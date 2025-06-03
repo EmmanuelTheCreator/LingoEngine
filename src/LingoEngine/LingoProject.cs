@@ -1,4 +1,5 @@
-﻿using LingoEngine.Sounds;
+﻿using ArkGodot.DirectorProxy;
+using LingoEngine.Sounds;
 
 namespace LingoEngine
 {
@@ -14,6 +15,7 @@ namespace LingoEngine
         ILingoMovie Movie { get; }
         ILingoCast CastLib { get; }
         ILingoClock Clock { get; }
+        ILingoFrameworkFactory Factory { get; }
     }
     public interface ILingoProject : ILingoEnvironment
     {
@@ -32,7 +34,7 @@ namespace LingoEngine
         private List<ILingoCast> _casts = new();
         private Dictionary<string, ILingoScore> _scoresByName = new();
         private List<ILingoScore> _scores = new();
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         private readonly LingoPlayer _player;
         private readonly LingoKey _LingoKey;
@@ -59,14 +61,17 @@ namespace LingoEngine
         public ILingoCast CastLib => _InternalCast;
         public ILingoClock Clock => _clock;
 
-        public LingoProject(string name)
+        public ILingoFrameworkFactory Factory { get; private set; }
+
+        public LingoProject(ILingoFrameworkFactory factory)
         {
-            Name = name;
+            Factory = factory;
+            _clock = new LingoClock();
             _player = new LingoPlayer();
             _LingoKey = new LingoKey();
             _Sound = new LingoSound();
             _score = AddScore("Default");
-            _Mouse = new LingoMouse(_score);
+            _Mouse = new LingoMouse((LingoScore)_score);
             _InternalCast = (LingoCast)AddCast("Internal");
             _Movie = new LingoMovie(_score);
             _System = new LingoSystem();
