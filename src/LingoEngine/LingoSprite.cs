@@ -187,6 +187,8 @@ namespace LingoEngine
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
+
+        public T FrameworkObj<T>() where T : ILingoFrameworkSprite => (T)_frameworkSprite;
         public string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
 
         public int SpriteNum { get; private set; }

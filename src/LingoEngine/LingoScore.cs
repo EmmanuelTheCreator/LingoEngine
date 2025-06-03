@@ -1,4 +1,6 @@
-﻿namespace LingoEngine
+﻿using LingoEngine.Movies;
+
+namespace LingoEngine
 {
     /// <summary>
     /// Represents the Score in a Lingo movie. The Score manages sprites, channels, and timeline playback.
@@ -127,6 +129,7 @@
         /// The rollover() method indicates whether the pointer is over the specified sprite.
         /// </summary>
         bool RollOver(int spriteNumber);
+        void UpdateStage();
 
     }
     public class LingoScore : ILingoScore, ILingoClockListener, IDisposable
@@ -135,6 +138,7 @@
         private List<LingoSprite> _sprites = new();
         private int _maxSpriteNum = 0;
         private readonly ILingoEnvironment _environment;
+        private readonly LingoMovieStage _movieStage;
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
         private int _currentFrame = 1;
@@ -168,9 +172,10 @@
             }
         }
         public bool IsPlaying => _isPlaying;
-        public LingoScore(ILingoEnvironment environment, string name, int number)
+        public LingoScore(ILingoEnvironment environment, LingoMovieStage movieStage, string name, int number)
         {
             _environment = environment;
+            _movieStage = movieStage;
             Name = name;
             Number = number;
             _lingoMouse = (LingoMouse)environment.Mouse;
@@ -297,6 +302,7 @@
                 // Subscription logic: Subscribe only when sprite is entering and not already subscribed
                 if (!wasActive && isActive)
                 {
+                    _movieStage.DrawSprite(sprite); 
                     _enteredSprites.Add(sprite);
                     _activeSprites.Add(sprite);
                     // Subscribe to mouse events if sprite is not already subscribed
@@ -329,13 +335,17 @@
             CallActiveSprites(s => s.DoEnterFrame());
             CallOnMoveScripts(s => s.DoEnterFrame());
 
-            // STEP 6: Fire exitFrame on all active sprites
+            // STEP 6: Call UpdateStage (e.g., rendering the stage content)
+            UpdateStage();
+
+            // STEP 7: Fire exitFrame on all active sprites
             CallActiveSprites(s => s.DoExitFrame());
             CallOnMoveScripts(s => s.DoExitFrame());
 
-            // STEP 7: Fire endSprite on exiting sprites
+            /// STEP 8: Fire endSprite on exiting sprites
             foreach (var sprite in _exitedSprites)
             {
+                _movieStage.RemoveSprite(sprite);
                 sprite.DoEndSprite();
                 _activeSprites.Remove(sprite);
                 // Unsubscribe from mouse events
@@ -418,6 +428,10 @@
                 }
             }
             return null; // Return null if no sprite is under the mouse
+        }
+        public void UpdateStage()
+        {
+            _movieStage.UpdateStage(_activeSprites);
         }
 
     }

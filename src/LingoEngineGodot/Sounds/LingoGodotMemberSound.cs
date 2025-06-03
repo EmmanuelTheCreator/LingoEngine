@@ -19,10 +19,12 @@ namespace LingoEngineGodot.Sounds
         internal void Init(LingoMemberSound memberSound)
         {
             _lingoMemberSound = memberSound;
-            AudioStream = GD.Load<AudioStream>($"res://{memberSound.LinkedFilePath}");
+            AudioStream = GD.Load<AudioStream>($"res://{memberSound.FileName}");
             Length = AudioStream.GetLength();
             StreamName = AudioStream._GetStreamName();
             Stereo = !AudioStream.IsMonophonic();
+            _lingoMemberSound.Size = Convert.ToInt32(AudioStream._GetLength() * 44100);
+            //_lingoMemberSound.CreationDate = new FileInfo(Format).LastWriteTime;
         }
 
         public void Dispose()

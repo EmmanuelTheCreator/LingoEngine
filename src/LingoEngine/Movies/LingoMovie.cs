@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Movies
 {
     /// <summary>
     /// Represents the Lingo _movie object, providing control over playback, navigation, and transitions.
@@ -97,6 +97,8 @@
 
     public class LingoMovie : ILingoMovie
     {
+        private readonly LingoMovieStage _MovieStage;
+
         public ILingoScore Score { get; set; }
         /// <inheritdoc/>
         public string Name => Score.Name;
@@ -113,9 +115,10 @@
         /// <inheritdoc/>
         public bool IsPlaying => Score.IsPlaying;
 
-        public LingoMovie(ILingoScore score)
+        public LingoMovie(ILingoScore score, LingoMovieStage movieStage)
         {
             Score = score;
+            _MovieStage = movieStage;
         }
 
 
