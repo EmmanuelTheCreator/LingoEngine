@@ -1,0 +1,71 @@
+﻿namespace LingoEngine.Events
+{
+    public interface IHasMouseDownEvent
+    {
+        void MouseDown(ILingoMouse mouse);
+    }
+
+    public interface IHasMouseUpEvent
+    {
+        void MouseUp(ILingoMouse mouse);
+    }
+
+    public interface IHasMouseMoveEvent
+    {
+        void MouseMove(ILingoMouse mouse);
+    }
+
+    public interface IHasBeginSpriteEvent
+    {
+        void BeginSprite();
+    }
+
+    public interface IHasEndSpriteEvent
+    {
+        void EndSprite();
+    }
+
+
+    public interface IHasMouseEnterEvent
+    {
+        void MouseEnter(ILingoMouse mouse);
+    }
+
+    public interface IHasMouseExitEvent
+    {
+        void MouseExit(ILingoMouse mouse);
+    }
+
+   
+
+    public interface IHasStepFrameEvent
+    {
+        void StepFrame();
+    }
+
+    public interface IHasPrepareFrameEvent
+    {
+        void PrepareFrame();
+    }
+
+    public interface IHasEnterFrameEvent
+    {
+        void EnterFrame();
+    }
+
+    public interface IHasExitFrameEvent
+    {
+        void ExitFrame();
+    }
+
+    public interface IHasFocusEvent
+    {
+        void Focus();
+    }
+
+    public interface IHasBlurEvent
+    {
+        void Blur();
+    }
+
+}

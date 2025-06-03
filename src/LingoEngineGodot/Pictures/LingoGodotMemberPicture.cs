@@ -10,6 +10,7 @@ namespace LingoEngineGodot.Pictures
         private ImageTexture? _imageTexture;
         private Image? _image;
 
+        internal ImageTexture? Texture => _imageTexture;
         public byte[]? ImageData {get;private set;}
 
         public bool IsLoaded {get;private set;}

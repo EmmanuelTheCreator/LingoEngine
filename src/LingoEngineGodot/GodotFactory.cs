@@ -24,6 +24,8 @@ namespace LingoEngineGodot
             _serviceProvider = serviceProvider;
         }
 
+        public LingoSpriteBehavior CreateBehavior<T>() where T : LingoSpriteBehavior => _serviceProvider.GetRequiredService<T>();
+
         #region Sound
         public LingoMemberSound CreateMemberSound(int number, string name = "")
         {
@@ -80,5 +82,7 @@ namespace LingoEngineGodot
             foreach (var disposable in _disposables)
                 disposable.Dispose();
         }
+
+      
     }
 }

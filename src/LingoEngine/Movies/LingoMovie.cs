@@ -92,12 +92,21 @@
         /// The rollover() method indicates whether the pointer is over the specified sprite.
         /// </summary>
         bool RollOver(int spriteNumber);
+        
+        LingoMember? GetMember(string memberName);
+        LingoMember? GetMember(int number);
+        void SendSprite(string name, Action<LingoSprite> actionOnSprite);
+        void SendSprite(int number, Action<LingoSprite> actionOnSprite);
+        void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior;
+        TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
+        void UpdateStage();
     }
 
 
     public class LingoMovie : ILingoMovie
     {
         private readonly LingoMovieStage _MovieStage;
+        private readonly LingoCast _lingoCast;
 
         public ILingoScore Score { get; set; }
         /// <inheritdoc/>
@@ -115,10 +124,11 @@
         /// <inheritdoc/>
         public bool IsPlaying => Score.IsPlaying;
 
-        public LingoMovie(ILingoScore score, LingoMovieStage movieStage)
+        public LingoMovie(ILingoScore score, LingoMovieStage movieStage, LingoCast lingoCast)
         {
             Score = score;
             _MovieStage = movieStage;
+            _lingoCast = lingoCast;
         }
 
 
@@ -145,5 +155,20 @@
         public void PrevFrame() => Score.PrevFrame();
 
         public void GoToAndStop(int frame) => Score.GoToAndStop(frame);
+
+        public void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior
+            => Score.SendSprite(spriteNumber, actionOnSprite);
+        public TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior
+            => Score.SendSprite(spriteNumber, actionOnSprite);
+        public void SendSprite(string name, Action<LingoSprite> actionOnSprite) => Score.SendSprite(name, actionOnSprite);
+
+        public void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite) => Score.SendSprite(spriteNumber, actionOnSprite);
+
+        public LingoMember? GetMember(string memberName) => _lingoCast.GetMember(memberName);
+        public LingoMember? GetMember(int number) => _lingoCast.GetMember(number);
+
+        public void UpdateStage() => _MovieStage.UpdateStage();
+
+       
     }
 }

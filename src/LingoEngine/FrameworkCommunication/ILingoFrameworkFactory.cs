@@ -13,5 +13,6 @@ namespace LingoEngine.FrameworkCommunication
         LingoSound CreateSound();
         LingoSoundChannel CreateSoundChannel(int number);
         T CreateSprite<T>(ILingoScore score) where T : LingoSprite;
+        LingoSpriteBehavior CreateBehavior<T>() where T : LingoSpriteBehavior;
     }
 }

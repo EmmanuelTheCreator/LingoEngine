@@ -61,6 +61,8 @@
         /// <param name="channelNumber">The number of the channel to access (1–8).</param>
         /// <returns>The requested sound channel, or null if unavailable.</returns>
         LingoSoundChannel? Channel(int channelNumber);
+        bool SoundBusy(int channelNumber);
+        void PuppetSound(int channelNumber, string memberName, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1);
         void StopAll();
     }
 
@@ -70,6 +72,7 @@
     {
         private Dictionary<int, LingoSoundChannel> _Channels = new();
         private int numberOfSoundChannels = 8;
+        private readonly ILingoEnvironment _lingoEnvironment;
         private readonly ILingoFrameworkSound _frameworkSound;
         public T FrameworkObj<T>() where T : ILingoFrameworkSound => (T)_frameworkSound;
 
@@ -94,6 +97,7 @@
         /// <inheritdoc/>
         public LingoSound(ILingoFrameworkSound frameworkSound, ILingoEnvironment lingoEnvironment)
         {
+            _lingoEnvironment = lingoEnvironment;
             _frameworkSound = frameworkSound;
             for (int i = 0; i < numberOfSoundChannels; i++)
             {
@@ -120,6 +124,14 @@
             {
                 _Channels[i].Stop();
             }
+        }
+
+        public bool SoundBusy(int number) => _Channels[number - 1].IsBusy();
+        public void PuppetSound(int channelNumber, string memberName, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1)
+        {
+            var member = _lingoEnvironment.CastLib.GetMember(memberName) as LingoMemberSound;
+            if (member == null) return;
+            _Channels[channelNumber].Play(member, startTime,endTime, loopCount, loopStartTime, loopEndTime,preloadTime);
         }
     }
 

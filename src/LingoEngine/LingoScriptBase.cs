@@ -29,13 +29,13 @@ Console.WriteLine(a);      // #hello
         }
 
         // Global objects ("the mouse", etc.)
-        public ILingoPlayer ThePlayer => _env.Player;
-        public ILingoMouse TheMouse => _env.Mouse;
-        public ILingoKey TheKey => _env.Key;
-        public ILingoSound TheSound => _env.Sound;
-        public ILingoMovie TheMovie => _env.Movie;
-        public ILingoCast TheCastLib => _env.CastLib;
-        public ILingoSystem TheSystem => _env.System;
+        protected ILingoPlayer _Player => _env.Player;
+        protected ILingoMouse _Mouse => _env.Mouse;
+        protected ILingoKey _Key => _env.Key;
+        protected ILingoSound _Sound => _env.Sound;
+        protected ILingoMovie _Movie => _env.Movie;
+        protected ILingoCast _CastLib => _env.CastLib;
+        protected ILingoSystem _System => _env.System;
 
         // Language built-in functions
         /// <summary>
@@ -54,6 +54,8 @@ Console.WriteLine(a);      // #hello
         
         public LingoMember? Member(string name) => _env.CastLib.GetMember(name); 
         public T? Member<T>(string name) where T : LingoMember => _env.CastLib.GetMember<T>(name); 
+        public void Member<T>(string name, Action<T> action) where T : LingoMember => action(_env.CastLib.GetMember<T>(name)!); 
+        public TResult Member<T, TResult>(string name, Func<T, TResult> action) where T : LingoMember => action(_env.CastLib.GetMember<T>(name)!); 
         // We dont need scripts in c#
         //public object? Script(string name) => null; // To resolve named script instances
         public object? Image(string name) => null; 
