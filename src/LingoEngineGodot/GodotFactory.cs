@@ -2,7 +2,11 @@
 using Godot;
 using LingoEngine;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
+using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
+using LingoEngineGodot.Movies;
+using LingoEngineGodot.Pictures;
 using LingoEngineGodot.Sounds;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,9 +47,26 @@ namespace LingoEngineGodot
             lingoSoundChannel.Init(soundChannel);
             _disposables.Add(lingoSoundChannel);
             return soundChannel;
-        } 
+        }
         #endregion
 
+
+        public LingoMemberPicture CreateMemberPicture(int number, string name = "")
+        {
+            var godotInstance = new LingoGodotMemberPicture();
+            var lingoInstance = new LingoMemberPicture(godotInstance, number, name);
+            godotInstance.Init(lingoInstance);
+            _disposables.Add(godotInstance);
+            return lingoInstance;
+        }
+        public LingoMovieStage CreateMovieStage()
+        {
+            var godotInstance = new LingoGodotMovieStage();
+            var lingoInstance = new LingoMovieStage(godotInstance);
+            godotInstance.Init(lingoInstance);
+            _disposables.Add(godotInstance);
+            return lingoInstance;
+        }
 
         public T CreateSprite<T>(ILingoScore score) where T : LingoSprite
         {

@@ -173,8 +173,8 @@
     public class LingoMember : ILingoMember
     {
         public string Name { get; set; }
-        public DateTime CreationDate{ get; private set; }
-        public DateTime ModifiedDate{ get; private set; }
+        public DateTime CreationDate{ get; set; }
+        public DateTime ModifiedDate{ get; set; }
         public int Number { get; private set; }
         public bool Hilite { get; private set; }
         public int CastLibNum { get; private set; }

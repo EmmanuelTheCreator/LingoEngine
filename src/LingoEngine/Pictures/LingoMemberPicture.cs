@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace LingoEngine.Pictures
 {
     namespace LingoEngine
@@ -12,80 +9,99 @@ namespace LingoEngine.Pictures
         /// </summary>
         public class LingoMemberPicture : LingoMember
         {
+            private readonly ILingoFrameworkMemberPicture _lingoFrameworkMemberPicture;
+
             /// <summary>
-            /// Raw image data (e.g., pixel data or encoded image format).
+            /// Gets the framework object that implements the ILingoFrameworkMemberPicture interface.
+            /// </summary>
+            /// <typeparam name="T">The type of the framework object.</typeparam>
+            /// <returns>Framework object implementing ILingoFrameworkMemberPicture.</returns>
+            public T FrameworkObj<T>() where T : ILingoFrameworkMemberPicture => (T)_lingoFrameworkMemberPicture;
+
+            /// <summary>
+            /// Gets the raw image data (e.g., pixel data or encoded image format).
             /// This field is implementation-independent; renderers may interpret this as needed.
             /// </summary>
-            public byte[]? ImageData { get; set; }
+            public byte[]? ImageData => _lingoFrameworkMemberPicture.ImageData;
 
             /// <summary>
             /// Indicates whether this image is loaded into memory.
             /// Corresponds to: member.picture.loaded
             /// </summary>
-            public bool IsLoaded { get; private set; }
+            public bool IsLoaded => _lingoFrameworkMemberPicture.IsLoaded;
 
             /// <summary>
-            /// Optional MIME type or encoding format (e.g., "image/png", "image/jpeg")
+            /// Gets the MIME type or encoding format of the image (e.g., "image/png", "image/jpeg").
             /// </summary>
-            public string Format { get; set; } = "image/unknown";
+            public string Format => _lingoFrameworkMemberPicture.Format;
 
-            public LingoMemberPicture(int number, string name = "")
+            /// <summary>
+            /// Initializes a new instance of the LingoMemberPicture class.
+            /// </summary>
+            /// <param name="lingoFrameworkMemberPicture">The framework picture object.</param>
+            /// <param name="number">The number of the member.</param>
+            /// <param name="name">The name of the member.</param>
+            public LingoMemberPicture(ILingoFrameworkMemberPicture lingoFrameworkMemberPicture, int number, string name = "")
                 : base(LingoMemberType.Picture, number, name)
             {
+                _lingoFrameworkMemberPicture = lingoFrameworkMemberPicture;
             }
 
-            /// <inheritdoc/>
-            public void Preload()
-            {
-                IsLoaded = true;
-            }
+            /// <summary>
+            /// Preloads the picture into memory.
+            /// Corresponds to: member.picture.preload
+            /// </summary>
+            public void Preload() => _lingoFrameworkMemberPicture.Preload();
 
-            /// <inheritdoc/>
-            public void Unload()
-            {
-                IsLoaded = false;
-            }
+            /// <summary>
+            /// Unloads the picture from memory.
+            /// Corresponds to: member.picture.unload
+            /// </summary>
+            public void Unload() => _lingoFrameworkMemberPicture.Unload();
 
-            /// <inheritdoc/>
-            public void Erase()
-            {
-                ImageData = null;
-                IsLoaded = false;
-            }
+            /// <summary>
+            /// Erases the picture.
+            /// Corresponds to: member.picture.erase
+            /// </summary>
+            public void Erase() => _lingoFrameworkMemberPicture.Erase();
 
-            /// <inheritdoc/>
+            /// <summary>
+            /// Imports a file into the picture. This is a placeholder for future external image loading functionality.
+            /// </summary>
             public void ImportFileInto()
             {
                 // Future: Implement external image loading
             }
 
-            /// <inheritdoc/>
-            public  void CopyToClipBoard()
-            {
-                // Future: Copy image to platform clipboard
-            }
+            /// <summary>
+            /// Copies the picture to the clipboard.
+            /// Corresponds to: member.picture.copy
+            /// </summary>
+            public void CopyToClipBoard() => _lingoFrameworkMemberPicture.CopyToClipBoard();
 
-            /// <inheritdoc/>
-            public void PasteClipBoardInto()
-            {
-                // Future: Paste image from clipboard into member
-            }
+            /// <summary>
+            /// Pastes the picture from the clipboard into the current picture.
+            /// Corresponds to: member.picture.paste
+            /// </summary>
+            public void PasteClipBoardInto() => _lingoFrameworkMemberPicture.PasteClipBoardInto();
 
-            /// <inheritdoc/>
+            /// <summary>
+            /// Creates a duplicate of the current picture member.
+            /// </summary>
+            /// <returns>A new LingoMemberPicture object that is a duplicate of the current one.</returns>
             public ILingoMember Duplicate()
             {
-                var clone = new LingoMemberPicture(Number, Name)
+                var clone = new LingoMemberPicture(_lingoFrameworkMemberPicture, Number, Name)
                 {
-                    ImageData = ImageData != null ? (byte[])ImageData.Clone() : null,
                     Width = Width,
                     Height = Height,
-                    Format = Format,
                     Comments = Comments,
                     PurgePriority = PurgePriority
                 };
                 return clone;
             }
         }
+
     }
 
 }

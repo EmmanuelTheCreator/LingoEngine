@@ -1,4 +1,5 @@
 ﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
 using LingoEngine.Sounds;
 
 namespace LingoEngine
@@ -41,6 +42,7 @@ namespace LingoEngine
         private readonly LingoSound _Sound;
         private readonly LingoMouse _Mouse;
         private readonly ILingoScore _score;
+        private readonly LingoMovieStage _Stage;
         private readonly LingoCast _InternalCast;
         private readonly LingoMovie _Movie;
         private readonly LingoSystem _System;
@@ -70,10 +72,11 @@ namespace LingoEngine
             _player = new LingoPlayer();
             _LingoKey = new LingoKey();
             _Sound = factory.CreateSound();
-            _score = AddScore("Default");
+            _Stage = factory.CreateMovieStage();
+            _score = AddScore("Default",_Stage);
             _Mouse = new LingoMouse((LingoScore)_score);
             _InternalCast = (LingoCast)AddCast("Internal");
-            _Movie = new LingoMovie(_score);
+            _Movie = new LingoMovie(_score, _Stage);
             _System = new LingoSystem();
         }
 
@@ -89,9 +92,9 @@ namespace LingoEngine
             _castsByName.Add(name, cast);
             return cast;
         }
-        public ILingoScore AddScore(string name)
+        public ILingoScore AddScore(string name, LingoMovieStage movieStage)
         {
-            var score = new LingoScore(this, name, _scores.Count + 1);
+            var score = new LingoScore(this, movieStage, name, _scores.Count + 1);
             _scores.Add(score);
             _scoresByName.Add(name, score);
             return score;
