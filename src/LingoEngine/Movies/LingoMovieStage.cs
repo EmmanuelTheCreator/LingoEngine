@@ -16,7 +16,7 @@ namespace LingoEngine.Movies
 
         internal void RemoveSprite(LingoSprite sprite) => _lingoFrameworkMovieStage.RemoveSprite(sprite);
 
-        internal void UpdateStage(List<LingoSprite> activeSprites) => _lingoFrameworkMovieStage.UpdateStage(activeSprites);
+        internal void UpdateStage() => _lingoFrameworkMovieStage.UpdateStage();
 
         
     }

@@ -11,6 +11,7 @@ namespace LingoEngine.FrameworkCommunication
         string Name { get; set; }
 
         Vector2 GetGlobalMousePosition();
+        void MemberChanged();
         void SetPositionX(float x);
         void SetPositionY(float y);
     }

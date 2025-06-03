@@ -1,4 +1,5 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.Events;
+using LingoEngine.FrameworkCommunication;
 
 namespace LingoEngine
 {
@@ -183,11 +184,25 @@ namespace LingoEngine
 
     public class LingoSprite : LingoScriptBase, ILingoSprite, ILingoSpriteEventHandler, ILingoMouseEventHandler
     {
+        private List<IHasMouseDownEvent> _mouseDownBehaviors = new List<IHasMouseDownEvent>();
+        private List<IHasMouseUpEvent> _mouseUpBehaviors = new List<IHasMouseUpEvent>();
+        private List<IHasMouseMoveEvent> _mouseMoveBehaviors = new List<IHasMouseMoveEvent>();
+        private List<IHasMouseEnterEvent> _mouseEnterBehaviors = new List<IHasMouseEnterEvent>();
+        private List<IHasMouseExitEvent> _mouseExitBehaviors = new List<IHasMouseExitEvent>();
+        private List<IHasBeginSpriteEvent> _beginSpriteBehaviors = new List<IHasBeginSpriteEvent>();
+        private List<IHasEndSpriteEvent> _endSpriteBehaviors = new List<IHasEndSpriteEvent>();
+        private List<IHasStepFrameEvent> _stepFrameBehaviors = new List<IHasStepFrameEvent>();
+        private List<IHasPrepareFrameEvent> _prepareFrameBehaviors = new List<IHasPrepareFrameEvent>();
+        private List<IHasEnterFrameEvent> _enterFrameBehaviors = new List<IHasEnterFrameEvent>();
+        private List<IHasExitFrameEvent> _exitFrameBehaviors = new List<IHasExitFrameEvent>();
+        private List<IHasFocusEvent> _focusBehaviors = new List<IHasFocusEvent>();
+        private List<IHasBlurEvent> _blurBehaviors = new List<IHasBlurEvent>();
+
         private ILingoFrameworkSprite _frameworkSprite;
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
-
+        private List<LingoSpriteBehavior> _behaviors = new List<LingoSpriteBehavior>();
         public T FrameworkObj<T>() where T : ILingoFrameworkSprite => (T)_frameworkSprite;
         public string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
 
@@ -206,7 +221,8 @@ namespace LingoEngine
         public LingoColor ForeColor { get; set; }
         public List<string> ScriptInstanceList { get; private set; } = new();
 
-        public new LingoMember? Member { get; private set; }
+        private LingoMember? _Member;
+        public LingoMember? Member { get => _Member; set => SetMember(value); }
         public LingoCast? Cast { get; private set; }
         public ILingoScore Score { get; }
 
@@ -274,6 +290,25 @@ namespace LingoEngine
             SpriteNum = number;
             Name = name;
         }
+        
+        public void AddBehavior<T>() where T : LingoSpriteBehavior
+        {
+            var behavior = _env.Factory.CreateBehavior<T>();
+            _behaviors.Add(behavior);
+            if (behavior is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Add(mouseDownEvent);
+            if (behavior is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Add(mouseUpEvent);
+            if (behavior is IHasMouseMoveEvent mouseMoveEvent) _mouseMoveBehaviors.Add(mouseMoveEvent);
+            if (behavior is IHasMouseEnterEvent mouseEnterEvent) _mouseEnterBehaviors.Add(mouseEnterEvent);
+            if (behavior is IHasMouseExitEvent mouseExitEvent) _mouseExitBehaviors.Add(mouseExitEvent);
+            if (behavior is IHasBeginSpriteEvent beginSpriteEvent) _beginSpriteBehaviors.Add(beginSpriteEvent);
+            if (behavior is IHasEndSpriteEvent endSpriteEvent) _endSpriteBehaviors.Add(endSpriteEvent);
+            if (behavior is IHasStepFrameEvent stepFrameEvent) _stepFrameBehaviors.Add(stepFrameEvent);
+            if (behavior is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrameBehaviors.Add(prepareFrameEvent);
+            if (behavior is IHasEnterFrameEvent enterFrameEvent) _enterFrameBehaviors.Add(enterFrameEvent);
+            if (behavior is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Add(exitFrameEvent);
+            if (behavior is IHasFocusEvent focusEvent) _focusBehaviors.Add(focusEvent);
+            if (behavior is IHasBlurEvent blurEvent) _blurBehaviors.Add(blurEvent);
+        }
 
         /*
         When the movie first starts, events occur in the following order:
@@ -299,24 +334,20 @@ When a movie stops, events occur in the following order:
 
         */
 
-        internal virtual void DoBeginSprite() { BeginSprite(); }
+        internal virtual void DoBeginSprite() { BeginSprite(); _beginSpriteBehaviors.ForEach(b => b.BeginSprite()); }
         protected virtual void BeginSprite() { }
-        internal virtual void DoEndSprite() { EndSprite(); }
+        internal virtual void DoEndSprite() { EndSprite(); _endSpriteBehaviors.ForEach(b => b.EndSprite()); }
         protected virtual void EndSprite() { }
-        internal virtual void DoEnterFrame() { EnterFrame(); }
+        internal virtual void DoEnterFrame() { EnterFrame(); _enterFrameBehaviors.ForEach(b => b.EnterFrame()); }
         protected virtual void EnterFrame() { }
-        internal virtual void DoExitFrame() { ExitFrame(); }
+        internal virtual void DoExitFrame() { ExitFrame(); _exitFrameBehaviors.ForEach(b => b.ExitFrame()); }
         protected virtual void ExitFrame() { }
-        internal virtual void DoStepFrame() { StepFrame(); }
-        protected virtual void StepFrame() { }
-        internal virtual void DoPrepareFrame() { PrepareFrame(); }
+        internal virtual void DoStepFrame() { StepFrame(); _stepFrameBehaviors.ForEach(b => b.StepFrame()); }
+        protected virtual void StepFrame() {  }
+        internal virtual void DoPrepareFrame() { PrepareFrame(); _prepareFrameBehaviors.ForEach(b => b.PrepareFrame()); }
         protected virtual void PrepareFrame() { }
 
-        internal virtual void DoMouseDown() { MouseDown(); }
-        protected virtual void MouseDown() { }
-        internal virtual void DoMouseUp() { MouseUp(); }
-        protected virtual void MouseUp() { }
-
+        
 
 
         internal void SetFrameworkSprite(ILingoFrameworkSprite fw) => _frameworkSprite = fw;
@@ -335,14 +366,22 @@ When a movie stops, events occur in the following order:
         public void SetMember(string memberName)
         {
             var member = _env.CastLib.GetMember(memberName);
-            Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
+            _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
+            _frameworkSprite.MemberChanged();
         }
 
+        
         public void SetMember(int memberNumber)
         {
             if (Cast == null) throw new Exception(Name + ":Cast not set for sprite: " + memberNumber);
-            var member = Cast.GetMember(memberNumber);
-            Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
+            LingoMember member = Cast.GetMember(memberNumber);
+            _Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
+            
+        }
+        public void SetMember(LingoMember member)
+        {
+            _Member = member;
+            _frameworkSprite.MemberChanged();
         }
         public void SetPosition(float x, float y)
         {
@@ -404,9 +443,11 @@ When a movie stops, events occur in the following order:
             // Only respond if the sprite is active and the mouse is within the bounding box
             if (IsActive && IsMouseInsideBoundingBox(mouse))
             {
+                _mouseMoveBehaviors.ForEach(b => b.MouseMove(mouse));
                 if (!isMouseInside)
                 {
                     MouseEnter(mouse); // Mouse has entered the sprite
+                    _mouseEnterBehaviors.ForEach(b => b.MouseEnter(mouse));
                     isMouseInside = true;
                 }
             }
@@ -415,6 +456,7 @@ When a movie stops, events occur in the following order:
                 if (isMouseInside)
                 {
                     MouseExit(mouse); // Mouse has exited the sprite
+                    _mouseExitBehaviors.ForEach(b => b.MouseExit(mouse));
                     isMouseInside = false;
                 }
             }
@@ -442,6 +484,7 @@ When a movie stops, events occur in the following order:
             if (isDraggable && IsMouseInsideBoundingBox(mouse))
                 isDragging = true;
             MouseDown(mouse);
+            _mouseDownBehaviors.ForEach(b => b.MouseDown(mouse));
         }
 
         protected virtual void MouseDown(LingoMouse mouse) { }
@@ -450,6 +493,7 @@ When a movie stops, events occur in the following order:
             if (isDragging && isDragging)
                 isDragging = false;
             MouseUp(mouse);
+            _mouseUpBehaviors.ForEach(b => b.MouseUp(mouse));
         }
         protected virtual void MouseUp(LingoMouse mouse) { }
         private void DoMouseDrag(LingoMouse mouse)
@@ -459,6 +503,7 @@ When a movie stops, events occur in the following order:
             MouseDrag(mouse);
         }
         protected virtual void MouseDrag(LingoMouse mouse) { }
+
 
         #endregion
 

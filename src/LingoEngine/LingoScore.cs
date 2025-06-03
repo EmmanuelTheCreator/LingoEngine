@@ -130,7 +130,10 @@ namespace LingoEngine
         /// </summary>
         bool RollOver(int spriteNumber);
         void UpdateStage();
-
+        void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T: LingoSpriteBehavior;
+        TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
+        void SendSprite(string name, Action<LingoSprite> actionOnSprite);
+        void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite);
     }
     public class LingoScore : ILingoScore, ILingoClockListener, IDisposable
     {
@@ -431,8 +434,36 @@ namespace LingoEngine
         }
         public void UpdateStage()
         {
-            _movieStage.UpdateStage(_activeSprites);
+            _movieStage.UpdateStage();
         }
 
+        public void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite)
+            where T : LingoSpriteBehavior
+        {
+            var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber) as T;
+            if (sprite == null) return;
+            actionOnSprite(sprite);
+        }
+        public TResult? SendSprite<T,TResult>(int spriteNumber, Func<T, TResult> actionOnSprite)
+            where T : LingoSpriteBehavior
+        {
+            var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber) as T;
+            if (sprite == null) return default;
+            return actionOnSprite(sprite);
+        }
+
+        public void SendSprite(string name, Action<LingoSprite> actionOnSprite)
+        {
+            var sprite = _activeSprites.FirstOrDefault(x => x.Name == Name);
+            if (sprite == null) return;
+            actionOnSprite(sprite);
+        }
+
+        public void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite)
+        {
+            var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber);
+            if (sprite == null) return;
+            actionOnSprite(sprite);
+        }
     }
 }

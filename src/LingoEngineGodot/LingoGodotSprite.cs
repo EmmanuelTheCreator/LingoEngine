@@ -5,12 +5,15 @@ using LingoEngine.FrameworkCommunication;
 namespace ArkGodot.GodotLinks
 {
 
-    public partial class LingoGodotSprite : Node2D, ILingoFrameworkSprite
+    public partial class LingoGodotSprite : Sprite2D, ILingoFrameworkSprite
     {
         private Node2D _node2D;
-        private ILingoSprite _lingoSprite;
-        public float X {get => _node2D.Position.X; set => _node2D.Position = new Vector2(value, _node2D.Position.Y); }
-        public float Y { get => _node2D.Position.Y; set => _node2D.Position = new Vector2(_node2D.Position.X,Y); }
+        private LingoSprite _lingoSprite;
+        internal LingoSprite LingoSprite => _lingoSprite;
+        internal bool IsDirty { get; set; }
+        internal bool IsDirtyMember { get; set; }
+        public float X { get => _node2D.Position.X; set { _node2D.Position = new Vector2(value, _node2D.Position.Y); IsDirty = true; } }
+        public float Y { get => _node2D.Position.Y; set { _node2D.Position = new Vector2(_node2D.Position.X, Y); IsDirty = true; } }
         public ILingoCast? Cast { get; private set; }
         public ILingoScore Score { get; }
 
@@ -43,20 +46,36 @@ namespace ArkGodot.GodotLinks
 
         }
 
-        public void SetPositionX(float x) => _node2D.Position = new Vector2(x, _node2D.Position.Y);
-        public void SetPositionY(float y) => _node2D.Position = new Vector2(_node2D.Position.X, y);
+        public void SetPositionX(float x)
+        {
+            _node2D.Position = new Vector2(x, _node2D.Position.Y);
+            IsDirty = true;
+        }
+
+        public void SetPositionY(float y)
+        {
+            _node2D.Position = new Vector2(_node2D.Position.X, y);
+            IsDirty = true;
+        }
 
         System.Numerics.Vector2 ILingoFrameworkSprite.GetGlobalMousePosition()
         {
             throw new NotImplementedException();
         }
 
-      
+        public void MemberChanged()
+        {
+            IsDirtyMember = true;
+        }
 
         public float Blend
         {
             get => _node2D.SelfModulate.A;
-            set => _node2D.SelfModulate = new Color(_node2D.SelfModulate, value);
+            set
+            {
+                _node2D.SelfModulate = new Color(_node2D.SelfModulate, value);
+                IsDirty = true;
+            }
         }
 
          public new string Name

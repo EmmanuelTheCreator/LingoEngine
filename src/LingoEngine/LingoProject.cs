@@ -76,7 +76,7 @@ namespace LingoEngine
             _score = AddScore("Default",_Stage);
             _Mouse = new LingoMouse((LingoScore)_score);
             _InternalCast = (LingoCast)AddCast("Internal");
-            _Movie = new LingoMovie(_score, _Stage);
+            _Movie = new LingoMovie(_score, _Stage,_InternalCast);
             _System = new LingoSystem();
         }
 

@@ -5,6 +5,6 @@ namespace LingoEngine.FrameworkCommunication
     {
         void DrawSprite(LingoSprite sprite);
         void RemoveSprite(LingoSprite sprite);
-        void UpdateStage(List<LingoSprite> activeSprites);
+        void UpdateStage();
     }
 }

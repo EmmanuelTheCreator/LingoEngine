@@ -1,6 +1,4 @@
-﻿using LingoEngine.Sounds;
-
-namespace LingoEngine
+﻿namespace LingoEngine.Sounds
 {
     /// <summary>
     /// Represents a sound item that can be queued and played in a Lingo sound channel using setPlayList() or queue().
