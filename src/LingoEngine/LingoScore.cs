@@ -28,7 +28,11 @@
         /// <summary>
         /// Adds a new sprite to a specific sprite channel number.
         /// </summary>
-        ILingoScore AddSprite(int num, string name);
+        ILingoScore AddSprite(int num);
+        /// <summary>
+        /// Adds a new sprite to a specific sprite channel number.
+        /// </summary>
+        ILingoScore AddSprite<T>(int num) where T : LingoSprite;
 
         /// <summary>
         /// Removes a sprite from the score by name.
@@ -129,6 +133,7 @@
     {
         private Dictionary<string, LingoSprite> _spritesByName = new();
         private List<LingoSprite> _sprites = new();
+        private int _maxSpriteNum = 0;
         private readonly ILingoEnvironment _environment;
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
@@ -197,15 +202,26 @@
 
         public string GetSpriteName(int number) => _sprites[number - 1].Name;
         public ILingoSprite GetSprite(int number) => _sprites[number - 1];
-
-        public ILingoScore AddSprite(string name)
-            => AddSprite(_sprites.Count + 1, name);
-        public ILingoScore AddSprite(int num, string name)
+        public ILingoScore AddSprite(string name) => AddSprite<LingoSprite>(name);
+        public ILingoScore AddSprite<T>(string name) where T : LingoSprite
         {
-            var sprite = new LingoSprite(_environment, this, name, num);
+            _maxSpriteNum++;
+            var num = _maxSpriteNum;
+            return AddSprite<T>(num,name);
+        }
+        public ILingoScore AddSprite(int num)=> AddSprite<LingoSprite>(num);
+        public ILingoScore AddSprite<T>(int num) where T : LingoSprite => AddSprite<T>(num,"Sprite_"+num);
+        
+        public ILingoScore AddSprite<T>(int num,string name) where T : LingoSprite
+        {
+            var sprite = _environment.Factory.CreateSprite<T>(this);
+            sprite.Init(num, name);
+            //var sprite = new LingoSprite(_environment, this, name, num);
             _sprites.Insert(num - 1, sprite);
             _spritesByName.Add(name, sprite);
             _spriteEventHandlers.Add(sprite);
+            if (num > _maxSpriteNum)
+                _maxSpriteNum = num;
             return this;
         }
         public bool RemoveSprite(string name)

@@ -5,14 +5,12 @@ namespace LingoEngine.FrameworkCommunication
     public interface ILingoFrameworkSprite
     {
         bool Visible { get; set; }
-        Vector2 Position { get; set; }
         float Blend { get; set; }
         float X { get; set; }
         float Y { get; set; }
         string Name { get; set; }
 
         Vector2 GetGlobalMousePosition();
-        void SetLingoSprite(ILingoSprite lingoSprite);
         void SetPositionX(float x);
         void SetPositionY(float y);
     }

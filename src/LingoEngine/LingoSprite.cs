@@ -257,13 +257,22 @@ namespace LingoEngine
         // Not used in c#
         // public int ScriptText { get; set; }
 
-        public LingoSprite(ILingoEnvironment environment, ILingoScore score, string name, int number)
+        public LingoSprite(ILingoEnvironment environment)
             :base(environment)
         {
-            Score = score;
-            Name = name;
-            SpriteNum = number;
+            Score = environment.Movie.Score;
+            
         }
+        public void Init(ILingoFrameworkSprite frameworkSprite)
+        {
+            _frameworkSprite = frameworkSprite;
+        }
+        internal void Init(int number, string name)
+        {
+            SpriteNum = number;
+            Name = name;
+        }
+
         /*
         When the movie first starts, events occur in the following order:
 1 prepareMovie
@@ -306,13 +315,9 @@ When a movie stops, events occur in the following order:
         internal virtual void DoMouseUp() { MouseUp(); }
         protected virtual void MouseUp() { }
 
-       
 
-        internal void SetFrameworkSprite(ILingoFrameworkSprite fw)
-        {
-            _frameworkSprite = fw;
-            _frameworkSprite.SetLingoSprite(this);
-        }
+
+        internal void SetFrameworkSprite(ILingoFrameworkSprite fw) => _frameworkSprite = fw;
         private void UpdateFrameworkPosition()
         {
             _frameworkSprite?.SetPositionX(LocH);
@@ -376,17 +381,17 @@ When a movie stops, events occur in the following order:
         {
             throw new NotImplementedException();
             // Create shallow copy, link same member, etc.
-            return new LingoSprite(_env, Score, Name + "_copy", SpriteNum)
-            {
-                Member = Member,
-                LocH = LocH,
-                LocV = LocV,
-                Blend = Blend,
-                Visible = Visible,
-                Color = Color,
-                //Rect = Rect
-                // etc.
-            };
+            //return new LingoSprite(_env, Score, Name + "_copy", SpriteNum)
+            //{
+            //    Member = Member,
+            //    LocH = LocH,
+            //    LocV = LocV,
+            //    Blend = Blend,
+            //    Visible = Visible,
+            //    Color = Color,
+            //    //Rect = Rect
+            //    // etc.
+            //};
         }
 
 
@@ -469,6 +474,6 @@ When a movie stops, events occur in the following order:
         /// </summary>
         public bool IsMouseInsideBoundingBox(LingoMouse mouse) => mouse.MouseH >= LocH && mouse.MouseH <= LocH + Width && mouse.MouseV >= LocV && mouse.MouseV <= LocV + Height;
 
-
+       
     }
 }
