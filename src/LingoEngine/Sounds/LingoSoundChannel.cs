@@ -145,28 +145,32 @@ namespace LingoEngine.Sounds
     public class LingoSoundChannel : ILingoSoundChannel
     {
         private Queue<LingoPlayListSound> _playlist = new();
+        private int _currentLoop;
+        private readonly ILingoFrameworkSoundChannel _frameworkSoundChannel;
+        public T FrameworkObj<T>() where T : ILingoFrameworkSoundChannel => (T)_frameworkSoundChannel;
+
         /// <inheritdoc/>
         public int Number { get; private set; }
         /// <inheritdoc/>
-        public int Volume { get; set; }
+        public int Volume { get => _frameworkSoundChannel.Volume; set => _frameworkSoundChannel.Volume = value; }
         /// <inheritdoc/>
         public LingoSoundChannelStatus Status { get; private set; }
         /// <inheritdoc/>
-        public int ChannelCount { get; private set; }
+        public int ChannelCount => _frameworkSoundChannel.ChannelCount;
         /// <inheritdoc/>
-        public int SampleCount { get; private set; }
+        public int SampleCount => _frameworkSoundChannel.SampleCount;
         /// <inheritdoc/>
-        public int SampleRate { get; private set; }
+        public int SampleRate => _frameworkSoundChannel.SampleRate;
         /// <inheritdoc/>
         public LingoMemberSound? Member { get; private set; }
         /// <inheritdoc/>
-        public int Pan { get; set; }
+        public int Pan { get => _frameworkSoundChannel.Pan; set => _frameworkSoundChannel.Pan = value; }
         /// <inheritdoc/>
-        public float ElapsedTime { get; private set; }
+        public float ElapsedTime => _frameworkSoundChannel.ElapsedTime;
         /// <inheritdoc/>
-        public float StartTime { get; private set; }
+        public float StartTime { get => _frameworkSoundChannel.StartTime; set => _frameworkSoundChannel.StartTime = value; }
         /// <inheritdoc/>
-        public float EndTime { get; private set; }
+        public float EndTime { get => _frameworkSoundChannel.EndTime; set => _frameworkSoundChannel.EndTime = value; }
         /// <inheritdoc/>
         public int LoopCount { get; private set; } = 1;
         /// <inheritdoc/>
@@ -176,10 +180,11 @@ namespace LingoEngine.Sounds
         public float LoopEndTime { get; private set; }
         /// <inheritdoc/>
         public float PreloadTime { get; set; }
-        public float CurrentTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public float CurrentTime { get => _frameworkSoundChannel.CurrentTime; set => _frameworkSoundChannel.CurrentTime = value; }
 
-        public LingoSoundChannel(int number)
+        public LingoSoundChannel(ILingoFrameworkSoundChannel frameworkSoundChannel, int number)
         {
+            _frameworkSoundChannel = frameworkSoundChannel;
             Number = number;
         }
         /// <inheritdoc/>
@@ -201,6 +206,7 @@ namespace LingoEngine.Sounds
         public void PlayFile(string stringFilePath)
         {
             // A string that specifies the name of the file to play. When the sound file is in a different folder than the currently playing movie, stringFilePath must also specify the full path to the file.
+            _frameworkSoundChannel.PlayFile(stringFilePath);
         }
         public void PlayNext()
         {
@@ -247,16 +253,19 @@ namespace LingoEngine.Sounds
         private void PlayNow(LingoMemberSound member)
         {
             Status = LingoSoundChannelStatus.Playing;
+            _frameworkSoundChannel.PlayNow(member);
         }
         /// <inheritdoc/>
         public void Pause()
         {
             Status = LingoSoundChannelStatus.Paused;
+            _frameworkSoundChannel.Pause();
         }
         /// <inheritdoc/>
         public void Stop()
         {
             Status = LingoSoundChannelStatus.Idle;
+            _frameworkSoundChannel.Stop();
         }
         /// <inheritdoc/>
         public void Queue(LingoMemberSound member, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1)
@@ -270,8 +279,9 @@ namespace LingoEngine.Sounds
             if (preloadTime > -1) sound.PreloadTime = preloadTime;
             _playlist.Enqueue(sound);
         }
+       
         /// <inheritdoc/>
-        public void Rewind() { }
+        public void Rewind() { _frameworkSoundChannel.Rewind(); }
         /// <inheritdoc/>
         public LingoPlayListSound[] GetPlayList() => _playlist.ToArray();
         /// <inheritdoc/>
@@ -281,6 +291,28 @@ namespace LingoEngine.Sounds
         }
         /// <inheritdoc/>
         public bool IsBusy() => Status == LingoSoundChannelStatus.Playing;
+
+        public void SoundFinished()
+        {
+            if (LoopCount > 1)
+            {
+                _currentLoop++;
+                
+                if (_currentLoop >= LoopCount)
+                {
+                    Status = LingoSoundChannelStatus.Idle;
+                    _currentLoop = 0;
+                    return;
+                }
+                _frameworkSoundChannel.Repeat();
+                Status = LingoSoundChannelStatus.Playing;
+            }
+            else
+            {
+                Status = LingoSoundChannelStatus.Idle;
+            }
+            
+        }
     }
 
 }

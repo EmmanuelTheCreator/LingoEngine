@@ -1,4 +1,4 @@
-﻿using ArkGodot.DirectorProxy;
+﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Sounds;
 
 namespace LingoEngine
@@ -69,7 +69,7 @@ namespace LingoEngine
             _clock = new LingoClock();
             _player = new LingoPlayer();
             _LingoKey = new LingoKey();
-            _Sound = new LingoSound();
+            _Sound = factory.CreateSound();
             _score = AddScore("Default");
             _Mouse = new LingoMouse((LingoScore)_score);
             _InternalCast = (LingoCast)AddCast("Internal");

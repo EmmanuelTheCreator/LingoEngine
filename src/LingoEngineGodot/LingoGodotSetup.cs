@@ -1,7 +1,6 @@
-﻿using ArkGodot.DirectorProxy;
-using LingoEngineGodot;
+﻿using LingoEngine.FrameworkCommunication;
 using Microsoft.Extensions.DependencyInjection;
-namespace LingoEngine
+namespace LingoEngineGodot
 {
     public static class LingoGodotSetup
     {

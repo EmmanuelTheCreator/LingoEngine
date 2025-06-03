@@ -61,7 +61,6 @@
         /// <param name="channelNumber">The number of the channel to access (1–8).</param>
         /// <returns>The requested sound channel, or null if unavailable.</returns>
         LingoSoundChannel? Channel(int channelNumber);
-        void UpdateDeviceList();
         void StopAll();
     }
 
@@ -69,37 +68,42 @@
     /// <inheritdoc/>
     public class LingoSound : ILingoSound
     {
-        private static readonly Random _random = new();
         private Dictionary<int, LingoSoundChannel> _Channels = new();
         private int numberOfSoundChannels = 8;
+        private readonly ILingoFrameworkSound _frameworkSound;
+        public T FrameworkObj<T>() where T : ILingoFrameworkSound => (T)_frameworkSound;
 
         /// <inheritdoc/>
         public LingoSoundDevice SoundDevice { get; set; } = new LingoSoundDevice();
 
         /// <inheritdoc/>
-        public List<LingoSoundDevice> SoundDeviceList { get; set; } = new();
+        public List<LingoSoundDevice> SoundDeviceList { get => _frameworkSound.SoundDeviceList; }
 
         /// <inheritdoc/>
-        public int SoundLevel { get; set; }
+        public int SoundLevel { get => _frameworkSound.SoundLevel; set => _frameworkSound.SoundLevel = value; }
 
         /// <inheritdoc/>
-        public int SoundMixMedia { get; set; }
+        public int SoundMixMedia { get; set; } // ignore in .NET, there is no flash
 
         /// <inheritdoc/>
-        public bool SoundEnable { get; set; }
+        public bool SoundEnable { get => _frameworkSound.SoundEnable; set => _frameworkSound.SoundEnable = value; }
 
         /// <inheritdoc/>
-        public bool SoundKeepDevice { get; set; }
+        public bool SoundKeepDevice { get; set; } // ingored in .NET
 
         /// <inheritdoc/>
-        public LingoSound()
+        public LingoSound(ILingoFrameworkSound frameworkSound, ILingoEnvironment lingoEnvironment)
         {
+            _frameworkSound = frameworkSound;
             for (int i = 0; i < numberOfSoundChannels; i++)
-                _Channels.Add(i + 1, new LingoSoundChannel(i + 1));
+            {
+                var channel = lingoEnvironment.Factory.CreateSoundChannel(i+1);
+                _Channels.Add(i + 1, channel);
+            }
         }
 
         /// <inheritdoc/>
-        public void Beep() => Console.Beep();
+        public void Beep() => _frameworkSound.Beep();
 
         /// <inheritdoc/>
         public LingoSoundChannel Channel(int channelNumber)
@@ -108,16 +112,14 @@
                 throw new ArgumentOutOfRangeException(nameof(channelNumber), "Channel number must be between 1 and " + numberOfSoundChannels);
             return _Channels[channelNumber];
         }
-    
 
 
-        public void UpdateDeviceList()
-        {
-
-        }
         public void StopAll()
         {
-
+            for (int i = 0; i < numberOfSoundChannels; i++)
+            {
+                _Channels[i].Stop();
+            }
         }
     }
 

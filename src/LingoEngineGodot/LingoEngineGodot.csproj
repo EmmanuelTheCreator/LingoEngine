@@ -4,7 +4,7 @@
 		<OutputType>Library</OutputType>
 		<TargetFramework>net6</TargetFramework>
 		<!-- Use netstandard for compatibility -->
-		<RootNamespace>MyGodotLibrary</RootNamespace>
+		<RootNamespace>LingoEngineGodot</RootNamespace>
 		<GodotVersion>4.2.2</GodotVersion>
 		<LangVersion>12</LangVersion>
 		<Nullable>enable</Nullable>
