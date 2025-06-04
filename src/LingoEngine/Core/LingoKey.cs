@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Core
 {
     /// <summary>
     /// Used to monitor a user’s keyboard activity.

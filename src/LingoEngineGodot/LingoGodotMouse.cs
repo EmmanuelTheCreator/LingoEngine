@@ -1,5 +1,4 @@
 ﻿using Godot;
-using LingoEngine;
 
 namespace ArkGodot.GodotLinks
 {
@@ -14,6 +13,7 @@ add_child(lingoGodotMouse)  # Add it to the scene
     /// Communication between the Godot engine and the Lingo mouse object
     /// </summary>
     using Godot;
+    using LingoEngine.Core;
     using System;
 
     public partial class LingoGodotMouse : Node

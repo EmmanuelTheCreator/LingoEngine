@@ -1,6 +1,5 @@
 ﻿using ArkGodot.GodotLinks;
 using Godot;
-using LingoEngine;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
@@ -31,7 +30,7 @@ namespace LingoEngineGodot
         public LingoMemberSound CreateMemberSound(int number, string name = "")
         {
             var lingoMemberSound = new LingoGodotMemberSound();
-            var memberSound = new LingoMemberSound(lingoMemberSound, number, name);
+            var memberSound = new LingoMemberSound(lingoMemberSound,((LingoCast) _environment.Player.ActiveCastLib), number, name);
             lingoMemberSound.Init(memberSound);
             _disposables.Add(lingoMemberSound);
             return memberSound;
@@ -57,7 +56,7 @@ namespace LingoEngineGodot
         public LingoMemberPicture CreateMemberPicture(int number, string name = "")
         {
             var godotInstance = new LingoGodotMemberPicture();
-            var lingoInstance = new LingoMemberPicture(godotInstance, number, name);
+            var lingoInstance = new LingoMemberPicture((LingoCast)_environment.Player.ActiveCastLib, godotInstance, number, name);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
@@ -74,7 +73,7 @@ namespace LingoEngineGodot
         /// <summary>
         /// Dependant on movie, because the behaviors are scoped and movie related.
         /// </summary>
-        public T CreateSprite<T>(ILingoMovie movie, ILingoScore score) where T : LingoSprite
+        public T CreateSprite<T>(ILingoMovie movie) where T : LingoSprite
         {
             var movieTyped = (LingoMovie)movie;
             var lingoSprite = movieTyped.GetServiceProvider().GetRequiredService<T>();
@@ -88,6 +87,6 @@ namespace LingoEngineGodot
                 disposable.Dispose();
         }
 
-      
+        
     }
 }
