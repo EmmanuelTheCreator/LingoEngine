@@ -1,6 +1,7 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Sounds;
+using LingoEngineGodot;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Movies
@@ -24,17 +25,19 @@ namespace LingoEngine.Movies
     }
     public class LingoMovieEnvironment : ILingoMovieEnvironment , IDisposable
     {
-        private readonly LingoPlayer _player;
-        private readonly LingoKey _key;
-        private readonly LingoSound _sound;
-        private readonly LingoMouse _mouse;
-        private readonly LingoSystem _system;
-        private readonly ILingoClock _clock;
-        private readonly ILingoMovie _movie;
+        private LingoPlayer _player;
+        private LingoKey _key;
+        private LingoSound _sound;
+        private LingoMouse _mouse;
+        private LingoSystem _system;
+        private ILingoClock _clock;
+        private ILingoMovie _movie;
+        private LingoCastLibsContainer _castLibsContainer;
+
+        private IServiceScope _scopedServiceProvider;
         private readonly ILingoFrameworkFactory _factory;
-        private readonly IServiceScope _scopedServiceProvider;
-        private readonly LingoCastLibsContainer _castLibsContainer;
-        
+        private readonly ILingoMemberFactory _memberFactory;
+        private readonly IServiceProvider _rootServiceProvider;
 
         public ILingoPlayer Player => _player;
 
@@ -52,18 +55,26 @@ namespace LingoEngine.Movies
 
         public ILingoFrameworkFactory Factory => _factory;
 
-        internal LingoMovieEnvironment(string name, int number, LingoPlayer player, LingoKey lingoKey, LingoSound sound, LingoMouse mouse, LingoStage stage, LingoSystem system, ILingoClock clock, ILingoFrameworkFactory factory, LingoCastLibsContainer lingoCastLibsContainer, IServiceProvider rootServiceProvider)
+#pragma warning disable CS8618 
+        public LingoMovieEnvironment(ILingoMemberFactory memberFactory, IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory)
+#pragma warning restore CS8618 
         {
+            _memberFactory = memberFactory;
+            _rootServiceProvider = rootServiceProvider;
+            _factory = factory;
+        }
+
+        internal void Init(string name, int number, LingoPlayer player, LingoKey lingoKey, LingoSound sound, LingoMouse mouse, LingoStage stage, LingoSystem system, ILingoClock clock, LingoCastLibsContainer lingoCastLibsContainer, IServiceScope scopedServiceProvider)
+        {
+            _scopedServiceProvider = scopedServiceProvider;
             _player = player;
             _key = lingoKey;
             _sound = sound;
             _mouse = mouse;
             _system = system;
             _clock = clock;
-            _factory = factory;
             _castLibsContainer = lingoCastLibsContainer;
-            _scopedServiceProvider = rootServiceProvider.CreateScope();
-            _movie = new LingoMovie(this, stage, name,number);
+            _movie = new LingoMovie(this, stage, _memberFactory, name,number);
         }
         internal IServiceProvider GetServiceProvider() => _scopedServiceProvider.ServiceProvider;
         public void Dispose()

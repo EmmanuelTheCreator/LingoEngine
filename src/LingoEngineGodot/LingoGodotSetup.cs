@@ -1,4 +1,5 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using Godot;
+using LingoEngine.FrameworkCommunication;
 using Microsoft.Extensions.DependencyInjection;
 namespace LingoEngineGodot
 {
@@ -7,9 +8,15 @@ namespace LingoEngineGodot
         public static IServiceCollection RegisterLingoGodotEngine(this IServiceCollection container)
         {
             container
-                .AddSingleton<ILingoFrameworkFactory, GodotFactory>() 
+                .AddSingleton<ILingoFrameworkFactory, GodotFactory>()
+
                 ;
             return container;
+        }
+        public static IServiceProvider SetupLingoGodotEngine(this IServiceProvider provider, Node2D rootNode)
+        {
+            ((GodotFactory)provider.GetRequiredService<ILingoFrameworkFactory>()).SetRootNode(rootNode);
+            return provider;
         }
     }
 }

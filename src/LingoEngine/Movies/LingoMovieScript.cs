@@ -7,11 +7,11 @@ namespace LingoEngine.Movies
     {
         public LingoMovieScript(ILingoMovieEnvironment env) : base(env)
         {
-            ((LingoMovie)_env.Movie).SubscribeMovieScript(this);
+            ((LingoMovie)_Movie).SubscribeMovieScript(this);
         }
         public void Dispose()
         {
-            ((LingoMovie)_env.Movie).UnsubscribeMovieScript(this);
+            ((LingoMovie)_Movie).UnsubscribeMovieScript(this);
         }
 
         void ILingoMovieScriptListener.DoEnterFrame() => EnterFrame();

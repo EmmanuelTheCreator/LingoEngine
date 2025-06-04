@@ -1,12 +1,11 @@
 ﻿using LingoEngine.Core;
-using LingoEngine.Events;
 
 namespace LingoEngine.Movies
 {
     public abstract class LingoSpriteBehavior : LingoScriptBase
     {
         protected LingoSprite Me;
-        public LingoSprite Sprite => Me;
+        public new LingoSprite Sprite => Me;
 #pragma warning disable CS8618 
         public LingoSpriteBehavior(ILingoMovieEnvironment env) : base(env)
 #pragma warning restore CS8618 
@@ -18,18 +17,5 @@ namespace LingoEngine.Movies
             Me = sprite;
         }
 
-    }
-
-    public class ExampleBehavior : LingoSpriteBehavior, IHasEnterFrameEvent
-    {
-        public ExampleBehavior(ILingoMovieEnvironment env) : base(env)
-        {
-        }
-
-        public void EnterFrame()
-        {
-            var num = Me.SpriteNum;
-            // ...
-        }
     }
 }
