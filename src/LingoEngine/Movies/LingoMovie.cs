@@ -1,4 +1,6 @@
-﻿namespace LingoEngine.Movies
+﻿using System;
+
+namespace LingoEngine.Movies
 {
     /// <summary>
     /// Represents the Lingo _movie object, providing control over playback, navigation, and transitions.
@@ -100,6 +102,16 @@
         void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior;
         TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
         void UpdateStage();
+        LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null);
+        LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null);
+        T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite;
+        T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite;
+        T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite;
+        bool RemoveSprite(string name);
+        ILingoSprite GetSprite(int number);
+        string GetSpriteName(int number);
+        bool TryGetSprite(string name, out ILingoSprite? sprite);
+        bool TryGetSprite(int number, out ILingoSprite? sprite);
     }
 
 
@@ -169,6 +181,19 @@
 
         public void UpdateStage() => _MovieStage.UpdateStage();
 
-       
+        /// <summary>
+        /// Adds a new sprite by name to the next available channel.
+        /// Lingo: new sprite
+        /// </summary>
+        public LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null) => Score.AddSprite(name, configure);
+        public LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null) => Score.AddSprite(num, configure;
+        public T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite => Score.AddSprite<T>(num, configure);
+        public T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite => Score.AddSprite<T>(name, configure);
+        public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite => Score.AddSprite<T>(num, name, configure);
+        public bool RemoveSprite(string name) => Score.RemoveSprite(name);
+        public ILingoSprite GetSprite(int number) => Score.GetSprite(number);
+        public string GetSpriteName(int number) => Score.GetSpriteName(number);
+        public bool TryGetSprite(string name, out ILingoSprite? sprite) => Score.TryGetSprite(name, out sprite);
+        public bool TryGetSprite(int number, out ILingoSprite? sprite) => Score.TryGetSprite(number, out sprite);
     }
 }
