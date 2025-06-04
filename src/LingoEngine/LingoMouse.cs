@@ -1,4 +1,6 @@
 ﻿
+using LingoEngine.Movies;
+
 namespace LingoEngine
 {
     /// <summary>
@@ -86,7 +88,7 @@ namespace LingoEngine
         private bool _lastMouseDownState = false; // Previous mouse state (used to detect "StillDown")
 
         private HashSet<ILingoMouseEventHandler> _subscriptions = new ();
-        private readonly LingoScore _lingoScore;
+        private readonly LingoMovieStage _lingoStage;
 
         public LingoMember? MouseMember { get; set; }
         public LingoPoint MouseLoc => new LingoPoint(MouseH,MouseV);
@@ -102,15 +104,15 @@ namespace LingoEngine
         public char MouseChar => ' ';
         public string MouseWord => "";
         public int MouseLine => 0;
-        public LingoSprite? ClickOn => _lingoScore.GetSpriteUnderMouse();
+        public LingoSprite? ClickOn => _lingoStage.GetSpriteUnderMouse();
 
         public bool LeftMouseDown { get; set; }
         public bool MiddleMouseDown { get; set; }
 
 
-        public LingoMouse(LingoScore lingoScore)
+        public LingoMouse(LingoMovieStage lingoMovieStage)
         {
-            _lingoScore = lingoScore;
+            _lingoStage = lingoMovieStage;
         }
 
         /// <summary>

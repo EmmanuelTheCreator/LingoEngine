@@ -1,4 +1,6 @@
-﻿namespace LingoEngine.Sounds
+﻿using LingoEngine.Movies;
+
+namespace LingoEngine.Sounds
 {
     public class LingoSoundDevice
     {
@@ -72,7 +74,7 @@
     {
         private Dictionary<int, LingoSoundChannel> _Channels = new();
         private int numberOfSoundChannels = 8;
-        private readonly ILingoEnvironment _lingoEnvironment;
+        private readonly ILingoMovieEnvironment _lingoEnvironment;
         private readonly ILingoFrameworkSound _frameworkSound;
         public T FrameworkObj<T>() where T : ILingoFrameworkSound => (T)_frameworkSound;
 
@@ -95,7 +97,7 @@
         public bool SoundKeepDevice { get; set; } // ingored in .NET
 
         /// <inheritdoc/>
-        public LingoSound(ILingoFrameworkSound frameworkSound, ILingoEnvironment lingoEnvironment)
+        public LingoSound(ILingoFrameworkSound frameworkSound, ILingoMovieEnvironment lingoEnvironment)
         {
             _lingoEnvironment = lingoEnvironment;
             _frameworkSound = frameworkSound;

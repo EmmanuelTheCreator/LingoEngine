@@ -2,7 +2,7 @@
 {
     public class LingoMovieScript : LingoScriptBase, ILingoMovieScriptListener, ILingoMouseEventHandler, IDisposable
     {
-        public LingoMovieScript(ILingoEnvironment env) : base(env)
+        public LingoMovieScript(ILingoMovieEnvironment env) : base(env)
         {
             ((LingoScore)_env.Movie.Score).SubscribeMovieScript(this);
         }

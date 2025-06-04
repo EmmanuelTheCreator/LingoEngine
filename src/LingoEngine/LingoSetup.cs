@@ -6,7 +6,7 @@ namespace LingoEngine
         public static IServiceCollection RegisterLingoEngine(this IServiceCollection container)
         {
             container.AddTransient<LingoSprite>();
-            container.AddSingleton<ILingoEnvironment,LingoProject>();
+            //container.AddScoped<ILingoMovieEnvironment>();
             return container;
         }
     }

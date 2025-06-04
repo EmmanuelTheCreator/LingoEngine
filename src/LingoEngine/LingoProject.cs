@@ -1,24 +1,14 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Sounds;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine
 {
 
     // Example interface for injection
-    public interface ILingoEnvironment
-    {
-        ILingoPlayer Player { get; }
-        ILingoKey Key { get; }
-        ILingoSound Sound { get; }
-        ILingoMouse Mouse { get; }
-        ILingoSystem System { get; }
-        ILingoMovie Movie { get; }
-        ILingoCast CastLib { get; }
-        ILingoClock Clock { get; }
-        ILingoFrameworkFactory Factory { get; }
-    }
-    public interface ILingoProject : ILingoEnvironment
+   
+    public interface ILingoProject
     {
         string Name { get; set; }
 
@@ -33,18 +23,16 @@ namespace LingoEngine
     {
         private Dictionary<string, ILingoCast> _castsByName = new();
         private List<ILingoCast> _casts = new();
-        private Dictionary<string, ILingoScore> _scoresByName = new();
-        private List<ILingoScore> _scores = new();
+        private Dictionary<string, LingoMovieEnvironment> _moviesByName = new();
+        private List<LingoMovieEnvironment> _movies = new();
         public string Name { get; set; } = "";
 
         private readonly LingoPlayer _player;
         private readonly LingoKey _LingoKey;
         private readonly LingoSound _Sound;
         private readonly LingoMouse _Mouse;
-        private readonly ILingoScore _score;
         private readonly LingoMovieStage _Stage;
         private readonly LingoCast _InternalCast;
-        private readonly LingoMovie _Movie;
         private readonly LingoSystem _System;
         private readonly ILingoClock _clock;
 
@@ -58,32 +46,27 @@ namespace LingoEngine
 
         public ILingoSystem System => _System;
 
-        public ILingoMovie Movie => _Movie;
-
         public ILingoCast CastLib => _InternalCast;
         public ILingoClock Clock => _clock;
 
         public ILingoFrameworkFactory Factory { get; private set; }
 
-        public LingoProject(ILingoFrameworkFactory factory)
+        public LingoProject(IServiceProvider services)
         {
-            Factory = factory;
+            Factory = services.GetRequiredService<ILingoFrameworkFactory>();
             _clock = new LingoClock();
             _player = new LingoPlayer();
             _LingoKey = new LingoKey();
-            _Sound = factory.CreateSound();
-            _Stage = factory.CreateMovieStage();
-            _score = AddScore("Default",_Stage);
-            _Mouse = new LingoMouse((LingoScore)_score);
+            _Sound = Factory.CreateSound();
+            _Stage = Factory.CreateMovieStage();
+            _Mouse = new LingoMouse(_Stage);
             _InternalCast = (LingoCast)AddCast("Internal");
-            _Movie = new LingoMovie(_score, _Stage,_InternalCast);
             _System = new LingoSystem();
+            AddMovie("Default");
         }
 
         public string GetCastName(int number) => _casts[number - 1].Name;
         public ILingoCast GetCast(int number) => _casts[number - 1];
-        public string GetScoreName(int number) => _scores[number - 1].Name;
-        public ILingoScore GetScore(int number) => _scores[number - 1];
 
         public ILingoCast AddCast(string name)
         {
@@ -92,12 +75,12 @@ namespace LingoEngine
             _castsByName.Add(name, cast);
             return cast;
         }
-        public ILingoScore AddScore(string name, LingoMovieStage movieStage)
+        public ILingoMovie AddMovie(string name)
         {
-            var score = new LingoScore(this, movieStage, name, _scores.Count + 1);
-            _scores.Add(score);
-            _scoresByName.Add(name, score);
-            return score;
+            var movie = new LingoMovieEnvironment(name, _movies.Count + 1,_player, _LingoKey, _Sound,_Mouse,_Stage,_InternalCast,_System,Clock,Factory);
+            _movies.Add(movie);
+            _moviesByName.Add(name, movie);
+            return movie.Movie;
         }
 
 

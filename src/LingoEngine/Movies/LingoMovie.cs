@@ -12,7 +12,7 @@ namespace LingoEngine.Movies
         /// Gets or sets the Score object for the current movie.
         /// Lingo: the score
         /// </summary>
-        ILingoScore Score { get; set; }
+        ILingoScore Score { get;}
 
         /// <summary>
         /// Gets the current frame number of the movie.
@@ -112,15 +112,18 @@ namespace LingoEngine.Movies
         string GetSpriteName(int number);
         bool TryGetSprite(string name, out ILingoSprite? sprite);
         bool TryGetSprite(int number, out ILingoSprite? sprite);
+        ILingoMovieEnvironment GetEnvironment();
     }
 
 
     public class LingoMovie : ILingoMovie
     {
-        private readonly LingoMovieStage _MovieStage;
-        private readonly LingoCast _lingoCast;
+        private readonly ILingoMovieEnvironment _environment;
+        private readonly LingoScore _score;
+        private readonly LingoMovieStage _stage;
+        private readonly LingoCast _cast;
 
-        public ILingoScore Score { get; set; }
+        public ILingoScore Score => _score;
         /// <inheritdoc/>
         public string Name => Score.Name;
         /// <inheritdoc/>
@@ -136,11 +139,12 @@ namespace LingoEngine.Movies
         /// <inheritdoc/>
         public bool IsPlaying => Score.IsPlaying;
 
-        public LingoMovie(ILingoScore score, LingoMovieStage movieStage, LingoCast lingoCast)
+        public LingoMovie(ILingoMovieEnvironment environment, LingoScore score, LingoMovieStage movieStage, LingoCast lingoCast)
         {
-            Score = score;
-            _MovieStage = movieStage;
-            _lingoCast = lingoCast;
+            this._environment = environment;
+            _score = score;
+            _stage = movieStage;
+            _cast = lingoCast;
         }
 
 
@@ -176,17 +180,17 @@ namespace LingoEngine.Movies
 
         public void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite) => Score.SendSprite(spriteNumber, actionOnSprite);
 
-        public LingoMember? GetMember(string memberName) => _lingoCast.GetMember(memberName);
-        public LingoMember? GetMember(int number) => _lingoCast.GetMember(number);
+        public LingoMember? GetMember(string memberName) => _cast.GetMember(memberName);
+        public LingoMember? GetMember(int number) => _cast.GetMember(number);
 
-        public void UpdateStage() => _MovieStage.UpdateStage();
+        public void UpdateStage() => _stage.UpdateStage();
 
         /// <summary>
         /// Adds a new sprite by name to the next available channel.
         /// Lingo: new sprite
         /// </summary>
         public LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null) => Score.AddSprite(name, configure);
-        public LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null) => Score.AddSprite(num, configure;
+        public LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null) => Score.AddSprite(num, configure);
         public T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite => Score.AddSprite<T>(num, configure);
         public T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite => Score.AddSprite<T>(name, configure);
         public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite => Score.AddSprite<T>(num, name, configure);
@@ -195,5 +199,9 @@ namespace LingoEngine.Movies
         public string GetSpriteName(int number) => Score.GetSpriteName(number);
         public bool TryGetSprite(string name, out ILingoSprite? sprite) => Score.TryGetSprite(name, out sprite);
         public bool TryGetSprite(int number, out ILingoSprite? sprite) => Score.TryGetSprite(number, out sprite);
+
+        internal LingoSprite? GetSpriteUnderMouse() => _score.GetSpriteUnderMouse();
+
+        public ILingoMovieEnvironment GetEnvironment() => _environment;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
 
 namespace LingoEngine
 {
@@ -275,7 +276,7 @@ namespace LingoEngine
         // Not used in c#
         // public int ScriptText { get; set; }
 
-        public LingoSprite(ILingoEnvironment environment)
+        public LingoSprite(ILingoMovieEnvironment environment)
             :base(environment)
         {
             Score = environment.Movie.Score;
