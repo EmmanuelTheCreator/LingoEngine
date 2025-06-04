@@ -1,4 +1,8 @@
 ﻿
+using LingoEngine.Core;
+using LingoEngine.Texts;
+using static System.Net.Mime.MediaTypeNames;
+
 namespace LingoEngine.Pictures
 {
     namespace LingoEngine
@@ -41,11 +45,19 @@ namespace LingoEngine.Pictures
             /// <param name="lingoFrameworkMemberPicture">The framework picture object.</param>
             /// <param name="number">The number of the member.</param>
             /// <param name="name">The name of the member.</param>
-            public LingoMemberPicture(ILingoFrameworkMemberPicture lingoFrameworkMemberPicture, int number, string name = "")
-                : base(LingoMemberType.Picture, number, name)
+            public LingoMemberPicture(LingoCast cast, ILingoFrameworkMemberPicture lingoFrameworkMemberPicture, int number, string name = "")
+                : base(LingoMemberType.Picture, cast, number, name)
             {
                 _lingoFrameworkMemberPicture = lingoFrameworkMemberPicture;
             }
+
+            protected override LingoMember OnDuplicate(int newNumber)
+            {
+                throw new NotImplementedException("_lingoFrameworkMemberPicture has to be retieved from the factory"); 
+                var clone = new LingoMemberPicture(_cast, _lingoFrameworkMemberPicture, newNumber, Name);
+                return clone;
+            }
+
 
             /// <summary>
             /// Preloads the picture into memory.

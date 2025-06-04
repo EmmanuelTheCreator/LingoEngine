@@ -1,4 +1,5 @@
-﻿using LingoEngine.Movies;
+﻿using LingoEngine.Core;
+using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 
@@ -6,7 +7,7 @@ namespace LingoEngine.FrameworkCommunication
 {
     public interface ILingoFrameworkFactory
     {
-        LingoMovieStage CreateMovieStage();
+        LingoStage CreateStage();
         LingoMemberPicture CreateMemberPicture(int number, string name = "");
 
         LingoMemberSound CreateMemberSound(int number, string name = "");

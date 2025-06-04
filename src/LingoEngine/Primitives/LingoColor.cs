@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Primitives
 {
     /// <summary>
     /// Represents a color value in the Lingo system, supporting palette index, RGB, and optional name.

@@ -3,14 +3,15 @@ using LingoEngine.Movies;
 using LingoEngine.Sounds;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LingoEngine
+namespace LingoEngine.Core
 {
 
     // Example interface for injection
-   
+
     public interface ILingoProject
     {
         string Name { get; set; }
+        ILingoMovie? ActiveMovie { get; set; }
 
         ILingoCast AddCast(string name);
         ILingoCast GetCast(int number);
@@ -18,6 +19,8 @@ namespace LingoEngine
         LingoMember GetMember(string cast, int number);
         LingoMember GetMember(string name);
         bool TryGetMember(string name, out LingoMember? member);
+        ILingoMovie LoadMovie(string name, bool andActivate = true);
+        void CloseMovie(ILingoMovie movie);
     }
     public class LingoProject : ILingoProject
     {
@@ -31,7 +34,7 @@ namespace LingoEngine
         private readonly LingoKey _LingoKey;
         private readonly LingoSound _Sound;
         private readonly LingoMouse _Mouse;
-        private readonly LingoMovieStage _Stage;
+        private readonly LingoStage _Stage;
         private readonly LingoCast _InternalCast;
         private readonly LingoSystem _System;
         private readonly ILingoClock _clock;
@@ -49,20 +52,23 @@ namespace LingoEngine
         public ILingoCast CastLib => _InternalCast;
         public ILingoClock Clock => _clock;
 
-        public ILingoFrameworkFactory Factory { get; private set; }
+        private readonly IServiceProvider _serviceProvider;
 
-        public LingoProject(IServiceProvider services)
+        public ILingoFrameworkFactory Factory { get; private set; }
+        public ILingoMovie? ActiveMovie { get; set; }
+
+        public LingoProject(IServiceProvider serviceProvider)
         {
-            Factory = services.GetRequiredService<ILingoFrameworkFactory>();
+            _serviceProvider = serviceProvider;
+            Factory = serviceProvider.GetRequiredService<ILingoFrameworkFactory>();
             _clock = new LingoClock();
             _player = new LingoPlayer();
             _LingoKey = new LingoKey();
             _Sound = Factory.CreateSound();
-            _Stage = Factory.CreateMovieStage();
+            _Stage = Factory.CreateStage();
             _Mouse = new LingoMouse(_Stage);
             _InternalCast = (LingoCast)AddCast("Internal");
             _System = new LingoSystem();
-            AddMovie("Default");
         }
 
         public string GetCastName(int number) => _casts[number - 1].Name;
@@ -75,16 +81,26 @@ namespace LingoEngine
             _castsByName.Add(name, cast);
             return cast;
         }
-        public ILingoMovie AddMovie(string name)
+        public ILingoMovie LoadMovie(string name, bool andActivate = true)
         {
-            var movie = new LingoMovieEnvironment(name, _movies.Count + 1,_player, _LingoKey, _Sound,_Mouse,_Stage,_InternalCast,_System,Clock,Factory);
-            _movies.Add(movie);
-            _moviesByName.Add(name, movie);
-            return movie.Movie;
+            var movieEnv = new LingoMovieEnvironment(name, _movies.Count + 1, _player, _LingoKey, _Sound, _Mouse, _Stage, _InternalCast, _System, Clock, Factory, _serviceProvider);
+            _movies.Add(movieEnv);
+            _moviesByName.Add(name, movieEnv);
+            if (andActivate)
+                ActiveMovie = movieEnv.Movie;
+            return movieEnv.Movie;
+        }
+        public void CloseMovie(ILingoMovie movie)
+        {
+            var typed = (LingoMovie)movie;
+            var movieEnvironment = typed.GetEnvironment();
+            _movies.Remove(movieEnvironment);
+            _moviesByName.Remove(typed.Name);
+            movieEnvironment.Dispose();
         }
 
 
-        public LingoMember GetMember(string cast, int number) => _castsByName[cast].GetMember(number);
+        public LingoMember GetMember(string cast, int number) => _castsByName[cast].Member(number);
         public LingoMember GetMember(string name)
         {
             foreach (var cast in _casts)

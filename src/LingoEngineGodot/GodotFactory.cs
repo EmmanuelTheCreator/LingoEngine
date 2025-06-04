@@ -1,6 +1,7 @@
 ﻿using ArkGodot.GodotLinks;
 using Godot;
 using LingoEngine;
+using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
@@ -15,10 +16,10 @@ namespace LingoEngineGodot
     public class GodotFactory : ILingoFrameworkFactory, IDisposable
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private readonly ILingoMovieEnvironment _environment;
+        private readonly LingoMovieEnvironment _environment;
         private readonly IServiceProvider _serviceProvider;
 
-        public GodotFactory(ILingoMovieEnvironment environment, IServiceProvider serviceProvider)
+        public GodotFactory(LingoMovieEnvironment environment, IServiceProvider serviceProvider)
         {
             _environment = environment;
             _serviceProvider = serviceProvider;
@@ -61,18 +62,22 @@ namespace LingoEngineGodot
             _disposables.Add(godotInstance);
             return lingoInstance;
         }
-        public LingoMovieStage CreateMovieStage()
+        public LingoStage CreateStage()
         {
-            var godotInstance = new LingoGodotMovieStage();
-            var lingoInstance = new LingoMovieStage(godotInstance);
+            var godotInstance = new LingoGodotStage();
+            var lingoInstance = new LingoStage(godotInstance);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
         }
 
-        public T CreateSprite<T>(ILingoScore score) where T : LingoSprite
+        /// <summary>
+        /// Dependant on movie, because the behaviors are scoped and movie related.
+        /// </summary>
+        public T CreateSprite<T>(ILingoMovie movie, ILingoScore score) where T : LingoSprite
         {
-            var lingoSprite = _serviceProvider.GetRequiredService<T>();
+            var movieTyped = (LingoMovie)movie;
+            var lingoSprite = movieTyped.GetServiceProvider().GetRequiredService<T>();
             var node2d = new LingoGodotSprite(new Node2D(), lingoSprite);
             return lingoSprite;
         }

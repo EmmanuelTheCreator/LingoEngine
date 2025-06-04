@@ -1,4 +1,7 @@
-﻿namespace LingoEngine.Movies
+﻿using LingoEngine.Core;
+using LingoEngine.Events;
+
+namespace LingoEngine.Movies
 {
     public class LingoMovieScript : LingoScriptBase, ILingoMovieScriptListener, ILingoMouseEventHandler, IDisposable
     {

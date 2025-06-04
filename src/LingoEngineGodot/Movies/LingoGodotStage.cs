@@ -8,14 +8,14 @@ using LingoEngineGodot.Pictures;
 
 namespace LingoEngineGodot.Movies
 {
-    public class LingoGodotMovieStage : ILingoFrameworkMovieStage, IDisposable
+    public class LingoGodotStage : ILingoFrameworkStage, IDisposable
     {
-        private LingoMovieStage _LingoMovieStage;
+        private LingoStage _LingoStage;
         private HashSet<LingoGodotSprite> _drawnSprites = new();
         private Node2D _stageRoot = new Node2D();
-        internal void Init(LingoMovieStage lingoInstance)
+        internal void Init(LingoStage lingoInstance)
         {
-            _LingoMovieStage = lingoInstance;
+            _LingoStage = lingoInstance;
         }
         public void DrawSprite(LingoSprite sprite)
         {

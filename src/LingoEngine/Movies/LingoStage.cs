@@ -2,14 +2,17 @@
 
 namespace LingoEngine.Movies
 {
-    public class LingoMovieStage
+    /// <summary>
+    /// You have one stage for all movies
+    /// </summary>
+    public class LingoStage
     {
-        private readonly ILingoFrameworkMovieStage _lingoFrameworkMovieStage;
+        private readonly ILingoFrameworkStage _lingoFrameworkMovieStage;
 
         public LingoMovie? ActiveMovie { get; private set; }
 
-        public T FrameworkObj<T>() where T : ILingoFrameworkMovieStage => (T)_lingoFrameworkMovieStage;
-        public LingoMovieStage(ILingoFrameworkMovieStage godotInstance)
+        public T FrameworkObj<T>() where T : ILingoFrameworkStage => (T)_lingoFrameworkMovieStage;
+        public LingoStage(ILingoFrameworkStage godotInstance)
         {
             _lingoFrameworkMovieStage = godotInstance;
         }

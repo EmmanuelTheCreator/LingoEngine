@@ -1,4 +1,6 @@
 ﻿
+using LingoEngine.Core;
+
 namespace LingoEngine.Texts
 {
     public class LingoMemberText : LingoMember
@@ -13,14 +15,20 @@ namespace LingoEngine.Texts
             set => ParseParagraphs(value);
         }
 
+        protected override LingoMember OnDuplicate(int newNumber)
+        {
+            var clone = new LingoMemberText(_cast, newNumber, Name);
+            clone.Text = Text;
+            return clone;
+        }
         /// <summary>
         /// List of parsed paragraphs.
         /// Lingo: the paragraphs of member
         /// </summary>
         public List<LingoParagraph> Paragraphs { get; private set; } = new();
 
-        public LingoMemberText(int number, string name = "")
-            : base(LingoMemberType.Text, number, name)
+        public LingoMemberText(LingoCast cast, int number, string name = "")
+            : base(LingoMemberType.Text, cast, number, name)
         {
         }
 

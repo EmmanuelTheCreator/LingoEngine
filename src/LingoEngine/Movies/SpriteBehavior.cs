@@ -1,7 +1,7 @@
-﻿using LingoEngine.Events;
-using LingoEngine.Movies;
+﻿using LingoEngine.Core;
+using LingoEngine.Events;
 
-namespace LingoEngine
+namespace LingoEngine.Movies
 {
     public abstract class LingoSpriteBehavior : LingoScriptBase
     {

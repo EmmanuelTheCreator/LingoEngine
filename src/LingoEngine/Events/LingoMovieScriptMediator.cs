@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Events
 {
     //public interface IEventSubscription
     //{

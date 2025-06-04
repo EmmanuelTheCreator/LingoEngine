@@ -1,7 +1,7 @@
 ﻿
 namespace LingoEngine.FrameworkCommunication
 {
-    public interface ILingoFrameworkMovieStage
+    public interface ILingoFrameworkStage
     {
         void DrawSprite(LingoSprite sprite);
         void RemoveSprite(LingoSprite sprite);

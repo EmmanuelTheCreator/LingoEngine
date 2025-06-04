@@ -1,6 +1,8 @@
-﻿using LingoEngine.Events;
+﻿using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
+using LingoEngine.Primitives;
 
 namespace LingoEngine
 {
@@ -367,7 +369,7 @@ When a movie stops, events occur in the following order:
 
         public void SetMember(string memberName)
         {
-            var member = _env.CastLib.GetMember(memberName);
+            var member = _env.CastLib.Member(memberName);
             _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
             _frameworkSprite.MemberChanged();
         }
@@ -376,7 +378,7 @@ When a movie stops, events occur in the following order:
         public void SetMember(int memberNumber)
         {
             if (Cast == null) throw new Exception(Name + ":Cast not set for sprite: " + memberNumber);
-            LingoMember member = Cast.GetMember(memberNumber);
+            LingoMember member = Cast.Member(memberNumber);
             _Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
             
         }

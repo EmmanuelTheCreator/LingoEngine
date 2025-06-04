@@ -1,4 +1,8 @@
-﻿namespace LingoEngine.Sounds
+﻿using LingoEngine.Core;
+using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Pictures;
+
+namespace LingoEngine.Sounds
 {
     public class LingoMemberSound : LingoMember
     {
@@ -32,11 +36,20 @@
         /// </summary>
         public string LinkedFilePath { get; set; } = string.Empty;
 
-        public LingoMemberSound(ILingoFrameworkMemberSound lingoMemberSound, int number, string name = "")
-            : base(LingoMemberType.Sound, number, name)
+        public LingoMemberSound(ILingoFrameworkMemberSound lingoMemberSound, LingoCast cast, int number, string name = "")
+            : base(LingoMemberType.Sound,cast, number, name)
         {
             _lingoFrameworkMemberSound = lingoMemberSound;
            
+        }
+        protected override LingoMember OnDuplicate(int newNumber)
+        {
+            throw new NotImplementedException("_lingoFrameworkMemberSound has to be retieved from the factory");
+            var clone = new LingoMemberSound(_lingoFrameworkMemberSound, _cast, newNumber, Name);
+            clone.Loop = Loop;
+            clone.IsLinked = IsLinked;
+            clone.LinkedFilePath = LinkedFilePath;
+            return clone;
         }
 
         public bool IsExternal => IsLinked && !string.IsNullOrWhiteSpace(LinkedFilePath);

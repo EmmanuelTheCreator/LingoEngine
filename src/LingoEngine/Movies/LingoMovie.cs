@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LingoEngine.Core;
+using System;
 
 namespace LingoEngine.Movies
 {
@@ -112,15 +113,17 @@ namespace LingoEngine.Movies
         string GetSpriteName(int number);
         bool TryGetSprite(string name, out ILingoSprite? sprite);
         bool TryGetSprite(int number, out ILingoSprite? sprite);
-        ILingoMovieEnvironment GetEnvironment();
+        ILingoSpriteChannel? Channel(int channelNumber);
+        ActorList ActorList { get;  }
+        LingoTimeOutList TimeOutList { get; }
     }
 
 
     public class LingoMovie : ILingoMovie
     {
-        private readonly ILingoMovieEnvironment _environment;
+        private readonly LingoMovieEnvironment _environment;
         private readonly LingoScore _score;
-        private readonly LingoMovieStage _stage;
+        private readonly LingoStage _stage;
         private readonly LingoCast _cast;
 
         public ILingoScore Score => _score;
@@ -138,13 +141,17 @@ namespace LingoEngine.Movies
         public int Tempo { get => Score.Tempo; set => Score.Tempo = value; }
         /// <inheritdoc/>
         public bool IsPlaying => Score.IsPlaying;
+        public ActorList ActorList { get; private set; } = new ActorList();
+        public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
 
-        public LingoMovie(ILingoMovieEnvironment environment, LingoScore score, LingoMovieStage movieStage, LingoCast lingoCast)
+
+        public LingoMovie(LingoMovieEnvironment environment, LingoScore score, LingoStage movieStage, LingoCast lingoCast)
         {
-            this._environment = environment;
+            _environment = environment;
             _score = score;
             _stage = movieStage;
             _cast = lingoCast;
+            score.SetActorList(ActorList);
         }
 
 
@@ -164,7 +171,19 @@ namespace LingoEngine.Movies
 
         public void Halt() => Score.Halt();
 
-        public void Play() => Score.Play();
+        public void Play()
+        {
+            // prepareMovie
+            // PrepareFrame
+            // BeginSprite
+            // StartMovie
+            Score.Play();
+        }
+        private void OnStop()
+        {
+            // EndSprite
+            // StopMovie
+        }
 
         public void NextFrame() => Score.NextFrame();
 
@@ -180,8 +199,8 @@ namespace LingoEngine.Movies
 
         public void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite) => Score.SendSprite(spriteNumber, actionOnSprite);
 
-        public LingoMember? GetMember(string memberName) => _cast.GetMember(memberName);
-        public LingoMember? GetMember(int number) => _cast.GetMember(number);
+        public LingoMember? GetMember(string memberName) => _cast.Member(memberName);
+        public LingoMember? GetMember(int number) => _cast.Member(number);
 
         public void UpdateStage() => _stage.UpdateStage();
 
@@ -200,8 +219,15 @@ namespace LingoEngine.Movies
         public bool TryGetSprite(string name, out ILingoSprite? sprite) => Score.TryGetSprite(name, out sprite);
         public bool TryGetSprite(int number, out ILingoSprite? sprite) => Score.TryGetSprite(number, out sprite);
 
+        public void PuppetSprite(int number,bool isPuppetSprite) => Score.GetSprite(number)., isPuppetSprite);
         internal LingoSprite? GetSpriteUnderMouse() => _score.GetSpriteUnderMouse();
 
-        public ILingoMovieEnvironment GetEnvironment() => _environment;
+        internal LingoMovieEnvironment GetEnvironment() => _environment;
+        public IServiceProvider GetServiceProvider() => _environment.GetServiceProvider();
+
+        public ILingoSpriteChannel? Channel(int channelNumber)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,4 +1,9 @@
-﻿namespace LingoEngine
+﻿using LingoEngine.Core;
+using LingoEngine.Texts;
+using System.Security.Cryptography;
+using static System.Net.Mime.MediaTypeNames;
+
+namespace LingoEngine
 {
     public enum LingoMemberType
     {
@@ -43,11 +48,6 @@
         /// </summary>
         DateTime ModifiedDate { get; }
 
-        /// <summary>
-        /// The cast member's numeric index within its cast library.
-        /// Lingo: the number of member
-        /// </summary>
-        int Number { get; }
 
         /// <summary>
         /// Whether the cast member is currently highlighted in the Cast window.
@@ -67,6 +67,10 @@
         /// Lingo: the purgePriority of member
         /// </summary>
         int PurgePriority { get; set; }
+        /// <summary>
+        /// Specifies the registration point of a cast member
+        /// </summary>
+        LingoPoint RegPoint { get; set; }
 
         /// <summary>
         /// The width (in pixels) of the cast member's content, if applicable.
@@ -148,9 +152,10 @@
 
         /// <summary>
         /// Creates a copy of the cast member with the same contents.
-        /// Lingo: duplicate member
-        /// </summary>
-        ILingoMember Duplicate();
+        /// Optional. An integer that specifies the Cast window for the duplicate cast member. If omitted, the duplicate cast member is placed in the first open Cast window position.
+            /// Lingo: duplicate member
+            /// </summary>
+            ILingoMember Duplicate(int? newNumber = null);
     }
 
     /// <summary>
@@ -172,10 +177,11 @@
     /// </summary>
     public class LingoMember : ILingoMember
     {
+        protected readonly LingoCast _cast;
+
         public string Name { get; set; }
         public DateTime CreationDate{ get; set; }
         public DateTime ModifiedDate{ get; set; }
-        public int Number { get; private set; }
         public bool Hilite { get; private set; }
         public int CastLibNum { get; private set; }
         public int PurgePriority { get; set; }
@@ -185,18 +191,20 @@
         public string Comments{ get; set; }
         public string FileName{ get; private set; }
         public LingoMemberType Type { get; private set; }
+        public LingoPoint RegPoint { get; set; }
 
-
-        public LingoMember(LingoMemberType type, int number, string name = "")
+        public LingoMember(LingoMemberType type, LingoCast cast, int number, string name = "")
         {
             Name = name;
-            Number = number;
+            CastLibNum = number;
+            _cast = cast;
             Type = type;
             CreationDate = DateTime.Now;
             ModifiedDate = DateTime.Now;
             FileName = string.Empty;
             Comments = string.Empty;
         }
+      
         /// <inheritdoc/>
         public void CopyToClipBoard() { }
         public void Erase() { }
@@ -206,16 +214,27 @@
         public void Preload() { }
         public void Unload() { }
 
-        ILingoMember ILingoMember.Duplicate()
+        public ILingoMember Duplicate(int? newNumber = null)
         {
-            var clone = new LingoMember(Type, Number, Name)
-            {
-                Width = Width,
-                Height = Height,
-                Size = Size,
-                Comments = Comments,
-                PurgePriority = PurgePriority
-            };
+            if (!newNumber.HasValue)
+                newNumber = _cast.FindEmpty();
+            var clone = OnDuplicate(newNumber.Value);
+            clone.Width = Width;
+            clone.Height = Height;
+            clone.Size = Size;
+            clone.Comments = Comments;
+            clone.PurgePriority = PurgePriority;
+            clone.CastLibNum = CastLibNum;
+            clone.FileName = FileName;
+            clone.Hilite = Hilite;
+            clone.Name = Name;
+            clone.RegPoint = RegPoint;
+            _cast.Add(clone);
+            return clone;
+        }
+        protected virtual LingoMember OnDuplicate(int newNumber) 
+        {
+            var clone = new LingoMember(Type, _cast, newNumber, Name);
             return clone;
         }
     }
