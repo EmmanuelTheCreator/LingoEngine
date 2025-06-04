@@ -1,4 +1,5 @@
 ﻿
+using LingoEngine.Events;
 using LingoEngine.Movies;
 
 namespace LingoEngine
@@ -88,7 +89,7 @@ namespace LingoEngine
         private bool _lastMouseDownState = false; // Previous mouse state (used to detect "StillDown")
 
         private HashSet<ILingoMouseEventHandler> _subscriptions = new ();
-        private readonly LingoMovieStage _lingoStage;
+        private readonly LingoStage _lingoStage;
 
         public LingoMember? MouseMember { get; set; }
         public LingoPoint MouseLoc => new LingoPoint(MouseH,MouseV);
@@ -110,7 +111,7 @@ namespace LingoEngine
         public bool MiddleMouseDown { get; set; }
 
 
-        public LingoMouse(LingoMovieStage lingoMovieStage)
+        public LingoMouse(LingoStage lingoMovieStage)
         {
             _lingoStage = lingoMovieStage;
         }

@@ -1,6 +1,9 @@
-﻿using LingoEngine.Movies;
+﻿using LingoEngine.Events;
+using LingoEngine.Movies;
+using System;
+using System.Numerics;
 
-namespace LingoEngine
+namespace LingoEngine.Core
 {
     /// <summary>
     /// Represents the Score in a Lingo movie. The Score manages sprites, channels, and timeline playback.
@@ -133,7 +136,7 @@ namespace LingoEngine
         /// </summary>
         bool RollOver(int spriteNumber);
         void UpdateStage();
-        void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T: LingoSpriteBehavior;
+        void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior;
         TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
         void SendSprite(string name, Action<LingoSprite> actionOnSprite);
         void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite);
@@ -144,7 +147,7 @@ namespace LingoEngine
         private List<LingoSprite> _sprites = new();
         private int _maxSpriteNum = 0;
         private readonly ILingoMovieEnvironment _environment;
-        private readonly LingoMovieStage _movieStage;
+        private readonly LingoStage _movieStage;
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
         private int _currentFrame = 1;
@@ -159,7 +162,7 @@ namespace LingoEngine
 
         // Movie Script subscriptions
         private HashSet<ILingoMovieScriptListener> _movieScriptListeners = new();
-
+        private ActorList _actorList;
 
         public string Name { get; set; }
         public int Number { get; private set; }
@@ -178,7 +181,10 @@ namespace LingoEngine
             }
         }
         public bool IsPlaying => _isPlaying;
-        public LingoScore(ILingoMovieEnvironment environment, LingoMovieStage movieStage, string name, int number)
+        
+
+
+        public LingoScore(ILingoMovieEnvironment environment, LingoStage movieStage, string name, int number)
         {
             _environment = environment;
             _movieStage = movieStage;
@@ -218,12 +224,12 @@ namespace LingoEngine
         {
             _maxSpriteNum++;
             var num = _maxSpriteNum;
-            return AddSprite<T>(num,name, configure);
+            return AddSprite<T>(num, name, configure);
         }
         public LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(num, configure);
-        public T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite => AddSprite<T>(num,"Sprite_"+num, configure);
-        
-        public T AddSprite<T>(int num,string name, Action<LingoSprite>? configure = null) where T : LingoSprite
+        public T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite => AddSprite<T>(num, "Sprite_" + num, configure);
+
+        public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {
             var sprite = _environment.Factory.CreateSprite<T>(this);
             sprite.Init(num, name);
@@ -310,7 +316,7 @@ namespace LingoEngine
                 // Subscription logic: Subscribe only when sprite is entering and not already subscribed
                 if (!wasActive && isActive)
                 {
-                    _movieStage.DrawSprite(sprite); 
+                    _movieStage.DrawSprite(sprite);
                     _enteredSprites.Add(sprite);
                     _activeSprites.Add(sprite);
                     // Subscribe to mouse events if sprite is not already subscribed
@@ -337,11 +343,14 @@ namespace LingoEngine
 
             // STEP 4: Fire prepareFrame on all active sprites
             CallActiveSprites(s => s.DoPrepareFrame());
-            
+
 
             // STEP 5: Fire enterFrame on all active sprites
             CallActiveSprites(s => s.DoEnterFrame());
             CallOnMoveScripts(s => s.DoEnterFrame());
+
+            // After enterFrame and before exitFrame, Director handles any time delays
+            // required by the tempo setting, idle events, and keyboard and mouse events
 
             // STEP 6: Call UpdateStage (e.g., rendering the stage content)
             UpdateStage();
@@ -359,7 +368,7 @@ namespace LingoEngine
                 // Unsubscribe from mouse events
                 if (_lingoMouse.IsSubscribed(sprite))
                     _lingoMouse.Unsubscribe(sprite);
-                
+
             }
         }
         internal void CallActiveSprites(Action<LingoSprite> actionOnAllActiveSprites)
@@ -415,13 +424,13 @@ namespace LingoEngine
         {
             // Implement specific logic for puppet transition effects (if any)
         }
-        
+
         /// <summary>
         /// The rollover() method indicates whether the pointer is over the specified sprite.
         /// </summary>
         public bool RollOver(int spriteNumber)
         {
-            var sprite = _sprites[spriteNumber-1];
+            var sprite = _sprites[spriteNumber - 1];
             return sprite.IsMouseInsideBoundingBox(_lingoMouse);
         }
 
@@ -437,8 +446,10 @@ namespace LingoEngine
             }
             return null; // Return null if no sprite is under the mouse
         }
+        
         public void UpdateStage()
         {
+            _actorList.Invoke();
             _movieStage.UpdateStage();
         }
 
@@ -449,7 +460,7 @@ namespace LingoEngine
             if (sprite == null) return;
             actionOnSprite(sprite);
         }
-        public TResult? SendSprite<T,TResult>(int spriteNumber, Func<T, TResult> actionOnSprite)
+        public TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite)
             where T : LingoSpriteBehavior
         {
             var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber) as T;
@@ -470,5 +481,7 @@ namespace LingoEngine
             if (sprite == null) return;
             actionOnSprite(sprite);
         }
+
+        internal void SetActorList(ActorList actorList) => _actorList = actorList;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Godot;
 using LingoEngine;
+using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 
 namespace ArkGodot.GodotLinks

@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Events
 {
     internal interface ILingoSpriteEventHandler
     {
@@ -10,6 +10,6 @@
         /// <summary>
         /// Triggered when the sprite loses focus
         /// </summary>
-        void DoBlur(); 
+        void DoBlur();
     }
 }

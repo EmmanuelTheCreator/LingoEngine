@@ -6,7 +6,9 @@ namespace LingoEngineGodot
     {
         public static IServiceCollection RegisterLingoGodotEngine(this IServiceCollection container)
         {
-            container.AddSingleton<ILingoFrameworkFactory, GodotFactory>();
+            container
+                .AddSingleton<ILingoFrameworkFactory, GodotFactory>() 
+                ;
             return container;
         }
     }
