@@ -1,8 +1,8 @@
-﻿
-using LingoEngine.Events;
+﻿using LingoEngine.Events;
 using LingoEngine.Movies;
+using LingoEngine.Primitives;
 
-namespace LingoEngine
+namespace LingoEngine.Core
 {
     /// <summary>
     /// Provides access to a user’s mouse activity, including mouse movement and mouse clicks.
@@ -79,20 +79,20 @@ namespace LingoEngine
         /// Returns TRUE if the mouse is still down from a prior frame.
         /// </summary>
         bool StillDown { get; }
-        bool LeftMouseDown { get;  }
-        bool MiddleMouseDown { get;  }
+        bool LeftMouseDown { get; }
+        bool MiddleMouseDown { get; }
     }
 
-  
+
     public class LingoMouse : ILingoMouse
     {
         private bool _lastMouseDownState = false; // Previous mouse state (used to detect "StillDown")
 
-        private HashSet<ILingoMouseEventHandler> _subscriptions = new ();
+        private HashSet<ILingoMouseEventHandler> _subscriptions = new();
         private readonly LingoStage _lingoStage;
 
         public LingoMember? MouseMember { get; set; }
-        public LingoPoint MouseLoc => new LingoPoint(MouseH,MouseV);
+        public LingoPoint MouseLoc => new LingoPoint(MouseH, MouseV);
 
         public float MouseH { get; set; }
         public float MouseV { get; set; }

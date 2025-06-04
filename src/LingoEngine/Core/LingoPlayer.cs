@@ -148,64 +148,69 @@ namespace LingoEngine.Core
 
 
     public class LingoPlayer : ILingoPlayer
-    {
+    {/// <inheritdoc/>
         public ILingoCast ActiveCastLib => throw new NotImplementedException();
-
+        /// <inheritdoc/>
         public ILingoSound Sound => throw new NotImplementedException();
-
-        public int CurrentSpriteNum => throw new NotImplementedException();
-
-        public bool NetPreset => throw new NotImplementedException();
-
-        public bool ActiveWindow => throw new NotImplementedException();
-
+        /// <inheritdoc/>
+        public int CurrentSpriteNum => 1;
+        /// <inheritdoc/>
+        public bool NetPreset => true;
+        /// <inheritdoc/>
+        public bool ActiveWindow => true;
+        /// <inheritdoc/>
         public bool SafePlayer => throw new NotImplementedException();
-
+        /// <inheritdoc/>
         public string OrganizationName { get; set; } = string.Empty;
+        /// <inheritdoc/>
         public string ApplicationName { get; set; } = string.Empty;
+        /// <inheritdoc/>
         public string ApplicationPath { get; set; } = string.Empty;
+        /// <inheritdoc/>
         public string ProductName { get; set; } = string.Empty;
-
-        public int LastClick => throw new NotImplementedException();
-
-        public int LastEvent => throw new NotImplementedException();
-
-        public int LastKey => throw new NotImplementedException();
-
+        /// <inheritdoc/>
+        public int LastClick => 1;
+        /// <inheritdoc/>
+        public int LastEvent => 1;
+        /// <inheritdoc/>
+        public int LastKey => 1;
+        /// <inheritdoc/>
         public Version ProductVersion { get; set; } = new Version(1, 0, 0, 0);
+        /// <inheritdoc/>
         public Func<string> AlertHook { get; set; } = () => "";
-        bool ILingoPlayer.SafePlayer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
+        /// <inheritdoc/>
+        bool ILingoPlayer.SafePlayer { get; set; }
+        /// <inheritdoc/>
         public void Alert(string message)
         {
             Console.WriteLine(message);
         }
-
+        /// <inheritdoc/>
         public void AppMinimize()
         {
 
         }
-
+        /// <inheritdoc/>
         public void Cursor(int cursorNum)
         {
-            throw new NotImplementedException();
+            
         }
-
+        /// <inheritdoc/>
         public void Halt()
         {
 
         }
-
+        /// <inheritdoc/>
         public void Open(string applicationName)
         {
 
         }
-
+        /// <inheritdoc/>
         public void Quit()
         {
 
         }
-
+        /// <inheritdoc/>
         public bool WindowPresent()
         {
             return true;

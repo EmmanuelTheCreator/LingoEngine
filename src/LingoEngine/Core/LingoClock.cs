@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Core
 {
     public interface ILingoClockListener
     {

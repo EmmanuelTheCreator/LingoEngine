@@ -1,7 +1,5 @@
 ﻿
 using LingoEngine.Core;
-using LingoEngine.Texts;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace LingoEngine.Pictures
 {
@@ -63,24 +61,24 @@ namespace LingoEngine.Pictures
             /// Preloads the picture into memory.
             /// Corresponds to: member.picture.preload
             /// </summary>
-            public void Preload() => _lingoFrameworkMemberPicture.Preload();
+            public override void Preload() => _lingoFrameworkMemberPicture.Preload();
 
             /// <summary>
             /// Unloads the picture from memory.
             /// Corresponds to: member.picture.unload
             /// </summary>
-            public void Unload() => _lingoFrameworkMemberPicture.Unload();
+            public override void Unload() => _lingoFrameworkMemberPicture.Unload();
 
             /// <summary>
             /// Erases the picture.
             /// Corresponds to: member.picture.erase
             /// </summary>
-            public void Erase() => _lingoFrameworkMemberPicture.Erase();
+            public override void Erase() => _lingoFrameworkMemberPicture.Erase();
 
             /// <summary>
             /// Imports a file into the picture. This is a placeholder for future external image loading functionality.
             /// </summary>
-            public void ImportFileInto()
+            public override void ImportFileInto()
             {
                 // Future: Implement external image loading
             }
@@ -89,29 +87,15 @@ namespace LingoEngine.Pictures
             /// Copies the picture to the clipboard.
             /// Corresponds to: member.picture.copy
             /// </summary>
-            public void CopyToClipBoard() => _lingoFrameworkMemberPicture.CopyToClipBoard();
+            public override void CopyToClipBoard() => _lingoFrameworkMemberPicture.CopyToClipBoard();
 
             /// <summary>
             /// Pastes the picture from the clipboard into the current picture.
             /// Corresponds to: member.picture.paste
             /// </summary>
-            public void PasteClipBoardInto() => _lingoFrameworkMemberPicture.PasteClipBoardInto();
+            public override void PasteClipBoardInto() => _lingoFrameworkMemberPicture.PasteClipBoardInto();
 
-            /// <summary>
-            /// Creates a duplicate of the current picture member.
-            /// </summary>
-            /// <returns>A new LingoMemberPicture object that is a duplicate of the current one.</returns>
-            public ILingoMember Duplicate()
-            {
-                var clone = new LingoMemberPicture(_lingoFrameworkMemberPicture, Number, Name)
-                {
-                    Width = Width,
-                    Height = Height,
-                    Comments = Comments,
-                    PurgePriority = PurgePriority
-                };
-                return clone;
-            }
+          
         }
 
     }

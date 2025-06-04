@@ -4,7 +4,7 @@ namespace LingoEngine.FrameworkCommunication
 {
     public interface ILingoFrameworkSprite
     {
-        bool Visible { get; set; }
+        bool Visibility { get; set; }
         float Blend { get; set; }
         float X { get; set; }
         float Y { get; set; }

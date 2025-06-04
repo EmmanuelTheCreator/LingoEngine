@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using LingoEngine.Movies;
+using Microsoft.Extensions.DependencyInjection;
 namespace LingoEngine
 {
     public static class LingoSetup

@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Primitives
 {
     public struct LingoPoint : IEquatable<LingoPoint>
     {

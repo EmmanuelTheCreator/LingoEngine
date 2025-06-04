@@ -1,4 +1,4 @@
-﻿namespace LingoEngine
+﻿namespace LingoEngine.Primitives
 {
     using System;
     using System.Globalization;

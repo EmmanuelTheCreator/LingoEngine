@@ -1,4 +1,6 @@
-﻿
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+
 namespace LingoEngine.Core
 {
     public enum PreLoadModeType
@@ -22,7 +24,7 @@ namespace LingoEngine.Core
     /// A cast library can contain cast members such as sounds, text, graphics, and media.
     /// Lingo equivalent: castLib("LibraryName")
     /// </summary>
-    public interface ILingoCast
+    public interface ILingoCast 
     {
         /// <summary>
         /// The name of the cast library.
@@ -51,41 +53,20 @@ namespace LingoEngine.Core
         /// <summary>
         /// Returns the cast members that are selected in a given Cast window
         /// </summary>
-        CastMemberSelection Selection { get; set; }
+        CastMemberSelection? Selection { get; set; }
 
-        /// <summary>
-        /// Returns the name of the cast member at the given position.
-        /// Lingo: the name of member x of castLib
-        /// </summary>
-        /// <param name="number">The cast member number (1-based).</param>
-        /// <returns>The name of the cast member.</returns>
-        string GetMemberName(int number);
 
-        /// <summary>
-        /// Retrieves a cast member by its number in the library.
-        /// Lingo: member x of castLib
-        /// </summary>
-        /// <param name="number">The cast member number (1-based).</param>
-        /// <returns>The specified cast member.</returns>
-        LingoMember Member(int number);
-        T? Member<T>(int number) where T : LingoMember;
-        LingoMember Member(string name);
-        T? Member<T>(string name) where T : LingoMember;
-
-        ILingoCast Add(LingoMember member);
-
-        /// <summary>
-        /// Attempts to retrieve a cast member by name.
-        /// Lingo: member "name" of castLib
-        /// </summary>
-        /// <param name="name">The name of the cast member.</param>
-        /// <param name="member">The resulting cast member, if found.</param>
-        /// <returns>True if found; otherwise, false.</returns>
-        bool TryGetMember(string name, out LingoMember? member);
+        public T? GetMember<T>(int number) where T : class, ILingoMember;
+        /// <inheritdoc/>
+        public T? GetMember<T>(string name) where T : class, ILingoMember;
+        ILingoMembersContainer Member { get; }
+        
         /// <summary>
         /// displays the next empty cast member position or the position after a specified cast member. This method is available only on the current cast library.
         /// </summary>
         int FindEmpty();
+
+        
     }
     public class CastMemberSelection
     {
@@ -95,49 +76,61 @@ namespace LingoEngine.Core
     /// <inheritdoc/>
     public class LingoCast : ILingoCast
     {
-        private Dictionary<string, LingoMember> _membersByName = new();
-        private List<LingoMember> _members = new();
+        
+        private readonly LingoCastLibsContainer _castLibsContainer;
+        private readonly LingoMembersContainer _MembersContainer = new();
+
         /// <inheritdoc/>
         public string Name { get; set; }
         /// <inheritdoc/>
-        public string FileName { get; set; }
+        public string FileName { get; set; } = "";
         /// <inheritdoc/>
         public int Number { get; private set; }
         /// <inheritdoc/>
-        public int MemberCount => _members.Count;
+        public PreLoadModeType PreLoadMode { get; set; } = PreLoadModeType.WhenNeeded;
         /// <inheritdoc/>
-        public PreLoadModeType PreLoadMode { get; set; }
-        /// <inheritdoc/>
-        public CastMemberSelection Selection { get; set; }
-        public LingoCast(string name, int number)
+        public CastMemberSelection? Selection { get; set; } = null;
+
+        public ILingoMembersContainer Member => _MembersContainer;
+        
+        internal LingoCast(LingoCastLibsContainer castLibsContainer, string name)
         {
+            _castLibsContainer = castLibsContainer;
             Name = name;
-            Number = number;
+            Number = castLibsContainer.GetNextCastNumber();
         }
 
         /// <inheritdoc/>
-        public string GetMemberName(int number) => _members[number - 1].Name;
+        public T? GetMember<T>(int number) where T : class, ILingoMember => _MembersContainer[number - 1] as T;
         /// <inheritdoc/>
-        public LingoMember Member(int number) => _members[number - 1];
+        public T? GetMember<T>(string name) where T : class, ILingoMember => _MembersContainer[name] as T;
         /// <inheritdoc/>
-        public T? Member<T>(int number) where T : LingoMember => _members[number - 1] as T;
-
-        /// <inheritdoc/>
-        public LingoMember Member(string name) => _membersByName[name];
-        /// <inheritdoc/>
-        public T? Member<T>(string name) where T : LingoMember
-            => _membersByName[name] as T;
-        /// <inheritdoc/>
-        public ILingoCast Add(LingoMember member)
+        internal ILingoCast Add(LingoMember member)
         {
-            //var member = new LingoMember( name, _members.Count + 1);
-            _members.Add(member);
-            _membersByName.Add(member.Name, member);
+            _castLibsContainer.AddMember(member);
+            _MembersContainer.Add(member);
             return this;
         }
+        internal ILingoCast Remove(LingoMember member)
+        {
+            _castLibsContainer.RemoveMember(member);
+            _MembersContainer.Remove(member);
+            return this;
+        }
+        internal void MemberNameChanged(string oldName, LingoMember member)
+        {
+            _castLibsContainer.MemberNameChanged(oldName, member);
+            _MembersContainer.MemberNameChanged(oldName, member);
+        }
         /// <inheritdoc/>
-        public bool TryGetMember(string name, out LingoMember? member) => _membersByName.TryGetValue(name, out member);
-        /// <inheritdoc/>
-        public int FindEmpty() => _members.Count + 1;
+        public int FindEmpty() => _MembersContainer.FindEmpty();
+        internal int GetUniqueNumber() => _castLibsContainer.GetNextMemberNumber();
+
+        internal void RemoveAll()
+        {
+            var allMembers = _MembersContainer.All;
+            foreach (var member in allMembers)
+                Remove(member);
+        }
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace LingoEngine.Movies
+﻿using LingoEngine.Core;
+using LingoEngine.Primitives;
+
+namespace LingoEngine.Movies
 {
     /// <summary>
     /// Sprite Channel

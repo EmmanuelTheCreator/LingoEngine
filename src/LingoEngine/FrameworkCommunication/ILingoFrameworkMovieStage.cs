@@ -1,4 +1,6 @@
 ﻿
+using LingoEngine.Movies;
+
 namespace LingoEngine.FrameworkCommunication
 {
     public interface ILingoFrameworkStage

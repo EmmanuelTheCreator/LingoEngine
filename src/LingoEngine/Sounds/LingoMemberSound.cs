@@ -1,6 +1,4 @@
 ﻿using LingoEngine.Core;
-using LingoEngine.Pictures.LingoEngine;
-using LingoEngine.Pictures;
 
 namespace LingoEngine.Sounds
 {

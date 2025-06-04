@@ -13,7 +13,7 @@ namespace LingoEngine.FrameworkCommunication
         LingoMemberSound CreateMemberSound(int number, string name = "");
         LingoSound CreateSound();
         LingoSoundChannel CreateSoundChannel(int number);
-        T CreateSprite<T>(ILingoScore score) where T : LingoSprite;
+        T CreateSprite<T>(ILingoMovie movie) where T : LingoSprite;
         LingoSpriteBehavior CreateBehavior<T>() where T : LingoSpriteBehavior;
     }
 }

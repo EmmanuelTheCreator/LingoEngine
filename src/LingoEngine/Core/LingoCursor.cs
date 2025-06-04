@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LingoEngine
+namespace LingoEngine.Core
 {
     /// <summary>
     /// Provides access to and control over the mouse cursor.

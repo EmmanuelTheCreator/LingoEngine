@@ -1,10 +1,9 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.Movies;
 using LingoEngine.Primitives;
 
-namespace LingoEngine
+namespace LingoEngine.Movies
 {
     /// <summary>
     /// Represents a sprite in the score with visual, timing, and behavioral properties.
@@ -93,12 +92,12 @@ namespace LingoEngine
         /// </summary>
         bool MediaReady { get; }
         float Width { get; }
-        float Height{ get; }
+        float Height { get; }
 
         /// <summary>
-        /// Gets the cast member associated with this sprite. Read-only.
+        /// Gets the cast member associated with this sprite. 
         /// </summary>
-        LingoMember? Member { get; }
+        ILingoMember? Member { get; set;  }
 
         /// <summary>
         /// Returns or sets the user or system who last modified the sprite.
@@ -120,10 +119,6 @@ namespace LingoEngine
         /// </summary>
         LingoPoint RegPoint { get; set; }
 
-        /// <summary>
-        /// Access to the score timeline and other score-related operations. Read-only.
-        /// </summary>
-        ILingoScore Score { get; }
 
         /// <summary>
         /// List of script instance names or types attached to the sprite.
@@ -148,7 +143,7 @@ namespace LingoEngine
         /// <summary>
         /// Controls whether the sprite is visible on the Stage. Read/write.
         /// </summary>
-        bool Visible { get; set; }
+        bool Visibility { get; set; }
         LingoPoint Loc { get; set; }
 
         /// <summary>
@@ -187,6 +182,7 @@ namespace LingoEngine
 
     public class LingoSprite : LingoScriptBase, ILingoSprite, ILingoSpriteEventHandler, ILingoMouseEventHandler
     {
+
         private List<IHasMouseDownEvent> _mouseDownBehaviors = new List<IHasMouseDownEvent>();
         private List<IHasMouseUpEvent> _mouseUpBehaviors = new List<IHasMouseUpEvent>();
         private List<IHasMouseMoveEvent> _mouseMoveBehaviors = new List<IHasMouseMoveEvent>();
@@ -207,11 +203,17 @@ namespace LingoEngine
         private bool isDraggable = false;  // A flag to control dragging behavior
         private List<LingoSpriteBehavior> _behaviors = new List<LingoSpriteBehavior>();
         public T FrameworkObj<T>() where T : ILingoFrameworkSprite => (T)_frameworkSprite;
+
+        /// <summary>
+        /// This represents the puppetsprite controlled by script.
+        /// </summary>
+        public bool IsPuppetSprite { get; internal set; }
+
         public string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
 
         public int SpriteNum { get; private set; }
         public int Ink { get; private set; }
-        public bool Visible { get => _frameworkSprite.Visible; set => _frameworkSprite.Visible = value; }
+        public bool Visibility { get => _frameworkSprite.Visibility; set => _frameworkSprite.Visibility = value; }
         public bool Hilite { get; set; }
         public bool Linked { get; private set; }
         public bool Loaded { get; private set; }
@@ -225,9 +227,8 @@ namespace LingoEngine
         public List<string> ScriptInstanceList { get; private set; } = new();
 
         private LingoMember? _Member;
-        public LingoMember? Member { get => _Member; set => SetMember(value); }
+        public new ILingoMember? Member { get => _Member; set => SetMember(value); }
         public LingoCast? Cast { get; private set; }
-        public ILingoScore Score { get; }
 
         public int BeginFrame { get; set; }
         public int EndFrame { get; set; }
@@ -246,8 +247,8 @@ namespace LingoEngine
         public int Size => Media.Length;
 
         public byte[] Media { get; set; } = new byte[] { };
-        public byte[] Thumbnail { get; set; }
-        public string ModifiedBy { get; set; }
+        public byte[] Thumbnail { get; set; } = new byte[] { };
+        public string ModifiedBy { get; set; } = "";
 
         public LingoPoint Loc
         {
@@ -269,7 +270,7 @@ namespace LingoEngine
         }
 
 
-        public float Width =>  Member?.Width ?? Rect.Width;
+        public float Width => Member?.Width ?? Rect.Width;
         public float Height => Member?.Height ?? Rect.Height;
         /// <summary>
         /// Whether this sprite is currently active (i.e., the playhead is within its frame span).
@@ -279,10 +280,8 @@ namespace LingoEngine
         // public int ScriptText { get; set; }
 
         public LingoSprite(ILingoMovieEnvironment environment)
-            :base(environment)
+            : base(environment)
         {
-            Score = environment.Movie.Score;
-            
         }
         public void Init(ILingoFrameworkSprite frameworkSprite)
         {
@@ -293,7 +292,7 @@ namespace LingoEngine
             SpriteNum = number;
             Name = name;
         }
-        
+
         public LingoSprite AddBehavior<T>() where T : LingoSpriteBehavior
         {
             var behavior = _env.Factory.CreateBehavior<T>();
@@ -347,11 +346,11 @@ When a movie stops, events occur in the following order:
         internal virtual void DoExitFrame() { ExitFrame(); _exitFrameBehaviors.ForEach(b => b.ExitFrame()); }
         protected virtual void ExitFrame() { }
         internal virtual void DoStepFrame() { StepFrame(); _stepFrameBehaviors.ForEach(b => b.StepFrame()); }
-        protected virtual void StepFrame() {  }
+        protected virtual void StepFrame() { }
         internal virtual void DoPrepareFrame() { PrepareFrame(); _prepareFrameBehaviors.ForEach(b => b.PrepareFrame()); }
         protected virtual void PrepareFrame() { }
 
-        
+
 
 
         internal void SetFrameworkSprite(ILingoFrameworkSprite fw) => _frameworkSprite = fw;
@@ -369,22 +368,22 @@ When a movie stops, events occur in the following order:
 
         public void SetMember(string memberName)
         {
-            var member = _env.CastLib.Member(memberName);
+            var member = _env.GetMember<LingoMember>(memberName);
             _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
             _frameworkSprite.MemberChanged();
         }
 
-        
+
         public void SetMember(int memberNumber)
         {
             if (Cast == null) throw new Exception(Name + ":Cast not set for sprite: " + memberNumber);
-            LingoMember member = Cast.Member(memberNumber);
+            var member = _env.GetMember<LingoMember>(memberNumber);
             _Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
-            
+
         }
-        public void SetMember(LingoMember member)
+        public void SetMember(ILingoMember? member)
         {
-            _Member = member;
+            _Member = member as LingoMember;
             _frameworkSprite.MemberChanged();
         }
         public void SetPosition(float x, float y)
@@ -514,7 +513,7 @@ When a movie stops, events occur in the following order:
 
 
         void ILingoSpriteEventHandler.DoFocus() => Focus();
-        protected virtual void Focus() { } 
+        protected virtual void Focus() { }
         void ILingoSpriteEventHandler.DoBlur() => Blur();
         protected virtual void Blur() { }
 
@@ -525,6 +524,17 @@ When a movie stops, events occur in the following order:
         /// </summary>
         public bool IsMouseInsideBoundingBox(LingoMouse mouse) => mouse.MouseH >= LocH && mouse.MouseH <= LocH + Width && mouse.MouseV >= LocV && mouse.MouseV <= LocV + Height;
 
-       
+        internal void CallBehavior<T>(Action<T> actionOnSpriteBehaviour) where T : LingoSpriteBehavior
+        {
+            var behavior = _behaviors.FirstOrDefault(x => x is T) as T;
+            if (behavior == null) return;
+            actionOnSpriteBehaviour(behavior);
+        }
+        internal TResult? CallBehavior<T, TResult>(Func<T, TResult> actionOnSpriteBehaviour) where T : LingoSpriteBehavior
+        {
+            var behavior = _behaviors.FirstOrDefault(x => x is T) as T;
+            if (behavior == null) return default;
+            return actionOnSpriteBehaviour(behavior);
+        }
     }
 }

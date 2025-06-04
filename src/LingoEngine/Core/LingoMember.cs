@@ -1,9 +1,9 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Primitives;
 using LingoEngine.Texts;
 using System.Security.Cryptography;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace LingoEngine
+namespace LingoEngine.Core
 {
     public enum LingoMemberType
     {
@@ -35,6 +35,13 @@ namespace LingoEngine
         /// Lingo: the name of member
         /// </summary>
         string Name { get; set; }
+        /// <summary>
+        /// indicates the cast library number of a specified cast member.
+        /// The value of this property is a unique identifier for the cast member that is a single integer
+        /// describing its location in and position in the cast library.
+        /// Its a unique number over all casts.
+        /// </summary>
+        int Number { get; }
 
         /// <summary>
         /// The creation timestamp of the cast member.
@@ -153,9 +160,9 @@ namespace LingoEngine
         /// <summary>
         /// Creates a copy of the cast member with the same contents.
         /// Optional. An integer that specifies the Cast window for the duplicate cast member. If omitted, the duplicate cast member is placed in the first open Cast window position.
-            /// Lingo: duplicate member
-            /// </summary>
-            ILingoMember Duplicate(int? newNumber = null);
+        /// Lingo: duplicate member
+        /// </summary>
+        ILingoMember Duplicate(int? newNumber = null);
     }
 
     /// <summary>
@@ -178,41 +185,72 @@ namespace LingoEngine
     public class LingoMember : ILingoMember
     {
         protected readonly LingoCast _cast;
+        private string _name = string.Empty;
 
-        public string Name { get; set; }
-        public DateTime CreationDate{ get; set; }
-        public DateTime ModifiedDate{ get; set; }
+        /// <inheritdoc/>
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                var oldName = _name;
+                var changed = _name != value;
+                _name = value;
+                if (_cast != null && changed && !string.IsNullOrWhiteSpace(_name)) _cast.MemberNameChanged(oldName, this);
+            }
+        }
+        /// <inheritdoc/>
+        public int Number { get; private set; }
+        /// <inheritdoc/>
+        public DateTime CreationDate { get; set; }
+        /// <inheritdoc/>
+        public DateTime ModifiedDate { get; set; }
+        /// <inheritdoc/>
         public bool Hilite { get; private set; }
+        /// <inheritdoc/>
         public int CastLibNum { get; private set; }
+        /// <inheritdoc/>
         public int PurgePriority { get; set; }
+        /// <inheritdoc/>
         public int Width { get; set; }
+        /// <inheritdoc/>
         public int Height { get; set; }
+        /// <inheritdoc/>
         public int Size { get; set; }
-        public string Comments{ get; set; }
-        public string FileName{ get; private set; }
+        /// <inheritdoc/>
+        public string Comments { get; set; }
+        /// <inheritdoc/>
+        public string FileName { get; private set; }
+        /// <inheritdoc/>
         public LingoMemberType Type { get; private set; }
+        /// <inheritdoc/>
         public LingoPoint RegPoint { get; set; }
 
+        /// <inheritdoc/>
         public LingoMember(LingoMemberType type, LingoCast cast, int number, string name = "")
         {
+            // We need to first set the name to not trigger the NameChangedEvent
             Name = name;
-            CastLibNum = number;
+            // Then the cast
             _cast = cast;
+            CastLibNum = number;
+            Number = _cast.GetUniqueNumber();
             Type = type;
             CreationDate = DateTime.Now;
             ModifiedDate = DateTime.Now;
             FileName = string.Empty;
             Comments = string.Empty;
+            cast.Add(this);
         }
-      
+
         /// <inheritdoc/>
-        public void CopyToClipBoard() { }
-        public void Erase() { }
-        public void ImportFileInto() { }
-        public void Move() { }
-        public void PasteClipBoardInto() { }
-        public void Preload() { }
-        public void Unload() { }
+        public virtual void CopyToClipBoard() { }
+        public virtual void Erase() { }
+        public virtual void ImportFileInto() { }
+        public virtual void Move() { }
+        public virtual void PasteClipBoardInto() { }
+        public virtual void Preload() { }
+        public virtual void Unload() { }
 
         public ILingoMember Duplicate(int? newNumber = null)
         {
@@ -232,10 +270,11 @@ namespace LingoEngine
             _cast.Add(clone);
             return clone;
         }
-        protected virtual LingoMember OnDuplicate(int newNumber) 
+        protected virtual LingoMember OnDuplicate(int newNumber)
         {
             var clone = new LingoMember(Type, _cast, newNumber, Name);
             return clone;
         }
+
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Godot;
-using LingoEngine;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
 
 namespace ArkGodot.GodotLinks
 {
@@ -15,8 +15,9 @@ namespace ArkGodot.GodotLinks
         internal bool IsDirtyMember { get; set; }
         public float X { get => _node2D.Position.X; set { _node2D.Position = new Vector2(value, _node2D.Position.Y); IsDirty = true; } }
         public float Y { get => _node2D.Position.Y; set { _node2D.Position = new Vector2(_node2D.Position.X, Y); IsDirty = true; } }
+
+        public bool Visibility { get => _node2D.Visible; set => _node2D.Visible = value; }
         public ILingoCast? Cast { get; private set; }
-        public ILingoScore Score { get; }
 
 #pragma warning disable CS8618
         public LingoGodotSprite(Node2D node2D, LingoSprite lingoSprite)
@@ -84,7 +85,7 @@ namespace ArkGodot.GodotLinks
             get => _node2D.Name.ToString();
             set => _node2D.Name = value;
         }
-      
+        
     }
 
 }
