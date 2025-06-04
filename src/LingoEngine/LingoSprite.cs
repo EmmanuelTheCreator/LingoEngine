@@ -291,7 +291,7 @@ namespace LingoEngine
             Name = name;
         }
         
-        public void AddBehavior<T>() where T : LingoSpriteBehavior
+        public LingoSprite AddBehavior<T>() where T : LingoSpriteBehavior
         {
             var behavior = _env.Factory.CreateBehavior<T>();
             _behaviors.Add(behavior);
@@ -308,6 +308,7 @@ namespace LingoEngine
             if (behavior is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Add(exitFrameEvent);
             if (behavior is IHasFocusEvent focusEvent) _focusBehaviors.Add(focusEvent);
             if (behavior is IHasBlurEvent blurEvent) _blurBehaviors.Add(blurEvent);
+            return this;
         }
 
         /*

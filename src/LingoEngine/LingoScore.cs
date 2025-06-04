@@ -25,16 +25,19 @@ namespace LingoEngine
         /// Adds a new sprite by name to the next available channel.
         /// Lingo: new sprite
         /// </summary>
-        ILingoScore AddSprite(string name);
+        LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null);
 
         /// <summary>
         /// Adds a new sprite to a specific sprite channel number.
         /// </summary>
-        ILingoScore AddSprite(int num);
+        LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null);
         /// <summary>
         /// Adds a new sprite to a specific sprite channel number.
         /// </summary>
-        ILingoScore AddSprite<T>(int num) where T : LingoSprite;
+        T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite;
+        T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite;
+
+        public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite;
 
         /// <summary>
         /// Removes a sprite from the score by name.
@@ -210,17 +213,17 @@ namespace LingoEngine
 
         public string GetSpriteName(int number) => _sprites[number - 1].Name;
         public ILingoSprite GetSprite(int number) => _sprites[number - 1];
-        public ILingoScore AddSprite(string name) => AddSprite<LingoSprite>(name);
-        public ILingoScore AddSprite<T>(string name) where T : LingoSprite
+        public LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(name, configure);
+        public T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {
             _maxSpriteNum++;
             var num = _maxSpriteNum;
-            return AddSprite<T>(num,name);
+            return AddSprite<T>(num,name, configure);
         }
-        public ILingoScore AddSprite(int num)=> AddSprite<LingoSprite>(num);
-        public ILingoScore AddSprite<T>(int num) where T : LingoSprite => AddSprite<T>(num,"Sprite_"+num);
+        public LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(num, configure);
+        public T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite => AddSprite<T>(num,"Sprite_"+num, configure);
         
-        public ILingoScore AddSprite<T>(int num,string name) where T : LingoSprite
+        public T AddSprite<T>(int num,string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {
             var sprite = _environment.Factory.CreateSprite<T>(this);
             sprite.Init(num, name);
@@ -230,7 +233,9 @@ namespace LingoEngine
             _spriteEventHandlers.Add(sprite);
             if (num > _maxSpriteNum)
                 _maxSpriteNum = num;
-            return this;
+            if (configure != null)
+                configure(sprite);
+            return sprite;
         }
         public bool RemoveSprite(string name)
         {
