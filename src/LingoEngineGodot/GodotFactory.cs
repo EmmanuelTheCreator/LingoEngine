@@ -15,10 +15,10 @@ namespace LingoEngineGodot
     public class GodotFactory : ILingoFrameworkFactory, IDisposable
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private readonly ILingoEnvironment _environment;
+        private readonly ILingoMovieEnvironment _environment;
         private readonly IServiceProvider _serviceProvider;
 
-        public GodotFactory(ILingoEnvironment environment, IServiceProvider serviceProvider)
+        public GodotFactory(ILingoMovieEnvironment environment, IServiceProvider serviceProvider)
         {
             _environment = environment;
             _serviceProvider = serviceProvider;

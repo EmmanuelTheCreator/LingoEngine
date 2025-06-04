@@ -21,9 +21,9 @@ Console.WriteLine(a);      // #hello
     /// </summary>
     public abstract class LingoScriptBase
     {
-        protected readonly ILingoEnvironment _env;
+        protected readonly ILingoMovieEnvironment _env;
         private static readonly Random _random = new Random();
-        protected LingoScriptBase(ILingoEnvironment env)
+        protected LingoScriptBase(ILingoMovieEnvironment env)
         {
             _env = env;
         }

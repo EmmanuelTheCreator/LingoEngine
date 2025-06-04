@@ -1,4 +1,5 @@
 ﻿using LingoEngine.Events;
+using LingoEngine.Movies;
 
 namespace LingoEngine
 {
@@ -7,7 +8,7 @@ namespace LingoEngine
         protected LingoSprite Me;
         public LingoSprite Sprite => Me;
 #pragma warning disable CS8618 
-        public LingoSpriteBehavior(ILingoEnvironment env) : base(env)
+        public LingoSpriteBehavior(ILingoMovieEnvironment env) : base(env)
 #pragma warning restore CS8618 
         {
         }
@@ -21,7 +22,7 @@ namespace LingoEngine
 
     public class ExampleBehavior : LingoSpriteBehavior, IHasEnterFrameEvent
     {
-        public ExampleBehavior(ILingoEnvironment env) : base(env)
+        public ExampleBehavior(ILingoMovieEnvironment env) : base(env)
         {
         }
 

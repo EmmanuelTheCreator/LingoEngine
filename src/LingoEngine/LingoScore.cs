@@ -143,7 +143,7 @@ namespace LingoEngine
         private Dictionary<string, LingoSprite> _spritesByName = new();
         private List<LingoSprite> _sprites = new();
         private int _maxSpriteNum = 0;
-        private readonly ILingoEnvironment _environment;
+        private readonly ILingoMovieEnvironment _environment;
         private readonly LingoMovieStage _movieStage;
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
@@ -178,7 +178,7 @@ namespace LingoEngine
             }
         }
         public bool IsPlaying => _isPlaying;
-        public LingoScore(ILingoEnvironment environment, LingoMovieStage movieStage, string name, int number)
+        public LingoScore(ILingoMovieEnvironment environment, LingoMovieStage movieStage, string name, int number)
         {
             _environment = environment;
             _movieStage = movieStage;
