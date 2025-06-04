@@ -1,4 +1,6 @@
-﻿using LingoEngine.Movies;
+﻿using LingoEngine.Core;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
 
 namespace LingoEngine.Sounds
 {
@@ -74,7 +76,7 @@ namespace LingoEngine.Sounds
     {
         private Dictionary<int, LingoSoundChannel> _Channels = new();
         private int numberOfSoundChannels = 8;
-        private readonly ILingoMovieEnvironment _lingoEnvironment;
+        private readonly ILingoCastLibsContainer _castLibsContainer;
         private readonly ILingoFrameworkSound _frameworkSound;
         public T FrameworkObj<T>() where T : ILingoFrameworkSound => (T)_frameworkSound;
 
@@ -97,13 +99,13 @@ namespace LingoEngine.Sounds
         public bool SoundKeepDevice { get; set; } // ingored in .NET
 
         /// <inheritdoc/>
-        public LingoSound(ILingoFrameworkSound frameworkSound, ILingoMovieEnvironment lingoEnvironment)
+        public LingoSound(ILingoFrameworkSound frameworkSound, ILingoCastLibsContainer castLibsContainer, ILingoFrameworkFactory factory)
         {
-            _lingoEnvironment = lingoEnvironment;
+            _castLibsContainer = castLibsContainer;
             _frameworkSound = frameworkSound;
             for (int i = 0; i < numberOfSoundChannels; i++)
             {
-                var channel = lingoEnvironment.Factory.CreateSoundChannel(i+1);
+                var channel = factory.CreateSoundChannel(i+1);
                 _Channels.Add(i + 1, channel);
             }
         }
@@ -130,7 +132,7 @@ namespace LingoEngine.Sounds
         public bool SoundBusy(int number) => _Channels[number - 1].IsBusy();
         public void PuppetSound(int channelNumber, string memberName, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1)
         {
-            var member = _lingoEnvironment.GetMember<LingoMemberSound>(memberName);
+            var member = _castLibsContainer.GetMember<LingoMemberSound>(memberName);
             if (member == null) return;
             _Channels[channelNumber -1].Play(member, startTime,endTime, loopCount, loopStartTime, loopEndTime,preloadTime);
         }

@@ -1,10 +1,14 @@
-﻿using LingoEngine.Sounds;
+﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
+using LingoEngine.Sounds;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Core
 {
     /// <summary>
     /// Represents the player-level interface for accessing global runtime environment information and control,
     /// such as system settings, UI state, and playback environment. Mirrors Lingo’s player properties.
+    /// Represents the core playback engine used to manage and execute the authoring environment, movies in a window(MIAWs), projectors, and Shockwave Playe
     /// </summary>
     public interface ILingoPlayer
     {
@@ -13,7 +17,7 @@ namespace LingoEngine.Core
         /// Lingo: the activeCastLib
         /// </summary>
         ILingoCast ActiveCastLib { get; }
-
+        ILingoMovie ActiveMovie { get; }
         /// <summary>
         /// Provides access to the sound system (including channels and control).
         /// Lingo: the sound
@@ -148,10 +152,29 @@ namespace LingoEngine.Core
 
 
     public class LingoPlayer : ILingoPlayer
-    {/// <inheritdoc/>
-        public ILingoCast ActiveCastLib => throw new NotImplementedException();
+    {
+        private readonly LingoCastLibsContainer _castLibsContainer;
+        private readonly LingoSound _sound;
+        private readonly ILingoWindow _window;
+        private readonly IServiceProvider _serviceProvider;
+        private Dictionary<string, LingoMovieEnvironment> _moviesByName = new();
+        private List<LingoMovieEnvironment> _movies = new();
+
+
+        private readonly LingoKey _LingoKey;
+        private readonly LingoMouse _Mouse;
+        private readonly LingoStage _Stage;
+        private readonly LingoSystem _System;
+        private readonly LingoClock _clock;
+        public ILingoFrameworkFactory Factory { get; private set; }
+
+        public ILingoClock Clock => _clock;
         /// <inheritdoc/>
-        public ILingoSound Sound => throw new NotImplementedException();
+        public ILingoCast ActiveCastLib => _castLibsContainer.ActiveCast;
+        /// <inheritdoc/>
+        public ILingoSound Sound => _sound;
+
+
         /// <inheritdoc/>
         public int CurrentSpriteNum => 1;
         /// <inheritdoc/>
@@ -180,6 +203,23 @@ namespace LingoEngine.Core
         public Func<string> AlertHook { get; set; } = () => "";
         /// <inheritdoc/>
         bool ILingoPlayer.SafePlayer { get; set; }
+        public ILingoMovie ActiveMovie { get; private set; }
+
+        public LingoPlayer(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+            Factory = serviceProvider.GetRequiredService<ILingoFrameworkFactory>();
+            _castLibsContainer = new LingoCastLibsContainer();
+            _sound = Factory.CreateSound(_castLibsContainer);
+            _window = new LingoWindow();
+            _clock = new LingoClock();
+            _LingoKey = new LingoKey();
+            _Stage = Factory.CreateStage();
+            _Mouse = new LingoMouse(_Stage);
+            _System = new LingoSystem();
+        }
+
+
         /// <inheritdoc/>
         public void Alert(string message)
         {
@@ -208,12 +248,41 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         public void Quit()
         {
-
         }
         /// <inheritdoc/>
         public bool WindowPresent()
         {
             return true;
+        }
+
+        public ILingoMovie LoadMovie(string name, bool andActivate = true)
+        {
+            // Create the default cast
+            _castLibsContainer.AddCast("Internal");
+
+            // Create a new movies scope, needed for behaviours.
+            var scope = _serviceProvider.CreateScope();
+
+            // Create the movie.
+            var movieEnv = (LingoMovieEnvironment)scope.ServiceProvider.GetRequiredService<ILingoMovieEnvironment>();
+            movieEnv.Init(name, _movies.Count + 1, this, _LingoKey, _sound, _Mouse, _Stage, _System, Clock, _castLibsContainer, scope);
+
+            // Add him
+            _movies.Add(movieEnv);
+            _moviesByName.Add(name, movieEnv);
+
+            // Activate him;
+            if (andActivate)
+                ActiveMovie = movieEnv.Movie;
+            return movieEnv.Movie;
+        }
+        public void CloseMovie(ILingoMovie movie)
+        {
+            var typed = (LingoMovie)movie;
+            var movieEnvironment = typed.GetEnvironment();
+            _movies.Remove(movieEnvironment);
+            _moviesByName.Remove(typed.Name);
+            movieEnvironment.Dispose();
         }
     }
 }

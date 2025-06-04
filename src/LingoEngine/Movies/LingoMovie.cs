@@ -1,5 +1,9 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
+using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Sounds;
+using LingoEngine.Texts;
+using LingoEngineGodot;
 
 namespace LingoEngine.Movies
 {
@@ -181,14 +185,21 @@ namespace LingoEngine.Movies
         public ILingoCastLibsContainer CastLib { get; }
         public ILingoMembersContainer Member { get; }
         public T? GetMember<T>(int number) where T : class, ILingoMember;
-        public T? GetMember<T>(string name) where T : class, ILingoMember; 
+        public T? GetMember<T>(string name) where T : class, ILingoMember;
+        /// <summary>
+        /// creates a new cast member and allows you to assign individual property values to child objects.
+        /// After newMember() is called, the new cast member is placed in the first empty cast library slot
+        /// Lingo : // newBitmap = _movie.newMember(#bitmap)
+        /// </summary>
+        ILingoMemberFactory New { get; }
+        
         #endregion
     }
 
 
     public class LingoMovie : ILingoMovie, ILingoClockListener, IDisposable
     {
-         
+        private readonly ILingoMemberFactory _memberFactory;
         private readonly LingoMovieEnvironment _environment;
         private readonly LingoStage _stage;
         private Dictionary<string, LingoSprite> _spritesByName = new();
@@ -237,10 +248,11 @@ namespace LingoEngine.Movies
         
 
 
-        public LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, string name, int number)
+        public LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, ILingoMemberFactory memberFactory, string name, int number)
         {
             _environment = environment;
             _stage = movieStage;
+            _memberFactory = memberFactory;
             _environment = environment;
             _movieStage = movieStage;
             Name = name;
@@ -579,7 +591,7 @@ namespace LingoEngine.Movies
 
         internal LingoMovieEnvironment GetEnvironment() => _environment;
         public IServiceProvider GetServiceProvider() => _environment.GetServiceProvider();
-
-       
+        
+        public ILingoMemberFactory New => _memberFactory;
     }
 }

@@ -4,13 +4,14 @@ namespace LingoEngine.Core
 {
     public interface ILingoCastLibsContainer
     {
+        ILingoCast ActiveCast { get; set; }
+        int Count { get; }
         ILingoCast this[int index] { get; }
         ILingoCast this[string name] { get; }
         /// <summary>
         /// Seacch in all members
         /// </summary>
         ILingoMembersContainer Member { get; }
-        int Count { get; }
         T? GetMember<T>(int number) where T : class, ILingoMember;
         T? GetMember<T>(string name) where T : class, ILingoMember;
         ILingoCast AddCast(string name);
@@ -24,12 +25,18 @@ namespace LingoEngine.Core
         private Dictionary<string, LingoMember> _allMembersByName = new();
         private Dictionary<string, LingoCast> _castsByName = new();
         private List<LingoCast> _casts = new();
+        private ILingoCast activeCast;
         private readonly LingoMembersContainer _allMembersContainer;
         
         public ILingoMembersContainer Member => _allMembersContainer;
         public int Count => _casts.Count;
 
-
+        public ILingoCast ActiveCast { get => activeCast; set
+            {
+                if (_casts.Contains(value))
+                    activeCast = value;
+            } 
+        }
         public LingoCastLibsContainer()
         {
             _allMembersContainer = new LingoMembersContainer(_allMembersByName);
@@ -45,6 +52,8 @@ namespace LingoEngine.Core
             var cast = new LingoCast(this, name);
             _casts.Add(cast);
             _castsByName.Add(name, cast);
+            if (ActiveCast == null)
+                ActiveCast = cast;
             return cast;
         }
         public ILingoCast RemoveCast(ILingoCast cast)
@@ -53,6 +62,9 @@ namespace LingoEngine.Core
             castTyped.RemoveAll();
             _casts.Remove(castTyped);
             _castsByName.Remove(cast.Name);
+            if (activeCast == cast && _casts.Count > 0)
+                activeCast = _casts[0];
+
             return cast;
         }
 

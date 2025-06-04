@@ -182,26 +182,27 @@ namespace LingoEngine.Movies
 
     public class LingoSprite : LingoScriptBase, ILingoSprite, ILingoSpriteEventHandler, ILingoMouseEventHandler
     {
+        private readonly ILingoMovieEnvironment _environment;
+        private readonly List<IHasMouseDownEvent> _mouseDownBehaviors = new List<IHasMouseDownEvent>();
+        private readonly List<IHasMouseUpEvent> _mouseUpBehaviors = new List<IHasMouseUpEvent>();
+        private readonly List<IHasMouseMoveEvent> _mouseMoveBehaviors = new List<IHasMouseMoveEvent>();
+        private readonly List<IHasMouseEnterEvent> _mouseEnterBehaviors = new List<IHasMouseEnterEvent>();
+        private readonly List<IHasMouseExitEvent> _mouseExitBehaviors = new List<IHasMouseExitEvent>();
+        private readonly List<IHasBeginSpriteEvent> _beginSpriteBehaviors = new List<IHasBeginSpriteEvent>();
+        private readonly List<IHasEndSpriteEvent> _endSpriteBehaviors = new List<IHasEndSpriteEvent>();
+        private readonly List<IHasStepFrameEvent> _stepFrameBehaviors = new List<IHasStepFrameEvent>();
+        private readonly List<IHasPrepareFrameEvent> _prepareFrameBehaviors = new List<IHasPrepareFrameEvent>();
+        private readonly List<IHasEnterFrameEvent> _enterFrameBehaviors = new List<IHasEnterFrameEvent>();
+        private readonly List<IHasExitFrameEvent> _exitFrameBehaviors = new List<IHasExitFrameEvent>();
+        private readonly List<IHasFocusEvent> _focusBehaviors = new List<IHasFocusEvent>();
+        private readonly List<IHasBlurEvent> _blurBehaviors = new List<IHasBlurEvent>();
 
-        private List<IHasMouseDownEvent> _mouseDownBehaviors = new List<IHasMouseDownEvent>();
-        private List<IHasMouseUpEvent> _mouseUpBehaviors = new List<IHasMouseUpEvent>();
-        private List<IHasMouseMoveEvent> _mouseMoveBehaviors = new List<IHasMouseMoveEvent>();
-        private List<IHasMouseEnterEvent> _mouseEnterBehaviors = new List<IHasMouseEnterEvent>();
-        private List<IHasMouseExitEvent> _mouseExitBehaviors = new List<IHasMouseExitEvent>();
-        private List<IHasBeginSpriteEvent> _beginSpriteBehaviors = new List<IHasBeginSpriteEvent>();
-        private List<IHasEndSpriteEvent> _endSpriteBehaviors = new List<IHasEndSpriteEvent>();
-        private List<IHasStepFrameEvent> _stepFrameBehaviors = new List<IHasStepFrameEvent>();
-        private List<IHasPrepareFrameEvent> _prepareFrameBehaviors = new List<IHasPrepareFrameEvent>();
-        private List<IHasEnterFrameEvent> _enterFrameBehaviors = new List<IHasEnterFrameEvent>();
-        private List<IHasExitFrameEvent> _exitFrameBehaviors = new List<IHasExitFrameEvent>();
-        private List<IHasFocusEvent> _focusBehaviors = new List<IHasFocusEvent>();
-        private List<IHasBlurEvent> _blurBehaviors = new List<IHasBlurEvent>();
+        private readonly List<LingoSpriteBehavior> _behaviors = new List<LingoSpriteBehavior>();
 
         private ILingoFrameworkSprite _frameworkSprite;
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
-        private List<LingoSpriteBehavior> _behaviors = new List<LingoSpriteBehavior>();
         public T FrameworkObj<T>() where T : ILingoFrameworkSprite => (T)_frameworkSprite;
 
         /// <summary>
@@ -282,6 +283,7 @@ namespace LingoEngine.Movies
         public LingoSprite(ILingoMovieEnvironment environment)
             : base(environment)
         {
+            _environment = environment;
         }
         public void Init(ILingoFrameworkSprite frameworkSprite)
         {
@@ -295,7 +297,8 @@ namespace LingoEngine.Movies
 
         public LingoSprite AddBehavior<T>() where T : LingoSpriteBehavior
         {
-            var behavior = _env.Factory.CreateBehavior<T>();
+            var behavior = _environment.Factory.CreateBehavior<T>();
+            behavior.SetMe(this);
             _behaviors.Add(behavior);
             if (behavior is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Add(mouseDownEvent);
             if (behavior is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Add(mouseUpEvent);
@@ -368,7 +371,7 @@ When a movie stops, events occur in the following order:
 
         public void SetMember(string memberName)
         {
-            var member = _env.GetMember<LingoMember>(memberName);
+            var member = _environment.GetMember<LingoMember>(memberName);
             _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
             _frameworkSprite.MemberChanged();
         }
@@ -377,7 +380,7 @@ When a movie stops, events occur in the following order:
         public void SetMember(int memberNumber)
         {
             if (Cast == null) throw new Exception(Name + ":Cast not set for sprite: " + memberNumber);
-            var member = _env.GetMember<LingoMember>(memberNumber);
+            var member = _environment.GetMember<LingoMember>(memberNumber);
             _Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
 
         }

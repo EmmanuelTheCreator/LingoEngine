@@ -5,6 +5,7 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
+using LingoEngine.Texts;
 using LingoEngineGodot.Movies;
 using LingoEngineGodot.Pictures;
 using LingoEngineGodot.Sounds;
@@ -15,30 +16,24 @@ namespace LingoEngineGodot
     public class GodotFactory : ILingoFrameworkFactory, IDisposable
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
-        private readonly LingoMovieEnvironment _environment;
         private readonly IServiceProvider _serviceProvider;
+        private Node2D _rootNode;
+        private Node2D _stageNode2D;
 
-        public GodotFactory(LingoMovieEnvironment environment, IServiceProvider serviceProvider)
+        public GodotFactory(IServiceProvider serviceProvider)
         {
-            _environment = environment;
             _serviceProvider = serviceProvider;
         }
 
-        public LingoSpriteBehavior CreateBehavior<T>() where T : LingoSpriteBehavior => _serviceProvider.GetRequiredService<T>();
+        public T CreateBehavior<T>() where T : LingoSpriteBehavior => _serviceProvider.GetRequiredService<T>();
+        public T CreateMovieScript<T>() where T : LingoMovieScript => _serviceProvider.GetRequiredService<T>();
 
         #region Sound
-        public LingoMemberSound CreateMemberSound(int number, string name = "")
-        {
-            var lingoMemberSound = new LingoGodotMemberSound();
-            var memberSound = new LingoMemberSound(lingoMemberSound,((LingoCast) _environment.Player.ActiveCastLib), number, name);
-            lingoMemberSound.Init(memberSound);
-            _disposables.Add(lingoMemberSound);
-            return memberSound;
-        }
-        public LingoSound CreateSound()
+       
+        public LingoSound CreateSound(ILingoCastLibsContainer castLibsContainer)
         {
             var lingoSound = new LingoGodotSound();
-            var soundChannel = new LingoSound(lingoSound, _environment);
+            var soundChannel = new LingoSound(lingoSound, castLibsContainer, this);
             lingoSound.Init(soundChannel);
             return soundChannel;
         }
@@ -53,18 +48,52 @@ namespace LingoEngineGodot
         #endregion
 
 
-        public LingoMemberPicture CreateMemberPicture(int number, string name = "")
+        #region Members
+        public T CreateMember<T>(ILingoCast cast, string name = "") where T : LingoMember
         {
+
+            return typeof(T) switch
+            {
+                Type t when t == typeof(LingoMemberPicture) => (CreateMemberPicture(cast, name) as T)!,
+                Type t when t == typeof(LingoMemberText) => (CreateMemberText(cast, name) as T)!,
+                Type t when t == typeof(LingoMemberSound) => (CreateMemberSound(cast, name) as T)!,
+            };
+        }
+        public LingoMemberSound CreateMemberSound(ILingoCast cast, string name = "")
+        {
+            var newNumber = cast.FindEmpty();
+            var lingoMemberSound = new LingoGodotMemberSound();
+            var memberSound = new LingoMemberSound(lingoMemberSound, (LingoCast)cast, newNumber, name);
+            lingoMemberSound.Init(memberSound);
+            _disposables.Add(lingoMemberSound);
+            return memberSound;
+        }
+        public LingoMemberPicture CreateMemberPicture(ILingoCast cast, string name = "")
+        {
+            var newNumber = cast.FindEmpty();
             var godotInstance = new LingoGodotMemberPicture();
-            var lingoInstance = new LingoMemberPicture((LingoCast)_environment.Player.ActiveCastLib, godotInstance, number, name);
+            var lingoInstance = new LingoMemberPicture((LingoCast)cast, godotInstance, newNumber, name);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
         }
+        public LingoMemberText CreateMemberText(ILingoCast cast, string name = "")
+        {
+            var newNumber = cast.FindEmpty();
+            //var godotInstance = new LingoGodotMemberText();
+            var lingoInstance = new LingoMemberText((LingoCast)cast, newNumber, name);
+            //godotInstance.Init(lingoInstance);
+            //_disposables.Add(godotInstance);
+            return lingoInstance;
+        } 
+        #endregion
+
+
         public LingoStage CreateStage()
         {
-            var godotInstance = new LingoGodotStage();
+            var godotInstance = new LingoGodotStage(_rootNode);
             var lingoInstance = new LingoStage(godotInstance);
+            _stageNode2D = godotInstance.StageNode2D;
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
@@ -77,7 +106,9 @@ namespace LingoEngineGodot
         {
             var movieTyped = (LingoMovie)movie;
             var lingoSprite = movieTyped.GetServiceProvider().GetRequiredService<T>();
-            var node2d = new LingoGodotSprite(new Node2D(), lingoSprite);
+            var spriteNode2D = new Node2D();
+            _stageNode2D.AddChild(spriteNode2D);
+            var node2d = new LingoGodotSprite(spriteNode2D, lingoSprite);
             return lingoSprite;
         }
 
@@ -87,6 +118,6 @@ namespace LingoEngineGodot
                 disposable.Dispose();
         }
 
-        
+        internal void SetRootNode(Node2D rootNode) => _rootNode = rootNode;
     }
 }

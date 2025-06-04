@@ -12,6 +12,14 @@ namespace LingoEngineGodot.Movies
         private LingoStage _LingoStage;
         private HashSet<LingoGodotSprite> _drawnSprites = new();
         private Node2D _stageRoot = new Node2D();
+
+        internal Node2D StageNode2D => _stageRoot;
+
+        public LingoGodotStage(Node2D rootNode)
+        {
+            rootNode.AddChild(_stageRoot);
+        }
+
         internal void Init(LingoStage lingoInstance)
         {
             _LingoStage = lingoInstance;
