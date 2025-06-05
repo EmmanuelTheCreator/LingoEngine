@@ -111,7 +111,7 @@ namespace LingoEngine.Sounds
         /// Sound cast members take some time to load into RAM before they can begin playback. It’s recommended that you queue sounds 
         /// with queue() before you want to begin playing them and then use the first form of this method.The second two forms do not take advantage of the preloading accomplished with the queue() command.
         /// </summary>
-        void Play(LingoMemberSound? member, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1);
+        void Play(LingoMemberSound? member = null, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1);
         /// <summary>
         /// Sound Channel method; plays the AIFF, SWA, AU, or WAV sound in a sound channel.
         /// For the sound to be played properly, the correct MIX Xtra must be available to the movie, usually in the Xtras folder of the application.

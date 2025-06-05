@@ -163,6 +163,10 @@ namespace LingoEngine.Core
         /// Lingo: duplicate member
         /// </summary>
         ILingoMember Duplicate(int? newNumber = null);
+        /// <summary>
+        /// Retrieves the next member
+        /// </summary>
+        ILingoMember GetOffsetMember(int numberOffset);
     }
 
     /// <summary>

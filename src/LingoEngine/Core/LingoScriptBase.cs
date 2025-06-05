@@ -63,9 +63,11 @@ Console.WriteLine(a);      // #hello
         protected DateTime Date() => DateTime.Now;
 
 
-        protected ILingoMember? Member(int number) => _env.CastLibsContainer.GetMember<ILingoMember>(number);
-        protected ILingoMember? Member(string name) => _env.CastLibsContainer.GetMember<ILingoMember>(name);
-        protected T? Member<T>(string name) where T : LingoMember => _env.CastLibsContainer.GetMember<T>(name);
+        protected ILingoMember? Member(int number,int? castlibNumber = null) => _env.CastLibsContainer.GetMember<ILingoMember>(number, castlibNumber);
+        protected ILingoMember? Member(int number,string castlibName) => _env.CastLibsContainer.GetMember<ILingoMember>(number, castlibName);
+        protected ILingoMember? Member(string name, int? castlibNumber = null) => _env.CastLibsContainer.GetMember<ILingoMember>(name, castlibNumber);
+        protected ILingoMember? Member(string name, string castlibName) => _env.CastLibsContainer.GetMember<ILingoMember>(name, castlibName);
+        protected T? Member<T>(string name, int? castlibNumber = null) where T : LingoMember => _env.CastLibsContainer.GetMember<T>(name, castlibNumber);
         protected void Member<T>(string name, Action<T> action) where T : LingoMember => action(_env.CastLibsContainer.GetMember<T>(name)!);
         protected TResult Member<T, TResult>(string name, Func<T, TResult> action) where T : LingoMember => action(_env.CastLibsContainer.GetMember<T>(name)!);
         // We dont need scripts in c#

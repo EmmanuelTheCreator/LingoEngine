@@ -1,4 +1,5 @@
 ﻿using LingoEngine.Movies;
+using LingoEngine.Xtras.BuddyApi;
 using LingoEngineGodot;
 using Microsoft.Extensions.DependencyInjection;
 namespace LingoEngine
@@ -11,6 +12,8 @@ namespace LingoEngine
                 .AddTransient<LingoSprite>()
                 .AddTransient<ILingoMemberFactory,LingoMemberFactory>()
                 .AddScoped<ILingoMovieEnvironment, LingoMovieEnvironment>()
+                // Xtras
+                .AddScoped<IBuddyAPI, BuddyAPI>()
                 ;
             //container.AddScoped<ILingoMovieEnvironment>();
             return container;
