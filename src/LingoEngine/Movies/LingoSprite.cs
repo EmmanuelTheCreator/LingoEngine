@@ -211,7 +211,12 @@ namespace LingoEngine.Movies
         public bool IsPuppetSprite { get; internal set; }
 
         public string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
-
+        public int MemberNum { get => Member?.Number ?? 0; set
+            {
+                if (Member != null)
+                    Member = Member.GetOffsetMember(value);
+            }
+        }
         public int SpriteNum { get; private set; }
         public int Ink { get; private set; }
         public bool Visibility { get => _frameworkSprite.Visibility; set => _frameworkSprite.Visibility = value; }
@@ -277,6 +282,8 @@ namespace LingoEngine.Movies
         /// Whether this sprite is currently active (i.e., the playhead is within its frame span).
         /// </summary>
         public bool IsActive { get; internal set; }
+        
+
         // Not used in c#
         // public int ScriptText { get; set; }
 

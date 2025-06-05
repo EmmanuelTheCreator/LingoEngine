@@ -102,6 +102,9 @@ namespace LingoEngine.Movies
         /// </summary>
         int Number { get; }
 
+        void CallMovieScript<T>(Action<T> action) where T : LingoMovieScript;
+        TResult? CallMovieScript<T, TResult>(Func<T, TResult> action) where T : LingoMovieScript;
+
         #region Sprites
 
         /// <summary>
@@ -186,6 +189,8 @@ namespace LingoEngine.Movies
         public ILingoMembersContainer Member { get; }
         public T? GetMember<T>(int number) where T : class, ILingoMember;
         public T? GetMember<T>(string name) where T : class, ILingoMember;
+        
+
         /// <summary>
         /// creates a new cast member and allows you to assign individual property values to child objects.
         /// After newMember() is called, the new cast member is placed in the first empty cast library slot
@@ -510,7 +515,23 @@ namespace LingoEngine.Movies
 
             }
         }
-
+        public void CallMovieScript<T>(Action<T> action)where T : LingoMovieScript
+        {
+            // TODO : optimize with type dictionary
+            var type = typeof(T);
+            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
+            if (script != null)
+                action(script);
+        }
+        public TResult? CallMovieScript<T, TResult>(Func<T, TResult> action)where T : LingoMovieScript
+        {
+            // TODO : optimize with type dictionary
+            var type = typeof(T);
+            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
+            if (script != null)
+                return action(script);
+            return default;
+        }
         internal void CallOnMoveScripts(Action<ILingoMovieScriptListener> actionOnAllActiveSprites)
         {
             foreach (var script in _movieScriptListeners)
@@ -591,7 +612,9 @@ namespace LingoEngine.Movies
 
         internal LingoMovieEnvironment GetEnvironment() => _environment;
         public IServiceProvider GetServiceProvider() => _environment.GetServiceProvider();
-        
+
+       
+
         public ILingoMemberFactory New => _memberFactory;
     }
 }
