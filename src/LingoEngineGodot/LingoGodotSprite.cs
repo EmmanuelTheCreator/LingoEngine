@@ -2,67 +2,105 @@
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
+using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Primitives;
+using LingoEngineGodot.Pictures;
 
-namespace ArkGodot.GodotLinks
+namespace LingoEngineGodot
 {
 
-    public partial class LingoGodotSprite : Sprite2D, ILingoFrameworkSprite
+    public partial class LingoGodotSprite : ILingoFrameworkSprite, IDisposable
     {
-        private Node2D _node2D;
-        private LingoSprite _lingoSprite;
+        private readonly CenterContainer _Container2D;
+        private readonly Node2D _parentNode2D;
+        private readonly Sprite2D _Sprite2D;
+        private readonly Action<LingoGodotSprite> _showMethod;
+        private readonly Action<LingoGodotSprite> _removeMethod;
+        private readonly Action<LingoGodotSprite> _hideMethod;
+        private readonly LingoSprite _lingoSprite;
+        private bool _wasShown;
+
         internal LingoSprite LingoSprite => _lingoSprite;
         internal bool IsDirty { get; set; }
-        internal bool IsDirtyMember { get; set; }
-        public float X { get => _node2D.Position.X; set { _node2D.Position = new Vector2(value, _node2D.Position.Y); IsDirty = true; } }
-        public float Y { get => _node2D.Position.Y; set { _node2D.Position = new Vector2(_node2D.Position.X, Y); IsDirty = true; } }
+        internal bool IsDirtyMember { get; set; } = true;
+        public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y); IsDirty = true; } }
+        public float Y { get => _Sprite2D.Position.Y; set { _Sprite2D.Position = new Vector2(_Sprite2D.Position.X, value); IsDirty = true; } }
+        public LingoPoint RegPoint { get => (_Container2D.Position.X, _Container2D.Position.Y); set { _Container2D.Position = new Vector2(value.X, value.Y); IsDirty = true; } }
 
-        public bool Visibility { get => _node2D.Visible; set => _node2D.Visible = value; }
+        public bool Visibility { get => _Container2D.Visible; set => _Container2D.Visible = value; }
         public ILingoCast? Cast { get; private set; }
 
+        public float Blend
+        {
+            get => _Sprite2D.SelfModulate.A;
+            set
+            {
+                _Sprite2D.SelfModulate = new Color(_Sprite2D.SelfModulate, value);
+                IsDirty = true;
+            }
+        }
+        public string Name
+        {
+            get => Name.ToString();
+            set
+            {
+                Name = value;
+                _Container2D.Name = value;
+                _Sprite2D.Name = value + "_Sprite";
+            }
+        }
+
+
 #pragma warning disable CS8618
-        public LingoGodotSprite(Node2D node2D, LingoSprite lingoSprite)
+        public LingoGodotSprite(LingoSprite lingoSprite, Node2D parentNode, Action<LingoGodotSprite> showMethod, Action<LingoGodotSprite> hideMethod, Action<LingoGodotSprite> removeMethod)
 #pragma warning restore CS8618
         {
-            _node2D = node2D;
+            _parentNode2D = parentNode;
             _lingoSprite = lingoSprite;
+            _showMethod = showMethod;
+            _hideMethod = hideMethod;
+            _removeMethod = removeMethod;
+            _Sprite2D = new Sprite2D();
+            _Container2D = new CenterContainer();
+            _Container2D.AddChild(_Sprite2D);
             lingoSprite.Init(this);
         }
-      
-        public override void _Ready()
-        {
 
+        public void RemoveMe()
+        {
+            _removeMethod(this);
+            Dispose();
+        }
+        public void Dispose()
+        {
+            _Container2D.GetParent().RemoveChild(_Container2D);
+            _Sprite2D.Dispose();
+            _Container2D.Dispose();
         }
 
-        public override void _Process(double delta)
+        public void Show()
         {
-            
+            if (!_wasShown)
+            {
+                _wasShown = true;
+                _parentNode2D.AddChild(_Container2D);
+                _showMethod(this);
+            }
+            Update();
+        }
+        public void Hide()
+        {
+            if (!_wasShown)
+                return;
+            _wasShown = false;
+            _hideMethod(this);
+            _Container2D.GetParent().RemoveChild(_Container2D);
         }
 
-        public override void _Input(InputEvent @event)
+        public void SetPosition(LingoPoint lingoPoint)
         {
-            //// Mouse in viewport coordinates.
-            //if (@event is InputEventMouseButton eventMouseButton)
-            //    MousePosition = eventMouseButton.Position;
-            //else if (@event is InputEventMouseMotion eventMouseMotion)
-            //    MousePosition = eventMouseMotion.Position;
-
-        }
-
-        public void SetPositionX(float x)
-        {
-            _node2D.Position = new Vector2(x, _node2D.Position.Y);
-            IsDirty = true;
-        }
-
-        public void SetPositionY(float y)
-        {
-            _node2D.Position = new Vector2(_node2D.Position.X, y);
-            IsDirty = true;
-        }
-
-        System.Numerics.Vector2 ILingoFrameworkSprite.GetGlobalMousePosition()
-        {
-            throw new NotImplementedException();
+            _Sprite2D.Position = new Vector2(lingoPoint.X, lingoPoint.Y);
+            //IsDirty = true;
         }
 
         public void MemberChanged()
@@ -70,22 +108,39 @@ namespace ArkGodot.GodotLinks
             IsDirtyMember = true;
         }
 
-        public float Blend
+        internal void Update()
         {
-            get => _node2D.SelfModulate.A;
-            set
+            if (IsDirty)
             {
-                _node2D.SelfModulate = new Color(_node2D.SelfModulate, value);
-                IsDirty = true;
+                // update complex properties
+                IsDirty = false;
             }
+            if (IsDirtyMember)
+                UpdateMember();
+
         }
 
-         public new string Name
+
+        private void UpdateMember()
         {
-            get => _node2D.Name.ToString();
-            set => _node2D.Name = value;
-        }
-        
-    }
+            if (!IsDirtyMember) return;
+            IsDirtyMember = false;
 
+            // Only handle picture members
+            if (!(_lingoSprite.Member is LingoMemberPicture pictureMember)) return;
+            UpdateMemberPicture(pictureMember.Framework<LingoGodotMemberPicture>());
+        }
+
+        private void UpdateMemberPicture(LingoGodotMemberPicture godotPicture)
+        {
+            godotPicture.Preload();
+
+            // Set the texture using the ImageTexture from the picture member
+            if (godotPicture.Texture == null)
+                return;
+            _Sprite2D.Texture = godotPicture.Texture;
+        }
+
+
+    }
 }

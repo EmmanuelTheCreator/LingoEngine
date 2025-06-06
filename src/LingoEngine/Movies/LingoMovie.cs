@@ -1,9 +1,10 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
+using LingoEngine.FrameworkCommunication;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
-using LingoEngineGodot;
+using System.Collections.Generic;
 
 namespace LingoEngine.Movies
 {
@@ -49,12 +50,14 @@ namespace LingoEngine.Movies
         /// Lingo: go frameNumber
         /// </summary>
         void Go(int frame);
+        void GoTo(int frame);
 
         /// <summary>
         /// Jumps to the specified frame label and continues playing.
         /// Lingo: go "label"
         /// </summary>
         void Go(string label);
+        void GoTo(string label);
 
         /// <summary>
         /// Plays a transition effect before navigating.
@@ -102,8 +105,11 @@ namespace LingoEngine.Movies
         /// </summary>
         int Number { get; }
 
+        #region MovieScripts
         void CallMovieScript<T>(Action<T> action) where T : LingoMovieScript;
         TResult? CallMovieScript<T, TResult>(Func<T, TResult> action) where T : LingoMovieScript;
+        ILingoMovie AddMovieScript(LingoMovieScript lingoMovieScript); 
+        #endregion
 
         #region Sprites
 
@@ -189,28 +195,36 @@ namespace LingoEngine.Movies
         public ILingoMembersContainer Member { get; }
         public T? GetMember<T>(int number) where T : class, ILingoMember;
         public T? GetMember<T>(string name) where T : class, ILingoMember;
-        
-
         /// <summary>
         /// creates a new cast member and allows you to assign individual property values to child objects.
         /// After newMember() is called, the new cast member is placed in the first empty cast library slot
         /// Lingo : // newBitmap = _movie.newMember(#bitmap)
         /// </summary>
         ILingoMemberFactory New { get; }
+        int CurrentFrame { get; }
         
+
         #endregion
+        /// <summary>
+        /// Resets the timer to 0;
+        /// </summary>
+        void StartTimer();
+        int Timer { get; }
+
     }
 
 
     public class LingoMovie : ILingoMovie, ILingoClockListener, IDisposable
     {
         private readonly ILingoMemberFactory _memberFactory;
+        private ILingoFrameworkMovie _FrameworkMovie;
         private readonly LingoMovieEnvironment _environment;
         private readonly LingoStage _stage;
         private Dictionary<string, LingoSprite> _spritesByName = new();
         private List<LingoSprite> _sprites = new();
         private int _maxSpriteNum = 0;
         private readonly LingoStage _movieStage;
+        private readonly Action<LingoMovie> _onRemoveMe;
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
         private int _currentFrame = 1;
@@ -218,7 +232,7 @@ namespace LingoEngine.Movies
         private bool _isPlaying = false;
         private int _tempo = 30;  // Default frame rate (FPS)
 
-        private LingoCastLibsContainer _castLibContainer = new();
+        private LingoCastLibsContainer _castLibContainer;
         
 
         private readonly List<LingoSprite> _activeSprites = new();
@@ -227,14 +241,20 @@ namespace LingoEngine.Movies
         private HashSet<ILingoSpriteEventHandler> _spriteEventHandlers = new();
 
         // Movie Script subscriptions
-        private HashSet<ILingoMovieScriptListener> _movieScriptListeners = new();
-        private ActorList _actorList;
+        private readonly HashSet<ILingoMovieScriptListener> _movieScriptListeners = new();
+        private readonly ActorList _actorList = new ActorList();
+        private readonly List<LingoMovieScript> _MovieScripts = new();
+
+        public ILingoFrameworkMovie FrameworkObj => _FrameworkMovie;
+        public T Framework<T>() where T:class, ILingoFrameworkMovie => (T)_FrameworkMovie;
 
         public string Name { get; set; }
         public int Number { get; private set; }
 
         public int Frame => _currentFrame;
+        public int CurrentFrame => _currentFrame;
         public int FrameCount => 60; // Arbitrary default, to be replaced with actual timeline data
+        public int Timer { get; private set; }
         public int SpriteCount => _sprites.Count;
         // Tempo (Frame Rate)
         public int Tempo
@@ -250,27 +270,48 @@ namespace LingoEngine.Movies
 
         public ActorList ActorList { get; private set; } = new ActorList();
         public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
-        
 
 
-        public LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, ILingoMemberFactory memberFactory, string name, int number)
+
+#pragma warning disable CS8618 
+        public LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, ILingoMemberFactory memberFactory, string name, int number, Action<LingoMovie> onRemoveMe)
+#pragma warning restore CS8618 
         {
+            _castLibContainer = new(environment.Factory);
             _environment = environment;
             _stage = movieStage;
             _memberFactory = memberFactory;
             _environment = environment;
             _movieStage = movieStage;
+            _onRemoveMe = onRemoveMe;
             Name = name;
             Number = number;
             _lingoMouse = (LingoMouse)environment.Mouse;
             _lingoClock = (LingoClock)environment.Clock;
-            _lingoClock.Subscribe(this);
+            
+        }
+        public void Init(ILingoFrameworkMovie frameworkMovie)
+        {
+            _FrameworkMovie = frameworkMovie;
         }
         public void Dispose()
         {
-            _lingoClock.Unsubscribe(this);
+            RemoveMe();
+        }
+        public void RemoveMe()
+        {
+            Hide();
+            _onRemoveMe(this);
         }
 
+        internal void Show()
+        {
+            _lingoClock.Subscribe(this);
+        }
+        internal void Hide()
+        {
+            _lingoClock.Unsubscribe(this);
+        }
 
 
        
@@ -284,18 +325,7 @@ namespace LingoEngine.Movies
         }
 
         public void PuppetSprite(int number, bool isPuppetSprite) => ((LingoSprite)GetSprite(number)).IsPuppetSprite = isPuppetSprite;
-        internal void SubscribeMovieScript(ILingoMovieScriptListener listener)
-        {
-            if (!_movieScriptListeners.Contains(listener))
-                _movieScriptListeners.Add(listener);
-            _lingoMouse.Subscribe(listener);
-        }
-
-        internal void UnsubscribeMovieScript(ILingoMovieScriptListener listener)
-        {
-            _movieScriptListeners.Remove(listener);
-            _lingoMouse.Unsubscribe(listener);
-        }
+       
 
         public string GetSpriteName(int number) => _sprites[number - 1].Name;
         public ILingoSprite GetSprite(int number) => _sprites[number - 1];
@@ -311,7 +341,14 @@ namespace LingoEngine.Movies
 
         public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {
-            var sprite = _environment.Factory.CreateSprite<T>(this);
+            var sprite = _environment.Factory.CreateSprite<T>(this, s =>
+            {
+                // On remove method
+                var index = _sprites.IndexOf(s);
+                _sprites.RemoveAt(index);
+                _spritesByName.Remove(name);
+                _spriteEventHandlers.Remove(s);
+            });
             sprite.Init(num, name);
             //var sprite = new LingoSprite(_environment, this, name, num);
             _sprites.Insert(num - 1, sprite);
@@ -327,11 +364,7 @@ namespace LingoEngine.Movies
         {
             if (!_spritesByName.TryGetValue(name, out var sprite))
                 return false;
-
-            var index = _sprites.IndexOf(sprite);
-            _sprites.RemoveAt(index);
-            _spritesByName.Remove(name);
-            _spriteEventHandlers.Remove(sprite);
+            sprite.RemoveMe();
             return true;
         }
 
@@ -419,12 +452,14 @@ namespace LingoEngine.Movies
 
         #region Playhead
 
+        public void GoTo(string label) => Go(label);
         public void Go(string label)
         {
             // TODO: Label lookup
             _currentFrame = 1; // Placeholder fallback
         }
 
+        public void GoTo(int frame) => Go(frame);
         public void Go(int frame)
         {
             if (frame <= 0)
@@ -460,7 +495,7 @@ namespace LingoEngine.Movies
                 // Subscription logic: Subscribe only when sprite is entering and not already subscribed
                 if (!wasActive && isActive)
                 {
-                    _movieStage.DrawSprite(sprite);
+                    sprite.FrameworkObj.Show();
                     _enteredSprites.Add(sprite);
                     _activeSprites.Add(sprite);
                     // Subscribe to mouse events if sprite is not already subscribed
@@ -506,7 +541,7 @@ namespace LingoEngine.Movies
             /// STEP 8: Fire endSprite on exiting sprites
             foreach (var sprite in _exitedSprites)
             {
-                _movieStage.RemoveSprite(sprite);
+                sprite.FrameworkObj.Hide();
                 sprite.DoEndSprite();
                 _activeSprites.Remove(sprite);
                 // Unsubscribe from mouse events
@@ -515,28 +550,7 @@ namespace LingoEngine.Movies
 
             }
         }
-        public void CallMovieScript<T>(Action<T> action)where T : LingoMovieScript
-        {
-            // TODO : optimize with type dictionary
-            var type = typeof(T);
-            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
-            if (script != null)
-                action(script);
-        }
-        public TResult? CallMovieScript<T, TResult>(Func<T, TResult> action)where T : LingoMovieScript
-        {
-            // TODO : optimize with type dictionary
-            var type = typeof(T);
-            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
-            if (script != null)
-                return action(script);
-            return default;
-        }
-        internal void CallOnMoveScripts(Action<ILingoMovieScriptListener> actionOnAllActiveSprites)
-        {
-            foreach (var script in _movieScriptListeners)
-                actionOnAllActiveSprites(script);
-        }
+       
         // Play the movie
         public void Play()
         {
@@ -588,8 +602,13 @@ namespace LingoEngine.Movies
 
         public void UpdateStage()
         {
+            OnUpdateStage();
+        }
+        private void OnUpdateStage()
+        {
+            Timer++;
             _actorList.Invoke();
-            _movieStage.UpdateStage();
+            _FrameworkMovie.UpdateStage();
         } 
         #endregion
 
@@ -610,11 +629,58 @@ namespace LingoEngine.Movies
         #endregion
 
 
+        #region MovieScripts
+        public ILingoMovie AddMovieScript(LingoMovieScript lingoMovieScript)
+        {
+            _MovieScripts.Add(lingoMovieScript);
+            return this;
+        }
+        internal void SubscribeMovieScript(ILingoMovieScriptListener listener)
+        {
+            if (!_movieScriptListeners.Contains(listener))
+                _movieScriptListeners.Add(listener);
+            _lingoMouse.Subscribe(listener);
+        }
+
+        internal void UnsubscribeMovieScript(ILingoMovieScriptListener listener)
+        {
+            _movieScriptListeners.Remove(listener);
+            _lingoMouse.Unsubscribe(listener);
+        }
+
+        public void CallMovieScript<T>(Action<T> action) where T : LingoMovieScript
+        {
+            // TODO : optimize with type dictionary
+            var type = typeof(T);
+            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
+            if (script != null)
+                action(script);
+        }
+        public TResult? CallMovieScript<T, TResult>(Func<T, TResult> action) where T : LingoMovieScript
+        {
+            // TODO : optimize with type dictionary
+            var type = typeof(T);
+            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
+            if (script != null)
+                return action(script);
+            return default;
+        }
+        internal void CallOnMoveScripts(Action<ILingoMovieScriptListener> actionOnAllActiveSprites)
+        {
+            foreach (var script in _movieScriptListeners)
+                actionOnAllActiveSprites(script);
+        }
+
+        #endregion
+
+
         internal LingoMovieEnvironment GetEnvironment() => _environment;
         public IServiceProvider GetServiceProvider() => _environment.GetServiceProvider();
 
-       
+        public void StartTimer() => Timer = 0;
 
         public ILingoMemberFactory New => _memberFactory;
+
+        
     }
 }

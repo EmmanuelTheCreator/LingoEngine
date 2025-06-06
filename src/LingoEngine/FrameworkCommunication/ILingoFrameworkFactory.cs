@@ -9,7 +9,8 @@ namespace LingoEngine.FrameworkCommunication
 {
     public interface ILingoFrameworkFactory
     {
-        LingoStage CreateStage();
+        LingoStage CreateStage(LingoClock lingoClock);
+        LingoMovie AddMovie(LingoStage stage, LingoMovie lingoMovie);
 
 
         #region Members
@@ -18,15 +19,15 @@ namespace LingoEngine.FrameworkCommunication
             LingoPoint regPoint = default);
         LingoMemberSound CreateMemberSound(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default);
         LingoMemberText CreateMemberText(ILingoCast cast, string name = "", string? fileName = null,
-            LingoPoint regPoint = default); 
-        LingoMemberText CreateEmpty(ILingoCast cast, string name = "", string? fileName = null,
-            LingoPoint regPoint = default); 
+            LingoPoint regPoint = default);
+        LingoMember CreateEmpty(ILingoCast cast, string name = "", string? fileName = null,
+            LingoPoint regPoint = default);
         #endregion
 
         LingoSound CreateSound(ILingoCastLibsContainer castLibsContainer);
         LingoSoundChannel CreateSoundChannel(int number);
 
-        T CreateSprite<T>(ILingoMovie movie) where T : LingoSprite;
+        T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
         T CreateBehavior<T>() where T : LingoSpriteBehavior;
         T CreateMovieScript<T>() where T : LingoMovieScript;
         

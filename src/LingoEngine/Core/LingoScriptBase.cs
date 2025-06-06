@@ -115,6 +115,9 @@ Console.WriteLine(a);      // #hello
         protected void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite) => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
+
+        protected void StartTimer() => _env.Movie.StartTimer();
+        protected int Timer => _env.Movie.Timer;
     }
 
 }

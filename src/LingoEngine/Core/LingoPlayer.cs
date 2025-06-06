@@ -4,6 +4,7 @@ using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 using LingoEngine.Tools;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace LingoEngine.Core
 {
@@ -19,7 +20,7 @@ namespace LingoEngine.Core
         /// Lingo: the activeCastLib
         /// </summary>
         ILingoCast ActiveCastLib { get; }
-        ILingoMovie ActiveMovie { get; }
+        ILingoMovie? ActiveMovie { get; }
         /// <summary>
         /// Provides access to the sound system (including channels and control).
         /// Lingo: the sound
@@ -161,6 +162,7 @@ namespace LingoEngine.Core
         private readonly LingoSound _sound;
         private readonly ILingoWindow _window;
         private readonly IServiceProvider _serviceProvider;
+        private readonly Action<LingoMovie> _actionOnNewMovie;
         private Dictionary<string, LingoMovieEnvironment> _moviesByName = new();
         private List<LingoMovieEnvironment> _movies = new();
 
@@ -207,18 +209,19 @@ namespace LingoEngine.Core
         public Func<string> AlertHook { get; set; } = () => "";
         /// <inheritdoc/>
         bool ILingoPlayer.SafePlayer { get; set; }
-        public ILingoMovie ActiveMovie { get; private set; }
+        public ILingoMovie? ActiveMovie { get; private set; }
 
-        public LingoPlayer(IServiceProvider serviceProvider)
+        internal LingoPlayer(IServiceProvider serviceProvider, Action<LingoMovie> actionOnNewMovie)
         {
             _serviceProvider = serviceProvider;
+            _actionOnNewMovie = actionOnNewMovie;
             Factory = serviceProvider.GetRequiredService<ILingoFrameworkFactory>();
-            _castLibsContainer = new LingoCastLibsContainer();
+            _castLibsContainer = new LingoCastLibsContainer(Factory);
             _sound = Factory.CreateSound(_castLibsContainer);
             _window = new LingoWindow();
             _clock = new LingoClock();
             _LingoKey = new LingoKey();
-            _Stage = Factory.CreateStage();
+            _Stage = Factory.CreateStage(_clock);
             _Mouse = new LingoMouse(_Stage);
             _System = new LingoSystem();
         }
@@ -259,7 +262,7 @@ namespace LingoEngine.Core
             return true;
         }
 
-        public ILingoMovie LoadMovie(string name, bool andActivate = true)
+        public ILingoMovie NewMovie(string name, bool andActivate = true)
         {
             // Create the default cast
             if (_castLibsContainer.Count == 0) 
@@ -270,24 +273,36 @@ namespace LingoEngine.Core
 
             // Create the movie.
             var movieEnv = (LingoMovieEnvironment)scope.ServiceProvider.GetRequiredService<ILingoMovieEnvironment>();
-            movieEnv.Init(name, _movies.Count + 1, this, _LingoKey, _sound, _Mouse, _Stage, _System, Clock, _castLibsContainer, scope);
+            movieEnv.Init(name, _movies.Count + 1, this, _LingoKey, _sound, _Mouse, _Stage, _System, Clock, _castLibsContainer, scope,m =>
+            {
+                // On remove movie
+                var movieEnvironment = m.GetEnvironment();
+                _movies.Remove(movieEnvironment);
+                _moviesByName.Remove(m.Name);
+            });
+            var movieTyped = (LingoMovie)movieEnv.Movie;
 
             // Add him
             _movies.Add(movieEnv);
             _moviesByName.Add(name, movieEnv);
 
+            Factory.AddMovie(_Stage, movieTyped);
+
+            // Add all movieScripts
+            _actionOnNewMovie(movieTyped);
+
             // Activate him;
             if (andActivate)
+            {
                 ActiveMovie = movieEnv.Movie;
+                _Stage.SetActiveMovie(movieTyped);
+            }
             return movieEnv.Movie;
         }
         public void CloseMovie(ILingoMovie movie)
         {
             var typed = (LingoMovie)movie;
-            var movieEnvironment = typed.GetEnvironment();
-            _movies.Remove(movieEnvironment);
-            _moviesByName.Remove(typed.Name);
-            movieEnvironment.Dispose();
+            typed.RemoveMe();
         }
 
         /// <summary>
@@ -300,6 +315,11 @@ namespace LingoEngine.Core
             var castLib = _castLibsContainer.AddCast(castlibName);
             _csvImporter.Value.ImportInCastFromCsvFile(castLib, pathAndFilenameToCsv);
             return this;
+        }
+
+        internal void LoadMovieScripts(IEnumerable<LingoMovieScript> enumerable)
+        {
+            throw new NotImplementedException();
         }
     }
 }

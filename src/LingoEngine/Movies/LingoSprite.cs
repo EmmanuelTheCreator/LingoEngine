@@ -71,15 +71,7 @@ namespace LingoEngine.Movies
         /// </summary>
         bool Loaded { get; }
 
-        /// <summary>
-        /// Horizontal location of the sprite on the stage. Read/write.
-        /// </summary>
-        float LocH { get; set; }
-
-        /// <summary>
-        /// Vertical location of the sprite on the stage. Read/write.
-        /// </summary>
-        float LocV { get; set; }
+       
 
         /// <summary>
         /// Identifies the specified cast member as a media byte array. Read/write.
@@ -118,7 +110,16 @@ namespace LingoEngine.Movies
         /// Specifies the registration point of a cast member. Read/write.
         /// </summary>
         LingoPoint RegPoint { get; set; }
+        LingoPoint Loc { get; set; }
+        /// <summary>
+        /// Horizontal location of the sprite on the stage. Read/write.
+        /// </summary>
+        float LocH { get; set; }
 
+        /// <summary>
+        /// Vertical location of the sprite on the stage. Read/write.
+        /// </summary>
+        float LocV { get; set; }
 
         /// <summary>
         /// List of script instance names or types attached to the sprite.
@@ -144,7 +145,7 @@ namespace LingoEngine.Movies
         /// Controls whether the sprite is visible on the Stage. Read/write.
         /// </summary>
         bool Visibility { get; set; }
-        LingoPoint Loc { get; set; }
+        int MemberNum { get; }
 
         /// <summary>
         /// Changes the cast member displayed by this sprite using the cast member number.
@@ -177,6 +178,11 @@ namespace LingoEngine.Movies
         /// Moves the sprite one layer forward in the display order.
         /// </summary>
         void MoveForward();
+
+        bool Intersects(ILingoSprite other);
+        bool Within(ILingoSprite other);
+        (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad();
+
     }
 
 
@@ -203,7 +209,11 @@ namespace LingoEngine.Movies
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
-        public T FrameworkObj<T>() where T : ILingoFrameworkSprite => (T)_frameworkSprite;
+        private LingoMember? _Member;
+        private Action<LingoSprite>? _onRemoveMe;
+
+        public ILingoFrameworkSprite FrameworkObj => _frameworkSprite;
+        public T Framework<T>() where T : class, ILingoFrameworkSprite => (T)_frameworkSprite;
 
         /// <summary>
         /// This represents the puppetsprite controlled by script.
@@ -224,15 +234,17 @@ namespace LingoEngine.Movies
         public bool Linked { get; private set; }
         public bool Loaded { get; private set; }
         public bool MediaReady { get; private set; }
+        public float Blend { get => _frameworkSprite.Blend; set => _frameworkSprite.Blend = value; }
         public float LocH { get => _frameworkSprite.X; set => _frameworkSprite.X = value; }
         public float LocV { get => _frameworkSprite.Y; set => _frameworkSprite.Y = value; }
-        public float Blend { get => _frameworkSprite.Blend; set => _frameworkSprite.Blend = value; }
+        public LingoPoint Loc { get => (_frameworkSprite.X,_frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
         public LingoPoint RegPoint { get; set; }
         public LingoColor ForeColor { get; set; }
         public List<string> ScriptInstanceList { get; private set; } = new();
 
-        private LingoMember? _Member;
+       
+
         public new ILingoMember? Member { get => _Member; set => SetMember(value); }
         public LingoCast? Cast { get; private set; }
 
@@ -256,38 +268,20 @@ namespace LingoEngine.Movies
         public byte[] Thumbnail { get; set; } = new byte[] { };
         public string ModifiedBy { get; set; } = "";
 
-        public LingoPoint Loc
-        {
-            get => new LingoPoint(LocH, LocV);
-            set
-            {
-                LocH = value.X;
-                LocV = value.Y;
-            }
-        }
-        public LingoPoint Position
-        {
-            get => new LingoPoint(_frameworkSprite.X, _frameworkSprite.Y);
-            set
-            {
-                _frameworkSprite.X = value.X;
-                _frameworkSprite.Y = value.Y;
-            }
-        }
-
-
         public float Width => Member?.Width ?? Rect.Width;
         public float Height => Member?.Height ?? Rect.Height;
         /// <summary>
         /// Whether this sprite is currently active (i.e., the playhead is within its frame span).
         /// </summary>
         public bool IsActive { get; internal set; }
-        
+
 
         // Not used in c#
         // public int ScriptText { get; set; }
 
+#pragma warning disable CS8618 
         public LingoSprite(ILingoMovieEnvironment environment)
+#pragma warning restore CS8618 
             : base(environment)
         {
             _environment = environment;
@@ -364,11 +358,6 @@ When a movie stops, events occur in the following order:
 
 
         internal void SetFrameworkSprite(ILingoFrameworkSprite fw) => _frameworkSprite = fw;
-        private void UpdateFrameworkPosition()
-        {
-            _frameworkSprite?.SetPositionX(LocH);
-            _frameworkSprite?.SetPositionY(LocV);
-        }
 
         public bool PointInSprite(LingoPoint point)
         {
@@ -396,22 +385,7 @@ When a movie stops, events occur in the following order:
             _Member = member as LingoMember;
             _frameworkSprite.MemberChanged();
         }
-        public void SetPosition(float x, float y)
-        {
-            LocH = x;
-            LocV = y;
-            UpdateFrameworkPosition();
-        }
-        public void SetPositionX(float x)
-        {
-            LocH = x;
-            _frameworkSprite?.SetPositionX(x);
-        }
-        public void SetPositionY(float y)
-        {
-            LocV = y;
-            _frameworkSprite?.SetPositionY(y);
-        }
+       
         public void SendToBack()
         {
             throw new NotImplementedException();
@@ -447,6 +421,37 @@ When a movie stops, events occur in the following order:
             //    // etc.
             //};
         }
+
+        public bool Intersects(ILingoSprite other)
+        {
+            return LocH < other.LocH + other.Width &&
+                   LocH + Width > other.LocH &&
+                   LocV < other.LocV + other.Height &&
+                   LocV + Height > other.LocV;
+        }
+        public bool Within(ILingoSprite other)
+        {
+            var thisCenterX = LocH + Width / 2;
+            var thisCenterY = LocV + Height / 2;
+
+            return thisCenterX >= other.LocH &&
+                   thisCenterX <= other.LocH + other.Width &&
+                   thisCenterY >= other.LocV &&
+                   thisCenterY <= other.LocV + other.Height;
+        }
+        public (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad()
+        {
+            float x = LocH;
+            float y = LocV;
+
+            return (
+                new LingoPoint(x, y),                             // top-left
+                new LingoPoint(x + Width, y),                     // top-right
+                new LingoPoint(x + Width, y + Height),            // bottom-right
+                new LingoPoint(x, y + Height)                     // bottom-left
+            );
+        }
+
 
 
         #region Mouse
@@ -546,5 +551,14 @@ When a movie stops, events occur in the following order:
             if (behavior == null) return default;
             return actionOnSpriteBehaviour(behavior);
         }
+
+        public void RemoveMe()
+        {
+            _frameworkSprite.RemoveMe();
+            if (_onRemoveMe != null)
+                _onRemoveMe(this);
+        }
+
+        public void SetOnRemoveMe(Action<LingoSprite> onRemoveMe) => _onRemoveMe = onRemoveMe;
     }
 }
