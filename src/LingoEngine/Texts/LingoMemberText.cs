@@ -1,5 +1,6 @@
 ﻿
 using LingoEngine.Core;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Texts
 {
@@ -27,8 +28,8 @@ namespace LingoEngine.Texts
         /// </summary>
         public List<LingoParagraph> Paragraphs { get; private set; } = new();
 
-        public LingoMemberText(LingoCast cast, int number, string name = "")
-            : base(LingoMemberType.Text, cast, number, name)
+        public LingoMemberText(LingoCast cast, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
+            : base(LingoMemberType.Text, cast, number, name, fileName,regPoint)
         {
         }
 

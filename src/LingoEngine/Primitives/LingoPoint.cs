@@ -40,6 +40,9 @@
         public static bool operator ==(LingoPoint left, LingoPoint right) => left.Equals(right);
 
         public static bool operator !=(LingoPoint left, LingoPoint right) => !(left == right);
+
+        public static implicit operator LingoPoint((float x, float y) tuple)
+       => new LingoPoint(tuple.x, tuple.y);
     }
 
 }

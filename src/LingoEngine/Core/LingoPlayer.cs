@@ -1,6 +1,8 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
+using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
+using LingoEngine.Tools;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Core
@@ -148,11 +150,13 @@ namespace LingoEngine.Core
         /// </summary>
         /// <returns>True if the window is present; false otherwise.</returns>
         bool WindowPresent();
+        ILingoPlayer LoadCastLibFromCsv(string castlibName, string pathAndFilenameToCsv);
     }
 
 
     public class LingoPlayer : ILingoPlayer
     {
+        private Lazy<CsvImporter> _csvImporter = new Lazy<CsvImporter>(() => new CsvImporter());
         private readonly LingoCastLibsContainer _castLibsContainer;
         private readonly LingoSound _sound;
         private readonly ILingoWindow _window;
@@ -258,7 +262,8 @@ namespace LingoEngine.Core
         public ILingoMovie LoadMovie(string name, bool andActivate = true)
         {
             // Create the default cast
-            _castLibsContainer.AddCast("Internal");
+            if (_castLibsContainer.Count == 0) 
+                _castLibsContainer.AddCast("Internal");
 
             // Create a new movies scope, needed for behaviours.
             var scope = _serviceProvider.CreateScope();
@@ -283,6 +288,18 @@ namespace LingoEngine.Core
             _movies.Remove(movieEnvironment);
             _moviesByName.Remove(typed.Name);
             movieEnvironment.Dispose();
+        }
+
+        /// <summary>
+        /// Format: comma split
+        ///     Number,Type,Name,Registration Point,Filename
+        ///     1,bitmap,BallB,"(5, 5)",
+        /// </summary>
+        public ILingoPlayer LoadCastLibFromCsv(string castlibName, string pathAndFilenameToCsv)
+        {
+            var castLib = _castLibsContainer.AddCast(castlibName);
+            _csvImporter.Value.ImportInCastFromCsvFile(castLib, pathAndFilenameToCsv);
+            return this;
         }
     }
 }
