@@ -1,4 +1,6 @@
-﻿using LingoEngine.Events;
+﻿using LingoEngine.Core;
+using LingoEngine.Events;
+using System;
 
 namespace LingoEngine.Movies
 {
@@ -6,7 +8,7 @@ namespace LingoEngine.Movies
     {
         private readonly ILingoMovieEnvironment _movieEnvironment;
 
-        private readonly List<LingoMovieScript> _movieScripts = new();
+        private readonly Dictionary<Type,LingoMovieScript> _movieScripts = new();
         private readonly List<IHasMouseDownEvent> _mouseDownBehaviors = new List<IHasMouseDownEvent>();
         private readonly List<IHasMouseUpEvent> _mouseUpBehaviors = new List<IHasMouseUpEvent>();
         private readonly List<IHasMouseMoveEvent> _mouseMoveBehaviors = new List<IHasMouseMoveEvent>();
@@ -27,40 +29,59 @@ namespace LingoEngine.Movies
         }
         public void Add<T>() where T : LingoMovieScript
         {
-            var behavior = _movieEnvironment.Factory.CreateMovieScript<T>();
-            _movieScripts.Add(behavior);
+            var ms = _movieEnvironment.Factory.CreateMovieScript<T>((LingoMovie)_movieEnvironment.Movie);
+            _movieScripts.Add(typeof(T),ms);
 
-            if (behavior is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Add(mouseDownEvent);
-            if (behavior is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Add(mouseUpEvent);
-            if (behavior is IHasMouseMoveEvent mouseMoveEvent) _mouseMoveBehaviors.Add(mouseMoveEvent);
-            if (behavior is IHasMouseEnterEvent mouseEnterEvent) _mouseEnterBehaviors.Add(mouseEnterEvent);
-            if (behavior is IHasMouseExitEvent mouseExitEvent) _mouseExitBehaviors.Add(mouseExitEvent);
-            if (behavior is IHasBeginSpriteEvent beginSpriteEvent) _beginSpriteBehaviors.Add(beginSpriteEvent);
-            if (behavior is IHasEndSpriteEvent endSpriteEvent) _endSpriteBehaviors.Add(endSpriteEvent);
-            if (behavior is IHasStepFrameEvent stepFrameEvent) _stepFrameBehaviors.Add(stepFrameEvent);
-            if (behavior is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrameBehaviors.Add(prepareFrameEvent);
-            if (behavior is IHasEnterFrameEvent enterFrameEvent) _enterFrameBehaviors.Add(enterFrameEvent);
-            if (behavior is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Add(exitFrameEvent);
-            if (behavior is IHasFocusEvent focusEvent) _focusBehaviors.Add(focusEvent);
-            if (behavior is IHasBlurEvent blurEvent) _blurBehaviors.Add(blurEvent);
+            if (ms is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Add(mouseDownEvent);
+            if (ms is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Add(mouseUpEvent);
+            if (ms is IHasMouseMoveEvent mouseMoveEvent) _mouseMoveBehaviors.Add(mouseMoveEvent);
+            if (ms is IHasMouseEnterEvent mouseEnterEvent) _mouseEnterBehaviors.Add(mouseEnterEvent);
+            if (ms is IHasMouseExitEvent mouseExitEvent) _mouseExitBehaviors.Add(mouseExitEvent);
+            if (ms is IHasBeginSpriteEvent beginSpriteEvent) _beginSpriteBehaviors.Add(beginSpriteEvent);
+            if (ms is IHasEndSpriteEvent endSpriteEvent) _endSpriteBehaviors.Add(endSpriteEvent);
+            if (ms is IHasStepFrameEvent stepFrameEvent) _stepFrameBehaviors.Add(stepFrameEvent);
+            if (ms is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrameBehaviors.Add(prepareFrameEvent);
+            if (ms is IHasEnterFrameEvent enterFrameEvent) _enterFrameBehaviors.Add(enterFrameEvent);
+            if (ms is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Add(exitFrameEvent);
+            if (ms is IHasFocusEvent focusEvent) _focusBehaviors.Add(focusEvent);
+            if (ms is IHasBlurEvent blurEvent) _blurBehaviors.Add(blurEvent);
         }
-        public void Remove(LingoMovieScript behavior)
+        public void Remove(LingoMovieScript ms)
         {
-            _movieScripts.Remove(behavior);
+            _movieScripts.Remove(ms.GetType());
 
-            if (behavior is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Remove(mouseDownEvent);
-            if (behavior is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Remove(mouseUpEvent);
-            if (behavior is IHasMouseMoveEvent mouseMoveEvent) _mouseMoveBehaviors.Remove(mouseMoveEvent);
-            if (behavior is IHasMouseEnterEvent mouseEnterEvent) _mouseEnterBehaviors.Remove(mouseEnterEvent);
-            if (behavior is IHasMouseExitEvent mouseExitEvent) _mouseExitBehaviors.Remove(mouseExitEvent);
-            if (behavior is IHasBeginSpriteEvent beginSpriteEvent) _beginSpriteBehaviors.Remove(beginSpriteEvent);
-            if (behavior is IHasEndSpriteEvent endSpriteEvent) _endSpriteBehaviors.Remove(endSpriteEvent);
-            if (behavior is IHasStepFrameEvent stepFrameEvent) _stepFrameBehaviors.Remove(stepFrameEvent);
-            if (behavior is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrameBehaviors.Remove(prepareFrameEvent);
-            if (behavior is IHasEnterFrameEvent enterFrameEvent) _enterFrameBehaviors.Remove(enterFrameEvent);
-            if (behavior is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Remove(exitFrameEvent);
-            if (behavior is IHasFocusEvent focusEvent) _focusBehaviors.Remove(focusEvent);
-            if (behavior is IHasBlurEvent blurEvent) _blurBehaviors.Remove(blurEvent);
+            if (ms is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Remove(mouseDownEvent);
+            if (ms is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Remove(mouseUpEvent);
+            if (ms is IHasMouseMoveEvent mouseMoveEvent) _mouseMoveBehaviors.Remove(mouseMoveEvent);
+            if (ms is IHasMouseEnterEvent mouseEnterEvent) _mouseEnterBehaviors.Remove(mouseEnterEvent);
+            if (ms is IHasMouseExitEvent mouseExitEvent) _mouseExitBehaviors.Remove(mouseExitEvent);
+            if (ms is IHasBeginSpriteEvent beginSpriteEvent) _beginSpriteBehaviors.Remove(beginSpriteEvent);
+            if (ms is IHasEndSpriteEvent endSpriteEvent) _endSpriteBehaviors.Remove(endSpriteEvent);
+            if (ms is IHasStepFrameEvent stepFrameEvent) _stepFrameBehaviors.Remove(stepFrameEvent);
+            if (ms is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrameBehaviors.Remove(prepareFrameEvent);
+            if (ms is IHasEnterFrameEvent enterFrameEvent) _enterFrameBehaviors.Remove(enterFrameEvent);
+            if (ms is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Remove(exitFrameEvent);
+            if (ms is IHasFocusEvent focusEvent) _focusBehaviors.Remove(focusEvent);
+            if (ms is IHasBlurEvent blurEvent) _blurBehaviors.Remove(blurEvent);
+        }
+        internal void RaiseMouseDown(ILingoMouse mouse) => _mouseDownBehaviors.ForEach(x => x.MouseDown(mouse));
+        internal void RaiseMouseUp(ILingoMouse mouse) => _mouseUpBehaviors.ForEach(x => x.MouseUp(mouse));
+        internal void RaiseMouseMove(ILingoMouse mouse) => _mouseMoveBehaviors.ForEach(x => x.MouseMove(mouse));
+        internal void RaiseMouseEnter(ILingoMouse mouse) => _mouseEnterBehaviors.ForEach(x => x.MouseEnter(mouse));
+        internal void RaiseMouseExit(ILingoMouse mouse) => _mouseExitBehaviors.ForEach(x => x.MouseExit(mouse));
+        internal void RaiseBeginSprite() => _beginSpriteBehaviors.ForEach(x => x.BeginSprite());
+        internal void RaiseEndSprite() => _endSpriteBehaviors.ForEach(x => x.EndSprite());
+        internal void RaiseStepFrame() => _stepFrameBehaviors.ForEach(x => x.StepFrame());
+        internal void RaisePrepareFrame() => _prepareFrameBehaviors.ForEach(x => x.PrepareFrame());
+        internal void RaiseEnterFrame() => _enterFrameBehaviors.ForEach(x => x.EnterFrame());
+        internal void RaiseExitFrame() => _exitFrameBehaviors.ForEach(x => x.ExitFrame());
+        internal void RaiseFocus() => _focusBehaviors.ForEach(x => x.Focus());
+        internal void RaiseBlur() => _blurBehaviors.ForEach(x => x.Blur());
+
+        internal T? Get<T>() where T : LingoMovieScript
+        {
+            if (_movieScripts.TryGetValue(typeof(T), out var ms)) return ms as T;
+            return null;
         }
     }
 }

@@ -28,8 +28,8 @@ namespace LingoEngineGodot
             _serviceProvider = serviceProvider;
         }
 
-        public T CreateBehavior<T>() where T : LingoSpriteBehavior => _serviceProvider.GetRequiredService<T>();
-        public T CreateMovieScript<T>() where T : LingoMovieScript => _serviceProvider.GetRequiredService<T>();
+        public T CreateBehavior<T>(LingoMovie lingoMovie) where T : LingoSpriteBehavior => lingoMovie.GetServiceProvider().GetRequiredService<T>();
+        public T CreateMovieScript<T>(LingoMovie lingoMovie) where T : LingoMovieScript => lingoMovie.GetServiceProvider().GetRequiredService<T>();
 
         #region Sound
        

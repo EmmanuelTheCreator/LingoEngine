@@ -28,8 +28,8 @@ namespace LingoEngine.FrameworkCommunication
         LingoSoundChannel CreateSoundChannel(int number);
 
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
-        T CreateBehavior<T>() where T : LingoSpriteBehavior;
-        T CreateMovieScript<T>() where T : LingoMovieScript;
+        T CreateBehavior<T>(LingoMovie lingoMovie) where T : LingoSpriteBehavior;
+        T CreateMovieScript<T>(LingoMovie lingoMovie) where T : LingoMovieScript;
         
     }
 }

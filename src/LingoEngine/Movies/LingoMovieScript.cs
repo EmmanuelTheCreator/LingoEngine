@@ -7,7 +7,7 @@ namespace LingoEngine.Movies
     {
         public LingoMovieScript(ILingoMovieEnvironment env) : base(env)
         {
-            ((LingoMovie)_Movie).SubscribeMovieScript(this);
+            ((LingoMovie)env.Movie).SubscribeMovieScript(this);
         }
         public void Dispose()
         {

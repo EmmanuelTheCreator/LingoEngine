@@ -298,7 +298,7 @@ namespace LingoEngine.Movies
 
         public LingoSprite AddBehavior<T>() where T : LingoSpriteBehavior
         {
-            var behavior = _environment.Factory.CreateBehavior<T>();
+            var behavior = _environment.Factory.CreateBehavior<T>((LingoMovie)_environment.Movie);
             behavior.SetMe(this);
             _behaviors.Add(behavior);
             if (behavior is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Add(mouseDownEvent);
