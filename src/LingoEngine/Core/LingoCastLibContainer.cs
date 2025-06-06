@@ -1,5 +1,7 @@
 ﻿
 
+using LingoEngine.FrameworkCommunication;
+
 namespace LingoEngine.Core
 {
     public interface ILingoCastLibsContainer
@@ -27,7 +29,8 @@ namespace LingoEngine.Core
         private List<LingoCast> _casts = new();
         private ILingoCast activeCast;
         private readonly LingoMembersContainer _allMembersContainer;
-        
+        private readonly ILingoFrameworkFactory _factory;
+
         public ILingoMembersContainer Member => _allMembersContainer;
         public int Count => _casts.Count;
 
@@ -37,9 +40,10 @@ namespace LingoEngine.Core
                     activeCast = value;
             } 
         }
-        public LingoCastLibsContainer()
+        public LingoCastLibsContainer(ILingoFrameworkFactory factory)
         {
             _allMembersContainer = new LingoMembersContainer(_allMembersByName);
+            _factory = factory;
         }
 
         public ILingoCast this[int number] => _casts[number - 1];
@@ -49,7 +53,7 @@ namespace LingoEngine.Core
 
         public ILingoCast AddCast(string name)
         {
-            var cast = new LingoCast(this, name);
+            var cast = new LingoCast(this, _factory, name);
             _casts.Add(cast);
             _castsByName.Add(name, cast);
             if (ActiveCast == null)
@@ -97,5 +101,7 @@ namespace LingoEngine.Core
         }
 
         internal int GetNextCastNumber() => _casts.Count + 1;
+
+       
     }
 }

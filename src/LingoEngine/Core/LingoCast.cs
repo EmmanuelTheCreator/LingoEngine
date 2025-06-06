@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Primitives;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace LingoEngine.Core
@@ -65,8 +67,9 @@ namespace LingoEngine.Core
         /// displays the next empty cast member position or the position after a specified cast member. This method is available only on the current cast library.
         /// </summary>
         int FindEmpty();
+        void Add(LingoMemberType type, string name, string fileName = "", LingoPoint regPoint = default);
 
-        
+
     }
     public class CastMemberSelection
     {
@@ -78,6 +81,7 @@ namespace LingoEngine.Core
     {
         
         private readonly LingoCastLibsContainer _castLibsContainer;
+        private readonly ILingoFrameworkFactory _factory;
         private readonly LingoMembersContainer _MembersContainer = new();
 
         /// <inheritdoc/>
@@ -93,9 +97,10 @@ namespace LingoEngine.Core
 
         public ILingoMembersContainer Member => _MembersContainer;
         
-        internal LingoCast(LingoCastLibsContainer castLibsContainer, string name)
+        internal LingoCast(LingoCastLibsContainer castLibsContainer, ILingoFrameworkFactory factory, string name)
         {
             _castLibsContainer = castLibsContainer;
+            _factory = factory;
             Name = name;
             Number = castLibsContainer.GetNextCastNumber();
         }
@@ -131,6 +136,19 @@ namespace LingoEngine.Core
             var allMembers = _MembersContainer.All;
             foreach (var member in allMembers)
                 Remove(member);
+        }
+
+        public void Add(LingoMemberType type, string name, string fileName = "", LingoPoint regPoint =default)
+        {
+            switch (type)
+            {
+                case LingoMemberType.Bitmap: _factory.CreateMemberPicture(this, name, fileName, regPoint); break;
+                case LingoMemberType.Sound: _factory.CreateMemberSound(this, name, fileName, regPoint); break;
+                case LingoMemberType.Text: _factory.CreateMemberText(this, name, fileName, regPoint); break;
+                default:
+                    _factory.CreateEmpty(this, name, fileName, regPoint); break;
+            }
+
         }
     }
 }

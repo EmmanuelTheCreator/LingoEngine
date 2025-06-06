@@ -166,7 +166,7 @@ namespace LingoEngine.Core
         /// <summary>
         /// Retrieves the next member
         /// </summary>
-        ILingoMember GetOffsetMember(int numberOffset);
+        ILingoMember? GetMemberInCastByOffset(int numberOffset);
     }
 
     /// <summary>
@@ -214,6 +214,8 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         public int CastLibNum { get; private set; }
         /// <inheritdoc/>
+        public LingoPoint RegPoint { get; set; }
+        /// <inheritdoc/>
         public int PurgePriority { get; set; }
         /// <inheritdoc/>
         public int Width { get; set; }
@@ -227,22 +229,21 @@ namespace LingoEngine.Core
         public string FileName { get; private set; }
         /// <inheritdoc/>
         public LingoMemberType Type { get; private set; }
-        /// <inheritdoc/>
-        public LingoPoint RegPoint { get; set; }
 
         /// <inheritdoc/>
-        public LingoMember(LingoMemberType type, LingoCast cast, int number, string name = "")
+        public LingoMember(LingoMemberType type, LingoCast cast, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
         {
             // We need to first set the name to not trigger the NameChangedEvent
             Name = name;
             // Then the cast
             _cast = cast;
+            RegPoint = regPoint;
             CastLibNum = number;
             Number = _cast.GetUniqueNumber();
             Type = type;
             CreationDate = DateTime.Now;
             ModifiedDate = DateTime.Now;
-            FileName = string.Empty;
+            FileName = fileName;
             Comments = string.Empty;
             cast.Add(this);
         }
@@ -280,5 +281,9 @@ namespace LingoEngine.Core
             return clone;
         }
 
+        public ILingoMember? GetMemberInCastByOffset(int numberOffset)
+        {
+            return _cast.Member[Number + numberOffset];
+        }
     }
 }

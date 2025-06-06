@@ -214,7 +214,7 @@ namespace LingoEngine.Movies
         public int MemberNum { get => Member?.Number ?? 0; set
             {
                 if (Member != null)
-                    Member = Member.GetOffsetMember(value);
+                    Member = Member.GetMemberInCastByOffset(value);
             }
         }
         public int SpriteNum { get; private set; }
