@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using LingoEngine.Primitives;
 
 namespace LingoEngine.FrameworkCommunication
 {
@@ -9,10 +9,14 @@ namespace LingoEngine.FrameworkCommunication
         float X { get; set; }
         float Y { get; set; }
         string Name { get; set; }
+        LingoPoint RegPoint { get; set; }
 
-        Vector2 GetGlobalMousePosition();
+       
         void MemberChanged();
-        void SetPositionX(float x);
-        void SetPositionY(float y);
+
+        void RemoveMe();
+        void Show();
+        void Hide();
+        void SetPosition(LingoPoint point);
     }
 }

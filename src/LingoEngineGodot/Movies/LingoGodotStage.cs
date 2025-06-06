@@ -1,86 +1,59 @@
-﻿using ArkGodot.GodotLinks;
-using Godot;
+﻿using Godot;
+using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
-using LingoEngineGodot.Pictures;
 
 namespace LingoEngineGodot.Movies
 {
-    public class LingoGodotStage : ILingoFrameworkStage, IDisposable
+    public partial class LingoGodotStage : Node2D, ILingoFrameworkStage, IDisposable
     {
         private LingoStage _LingoStage;
-        private HashSet<LingoGodotSprite> _drawnSprites = new();
-        private Node2D _stageRoot = new Node2D();
+        private readonly LingoClock _lingoClock;
 
-        internal Node2D StageNode2D => _stageRoot;
+        private LingoGodotMovie? _activeMovie;
 
-        public LingoGodotStage(Node2D rootNode)
+        public LingoGodotStage(Node2D rootNode, LingoClock lingoClock)
         {
-            rootNode.AddChild(_stageRoot);
+            _lingoClock = lingoClock;
+            rootNode.AddChild(this);
         }
 
+        public override void _Ready()
+        {
+            base._Ready();
+        }
+        public override void _Process(double delta)
+        {
+            base._Process(delta);
+            _lingoClock.Tick((float)delta);
+        }
         internal void Init(LingoStage lingoInstance)
         {
             _LingoStage = lingoInstance;
         }
-        public void DrawSprite(LingoSprite sprite)
+     
+
+        internal void ShowMovie(LingoGodotMovie lingoGodotMovie)
         {
-            // Only handle picture members
-            if (!(sprite.Member is LingoMemberPicture pictureMember)) return;
-            var godotSprite = sprite.FrameworkObj<LingoGodotSprite>();
-            if (godotSprite == null) return;
-            
-            // Set the texture using the ImageTexture from the picture member
-            var texture = pictureMember.FrameworkObj<LingoGodotMemberPicture>().Texture;
-            if (texture == null)
+            AddChild(lingoGodotMovie.GetNode2D());
+        }
+        internal void HideMovie(LingoGodotMovie lingoGodotMovie)
+        {
+            RemoveChild(lingoGodotMovie.GetNode2D());
+        }
+
+        public void SetActiveMovie(LingoMovie? lingoMovie)
+        {
+            if (_activeMovie != null)
+                _activeMovie.Hide();
+            if (lingoMovie == null) { 
+                _activeMovie = null;
                 return;
-            godotSprite.Texture = texture;
-
-            // Set initial position and visibility
-            //godotSprite.Position = new Vector2(sprite.LocH, sprite.LocV);
-            //godotSprite.Visible = sprite.Visible;
-
-            // Add the sprite node to the stage root if it's not already added
-            if (godotSprite.GetParent() == null && _stageRoot != null)
-                _stageRoot.AddChild(godotSprite);
-            _drawnSprites.Add(godotSprite);
-        }
-
-        public void RemoveSprite(LingoSprite sprite)
-        {
-            var godotSprite = sprite.FrameworkObj<LingoGodotSprite>();
-            // Remove the Node2D from the scene tree
-            if (godotSprite.GetParent() != null)
-            {
-                godotSprite.GetParent().RemoveChild(godotSprite);
             }
-            // Free the node to release resources
-            //godotSprite.QueueFree();
-            _drawnSprites.Remove(godotSprite);
+            if (lingoMovie == null) return;
+            var godotMovie = lingoMovie.Framework<LingoGodotMovie>();
+            _activeMovie = godotMovie;
+            godotMovie.Show();
         }
-
-        public void UpdateStage()
-        {
-            foreach (var godotSprite in _drawnSprites)
-            {
-                if (!(godotSprite.LingoSprite.Member is LingoMemberPicture pictureMember)) return;
-                if (godotSprite.IsDirtyMember)
-                {
-                    var texture = pictureMember.FrameworkObj<LingoGodotMemberPicture>().Texture;
-                    if (texture != null)
-                        godotSprite.Texture = texture;
-                    godotSprite.IsDirtyMember = false;
-                }
-                if (!godotSprite.IsDirty) continue;
-                godotSprite.IsDirty = false;
-            }
-        }
-
-        public void Dispose()
-        {
-        }
-
-      
     }
 }

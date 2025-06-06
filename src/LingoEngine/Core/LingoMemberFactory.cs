@@ -1,11 +1,10 @@
-﻿using LingoEngine.Core;
-using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 
-namespace LingoEngineGodot
+namespace LingoEngine.Core
 {
     public interface ILingoMemberFactory
     {

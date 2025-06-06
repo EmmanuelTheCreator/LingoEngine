@@ -19,7 +19,7 @@ namespace LingoEngine.Pictures
             /// </summary>
             /// <typeparam name="T">The type of the framework object.</typeparam>
             /// <returns>Framework object implementing ILingoFrameworkMemberPicture.</returns>
-            public T FrameworkObj<T>() where T : ILingoFrameworkMemberPicture => (T)_lingoFrameworkMemberPicture;
+            public T Framework<T>() where T : class, ILingoFrameworkMemberPicture => (T)_lingoFrameworkMemberPicture;
 
             /// <summary>
             /// Gets the raw image data (e.g., pixel data or encoded image format).
@@ -45,7 +45,7 @@ namespace LingoEngine.Pictures
             /// <param name="number">The number of the member.</param>
             /// <param name="name">The name of the member.</param>
             public LingoMemberPicture(LingoCast cast, ILingoFrameworkMemberPicture lingoFrameworkMemberPicture, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
-                : base(LingoMemberType.Picture, cast, number, name, fileName, regPoint)
+                : base(lingoFrameworkMemberPicture, LingoMemberType.Picture, cast, number, name, fileName, regPoint)
             {
                 _lingoFrameworkMemberPicture = lingoFrameworkMemberPicture;
             }

@@ -5,7 +5,7 @@ namespace LingoEngine.Sounds
     public class LingoMemberSound : LingoMember
     {
         private readonly ILingoFrameworkMemberSound _lingoFrameworkMemberSound;
-        public T FrameworkObj<T>() where T : ILingoFrameworkMemberSound => (T)_lingoFrameworkMemberSound;
+        public T Framework<T>() where T : ILingoFrameworkMemberSound => (T)_lingoFrameworkMemberSound;
 
         /// <summary>
         /// Whether this sound member is stereo (true) or mono (false). Default is mono.
@@ -35,7 +35,7 @@ namespace LingoEngine.Sounds
         public string LinkedFilePath { get; set; } = string.Empty;
 
         public LingoMemberSound(ILingoFrameworkMemberSound lingoMemberSound, LingoCast cast, int number, string name = "", string fileName = "")
-            : base(LingoMemberType.Sound,cast, number, name, fileName)
+            : base(lingoMemberSound, LingoMemberType.Sound,cast, number, name, fileName)
         {
             _lingoFrameworkMemberSound = lingoMemberSound;
            

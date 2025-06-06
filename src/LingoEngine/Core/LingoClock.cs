@@ -7,18 +7,26 @@
     public interface ILingoClock
     {
         int FrameRate { get; set; }
+        int TickCount { get;}
+
+        /// <summary>
+        /// Resets the timertick count to 0;
+        /// </summary>
+        void Reset();
         void Subscribe(ILingoClockListener listener);
         void Unsubscribe(ILingoClockListener listener);
     }
     public class LingoClock : ILingoClock
     {
         public int FrameRate { get; set; } = 30;
+        public int TickCount { get; private set; } = 0;
 
         private float _accumulatedTime = 0f;
         private readonly List<ILingoClockListener> _listeners = new();
 
         public void Tick(float deltaTime)
         {
+            TickCount++;
             _accumulatedTime += deltaTime;
             float frameTime = 1f / FrameRate;
 
@@ -40,6 +48,7 @@
         {
             _listeners.Remove(listener);
         }
+        public void Reset() => TickCount = 0;
     }
 
 

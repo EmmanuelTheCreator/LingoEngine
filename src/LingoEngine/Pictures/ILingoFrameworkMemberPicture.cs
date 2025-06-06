@@ -1,6 +1,8 @@
-﻿namespace LingoEngine.Pictures
+﻿using LingoEngine.FrameworkCommunication;
+
+namespace LingoEngine.Pictures
 {
-    public interface ILingoFrameworkMemberPicture
+    public interface ILingoFrameworkMemberPicture : ILingoFrameworkMember
     {
        
         /// <summary>
@@ -20,10 +22,5 @@
         int Width { get;  }
         int Height { get;  }
 
-        void CopyToClipBoard();
-        void Erase();
-        void PasteClipBoardInto();
-        void Preload();
-        void Unload();
     }
 }

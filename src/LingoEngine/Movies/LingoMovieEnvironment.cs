@@ -1,7 +1,6 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Sounds;
-using LingoEngineGodot;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Movies
@@ -64,7 +63,7 @@ namespace LingoEngine.Movies
             _factory = factory;
         }
 
-        internal void Init(string name, int number, LingoPlayer player, LingoKey lingoKey, LingoSound sound, LingoMouse mouse, LingoStage stage, LingoSystem system, ILingoClock clock, LingoCastLibsContainer lingoCastLibsContainer, IServiceScope scopedServiceProvider)
+        internal void Init(string name, int number, LingoPlayer player, LingoKey lingoKey, LingoSound sound, LingoMouse mouse, LingoStage stage, LingoSystem system, ILingoClock clock, LingoCastLibsContainer lingoCastLibsContainer, IServiceScope scopedServiceProvider,Action<LingoMovie> onRemoveMe)
         {
             _scopedServiceProvider = scopedServiceProvider;
             _player = player;
@@ -74,7 +73,11 @@ namespace LingoEngine.Movies
             _system = system;
             _clock = clock;
             _castLibsContainer = lingoCastLibsContainer;
-            _movie = new LingoMovie(this, stage, _memberFactory, name,number);
+            _movie = new LingoMovie(this, stage, _memberFactory, name,number,m=>
+            {
+                onRemoveMe(m);
+                Dispose();
+            });
         }
         internal IServiceProvider GetServiceProvider() => _scopedServiceProvider.ServiceProvider;
         public void Dispose()

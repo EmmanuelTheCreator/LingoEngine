@@ -1,4 +1,5 @@
-﻿using LingoEngine.Primitives;
+﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Primitives;
 using LingoEngine.Texts;
 using System.Security.Cryptography;
 using static System.Net.Mime.MediaTypeNames;
@@ -190,6 +191,7 @@ namespace LingoEngine.Core
     {
         protected readonly LingoCast _cast;
         private string _name = string.Empty;
+        private readonly ILingoFrameworkMember _frameworkMember;
 
         /// <inheritdoc/>
         public string Name
@@ -231,8 +233,9 @@ namespace LingoEngine.Core
         public LingoMemberType Type { get; private set; }
 
         /// <inheritdoc/>
-        public LingoMember(LingoMemberType type, LingoCast cast, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
+        public LingoMember(ILingoFrameworkMember frameworkMember, LingoMemberType type, LingoCast cast, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
         {
+            _frameworkMember = frameworkMember;
             // We need to first set the name to not trigger the NameChangedEvent
             Name = name;
             // Then the cast
@@ -249,13 +252,13 @@ namespace LingoEngine.Core
         }
 
         /// <inheritdoc/>
-        public virtual void CopyToClipBoard() { }
-        public virtual void Erase() { }
-        public virtual void ImportFileInto() { }
+        public virtual void Erase() => _frameworkMember.Erase();
+        public virtual void ImportFileInto() => _frameworkMember.ImportFileInto();
         public virtual void Move() { }
-        public virtual void PasteClipBoardInto() { }
-        public virtual void Preload() { }
-        public virtual void Unload() { }
+        public virtual void CopyToClipBoard() => _frameworkMember.CopyToClipBoard();
+        public virtual void PasteClipBoardInto() => _frameworkMember.PasteClipBoardInto();
+        public virtual void Preload() => _frameworkMember.Preload();
+        public virtual void Unload() => _frameworkMember.Unload();
 
         public ILingoMember Duplicate(int? newNumber = null)
         {
@@ -277,8 +280,9 @@ namespace LingoEngine.Core
         }
         protected virtual LingoMember OnDuplicate(int newNumber)
         {
-            var clone = new LingoMember(Type, _cast, newNumber, Name);
-            return clone;
+            throw new NotImplementedException();
+            //var clone = new LingoMember( Type, _cast, newNumber, Name);
+            //return clone;
         }
 
         public ILingoMember? GetMemberInCastByOffset(int numberOffset)

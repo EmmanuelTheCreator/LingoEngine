@@ -23,6 +23,12 @@ namespace LingoEngineGodot.Pictures
 
         public int Height {get;private set;}
 
+#pragma warning disable CS8618 
+        public LingoGodotMemberPicture()
+#pragma warning restore CS8618 
+        {
+            
+        }
 
         internal void Init(LingoMemberPicture lingoInstance)
         {
@@ -34,12 +40,10 @@ namespace LingoEngineGodot.Pictures
         /// </summary>
         public void CreateTexture()
         {
-            if (ImageData == null)
-                throw new InvalidOperationException("ImageData is not set.");
-
             // Create a new Image object
             _image = new Image();
-
+            
+            
             // Load the image from the byte array (assuming PNG/JPEG format)
             var error = _image.Load($"res://{_lingoMemberPicture.FileName}");
             if (error != Error.Ok)
@@ -68,7 +72,17 @@ namespace LingoEngineGodot.Pictures
                 _ => "application/octet-stream" // Default MIME type for unknown extensions
             };
         }
+        private void UpdateImageData(Image image)
+        {
+            Width = image.GetWidth();
+            Height = image.GetHeight();
+            ImageData = image.GetData();
 
+            Format = GetMimeType(_lingoMemberPicture.FileName);
+            _lingoMemberPicture.Size = ImageData.Length;
+            _lingoMemberPicture.Width = Width;
+            _lingoMemberPicture.Height = Height;
+        }
         public void Erase()
         {
             Unload();
@@ -80,6 +94,7 @@ namespace LingoEngineGodot.Pictures
 
         public void Preload()
         {
+            if (IsLoaded) return;
             if (_image == null) CreateTexture();
             _imageTexture = ImageTexture.CreateFromImage(_image);
             IsLoaded = true;
@@ -109,16 +124,9 @@ namespace LingoEngineGodot.Pictures
             _image = DisplayServer.ClipboardGetImage();
             UpdateImageData(_image);
         }
-        private void UpdateImageData(Image image)
-        {
-            Width = image.GetWidth();
-            Height = image.GetHeight();
-            ImageData = image.GetData();
 
-            Format = GetMimeType(_lingoMemberPicture.FileName);
-            _lingoMemberPicture.Size = ImageData.Length;
-            _lingoMemberPicture.Width = Width;
-            _lingoMemberPicture.Height = Height;
+        public void ImportFileInto()
+        {
         }
     }
 }

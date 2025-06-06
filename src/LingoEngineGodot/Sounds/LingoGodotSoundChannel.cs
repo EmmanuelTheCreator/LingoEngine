@@ -84,7 +84,7 @@ namespace LingoEngineGodot.Sounds
         /// <inheritdoc/>
         public void PlayNow(LingoMemberSound member)
         {
-            var stream = member.FrameworkObj<LingoGodotMemberSound>().AudioStream;
+            var stream = member.Framework<LingoGodotMemberSound>().AudioStream;
             if (stream == null) return;
             Play(stream);
         }
