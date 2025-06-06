@@ -48,7 +48,7 @@ namespace LingoEngineGodot.Pictures
             var error = _image.Load($"res://{_lingoMemberPicture.FileName}");
             if (error != Error.Ok)
             {
-                GD.PrintErr("Failed to load image data.");
+                GD.PrintErr("Failed to load image data.:"+ _lingoMemberPicture.FileName+":" +error);
                 return;
             }
             UpdateImageData(_image);

@@ -1,4 +1,5 @@
 ﻿using Godot;
+using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 
 namespace LingoEngineGodot.Sounds
@@ -26,7 +27,7 @@ namespace LingoEngineGodot.Sounds
         internal void Init(LingoMemberSound memberSound)
         {
             _lingoMemberSound = memberSound;
-            
+            Preload();
             //_lingoMemberSound.CreationDate = new FileInfo(Format).LastWriteTime;
         }
 
@@ -56,10 +57,15 @@ namespace LingoEngineGodot.Sounds
             if (IsLoaded) return;
             IsLoaded = true;
             AudioStream = GD.Load<AudioStream>($"res://{_lingoMemberSound.FileName}");
+            //if (AudioStream.ok != Error.Ok)
+            //{
+            //    GD.PrintErr("Failed to load image data.:" + _lingoMemberPicture.FileName + ":" + error);
+            //    return;
+            //}
             Length = AudioStream.GetLength();
             StreamName = AudioStream._GetStreamName();
             Stereo = !AudioStream.IsMonophonic();
-            _lingoMemberSound.Size = Convert.ToInt32(AudioStream._GetLength() * 44100);
+            _lingoMemberSound.Size = (long)AudioStream._GetLength() * 44100;
         }
 
         public void Unload()

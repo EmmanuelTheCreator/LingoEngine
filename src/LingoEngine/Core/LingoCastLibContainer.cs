@@ -82,7 +82,8 @@ namespace LingoEngine.Core
         internal void AddMember(LingoMember member)
         {
             _allMembersContainer.Add(member);
-            _allMembersByName.Add(member.Name, member);
+            if (!_allMembersByName.ContainsKey(member.Name))
+                _allMembersByName.Add(member.Name, member);
         }
 
         internal void RemoveMember(LingoMember member)

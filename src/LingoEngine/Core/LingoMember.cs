@@ -96,7 +96,7 @@ namespace LingoEngine.Core
         /// The size of the member in memory (bytes).
         /// Lingo: the size of member
         /// </summary>
-        int Size { get; set; }
+        long Size { get; set; }
 
         /// <summary>
         /// Arbitrary comments associated with the cast member.
@@ -224,7 +224,7 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         public int Height { get; set; }
         /// <inheritdoc/>
-        public int Size { get; set; }
+        public long Size { get; set; }
         /// <inheritdoc/>
         public string Comments { get; set; }
         /// <inheritdoc/>
@@ -233,7 +233,7 @@ namespace LingoEngine.Core
         public LingoMemberType Type { get; private set; }
 
         /// <inheritdoc/>
-        public LingoMember(ILingoFrameworkMember frameworkMember, LingoMemberType type, LingoCast cast, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
+        public LingoMember(ILingoFrameworkMember frameworkMember, LingoMemberType type, LingoCast cast, string name = "", string fileName = "", LingoPoint regPoint = default)
         {
             _frameworkMember = frameworkMember;
             // We need to first set the name to not trigger the NameChangedEvent
@@ -241,7 +241,7 @@ namespace LingoEngine.Core
             // Then the cast
             _cast = cast;
             RegPoint = regPoint;
-            CastLibNum = number;
+            CastLibNum = _cast.Number;
             Number = _cast.GetUniqueNumber();
             Type = type;
             CreationDate = DateTime.Now;

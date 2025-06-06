@@ -35,7 +35,7 @@ namespace LingoEngine.Movies
 
         private IServiceScope _scopedServiceProvider;
         private readonly ILingoFrameworkFactory _factory;
-        private readonly ILingoMemberFactory _memberFactory;
+        private readonly Lazy<ILingoMemberFactory> _memberFactory;
         private readonly IServiceProvider _rootServiceProvider;
 
         public ILingoPlayer Player => _player;
@@ -55,7 +55,7 @@ namespace LingoEngine.Movies
         public ILingoFrameworkFactory Factory => _factory;
 
 #pragma warning disable CS8618 
-        public LingoMovieEnvironment(ILingoMemberFactory memberFactory, IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory)
+        public LingoMovieEnvironment(Lazy<ILingoMemberFactory> memberFactory, IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory)
 #pragma warning restore CS8618 
         {
             _memberFactory = memberFactory;
@@ -73,7 +73,7 @@ namespace LingoEngine.Movies
             _system = system;
             _clock = clock;
             _castLibsContainer = lingoCastLibsContainer;
-            _movie = new LingoMovie(this, stage, _memberFactory, name,number,m=>
+            _movie = new LingoMovie(this, stage, _memberFactory.Value, name,number,m=>
             {
                 onRemoveMe(m);
                 Dispose();

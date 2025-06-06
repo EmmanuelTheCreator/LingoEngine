@@ -239,6 +239,7 @@ namespace LingoEngine.Movies
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
         private HashSet<ILingoSpriteEventHandler> _spriteEventHandlers = new();
+        private bool _IsManualUpdateStage;
 
         // Movie Script subscriptions
         private readonly HashSet<ILingoMovieScriptListener> _movieScriptListeners = new();
@@ -474,7 +475,12 @@ namespace LingoEngine.Movies
         public void OnTick()
         {
             if (_isPlaying)
-                AdvanceFrame();
+            {
+                if(_IsManualUpdateStage)
+                    OnUpdateStage();
+                else
+                    AdvanceFrame();
+            }
         }
         public void AdvanceFrame()
         {
@@ -532,7 +538,7 @@ namespace LingoEngine.Movies
             // required by the tempo setting, idle events, and keyboard and mouse events
 
             // STEP 6: Call UpdateStage (e.g., rendering the stage content)
-            UpdateStage();
+            OnUpdateStage();
 
             // STEP 7: Fire exitFrame on all active sprites
             CallActiveSprites(s => s.DoExitFrame());
@@ -602,13 +608,16 @@ namespace LingoEngine.Movies
 
         public void UpdateStage()
         {
-            OnUpdateStage();
+            // a manual update stage needs to run on same framerate, it means that the head player will not advance
+            _IsManualUpdateStage = true;
         }
         private void OnUpdateStage()
         {
+            
             Timer++;
             _actorList.Invoke();
             _FrameworkMovie.UpdateStage();
+            _IsManualUpdateStage = false;
         } 
         #endregion
 
