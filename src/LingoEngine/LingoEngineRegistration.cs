@@ -76,6 +76,7 @@ namespace LingoEngine
         public ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action)
         {
             var registration = new MovieRegistration(_container, name);
+            action(registration);
             _Movies.Add(name, registration);
             return this;
         }
@@ -84,7 +85,7 @@ namespace LingoEngine
             var registration = _Movies[movie.Name];
             var ctor = registration.GetAllMovieScriptsCtors();
             foreach (var item in ctor)
-                movie.AddMovieScript(item(_serviceProvider!));
+                item(movie);
         }
 
         public ILingoEngineRegistration Services(Action<IServiceCollection> services)
@@ -97,14 +98,14 @@ namespace LingoEngine
         {
             private readonly IServiceCollection _container;
             private readonly string _movieName;
-            private readonly List<Func<IServiceProvider, LingoMovieScript>> _MovieScripts = new();
+            private readonly List<Action<LingoMovie>> _MovieScripts = new();
 
             public MovieRegistration(IServiceCollection container, string movieName)
             {
                 _container = container;
                 _movieName = movieName;
             }
-            public Func<IServiceProvider, LingoMovieScript>[] GetAllMovieScriptsCtors() => _MovieScripts.ToArray();
+            public Action<LingoMovie>[] GetAllMovieScriptsCtors() => _MovieScripts.ToArray();
 
             public IMovieRegistration AddBehavior<T>() where T : LingoSpriteBehavior
             {
@@ -115,7 +116,9 @@ namespace LingoEngine
             public IMovieRegistration AddMovieScript<T>() where T : LingoMovieScript
             {
                 _container.AddScoped<T>();
-                _MovieScripts.Add(p => p.GetRequiredService<T>());
+                _MovieScripts.Add(movie => {
+                    movie.AddMovieScript<T>();
+                    });
                 return this;
             }
 

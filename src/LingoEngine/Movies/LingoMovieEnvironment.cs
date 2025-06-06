@@ -55,10 +55,10 @@ namespace LingoEngine.Movies
         public ILingoFrameworkFactory Factory => _factory;
 
 #pragma warning disable CS8618 
-        public LingoMovieEnvironment(Lazy<ILingoMemberFactory> memberFactory, IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory)
+        public LingoMovieEnvironment(IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory)
 #pragma warning restore CS8618 
         {
-            _memberFactory = memberFactory;
+            _memberFactory = rootServiceProvider.GetRequiredService<Lazy<ILingoMemberFactory>>();
             _rootServiceProvider = rootServiceProvider;
             _factory = factory;
         }
@@ -73,7 +73,7 @@ namespace LingoEngine.Movies
             _system = system;
             _clock = clock;
             _castLibsContainer = lingoCastLibsContainer;
-            _movie = new LingoMovie(this, stage, _memberFactory.Value, name,number,m=>
+            _movie = new LingoMovie(this, stage, _castLibsContainer, _memberFactory.Value, name,number,m=>
             {
                 onRemoveMe(m);
                 Dispose();
