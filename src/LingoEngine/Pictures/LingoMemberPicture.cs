@@ -44,8 +44,8 @@ namespace LingoEngine.Pictures
             /// <param name="lingoFrameworkMemberPicture">The framework picture object.</param>
             /// <param name="number">The number of the member.</param>
             /// <param name="name">The name of the member.</param>
-            public LingoMemberPicture(LingoCast cast, ILingoFrameworkMemberPicture lingoFrameworkMemberPicture, int number, string name = "", string fileName = "", LingoPoint regPoint = default)
-                : base(lingoFrameworkMemberPicture, LingoMemberType.Picture, cast, number, name, fileName, regPoint)
+            public LingoMemberPicture(LingoCast cast, ILingoFrameworkMemberPicture lingoFrameworkMemberPicture, string name = "", string fileName = "", LingoPoint regPoint = default)
+                : base(lingoFrameworkMemberPicture, LingoMemberType.Picture, cast, name, fileName, regPoint)
             {
                 _lingoFrameworkMemberPicture = lingoFrameworkMemberPicture;
             }

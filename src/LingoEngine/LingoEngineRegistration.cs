@@ -7,6 +7,7 @@ namespace LingoEngine
 {
     public interface ILingoEngineRegistration
     {
+        ILingoEngineRegistration Services(Action<IServiceCollection> services);
         ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action);
         ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class, ILingoFrameworkFactory;
         LingoPlayer Build();
@@ -24,6 +25,7 @@ namespace LingoEngine
             var engineRegistration = new LingoEngineRegistration(container);
             engineRegistration.RegisterCommonServices();
             container.AddSingleton<ILingoEngineRegistration>(engineRegistration);
+            config(engineRegistration);
             return container;
         }
     }
@@ -43,6 +45,7 @@ namespace LingoEngine
             _container
                .AddTransient<LingoSprite>()
                .AddTransient<ILingoMemberFactory, LingoMemberFactory>()
+               .AddTransient(p => new Lazy<ILingoMemberFactory>(() => p.GetRequiredService<ILingoMemberFactory>()))
                .AddScoped<ILingoMovieEnvironment, LingoMovieEnvironment>()
                // Xtras
                .AddScoped<IBuddyAPI, BuddyAPI>()
@@ -82,6 +85,12 @@ namespace LingoEngine
             var ctor = registration.GetAllMovieScriptsCtors();
             foreach (var item in ctor)
                 movie.AddMovieScript(item(_serviceProvider!));
+        }
+
+        public ILingoEngineRegistration Services(Action<IServiceCollection> services)
+        {
+            services(_container);
+            return this;
         }
 
         private class MovieRegistration : IMovieRegistration

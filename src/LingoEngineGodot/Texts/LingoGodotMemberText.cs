@@ -36,6 +36,11 @@ namespace LingoEngineGodot.Texts
         /// </summary>
         public void LoadFile()
         {
+            if (!File.Exists(_lingoMemberText.FileName))
+            {
+                GD.PrintErr("File not found for Text :"+_lingoMemberText.FileName);
+                return;
+            }
             RAWTextData = File.ReadAllText(_lingoMemberText.FileName);
             //var error = _image.Load($"res://{_lingoMemberText.FileName}");
             UpdateRAWTextData(RAWTextData);

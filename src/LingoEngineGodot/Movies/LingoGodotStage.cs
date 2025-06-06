@@ -12,7 +12,7 @@ namespace LingoEngineGodot.Movies
 
         private LingoGodotMovie? _activeMovie;
 
-        public LingoGodotStage(Node2D rootNode, LingoClock lingoClock)
+        public LingoGodotStage(Node rootNode, LingoClock lingoClock)
         {
             _lingoClock = lingoClock;
             rootNode.AddChild(this);

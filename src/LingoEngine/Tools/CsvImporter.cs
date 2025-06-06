@@ -33,17 +33,35 @@ namespace LingoEngine.Tools
         ///     Number,Type,Name,Registration Point,Filename
         ///     1,bitmap,BallB,"(5, 5)",
         /// </summary>
-        public void ImportInCastFromCsvFile(ILingoCast cast, string filePath)
+        public void ImportInCastFromCsvFile(ILingoCast cast, string filePath, bool skipFirstLine = true)
         {
-            var rootFolder = Path.GetRelativePath(Assembly.GetExecutingAssembly().Location,filePath);
-            var csv = ImportCsvCastFile(filePath);
+            var rootFolder = Path.GetDirectoryName(Path.GetRelativePath(Environment.CurrentDirectory, filePath));
+            var csv = ImportCsvCastFile(filePath, skipFirstLine);
             foreach (var row in csv)
-                cast.Add(row.Type, row.Name,Path.Combine(rootFolder, row.FileName), row.RegPoint);
+            {
+                var fn = row.FileName;
+                if (string.IsNullOrWhiteSpace(row.FileName)) {
+                    var ext = ".png";
+                    switch (row.Type)
+                    {
+                        case LingoMemberType.Text:
+                            ext = ".txt";
+                            break;
+                        case LingoMemberType.Sound:
+                            ext = ".wav";
+                            break;
+                    }
+                    var name = row.Name.Length <1?"":"_"+ row.Name;
+                    fn = row.Number + name + ext;
+                }
+                var fileName = Path.Combine(rootFolder, fn);
+                cast.Add(row.Type, row.Name, fileName, row.RegPoint);
+            }
         }
-        public IReadOnlyCollection<ScvRow> ImportCsvCastFile(string filePath)
+        public IReadOnlyCollection<ScvRow> ImportCsvCastFile(string filePath, bool skipFirstLine = true)
         {
             var returnData = new List<ScvRow>();
-            var csv = Import(filePath);
+            var csv = Import(filePath, skipFirstLine);
             foreach (var row in csv)
             {
                 var number = Convert.ToInt32(row[0]);
@@ -52,20 +70,25 @@ namespace LingoEngine.Tools
                 var registration = row[3].TrimStart('(').TrimEnd(')').Split(',').Select(int.Parse).ToArray();
                 var fileName = row[4];
                 var type1 = LingoMemberType.Unknown;
-                Enum.TryParse(type, out type1);
+                Enum.TryParse(type,true, out type1);
                 returnData.Add(new ScvRow(number, type1, name, (registration[0], registration[1]), fileName));
             }
             return returnData;
         }
 
-        public List<string[]> Import(string filePath)
+        public List<string[]> Import(string filePath, bool skipFirstLine = true)
         {
             var rows = new List<string[]>();
-
+            var hasSkipped = false;
             foreach (var line in File.ReadLines(filePath))
             {
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
+                if (skipFirstLine && !hasSkipped)
+                {
+                    hasSkipped = true;
+                    continue;
+                }
 
                 rows.Add(ParseCsvLine(line));
             }

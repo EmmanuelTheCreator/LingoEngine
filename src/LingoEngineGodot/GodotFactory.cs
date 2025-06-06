@@ -20,13 +20,13 @@ namespace LingoEngineGodot
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         private readonly IServiceProvider _serviceProvider;
-        private Node2D _rootNode;
+        private readonly Node _rootNode;
 
-        public GodotFactory(IServiceProvider serviceProvider)
+        public GodotFactory(IServiceProvider serviceProvider, LingoGodotRootNode rootNode)
         {
+            _rootNode = rootNode.RootNode;
             _serviceProvider = serviceProvider;
         }
-        public void SetRootNode(Node2D rootNode) => _rootNode = rootNode;
 
         public T CreateBehavior<T>() where T : LingoSpriteBehavior => _serviceProvider.GetRequiredService<T>();
         public T CreateMovieScript<T>() where T : LingoMovieScript => _serviceProvider.GetRequiredService<T>();
@@ -65,7 +65,7 @@ namespace LingoEngineGodot
         public LingoMemberSound CreateMemberSound(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var lingoMemberSound = new LingoGodotMemberSound();
-            var memberSound = new LingoMemberSound(lingoMemberSound, (LingoCast)cast, cast.FindEmpty(), name,fileName ?? "");
+            var memberSound = new LingoMemberSound(lingoMemberSound, (LingoCast)cast, name,fileName ?? "");
             lingoMemberSound.Init(memberSound);
             _disposables.Add(lingoMemberSound);
             return memberSound;
@@ -73,7 +73,7 @@ namespace LingoEngineGodot
         public LingoMemberPicture CreateMemberPicture(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var godotInstance = new LingoGodotMemberPicture();
-            var lingoInstance = new LingoMemberPicture((LingoCast)cast, godotInstance, cast.FindEmpty(), name, fileName ??"", regPoint);
+            var lingoInstance = new LingoMemberPicture((LingoCast)cast, godotInstance, name, fileName ??"", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
@@ -81,7 +81,7 @@ namespace LingoEngineGodot
         public LingoMemberText CreateMemberText(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var godotInstance = new LingoGodotMemberText();
-            var lingoInstance = new LingoMemberText((LingoCast)cast,godotInstance, cast.FindEmpty(), name, fileName ?? "", regPoint);
+            var lingoInstance = new LingoMemberText((LingoCast)cast,godotInstance, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
@@ -90,7 +90,7 @@ namespace LingoEngineGodot
             LingoPoint regPoint = default)
         {
             var godotInstance = new LingoFrameworkMemberEmpty();
-            var lingoInstance = new LingoMember(godotInstance, LingoMemberType.Empty,(LingoCast)cast, cast.FindEmpty(), name, fileName ?? "", regPoint);
+            var lingoInstance = new LingoMember(godotInstance, LingoMemberType.Empty,(LingoCast)cast, name, fileName ?? "", regPoint);
             return lingoInstance;
         }
         #endregion

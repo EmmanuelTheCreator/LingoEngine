@@ -39,12 +39,13 @@ namespace LingoEngineGodot
                 IsDirty = true;
             }
         }
+        private string _name;
         public string Name
         {
-            get => Name.ToString();
+            get => _name.ToString();
             set
             {
-                Name = value;
+                _name = value;
                 _Container2D.Name = value;
                 _Sprite2D.Name = value + "_Sprite";
             }
