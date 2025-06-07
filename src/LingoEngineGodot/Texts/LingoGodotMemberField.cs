@@ -23,6 +23,15 @@ namespace LingoEngineGodot.Texts
             _parentNode = new CenterContainer();
             _labelNode = new Label();
             _parentNode.AddChild(_labelNode);
+            var fontFile = GD.Load<FontFile>("res://Fonts/YourFont.ttf");
+            var font = new FontFile(); // Or load a `.ttf`/`.otf` from resources
+            var labelSettings = new LabelSettings
+            {
+                Font = fontFile,
+                FontColor = new Color(1, 0, 0),
+                FontSize = 40,
+            };
+            _labelNode.LabelSettings = labelSettings;
         }
 
         internal void Init(LingoMemberField lingoInstance)

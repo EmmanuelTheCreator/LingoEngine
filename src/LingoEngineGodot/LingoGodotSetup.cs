@@ -1,6 +1,7 @@
 ﻿using Godot;
 using LingoEngine;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.FrameworkCommunication.Events;
 using Microsoft.Extensions.DependencyInjection;
 namespace LingoEngineGodot
 {
@@ -11,6 +12,7 @@ namespace LingoEngineGodot
             engineRegistration
                 .Services(s => s
                         .AddSingleton<ILingoFrameworkFactory,GodotFactory>()
+                        .AddSingleton<ILingoFontManager, LingoGodotFontManager>()
                         .AddSingleton(p => new LingoGodotRootNode(rootNode))
                         )
                 .WithFrameworkFactory(setup)
