@@ -337,7 +337,7 @@ namespace LingoEngine.Movies
             _isAdvancing = true;
             try
             {
-                var frameChanged = _currentFrame == _lastFrame;
+                var frameChanged = _currentFrame != _lastFrame;
                 _lastFrame = _currentFrame;
                 if (_NextFrame<0)
                     _currentFrame++;
@@ -387,7 +387,7 @@ namespace LingoEngine.Movies
                     sprite.DoBeginSprite();
                 _currentFrameSprite?.DoBeginSprite(); // must always be Latest
 
-                _EventMediator.RaiseBeginSprite();
+                //_EventMediator.RaiseBeginSprite(); -> not alowed, only the _enteredSprites may do this
 
                 if (_needToRaiseStartMovie)
                     _EventMediator.RaiseStartMovie();
@@ -396,9 +396,9 @@ namespace LingoEngine.Movies
                 _lingoMouse.UpdateMouseState();
 
                 // STEP 3: Fire stepFrame on all active sprites
+                _currentFrameSprite?.DoStepFrame();// must always be first
                 CallActiveSprites(s => s.DoStepFrame());
                 _EventMediator.RaiseStepFrame();
-                _currentFrameSprite?.DoStepFrame();// must always be Latest
 
                 // STEP 4: Fire prepareFrame on all active sprites
                 CallActiveSprites(s => s.DoPrepareFrame());
@@ -406,9 +406,9 @@ namespace LingoEngine.Movies
                 _currentFrameSprite?.DoPrepareFrame();
 
                 // STEP 5: Fire enterFrame on all active sprites
+                _currentFrameSprite?.DoEnterFrame();// must always be first
                 CallActiveSprites(s => s.DoEnterFrame());
                 _EventMediator.RaiseEnterFrame();
-                _currentFrameSprite?.DoEnterFrame();// must always be Latest
 
                 // After enterFrame and before exitFrame, Director handles any time delays
                 // required by the tempo setting, idle events, and keyboard and mouse events
@@ -417,9 +417,9 @@ namespace LingoEngine.Movies
                 OnUpdateStage();
 
                 // STEP 7: Fire exitFrame on all active sprites
+                _currentFrameSprite?.DoExitFrame(); // must always be first
                 CallActiveSprites(s => s.DoExitFrame());
                 _EventMediator.RaiseExitFrame();
-                _currentFrameSprite?.DoExitFrame(); // must always be Latest
             }
             finally
             {
@@ -433,7 +433,8 @@ namespace LingoEngine.Movies
 
         private void DoEndSprite()
         {
-            _EventMediator.RaiseEndSprite();
+            //_EventMediator.RaiseEndSprite();-> not alowed, only the _exitedSprites may do this
+            _currentFrameSprite?.DoEndSprite();
             foreach (var sprite in _exitedSprites)
             {
                 sprite.FrameworkObj.Hide();
@@ -444,7 +445,6 @@ namespace LingoEngine.Movies
                 if (_lingoMouse.IsSubscribed(sprite))
                     _lingoMouse.Unsubscribe(sprite);
             }
-            _currentFrameSprite?.DoEndSprite();
         }
 
         // Play the movie

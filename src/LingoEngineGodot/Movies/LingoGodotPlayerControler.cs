@@ -1,5 +1,6 @@
 ﻿using Godot;
 using LingoEngine.Events;
+using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Movies;
 
 namespace LingoEngineGodot.Movies
@@ -20,6 +21,13 @@ namespace LingoEngineGodot.Movies
             _lingoMovie = lingoMovie;
             _lingoMovie.ActorList.Add(this);
             LabelNode.Text = "Frame 1";
+            //var labelSettings = new LabelSettings
+            //{
+            //    Font = GD.Load<FontFile>($"res://Media\\Fonts\\Earth.ttf"),
+            //    FontColor = new Color(1, 0, 0),
+            //    FontSize = 10,
+            //};
+            //LabelNode.LabelSettings = labelSettings;
         }
 
         public void StepFrame()

@@ -2,6 +2,7 @@
 using Godot;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
@@ -81,7 +82,7 @@ namespace LingoEngineGodot
         }
         public LingoMemberField CreateMemberField(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
-            var godotInstance = new LingoGodotMemberField();
+            var godotInstance = new LingoGodotMemberField(_serviceProvider.GetRequiredService<ILingoFontManager>());
             var lingoInstance = new LingoMemberField((LingoCast)cast,godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
@@ -89,7 +90,7 @@ namespace LingoEngineGodot
         } 
         public LingoMemberText CreateMemberText(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
-            var godotInstance = new LingoGodotMemberText();
+            var godotInstance = new LingoGodotMemberText(_serviceProvider.GetRequiredService<ILingoFontManager>());
             var lingoInstance = new LingoMemberText((LingoCast)cast,godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);

@@ -14,8 +14,8 @@ namespace LingoEngine.Movies
         private readonly List<IHasMouseMoveEvent> _mouseMoves = new();
         private readonly List<IHasMouseEnterEvent> _mouseEnters = new();
         private readonly List<IHasMouseExitEvent> _mouseExits = new();
-        private readonly List<IHasBeginSpriteEvent> _beginSprites = new();
-        private readonly List<IHasEndSpriteEvent> _endSprites = new();
+        //private readonly List<IHasBeginSpriteEvent> _beginSprites = new();
+        //private readonly List<IHasEndSpriteEvent> _endSprites = new();
         private readonly List<IHasStepFrameEvent> _stepFrames = new();
         private readonly List<IHasPrepareFrameEvent> _prepareFrames = new();
         private readonly List<IHasEnterFrameEvent> _enterFrames = new();
@@ -36,8 +36,8 @@ namespace LingoEngine.Movies
             if (ms is IHasMouseMoveEvent mouseMoveEvent) _mouseMoves.Add(mouseMoveEvent);
             if (ms is IHasMouseEnterEvent mouseEnterEvent) _mouseEnters.Add(mouseEnterEvent);
             if (ms is IHasMouseExitEvent mouseExitEvent) _mouseExits.Add(mouseExitEvent);
-            if (ms is IHasBeginSpriteEvent beginSpriteEvent) _beginSprites.Add(beginSpriteEvent);
-            if (ms is IHasEndSpriteEvent endSpriteEvent) _endSprites.Add(endSpriteEvent);
+            //if (ms is IHasBeginSpriteEvent beginSpriteEvent) _beginSprites.Add(beginSpriteEvent);
+            //if (ms is IHasEndSpriteEvent endSpriteEvent) _endSprites.Add(endSpriteEvent);
             if (ms is IHasStepFrameEvent stepFrameEvent) _stepFrames.Add(stepFrameEvent);
             if (ms is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrames.Add(prepareFrameEvent);
             if (ms is IHasEnterFrameEvent enterFrameEvent) _enterFrames.Add(enterFrameEvent);
@@ -57,8 +57,8 @@ namespace LingoEngine.Movies
             if (ms is IHasMouseMoveEvent mouseMoveEvent) _mouseMoves.Remove(mouseMoveEvent);
             if (ms is IHasMouseEnterEvent mouseEnterEvent) _mouseEnters.Remove(mouseEnterEvent);
             if (ms is IHasMouseExitEvent mouseExitEvent) _mouseExits.Remove(mouseExitEvent);
-            if (ms is IHasBeginSpriteEvent beginSpriteEvent) _beginSprites.Remove(beginSpriteEvent);
-            if (ms is IHasEndSpriteEvent endSpriteEvent) _endSprites.Remove(endSpriteEvent);
+            //if (ms is IHasBeginSpriteEvent beginSpriteEvent) _beginSprites.Remove(beginSpriteEvent);
+            //if (ms is IHasEndSpriteEvent endSpriteEvent) _endSprites.Remove(endSpriteEvent);
             if (ms is IHasStepFrameEvent stepFrameEvent) _stepFrames.Remove(stepFrameEvent);
             if (ms is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrames.Remove(prepareFrameEvent);
             if (ms is IHasEnterFrameEvent enterFrameEvent) _enterFrames.Remove(enterFrameEvent);
@@ -76,8 +76,8 @@ namespace LingoEngine.Movies
         public void RaiseMouseMove(LingoMouse mouse) => _mouseMoves.ForEach(x => x.MouseMove(mouse));
         internal void RaiseMouseEnter(ILingoMouse mouse) => _mouseEnters.ForEach(x => x.MouseEnter(mouse));
         internal void RaiseMouseExit(ILingoMouse mouse) => _mouseExits.ForEach(x => x.MouseExit(mouse));
-        internal void RaiseBeginSprite() => _beginSprites.ForEach(x => x.BeginSprite());
-        internal void RaiseEndSprite() => _endSprites.ForEach(x => x.EndSprite());
+        //internal void RaiseBeginSprite() => _beginSprites.ForEach(x => x.BeginSprite());
+        //internal void RaiseEndSprite() => _endSprites.ForEach(x => x.EndSprite());
         internal void RaiseStepFrame() => _stepFrames.ForEach(x => x.StepFrame());
         internal void RaisePrepareFrame() => _prepareFrames.ForEach(x => x.PrepareFrame());
         internal void RaiseEnterFrame() => _enterFrames.ForEach(x => x.EnterFrame());

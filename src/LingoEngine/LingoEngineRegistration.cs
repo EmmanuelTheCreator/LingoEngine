@@ -1,5 +1,6 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Movies;
 using LingoEngine.Xtras.BuddyApi;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,7 @@ namespace LingoEngine
     {
         private readonly IServiceCollection _container;
         private readonly Dictionary<string, MovieRegistration> _Movies = new();
+        private readonly List<(string Name, string FileName)> _Fonts = new();
         private Action<ILingoFrameworkFactory>? _FrameworkFactorySetup;
         private IServiceProvider? _serviceProvider;
 
@@ -69,10 +71,19 @@ namespace LingoEngine
         public LingoPlayer Build(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            LoadFonts(serviceProvider);
             var player = new LingoPlayer(serviceProvider, ActionOnNewMovie);
             if (_FrameworkFactorySetup != null)
                 _FrameworkFactorySetup(serviceProvider.GetRequiredService<ILingoFrameworkFactory>());
             return player;
+        }
+
+        private void LoadFonts(IServiceProvider serviceProvider)
+        {
+            var fontsManager = serviceProvider.GetRequiredService<ILingoFontManager>();
+            foreach (var font in _Fonts)
+                fontsManager.AddFont(font.Name, font.FileName);
+            fontsManager.LoadAll();
         }
 
         public ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action)
@@ -93,6 +104,12 @@ namespace LingoEngine
         public ILingoEngineRegistration Services(Action<IServiceCollection> services)
         {
             services(_container);
+            return this;
+        }
+
+        public ILingoEngineRegistration AddFont(string name, string pathAndName)
+        {
+            _Fonts.Add((name, pathAndName));
             return this;
         }
 
