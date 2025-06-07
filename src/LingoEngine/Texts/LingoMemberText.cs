@@ -33,11 +33,7 @@ namespace LingoEngine.Texts
         public string Text
         {
             get => _frameworkMemberText.Text;
-            set
-            {
-                _frameworkMemberText.Text = value;
-                UpdateParagraphs(value);
-            }
+            set => _frameworkMemberText.Text = value;
         }
 
         protected override LingoMember OnDuplicate(int newNumber)
@@ -64,7 +60,7 @@ namespace LingoEngine.Texts
             _frameworkMemberText = frameworkMember;
         }
 
-        public void UpdateParagraphs(string text)
+        public void UpdateTextFromFW(string text)
         {
             _word.SetText(text);
             _Line.SetText(text);

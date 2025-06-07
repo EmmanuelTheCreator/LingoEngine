@@ -32,6 +32,10 @@ namespace LingoEngine.Core
     public interface ILingoMember
     {
         /// <summary>
+        /// Retrieves the framework object like godot, unity or SDL
+        /// </summary>
+        ILingoFrameworkMember FrameworkObj { get; }
+        /// <summary>
         /// The name of the cast member.
         /// Lingo: the name of member
         /// </summary>
@@ -192,6 +196,7 @@ namespace LingoEngine.Core
         protected readonly LingoCast _cast;
         private string _name = string.Empty;
         private readonly ILingoFrameworkMember _frameworkMember;
+        public ILingoFrameworkMember FrameworkObj => _frameworkMember;
 
         /// <inheritdoc/>
         public string Name

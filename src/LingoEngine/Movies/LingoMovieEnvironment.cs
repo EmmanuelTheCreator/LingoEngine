@@ -32,7 +32,7 @@ namespace LingoEngine.Movies
         private ILingoClock _clock;
         private ILingoMovie _movie;
         private LingoCastLibsContainer _castLibsContainer;
-
+        private LingoEventMediator _eventMediator;
         private IServiceScope _scopedServiceProvider;
         private readonly ILingoFrameworkFactory _factory;
         private readonly Lazy<ILingoMemberFactory> _memberFactory;
@@ -66,14 +66,17 @@ namespace LingoEngine.Movies
         internal void Init(string name, int number, LingoPlayer player, LingoKey lingoKey, LingoSound sound, LingoMouse mouse, LingoStage stage, LingoSystem system, ILingoClock clock, LingoCastLibsContainer lingoCastLibsContainer, IServiceScope scopedServiceProvider,Action<LingoMovie> onRemoveMe)
         {
             _scopedServiceProvider = scopedServiceProvider;
+            _eventMediator = (LingoEventMediator)scopedServiceProvider.ServiceProvider.GetRequiredService<ILingoEventMediator>();
             _player = player;
             _key = lingoKey;
             _sound = sound;
             _mouse = mouse;
             _system = system;
             _clock = clock;
+            _mouse.Subscribe(_eventMediator);
+            _key.Subscribe(_eventMediator);
             _castLibsContainer = lingoCastLibsContainer;
-            _movie = new LingoMovie(this, stage, _castLibsContainer, _memberFactory.Value, name,number,m=>
+            _movie = new LingoMovie(this, stage, _castLibsContainer, _memberFactory.Value, name,number, _eventMediator, m =>
             {
                 onRemoveMe(m);
                 Dispose();
@@ -82,6 +85,7 @@ namespace LingoEngine.Movies
         internal IServiceProvider GetServiceProvider() => _scopedServiceProvider.ServiceProvider;
         public void Dispose()
         {
+            _mouse.Unsubscribe(_eventMediator);
             _scopedServiceProvider.Dispose();
         }
 

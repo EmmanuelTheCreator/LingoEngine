@@ -119,9 +119,9 @@ namespace LingoEngine.Core
         /// <summary>
         /// Called from communiction framework mouse
         /// </summary>
-        public void DoMouseUp() => DoOnAll(x => x.DoMouseUp(this));
-        public void DoMouseDown() => DoOnAll(x => x.DoMouseDown(this));
-        public void DoMouseMove() => DoOnAll(x => x.DoMouseMove(this));
+        public void DoMouseUp() => DoOnAll(x => x.RaiseMouseUp(this));
+        public void DoMouseDown() => DoOnAll(x => x.RaiseMouseDown(this));
+        public void DoMouseMove() => DoOnAll(x => x.RaiseMouseMove(this));
         private void DoOnAll(Action<ILingoMouseEventHandler> action)
         {
             foreach (var subscription in _subscriptions)

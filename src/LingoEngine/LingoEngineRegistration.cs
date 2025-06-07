@@ -49,6 +49,7 @@ namespace LingoEngine
                .AddScoped<ILingoMovieEnvironment, LingoMovieEnvironment>()
                // Xtras
                .AddScoped<IBuddyAPI, BuddyAPI>()
+               .AddScoped<ILingoEventMediator, LingoEventMediator>()
                ;
         }
 
@@ -109,7 +110,7 @@ namespace LingoEngine
 
             public IMovieRegistration AddBehavior<T>() where T : LingoSpriteBehavior
             {
-                _container.AddScoped<T>();
+                _container.AddTransient<T>();
                 return this;
             }
 

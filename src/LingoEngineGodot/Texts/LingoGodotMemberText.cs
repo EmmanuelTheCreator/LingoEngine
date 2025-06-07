@@ -9,13 +9,13 @@ namespace LingoEngineGodot.Texts
         private LingoMemberText _lingoMemberText;
 #pragma warning restore CS8618 
 
-        private string text = "";
+        private string _text = "";
         private readonly Label _labelNode;
         private readonly CenterContainer _parentNode;
         public Node Node2D => _parentNode;
 
         public string RAWTextData { get; private set; } = "";
-        public string Text { get => text; set => UpdateText(value); }
+        public string Text { get => _text; set => UpdateText(value); }
         public bool IsLoaded { get; private set; }
 
         public LingoGodotMemberText()
@@ -36,6 +36,11 @@ namespace LingoEngineGodot.Texts
         /// </summary>
         public void LoadFile()
         {
+#if DEBUG
+            if (_lingoMemberText.FileName.Contains("blockT") )
+            {
+            }
+#endif
             if (!File.Exists(_lingoMemberText.FileName))
             {
                 GD.PrintErr("File not found for Text :"+_lingoMemberText.FileName);
@@ -52,8 +57,10 @@ namespace LingoEngineGodot.Texts
         }
         private void UpdateText(string value)
         {
-            if (Text == value) return;
-            _labelNode.Text = Text;
+            if (_text == value) return;
+            _text = value;
+            _labelNode.Text = value;
+            _lingoMemberText.UpdateTextFromFW(value);
         }
 
         public void Erase()
