@@ -8,6 +8,7 @@ namespace LingoEngine
     public interface ILingoEngineRegistration
     {
         ILingoEngineRegistration Services(Action<IServiceCollection> services);
+        ILingoEngineRegistration AddFont(string name,string pathAndName);
         ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action);
         ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class, ILingoFrameworkFactory;
         LingoPlayer Build();
