@@ -4,7 +4,9 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
+using LingoEngine.Texts;
 using LingoEngineGodot.Pictures;
+using LingoEngineGodot.Texts;
 
 namespace LingoEngineGodot
 {
@@ -155,13 +157,23 @@ namespace LingoEngineGodot
             if (!IsDirtyMember) return;
             IsDirtyMember = false;
 
-            // Only handle picture members
-            if (!(_lingoSprite.Member is LingoMemberPicture pictureMember)) return;
-            UpdateMemberPicture(pictureMember.Framework<LingoGodotMemberPicture>());
-            UpdateSizeFromTexture();
-            if (_DesiredWidth == 0) _DesiredWidth = Width;
-            if (_DesiredHeight == 0) _DesiredHeight = Height;
-            IsDirty = true;
+
+            switch (_lingoSprite.Member)
+            {
+                case LingoMemberPicture pictureMember:
+                    UpdateMemberPicture(pictureMember.Framework<LingoGodotMemberPicture>());
+                    UpdateSizeFromTexture();
+                    if (_DesiredWidth == 0) _DesiredWidth = Width;
+                    if (_DesiredHeight == 0) _DesiredHeight = Height;
+                    IsDirty = true;
+                    return;
+                case LingoMemberText textMember:
+                    UpdateMemberText(textMember.Framework<LingoGodotMemberText>());
+                    break;
+                case LingoMemberField fieldMember:
+                    UpdateMemberField(fieldMember.Framework<LingoGodotMemberField>());
+                    break;
+            }
         }
 
         private void UpdateMemberPicture(LingoGodotMemberPicture godotPicture)
@@ -172,6 +184,21 @@ namespace LingoEngineGodot
             if (godotPicture.Texture == null)
                 return;
             _Sprite2D.Texture = godotPicture.Texture;
+        }
+        private Node? _previousElement;
+        private void UpdateMemberText(LingoGodotMemberText godotElement)
+        {
+            if (_previousElement == godotElement.Node2D) return;
+            godotElement.Preload();
+            _Sprite2D.AddChild(godotElement.Node2D);
+            _previousElement = godotElement.Node2D;
+        }
+        private void UpdateMemberField(LingoGodotMemberField godotElement)
+        {
+            if (_previousElement == godotElement.Node2D) return;
+            godotElement.Preload();
+            _Sprite2D.AddChild(godotElement.Node2D);
+            _previousElement = godotElement.Node2D;
         }
 
         public void Resize(float targetWidth, float targetHeight)

@@ -1,5 +1,7 @@
 ﻿using Godot;
+using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Texts;
+using LingoEngine.Tools;
 
 namespace LingoEngineGodot.Texts
 {
@@ -8,6 +10,7 @@ namespace LingoEngineGodot.Texts
         private LingoMemberText _lingoMemberText;
 
         private string _text = "";
+        private ILingoFontManager _fontManager;
         private readonly Label _labelNode;
         private readonly CenterContainer _parentNode;
         public Node Node2D => _parentNode;
@@ -17,14 +20,23 @@ namespace LingoEngineGodot.Texts
         public bool IsLoaded { get; private set; }
 
 #pragma warning disable CS8618 
-        public LingoGodotMemberText()
+        public LingoGodotMemberText(ILingoFontManager lingoFontManager)
 #pragma warning restore CS8618 
         {
+            _fontManager = lingoFontManager;
             _parentNode = new CenterContainer();
             _labelNode = new Label();
             _parentNode.AddChild(_labelNode);
+            var labelSettings = new LabelSettings
+            {
+                Font = _fontManager.Get<FontFile>("Earth"),
+                FontColor = new Color(1, 0, 0),
+                FontSize = 40,
+            };
+            _labelNode.LabelSettings = labelSettings;
         }
 
+     
         internal void Init(LingoMemberText lingoInstance)
         {
             _lingoMemberText = lingoInstance;
@@ -44,7 +56,8 @@ namespace LingoEngineGodot.Texts
                 return;
             }
             RAWTextData = File.ReadAllText(_lingoMemberText.FileName);
-            //var error = _image.Load($"res://{_lingoMemberText.FileName}");
+            var rtfVersion = _lingoMemberText.FileName.Replace(".txt", ".rtf");
+            _labelNode.TryParseRtfFont(rtfVersion, _fontManager);
             UpdateRAWTextData(RAWTextData);
         }
         private void UpdateRAWTextData(string rawTextData)

@@ -164,16 +164,23 @@ When a movie stops, events occur in the following order:
         internal virtual void DoBeginSprite()
         {
             // Subscribe all behaviors
-            _behaviors.ForEach(_eventMediator.Subscribe);
-            //_eventMediator.RaiseBeginSprite();
+            _behaviors.ForEach(b =>
+            {
+                _eventMediator.Subscribe(b);
+                if (b is IHasBeginSpriteEvent beginSpriteEvent) beginSpriteEvent.BeginSprite();
+                
+            });
             BeginSprite();
         }
         protected virtual void BeginSprite() { }
         internal virtual void DoEndSprite()
         {
-            //_eventMediator.RaiseEndSprite();
-            // Unsubscribe all behaviors
-            _behaviors.ForEach(_eventMediator.Unsubscribe);
+            _behaviors.ForEach(b =>
+            {
+                // Unsubscribe all behaviors
+                _eventMediator.Unsubscribe(b);
+                if (b is IHasEndSpriteEvent endSpriteEvent) endSpriteEvent.EndSprite();
+            });
             EndSprite();
         }
         protected virtual void EndSprite() { }
