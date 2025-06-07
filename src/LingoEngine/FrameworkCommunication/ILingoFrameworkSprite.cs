@@ -14,6 +14,7 @@ namespace LingoEngine.FrameworkCommunication
         LingoPoint RegPoint { get; set; }
         float SetDesiredHeight { get; set; }
         float SetDesiredWidth { get; set; }
+        int ZIndex { get; set; }
 
         void MemberChanged();
 

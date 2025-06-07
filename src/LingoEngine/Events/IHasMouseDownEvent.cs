@@ -2,6 +2,18 @@
 
 namespace LingoEngine.Events
 {
+    public interface IHasPrepareMovieEvent
+    {
+        void PrepareMovie();
+    }
+    public interface IHasStartMovieEvent
+    {
+        void StartMovie();
+    }
+    public interface IHasStopMovieEvent
+    {
+        void StopMovie();
+    }
     public interface IHasKeyDownEvent
     {
         void KeyDown(ILingoKey mouse);

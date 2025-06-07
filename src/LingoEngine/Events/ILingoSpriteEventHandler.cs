@@ -6,10 +6,10 @@
         /// <summary>
         ///  Triggered when the sprite receives focus
         /// </summary>
-        void DoFocus();
+        void RaiseFocus();
         /// <summary>
         /// Triggered when the sprite loses focus
         /// </summary>
-        void DoBlur();
+        void RaiseBlur();
     }
 }

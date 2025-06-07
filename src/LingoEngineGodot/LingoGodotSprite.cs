@@ -23,8 +23,9 @@ namespace LingoEngineGodot
         internal LingoSprite LingoSprite => _lingoSprite;
         internal bool IsDirty { get; set; } = true;
         internal bool IsDirtyMember { get; set; } = true;
-        public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y); IsDirty = true; } }
-        public float Y { get => _Sprite2D.Position.Y; set { _Sprite2D.Position = new Vector2(_Sprite2D.Position.X, value); IsDirty = true; } }
+        public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y);  } }
+        public float Y { get => _Sprite2D.Position.Y; set { _Sprite2D.Position = new Vector2(_Sprite2D.Position.X, value); } }
+        public int ZIndex { get => _Sprite2D.ZIndex; set { _Sprite2D.ZIndex = value; } }
         public LingoPoint RegPoint { get => (_Container2D.Position.X, _Container2D.Position.Y); set { _Container2D.Position = new Vector2(value.X, value.Y); IsDirty = true; } }
 
         public bool Visibility { get => _Container2D.Visible; set => _Container2D.Visible = value; }
@@ -71,6 +72,7 @@ namespace LingoEngineGodot
             _Container2D = new CenterContainer();
             _Container2D.AddChild(_Sprite2D);
             lingoSprite.Init(this);
+            ZIndex = lingoSprite.SpriteNum;
         }
 
         public void RemoveMe()

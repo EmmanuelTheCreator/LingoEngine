@@ -23,10 +23,33 @@ namespace LingoEngine.Movies
             _movieScripts.Remove(ms.GetType());
             _eventMediator.Unsubscribe(ms);
         }
+
+        public TResult? Call<T, TResult>(Func<T, TResult> action) where T : LingoMovieScript
+        {
+            var type = typeof(T);
+            var script = Get<T>();
+            if (script != null)
+                return action(script);
+            return default;
+        }
+        public void Call<T>(Action<T> action) where T : LingoMovieScript
+        {
+            var type = typeof(T);
+            var script = Get<T>();
+            if (script != null)
+                action(script);
+        }
+
         internal T? Get<T>() where T : LingoMovieScript
         {
             if (_movieScripts.TryGetValue(typeof(T), out var ms)) return ms as T;
             return null;
+        }
+
+        internal void CallAll(Action<LingoMovieScript> actionOnAll)
+        {
+            foreach (var ms in _movieScripts.Values)  
+                actionOnAll(ms); 
         }
     }
 }
