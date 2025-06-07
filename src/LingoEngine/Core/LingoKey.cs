@@ -1,4 +1,6 @@
-﻿namespace LingoEngine.Core
+﻿using LingoEngine.Events;
+
+namespace LingoEngine.Core
 {
     /// <summary>
     /// Used to monitor a user’s keyboard activity.
@@ -69,6 +71,8 @@
     /// <inheritdoc/>
     public class LingoKey : ILingoKey
     {
+        private HashSet<ILingoKeyEventHandler> _subscriptions = new();
+
         public bool ControlDown => false;
         public bool CommandDown => false;
         public bool OptionDown => false;
@@ -77,6 +81,27 @@
         public bool KeyPressed(char key) => false;
         public string Key => "";
         public int KeyCode => 10;
-    }
 
+        public void DoKeyUp() => DoOnAll(x => x.RaiseKeyUp(this));
+        public void DoKeyDown() => DoOnAll(x => x.RaiseKeyDown(this));
+        private void DoOnAll(Action<ILingoKeyEventHandler> action)
+        {
+            foreach (var subscription in _subscriptions)
+                action(subscription);
+        }
+        /// <summary>
+        /// Subscribe to mouse events
+        /// </summary>
+        public LingoKey Subscribe(ILingoKeyEventHandler handler)
+        {
+            if (_subscriptions.Contains(handler)) return this;
+            _subscriptions.Add(handler);
+            return this;
+        }
+        public LingoKey Unsubscribe(ILingoKeyEventHandler handler)
+        {
+            _subscriptions.Remove(handler);
+            return this;
+        }
+    }
 }

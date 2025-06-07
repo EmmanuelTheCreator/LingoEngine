@@ -21,7 +21,7 @@ namespace LingoEngineGodot
         private bool _wasShown;
 
         internal LingoSprite LingoSprite => _lingoSprite;
-        internal bool IsDirty { get; set; }
+        internal bool IsDirty { get; set; } = true;
         internal bool IsDirtyMember { get; set; } = true;
         public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y); IsDirty = true; } }
         public float Y { get => _Sprite2D.Position.Y; set { _Sprite2D.Position = new Vector2(_Sprite2D.Position.X, value); IsDirty = true; } }
@@ -50,6 +50,12 @@ namespace LingoEngineGodot
                 _Sprite2D.Name = value + "_Sprite";
             }
         }
+        public float Width { get; private set; }
+        public float Height { get; private set; }
+        private float _DesiredWidth;
+        private float _DesiredHeight;
+        public float SetDesiredHeight { get => _DesiredWidth; set { _DesiredWidth = value; IsDirty = true; } }
+        public float SetDesiredWidth { get => _DesiredHeight; set { _DesiredHeight = value; IsDirty = true; } }
 
 
 #pragma warning disable CS8618
@@ -108,17 +114,36 @@ namespace LingoEngineGodot
         {
             IsDirtyMember = true;
         }
-
+        private void UpdateSizeFromTexture()
+        {
+            if (_Sprite2D.Texture == null)
+            {
+                Width = 0;
+                Height = 0;
+                return;
+            }
+            Width = _Sprite2D.Texture.GetWidth();
+            Height = _Sprite2D.Texture.GetWidth();
+        }
         internal void Update()
         {
-            if (IsDirty)
-            {
-                // update complex properties
-                IsDirty = false;
-            }
             if (IsDirtyMember)
                 UpdateMember();
 
+            if (IsDirty)
+            {
+                // update complex properties
+                if (_Sprite2D.Texture != null)
+                {
+                    if (_DesiredWidth != Width || _DesiredHeight != Height)
+                    {
+                        UpdateSizeFromTexture();
+                        _DesiredWidth = Width;
+                        _DesiredHeight = Height;
+                    }
+                }
+                IsDirty = false;
+            }
         }
 
 
@@ -130,6 +155,8 @@ namespace LingoEngineGodot
             // Only handle picture members
             if (!(_lingoSprite.Member is LingoMemberPicture pictureMember)) return;
             UpdateMemberPicture(pictureMember.Framework<LingoGodotMemberPicture>());
+            UpdateSizeFromTexture();
+            IsDirty = true;
         }
 
         private void UpdateMemberPicture(LingoGodotMemberPicture godotPicture)
@@ -142,6 +169,11 @@ namespace LingoEngineGodot
             _Sprite2D.Texture = godotPicture.Texture;
         }
 
-
+        public void Resize(float targetWidth, float targetHeight)
+        {
+            float scaleFactorW = targetWidth / _Sprite2D.Texture.GetWidth();
+            float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
+            _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
+        }
     }
 }

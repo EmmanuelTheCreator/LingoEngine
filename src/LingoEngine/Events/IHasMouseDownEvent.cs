@@ -2,7 +2,15 @@
 
 namespace LingoEngine.Events
 {
-    public interface IHasMouseDownEvent
+    public interface IHasKeyDownEvent
+    {
+        void KeyDown(ILingoKey mouse);
+    }
+    public interface IHasKeyUpEvent
+    {
+        void KeyUp(ILingoKey mouse);
+    }
+     public interface IHasMouseDownEvent
     {
         void MouseDown(ILingoMouse mouse);
     }

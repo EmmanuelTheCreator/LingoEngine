@@ -35,10 +35,10 @@ namespace LingoEngine.Movies
         void ILingoMovieScriptListener.DoMouseUp(LingoMouse mouse) => MouseUp(mouse);
         protected virtual void MouseUp(LingoMouse key) { }
 
-        void ILingoMouseEventHandler.DoMouseDown(LingoMouse mouse) => MouseDown(mouse);
+        void ILingoMouseEventHandler.RaiseMouseDown(LingoMouse mouse) => MouseDown(mouse);
 
-        void ILingoMouseEventHandler.DoMouseUp(LingoMouse mouse) => MouseUp(mouse);
+        void ILingoMouseEventHandler.RaiseMouseUp(LingoMouse mouse) => MouseUp(mouse);
 
-        void ILingoMouseEventHandler.DoMouseMove(LingoMouse mouse) => MouseMove(mouse);
+        void ILingoMouseEventHandler.RaiseMouseMove(LingoMouse mouse) => MouseMove(mouse);
     }
 }

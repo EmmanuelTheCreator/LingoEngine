@@ -158,6 +158,7 @@ namespace LingoEngine.Movies
         /// </summary>
         /// <param name="memberName">The name of the cast member.</param>
         void SetMember(string memberName);
+        void SetMember(ILingoMember? member);
 
         /// <summary>
         /// Sends the sprite to the back of the display order (lowest layer).
@@ -268,8 +269,8 @@ namespace LingoEngine.Movies
         public byte[] Thumbnail { get; set; } = new byte[] { };
         public string ModifiedBy { get; set; } = "";
 
-        public float Width => Member?.Width ?? Rect.Width;
-        public float Height => Member?.Height ?? Rect.Height;
+        public float Width {get=> _frameworkSprite.Width; set => _frameworkSprite.SetDesiredWidth = value; }
+        public float Height { get => _frameworkSprite.Width; set => _frameworkSprite.SetDesiredHeight = value; }
         /// <summary>
         /// Whether this sprite is currently active (i.e., the playhead is within its frame span).
         /// </summary>
@@ -296,7 +297,12 @@ namespace LingoEngine.Movies
             Name = name;
         }
 
-        public LingoSprite AddBehavior<T>() where T : LingoSpriteBehavior
+        public ILingoSprite AddBehavior<T>() where T : LingoSpriteBehavior
+        {
+            SetBehavior<T>();
+            return this;
+        }
+        public T SetBehavior<T>() where T : LingoSpriteBehavior
         {
             var behavior = _environment.Factory.CreateBehavior<T>((LingoMovie)_environment.Movie);
             behavior.SetMe(this);
@@ -314,7 +320,7 @@ namespace LingoEngine.Movies
             if (behavior is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Add(exitFrameEvent);
             if (behavior is IHasFocusEvent focusEvent) _focusBehaviors.Add(focusEvent);
             if (behavior is IHasBlurEvent blurEvent) _blurBehaviors.Add(blurEvent);
-            return this;
+            return behavior;
         }
 
         /*
@@ -456,7 +462,7 @@ When a movie stops, events occur in the following order:
 
         #region Mouse
 
-        void ILingoMouseEventHandler.DoMouseMove(LingoMouse mouse)
+        void ILingoMouseEventHandler.RaiseMouseMove(LingoMouse mouse)
         {
             // Only respond if the sprite is active and the mouse is within the bounding box
             if (IsActive && IsMouseInsideBoundingBox(mouse))
@@ -497,7 +503,7 @@ When a movie stops, events occur in the following order:
         public virtual void MouseExit(LingoMouse mouse)
         {
         }
-        void ILingoMouseEventHandler.DoMouseDown(LingoMouse mouse)
+        void ILingoMouseEventHandler.RaiseMouseDown(LingoMouse mouse)
         {
             if (isDraggable && IsMouseInsideBoundingBox(mouse))
                 isDragging = true;
@@ -506,7 +512,7 @@ When a movie stops, events occur in the following order:
         }
 
         protected virtual void MouseDown(LingoMouse mouse) { }
-        void ILingoMouseEventHandler.DoMouseUp(LingoMouse mouse)
+        void ILingoMouseEventHandler.RaiseMouseUp(LingoMouse mouse)
         {
             if (isDragging && isDragging)
                 isDragging = false;

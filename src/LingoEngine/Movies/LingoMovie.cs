@@ -1,217 +1,9 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.Pictures.LingoEngine;
-using LingoEngine.Sounds;
-using LingoEngine.Texts;
-using System.Collections.Generic;
 
 namespace LingoEngine.Movies
 {
-    /// <summary>
-    /// Represents the Lingo _movie object, providing control over playback, navigation, and transitions.
-    /// Lingo equivalents are noted for each member.
-    /// </summary>
-    public interface ILingoMovie
-    {
-        /// <summary>
-        /// Gets the name of the movie.
-        /// Lingo: the name
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// Gets the current frame number of the movie.
-        /// Lingo: the frame
-        /// </summary>
-        int Frame { get; }
-
-        /// <summary>
-        /// Gets the total number of frames in the movie.
-        /// Lingo: the frameCount
-        /// </summary>
-        int FrameCount { get; }
-
-        
-
-        /// <summary>
-        /// Gets or sets the tempo (frames per second) of the movie.
-        /// Lingo: the tempo
-        /// </summary>
-        int Tempo { get; set; }
-
-        /// <summary>
-        /// Indicates whether the movie is currently playing.
-        /// </summary>
-        bool IsPlaying { get; }
-
-        /// <summary>
-        /// Jumps to the specified frame and continues playing.
-        /// Lingo: go frameNumber
-        /// </summary>
-        void Go(int frame);
-        void GoTo(int frame);
-
-        /// <summary>
-        /// Jumps to the specified frame label and continues playing.
-        /// Lingo: go "label"
-        /// </summary>
-        void Go(string label);
-        void GoTo(string label);
-
-        /// <summary>
-        /// Plays a transition effect before navigating.
-        /// Lingo: puppetTransition effectNumber
-        /// </summary>
-        void PuppetTransition(int effectNumber);
-
-        /// <summary>
-        /// Stops playback immediately.
-        /// Lingo: halt or stop
-        /// </summary>
-        void Halt();
-
-        /// <summary>
-        /// Starts or resumes playback.
-        /// Lingo: play
-        /// </summary>
-        void Play();
-
-        /// <summary>
-        /// Advances to the next frame.
-        /// Lingo: nextFrame
-        /// </summary>
-        void NextFrame();
-
-        /// <summary>
-        /// Goes back to the previous frame.
-        /// Lingo: prevFrame
-        /// </summary>
-        void PrevFrame();
-
-        /// <summary>
-        /// Goes to a specific frame and stops playback.
-        /// Lingo: go to frame
-        /// </summary>
-        void GoToAndStop(int frame);
-        
-        void UpdateStage();
-        ILingoSpriteChannel? Channel(int channelNumber);
-        ActorList ActorList { get;  }
-        LingoTimeOutList TimeOutList { get; }
-        /// <summary>
-        /// The number/index of this Score within the movie.
-        /// Lingo: the number of score
-        /// </summary>
-        int Number { get; }
-
-        #region MovieScripts
-        void CallMovieScript<T>(Action<T> action) where T : LingoMovieScript;
-        TResult? CallMovieScript<T, TResult>(Func<T, TResult> action) where T : LingoMovieScript;
-        ILingoMovie AddMovieScript<T>() where T : LingoMovieScript;
-        #endregion
-
-        #region Sprites
-
-        /// <summary>
-        /// Adds a new sprite by name to the next available channel.
-        /// Lingo: new sprite
-        /// </summary>
-        LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null);
-
-        /// <summary>
-        /// Adds a new sprite to a specific sprite channel number.
-        /// </summary>
-        LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null);
-        /// <summary>
-        /// Adds a new sprite to a specific sprite channel number.
-        /// </summary>
-        T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite;
-        T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite;
-
-        public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite;
-
-        /// <summary>
-        /// Removes a sprite from the score by name.
-        /// </summary>
-        bool RemoveSprite(string name);
-
-        /// <summary>
-        /// Retrieves a sprite by number (channel number).
-        /// Lingo: sprite x
-        /// </summary>
-        ILingoSprite GetSprite(int number);
-
-        /// <summary>
-        /// Retrieves the name of the sprite at a specific channel number.
-        /// </summary>
-        string GetSpriteName(int number);
-
-        /// <summary>
-        /// Tries to get a sprite by name.
-        /// </summary>
-        bool TryGetSprite(string name, out ILingoSprite? sprite);
-
-        /// <summary>
-        /// Tries to get a sprite by number.
-        /// </summary>
-        bool TryGetSprite(int number, out ILingoSprite? sprite);
-
-        /// <summary>
-        /// Sets the member of a sprite using the member's name.
-        /// Lingo: the member of sprite x
-        /// </summary>
-        void SetSpriteMember(int number, string memberName);
-
-        /// <summary>
-        /// Sets the member of a sprite using the member's number.
-        /// </summary>
-        void SetSpriteMember(int number, int memberNumber);
-
-        /// <summary>
-        /// Gets the name of the member used by a sprite.
-        /// </summary>
-        string GetSpriteMemberName(int number);
-
-        /// <summary>
-        /// Gets the total number of sprite channels in the Score.
-        /// Lingo: the spriteCount
-        /// </summary>
-        int SpriteCount { get; }
-        /// <summary>
-        /// The rollover() method indicates whether the pointer is over the specified sprite.
-        /// </summary>
-        bool RollOver(int spriteNumber);
-
-
-        void SendSprite(string name, Action<LingoSprite> actionOnSprite);
-        void SendSprite(int number, Action<LingoSprite> actionOnSprite);
-        void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior;
-        TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
-        #endregion
-
-        #region Members
-        public ILingoCastLibsContainer CastLib { get; }
-        public ILingoMembersContainer Member { get; }
-        public T? GetMember<T>(int number) where T : class, ILingoMember;
-        public T? GetMember<T>(string name) where T : class, ILingoMember;
-        /// <summary>
-        /// creates a new cast member and allows you to assign individual property values to child objects.
-        /// After newMember() is called, the new cast member is placed in the first empty cast library slot
-        /// Lingo : // newBitmap = _movie.newMember(#bitmap)
-        /// </summary>
-        ILingoMemberFactory New { get; }
-        int CurrentFrame { get; }
-        
-
-        #endregion
-        /// <summary>
-        /// Resets the timer to 0;
-        /// </summary>
-        void StartTimer();
-        int Timer { get; }
-
-    }
 
 
     public class LingoMovie : ILingoMovie, ILingoClockListener, IDisposable
@@ -220,26 +12,27 @@ namespace LingoEngine.Movies
         private ILingoFrameworkMovie _FrameworkMovie;
         private readonly LingoMovieEnvironment _environment;
         private readonly LingoStage _stage;
-        private Dictionary<string, LingoSprite> _spritesByName = new();
-        private List<LingoSprite> _sprites = new List<LingoSprite>();
         private int _maxSpriteNum = 0;
         private readonly LingoStage _movieStage;
         private readonly Action<LingoMovie> _onRemoveMe;
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
-        private int _currentFrame = 1;
-        private int _lastFrame = 1;
+        private int _currentFrame = 0;
+        private int _lastFrame = 0;
         private bool _isPlaying = false;
         private int _tempo = 30;  // Default frame rate (FPS)
 
         private LingoCastLibsContainer _castLibContainer;
-        
 
-        private readonly List<LingoSprite> _activeSprites = new();
+        private Dictionary<string, int> _scoreLabels = new();
+        private Dictionary<string, LingoSprite> _spritesByName = new();
+        private List<LingoSprite?> _sprites = new ();
+        private readonly Dictionary<int,LingoSprite> _activeSprites = new();
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
         private HashSet<ILingoSpriteEventHandler> _spriteEventHandlers = new();
         private bool _IsManualUpdateStage;
+        private int _maxSpriteCount;
 
         // Movie Script subscriptions
         private readonly HashSet<ILingoMovieScriptListener> _movieScriptListeners = new();
@@ -250,6 +43,15 @@ namespace LingoEngine.Movies
         public T Framework<T>() where T:class, ILingoFrameworkMovie => (T)_FrameworkMovie;
 
         public string Name { get; set; }
+        public int MaxSpriteCount
+        {
+            get => _maxSpriteCount; set
+            {
+                _maxSpriteCount = value;
+                for (int i = _sprites.Count; i < value; i++)
+                    _sprites.Add(null);
+            }
+        }
         public int Number { get; private set; }
 
         public int Frame => _currentFrame;
@@ -268,14 +70,14 @@ namespace LingoEngine.Movies
             }
         }
         public bool IsPlaying => _isPlaying;
-
+        
         public ActorList ActorList { get; private set; } = new ActorList();
         public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
 
 
 
 #pragma warning disable CS8618 
-        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, Action<LingoMovie> onRemoveMe)
+        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe)
 #pragma warning restore CS8618 
         {
             _castLibContainer = castLibContainer;
@@ -287,13 +89,11 @@ namespace LingoEngine.Movies
             _onRemoveMe = onRemoveMe;
             Name = name;
             Number = number;
-            _MovieScripts = new(environment);
+            _MovieScripts = new(environment, mediator);
             _lingoMouse = (LingoMouse)environment.Mouse;
             _lingoClock = (LingoClock)environment.Clock;
-            for (int i = 0; i < 1000; i++)
-            {
-                _sprites.Add(new LingoSprite(environment));
-            }
+            MaxSpriteCount = 2000;
+           
         }
         public void Init(ILingoFrameworkMovie frameworkMovie)
         {
@@ -329,11 +129,9 @@ namespace LingoEngine.Movies
             throw new NotImplementedException();
         }
 
-        public void PuppetSprite(int number, bool isPuppetSprite) => ((LingoSprite)GetSprite(number)).IsPuppetSprite = isPuppetSprite;
+        public void PuppetSprite(int number, bool isPuppetSprite) => CallActiveSprite(number, sprite => sprite.IsPuppetSprite = isPuppetSprite);
        
-
-        public string GetSpriteName(int number) => _sprites[number - 1].Name;
-        public ILingoSprite GetSprite(int number) => _sprites[number - 1];
+        public ILingoSprite? GetSprite(int number) => _activeSprites[number - 1];
         public LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(name, configure);
         public T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {
@@ -342,6 +140,26 @@ namespace LingoEngine.Movies
             return AddSprite<T>(num, name, configure);
         }
         public LingoSprite AddSprite(int num, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(num, configure);
+        private int _lastFrameBehaviour = 1900;
+        public LingoSprite AddFrameBehavior<TBehaviour>(int frameNumber, Action<TBehaviour>? configureBehaviour = null, Action<LingoSprite>? configure = null) where TBehaviour : LingoSpriteBehavior
+            => AddSprite<LingoSprite>(_lastFrameBehaviour, c =>
+            {
+                c.BeginFrame = frameNumber;
+                c.EndFrame = frameNumber;
+                var behaviour = c.SetBehavior<TBehaviour>();
+                if (configureBehaviour != null) configureBehaviour(behaviour);
+                if (configure != null) configure(c);
+                _lastFrameBehaviour++;
+            });
+        public LingoSprite AddSprite(int num, int begin, int end, float x, float y, Action<LingoSprite>? configure = null)
+            => AddSprite<LingoSprite>(num, c =>
+            {
+                c.BeginFrame = begin;
+                c.EndFrame = end;
+                c.LocH = x; c.LocV = y;
+                if (configure != null)
+                    configure(c);
+            });
         public T AddSprite<T>(int num, Action<LingoSprite>? configure = null) where T : LingoSprite => AddSprite<T>(num, "Sprite_" + num, configure);
 
         public T AddSprite<T>(int num, string name, Action<LingoSprite>? configure = null) where T : LingoSprite
@@ -395,55 +213,39 @@ namespace LingoEngine.Movies
             sprite = _sprites[number - 1];
             return true;
         }
-        public void SetSpriteMember(int number, string memberName) => GetSprite(number).SetMember(memberName);
-        public void SetSpriteMember(int number, int memberNumber) => GetSprite(number).SetMember(memberNumber);
-        public string GetSpriteMemberName(int number) => GetSprite(number).Name;
+        public void SetSpriteMember(int number, string memberName) => CallActiveSprite(number, s => s.SetMember(memberName));
+        public void SetSpriteMember(int number, int memberNumber) => CallActiveSprite(number, s => s.SetMember(memberNumber));
         public void SendSprite<T>(int spriteNumber, Action<T> actionOnSpriteBehaviour)
           where T : LingoSpriteBehavior
-        {
-            var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber);
-            if (sprite == null) return;
-            sprite.CallBehavior(actionOnSpriteBehaviour);
-        }
+                  => CallActiveSprite(spriteNumber, s => s.CallBehavior(actionOnSpriteBehaviour));
         public TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSpriteBehaviour)
             where T : LingoSpriteBehavior
-        {
-            var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber);
-            if (sprite == null) return default;
-            return sprite.CallBehavior(actionOnSpriteBehaviour);
-        }
+                => CallActiveSprite(spriteNumber, s => s.CallBehavior(actionOnSpriteBehaviour));
+        
 
         public void SendSprite(string name, Action<LingoSprite> actionOnSprite)
         {
-            var sprite = _activeSprites.FirstOrDefault(x => x.Name == Name);
+            var sprite = _activeSprites.Values.FirstOrDefault(x => x.Name == Name);
             if (sprite == null) return;
             actionOnSprite(sprite);
         }
 
         public void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite)
-        {
-            var sprite = _activeSprites.FirstOrDefault(x => x.SpriteNum == spriteNumber);
-            if (sprite == null) return;
-            actionOnSprite(sprite);
-        }
-        internal void CallActiveSprites(Action<LingoSprite> actionOnAllActiveSprites)
-        {
-            foreach (var sprite in _activeSprites)
-                actionOnAllActiveSprites(sprite);
-        }
+            => CallActiveSprite(spriteNumber, actionOnSprite);
+       
         /// <summary>
         /// The rollover() method indicates whether the pointer is over the specified sprite.
         /// </summary>
         public bool RollOver(int spriteNumber)
         {
-            var sprite = _sprites[spriteNumber - 1];
+            var sprite = _activeSprites[spriteNumber - 1];
             return sprite.IsMouseInsideBoundingBox(_lingoMouse);
         }
 
         public LingoSprite? GetSpriteUnderMouse()
         {
             // Loop through all sprites and check if the mouse is inside the bounding box of the sprite
-            foreach (var sprite in _sprites)
+            foreach (var sprite in _activeSprites.Values)
             {
                 if (sprite.IsMouseInsideBoundingBox(_lingoMouse))
                 {
@@ -451,6 +253,29 @@ namespace LingoEngine.Movies
                 }
             }
             return null; // Return null if no sprite is under the mouse
+        }
+        private void CallActiveSprites(Action<LingoSprite> actionOnAllActiveSprites)
+        {
+            foreach (var sprite in _activeSprites.Values)
+                actionOnAllActiveSprites(sprite);
+        }
+        private void CallActiveSprite(int number, Action<LingoSprite> spriteAction)
+        {
+            var sprite = _activeSprites[number - 1];
+            if (sprite == null) return;
+            spriteAction(sprite);
+        }
+        private TResult? CallActiveSprite<TResult>(int number, Func<LingoSprite, TResult?> spriteAction) 
+        {
+            var sprite = _activeSprites[number - 1];
+            if (sprite == null) return default;
+            return spriteAction(sprite);
+        }
+        private void CallLoadedSprite(int number, Action<LingoSprite> spriteAction)
+        {
+            var sprite = _sprites[number - 1];
+            if (sprite == null) return;
+            spriteAction(sprite);
         }
         #endregion
 
@@ -461,8 +286,8 @@ namespace LingoEngine.Movies
         public void GoTo(string label) => Go(label);
         public void Go(string label)
         {
-            // TODO: Label lookup
-            _currentFrame = 1; // Placeholder fallback
+            if (_scoreLabels.TryGetValue(label, out var scoreLabel))
+                _currentFrame = scoreLabel; 
         }
 
         public void GoTo(int frame) => Go(frame);
@@ -498,6 +323,7 @@ namespace LingoEngine.Movies
             // STEP 1: Find which sprites are entering and exiting
             foreach (var sprite in _sprites)
             {
+                if (sprite == null) continue;
                 sprite.IsActive = sprite.BeginFrame <= _currentFrame && sprite.EndFrame >= _currentFrame;
 
                 bool wasActive = sprite.BeginFrame <= _lastFrame && sprite.EndFrame >= _lastFrame;
@@ -508,7 +334,7 @@ namespace LingoEngine.Movies
                 {
                     sprite.FrameworkObj.Show();
                     _enteredSprites.Add(sprite);
-                    _activeSprites.Add(sprite);
+                    _activeSprites.Add(sprite.SpriteNum, sprite);
                     // Subscribe to mouse events if sprite is not already subscribed
                     if (!_lingoMouse.IsSubscribed(sprite))
                     {
@@ -559,7 +385,7 @@ namespace LingoEngine.Movies
                 sprite.FrameworkObj.Hide();
                 _MovieScripts.RaiseEndSprite();
                 sprite.DoEndSprite();
-                _activeSprites.Remove(sprite);
+                _activeSprites.Remove(sprite.SpriteNum);
                 // Unsubscribe from mouse events
                 if (_lingoMouse.IsSubscribed(sprite))
                     _lingoMouse.Unsubscribe(sprite);
@@ -699,6 +525,26 @@ namespace LingoEngine.Movies
         public IServiceProvider GetServiceProvider() => _environment.GetServiceProvider();
 
         public void StartTimer() => Timer = 0;
+
+        public void SetScoreLabel(int frameNumber, string? name)
+        {
+            KeyValuePair<string, int>? exists = null;
+            // find existing
+            foreach (var item in _scoreLabels)
+            {
+                if (item.Value == frameNumber)
+                    exists = item;
+                break;
+            }
+            if (name == null && exists != null)
+            {
+                // remove existing
+                _scoreLabels.Remove(exists.Value.Key);
+                return;
+            }
+            if (name != null)
+                _scoreLabels.Add(name,frameNumber);
+        }
 
         public ILingoMemberFactory New => _memberFactory;
 
