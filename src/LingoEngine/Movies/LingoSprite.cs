@@ -92,7 +92,7 @@ namespace LingoEngine.Movies
         public string ModifiedBy { get; set; } = "";
 
         public float Width { get => _frameworkSprite.Width; set => _frameworkSprite.SetDesiredWidth = value; }
-        public float Height { get => _frameworkSprite.Width; set => _frameworkSprite.SetDesiredHeight = value; }
+        public float Height { get => _frameworkSprite.Height; set => _frameworkSprite.SetDesiredHeight = value; }
         /// <summary>
         /// Whether this sprite is currently active (i.e., the playhead is within its frame span).
         /// </summary>
