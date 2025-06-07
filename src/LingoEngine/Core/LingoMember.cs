@@ -236,11 +236,13 @@ namespace LingoEngine.Core
         public string FileName { get; private set; }
         /// <inheritdoc/>
         public LingoMemberType Type { get; private set; }
+        public int NumberInCast { get; internal set; }
 
         /// <inheritdoc/>
-        public LingoMember(ILingoFrameworkMember frameworkMember, LingoMemberType type, LingoCast cast, string name = "", string fileName = "", LingoPoint regPoint = default)
+        public LingoMember(ILingoFrameworkMember frameworkMember, LingoMemberType type, LingoCast cast, int numberInCast, string name = "", string fileName = "", LingoPoint regPoint = default)
         {
             _frameworkMember = frameworkMember;
+            NumberInCast = numberInCast;
             // We need to first set the name to not trigger the NameChangedEvent
             Name = name;
             // Then the cast

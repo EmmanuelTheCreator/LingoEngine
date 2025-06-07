@@ -34,8 +34,8 @@ namespace LingoEngine.Sounds
         /// </summary>
         public string LinkedFilePath { get; set; } = string.Empty;
 
-        public LingoMemberSound(ILingoFrameworkMemberSound lingoMemberSound, LingoCast cast, string name = "", string fileName = "")
-            : base(lingoMemberSound, LingoMemberType.Sound,cast, name, fileName)
+        public LingoMemberSound(ILingoFrameworkMemberSound lingoMemberSound, LingoCast cast, int numberInCast, string name = "", string fileName = "")
+            : base(lingoMemberSound, LingoMemberType.Sound,cast, numberInCast, name, fileName)
         {
             _lingoFrameworkMemberSound = lingoMemberSound;
            

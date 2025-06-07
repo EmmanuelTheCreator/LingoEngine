@@ -189,18 +189,17 @@ When a movie stops, events occur in the following order:
             return bounds.Contains(point);
         }
 
-        public void SetMember(string memberName)
+        public void SetMember(string memberName, int? castLibNum = null)
         {
-            var member = _environment.GetMember<LingoMember>(memberName);
+            var member = _environment.GetMember<LingoMember>(memberName, castLibNum);
             _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
             _frameworkSprite.MemberChanged();
         }
 
 
-        public void SetMember(int memberNumber)
+        public void SetMember(int memberNumber, int? castLibNum = null)
         {
-            if (Cast == null) throw new Exception(Name + ":Cast not set for sprite: " + memberNumber);
-            var member = _environment.GetMember<LingoMember>(memberNumber);
+            var member = _environment.GetMember<LingoMember>(memberNumber, castLibNum);
             _Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
 
         }

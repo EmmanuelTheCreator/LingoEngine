@@ -149,13 +149,13 @@ namespace LingoEngine.Movies
         /// Changes the cast member displayed by this sprite using the cast member number.
         /// </summary>
         /// <param name="memberNumber">The index of the cast member.</param>
-        void SetMember(int memberNumber);
+        void SetMember(int memberNumber, int? castLibNum = null);
 
         /// <summary>
         /// Changes the cast member displayed by this sprite using the cast member name.
         /// </summary>
         /// <param name="memberName">The name of the cast member.</param>
-        void SetMember(string memberName);
+        void SetMember(string memberName, int? castLibNum = null);
         void SetMember(ILingoMember? member);
 
         /// <summary>

@@ -23,29 +23,41 @@ namespace LingoEngine.Core
 
     internal class LingoMembersContainer : ILingoMembersContainer
     {
-        private readonly List<LingoMember> _members = new();
+        private readonly Dictionary<int, LingoMember> _members = new();
+        private readonly bool containerForAll;
         private readonly Dictionary<string, LingoMember> _membersByName;
 
 
         /// <summary>
         /// Returns a copy array
         /// </summary>
-        internal IReadOnlyCollection<LingoMember> All => _members.ToArray();
+        internal IReadOnlyCollection<LingoMember> All => _members.Values.ToArray();
         public int Count => _members.Count;
-        internal LingoMembersContainer(Dictionary<string, LingoMember>? membersByName = null)
+        internal LingoMembersContainer(bool containerForAll,Dictionary<string, LingoMember>? membersByName = null)
         {
+            this.containerForAll = containerForAll;
             _membersByName = membersByName ?? new();
         }
         internal void Add(LingoMember member)
         {
-            _members.Add(member);
+            if (containerForAll)
+                _members.Add(member.Number,member);
+            else
+            {
+                if (member.NumberInCast == 0)
+                    member.NumberInCast = GetNextNumber();
+                _members[member.NumberInCast] = member;
+            }
             if (!_membersByName.ContainsKey(member.Name))
                 _membersByName.Add(member.Name, member);
         }
 
         internal void Remove(LingoMember member)
         {
-            _members.Remove(member);
+            if (containerForAll)
+                _members.Remove(member.Number);
+            else
+                _members.Remove(member.NumberInCast);
             if (_membersByName.ContainsKey(member.Name))
                 _membersByName.Remove(member.Name);
         }
@@ -58,15 +70,26 @@ namespace LingoEngine.Core
                 _membersByName.Add(member.Name, member);
         }
 
-        public ILingoMember? this[int number] => _members[number - 1];
+        public ILingoMember? this[int number] => _members.TryGetValue(number, out var member) ? member : null;
         public ILingoMember? this[string name] => _membersByName.TryGetValue(name, out var theValue) ? theValue : null;
 
-        public T? Member<T>(int number) where T : class, ILingoMember => _members[number - 1] as T;
+        public T? Member<T>(int number) where T : class, ILingoMember => _members.TryGetValue(number, out var member) ? member as T: null;
         public T? Member<T>(string name) where T : class, ILingoMember => _membersByName.TryGetValue(name, out var theValue) ? theValue as T : null;
-        public int GetNextNumber() => _members.Count + 1;
+        public int GetNextNumber() => _members.Keys.Any()? _members.Keys.Max() + 1 : 1;
 
-        internal int FindEmpty() => _members.Count + 1;
-
-        
+        private int _lastHighestNumber =1;
+        internal int FindEmpty()
+        {
+            var newNumber = 1;
+            for (int i = _lastHighestNumber; i < 5000; i++)
+            {
+                if (!_members.ContainsKey(i))
+                {
+                    _lastHighestNumber = i;
+                    return i;
+                }
+            }
+            return newNumber;
+        }
     }
 }

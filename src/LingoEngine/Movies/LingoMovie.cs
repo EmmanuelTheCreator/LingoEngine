@@ -17,6 +17,7 @@ namespace LingoEngine.Movies
         private readonly LingoMouse _lingoMouse;
         private readonly LingoClock _lingoClock;
         private int _currentFrame = 0;
+        private int _NextFrame = -1;
         private int _lastFrame = 0;
         private bool _isPlaying = false;
         private int _tempo = 30;  // Default frame rate (FPS)
@@ -74,7 +75,7 @@ namespace LingoEngine.Movies
         }
         public bool IsPlaying => _isPlaying;
 
-        public ActorList ActorList { get; private set; } = new ActorList();
+        public ActorList ActorList => _actorList;
         public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
 
         #endregion
@@ -285,7 +286,7 @@ namespace LingoEngine.Movies
         public void Go(string label)
         {
             if (_scoreLabels.TryGetValue(label, out var scoreLabel))
-                _currentFrame = scoreLabel; 
+                _NextFrame = scoreLabel; 
         }
 
         public void GoTo(int frame) => Go(frame);
@@ -293,11 +294,7 @@ namespace LingoEngine.Movies
         {
             if (frame <= 0)
                 throw new ArgumentOutOfRangeException(nameof(frame));
-
-            _lastFrame = _currentFrame;
-            _currentFrame = frame;
-
-            AdvanceFrame();
+            _NextFrame = frame;
         }
 
         public void OnTick()
@@ -312,9 +309,15 @@ namespace LingoEngine.Movies
         }
         public void AdvanceFrame()
         {
+            var frameChanged = _currentFrame == _lastFrame;
             _lastFrame = _currentFrame;
-            _currentFrame++;
-
+            if (_NextFrame<0)
+                _currentFrame++;
+            else
+            {
+                _currentFrame = _NextFrame;
+                _NextFrame = -1;
+            }
             _enteredSprites.Clear();
             _exitedSprites.Clear();
 

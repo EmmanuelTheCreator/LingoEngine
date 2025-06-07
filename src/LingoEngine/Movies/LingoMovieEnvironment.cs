@@ -20,8 +20,8 @@ namespace LingoEngine.Movies
         ILingoCast? GetCastLib(int number);
         ILingoCast? GetCastLib(string name);
         internal ILingoCastLibsContainer CastLibsContainer { get; }
-        T? GetMember<T>(int number) where T : class, ILingoMember;
-        T? GetMember<T>(string name) where T : class, ILingoMember;
+        T? GetMember<T>(int number, int? castLibNum = null) where T : class, ILingoMember;
+        T? GetMember<T>(string name, int? castLibNum = null) where T : class, ILingoMember;
     }
     public class LingoMovieEnvironment : ILingoMovieEnvironment , IDisposable
     {
@@ -95,8 +95,8 @@ namespace LingoEngine.Movies
         public ILingoCast? GetCastLib(int number) => _castLibsContainer[number];
         public ILingoCast? GetCastLib(string name) => _castLibsContainer[name];
 
-        T? ILingoMovieEnvironment.GetMember<T>(int number) where T : class => _castLibsContainer.GetMember<T>(number);  
+        T? ILingoMovieEnvironment.GetMember<T>(int number, int? castLibNum = null) where T : class => _castLibsContainer.GetMember<T>(number, castLibNum);  
 
-        T? ILingoMovieEnvironment.GetMember<T>(string name) where T : class => _castLibsContainer.GetMember<T>(name);
+        T? ILingoMovieEnvironment.GetMember<T>(string name, int? castLibNum = null) where T : class => _castLibsContainer.GetMember<T>(name, castLibNum);
     }
 }
