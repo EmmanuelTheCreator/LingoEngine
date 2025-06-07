@@ -15,6 +15,7 @@ namespace LingoEngine.Movies
         ILingoMovie Movie { get; }
         ILingoClock Clock { get; }
         ILingoFrameworkFactory Factory { get; }
+        ILingoEventMediator Events { get; }
 
         ILingoCast? GetCastLib(int number);
         ILingoCast? GetCastLib(string name);
@@ -37,6 +38,7 @@ namespace LingoEngine.Movies
         private readonly ILingoFrameworkFactory _factory;
         private readonly Lazy<ILingoMemberFactory> _memberFactory;
         private readonly IServiceProvider _rootServiceProvider;
+        public ILingoEventMediator Events => _eventMediator;
 
         public ILingoPlayer Player => _player;
 

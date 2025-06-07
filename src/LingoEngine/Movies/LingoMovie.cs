@@ -1,6 +1,7 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
+using System;
 
 namespace LingoEngine.Movies
 {
@@ -21,7 +22,7 @@ namespace LingoEngine.Movies
         private int _lastFrame = 0;
         private bool _isPlaying = false;
         private int _tempo = 30;  // Default frame rate (FPS)
-
+        private bool _needToRaiseStartMovie = false;
         private LingoCastLibsContainer _castLibContainer;
 
         private Dictionary<string, int> _scoreLabels = new();
@@ -30,17 +31,18 @@ namespace LingoEngine.Movies
         private readonly Dictionary<int,LingoSprite> _activeSprites = new();
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
-        private HashSet<ILingoSpriteEventHandler> _spriteEventHandlers = new();
         private bool _IsManualUpdateStage;
         private int _maxSpriteCount;
 
         // Movie Script subscriptions
-        private readonly HashSet<ILingoMovieScriptListener> _movieScriptListeners = new();
         private readonly ActorList _actorList = new ActorList();
         private readonly LingoMovieScriptContainer _MovieScripts;
 
+
+        #region Properties
+
         public ILingoFrameworkMovie FrameworkObj => _FrameworkMovie;
-        public T Framework<T>() where T:class, ILingoFrameworkMovie => (T)_FrameworkMovie;
+        public T Framework<T>() where T : class, ILingoFrameworkMovie => (T)_FrameworkMovie;
 
         public string Name { get; set; }
         public int MaxSpriteCount
@@ -53,6 +55,8 @@ namespace LingoEngine.Movies
             }
         }
         public int Number { get; private set; }
+
+        private readonly LingoEventMediator _EventMediator;
 
         public int Frame => _currentFrame;
         public int CurrentFrame => _currentFrame;
@@ -70,13 +74,14 @@ namespace LingoEngine.Movies
             }
         }
         public bool IsPlaying => _isPlaying;
-        
+
         public ActorList ActorList { get; private set; } = new ActorList();
         public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
 
+        #endregion
 
 
-#pragma warning disable CS8618 
+#pragma warning disable CS8618
         internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe)
 #pragma warning restore CS8618 
         {
@@ -89,6 +94,7 @@ namespace LingoEngine.Movies
             _onRemoveMe = onRemoveMe;
             Name = name;
             Number = number;
+            _EventMediator = mediator;
             _MovieScripts = new(environment, mediator);
             _lingoMouse = (LingoMouse)environment.Mouse;
             _lingoClock = (LingoClock)environment.Clock;
@@ -170,14 +176,12 @@ namespace LingoEngine.Movies
                 var index = _sprites.IndexOf(s);
                 _sprites.RemoveAt(index);
                 _spritesByName.Remove(name);
-                _spriteEventHandlers.Remove(s);
             });
             sprite.Init(num, name);
             //var sprite = new LingoSprite(_environment, this, name, num);
             _sprites[num] = sprite;
             if (!_spritesByName.ContainsKey(name))
                 _spritesByName.Add(name, sprite);
-            _spriteEventHandlers.Add(sprite);
             if (num > _maxSpriteNum)
                 _maxSpriteNum = num;
             if (configure != null)
@@ -348,25 +352,27 @@ namespace LingoEngine.Movies
             }
 
             // STEP 2: Fire beginSprite on new sprites
-            _MovieScripts.RaiseBeginSprite();
             foreach (var sprite in _enteredSprites)
                 sprite.DoBeginSprite();
+            _EventMediator.RaiseBeginSprite();
+
+            if (_needToRaiseStartMovie)
+                _EventMediator.RaiseStartMovie();
 
             // At the end of each frame, update the mouse state
             _lingoMouse.UpdateMouseState();
 
             // STEP 3: Fire stepFrame on all active sprites
-            _MovieScripts.RaiseStepFrame();
             CallActiveSprites(s => s.DoStepFrame());
+            _EventMediator.RaiseStepFrame();
 
             // STEP 4: Fire prepareFrame on all active sprites
-            _MovieScripts.RaisePrepareFrame();
             CallActiveSprites(s => s.DoPrepareFrame());
+            _EventMediator.RaisePrepareFrame();
 
             // STEP 5: Fire enterFrame on all active sprites
-            _MovieScripts.RaiseEnterFrame();
             CallActiveSprites(s => s.DoEnterFrame());
-            CallOnMoveScripts(s => s.DoEnterFrame());
+            _EventMediator.RaiseEnterFrame();
 
             // After enterFrame and before exitFrame, Director handles any time delays
             // required by the tempo setting, idle events, and keyboard and mouse events
@@ -375,44 +381,54 @@ namespace LingoEngine.Movies
             OnUpdateStage();
 
             // STEP 7: Fire exitFrame on all active sprites
-            _MovieScripts.RaiseExitFrame();
             CallActiveSprites(s => s.DoExitFrame());
-            CallOnMoveScripts(s => s.DoExitFrame());
+            _EventMediator.RaiseExitFrame();
 
             /// STEP 8: Fire endSprite on exiting sprites
+            DoEndSprite();
+        }
+
+        private void DoEndSprite()
+        {
             foreach (var sprite in _exitedSprites)
             {
+                _EventMediator.RaiseEndSprite();
                 sprite.FrameworkObj.Hide();
-                _MovieScripts.RaiseEndSprite();
                 sprite.DoEndSprite();
                 _activeSprites.Remove(sprite.SpriteNum);
                 // Unsubscribe from mouse events
                 if (_lingoMouse.IsSubscribed(sprite))
                     _lingoMouse.Unsubscribe(sprite);
-
             }
         }
-       
+
         // Play the movie
         public void Play()
         {
+            _EventMediator.RaisePrepareMovie();
+            _needToRaiseStartMovie = true;
             // prepareMovie
             // PrepareFrame
             // BeginSprite
             // StartMovie
             _isPlaying = true;
+            OnTick();
+            _needToRaiseStartMovie = false;
+           
         }
 
         private void OnStop()
         {
-            // TODO EVENTS
+            _isPlaying = false;
+            DoEndSprite();
+            _EventMediator.RaiseStopMovie();
             // EndSprite
             // StopMovie
         }
         // Halt the movie
         public void Halt()
         {
-            _isPlaying = false;
+            OnStop();
         }
         public void NextFrame()
         {
@@ -481,42 +497,13 @@ namespace LingoEngine.Movies
             _MovieScripts.Add<T>();
             return this;
         } 
-       
-        internal void SubscribeMovieScript(ILingoMovieScriptListener listener)
-        {
-            if (!_movieScriptListeners.Contains(listener))
-                _movieScriptListeners.Add(listener);
-            _lingoMouse.Subscribe(listener);
-        }
-
-        internal void UnsubscribeMovieScript(ILingoMovieScriptListener listener)
-        {
-            _movieScriptListeners.Remove(listener);
-            _lingoMouse.Unsubscribe(listener);
-        }
-
         public void CallMovieScript<T>(Action<T> action) where T : LingoMovieScript
-        {
-            // TODO : optimize with type dictionary
-            var type = typeof(T);
-            var script = _MovieScripts.Get<T>();
-            if (script != null)
-                action(script);
-        }
+            => _MovieScripts.Call(action);
         public TResult? CallMovieScript<T, TResult>(Func<T, TResult> action) where T : LingoMovieScript
-        {
-            // TODO : optimize with type dictionary
-            var type = typeof(T);
-            var script = _movieScriptListeners.FirstOrDefault(x => x.GetType() == type) as T;
-            if (script != null)
-                return action(script);
-            return default;
-        }
-        internal void CallOnMoveScripts(Action<ILingoMovieScriptListener> actionOnAllActiveSprites)
-        {
-            foreach (var script in _movieScriptListeners)
-                actionOnAllActiveSprites(script);
-        }
+            => _MovieScripts.Call(action);
+           
+        private void CallOnAllMovieScripts(Action<LingoMovieScript> actionOnAll)
+            => _MovieScripts.CallAll(actionOnAll);
 
         #endregion
 
@@ -545,6 +532,8 @@ namespace LingoEngine.Movies
             if (name != null)
                 _scoreLabels.Add(name,frameNumber);
         }
+
+        internal int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);
 
         public ILingoMemberFactory New => _memberFactory;
 

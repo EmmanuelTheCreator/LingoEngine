@@ -4,8 +4,11 @@ using LingoEngine.Events;
 namespace LingoEngine.Movies
 {
 
-    internal class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler , ILingoKeyEventHandler
+    internal class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler , ILingoKeyEventHandler, ILingoSpriteEventHandler
     {
+        private readonly List<IHasPrepareMovieEvent> _prepareMovies = new();
+        private readonly List<IHasStartMovieEvent> _startMovies = new();
+        private readonly List<IHasStopMovieEvent> _stopMovies = new();
         private readonly List<IHasMouseDownEvent> _mouseDowns = new();
         private readonly List<IHasMouseUpEvent> _mouseUps = new();
         private readonly List<IHasMouseMoveEvent> _mouseMoves = new();
@@ -25,6 +28,9 @@ namespace LingoEngine.Movies
 
         public void Subscribe(object ms)
         {
+            if (ms is IHasPrepareMovieEvent prepareMovieEvent) _prepareMovies.Add(prepareMovieEvent);
+            if (ms is IHasStartMovieEvent startMovieEvent) _startMovies.Add(startMovieEvent);
+            if (ms is IHasStopMovieEvent stopMovieEvent) _stopMovies.Add(stopMovieEvent);
             if (ms is IHasMouseDownEvent mouseDownEvent) _mouseDowns.Add(mouseDownEvent);
             if (ms is IHasMouseUpEvent mouseUpEvent) _mouseUps.Add(mouseUpEvent);
             if (ms is IHasMouseMoveEvent mouseMoveEvent) _mouseMoves.Add(mouseMoveEvent);
@@ -43,6 +49,9 @@ namespace LingoEngine.Movies
         }
         public void Unsubscribe(object ms)
         {
+            if (ms is IHasPrepareMovieEvent prepareMovieEvent) _prepareMovies.Remove(prepareMovieEvent);
+            if (ms is IHasStartMovieEvent startMovieEvent) _startMovies.Remove(startMovieEvent);
+            if (ms is IHasStopMovieEvent stopMovieEvent) _stopMovies.Remove(stopMovieEvent);
             if (ms is IHasMouseDownEvent mouseDownEvent) _mouseDowns.Remove(mouseDownEvent);
             if (ms is IHasMouseUpEvent mouseUpEvent) _mouseUps.Remove(mouseUpEvent);
             if (ms is IHasMouseMoveEvent mouseMoveEvent) _mouseMoves.Remove(mouseMoveEvent);
@@ -59,6 +68,9 @@ namespace LingoEngine.Movies
             if (ms is IHasKeyUpEvent keyUpEvent) _keyUps.Remove(keyUpEvent);
             if (ms is IHasKeyDownEvent keyDownEvent) _keyDowns.Remove(keyDownEvent);
         }
+        internal void RaisePrepareMovie() => _prepareMovies.ForEach(x => x.PrepareMovie());
+        internal void RaiseStartMovie() => _startMovies.ForEach(x => x.StartMovie());
+        internal void RaiseStopMovie() => _stopMovies.ForEach(x => x.StopMovie());
         public void RaiseMouseDown(LingoMouse mouse) => _mouseDowns.ForEach(x => x.MouseDown(mouse));
         public void RaiseMouseUp(LingoMouse mouse) => _mouseUps.ForEach(x => x.MouseUp(mouse));
         public void RaiseMouseMove(LingoMouse mouse) => _mouseMoves.ForEach(x => x.MouseMove(mouse));
@@ -70,8 +82,8 @@ namespace LingoEngine.Movies
         internal void RaisePrepareFrame() => _prepareFrames.ForEach(x => x.PrepareFrame());
         internal void RaiseEnterFrame() => _enterFrames.ForEach(x => x.EnterFrame());
         internal void RaiseExitFrame() => _exitFrames.ForEach(x => x.ExitFrame());
-        internal void RaiseFocus() => _focuss.ForEach(x => x.Focus());
-        internal void RaiseBlur() => _blurs.ForEach(x => x.Blur());
+        public void RaiseFocus() => _focuss.ForEach(x => x.Focus());
+        public void RaiseBlur() => _blurs.ForEach(x => x.Blur());
         public void RaiseKeyUp(LingoKey key) => _keyUps.ForEach(x => x.KeyUp(key));
         public void RaiseKeyDown(LingoKey key) => _keyDowns.ForEach(x => x.KeyDown(key));
         

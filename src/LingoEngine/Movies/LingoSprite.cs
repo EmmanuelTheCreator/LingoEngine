@@ -5,205 +5,12 @@ using LingoEngine.Primitives;
 
 namespace LingoEngine.Movies
 {
-    /// <summary>
-    /// Represents a sprite in the score with visual, timing, and behavioral properties.
-    /// Mirrors Lingo’s sprite object functionality.
-    /// </summary>
-    public interface ILingoSprite
-    {
-        /// <summary>
-        /// The frame number at which the sprite appears. Read/write.
-        /// </summary>
-        int BeginFrame { get; set; }
-
-        /// <summary>
-        /// Background color for the sprite. Read/write.
-        /// </summary>
-        LingoColor BgColor { get; set; }
-
-        /// <summary>
-        /// Specifies the blend percentage (0–100) of the sprite’s visibility. Read/write.
-        /// </summary>
-        float Blend { get; set; }
-
-        /// <summary>
-        /// Reference to the cast associated with this sprite. Read-only.
-        /// </summary>
-        LingoCast? Cast { get; }
-
-        /// <summary>
-        /// Foreground color tint of the sprite. Read/write.
-        /// </summary>
-        LingoColor Color { get; set; }
-
-        /// <summary>
-        /// Whether the sprite is editable by the user (e.g., for text input). Read/write.
-        /// </summary>
-        bool Editable { get; set; }
-
-        /// <summary>
-        /// The frame number at which the sprite stops displaying. Read/write.
-        /// </summary>
-        int EndFrame { get; set; }
-
-        /// <summary>
-        /// Foreground color of the sprite, often used in text. Read/write.
-        /// </summary>
-        LingoColor ForeColor { get; set; }
-
-        /// <summary>
-        /// Whether the sprite is highlighted. Read/write.
-        /// </summary>
-        bool Hilite { get; set; }
-
-        /// <summary>
-        /// The ink effect applied to the sprite. Read-only.
-        /// </summary>
-        int Ink { get; }
-
-        /// <summary>
-        /// Returns TRUE if the sprite’s cast member is linked to an external file. Read-only.
-        /// </summary>
-        bool Linked { get; }
-
-        /// <summary>
-        /// Returns TRUE if the sprite's media is fully loaded. Read-only.
-        /// </summary>
-        bool Loaded { get; }
-
-       
-
-        /// <summary>
-        /// Identifies the specified cast member as a media byte array. Read/write.
-        /// Use for copying or swapping media content at runtime.
-        /// </summary>
-        byte[] Media { get; set; }
-
-        /// <summary>
-        /// Returns TRUE if the sprite’s media is initialized and ready. Read-only.
-        /// </summary>
-        bool MediaReady { get; }
-        float Width { get; }
-        float Height { get; }
-
-        /// <summary>
-        /// Gets the cast member associated with this sprite. 
-        /// </summary>
-        ILingoMember? Member { get; set;  }
-
-        /// <summary>
-        /// Returns or sets the user or system who last modified the sprite.
-        /// </summary>
-        string ModifiedBy { get; set; }
-
-        /// <summary>
-        /// Returns or sets the name of the sprite.
-        /// </summary>
-        string Name { get; set; }
-
-        /// <summary>
-        /// The rectangular boundary of the sprite (top-left to bottom-right). Read/write.
-        /// </summary>
-        LingoRect Rect { get; }
-
-        /// <summary>
-        /// Specifies the registration point of a cast member. Read/write.
-        /// </summary>
-        LingoPoint RegPoint { get; set; }
-        LingoPoint Loc { get; set; }
-        /// <summary>
-        /// Horizontal location of the sprite on the stage. Read/write.
-        /// </summary>
-        float LocH { get; set; }
-
-        /// <summary>
-        /// Vertical location of the sprite on the stage. Read/write.
-        /// </summary>
-        float LocV { get; set; }
-
-        /// <summary>
-        /// List of script instance names or types attached to the sprite.
-        /// </summary>
-        List<string> ScriptInstanceList { get; }
-
-        /// <summary>
-        /// Returns the size of the media in memory, in bytes. Read-only.
-        /// </summary>
-        int Size { get; }
-
-        /// <summary>
-        /// The unique index number of the sprite in the score. Read-only.
-        /// </summary>
-        int SpriteNum { get; }
-
-        /// <summary>
-        /// Returns or sets a small thumbnail representation of the sprite’s media.
-        /// </summary>
-        byte[] Thumbnail { get; set; }
-
-        /// <summary>
-        /// Controls whether the sprite is visible on the Stage. Read/write.
-        /// </summary>
-        bool Visibility { get; set; }
-        int MemberNum { get; }
-
-        /// <summary>
-        /// Changes the cast member displayed by this sprite using the cast member number.
-        /// </summary>
-        /// <param name="memberNumber">The index of the cast member.</param>
-        void SetMember(int memberNumber);
-
-        /// <summary>
-        /// Changes the cast member displayed by this sprite using the cast member name.
-        /// </summary>
-        /// <param name="memberName">The name of the cast member.</param>
-        void SetMember(string memberName);
-        void SetMember(ILingoMember? member);
-
-        /// <summary>
-        /// Sends the sprite to the back of the display order (lowest layer).
-        /// </summary>
-        void SendToBack();
-
-        /// <summary>
-        /// Brings the sprite to the front of the display order (topmost layer).
-        /// </summary>
-        void BringToFront();
-
-        /// <summary>
-        /// Moves the sprite one layer backward in the display order.
-        /// </summary>
-        void MoveBackward();
-
-        /// <summary>
-        /// Moves the sprite one layer forward in the display order.
-        /// </summary>
-        void MoveForward();
-
-        bool Intersects(ILingoSprite other);
-        bool Within(ILingoSprite other);
-        (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad();
-
-    }
 
 
-    public class LingoSprite : LingoScriptBase, ILingoSprite, ILingoSpriteEventHandler, ILingoMouseEventHandler
+    public class LingoSprite : LingoScriptBase, ILingoSprite, ILingoMouseEventHandler
     {
         private readonly ILingoMovieEnvironment _environment;
-        private readonly List<IHasMouseDownEvent> _mouseDownBehaviors = new List<IHasMouseDownEvent>();
-        private readonly List<IHasMouseUpEvent> _mouseUpBehaviors = new List<IHasMouseUpEvent>();
-        private readonly List<IHasMouseMoveEvent> _mouseMoveBehaviors = new List<IHasMouseMoveEvent>();
-        private readonly List<IHasMouseEnterEvent> _mouseEnterBehaviors = new List<IHasMouseEnterEvent>();
-        private readonly List<IHasMouseExitEvent> _mouseExitBehaviors = new List<IHasMouseExitEvent>();
-        private readonly List<IHasBeginSpriteEvent> _beginSpriteBehaviors = new List<IHasBeginSpriteEvent>();
-        private readonly List<IHasEndSpriteEvent> _endSpriteBehaviors = new List<IHasEndSpriteEvent>();
-        private readonly List<IHasStepFrameEvent> _stepFrameBehaviors = new List<IHasStepFrameEvent>();
-        private readonly List<IHasPrepareFrameEvent> _prepareFrameBehaviors = new List<IHasPrepareFrameEvent>();
-        private readonly List<IHasEnterFrameEvent> _enterFrameBehaviors = new List<IHasEnterFrameEvent>();
-        private readonly List<IHasExitFrameEvent> _exitFrameBehaviors = new List<IHasExitFrameEvent>();
-        private readonly List<IHasFocusEvent> _focusBehaviors = new List<IHasFocusEvent>();
-        private readonly List<IHasBlurEvent> _blurBehaviors = new List<IHasBlurEvent>();
-
+        private readonly LingoEventMediator _eventMediator;
         private readonly List<LingoSpriteBehavior> _behaviors = new List<LingoSpriteBehavior>();
 
         private ILingoFrameworkSprite _frameworkSprite;
@@ -212,6 +19,10 @@ namespace LingoEngine.Movies
         private bool isDraggable = false;  // A flag to control dragging behavior
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
+        private bool _isFocus = false;
+
+
+        #region Properties
 
         public ILingoFrameworkSprite FrameworkObj => _frameworkSprite;
         public T Framework<T>() where T : class, ILingoFrameworkSprite => (T)_frameworkSprite;
@@ -222,7 +33,9 @@ namespace LingoEngine.Movies
         public bool IsPuppetSprite { get; internal set; }
 
         public string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
-        public int MemberNum { get => Member?.Number ?? 0; set
+        public int MemberNum
+        {
+            get => Member?.Number ?? 0; set
             {
                 if (Member != null)
                     Member = Member.GetMemberInCastByOffset(value);
@@ -238,13 +51,14 @@ namespace LingoEngine.Movies
         public float Blend { get => _frameworkSprite.Blend; set => _frameworkSprite.Blend = value; }
         public float LocH { get => _frameworkSprite.X; set => _frameworkSprite.X = value; }
         public float LocV { get => _frameworkSprite.Y; set => _frameworkSprite.Y = value; }
-        public LingoPoint Loc { get => (_frameworkSprite.X,_frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
+        public int LocZ { get => _frameworkSprite.ZIndex; set => _frameworkSprite.ZIndex = value; }
+        public LingoPoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
         public LingoPoint RegPoint { get; set; }
         public LingoColor ForeColor { get; set; }
         public List<string> ScriptInstanceList { get; private set; } = new();
 
-       
+
 
         public new ILingoMember? Member { get => _Member; set => SetMember(value); }
         public LingoCast? Cast { get; private set; }
@@ -269,23 +83,27 @@ namespace LingoEngine.Movies
         public byte[] Thumbnail { get; set; } = new byte[] { };
         public string ModifiedBy { get; set; } = "";
 
-        public float Width {get=> _frameworkSprite.Width; set => _frameworkSprite.SetDesiredWidth = value; }
+        public float Width { get => _frameworkSprite.Width; set => _frameworkSprite.SetDesiredWidth = value; }
         public float Height { get => _frameworkSprite.Width; set => _frameworkSprite.SetDesiredHeight = value; }
         /// <summary>
         /// Whether this sprite is currently active (i.e., the playhead is within its frame span).
         /// </summary>
         public bool IsActive { get; internal set; }
 
+        #endregion
+
+
 
         // Not used in c#
         // public int ScriptText { get; set; }
 
-#pragma warning disable CS8618 
+#pragma warning disable CS8618
         public LingoSprite(ILingoMovieEnvironment environment)
 #pragma warning restore CS8618 
             : base(environment)
         {
             _environment = environment;
+            _eventMediator = (LingoEventMediator) _environment.Events;
         }
         public void Init(ILingoFrameworkSprite frameworkSprite)
         {
@@ -307,19 +125,7 @@ namespace LingoEngine.Movies
             var behavior = _environment.Factory.CreateBehavior<T>((LingoMovie)_environment.Movie);
             behavior.SetMe(this);
             _behaviors.Add(behavior);
-            if (behavior is IHasMouseDownEvent mouseDownEvent) _mouseDownBehaviors.Add(mouseDownEvent);
-            if (behavior is IHasMouseUpEvent mouseUpEvent) _mouseUpBehaviors.Add(mouseUpEvent);
-            if (behavior is IHasMouseMoveEvent mouseMoveEvent) _mouseMoveBehaviors.Add(mouseMoveEvent);
-            if (behavior is IHasMouseEnterEvent mouseEnterEvent) _mouseEnterBehaviors.Add(mouseEnterEvent);
-            if (behavior is IHasMouseExitEvent mouseExitEvent) _mouseExitBehaviors.Add(mouseExitEvent);
-            if (behavior is IHasBeginSpriteEvent beginSpriteEvent) _beginSpriteBehaviors.Add(beginSpriteEvent);
-            if (behavior is IHasEndSpriteEvent endSpriteEvent) _endSpriteBehaviors.Add(endSpriteEvent);
-            if (behavior is IHasStepFrameEvent stepFrameEvent) _stepFrameBehaviors.Add(stepFrameEvent);
-            if (behavior is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrameBehaviors.Add(prepareFrameEvent);
-            if (behavior is IHasEnterFrameEvent enterFrameEvent) _enterFrameBehaviors.Add(enterFrameEvent);
-            if (behavior is IHasExitFrameEvent exitFrameEvent) _exitFrameBehaviors.Add(exitFrameEvent);
-            if (behavior is IHasFocusEvent focusEvent) _focusBehaviors.Add(focusEvent);
-            if (behavior is IHasBlurEvent blurEvent) _blurBehaviors.Add(blurEvent);
+            
             return behavior;
         }
 
@@ -347,17 +153,29 @@ When a movie stops, events occur in the following order:
 
         */
 
-        internal virtual void DoBeginSprite() { BeginSprite(); _beginSpriteBehaviors.ForEach(b => b.BeginSprite()); }
+        internal virtual void DoBeginSprite()
+        {
+            // Subscribe all behaviors
+            _behaviors.ForEach(_eventMediator.Subscribe);
+            _eventMediator.RaiseBeginSprite();
+            BeginSprite();
+        }
         protected virtual void BeginSprite() { }
-        internal virtual void DoEndSprite() { EndSprite(); _endSpriteBehaviors.ForEach(b => b.EndSprite()); }
+        internal virtual void DoEndSprite()
+        {
+            _eventMediator.RaiseEndSprite();
+            // Unsubscribe all behaviors
+            _behaviors.ForEach(_eventMediator.Unsubscribe);
+            EndSprite();
+        }
         protected virtual void EndSprite() { }
-        internal virtual void DoEnterFrame() { EnterFrame(); _enterFrameBehaviors.ForEach(b => b.EnterFrame()); }
+        internal virtual void DoEnterFrame() { EnterFrame(); }
         protected virtual void EnterFrame() { }
-        internal virtual void DoExitFrame() { ExitFrame(); _exitFrameBehaviors.ForEach(b => b.ExitFrame()); }
+        internal virtual void DoExitFrame() { ExitFrame(); }
         protected virtual void ExitFrame() { }
-        internal virtual void DoStepFrame() { StepFrame(); _stepFrameBehaviors.ForEach(b => b.StepFrame()); }
+        internal virtual void DoStepFrame() { StepFrame(); }
         protected virtual void StepFrame() { }
-        internal virtual void DoPrepareFrame() { PrepareFrame(); _prepareFrameBehaviors.ForEach(b => b.PrepareFrame()); }
+        internal virtual void DoPrepareFrame() { PrepareFrame(); }
         protected virtual void PrepareFrame() { }
 
 
@@ -391,26 +209,29 @@ When a movie stops, events occur in the following order:
             _Member = member as LingoMember;
             _frameworkSprite.MemberChanged();
         }
-       
+
+        #region ZIndex/locZ
         public void SendToBack()
         {
-            throw new NotImplementedException();
+            LocZ = 1;
         }
 
         public void BringToFront()
         {
-            throw new NotImplementedException();
+            var maxZ = ((LingoMovie)_Movie).GetMaxLocZ();
+            LocZ = maxZ + 1;
         }
 
         public void MoveBackward()
         {
-            throw new NotImplementedException();
+            LocZ--;
         }
 
         public void MoveForward()
         {
-            throw new NotImplementedException();
-        }
+            LocZ++;
+        } 
+        #endregion
         public LingoSprite Duplicate()
         {
             throw new NotImplementedException();
@@ -427,6 +248,9 @@ When a movie stops, events occur in the following order:
             //    // etc.
             //};
         }
+
+
+        #region Math methods
 
         public bool Intersects(ILingoSprite other)
         {
@@ -458,6 +282,7 @@ When a movie stops, events occur in the following order:
             );
         }
 
+        #endregion
 
 
         #region Mouse
@@ -467,11 +292,11 @@ When a movie stops, events occur in the following order:
             // Only respond if the sprite is active and the mouse is within the bounding box
             if (IsActive && IsMouseInsideBoundingBox(mouse))
             {
-                _mouseMoveBehaviors.ForEach(b => b.MouseMove(mouse));
+                _eventMediator.RaiseMouseMove(mouse);
                 if (!isMouseInside)
                 {
                     MouseEnter(mouse); // Mouse has entered the sprite
-                    _mouseEnterBehaviors.ForEach(b => b.MouseEnter(mouse));
+                    _eventMediator.RaiseMouseEnter(mouse);
                     isMouseInside = true;
                 }
             }
@@ -480,7 +305,7 @@ When a movie stops, events occur in the following order:
                 if (isMouseInside)
                 {
                     MouseExit(mouse); // Mouse has exited the sprite
-                    _mouseExitBehaviors.ForEach(b => b.MouseExit(mouse));
+                    _eventMediator.RaiseMouseExit(mouse);
                     isMouseInside = false;
                 }
             }
@@ -508,7 +333,7 @@ When a movie stops, events occur in the following order:
             if (isDraggable && IsMouseInsideBoundingBox(mouse))
                 isDragging = true;
             MouseDown(mouse);
-            _mouseDownBehaviors.ForEach(b => b.MouseDown(mouse));
+            _eventMediator.RaiseMouseDown(mouse);
         }
 
         protected virtual void MouseDown(LingoMouse mouse) { }
@@ -517,7 +342,7 @@ When a movie stops, events occur in the following order:
             if (isDragging && isDragging)
                 isDragging = false;
             MouseUp(mouse);
-            _mouseUpBehaviors.ForEach(b => b.MouseUp(mouse));
+            _eventMediator.RaiseMouseUp(mouse);
         }
         protected virtual void MouseUp(LingoMouse mouse) { }
         private void DoMouseDrag(LingoMouse mouse)
@@ -533,10 +358,20 @@ When a movie stops, events occur in the following order:
 
 
 
-        void ILingoSpriteEventHandler.DoFocus() => Focus();
-        protected virtual void Focus() { }
-        void ILingoSpriteEventHandler.DoBlur() => Blur();
-        protected virtual void Blur() { }
+        #region Blur/Focus
+        public virtual void Focus()
+        {
+            if (_isFocus) return;
+            _isFocus = true;
+            _eventMediator.RaiseFocus();
+        }
+        public virtual void Blur()
+        {
+            if (!_isFocus) return;
+            _isFocus = false;
+            _eventMediator.RaiseBlur();
+        } 
+        #endregion
 
 
 
