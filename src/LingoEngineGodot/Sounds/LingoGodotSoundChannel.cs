@@ -15,12 +15,31 @@ namespace LingoEngineGodot.Sounds
 
         public int SampleRate => 44100; // it seems godot can't retriev the sample rate
 
+        #region Volume
         public int Volume
         {
-            get => (int)(_audioPlayer.VolumeDb * 100); // Volume in dB scale in Godot
-            set => _audioPlayer.VolumeDb = value / 100f; // Set the volume in dB
+            get => GodotToLingoVolume(_audioPlayer.VolumeDb); // Volume in dB scale in Godot
+            set => _audioPlayer.VolumeDb = LingoToGodotVolume(value); // Set the volume in dB
         }
 
+        float LingoToGodotVolume(int lingoVolume)
+        {
+            if (lingoVolume <= 0) return -80f; // silent
+            if (lingoVolume >= 255) return 0f; // full volume
+
+            // Linear to decibel conversion
+            float normalized = lingoVolume / 255f;
+            return (float)(Math.Log10(normalized) * 20.0);
+        }
+        int GodotToLingoVolume(float db)
+        {
+            if (db <= -80f) return 0;      // silent in Godot
+            if (db >= 0f) return 255;      // full volume
+
+            double normalized = Math.Pow(10.0, db / 20.0);
+            return (int)Math.Clamp(normalized * 255.0, 0.0, 255.0);
+        } 
+        #endregion
         public int Pan
         {
             get => (int)_audioEffectPanner.Pan * 100; // Pan for stereo left (-1) to right (+1)

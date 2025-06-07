@@ -18,6 +18,8 @@ namespace LingoEngine.FrameworkCommunication
         LingoMemberPicture CreateMemberPicture(ILingoCast cast, string name = "", string? fileName = null, 
             LingoPoint regPoint = default);
         LingoMemberSound CreateMemberSound(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default);
+        LingoMemberField CreateMemberField(ILingoCast cast, string name = "", string? fileName = null,
+            LingoPoint regPoint = default); 
         LingoMemberText CreateMemberText(ILingoCast cast, string name = "", string? fileName = null,
             LingoPoint regPoint = default);
         LingoMember CreateEmpty(ILingoCast cast, string name = "", string? fileName = null,

@@ -3,9 +3,9 @@ using LingoEngine.Texts;
 
 namespace LingoEngineGodot.Texts
 {
-    public class LingoGodotMemberText : ILingoFrameworkMemberText, IDisposable
+    public class LingoGodotMemberField : ILingoFrameworkMemberField, IDisposable
     {
-        private LingoMemberText _lingoMemberText;
+        private LingoMemberField _lingoMember;
 
         private string _text = "";
         private readonly Label _labelNode;
@@ -17,7 +17,7 @@ namespace LingoEngineGodot.Texts
         public bool IsLoaded { get; private set; }
 
 #pragma warning disable CS8618 
-        public LingoGodotMemberText()
+        public LingoGodotMemberField()
 #pragma warning restore CS8618 
         {
             _parentNode = new CenterContainer();
@@ -25,25 +25,25 @@ namespace LingoEngineGodot.Texts
             _parentNode.AddChild(_labelNode);
         }
 
-        internal void Init(LingoMemberText lingoInstance)
+        internal void Init(LingoMemberField lingoInstance)
         {
-            _lingoMemberText = lingoInstance;
+            _lingoMember = lingoInstance;
             _parentNode.Name = lingoInstance.Name;
             LoadFile();
         }
         public void LoadFile()
         {
 #if DEBUG
-            if (_lingoMemberText.FileName.Contains("blockT") )
+            if (_lingoMember.FileName.Contains("blockT") )
             {
             }
 #endif
-            if (!File.Exists(_lingoMemberText.FileName))
+            if (!File.Exists(_lingoMember.FileName))
             {
-                GD.PrintErr("File not found for Text :"+_lingoMemberText.FileName);
+                GD.PrintErr("File not found for Text :"+_lingoMember.FileName);
                 return;
             }
-            RAWTextData = File.ReadAllText(_lingoMemberText.FileName);
+            RAWTextData = File.ReadAllText(_lingoMember.FileName);
             //var error = _image.Load($"res://{_lingoMemberText.FileName}");
             UpdateRAWTextData(RAWTextData);
         }
@@ -57,7 +57,7 @@ namespace LingoEngineGodot.Texts
             if (_text == value) return;
             _text = value;
             _labelNode.Text = value;
-            _lingoMemberText.UpdateTextFromFW(value);
+            _lingoMember.UpdateTextFromFW(value);
         }
 
         public void Erase()
@@ -96,5 +96,5 @@ namespace LingoEngineGodot.Texts
         public void ImportFileInto()
         {
         }
-    } 
+    }
 }

@@ -145,6 +145,7 @@ namespace LingoEngine.Core
                 case LingoMemberType.Bitmap: _factory.CreateMemberPicture(this, name, fileName, regPoint); break;
                 case LingoMemberType.Sound: _factory.CreateMemberSound(this, name, fileName, regPoint); break;
                 case LingoMemberType.Text: _factory.CreateMemberText(this, name, fileName, regPoint); break;
+                case LingoMemberType.Field: _factory.CreateMemberField(this, name, fileName, regPoint); break;
                 default:
                     _factory.CreateEmpty(this, name, fileName, regPoint); break;
             }

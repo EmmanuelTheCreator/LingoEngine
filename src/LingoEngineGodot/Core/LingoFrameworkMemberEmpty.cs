@@ -4,6 +4,8 @@ namespace LingoEngineGodot.Core
 {
     public class LingoFrameworkMemberEmpty : ILingoFrameworkMemberEmpty
     {
+        public bool IsLoaded => true;
+
         public void CopyToClipBoard()
         {
         }

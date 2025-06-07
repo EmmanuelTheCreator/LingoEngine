@@ -26,7 +26,7 @@ namespace LingoEngineGodot.Movies
             _removeMethod = removeMethod;
 
             _MovieNode2D = new Node2D();
-            _MovieNode2D.Position = new Vector2(640/2, 480/2);
+            //_MovieNode2D.Position = new Vector2(640/2, 480/2);
             _controller = new LingoGodotPlayerControler(stage, lingoInstance);
             stage.ShowMovie(this);
         }

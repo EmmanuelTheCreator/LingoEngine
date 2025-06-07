@@ -118,7 +118,7 @@ namespace LingoEngine.Sounds
         {
             if (channelNumber < 1 || channelNumber > numberOfSoundChannels)
                 throw new ArgumentOutOfRangeException(nameof(channelNumber), "Channel number must be between 1 and " + numberOfSoundChannels);
-            return _Channels[channelNumber-1];
+            return _Channels[channelNumber];
         }
 
 
@@ -129,12 +129,12 @@ namespace LingoEngine.Sounds
             
         }
 
-        public bool SoundBusy(int number) => _Channels[number - 1].IsBusy();
+        public bool SoundBusy(int number) => _Channels[number].IsBusy();
         public void PuppetSound(int channelNumber, string memberName, float startTime = -1, float endTime = -1, int loopCount = -1, float loopStartTime = -1, float loopEndTime = -1, float preloadTime = -1)
         {
             var member = _castLibsContainer.GetMember<LingoMemberSound>(memberName);
             if (member == null) return;
-            _Channels[channelNumber -1].Play(member, startTime,endTime, loopCount, loopStartTime, loopEndTime,preloadTime);
+            _Channels[channelNumber].Play(member, startTime,endTime, loopCount, loopStartTime, loopEndTime,preloadTime);
         }
     }
 

@@ -136,17 +136,17 @@ namespace LingoEngine.Movies
         /// Retrieves a sprite by number (channel number).
         /// Lingo: sprite x
         /// </summary>
-        ILingoSprite? GetSprite(int number);
+        ILingoSprite? GetActiveSprite(int number);
 
         /// <summary>
         /// Tries to get a sprite by name.
         /// </summary>
-        bool TryGetSprite(string name, out ILingoSprite? sprite);
+        bool TryGetAllTimeSprite(string name, out ILingoSprite? sprite);
 
         /// <summary>
         /// Tries to get a sprite by number.
         /// </summary>
-        bool TryGetSprite(int number, out ILingoSprite? sprite);
+        bool TryGetAllTimeSprite(int number, out ILingoSprite? sprite);
 
         /// <summary>
         /// Sets the member of a sprite using the member's name.
@@ -163,7 +163,7 @@ namespace LingoEngine.Movies
         /// Gets the total number of sprite channels in the Score.
         /// Lingo: the spriteCount
         /// </summary>
-        int SpriteCount { get; }
+        int SpriteTotalCount { get; }
         /// <summary>
         /// The rollover() method indicates whether the pointer is over the specified sprite.
         /// </summary>

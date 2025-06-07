@@ -2,9 +2,10 @@
 
 namespace LingoEngine.Texts
 {
-    public interface ILingoFrameworkMemberText : ILingoFrameworkMember
+    public interface ILingoFrameworkMemberField : ILingoFrameworkMember
     {
+      
         string Text { get; set; }
        
-    } 
+    }
 }
