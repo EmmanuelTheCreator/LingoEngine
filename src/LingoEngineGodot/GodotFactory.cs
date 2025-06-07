@@ -78,6 +78,14 @@ namespace LingoEngineGodot
             _disposables.Add(godotInstance);
             return lingoInstance;
         }
+        public LingoMemberField CreateMemberField(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+        {
+            var godotInstance = new LingoGodotMemberField();
+            var lingoInstance = new LingoMemberField((LingoCast)cast,godotInstance, name, fileName ?? "", regPoint);
+            godotInstance.Init(lingoInstance);
+            _disposables.Add(godotInstance);
+            return lingoInstance;
+        } 
         public LingoMemberText CreateMemberText(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var godotInstance = new LingoGodotMemberText();

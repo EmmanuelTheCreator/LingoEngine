@@ -1,7 +1,5 @@
 ﻿using LingoEngine.Core;
-using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using System;
 
 namespace LingoEngine.Movies
 {
@@ -27,7 +25,7 @@ namespace LingoEngine.Movies
 
         private Dictionary<string, int> _scoreLabels = new();
         private Dictionary<string, LingoSprite> _spritesByName = new();
-        private List<LingoSprite?> _sprites = new ();
+        private List<LingoSprite> _allTimeSprites = new ();
         private readonly Dictionary<int,LingoSprite> _activeSprites = new();
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
@@ -50,8 +48,8 @@ namespace LingoEngine.Movies
             get => _maxSpriteCount; set
             {
                 _maxSpriteCount = value;
-                for (int i = _sprites.Count; i < value; i++)
-                    _sprites.Add(null);
+                //for (int i = _activeSprites.Count; i < value; i++)
+                //    _activeSprites.Add(null);
             }
         }
         public int Number { get; private set; }
@@ -62,7 +60,8 @@ namespace LingoEngine.Movies
         public int CurrentFrame => _currentFrame;
         public int FrameCount => 60; // Arbitrary default, to be replaced with actual timeline data
         public int Timer { get; private set; }
-        public int SpriteCount => _sprites.Count;
+        public int SpriteTotalCount => _activeSprites.Count;
+        public int SpriteMaxNumber => _activeSprites.Keys.Max();
         // Tempo (Frame Rate)
         public int Tempo
         {
@@ -137,7 +136,7 @@ namespace LingoEngine.Movies
 
         public void PuppetSprite(int number, bool isPuppetSprite) => CallActiveSprite(number, sprite => sprite.IsPuppetSprite = isPuppetSprite);
        
-        public ILingoSprite? GetSprite(int number) => _activeSprites[number - 1];
+        public ILingoSprite? GetActiveSprite(int number) => _activeSprites[number];
         public LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(name, configure);
         public T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {
@@ -173,13 +172,13 @@ namespace LingoEngine.Movies
             var sprite = _environment.Factory.CreateSprite<T>(this, s =>
             {
                 // On remove method
-                var index = _sprites.IndexOf(s);
-                _sprites.RemoveAt(index);
+                var index = _allTimeSprites.IndexOf(s);
+                _allTimeSprites.RemoveAt(index);
                 _spritesByName.Remove(name);
             });
             sprite.Init(num, name);
             //var sprite = new LingoSprite(_environment, this, name, num);
-            _sprites[num] = sprite;
+            _allTimeSprites.Add(sprite);
             if (!_spritesByName.ContainsKey(name))
                 _spritesByName.Add(name, sprite);
             if (num > _maxSpriteNum)
@@ -196,7 +195,7 @@ namespace LingoEngine.Movies
             return true;
         }
 
-        public bool TryGetSprite(string name, out ILingoSprite? sprite)
+        public bool TryGetAllTimeSprite(string name, out ILingoSprite? sprite)
         {
             sprite = null;
             if (_spritesByName.TryGetValue(name, out var sprite1))
@@ -207,14 +206,14 @@ namespace LingoEngine.Movies
             return false;
         }
 
-        public bool TryGetSprite(int number, out ILingoSprite? sprite)
+        public bool TryGetAllTimeSprite(int number, out ILingoSprite? sprite)
         {
-            if (number <= 0 || number > _sprites.Count)
+            if (number <= 0 || number > _allTimeSprites.Count)
             {
                 sprite = null;
                 return false;
             }
-            sprite = _sprites[number - 1];
+            sprite = _allTimeSprites[number - 1];
             return true;
         }
         public void SetSpriteMember(int number, string memberName) => CallActiveSprite(number, s => s.SetMember(memberName));
@@ -242,7 +241,7 @@ namespace LingoEngine.Movies
         /// </summary>
         public bool RollOver(int spriteNumber)
         {
-            var sprite = _activeSprites[spriteNumber - 1];
+            var sprite = _activeSprites[spriteNumber];
             return sprite.IsMouseInsideBoundingBox(_lingoMouse);
         }
 
@@ -265,22 +264,17 @@ namespace LingoEngine.Movies
         }
         private void CallActiveSprite(int number, Action<LingoSprite> spriteAction)
         {
-            var sprite = _activeSprites[number - 1];
+            var sprite = _activeSprites[number];
             if (sprite == null) return;
             spriteAction(sprite);
         }
         private TResult? CallActiveSprite<TResult>(int number, Func<LingoSprite, TResult?> spriteAction) 
         {
-            var sprite = _activeSprites[number - 1];
+            var sprite = _activeSprites[number];
             if (sprite == null) return default;
             return spriteAction(sprite);
         }
-        private void CallLoadedSprite(int number, Action<LingoSprite> spriteAction)
-        {
-            var sprite = _sprites[number - 1];
-            if (sprite == null) return;
-            spriteAction(sprite);
-        }
+     
         #endregion
 
 
@@ -325,7 +319,7 @@ namespace LingoEngine.Movies
             _exitedSprites.Clear();
 
             // STEP 1: Find which sprites are entering and exiting
-            foreach (var sprite in _sprites)
+            foreach (var sprite in _allTimeSprites)
             {
                 if (sprite == null) continue;
                 sprite.IsActive = sprite.BeginFrame <= _currentFrame && sprite.EndFrame >= _currentFrame;

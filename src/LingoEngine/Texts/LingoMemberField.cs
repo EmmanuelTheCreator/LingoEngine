@@ -4,10 +4,10 @@ using LingoEngine.Primitives;
 
 namespace LingoEngine.Texts
 {
-    public class LingoMemberText : LingoMember
+    public class LingoMemberField : LingoMember
     {
-        protected readonly ILingoFrameworkMemberText _frameworkMemberText;
-        public T Framework<T>() where T : class, ILingoFrameworkMemberText => (T)_frameworkMemberText;
+        protected readonly ILingoFrameworkMemberField _frameworkMemberText;
+        public T Framework<T>() where T : class, ILingoFrameworkMemberField => (T)_frameworkMemberText;
 
         /// <summary>
         /// The raw text content of the member.
@@ -37,7 +37,7 @@ namespace LingoEngine.Texts
         public ILingoWord Word => _word;
         public LingoParagraph Paragraph => _Paragraph;
 
-        public LingoMemberText(LingoCast cast, ILingoFrameworkMemberText frameworkMember, string name = "", string fileName = "", LingoPoint regPoint = default)
+        public LingoMemberField(LingoCast cast, ILingoFrameworkMemberField frameworkMember, string name = "", string fileName = "", LingoPoint regPoint = default)
             : base(frameworkMember, LingoMemberType.Text, cast, name, fileName, regPoint)
         {
             _frameworkMemberText = frameworkMember;
