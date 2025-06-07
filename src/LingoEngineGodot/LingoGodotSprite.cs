@@ -55,8 +55,8 @@ namespace LingoEngineGodot
         public float Height { get; private set; }
         private float _DesiredWidth;
         private float _DesiredHeight;
-        public float SetDesiredHeight { get => _DesiredWidth; set { _DesiredWidth = value; IsDirty = true; } }
-        public float SetDesiredWidth { get => _DesiredHeight; set { _DesiredHeight = value; IsDirty = true; } }
+        public float SetDesiredWidth { get => _DesiredWidth; set { _DesiredWidth = value; IsDirty = true; } }
+        public float SetDesiredHeight { get => _DesiredHeight; set { _DesiredHeight = value; IsDirty = true; } }
 
 
 #pragma warning disable CS8618
@@ -140,8 +140,9 @@ namespace LingoEngineGodot
                     if (_DesiredWidth != Width || _DesiredHeight != Height)
                     {
                         UpdateSizeFromTexture();
-                        _DesiredWidth = Width;
-                        _DesiredHeight = Height;
+                        Width = _DesiredWidth;
+                        Height = _DesiredHeight;
+                        Resize(_DesiredWidth, _DesiredHeight);
                     }
                 }
                 IsDirty = false;
@@ -158,6 +159,8 @@ namespace LingoEngineGodot
             if (!(_lingoSprite.Member is LingoMemberPicture pictureMember)) return;
             UpdateMemberPicture(pictureMember.Framework<LingoGodotMemberPicture>());
             UpdateSizeFromTexture();
+            if (_DesiredWidth == 0) _DesiredWidth = Width;
+            if (_DesiredHeight == 0) _DesiredHeight = Height;
             IsDirty = true;
         }
 
@@ -173,7 +176,9 @@ namespace LingoEngineGodot
 
         public void Resize(float targetWidth, float targetHeight)
         {
-            float scaleFactorW = targetWidth / _Sprite2D.Texture.GetWidth();
+            var width = _Sprite2D.Texture.GetWidth();
+            var height = _Sprite2D.Texture.GetHeight();
+            float scaleFactorW = targetWidth / width;
             float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
         }
