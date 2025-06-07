@@ -22,7 +22,7 @@ namespace LingoEngine.Movies
     /// a named reference to a sprite channel allows the reference to remain intact even if the sprite
     /// channel moves position in the Score.
     /// </summary>
-    public interface ILingoSpriteChannel
+    public interface ILingoSpriteChannel: ILingoSprite
     {
         /// <summary>
         ///  identifies the name of a sprite channel. Read/write during a Score recording session only.
@@ -58,18 +58,36 @@ namespace LingoEngine.Movies
 
     public class LingoSpriteChannel : ILingoSpriteChannel
     {
+        private bool _visibility = true;
+        private ILingoSprite? _sprite;
         /// <inheritdoc/>
-        public string Name { get; set; } = "";
         /// <inheritdoc/>
         public int Number { get; private set; }
         /// <inheritdoc/>
         public bool Scripted {get; private set; }
+        public bool Visibility { get => _visibility; set
+            {
+                if (_visibility == value) return; // avoid inifinty loop   
+                _visibility = value;
+                if (_sprite != null) _sprite.Visibility = value;
+            }
+        }
         /// <inheritdoc/>
-        public ILingoSprite? Sprite { get; private set; }
+        public ILingoSprite? Sprite => _sprite;
 
         public LingoSpriteChannel(int number)
         {
             Number = number;
+        }
+        internal void SetSprite(LingoSprite sprite)
+        {
+            _sprite = sprite;
+            sprite.SpriteChannel = this;
+            _sprite.Visibility = _visibility;
+        }
+        internal void RemoveSprite()
+        {
+            _sprite = null;
         }
 
 
@@ -83,5 +101,54 @@ namespace LingoEngine.Movies
         {
             Scripted = false;
         }
+
+
+        // Let it crach when there is no sprite set.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        public int BeginFrame { get => _sprite.BeginFrame; set => _sprite.BeginFrame = value; }
+
+        public LingoColor BgColor { get => _sprite.BgColor; set => _sprite.BgColor = value; }
+        public float Blend { get => _sprite.Blend; set => _sprite.Blend = value; }
+        public LingoCast? Cast => _sprite.Cast;
+        public LingoColor Color { get => _sprite.Color; set => _sprite.Color = value; }
+        public bool Editable { get => _sprite.Editable; set => _sprite.Editable = value; }
+        public int EndFrame { get => _sprite.EndFrame; set => _sprite.EndFrame = value; }
+        public LingoColor ForeColor { get => _sprite.ForeColor; set => _sprite.ForeColor = value; }
+        public bool Hilite { get => _sprite.Hilite; set => _sprite.Hilite = value; }
+        public int Ink => _sprite.Ink;
+        public bool Linked => _sprite.Linked;
+        public bool Loaded => _sprite.Loaded;
+        public byte[] Media { get => _sprite.Media; set => _sprite.Media = value; }
+        public bool MediaReady => _sprite.MediaReady;
+        public float Width => _sprite.Width;
+        public float Height => _sprite.Height;
+        public ILingoMember? Member { 
+            get => _sprite.Member; 
+            set => _sprite.Member = value; }
+        public string ModifiedBy { get => _sprite.ModifiedBy; set => _sprite.ModifiedBy = value; }
+        public string Name { get => _sprite.Name; set => _sprite.Name = value; }
+        public LingoRect Rect => _sprite.Rect;
+        public LingoPoint RegPoint { get => _sprite.RegPoint; set => _sprite.RegPoint = value; }
+        public LingoPoint Loc { get => _sprite.Loc; set => _sprite.Loc = value; }
+        public float LocH { get => _sprite.LocH; set => _sprite.LocH = value; }
+        public float LocV { get => _sprite.LocV; set => _sprite.LocV = value; }
+        public List<string> ScriptInstanceList => _sprite.ScriptInstanceList;
+        public int Size => _sprite.Size;
+        public int SpriteNum => _sprite.SpriteNum;
+        public byte[] Thumbnail { get => _sprite.Thumbnail; set => _sprite.Thumbnail = value; }
+        
+        public int MemberNum => _sprite.MemberNum;
+
+        public void SetMember(int memberNumber, int? castLibNum = null) => _sprite.SetMember(memberNumber, castLibNum);
+        public void SetMember(string memberName, int? castLibNum = null) => _sprite.SetMember(memberName, castLibNum);
+        public void SetMember(ILingoMember? member) => _sprite.SetMember(member);
+        public void SendToBack() => _sprite.SendToBack();
+        public void BringToFront() => _sprite.BringToFront();
+        public void MoveBackward() => _sprite.MoveBackward();
+        public void MoveForward() => _sprite.MoveForward();
+        public bool Intersects(ILingoSprite other) => _sprite.Intersects(other);
+        public bool Within(ILingoSprite other) => _sprite.Within(other);
+        public (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad() => _sprite.Quad();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
     }
 }

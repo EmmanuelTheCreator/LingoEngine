@@ -23,7 +23,7 @@ namespace LingoEngine.Movies
 
 
         #region Properties
-
+        internal LingoSpriteChannel? SpriteChannel { get; set; }
         public ILingoFrameworkSprite FrameworkObj => _frameworkSprite;
         public T Framework<T>() where T : class, ILingoFrameworkSprite => (T)_frameworkSprite;
 
@@ -43,7 +43,15 @@ namespace LingoEngine.Movies
         }
         public int SpriteNum { get; private set; }
         public int Ink { get; private set; }
-        public bool Visibility { get => _frameworkSprite.Visibility; set => _frameworkSprite.Visibility = value; }
+        public bool Visibility
+        {
+            get => _frameworkSprite.Visibility; set
+            {
+                if (SpriteChannel != null)
+                    SpriteChannel.Visibility = value;
+                _frameworkSprite.Visibility = value;
+            }
+        }
         public bool Hilite { get; set; }
         public bool Linked { get; private set; }
         public bool Loaded { get; private set; }
@@ -157,13 +165,13 @@ When a movie stops, events occur in the following order:
         {
             // Subscribe all behaviors
             _behaviors.ForEach(_eventMediator.Subscribe);
-            _eventMediator.RaiseBeginSprite();
+            //_eventMediator.RaiseBeginSprite();
             BeginSprite();
         }
         protected virtual void BeginSprite() { }
         internal virtual void DoEndSprite()
         {
-            _eventMediator.RaiseEndSprite();
+            //_eventMediator.RaiseEndSprite();
             // Unsubscribe all behaviors
             _behaviors.ForEach(_eventMediator.Unsubscribe);
             EndSprite();

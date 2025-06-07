@@ -99,8 +99,8 @@ Console.WriteLine(a);      // #hello
         /// <summary>
         /// Returns a sprite channel.
         /// </summary>
-        protected ILingoSpriteChannel? Channel(int channelNumber) => _Movie.Channel(channelNumber);
-        protected ILingoSprite? Sprite(int number) => _Movie.GetActiveSprite(number);
+        protected ILingoSpriteChannel Channel(int channelNumber) => _Movie.Channel(channelNumber);
+        protected ILingoSprite Sprite(int number) => _Movie.GetActiveSprite(number);
         protected ILingoCast? CastLib(int number) => _env.GetCastLib(number);
         protected ILingoCast? CastLib(string name) => _env.GetCastLib(name);
         /// <summary>
@@ -111,8 +111,8 @@ Console.WriteLine(a);      // #hello
         protected ILingoTimeoutObject Timeout(string timeoutObjName, int periodInMilliseconds,Action onTick) => _Movie.TimeOutList.New(timeoutObjName, periodInMilliseconds, onTick);
 
         protected void UpdateStage() => _Movie.UpdateStage();
-        protected void SendSprite(string name, Action<LingoSprite> actionOnSprite) => _Movie.SendSprite(name, actionOnSprite);
-        protected void SendSprite(int spriteNumber, Action<LingoSprite> actionOnSprite) => _Movie.SendSprite(spriteNumber, actionOnSprite);
+        protected void SendSprite(string name, Action<ILingoSpriteChannel> actionOnSprite) => _Movie.SendSprite(name, actionOnSprite);
+        protected void SendSprite(int spriteNumber, Action<ILingoSpriteChannel> actionOnSprite) => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
 
