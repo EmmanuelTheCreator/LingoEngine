@@ -14,8 +14,8 @@ namespace LingoEngine.Core
         /// Seacch in all members
         /// </summary>
         ILingoMembersContainer Member { get; }
-        T? GetMember<T>(int number) where T : class, ILingoMember;
-        T? GetMember<T>(string name) where T : class, ILingoMember;
+        T? GetMember<T>(int number, int? castLibNum = null) where T : class, ILingoMember;
+        T? GetMember<T>(string name, int? castLibNum = null) where T : class, ILingoMember;
         ILingoCast AddCast(string name);
         ILingoCast GetCast(int number);
         string GetCastName(int number);
@@ -42,7 +42,7 @@ namespace LingoEngine.Core
         }
         public LingoCastLibsContainer(ILingoFrameworkFactory factory)
         {
-            _allMembersContainer = new LingoMembersContainer(_allMembersByName);
+            _allMembersContainer = new LingoMembersContainer(true, _allMembersByName);
             _factory = factory;
         }
 
@@ -73,11 +73,15 @@ namespace LingoEngine.Core
         }
 
         public int GetNextMemberNumber() => _allMembersContainer.GetNextNumber();
-        public T? GetMember<T>(int number) where T : class, ILingoMember
-            => _allMembersContainer.Member<T>(number);
+        public T? GetMember<T>(int number, int? castLibNum = null) where T : class, ILingoMember
+            => !castLibNum.HasValue
+             ? _allMembersContainer.Member<T>(number)
+             : _casts[castLibNum.Value- 1].GetMember<T>(number);
 
-        public T? GetMember<T>(string name) where T : class, ILingoMember
-            => _allMembersContainer.Member<T>(name);
+        public T? GetMember<T>(string name, int? castLibNum = null) where T : class, ILingoMember
+            => !castLibNum.HasValue
+             ? _allMembersContainer.Member<T>(name)
+             : _casts[castLibNum.Value - 1].GetMember<T>(name);
 
         internal void AddMember(LingoMember member)
         {

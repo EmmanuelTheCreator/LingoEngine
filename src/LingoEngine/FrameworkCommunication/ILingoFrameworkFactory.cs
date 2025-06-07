@@ -14,15 +14,15 @@ namespace LingoEngine.FrameworkCommunication
 
 
         #region Members
-        T CreateMember<T>(ILingoCast cast, string name = "") where T : LingoMember;
-        LingoMemberPicture CreateMemberPicture(ILingoCast cast, string name = "", string? fileName = null, 
+        T CreateMember<T>(ILingoCast cast, int numberInCast, string name = "") where T : LingoMember;
+        LingoMemberPicture CreateMemberPicture(ILingoCast cast,int numberInCast, string name = "", string? fileName = null, 
             LingoPoint regPoint = default);
-        LingoMemberSound CreateMemberSound(ILingoCast cast, string name = "", string? fileName = null, LingoPoint regPoint = default);
-        LingoMemberField CreateMemberField(ILingoCast cast, string name = "", string? fileName = null,
+        LingoMemberSound CreateMemberSound(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default);
+        LingoMemberField CreateMemberField(ILingoCast cast, int numberInCast, string name = "", string? fileName = null,
             LingoPoint regPoint = default); 
-        LingoMemberText CreateMemberText(ILingoCast cast, string name = "", string? fileName = null,
+        LingoMemberText CreateMemberText(ILingoCast cast, int numberInCast, string name = "", string? fileName = null,
             LingoPoint regPoint = default);
-        LingoMember CreateEmpty(ILingoCast cast, string name = "", string? fileName = null,
+        LingoMember CreateEmpty(ILingoCast cast, int numberInCast, string name = "", string? fileName = null,
             LingoPoint regPoint = default);
         #endregion
 

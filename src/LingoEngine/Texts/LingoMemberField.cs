@@ -37,8 +37,8 @@ namespace LingoEngine.Texts
         public ILingoWord Word => _word;
         public LingoParagraph Paragraph => _Paragraph;
 
-        public LingoMemberField(LingoCast cast, ILingoFrameworkMemberField frameworkMember, string name = "", string fileName = "", LingoPoint regPoint = default)
-            : base(frameworkMember, LingoMemberType.Text, cast, name, fileName, regPoint)
+        public LingoMemberField(LingoCast cast, ILingoFrameworkMemberField frameworkMember, int numberInCast, string name = "", string fileName = "", LingoPoint regPoint = default)
+            : base(frameworkMember, LingoMemberType.Text, cast, numberInCast, name, fileName, regPoint)
         {
             _frameworkMemberText = frameworkMember;
         }

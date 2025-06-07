@@ -55,7 +55,7 @@ namespace LingoEngine.Tools
                     fn = row.Number + name + ext;
                 }
                 var fileName = Path.Combine(rootFolder, fn);
-                cast.Add(row.Type, row.Name, fileName, row.RegPoint);
+                cast.Add(row.Type,row.Number, row.Name, fileName, row.RegPoint);
             }
         }
         public IReadOnlyCollection<ScvRow> ImportCsvCastFile(string filePath, bool skipFirstLine = true)

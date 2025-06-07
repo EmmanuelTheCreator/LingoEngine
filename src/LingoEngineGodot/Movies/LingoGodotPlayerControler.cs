@@ -15,7 +15,7 @@ namespace LingoEngineGodot.Movies
         {
             parent.AddChild(Container);
             Container.AddChild(LabelNode);
-
+            Container.Position = new Vector2(400, 400);
             Container.ZIndex = 99999;
             _lingoMovie = lingoMovie;
             _lingoMovie.ActorList.Add(this);
