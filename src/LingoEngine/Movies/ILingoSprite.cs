@@ -142,8 +142,9 @@ namespace LingoEngine.Movies
         /// <summary>
         /// Controls whether the sprite is visible on the Stage. Read/write.
         /// </summary>
-        bool Visibility { get; set; }
+        bool Visibility { get; set; } 
         int MemberNum { get; }
+        
 
         /// <summary>
         /// Changes the cast member displayed by this sprite using the cast member number.

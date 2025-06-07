@@ -90,7 +90,7 @@ namespace LingoEngine.Movies
         void GoToAndStop(int frame);
         
         void UpdateStage();
-        ILingoSpriteChannel? Channel(int channelNumber);
+        ILingoSpriteChannel Channel(int channelNumber);
         ActorList ActorList { get;  }
         LingoTimeOutList TimeOutList { get; }
         /// <summary>
@@ -136,7 +136,7 @@ namespace LingoEngine.Movies
         /// Retrieves a sprite by number (channel number).
         /// Lingo: sprite x
         /// </summary>
-        ILingoSprite? GetActiveSprite(int number);
+        ILingoSprite GetActiveSprite(int number);
 
         /// <summary>
         /// Tries to get a sprite by name.
@@ -170,8 +170,8 @@ namespace LingoEngine.Movies
         bool RollOver(int spriteNumber);
 
 
-        void SendSprite(string name, Action<LingoSprite> actionOnSprite);
-        void SendSprite(int number, Action<LingoSprite> actionOnSprite);
+        void SendSprite(string name, Action<ILingoSpriteChannel> actionOnSprite);
+        void SendSprite(int number, Action<ILingoSpriteChannel> actionOnSprite);
         void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior;
         TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
         #endregion
