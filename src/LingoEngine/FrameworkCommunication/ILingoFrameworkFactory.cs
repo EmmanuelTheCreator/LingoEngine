@@ -28,10 +28,10 @@ namespace LingoEngine.FrameworkCommunication
 
         LingoSound CreateSound(ILingoCastLibsContainer castLibsContainer);
         LingoSoundChannel CreateSoundChannel(int number);
+        LingoMouse CreateMouse(LingoStage stage);
 
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
         T CreateBehavior<T>(LingoMovie lingoMovie) where T : LingoSpriteBehavior;
         T CreateMovieScript<T>(LingoMovie lingoMovie) where T : LingoMovieScript;
-        
     }
 }

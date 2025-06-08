@@ -2,6 +2,7 @@
 using LingoEngine;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.FrameworkCommunication.Events;
+using LingoEngineGodot.Core;
 using Microsoft.Extensions.DependencyInjection;
 namespace LingoEngineGodot
 {

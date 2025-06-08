@@ -1,4 +1,5 @@
 ﻿using LingoEngine.Events;
+using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
 
@@ -48,7 +49,7 @@ namespace LingoEngine.Core
         /// <summary>
         /// Returns or sets the cast member underneath the mouse pointer.
         /// </summary>
-        LingoMember? MouseMember { get; set; }
+        LingoMember? MouseMember { get; }
 
         /// <summary>
         /// Returns TRUE on the frame when the mouse button is released.
@@ -81,6 +82,7 @@ namespace LingoEngine.Core
         bool StillDown { get; }
         bool LeftMouseDown { get; }
         bool MiddleMouseDown { get; }
+        ILingoCursor Cursor { get; }
     }
 
 
@@ -90,8 +92,11 @@ namespace LingoEngine.Core
 
         private HashSet<ILingoMouseEventHandler> _subscriptions = new();
         private readonly LingoStage _lingoStage;
+        private readonly LingoCursor _cursor;
+        private ILingoFrameworkMouse _frameworkObj;
+        public T Framework<T>() where T : ILingoFrameworkMouse => (T)_frameworkObj;
 
-        public LingoMember? MouseMember { get; set; }
+        public LingoMember? MouseMember { get => _lingoStage.MouseMemberUnderMouse;}
         public LingoPoint MouseLoc => new LingoPoint(MouseH, MouseV);
 
         public float MouseH { get; set; }
@@ -109,13 +114,17 @@ namespace LingoEngine.Core
 
         public bool LeftMouseDown { get; set; }
         public bool MiddleMouseDown { get; set; }
+        public ILingoCursor Cursor => _cursor;
 
 
-        public LingoMouse(LingoStage lingoMovieStage)
+        public LingoMouse(LingoStage lingoMovieStage, ILingoFrameworkMouse frameworkMouse)
         {
+            _frameworkObj = frameworkMouse;
             _lingoStage = lingoMovieStage;
+            _cursor = new LingoCursor(_frameworkObj);    
         }
 
+        
         /// <summary>
         /// Called from communiction framework mouse
         /// </summary>

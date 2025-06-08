@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using LingoEngine.Pictures.LingoEngine;
 
 namespace LingoEngine.Core
 {
@@ -15,6 +13,16 @@ namespace LingoEngine.Core
         /// Lingo: the cursor
         /// </summary>
         int Cursor { get; set; }
+        
+        /// <summary>
+        /// Sets a custom image for the mouse cursor
+        /// </summary>
+        LingoMemberPicture? Image { get; set; }
+
+         /// <summary>
+         /// Determines whether the cursor is currently visible.
+         /// </summary>
+        bool IsCursorVisible { get; }
 
         /// <summary>
         /// Shows the system cursor.
@@ -28,36 +36,11 @@ namespace LingoEngine.Core
         /// </summary>
         void HideCursor();
 
-        /// <summary>
-        /// Determines whether the cursor is currently visible.
-        /// </summary>
-        bool IsCursorVisible { get; }
+       
 
         /// <summary>
         /// Resets the cursor to the system default.
         /// </summary>
         void ResetCursor();
-    }
-
-    public class LingoCursor : ILingoCursor
-    {
-        public int Cursor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public bool IsCursorVisible => throw new NotImplementedException();
-
-        public void HideCursor()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ResetCursor()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ShowCursor()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

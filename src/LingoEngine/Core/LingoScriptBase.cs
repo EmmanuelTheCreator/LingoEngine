@@ -1,5 +1,6 @@
 ﻿using LingoEngine.Movies;
 using LingoEngine.Pictures;
+using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using System;
@@ -39,14 +40,16 @@ Console.WriteLine(a);      // #hello
         protected ILingoSound _Sound => _env.Sound;
         protected ILingoMovie _Movie => _env.Movie;
         protected ILingoSystem _System => _env.System;
+        protected int Cursor { get  => _env.Mouse.Cursor.Cursor; set => _env.Mouse.Cursor.Cursor = value; }
+        protected LingoMemberPicture? CursorImage { get  => _env.Mouse.Cursor.Image; set => _env.Mouse.Cursor.Image = value; }
 
         // Language built-in functions
-        /// <summary>
-        /// Why 1 : because Lingo's random(n) returns a number between 1 and n, inclusive — unlike .NET's Next(0, n) which is exclusive on the upper bound.
-        /// </summary>
+            /// <summary>
+            /// Why 1 : because Lingo's random(n) returns a number between 1 and n, inclusive — unlike .NET's Next(0, n) which is exclusive on the upper bound.
+            /// </summary>
         protected int Random(int max) => _random.Next(1, max + 1); // Lingo: random(max)
         /// <summary>
-        /// eturns a unit vector describing a randomly chosen point on the surface of a unit sphere.
+        /// Returns a unit vector describing a randomly chosen point on the surface of a unit sphere.
         /// This function differs from vector(random(10)/10.0, random(10)/10.0, random(10)/10.0,) 
         /// in that the resulting vector using randomVector() is guaranteed to be a unit vector.
         /// A unit vector always has a length of one.
