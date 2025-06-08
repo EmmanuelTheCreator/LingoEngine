@@ -49,10 +49,17 @@ namespace LingoEngineGodot
             set
             {
                 _name = value;
-                _Container2D.Name = value;
-                _Sprite2D.Name = value + "_Sprite";
+                UpdateSprite2DName();
             }
         }
+
+        private void UpdateSprite2DName()
+        {
+            var fullName = _lingoSprite.GetFullName();
+            _Sprite2D.Name = fullName + ".sprite";
+            _Container2D.Name = fullName;
+        }
+
         public float Width { get; private set; }
         public float Height { get; private set; }
         private float _DesiredWidth;
@@ -174,6 +181,7 @@ namespace LingoEngineGodot
                     UpdateMemberField(fieldMember.Framework<LingoGodotMemberField>());
                     break;
             }
+            UpdateSprite2DName();
         }
 
         private void UpdateMemberPicture(LingoGodotMemberPicture godotPicture)

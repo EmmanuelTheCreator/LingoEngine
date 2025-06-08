@@ -396,18 +396,18 @@ namespace LingoEngine.Movies
                 _lingoMouse.UpdateMouseState();
 
                 // STEP 3: Fire stepFrame on all active sprites
-                _currentFrameSprite?.DoStepFrame();// must always be first
-                CallActiveSprites(s => s.DoStepFrame());
+                //_currentFrameSprite?.DoStepFrame();// must always be first
+                //CallActiveSprites(s => s.DoStepFrame());
                 _EventMediator.RaiseStepFrame();
 
                 // STEP 4: Fire prepareFrame on all active sprites
-                CallActiveSprites(s => s.DoPrepareFrame());
+                //CallActiveSprites(s => s.DoPrepareFrame());
                 _EventMediator.RaisePrepareFrame();
-                _currentFrameSprite?.DoPrepareFrame();
+                //_currentFrameSprite?.DoPrepareFrame();
 
                 // STEP 5: Fire enterFrame on all active sprites
-                _currentFrameSprite?.DoEnterFrame();// must always be first
-                CallActiveSprites(s => s.DoEnterFrame());
+                //_currentFrameSprite?.DoEnterFrame();// must always be first
+                //CallActiveSprites(s => s.DoEnterFrame());
                 _EventMediator.RaiseEnterFrame();
 
                 // After enterFrame and before exitFrame, Director handles any time delays
@@ -417,8 +417,8 @@ namespace LingoEngine.Movies
                 OnUpdateStage();
 
                 // STEP 7: Fire exitFrame on all active sprites
-                _currentFrameSprite?.DoExitFrame(); // must always be first
-                CallActiveSprites(s => s.DoExitFrame());
+                //_currentFrameSprite?.DoExitFrame(); // must always be first
+                //CallActiveSprites(s => s.DoExitFrame());
                 _EventMediator.RaiseExitFrame();
             }
             finally

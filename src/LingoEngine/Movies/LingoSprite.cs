@@ -184,15 +184,6 @@ When a movie stops, events occur in the following order:
             EndSprite();
         }
         protected virtual void EndSprite() { }
-        internal virtual void DoEnterFrame() { EnterFrame(); }
-        protected virtual void EnterFrame() { }
-        internal virtual void DoExitFrame() { ExitFrame(); }
-        protected virtual void ExitFrame() { }
-        internal virtual void DoStepFrame() { StepFrame(); }
-        protected virtual void StepFrame() { }
-        internal virtual void DoPrepareFrame() { PrepareFrame(); }
-        protected virtual void PrepareFrame() { }
-
 
 
 
@@ -415,5 +406,7 @@ When a movie stops, events occur in the following order:
         }
 
         public void SetOnRemoveMe(Action<LingoSprite> onRemoveMe) => _onRemoveMe = onRemoveMe;
+
+        public string GetFullName() => $"{SpriteNum}.{Name}.{Member?.Name}";
     }
 }
