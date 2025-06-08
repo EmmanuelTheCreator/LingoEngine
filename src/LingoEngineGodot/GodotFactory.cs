@@ -1,5 +1,4 @@
-﻿using ArkGodot.GodotLinks;
-using Godot;
+﻿using Godot;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.FrameworkCommunication.Events;
@@ -43,7 +42,7 @@ namespace LingoEngineGodot
         }
         public LingoSoundChannel CreateSoundChannel(int number)
         {
-            var lingoSoundChannel = new LingoGodotSoundChannel(number);
+            var lingoSoundChannel = new LingoGodotSoundChannel(number, _rootNode);
             var soundChannel = new LingoSoundChannel(lingoSoundChannel, number);
             lingoSoundChannel.Init(soundChannel);
             _disposables.Add(lingoSoundChannel);
@@ -141,6 +140,12 @@ namespace LingoEngineGodot
                 disposable.Dispose();
         }
 
-        
+        public LingoMouse CreateMouse(LingoStage stage)
+        {
+            LingoMouse? mouse = null;
+            var godotInstance = new LingoGodotMouse(_rootNode, new Lazy<LingoMouse>(() => mouse!));
+            mouse = new LingoMouse(stage, godotInstance);
+            return mouse;
+        }
     }
 }

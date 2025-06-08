@@ -1,7 +1,7 @@
 ﻿using Godot;
 using LingoEngine.FrameworkCommunication.Events;
 
-namespace LingoEngineGodot
+namespace LingoEngineGodot.Core
 {
     internal class LingoGodotFontManager : ILingoFontManager
     {
@@ -23,8 +23,8 @@ namespace LingoEngineGodot
             }
             _fontsToLoad.Clear();
         }
-        public T? Get<T>(string name) where T: class
-             => _loadedFonts.TryGetValue(name, out var fontt) ? fontt as T: null;
+        public T? Get<T>(string name) where T : class
+             => _loadedFonts.TryGetValue(name, out var fontt) ? fontt as T : null;
         public FontFile GetTyped(string name)
             => _loadedFonts[name];
     }

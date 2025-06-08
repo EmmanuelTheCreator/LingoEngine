@@ -64,18 +64,21 @@ namespace LingoEngineGodot.Sounds
         public float EndTime { get; set; }
 
         // Constructor: Takes a channel number and initializes the audio player
-        public LingoGodotSoundChannel(int channelNumber)
+        public LingoGodotSoundChannel(int channelNumber, Node parentNode)
         {
-            var busName = "Channel" + channelNumber;
+            var busName = "ChannelBus " + channelNumber;
             ChannelNumber = channelNumber;
             _audioPlayer = new AudioStreamPlayer();
+            _audioPlayer.Name = "Channel " + channelNumber;
             _audioEffectPanner = new AudioEffectPanner();
             _audioPlayer.Finished += _audioPlayer_Finished;
-            AudioServer.AddBus(channelNumber);
-            AudioServer.SetBusName(channelNumber, busName);
-            AudioServer.AddBusEffect(channelNumber, _audioEffectPanner, channelNumber);
-            AudioServer.SetBusSend(channelNumber, "Master");
-            _audioPlayer.Bus = busName;
+            parentNode.AddChild(_audioPlayer);
+            
+            //AudioServer.AddBus(channelNumber);
+            //AudioServer.SetBusName(channelNumber, busName);
+            //AudioServer.AddBusEffect(channelNumber, _audioEffectPanner, channelNumber);
+            //AudioServer.SetBusSend(channelNumber, "Master");
+            //_audioPlayer.Bus = busName;
         }
         internal void Init(LingoSoundChannel soundChannel)
         {

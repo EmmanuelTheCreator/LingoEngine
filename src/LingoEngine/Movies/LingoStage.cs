@@ -1,4 +1,5 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.Core;
+using LingoEngine.FrameworkCommunication;
 
 namespace LingoEngine.Movies
 {
@@ -10,6 +11,15 @@ namespace LingoEngine.Movies
         private readonly ILingoFrameworkStage _lingoFrameworkMovieStage;
 
         public LingoMovie? ActiveMovie { get; private set; }
+        public LingoMember? MouseMemberUnderMouse
+        {
+            get
+            {
+                if (ActiveMovie == null) return null;
+                return ActiveMovie.MouseMemberUnderMouse();
+            }
+        }
+             
 
         public T Framework<T>() where T : class, ILingoFrameworkStage => (T)_lingoFrameworkMovieStage;
         public LingoStage(ILingoFrameworkStage godotInstance)
