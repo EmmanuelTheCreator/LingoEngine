@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 
 namespace LingoEngine.Primitives
 {
@@ -17,7 +14,11 @@ namespace LingoEngine.Primitives
         /// </summary>
         public T this[int index]
         {
-            get => GetAt(index);
+            get {
+                if (index < 1 || index > _items.Count)
+                    return default;
+                return _items[index];
+            }
             set => SetAt(index, value);
         }
 
@@ -49,7 +50,12 @@ namespace LingoEngine.Primitives
         /// <summary>
         /// Gets the item at the specified 1-based index.
         /// </summary>
-        public T GetAt(int index) => _items[index - 1];
+        public T? GetAt(int index)
+        {
+            if (index < 1 || index > _items.Count)
+                return default;
+            return _items[index - 1];
+        }
 
         /// <summary>
         /// Sets the item at the specified 1-based index.

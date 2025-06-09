@@ -1,5 +1,6 @@
 ﻿
 using LingoEngine.Core;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Texts
 {
@@ -59,6 +60,77 @@ namespace LingoEngine.Texts
         /// Selects a range of characters within the text. 1-based inclusive range.
         /// </summary>
         void SetSelection(int start, int end);
+
+
+
+
+
+
+        /// <summary>
+        /// Indicates whether the field is editable at runtime. Equivalent to the Lingo 'editable' property.
+        /// </summary>
+        bool Editable { get; set; }
+
+        /// <summary>
+        /// Enables or disables word wrapping in the field.
+        /// </summary>
+        bool WordWrap { get; set; }
+
+
+        /// <summary>
+        /// Gets or sets the scroll position of the field.
+        /// </summary>
+        int ScrollTop { get; set; }
+
+        /// <summary>
+        /// Font name used in the field (e.g., "Arial").
+        /// Corresponds to Lingo's textFont property.
+        /// </summary>
+        string Font { get; set; }
+
+        /// <summary>
+        /// Font size for the field text, in points.
+        /// Corresponds to Lingo's textSize property.
+        /// </summary>
+        int FontSize { get; set; }
+
+        /// <summary>
+        /// Font style flags: 
+        /// combination of bold (1), italic (2), underline (4).
+        /// Corresponds to Lingo's textStyle property.
+        /// </summary>
+        LingoTextStyle FontStyle { get; set; }
+
+        /// <summary>
+        /// Text color in a Lingo-compatible color format.
+        /// Corresponds to Lingo's textColor property.
+        /// </summary>
+        LingoColor TextColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the text is bold.
+        /// </summary>
+        bool Bold { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the text is italic.
+        /// </summary>
+        bool Italic { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the text is underlined.
+        /// </summary>
+        bool Underline { get; set; }
+
+        /// <summary>
+        /// Gets or sets the alignment of the text in the field: 0 = left, 1 = center, 2 = right.
+        /// </summary>
+        LingoTextAlignment Alignment { get; set; }
+
+        /// <summary>
+        /// Gets or sets the margin (padding) around the text inside the field.
+        /// </summary>
+        int Margin { get; set; }
     }
 
 

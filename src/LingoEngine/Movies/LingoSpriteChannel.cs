@@ -44,6 +44,10 @@ namespace LingoEngine.Movies
         /// Gets the sprite currently assigned to the sprite channel.
         /// </summary>
         ILingoSprite? Sprite { get; }
+        /// <summary>
+        /// Has a loaded sprite in the timeline on this channel
+        /// </summary>
+        bool HasSprite();
 
         /// <summary>
         /// Creates a scripted sprite that can be controlled by script.
@@ -150,5 +154,9 @@ namespace LingoEngine.Movies
         public bool Within(ILingoSprite other) => _sprite.Within(other);
         public (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad() => _sprite.Quad();
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
+
+        public bool HasSprite() => _sprite != null;
+
+
     }
 }

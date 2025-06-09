@@ -182,6 +182,6 @@ namespace LingoEngine.Movies
         bool Intersects(ILingoSprite other);
         bool Within(ILingoSprite other);
         (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad();
-
+        
     }
 }

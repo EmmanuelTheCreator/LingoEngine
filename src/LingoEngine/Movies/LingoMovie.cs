@@ -144,7 +144,7 @@ namespace LingoEngine.Movies
         public ILingoSpriteChannel Channel(int channelNumber) =>_spriteChannels[channelNumber];
         public void PuppetSprite(int number, bool isPuppetSprite) => CallActiveSprite(number, sprite => sprite.IsPuppetSprite = isPuppetSprite);
        
-        public ILingoSprite GetActiveSprite(int number) => _spriteChannels[number];
+        public ILingoSpriteChannel GetActiveSprite(int number) => _spriteChannels[number];
         public LingoSprite AddSprite(string name, Action<LingoSprite>? configure = null) => AddSprite<LingoSprite>(name, configure);
         public T AddSprite<T>(string name, Action<LingoSprite>? configure = null) where T : LingoSprite
         {

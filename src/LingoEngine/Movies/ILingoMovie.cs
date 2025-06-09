@@ -136,7 +136,7 @@ namespace LingoEngine.Movies
         /// Retrieves a sprite by number (channel number).
         /// Lingo: sprite x
         /// </summary>
-        ILingoSprite GetActiveSprite(int number);
+        ILingoSpriteChannel GetActiveSprite(int number);
 
         /// <summary>
         /// Tries to get a sprite by name.
