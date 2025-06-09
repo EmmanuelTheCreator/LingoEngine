@@ -9,15 +9,6 @@ using System.Numerics;
 namespace LingoEngine.Core
 {
 
-    /*
-    var a = LingoSymbol.Intern("hello");
-var b = LingoSymbol.Intern("hello");
-var c = LingoSymbol.Intern("world");
-
-Console.WriteLine(a == b); // true
-Console.WriteLine(a == c); // false
-Console.WriteLine(a);      // #hello
-*/
 
     // https://usermanual.wiki/adobe/drmx2004scripting.537266374.pdf
     /// <summary>
@@ -34,19 +25,51 @@ Console.WriteLine(a);      // #hello
         }
 
         // Global objects ("the mouse", etc.)
+
+        #region Global accessors
         protected ILingoPlayer _Player => _env.Player;
         protected ILingoMouse _Mouse => _env.Mouse;
         protected ILingoKey _Key => _env.Key;
         protected ILingoSound _Sound => _env.Sound;
+        /// <summary>
+        /// Retrieves the current movie
+        /// </summary>
         protected ILingoMovie _Movie => _env.Movie;
         protected ILingoSystem _System => _env.System;
-        protected int Cursor { get  => _env.Mouse.Cursor.Cursor; set => _env.Mouse.Cursor.Cursor = value; }
+
+        #endregion
         protected LingoMemberPicture? CursorImage { get  => _env.Mouse.Cursor.Image; set => _env.Mouse.Cursor.Image = value; }
+        protected int Cursor { get  => _env.Mouse.Cursor.Cursor; set => _env.Mouse.Cursor.Cursor = value; }
+
+
+        // We dont need scripts in c#
+        //public object? Script(string name) => null; // To resolve named script instances
+
+        /// <summary>
+        /// returns a reference to a specified sound channel.
+        /// </summary>
+        protected ILingoSoundChannel? Sound(int channelNumber) => _Sound.Channel(channelNumber);
+        /// <summary>
+        /// Returns a sprite channel.
+        /// </summary>
+        protected ILingoSpriteChannel Channel(int channelNumber) => _Movie.Channel(channelNumber);
+        protected ILingoSprite Sprite(int number) => _Movie.GetActiveSprite(number);
+        protected ILingoCast? CastLib(int number) => _env.GetCastLib(number);
+        protected ILingoCast? CastLib(string name) => _env.GetCastLib(name);
+        /// <summary>
+        /// creates and returns a new image with specified dimensions.
+        /// bitDepth : allowed values : 1, 2, 4, 8, 16, or 32.
+        /// </summary>
+        protected ILingoImage? Image(int width, int height, int bitDepth) => throw new NotImplementedException(); // page 364 in manual
+
+
+
+        #region Primitive functions
 
         // Language built-in functions
-            /// <summary>
-            /// Why 1 : because Lingo's random(n) returns a number between 1 and n, inclusive — unlike .NET's Next(0, n) which is exclusive on the upper bound.
-            /// </summary>
+        /// <summary>
+        /// Why 1 : because Lingo's random(n) returns a number between 1 and n, inclusive — unlike .NET's Next(0, n) which is exclusive on the upper bound.
+        /// </summary>
         protected int Random(int max) => _random.Next(1, max + 1); // Lingo: random(max)
         /// <summary>
         /// Returns a unit vector describing a randomly chosen point on the surface of a unit sphere.
@@ -57,13 +80,38 @@ Console.WriteLine(a);      // #hello
         /// <returns></returns>
         protected Vector2 RandomVector() => throw new NotImplementedException();
 
-        protected LingoSymbol Symbol(string name) => LingoSymbol.Intern(name);
+        protected LingoSymbol Symbol(string name) => LingoSymbol.New(name);
         protected LingoPoint Point(float x, float y) => new(x, y);
         protected LingoRect Rect(float left, float top, float right, float bottom) => new(left, top, right, bottom);
+        protected DateTime Date() => DateTime.Now;
+        protected ILingoTimeoutObject Timeout(string timeoutObjName, int periodInMilliseconds, Action onTick) => _Movie.TimeOutList.New(timeoutObjName, periodInMilliseconds, onTick);
+
+
+        #endregion
 
         protected void Put(object obj) => Console.WriteLine(obj);
+        
+        
 
-        protected DateTime Date() => DateTime.Now;
+
+        #region Lists
+
+        // list
+        protected LingoList<TValue> List<TValue>() => new LingoList<TValue>();
+        protected TValue GetAt<TValue>(LingoPropertyList<TValue> list,int number) => list.GetAt(number);
+        protected void SetAt<TValue>(LingoPropertyList<TValue> list,int number, TValue value) => list.SetAt(number, value);
+        protected void DeleteAt<TValue>(LingoPropertyList<TValue> list,int number, TValue value) => list.DeleteAt(number);
+
+        // Property list
+        protected LingoPropertyList<TValue> PropList<TValue>() => new LingoPropertyList<TValue>();
+        protected TValue GetAt<TValue>(LingoList<TValue> list,int number) => list.GetAt(number);
+        protected void SetAt<TValue>(LingoList<TValue> list,int number, TValue value) => list.SetAt(number, value);
+        protected void DeleteAt<TValue>(LingoList<TValue> list,int number, TValue value) => list.DeleteAt(number);
+        
+
+
+        #endregion
+
 
         #region Members
         protected ILingoMember? Member(int number, int? castlibNumber = null)
@@ -90,37 +138,20 @@ Console.WriteLine(a);      // #hello
         protected void Member<T>(string name, Action<T> action) where T : LingoMember
             => action(_env.CastLibsContainer.GetMember<T>(name)!);
         protected TResult Member<T, TResult>(string name, Func<T, TResult> action) where T : LingoMember
-            => action(_env.CastLibsContainer.GetMember<T>(name)!); 
+            => action(_env.CastLibsContainer.GetMember<T>(name)!);
         #endregion
-        // We dont need scripts in c#
-        //public object? Script(string name) => null; // To resolve named script instances
 
-        /// <summary>
-        /// returns a reference to a specified sound channel.
-        /// </summary>
-        protected ILingoSoundChannel? Sound(int channelNumber) => _Sound.Channel(channelNumber);
-        /// <summary>
-        /// Returns a sprite channel.
-        /// </summary>
-        protected ILingoSpriteChannel Channel(int channelNumber) => _Movie.Channel(channelNumber);
-        protected ILingoSprite Sprite(int number) => _Movie.GetActiveSprite(number);
-        protected ILingoCast? CastLib(int number) => _env.GetCastLib(number);
-        protected ILingoCast? CastLib(string name) => _env.GetCastLib(name);
-        /// <summary>
-        /// creates and returns a new image with specified dimensions.
-        /// bitDepth : allowed values : 1, 2, 4, 8, 16, or 32.
-        /// </summary>
-        protected ILingoImage? Image(int width, int height, int bitDepth) => throw new NotImplementedException(); // page 364 in manual
-        protected ILingoTimeoutObject Timeout(string timeoutObjName, int periodInMilliseconds,Action onTick) => _Movie.TimeOutList.New(timeoutObjName, periodInMilliseconds, onTick);
 
-        protected void UpdateStage() => _Movie.UpdateStage();
+        #region Movie methods
         protected void SendSprite(string name, Action<ILingoSpriteChannel> actionOnSprite) => _Movie.SendSprite(name, actionOnSprite);
         protected void SendSprite(int spriteNumber, Action<ILingoSpriteChannel> actionOnSprite) => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
 
+        protected void UpdateStage() => _Movie.UpdateStage();
         protected void StartTimer() => _env.Movie.StartTimer();
-        protected int Timer => _env.Movie.Timer;
+        protected int Timer => _env.Movie.Timer; 
+        #endregion
     }
 
 }

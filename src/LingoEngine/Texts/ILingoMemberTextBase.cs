@@ -13,18 +13,54 @@ namespace LingoEngine.Texts
         /// <summary>
         /// Returns or sets individual lines of the text, 1-based indexing.
         /// </summary>
-        ILingoLine Line { get; }
+        LingoLines Line { get; }
 
         /// <summary>
         /// Returns or sets individual words of the text, 1-based indexing.
         /// </summary>
-        ILingoWord Word { get; }
+        LingoWords Word { get; }
 
         /// <summary>
         /// Returns or sets individual characters of the text, 1-based indexing.
         /// </summary>
-        ILingoChar Char { get; }
+        LingoChars Char { get; }
+
+        /// <summary>
+        /// Clears the contents of the member.
+        /// </summary>
+        void Clear();
+
+        /// <summary>
+        /// Copies the current selection to the clipboard.
+        /// </summary>
+        void Copy();
+
+        /// <summary>
+        /// Cuts the current selection to the clipboard.
+        /// </summary>
+        void Cut();
+
+        /// <summary>
+        /// Pastes the clipboard contents at the current selection.
+        /// </summary>
+        void Paste();
+
+        /// <summary>
+        /// Inserts the given text at the current selection.
+        /// </summary>
+        void InsertText(string text);
+
+        /// <summary>
+        /// Replaces the currently selected text with the given replacement.
+        /// </summary>
+        void ReplaceSelection(string replacement);
+
+        /// <summary>
+        /// Selects a range of characters within the text. 1-based inclusive range.
+        /// </summary>
+        void SetSelection(int start, int end);
     }
+
 
 }
 

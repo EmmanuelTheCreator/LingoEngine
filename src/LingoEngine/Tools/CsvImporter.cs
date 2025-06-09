@@ -1,5 +1,6 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Primitives;
+using LingoEngine.Texts;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
@@ -35,7 +36,7 @@ namespace LingoEngine.Tools
         /// </summary>
         public void ImportInCastFromCsvFile(ILingoCast cast, string filePath, bool skipFirstLine = true)
         {
-            var rootFolder = Path.GetDirectoryName(Path.GetRelativePath(Environment.CurrentDirectory, filePath));
+            var rootFolder = Path.GetDirectoryName(Path.GetRelativePath(Environment.CurrentDirectory, filePath))??"";
             var csv = ImportCsvCastFile(filePath, skipFirstLine);
             foreach (var row in csv)
             {
@@ -46,6 +47,9 @@ namespace LingoEngine.Tools
                     {
                         case LingoMemberType.Text:
                             ext = ".txt";
+                            break; 
+                        case LingoMemberType.Field:
+                            ext = ".txt";
                             break;
                         case LingoMemberType.Sound:
                             ext = ".wav";
@@ -55,7 +59,9 @@ namespace LingoEngine.Tools
                     fn = row.Number + name + ext;
                 }
                 var fileName = Path.Combine(rootFolder, fn);
-                cast.Add(row.Type,row.Number, row.Name, fileName, row.RegPoint);
+                var newMember = cast.Add(row.Type,row.Number, row.Name, fileName, row.RegPoint);
+                if (newMember is  ILingoMemberTextBaseInteral textbased)
+                    textbased.LoadFile();
             }
         }
         public IReadOnlyCollection<ScvRow> ImportCsvCastFile(string filePath, bool skipFirstLine = true)
