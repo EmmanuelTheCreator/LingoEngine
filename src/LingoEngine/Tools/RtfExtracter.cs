@@ -8,9 +8,9 @@ namespace LingoEngine.Tools
     {
         public record RtfBasicInfo
         {
-            public string FontName { get; set; } = "";
+            public string? FontName { get; set; } = "";
             public int Size{ get; set; }
-            public LingoColor Color{ get; set; }
+            public LingoColor? Color{ get; set; }
             public string Text { get; set; } = "";
         }
         public static RtfBasicInfo? Parse(string rtfContent)
@@ -90,7 +90,7 @@ namespace LingoEngine.Tools
             var colorTableMatch = Regex.Match(rtfContent, @"\\colortbl(?<colortbl>[^}]+)}");
             var colorEntries = Regex.Matches(colorTableMatch.Groups["colortbl"].Value, @"\\red(?<r>\d+)\\green(?<g>\d+)\\blue(?<b>\d+);");
 
-            var colorL = new LingoColor(-1, 0, 0, 0);
+            LingoColor? colorL = null;
             if (colorIndex - 1 >= 0 && colorIndex - 1 < colorEntries.Count)
             {
                 var colorEntry = colorEntries[colorIndex - 1];
@@ -106,7 +106,7 @@ namespace LingoEngine.Tools
 
             var result = new RtfBasicInfo
             {
-                FontName = fontName.TrimEnd('*').Trim(),
+                FontName =  !string.IsNullOrWhiteSpace(fontName)? fontName.TrimEnd('*').Trim(): null,
                 Color = colorL,
                 Size = Convert.ToInt32(pointSize),
                 Text = textContent

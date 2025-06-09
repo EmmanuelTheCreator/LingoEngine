@@ -16,7 +16,7 @@ namespace LingoEngine.Primitives
             Name = name;
         }
 
-        public static LingoSymbol Intern(string name)
+        public static LingoSymbol New(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Symbol name cannot be null or whitespace.", nameof(name));
@@ -24,7 +24,7 @@ namespace LingoEngine.Primitives
             return _symbolTable.GetOrAdd(name, n => new LingoSymbol(n));
         }
 
-        public static implicit operator LingoSymbol(string name) => Intern(name);
+        public static implicit operator LingoSymbol(string name) => New(name);
         public static implicit operator string(LingoSymbol symbol) => symbol.Name;
 
         public override string ToString() => $"#{Name}";

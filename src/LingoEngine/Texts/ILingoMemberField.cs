@@ -51,11 +51,6 @@ namespace LingoEngine.Texts
         LingoColor TextColor { get; set; }
 
         /// <summary>
-        /// Gets or sets the font size of the text in the field.
-        /// </summary>
-        int FontSize { get; set; }
-
-        /// <summary>
         /// Gets or sets whether the text is bold.
         /// </summary>
         bool Bold { get; set; }
@@ -84,41 +79,6 @@ namespace LingoEngine.Texts
         /// </summary>
         bool IsFocused { get; }
         
-
-        /// <summary>
-        /// Selects a portion of text within the field from start to end index.
-        /// </summary>
-        void SetSelection(int start, int end);
-
-        /// <summary>
-        /// Replaces the currently selected text with the specified string.
-        /// </summary>
-        void ReplaceSelection(string replacement);
-
-        /// <summary>
-        /// Inserts text at the current caret position.
-        /// </summary>
-        void InsertText(string text);
-
-        /// <summary>
-        /// Clears the field content.
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Copies the current selection to the clipboard.
-        /// </summary>
-        void Copy();
-
-        /// <summary>
-        /// Cuts the current selection to the clipboard.
-        /// </summary>
-        void Cut();
-
-        /// <summary>
-        /// Pastes clipboard content into the field at the caret position.
-        /// </summary>
-        void Paste();
 
 
     }
