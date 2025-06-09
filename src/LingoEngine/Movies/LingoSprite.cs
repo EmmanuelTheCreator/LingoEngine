@@ -82,7 +82,7 @@ namespace LingoEngine.Movies
         }
 
         public LingoColor Color { get; set; }
-        public LingoColor BgColor { get; set; }
+        public LingoColor BackColor { get; set; }
         public new LingoRect Rect => new LingoRect(LocH, LocV, LocH + Width, LocV + Height);
 
         public int Size => Media.Length;

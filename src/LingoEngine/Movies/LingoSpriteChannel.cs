@@ -107,7 +107,7 @@ namespace LingoEngine.Movies
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
         public int BeginFrame { get => _sprite.BeginFrame; set => _sprite.BeginFrame = value; }
 
-        public LingoColor BgColor { get => _sprite.BgColor; set => _sprite.BgColor = value; }
+        public LingoColor BackColor { get => _sprite.BackColor; set => _sprite.BackColor = value; }
         public float Blend { get => _sprite.Blend; set => _sprite.Blend = value; }
         public LingoCast? Cast => _sprite.Cast;
         public LingoColor Color { get => _sprite.Color; set => _sprite.Color = value; }

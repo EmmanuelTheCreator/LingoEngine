@@ -1,5 +1,6 @@
 ﻿using Godot;
 using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Primitives;
 using LingoEngine.Texts;
 
 namespace LingoEngineGodot.Texts
@@ -18,8 +19,17 @@ namespace LingoEngineGodot.Texts
         public string RAWTextData { get; private set; } = "";
         public string Text { get => _text; set => UpdateText(value); }
         public bool IsLoaded { get; private set; }
+        public bool WordWrap { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int ScrollTop { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string TextFont { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int TextSize { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public LingoTextStyle TextStyle { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public LingoColor TextColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int FontSize { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public LingoTextAlignment Alignment { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int Margin { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-#pragma warning disable CS8618 
+#pragma warning disable CS8618
         public LingoGodotMemberField(ILingoFontManager fontManager)
 #pragma warning restore CS8618 
         {
@@ -96,11 +106,11 @@ namespace LingoEngineGodot.Texts
             _labelNode.Dispose();
             _parentNode.Dispose();
         }
-        public void CopyToClipBoard()
+        public void CopyToClipboard()
         {
             DisplayServer.ClipboardSet(RAWTextData);
         }
-        public void PasteClipBoardInto()
+        public void PasteClipboardInto()
         {
             var _RAWTextData = DisplayServer.ClipboardGet();
             UpdateRAWTextData(_RAWTextData);
@@ -108,6 +118,46 @@ namespace LingoEngineGodot.Texts
 
         public void ImportFileInto()
         {
+        }
+
+        public void SetSelection(int start, int end)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReplaceSelection(string replacement)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void InsertText(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Copy(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Cut()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Paste()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string PasteClipboard()
+        {
+            throw new NotImplementedException();
         }
     }
 }

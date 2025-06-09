@@ -88,13 +88,13 @@ namespace LingoEngine.Pictures
             /// Copies the picture to the clipboard.
             /// Corresponds to: member.picture.copy
             /// </summary>
-            public override void CopyToClipBoard() => _lingoFrameworkMemberPicture.CopyToClipBoard();
+            public override void CopyToClipBoard() => _lingoFrameworkMemberPicture.CopyToClipboard();
 
             /// <summary>
             /// Pastes the picture from the clipboard into the current picture.
             /// Corresponds to: member.picture.paste
             /// </summary>
-            public override void PasteClipBoardInto() => _lingoFrameworkMemberPicture.PasteClipBoardInto();
+            public override void PasteClipBoardInto() => _lingoFrameworkMemberPicture.PasteClipboardInto();
 
           
         }

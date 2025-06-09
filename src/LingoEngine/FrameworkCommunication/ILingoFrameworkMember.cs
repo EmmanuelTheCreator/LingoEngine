@@ -11,10 +11,10 @@
         /// Corresponds to: member.text.loaded
         /// </summary>
         bool IsLoaded { get; }
-        void CopyToClipBoard();
+        void CopyToClipboard();
         void Erase();
         void ImportFileInto();
-        void PasteClipBoardInto();
+        void PasteClipboardInto();
         void Preload();
         void Unload();
     }

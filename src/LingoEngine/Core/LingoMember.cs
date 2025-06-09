@@ -262,8 +262,8 @@ namespace LingoEngine.Core
         public virtual void Erase() => _frameworkMember.Erase();
         public virtual void ImportFileInto() => _frameworkMember.ImportFileInto();
         public virtual void Move() { }
-        public virtual void CopyToClipBoard() => _frameworkMember.CopyToClipBoard();
-        public virtual void PasteClipBoardInto() => _frameworkMember.PasteClipBoardInto();
+        public virtual void CopyToClipBoard() => _frameworkMember.CopyToClipboard();
+        public virtual void PasteClipBoardInto() => _frameworkMember.PasteClipboardInto();
         public virtual void Preload() => _frameworkMember.Preload();
         public virtual void Unload() => _frameworkMember.Unload();
 
