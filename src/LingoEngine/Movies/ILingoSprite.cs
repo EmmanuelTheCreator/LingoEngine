@@ -17,7 +17,7 @@ namespace LingoEngine.Movies
         /// <summary>
         /// Background color for the sprite. Read/write.
         /// </summary>
-        LingoColor BgColor { get; set; }
+        LingoColor BackColor { get; set; }
 
         /// <summary>
         /// Specifies the blend percentage (0–100) of the sprite’s visibility. Read/write.

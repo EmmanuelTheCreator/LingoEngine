@@ -112,14 +112,14 @@ namespace LingoEngineGodot.Pictures
             _image?.Dispose();
             _imageTexture?.Dispose();
         }
-        public void CopyToClipBoard()
+        public void CopyToClipboard()
         {
             if (_image == null) CreateTexture();
             if (ImageData == null) return;
             var base64 = Convert.ToBase64String(ImageData);
             DisplayServer.ClipboardSet("data:" + Format + ";base64," + base64);
         }
-        public void PasteClipBoardInto()
+        public void PasteClipboardInto()
         {
             _image = DisplayServer.ClipboardGetImage();
             UpdateImageData(_image);

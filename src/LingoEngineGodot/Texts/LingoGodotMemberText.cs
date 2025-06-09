@@ -70,7 +70,6 @@ namespace LingoEngineGodot.Texts
             if (_text == value) return;
             _text = value;
             _labelNode.Text = value;
-            _lingoMemberText.UpdateTextFromFW(value);
         }
 
         public void Erase()
@@ -96,11 +95,11 @@ namespace LingoEngineGodot.Texts
             _labelNode.Dispose();
             _parentNode.Dispose();
         }
-        public void CopyToClipBoard()
+        public void CopyToClipboard()
         {
             DisplayServer.ClipboardSet(RAWTextData);
         }
-        public void PasteClipBoardInto()
+        public void PasteClipboardInto()
         {
             var _RAWTextData = DisplayServer.ClipboardGet();
             UpdateRAWTextData(_RAWTextData);

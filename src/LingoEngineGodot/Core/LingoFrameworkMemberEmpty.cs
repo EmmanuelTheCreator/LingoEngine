@@ -6,7 +6,7 @@ namespace LingoEngineGodot.Core
     {
         public bool IsLoaded => true;
 
-        public void CopyToClipBoard()
+        public void CopyToClipboard()
         {
         }
 
@@ -18,7 +18,7 @@ namespace LingoEngineGodot.Core
         {
         }
 
-        public void PasteClipBoardInto()
+        public void PasteClipboardInto()
         {
         }
 

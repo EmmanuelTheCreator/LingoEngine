@@ -36,7 +36,7 @@ namespace LingoEngineGodot.Sounds
             Unload();
         }
 
-        public void CopyToClipBoard()
+        public void CopyToClipboard()
         {
         }
 
@@ -48,7 +48,7 @@ namespace LingoEngineGodot.Sounds
         {
         }
 
-        public void PasteClipBoardInto()
+        public void PasteClipboardInto()
         {
         }
 
