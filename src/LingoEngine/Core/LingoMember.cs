@@ -1,6 +1,7 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -29,6 +30,7 @@ namespace LingoEngine.Core
     /// Cast members can contain media (e.g., images, sounds, video) or scripts (behaviors, movie scripts).
     /// Corresponds to Lingo: member "Name" or member x
     /// </summary>
+  
     public interface ILingoMember
     {
         /// <summary>
@@ -191,6 +193,7 @@ namespace LingoEngine.Core
     ///     member allows the reference to remain intact even if the cast member moves position in its
     ///     cast library.
     /// </summary>
+    [DebuggerDisplay("Member:{Number}:Cast={CastLibNum},{NumberInCast}:{Type}:{Name}:Size={Width}x{Height}")]
     public class LingoMember : ILingoMember
     {
         protected readonly LingoCast _cast;
