@@ -1,7 +1,5 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
-using System.Xml.Linq;
-using System;
 
 namespace LingoEngine.Movies
 {
@@ -353,7 +351,7 @@ namespace LingoEngine.Movies
                 foreach (var sprite in _allTimeSprites)
                 {
                     if (sprite == null) continue;
-                    sprite.IsActive = sprite.BeginFrame <= _currentFrame && sprite.EndFrame >= _currentFrame;
+                    sprite.IsActive = sprite.BeginFrame <= _currentFrame && sprite.EndFrame >= _currentFrame; // &&  _spriteChannels[sprite.SpriteNum - 1].Visibility;
 
                     bool wasActive = sprite.BeginFrame <= _lastFrame && sprite.EndFrame >= _lastFrame;
                     bool isActive = sprite.IsActive;
@@ -384,7 +382,8 @@ namespace LingoEngine.Movies
 
                 // STEP 2: Fire beginSprite on new sprites
                 foreach (var sprite in _enteredSprites)
-                    sprite.DoBeginSprite();
+                        sprite.DoBeginSprite();
+
                 _currentFrameSprite?.DoBeginSprite(); // must always be Latest
 
                 //_EventMediator.RaiseBeginSprite(); -> not alowed, only the _enteredSprites may do this

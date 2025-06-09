@@ -48,7 +48,7 @@ namespace LingoEngine.Texts
 
         internal void SetText(string text)
         {
-            _text = text.Replace("\r","").Replace("\n", " ");
+            _text = text.Replace("\r"," ").Replace("\n", " ");
             _hasParsed = false;
         }
 
