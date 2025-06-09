@@ -46,10 +46,12 @@
         /// <summary>
         /// Gets the value at a 1-based index.
         /// </summary>
-        public TValue GetAt(int index)
+        public TValue? GetAt(int index)
         {
-            if (index < 1 || index > _keyOrder.Count)
-                throw new IndexOutOfRangeException("LingoDictionary is 1-based.");
+            if (index < 1)
+                throw new IndexOutOfRangeException("LingoPropertyList is 1-based.");
+            if (index > _keyOrder.Count)
+                return default;
             return _dict[_keyOrder[index - 1]];
         }
 
@@ -59,7 +61,7 @@
         public void SetAt(int index, TValue value)
         {
             if (index < 1 || index > _keyOrder.Count)
-                throw new IndexOutOfRangeException("LingoDictionary is 1-based.");
+                throw new IndexOutOfRangeException("LingoPropertyList is 1-based.");
             _dict[_keyOrder[index - 1]] = value;
         }
 

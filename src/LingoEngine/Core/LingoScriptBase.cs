@@ -53,7 +53,7 @@ namespace LingoEngine.Core
         /// Returns a sprite channel.
         /// </summary>
         protected ILingoSpriteChannel Channel(int channelNumber) => _Movie.Channel(channelNumber);
-        protected ILingoSprite Sprite(int number) => _Movie.GetActiveSprite(number);
+        protected ILingoSpriteChannel Sprite(int number) => _Movie.GetActiveSprite(number);
         protected ILingoCast? CastLib(int number) => _env.GetCastLib(number);
         protected ILingoCast? CastLib(string name) => _env.GetCastLib(name);
         /// <summary>
