@@ -1,11 +1,11 @@
-﻿<Project Sdk="Godot.NET.Sdk/4.4.1">
+﻿<Project Sdk="Godot.NET.Sdk/4.5.0-dev.5">
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net8</TargetFramework>
 		<!-- Use netstandard for compatibility -->
 		<RootNamespace>LingoEngineGodot</RootNamespace>
-		<GodotVersion>4.4.1</GodotVersion>
+		<GodotVersion>4.5.0-dev.5</GodotVersion>
 		<LangVersion>12</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -17,7 +17,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Godot.NET.Sdk" Version="4.2.2" />
+		<PackageReference Include="Godot.NET.Sdk" Version="4.5.0-dev.5" />
 	</ItemGroup>
 
   <ItemGroup>

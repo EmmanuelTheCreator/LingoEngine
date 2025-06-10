@@ -44,6 +44,12 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         internal ILingoCast Add(LingoMember member)
         {
+#if DEBUG
+            if (member.Name.Contains("blokred") || member.NumberInCast == 30)
+            {
+
+            }
+#endif
             _castLibsContainer.AddMember(member);
             _MembersContainer.Add(member);
             return this;
