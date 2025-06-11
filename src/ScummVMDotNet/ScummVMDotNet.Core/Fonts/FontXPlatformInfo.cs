@@ -1,4 +1,4 @@
-﻿namespace Director
+﻿namespace Director.Fonts
 {
     public class FontXPlatformInfo : IDisposable
     {

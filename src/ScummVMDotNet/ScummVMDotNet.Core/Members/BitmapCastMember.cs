@@ -1,6 +1,9 @@
-﻿using Director.Primitives;
+﻿using Director.Graphics;
+using Director.IO;
+using Director.Primitives;
 using System;
 using System.IO;
+using System.Text;
 
 namespace Director.Members
 {
@@ -37,9 +40,10 @@ namespace Director.Members
         {
         }
 
-        public override void LoadFromStream(Stream stream, Resource res)
+        public BitmapCastMember(Cast cast, int castId, SeekableReadStreamEndian stream, ushort version)
+     : base(cast, castId, stream)
         {
-            using var reader = new BinaryReader(stream);
+            using var reader = new BinaryReader(stream.BaseStream, Encoding.Default, leaveOpen: true);
 
             _picture = new Picture();
             _ditheredImg = null;
@@ -53,18 +57,10 @@ namespace Director.Members
             _ditheredTargetClut = new CastMemberID(0, 0);
             _bitsPerPixel = 0;
             _external = false;
-            // A little context about how bitmap bounding boxes are stored.
-            // In the Director editor, images can be edited on a big scrolling canvas with
-            // the image in the middle. _initialRect describes the location on that virtual
-            // canvas, with the top-left being the start position of the image.
-            // _regX and _regY is the registration offset, in canvas space.
-            // This means if a bitmap cast member is placed at (64, 64) on the score, the
-            // registration offset of the image is placed at (64, 64).
-            // By default the registration offset is the dead centre of the image.
-            // _boundingRect I think is used internally by the editor and not elsewhere.
-            if (_version < 400)
+
+            if (version < 400)
             {
-                _flags1 = res.Flags1;
+                _flags1 = Flags1;
                 _bytes = reader.ReadUInt16BE();
                 _initialRect = reader.ReadRect();
                 _boundingRect = reader.ReadRect();
@@ -88,11 +84,10 @@ namespace Director.Members
                     _pitch += 16 - _initialRect.Width % 16;
                 _pitch *= _bitsPerPixel;
                 _pitch >>= 3;
-
             }
-            else if (_version >= 400 && _version < 600)
+            else if (version >= 400 && version < 600)
             {
-                _flags1 = res.Flags1;
+                _flags1 = Flags1;
                 _pitch = reader.ReadUInt16BE() & 0x0FFF;
                 _initialRect = reader.ReadRect();
                 _boundingRect = reader.ReadRect();
@@ -102,11 +97,11 @@ namespace Director.Members
 
                 if (reader.BaseStream.Position < reader.BaseStream.Length)
                 {
-                    reader.ReadByte();
+                    reader.ReadByte(); // unknown
                     _bitsPerPixel = reader.ReadByte();
 
                     int clutCastLib = -1;
-                    if (_version >= 500)
+                    if (version >= 500)
                         clutCastLib = reader.ReadInt16BE();
 
                     int clutId = reader.ReadInt16BE();
@@ -115,17 +110,17 @@ namespace Director.Members
                     else
                     {
                         if (clutCastLib == -1)
-                            clutCastLib = _cast._castLibID;
+                            clutCastLib = cast.CastLibId;
                         _clut = new CastMemberID(clutId, clutCastLib);
                     }
 
-                    if (reader.BaseStream.Position < reader.BaseStream.Length)
+                    if (reader.BaseStream.Position + 12 <= reader.BaseStream.Length)
                     {
-                        reader.ReadUInt16BE();
-                        reader.ReadUInt16BE();
-                        reader.ReadUInt16BE();
-                        reader.ReadUInt32BE();
-                        reader.ReadUInt32BE();
+                        reader.ReadUInt16BE(); // unknown1
+                        reader.ReadUInt16BE(); // unknown2
+                        reader.ReadUInt16BE(); // unknown3
+                        reader.ReadUInt32BE(); // unknown4
+                        reader.ReadUInt32BE(); // unknown5
                         _flags2 = reader.ReadUInt16BE();
                     }
                 }
@@ -136,14 +131,13 @@ namespace Director.Members
                 int tail = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
                 if (tail > 0)
                     reader.BaseStream.Seek(tail, SeekOrigin.Current);
-
             }
             else
             {
-                throw new NotSupportedException($"Bitmaps not yet supported for version {_version}");
+                throw new NotSupportedException($"Bitmaps not yet supported for version {version}");
             }
 
-            _tag = res.CastTag;
+            _tag = Tag;
             Width = _boundingRect.Width;
             Height = _boundingRect.Height;
             BitsPerPixel = _bitsPerPixel;
@@ -155,6 +149,7 @@ namespace Director.Members
 
             PixelData = reader.ReadBytes(ImageSize);
         }
+
     }
 
 }

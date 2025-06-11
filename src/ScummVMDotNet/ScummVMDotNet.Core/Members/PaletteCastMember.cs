@@ -3,9 +3,9 @@
 using Director.Primitives;
 
 namespace Director.Members
-    {
+{
 
-        public class PaletteCastMember : CastMember
+    public class PaletteCastMember : CastMember
         {
             private PaletteV4? _palette;
 

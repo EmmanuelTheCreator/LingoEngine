@@ -1,7 +1,13 @@
 ﻿using Director.Fonts;
 using Director.Graphics;
+using Director.IO;
 using Director.Members;
 using Director.Primitives;
+using Director.Scripts;
+using Director.ScummVM;
+using Director.Texts;
+using Director.Tools;
+using System.Linq;
 
 namespace Director
 {
@@ -11,8 +17,8 @@ namespace Director
         public const int DEFAULT_CAST_LIB = -1;
         public const int KClutSystemMac = 36;
         private readonly Movie _movie;
-        private readonly DirectorEngine _vm;
-        private readonly Lingo _lingo;
+        //private readonly DirectorEngine _vm;
+        //private readonly Lingo _lingo;
 
         public readonly ushort _castLibID;
         private readonly ushort _libResourceId;
@@ -44,45 +50,52 @@ namespace Director
         private Rect _movieRect;
         private ushort _stageColor;
         private CastMemberID _defaultPalette = new(-1, -1);
-        private int _frameRate;
+        private ushort _frameRate;
 
         private Archive? _castArchive;
-        private int _version;
+        private ushort _version;
         private Platform _platform = Platform.Macintosh;
         private bool _isProtected;
 
         private readonly TilePatternEntry[] _tiles = new TilePatternEntry[8];
 
-        private LingoDec.ScriptContext? _lingodec;
-        private LingoDec.ChunkResolver? _chunkResolver;
-
+        //private LingoDec.ScriptContext? _lingodec;
+        //private LingoDec.ChunkResolver? _chunkResolver;
+        private byte[] _macCharsToWin;
+        private byte[] _winCharsToMac;
+        private ChunkResolver _chunkResolver;
+        private LingoScriptContext _lingodec;
 
         public Dictionary<ushort, FontMapEntry> FontMap => _fontMap;
         public Platform Platform => _platform;
-        public int Version => _version;
+        public ushort Version => _version;
         public ushort CastIDOffset => _castIDoffset;
         public ushort CastLibID => _castLibID;
+        public ushort FrameRate => _frameRate;
+        public Rect MovieRect => _movieRect;
+        public ushort StageColor => _stageColor;
+        public CastMemberID DefaultPalette => _defaultPalette;
+        public LingoArchive LingoArchive => _lingoArchive;
+        public Archive CastArchive => _castArchive;
+        public int CastLibId => _castLibID;
 
-        public Cast(Movie movie, ushort castLibID, bool isShared = false, bool isExternal = false, ushort libResourceId = 1024)
+        //public Cast(Movie movie, ushort castLibID, bool isShared = false, bool isExternal = false, ushort libResourceId = 1024)
+        public Cast(Archive archive, ushort castLibID, bool isShared = false, bool isExternal = false, ushort libResourceId = 1024)
         {
-            _movie = movie;
-            _vm = _movie.GetVM();
-            _lingo = _vm.GetLingo();
-
             _castLibID = castLibID;
             _libResourceId = libResourceId;
             _isShared = isShared;
             _isExternal = isExternal;
             _loadMutex = true;
 
-            _lingoArchive = new LingoArchive(this);
+            _lingoArchive = new LingoArchive(archive);
             _loadedCast = new();
         }
 
         public void Dispose()
         {
-            foreach (var stxt in _loadedStxts.Values)
-                stxt?.Dispose();
+            //foreach (var stxt in _loadedStxts.Values)
+            //    stxt?.Dispose();
 
             foreach (var cast in _loadedCast.Values)
                 cast?.DecRefCount();
@@ -91,30 +104,31 @@ namespace Director
             //foreach (var info in _castsInfo.Values)
             //    info?.Dispose();
 
-            foreach (var map in _fontMap.Values)
-                map?.Dispose();
+            //foreach (var map in _fontMap.Values)
+            //    map?.Dispose();
 
-            foreach (var map in _fontXPlatformMap.Values)
-                map?.Dispose();
+            //foreach (var map in _fontXPlatformMap.Values)
+            //    map?.Dispose();
 
-            foreach (var rte0 in _loadedRTE0s.Values)
-                rte0?.Dispose();
+            //foreach (var rte0 in _loadedRTE0s.Values)
+            //    rte0?.Dispose();
 
-            foreach (var rte1 in _loadedRTE1s.Values)
-                rte1?.Dispose();
+            //foreach (var rte1 in _loadedRTE1s.Values)
+            //    rte1?.Dispose();
 
-            foreach (var rte2 in _loadedRTE2s.Values)
-                rte2?.Dispose();
+            //foreach (var rte2 in _loadedRTE2s.Values)
+            //    rte2?.Dispose();
 
-            _lingoArchive?.Dispose();
-            _chunkResolver?.Dispose();
-            _lingodec?.Dispose();
+            //_lingoArchive?.Dispose();
+            //_chunkResolver?.Dispose();
+            //_lingodec?.Dispose();
         }
 
         public void SetArchive(Archive archive)
         {
             _castArchive = archive;
-            _macName = archive.HasResource("MCNM", 0) ? archive.GetName("MCNM", 0) : archive.GetFileName();
+            var tag = ResourceTags.ToTag("MCNM");
+            _macName = archive.HasResource(tag, 0) ? archive.GetName(tag, 0) : archive.GetFileName();
         }
 
         public Archive? GetArchive() => _castArchive;
@@ -220,7 +234,7 @@ namespace Director
 
             if (_castsInfo.TryGetValue(castId, out var info))
             {
-                info.Dispose();
+                //info.Dispose();
                 _castsInfo.Remove(castId);
             }
             return true;
@@ -265,9 +279,9 @@ namespace Director
             if (_castArchive == null)
                 return false;
 
-            if (_castArchive.HasResource("VWCF", 1024))
+            if (_castArchive.HasResource(ResourceTags.VWCF, 1024))
             {
-                using var stream = _castArchive.GetResourceStream("VWCF", 1024);
+                using var stream = _castArchive.GetResource(ResourceTags.VWCF, 1024);
                 _version = stream.ReadByte();
                 _platform = (Platform)stream.ReadByte();
                 _isProtected = stream.ReadByte() != 0;
@@ -275,7 +289,7 @@ namespace Director
                 stream.ReadByte(); // Reserved
                 _castArrayStart = stream.ReadUInt16();
                 _castArrayEnd = stream.ReadUInt16();
-                _frameRate = stream.ReadInt16();
+                _frameRate = (ushort)stream.ReadInt16();
                 _stageColor = stream.ReadUInt16();
 
                 return true;
@@ -291,22 +305,157 @@ namespace Director
 
             for (int id = _castArrayStart; id <= _castArrayEnd; id++)
             {
-                if (_castArchive.HasResource("VWCI", (ushort)id))
-                    LoadCastInfo(_castArchive.GetResourceStream("VWCI", (ushort)id), (ushort)id);
+                if (_castArchive.HasResource(ResourceTags.VWCI, (ushort)id))
+                    LoadCastInfo(_castArchive.GetResource(ResourceTags.VWCI, (ushort)id), (ushort)id);
 
-                if (_castArchive.HasResource("VWSC", (ushort)id))
-                    LoadCastLibInfo(_castArchive.GetResourceStream("VWSC", (ushort)id), (ushort)id);
+                if (_castArchive.HasResource(ResourceTags.VWSC, (ushort)id))
+                    LoadCastLibInfo(_castArchive.GetResource(ResourceTags.VWSC, (ushort)id), (ushort)id);
             }
         }
 
-        public void LoadCastInfo(Stream stream, ushort id)
+        public void LoadCastInfo(SeekableReadStreamEndian stream, ushort id)
         {
-            // Dummy placeholder - real logic depends on your CastMemberInfo parser
-            var info = CastMemberInfo.LoadFromStream(stream, id, _version);
-            _castsInfo[id] = info;
-        }
+            if (!_loadedCast.ContainsKey(id))
+                return;
 
-        public void LoadCastLibInfo(Stream stream, ushort id)
+            var castInfo = _movie.LoadInfoEntries(stream, _version);
+
+            var ci = new CastMemberInfo();
+            MemoryReadStreamEndian entryStream = null;
+            var member = _loadedCast[id];
+
+            switch (castInfo.Strings.Count)
+            {
+                default:
+                    LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: extra {castInfo.Strings.Count - 15} strings for castid {id}");
+                    goto case 15;
+                case 15:
+                    if (castInfo.Strings[14].Length > 0)
+                    {
+                        LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: string #14 for castid {id}");
+                        LogHelper.DebugHexdump(castInfo.Strings[14].Data, castInfo.Strings[14].Length);
+                    }
+                    goto case 14;
+                case 14:
+                    if (castInfo.Strings[13].Length > 0)
+                    {
+                        LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: string #13 for castid {id}");
+                        LogHelper.DebugHexdump(castInfo.Strings[13].Data, castInfo.Strings[13].Length);
+                    }
+                    goto case 13;
+                case 13:
+                    if (castInfo.Strings[12].Length > 0)
+                    {
+                        LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: string #12 for castid {id}");
+                        LogHelper.DebugHexdump(castInfo.Strings[12].Data, castInfo.Strings[12].Length);
+                    }
+                    goto case 12;
+                case 12:
+                    if (castInfo.Strings[11].Length > 0)
+                    {
+                        LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: string #11 for castid {id}");
+                        LogHelper.DebugHexdump(castInfo.Strings[11].Data, castInfo.Strings[11].Length);
+                    }
+                    goto case 11;
+                case 11:
+                    if (castInfo.Strings[10].Length > 0)
+                    {
+                        LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: string #10 for castid {id}");
+                        LogHelper.DebugHexdump(castInfo.Strings[10].Data, castInfo.Strings[10].Length);
+                    }
+                    goto case 10;
+                case 10:
+                    if (castInfo.Strings[9].Length > 0)
+                    {
+                        LogHelper.DebugWarning($"Cast::loadCastInfo(): BUILDBOT: string #9 for castid {id}");
+                        LogHelper.DebugHexdump(castInfo.Strings[9].Data, castInfo.Strings[9].Length);
+                    }
+                    goto case 9;
+                case 9:
+                    if (castInfo.Strings[8].Length > 0)
+                    {
+                        entryStream = new MemoryReadStreamEndian(castInfo.Strings[8].Data, castInfo.Strings[8].Length, stream.IsBigEndian);
+                        ReadEditInfo(ci.TextEditInfo, entryStream);
+                        entryStream.Dispose();
+                    }
+                    goto case 8;
+                case 8:
+                    if (castInfo.Strings[7].Length > 0)
+                    {
+                        entryStream = new MemoryReadStreamEndian(castInfo.Strings[7].Data, castInfo.Strings[7].Length, stream.IsBigEndian);
+                        var count = entryStream.ReadUInt16();
+                        for (short i = 0; i < count; i++)
+                            ci.ScriptStyle.Read(entryStream, this);
+                        entryStream.Dispose();
+                    }
+                    goto case 7;
+                case 7:
+                    if (castInfo.Strings[6].Length > 0)
+                    {
+                        entryStream = new MemoryReadStreamEndian(castInfo.Strings[6].Data, castInfo.Strings[6].Length, stream.IsBigEndian);
+                        ReadEditInfo(ci.ScriptEditInfo, entryStream);
+                        entryStream.Dispose();
+                    }
+                    goto case 6;
+                case 6:
+                    ci.Type = Enum.Parse< CastType>(castInfo.Strings[4].ReadString());
+                    goto case 5;
+                case 5:
+                    ci.FileName = castInfo.Strings[3].ReadString();
+                    goto case 4;
+                case 4:
+                    ci.Directory = castInfo.Strings[2].ReadString();
+                    goto case 3;
+                case 3:
+                    ci.Name = castInfo.Strings[1].ReadString();
+                    goto case 2;
+                case 2:
+                    ci.Script = castInfo.Strings[0].ReadString(false);
+                    break;
+            }
+
+            LogHelper.DebugLog(4, DebugChannel.Loading, $"Cast::loadCastInfo(): castId: {id}, size: {castInfo.Strings.Count}, script: {ci.Script}, name: {ci.Name}, directory: {ci.Directory}, fileName: {ci.FileName}, type: {ci.Type}");
+
+            if (_version < FileVersion.Ver400 || LogHelper.DebugChannelSet(-1, DebugChannel.NoBytecode))
+            {
+                if (!string.IsNullOrEmpty(ci.Script))
+                {
+                    var scriptType = ScriptType.Cast;
+                    if (member.Type == CastType.Script)
+                    {
+                        scriptType = ((ScriptCastMember)member).ScriptType;
+                    }
+
+                    if (ConfMan.GetBool("dump_scripts"))
+                        DumpScript(ci.Script, scriptType, id);
+
+                    _lingoArchive.AddCode(ci.Script, scriptType, id, ci.Name);
+                }
+            }
+
+            if (_version >= FileVersion.Ver400 && _version < FileVersion.Ver600 && member.Type == CastType.Sound)
+            {
+                ((SoundCastMember)member).Looping = (castInfo.Flags & 16) == 0 ? 1 : 0;
+            }
+            else if (_version >= FileVersion.Ver600 && member.Type == CastType.Sound)
+            {
+                LogHelper.DebugWarning($"STUB: Cast::loadCastInfo(): Sound cast member info not yet supported for version {_version}");
+            }
+
+            if (member.Type == CastType.Palette)
+                member.Load();
+
+            ci.AutoHilite = (castInfo.Flags & 2) != 0;
+            ci.ScriptId = castInfo.ScriptId;
+            if (ci.ScriptId != 0)
+                _castsScriptIds[(int)ci.ScriptId] = id;
+
+            _castsInfo[id] = ci;
+        }
+       
+
+
+        public void LoadCastLibInfo(SeekableReadStreamEndian stream, ushort id)
         {
             // Dummy placeholder - real logic depends on your LibInfo format
             var info = _castsInfo.GetValueOrDefault(id);
@@ -315,7 +464,7 @@ namespace Director
                 info.LoadScriptMetadata(stream);
             }
         }
-        public void LoadCastDataVWCR(Stream stream)
+        public void LoadCastDataVWCR(SeekableReadStreamEndian stream)
         {
             // Handle versioned cast record loading
             while (stream.Position < stream.Length)
@@ -324,14 +473,14 @@ namespace Director
                 ushort size = stream.ReadUInt16BE();
                 long pos = stream.Position;
 
-                if (_castArchive != null && _castArchive.HasResource("VWCI", id))
-                    LoadCastInfo(_castArchive.GetResourceStream("VWCI", id), id);
+                if (_castArchive != null && _castArchive.HasResource(ResourceTags.VWCI, id))
+                    LoadCastInfo(_castArchive.GetResource(ResourceTags.VWCI, id), id);
 
                 stream.Position = pos + size;
             }
         }
 
-        public void LoadCastData(Stream stream, ushort id, Resource res)
+        public void LoadCastData(SeekableReadStreamEndian stream, ushort id, Resource res)
         {
             // Actual implementation would depend on the data structure of cast data
             if (_castsInfo.TryGetValue(id, out var info))
@@ -342,12 +491,21 @@ namespace Director
             }
         }
 
-        public void LoadLingoContext(Stream stream)
+        public void LoadLingoContext(SeekableReadStreamEndian stream, ushort id)
         {
-            _lingodec = new LingoDec.ScriptContext(stream);
+            if (!_loadedCast.ContainsKey(id))
+                return;
+
+            var member = _loadedCast[id];
+            if (member is not ScriptCastMember script)
+                return;
+
+            var resolver = new ChunkResolver(this);
+            resolver.Resolve(stream, script, _version);
         }
 
-        public void LoadExternalSound(Stream stream)
+
+        public void LoadExternalSound(SeekableReadStreamEndian stream)
         {
             while (stream.Position < stream.Length)
             {
@@ -356,13 +514,13 @@ namespace Director
                 long pos = stream.Position;
 
                 var res = new Resource(stream.ReadBytes(size));
-                LoadCastData(new MemoryStream(res.Data), id, res);
+                LoadCastData(new SeekableReadStreamEndian(new MemoryStream(res.Data),true), id, res);
 
                 stream.Position = pos + size;
             }
         }
 
-        public void LoadSord(Stream stream)
+        public void LoadSord(SeekableReadStreamEndian stream)
         {
             while (stream.Position < stream.Length)
             {
@@ -371,7 +529,7 @@ namespace Director
                 stream.Position += size;
             }
         }
-        private void LoadScriptV2(Stream stream, ushort id)
+        private void LoadScriptV2(SeekableReadStreamEndian stream, ushort id)
         {
             if (_castsInfo.TryGetValue(id, out var info))
             {
@@ -381,7 +539,7 @@ namespace Director
             }
         }
 
-        private void LoadFontMap(Stream stream)
+        private void LoadFontMap(SeekableReadStreamEndian stream)
         {
             ushort entryCount = stream.ReadUInt16BE();
             for (int i = 0; i < entryCount; i++)
@@ -390,12 +548,7 @@ namespace Director
                 ushort toFont = stream.ReadUInt16BE();
                 bool remapChars = stream.ReadUInt16BE() != 0;
 
-                var entry = new FontMapEntry
-                {
-                    ToFont = toFont,
-                    RemapChars = remapChars,
-                    SizeMap = new Dictionary<ushort, ushort>()
-                };
+                var entry = new FontMapEntry(toFont, remapChars);
 
                 ushort sizeCount = stream.ReadUInt16BE();
                 for (int j = 0; j < sizeCount; j++)
@@ -409,7 +562,7 @@ namespace Director
             }
         }
 
-        private void LoadFontMapV4(Stream stream)
+        private void LoadFontMapV4(SeekableReadStreamEndian stream)
         {
             ushort entryCount = stream.ReadUInt16BE();
             for (int i = 0; i < entryCount; i++)
@@ -437,7 +590,7 @@ namespace Director
             }
         }
 
-        private void LoadFXmp(Stream stream)
+        private void LoadFXmp(SeekableReadStreamEndian stream)
         {
             while (stream.Position < stream.Length)
             {
@@ -446,7 +599,7 @@ namespace Director
             }
         }
 
-        private bool ReadFXmpLine(Stream stream)
+        private bool ReadFXmpLine(SeekableReadStreamEndian stream)
         {
             if (stream.Position + 4 > stream.Length)
                 return false;
@@ -458,7 +611,7 @@ namespace Director
             return true;
         }
 
-        private void LoadVWTL(Stream stream)
+        private void LoadVWTL(SeekableReadStreamEndian stream)
         {
             for (int i = 0; i < 8; i++)
             {
@@ -491,14 +644,169 @@ namespace Director
             return $"[Cast {castId}] {info.Type}: {info.Name}";
         }
 
-        public PaletteV4 LoadPalette(Stream stream, int id)
+        public PaletteV4 LoadPalette(SeekableReadStreamEndian stream, int id)
         {
             var palette = new PaletteV4();
             palette.LoadFromStream(stream, id);
             return palette;
         }
 
-        
+
+        /// <summary>
+        /// Reads EditInfo from the given stream into the provided info structure.
+        /// </summary>
+        public static void ReadEditInfo(EditInfo info, SeekableReadStreamEndian stream)
+        {
+            info.Rect = stream.ReadRect();
+            info.SelStart = (int)stream.ReadUInt32();
+            info.SelEnd = (int)stream.ReadUInt32();
+            info.Version = stream.ReadByte();
+            info.RulerFlag = stream.ReadByte();
+
+            if (LogHelper.DebugChannelSet(3, DebugChannel.Loading))
+            {
+                LogHelper.DebugLog(3, DebugChannel.Loading,
+                    $"EditInfo: Rect={info.Rect}, SelStart={info.SelStart}, SelEnd={info.SelEnd}, Version={info.Version}, RulerFlag={info.RulerFlag}");
+            }
+        }
+
+        public void LoadLingoContext(SeekableReadStreamEndian stream)
+        {
+            if (_version < FileVersion.Ver400)
+                throw new InvalidOperationException($"Unsupported Director version ({_version})");
+
+            LogHelper.DebugLog(1, DebugChannel.Compile, "Add D4 script context");
+
+            if (LogHelper.DebugChannelSet(5, DebugChannel.Loading))
+            {
+                LogHelper.DebugLog(5, DebugChannel.Loading, "Lctx header:");
+                stream.HexDump(0x2A);
+            }
+
+            stream.ReadUInt16();
+            stream.ReadUInt16();
+            stream.ReadUInt16();
+            stream.ReadUInt16();
+            int itemCount = stream.ReadInt32();
+            stream.ReadInt32(); // itemCount2
+            ushort itemsOffset = stream.ReadUInt16();
+            stream.ReadUInt16(); // entrySize
+            stream.ReadUInt32(); // unk1
+            stream.ReadUInt32(); // fileType
+            stream.ReadUInt32(); // unk2
+            int nameTableId = stream.ReadInt32();
+            stream.ReadInt16(); // validCount
+            stream.ReadUInt16(); // flags
+            short firstUnused = stream.ReadInt16();
+
+            LogHelper.DebugLog(2, DebugChannel.Loading, $"****** Loading Lnam resource ({nameTableId})");
+            using (var nameStream = _castArchive.GetResource(ResourceTags.MKTAG('L', 'n', 'a', 'm'), nameTableId))
+            {
+                _lingoArchive.AddNamesV4(nameStream);
+            }
+
+            var entries = new List<LingoContextEntry>();
+            stream.Seek(itemsOffset);
+            for (short i = 1; i <= itemCount; i++)
+            {
+                if (LogHelper.DebugChannelSet(5, DebugChannel.Loading))
+                {
+                    LogHelper.DebugLog(5, DebugChannel.Loading, $"Context entry {i}:");
+                    stream.HexDump(0xC);
+                }
+
+                stream.ReadUInt32();
+                int index = stream.ReadInt32();
+                stream.ReadUInt16(); // entryFlags
+                short nextUnused = stream.ReadInt16();
+
+                entries.Add(new LingoContextEntry(index, nextUnused));
+            }
+
+            int next = firstUnused;
+            while (next >= 0 && next < entries.Count)
+            {
+                var entry = entries[next];
+                entry.Unused = true;
+                next = entry.NextUnused;
+            }
+
+            for (short i = 1; i <= entries.Count; i++)
+            {
+                var entry = entries[i - 1];
+                if (entry.Unused && entry.Index < 0)
+                {
+                    LogHelper.DebugLog(1, DebugChannel.Compile, $"Cast::loadLingoContext: Script {i} is unused and empty");
+                    continue;
+                }
+                if (entry.Unused)
+                {
+                    LogHelper.DebugLog(1, DebugChannel.Compile, $"Cast::loadLingoContext: Script {i} is unused but not empty");
+                    continue;
+                }
+                if (entry.Index < 0)
+                {
+                    LogHelper.DebugLog(1, DebugChannel.Compile, $"Cast::loadLingoContext: Script {i} is used but empty");
+                    continue;
+                }
+                var resolver = new ChunkResolver(this); 
+                var context = new LingoScriptContext(_version, resolver);
+
+                using (var scrStream = _castArchive.GetResource(ResourceTags.Lscr, entry.Index))
+                {
+                    _lingoArchive.AddCodeV4(scrStream, i, _macName, _version, context, _loadedCast);
+                }
+
+                _lingoArchive.LctxContexts[i] = context;
+            }
+
+            foreach (var (contextId, context) in _lingoArchive.LctxContexts)
+            {
+                _lingoArchive.AddScriptContext(ScriptType.Score, contextId, context); // or another type if appropriate
+
+                foreach (var script in context.Scripts.Values)
+                {
+                    if (script.Id >= 0 && !script.IsFactory)
+                    {
+                        _lingoArchive.PatchScriptHandler(script.Type, new CastMemberID(script.Id, _castLibID));
+                    }
+                    else
+                    {
+                        script.SetOnlyInLctxContexts();
+                    }
+                }
+            }
+            if (LogHelper.DebugChannelSet(-1, DebugChannel.ImGui) || ConfMan.GetBool("dump_scripts"))
+            {
+                stream.Seek(0);
+                _chunkResolver = new ChunkResolver(this);
+                _lingodec = new LingoScriptContext(_version, _chunkResolver);
+                _lingodec.Read(stream);
+                _lingodec.ParseScripts();
+
+                foreach (var pair in _lingodec.Scripts)
+                {
+                    LogHelper.DebugLog(9, DebugChannel.Compile, $"[{pair.Value.CastId}/{pair.Key}] {pair.Value.ScriptText("\n", false)}");
+                }
+
+                if (ConfMan.GetBool("dump_scripts"))
+                {
+                    foreach (var pair in _lingodec.Scripts)
+                    {
+                        ScriptType type = ScriptType.Movie;
+                        if (_loadedCast.ContainsKey(pair.Value.CastId))
+                        {
+                            var member = _loadedCast[pair.Value.CastId];
+                            if (member is ScriptCastMember scriptMember)
+                                type = scriptMember.ScriptType;
+                        }
+
+                        string lingoPath = LingoArchive.DumpScriptName(_macName, type, pair.Value.CastId, "lingo");
+                        File.WriteAllText(lingoPath, pair.Value.ScriptText("\n", true));
+                    }
+                }
+            }
+        }
 
     }
 

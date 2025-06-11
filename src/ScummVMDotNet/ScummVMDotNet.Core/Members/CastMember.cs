@@ -1,10 +1,7 @@
-﻿using Director.Fonts;
-using Director.Graphics;
+﻿using Director.Graphics;
+using Director.IO;
 using Director.Primitives;
-using Microsoft.VisualBasic;
-using System;
-using System.IO;
-using System.Runtime;
+using Director.Scripts;
 
 namespace Director.Members
 {
@@ -37,27 +34,6 @@ namespace Director.Members
         public byte Version { get; set; }
         public byte RulerFlag { get; set; }
     }
-    public class CastMemberInfo
-    {
-        public bool AutoHilite { get; set; }
-        public uint ScriptId { get; set; }
-        public string Script { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Directory { get; set; } = string.Empty;
-        public string FileName { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public EditInfo ScriptEditInfo { get; set; } = new EditInfo();
-        public FontStyle ScriptStyle { get; set; } = new FontStyle();
-        public EditInfo TextEditInfo { get; set; } = new EditInfo();
-        public string ModifiedBy { get; set; } = string.Empty;
-        public string Comments { get; set; } = string.Empty;
-
-        public CastMemberInfo()
-        {
-            AutoHilite = false;
-            ScriptId = 0;
-        }
-    }
     public abstract class CastMember
     {
         private static int _refCount;
@@ -86,7 +62,6 @@ namespace Director.Members
             _regX = 0;
             _regY = 0;
         }
-
         public int Id => _castId;
         public CastType Type => _type;
         public uint Tag => _tag;
@@ -96,7 +71,27 @@ namespace Director.Members
         public int RegX => _regX;
         public int RegY => _regY;
         public IReadOnlyList<ResourceChunk> Children => _children;
-        public virtual void LoadFromStream(Stream stream, Resource res)
+
+        protected CastMember(Cast cast, int castId, SeekableReadStreamEndian stream)
+        {
+            _cast = cast;
+            _castId = castId;
+
+            _tag = stream.ReadUInt32();
+            _flags1 = stream.ReadInt16();
+            _initialRect = Movie.ReadRect(stream);
+            _boundingRect = Movie.ReadRect(stream);
+            _regX = stream.ReadInt16();
+            _regY = stream.ReadInt16();
+            _type = (CastType)stream.ReadByte();
+
+            _version = 0;
+            _loaded = false;
+            _modified = false;
+        }
+
+       
+        public virtual void LoadFromStream(SeekableReadStreamEndian stream, Resource res)
         {
             // Default implementation: override in derived classes
         }
@@ -125,7 +120,7 @@ namespace Director.Members
         }
 
 
-        public virtual void LoadFromScriptStream(Stream stream, int version)
+        public virtual void LoadFromScriptStream(SeekableReadStreamEndian stream, int version)
         {
             // Optionally overridden in subclass
         }
@@ -163,6 +158,22 @@ namespace Director.Members
         }
 
         public virtual string FormatInfo() { return ""; }
+
+        /// <summary>
+        /// Creates a duplicate of this cast member.
+        /// </summary>
+        public virtual CastMember Duplicate(Cast cast, int castId)
+        {
+            throw new NotImplementedException();
+        }
+        public virtual bool HasField(int field) => false;
+
+        public virtual Datum GetField(int field)=> new Datum();
+
+        /// <summary>
+        /// Sets the value of a specified field.
+        /// </summary>
+        public virtual bool SetField(int field, Datum value) => false;
     }
 
 }

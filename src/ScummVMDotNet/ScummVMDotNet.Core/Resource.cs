@@ -2,13 +2,12 @@
 {
     public class Resource
     {
-        public uint CastTag { get; set; } = 0;
-        public int Flags1 { get; set; } = 0;
 
-        public Resource(uint castTag, int flags1)
+        public byte[] Data { get; set; } = Array.Empty<byte>();
+
+        public Resource(byte[] data)
         {
-            CastTag = castTag;
-            Flags1 = flags1;
+            Data = data ?? Array.Empty<byte>();
         }
 
         public Resource() { }
