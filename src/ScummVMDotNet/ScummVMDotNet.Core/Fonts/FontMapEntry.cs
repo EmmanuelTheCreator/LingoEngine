@@ -6,9 +6,10 @@
         public bool RemapChars;
         public Dictionary<ushort, ushort> SizeMap { get; } = new();
 
-        public FontMapEntry(ushort toFont)
+        public FontMapEntry(ushort toFont, bool remapChars)
         {
             ToFont = toFont;
+            RemapChars = remapChars;
         }
     }
     

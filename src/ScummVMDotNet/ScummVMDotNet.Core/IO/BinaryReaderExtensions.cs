@@ -1,6 +1,6 @@
 ﻿using Director.Graphics;
 
-namespace Director
+namespace Director.IO
 {
     public static class BinaryReaderExtensions
     {

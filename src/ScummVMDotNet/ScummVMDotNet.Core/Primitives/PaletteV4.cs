@@ -1,4 +1,6 @@
-﻿namespace Director.Primitives
+﻿using Director.IO;
+
+namespace Director.Primitives
 {
     public class PaletteV4
     {
@@ -29,7 +31,13 @@
             Palette = (byte[])other.Palette.Clone();
             Id = other.Id;
         }
-
+        public void LoadFromStream(SeekableReadStreamEndian stream, int id)
+        {
+            // Director palettes are usually 3 bytes per color (R, G, B)
+            int length = stream.ReadUInt16(); // number of colors
+            Palette = stream.ReadBytesRequired(length * 3);
+            Id = new CastMemberID(id, 0); // CastLibID will be overwritten later
+        }
         public string[] ToHexArray()
         {
             var hexColors = new string[Length];

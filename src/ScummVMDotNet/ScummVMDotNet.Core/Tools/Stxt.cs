@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Director.Fonts;
-using Director.Tools;
+using Director.IO;
 
-namespace Director
+namespace Director.Tools
 {
     public class Stxt
     {
@@ -41,7 +41,7 @@ namespace Director
 
             while (formattingCount > 0)
             {
-                ushort currentFont = (ushort)_style.FontId;
+                ushort currentFont = _style.FontId;
                 _style.Read(textStream, _cast);
 
                 if (prevPos > _style.FormatStartOffset)

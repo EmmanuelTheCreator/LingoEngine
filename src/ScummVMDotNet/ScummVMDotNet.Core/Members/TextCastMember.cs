@@ -1,8 +1,5 @@
-﻿// Full translation of castmember/text.cpp and text.h — completed with actual logic
-using System;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.VisualBasic;
+﻿using Director.IO;
+using Director.Primitives;
 
 namespace Director.Members
 {
@@ -26,8 +23,11 @@ namespace Director.Members
         public TextCastMember(Cast parent, int id)
             : base(parent, id, CastType.Text) { }
 
-        public override void LoadFromStream(Stream stream, Resource res)
+        public TextCastMember(Cast cast, int castId, SeekableReadStreamEndian stream)
+    : base(cast, castId, stream)
         {
+            _type = CastType.Text;
+
             using var reader = new BinaryReader(stream);
 
             ushort textLen = reader.ReadUInt16BE();
@@ -49,14 +49,15 @@ namespace Director.Members
             Editable = reader.ReadUInt16BE() != 0;
             Scrollable = reader.ReadUInt16BE() != 0;
 
-            if (Parent._fontMap.TryGetValue(FontId, out var mapEntry))
+            if (_cast._fontMap.TryGetValue(FontId, out var mapEntry))
             {
                 FontId = mapEntry.ToFont;
                 FontSize = mapEntry.SizeMap.GetValueOrDefault(FontSize, FontSize);
                 if (mapEntry.RemapChars)
-                    Text = RemapText(Text, Parent._macCharsToWin);
+                    Text = RemapText(Text, _cast._macCharsToWin);
             }
         }
+
 
         private string RemapText(string input, Dictionary<byte, byte> charMap)
         {

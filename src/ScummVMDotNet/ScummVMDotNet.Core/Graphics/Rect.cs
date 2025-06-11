@@ -1,4 +1,6 @@
-﻿namespace Director.Graphics
+﻿using Director.IO;
+
+namespace Director.Graphics
 {
     public class Rect
     {
