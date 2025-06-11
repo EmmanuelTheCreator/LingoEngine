@@ -18,6 +18,11 @@ namespace Director
         public PixelFormat PixelFormat { get; set; } = PixelFormat.CreateFormatCLUT8();
 
         public CastMemberID CurrentPaletteId { get; private set; } = new();
+        public bool DesktopEnabled { get; internal set; }
+        public object CenterStage { get; internal set; }
+        public ushort WmHeight { get; internal set; }
+        public ushort WmWidth { get; internal set; }
+        public CastMemberID LastPalette { get; internal set; }
 
         public byte[] GetPalette()
         {
@@ -39,7 +44,13 @@ namespace Director
             if (_palettes.ContainsKey(id))
                 CurrentPaletteId = id;
         }
-
+        /// <summary>
+        /// Returns true if a palette with the given CastMemberID exists.
+        /// </summary>
+        public bool HasPalette(CastMemberID id)
+        {
+            return _palettes.ContainsKey(id);
+        }
         private DirectorApp() { }
     }
     public class WindowManager
