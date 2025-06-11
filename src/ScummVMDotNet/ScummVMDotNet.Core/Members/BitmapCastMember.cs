@@ -1,4 +1,5 @@
-﻿using Director.Primitives;
+﻿using Director.Graphics;
+using Director.Primitives;
 using System;
 using System.IO;
 
@@ -18,7 +19,7 @@ namespace Director.Members
         public int ImageSize { get; private set; }
 
         // Internal state (from original C++)
-        private Picture _picture = new();
+        private Pictere _picture = new();
         private object? _ditheredImg = null;
         private object? _matte = null;
         private bool _noMatte = false;

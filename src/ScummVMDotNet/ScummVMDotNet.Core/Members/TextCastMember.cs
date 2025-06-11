@@ -1,8 +1,4 @@
-﻿// Full translation of castmember/text.cpp and text.h — completed with actual logic
-using System;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.VisualBasic;
+﻿using Director.Primitives;
 
 namespace Director.Members
 {
