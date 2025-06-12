@@ -36,7 +36,7 @@ add_child(lingoGodotMouse)  # Add it to the scene
             AddChild(_collisionShape2D);
             _RectangleShape2D.Size = new Vector2(1000, 1000);
             _collisionShape2D.Shape = _RectangleShape2D;
-            Input.MouseMode = Input.MouseModeEnum.Hidden;
+            //Input.MouseMode = Input.MouseModeEnum.Hidden;
         }
        
 

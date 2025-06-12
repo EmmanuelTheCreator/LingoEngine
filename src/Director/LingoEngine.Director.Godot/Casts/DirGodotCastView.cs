@@ -2,14 +2,15 @@
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
-using LingoEngineGodot.Pictures;
 
 namespace LingoEngine.Director.Godot.Casts
 {
     internal class DirGodotCastViewer : IDisposable
     {
+        private readonly TabContainer _tabs;
+        private readonly DirGodotCastMemberPropViewer _selectedItem;
         private readonly Node2D _castsViewerNode2D;
+        
         private readonly ILingoMovie _lingoMovie;
 
         public ILingoCast? ActiveCastLib { get; private set; }
@@ -18,18 +19,43 @@ namespace LingoEngine.Director.Godot.Casts
         public DirGodotCastViewer(Node2D parent,ILingoMovie lingoMovie)
         {
             _castsViewerNode2D = new Node2D();
-            _castsViewerNode2D.Position = new Vector2(645, 20);
+            _castsViewerNode2D.Position = new Vector2(650, 20);
+
+            
+
+            _tabs = new TabContainer();
+            _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _tabs.Size = new Vector2(350, 600);
+            _castsViewerNode2D.AddChild(_tabs);
+
             parent.AddChild(_castsViewerNode2D);
             _lingoMovie = lingoMovie;
-            
-            CastLibViewer = new DirGodotCastView(_castsViewerNode2D);
-            Activate(2);
+            foreach (var cast in lingoMovie.CastLib.GetAll())
+            {
+                var castLibViewer = new DirGodotCastView(OnSelectElement);
+                castLibViewer.Show(cast);
+                var tabContent = new VBoxContainer
+                {
+                    Name = cast.Name,
+                };
+                
+                tabContent.AddChild(castLibViewer.Node);
+                _tabs.AddChild(tabContent);
+            }
+            _selectedItem = new DirGodotCastMemberPropViewer();
+            _selectedItem.Position = new Vector2(0, 620);
+            _castsViewerNode2D.AddChild(_selectedItem);
+        }
+        private void OnSelectElement(DirGodotCastItem castItem)
+        {
+            _selectedItem.Load(castItem.LingoMember);
         }
         public void Activate(int castlibNum)
         {
-            ActiveCastLib = _lingoMovie.CastLib.GetCast(castlibNum);
-            if (ActiveCastLib != null)
-                CastLibViewer.Show(ActiveCastLib);
+            //ActiveCastLib = _lingoMovie.CastLib.GetCast(castlibNum);
+            //if (ActiveCastLib != null)
+            //    CastLibViewer.Show(ActiveCastLib);
         }
 
         public void Dispose()
@@ -40,34 +66,36 @@ namespace LingoEngine.Director.Godot.Casts
     }
     internal class DirGodotCastView : IDirFrameworkCast
     {
-        
+        private readonly HFlowContainer _elementsContainer;
+        private readonly ScrollContainer _ScrollContainer;
         private readonly List<DirGodotCastItem> _elements = new List<DirGodotCastItem>();
-        private readonly Node _parent;
+        private readonly Action<DirGodotCastItem> _onSelectItem;
 
-        public DirGodotCastView(Node parent)
+        public Node Node => _ScrollContainer;
+
+        public DirGodotCastView(Action<DirGodotCastItem> onSelect)
         {
-            _parent = parent;
+            _ScrollContainer = new ScrollContainer();
+            _ScrollContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _ScrollContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+            _elementsContainer = new HFlowContainer();
+            _elementsContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _elementsContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _ScrollContainer.AddChild(_elementsContainer);
+            this._onSelectItem = onSelect;
         }
 
         public void Show(ILingoCast cast)
         {
             Hide();
-            var x = 0;
-            var y = 0;
             var i = 0;
             foreach (var castItem in cast.GetAll())
             {
-                var dirCastItem = new DirGodotCastItem(castItem);
+                var dirCastItem = new DirGodotCastItem(castItem, i+1, _onSelectItem);
                 dirCastItem.Init();
                 _elements.Add(dirCastItem);
-                _parent.AddChild(dirCastItem.Node);
-                if ((i - 20 + 1) % 12 == 0)
-                {
-                    y += dirCastItem.Height+5;
-                    x = 0;
-                }
-                x += dirCastItem.Width;
-                dirCastItem.SetPosition(x, y);
+                _elementsContainer.AddChild(dirCastItem);
                 i++;
             }
         }
@@ -75,7 +103,6 @@ namespace LingoEngine.Director.Godot.Casts
         {
             foreach (var element in _elements)
             {
-                _parent.RemoveChild(element.Node);
                 element.Dispose();
             }
             _elements.Clear();
@@ -83,90 +110,36 @@ namespace LingoEngine.Director.Godot.Casts
        
 
     }
-    internal class DirGodotCastItem : IDisposable
+    public partial class DirGodotCastMemberPropViewer : VBoxContainer
     {
-        private readonly VBoxContainer _root;      // holds everything
-        private readonly ColorRect _bg;
-        private readonly CenterContainer _spriteContainer;
-        private readonly Sprite2D _Sprite2D;
-        private readonly ILingoMember _lingoMember;
-        private readonly Label _caption;
-        public int LabelHeight { get; set; } = 18;
-        public Node Node => _root;
-        public int Width { get; set; } = 50;
-        public int Height { get; set; } = 50;
-        public DirGodotCastItem(ILingoMember element)
+        private Label _labelName;
+        private readonly Label _labelType;
+        private readonly Label _labelSize;
+        private readonly Label _labelCastNumber;
+        private readonly Label _labelFileSize;
+
+        public DirGodotCastMemberPropViewer()
         {
-            _lingoMember = element;
-            _root = new VBoxContainer { CustomMinimumSize = new Vector2(50, 50) };
-
-            // Solid background
-            _bg = new ColorRect { Color = Colors.DimGray };
-            _bg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            _bg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            _root.AddChild(_bg);
-
-            // Sprite centered
-            _Sprite2D = new Sprite2D();
-            _spriteContainer = new CenterContainer();
-            _spriteContainer.AddChild(_Sprite2D);
-            _spriteContainer.Position = new Vector2(0, LabelHeight);
-            _root.AddChild(_spriteContainer);
-
-            // Bottom label
-            _caption = new Label
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-            };
-            _caption.LabelSettings = new LabelSettings
-            {
-                FontSize = 8,
-            };
-            _root.AddChild(_caption);
-            _caption.Text = element.Name;
-
-            
+            _labelName = new Label{Text = "" };
+            _labelType = new Label{Text = "" };
+            _labelSize = new Label{Text = "" };
+            _labelCastNumber = new Label{Text = "" };
+            _labelFileSize = new Label{Text = "" };
+            AddChild(_labelName);
+            AddChild(_labelType);
+            AddChild(_labelSize);
+            AddChild(_labelCastNumber);
+            AddChild(_labelFileSize);
             
         }
-        public void SetPosition(int x, int y)
+        public void Load(ILingoMember lingoMember)
         {
-            _root.Position = new Vector2(x, y);
-        }
-      
-
-        public void Init()
-        {
-            switch (_lingoMember)
-            {
-                case LingoMemberPicture pic:
-                    var godotPicture = pic.Framework<LingoGodotMemberPicture>();
-                    godotPicture.Preload();
-
-                    // Set the texture using the ImageTexture from the picture member
-                    if (godotPicture.Texture == null)
-                        return;
-                    _Sprite2D.Texture = godotPicture.Texture;
-                    Resize(Width - 1, Height - LabelHeight);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        public void Resize(float targetWidth, float targetHeight)
-        {
-            if (_Sprite2D.Texture == null) return;
-            var width = _Sprite2D.Texture.GetWidth();
-            var height = _Sprite2D.Texture.GetHeight();
-            float scaleFactorW = targetWidth / width;
-            float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
-            _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
-        }
-
-        public void Dispose()
-        {
-            _Sprite2D.Dispose();
-            _root.Dispose();
+            _labelName.Text = lingoMember.NumberInCast + ". " + lingoMember.Name;
+            _labelType.Text = "Type:" + lingoMember.Type;
+            _labelSize.Text = "CastNumber:" + lingoMember.CastLibNum;
+            _labelCastNumber.Text = "Size:" + lingoMember.Width + "x" + lingoMember.Height;
+            _labelFileSize.Text = "File Size:" + lingoMember.Size + " bytes";
+           
         }
     }
 }
