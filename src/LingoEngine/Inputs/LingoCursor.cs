@@ -27,7 +27,8 @@ namespace LingoEngine.Core
             } }
         public int Cursor
         {
-            get => _cursor; set
+            get => _cursor; 
+            set
             {
                 _cursor = value;
                 _lastCursor = value;

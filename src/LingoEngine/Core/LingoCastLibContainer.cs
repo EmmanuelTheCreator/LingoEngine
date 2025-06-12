@@ -19,6 +19,7 @@ namespace LingoEngine.Core
         ILingoCast AddCast(string name);
         ILingoCast GetCast(int number);
         string GetCastName(int number);
+        IEnumerable<ILingoCast> GetAll();
     }
 
 
@@ -107,6 +108,6 @@ namespace LingoEngine.Core
 
         internal int GetNextCastNumber() => _casts.Count + 1;
 
-       
+        public IEnumerable<ILingoCast> GetAll() => _casts;
     }
 }

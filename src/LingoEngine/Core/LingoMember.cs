@@ -74,6 +74,10 @@ namespace LingoEngine.Core
         /// Lingo: the castLibNum of member
         /// </summary>
         int CastLibNum { get; }
+        /// <summary>
+        /// The number in the cast
+        /// </summary>
+        int NumberInCast { get; }
 
         /// <summary>
         /// The priority with which the member will be purged from memory.
