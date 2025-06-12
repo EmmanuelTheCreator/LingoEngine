@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Director.Members
 {
@@ -11,12 +12,12 @@ namespace Director.Members
             {
                 CastType.Bitmap => new BitmapCastMember(parent, id),
                 CastType.Text => new TextCastMember(parent, id),
-                CastType.Shape => new ShapeCastMember(parent, id),
-                CastType.FilmLoop => new FilmLoopCastMember(parent, id),
+                //CastType.Shape => new ShapeCastMember(parent, id),
+                //CastType.FilmLoop => new FilmLoopCastMember(parent, id),
                 CastType.Sound => new SoundCastMember(parent, id),
                 CastType.Palette => new PaletteCastMember(parent, id),
                 CastType.Script => new ScriptCastMember(parent, id),
-                _ => throw new NotSupportedException($"Unsupported cast type: {type}")
+                _ => new CastMember(parent, parent.CastLibId, CastType.Any)
             };
         }
     }

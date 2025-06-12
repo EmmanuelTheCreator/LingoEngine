@@ -25,7 +25,7 @@ namespace Director.Members
             AutoHilite = false;
             ScriptId = 0;
         }
-        public void LoadScriptMetadata(SeekableReadStreamEndian stream)
+        public void LoadScriptMetadata(SeekableReadStreamEndian stream, Cast cast)
         {
             ScriptId = stream.ReadUInt32();
             AutoHilite = stream.ReadByte() != 0;
@@ -50,7 +50,41 @@ namespace Director.Members
                 RulerFlag = stream.ReadByte()
             };
 
-            ScriptStyle.Read(stream, cast: null); // Pass the actual Cast if mapping is needed
+            ScriptStyle.Read(stream, cast: cast); // Pass the actual Cast if mapping is needed
+
+            TextEditInfo = new EditInfo
+            {
+                Rect = stream.ReadRect(),
+                SelStart = stream.ReadInt32(),
+                SelEnd = stream.ReadInt32(),
+                Version = stream.ReadByte(),
+                RulerFlag = stream.ReadByte()
+            };
+        }
+        public void LoadScriptMetadataV4(SeekableReadStreamEndian stream, Cast cast)
+        {
+            // Lingo bytecode has already been read before calling this
+
+            Script = stream.ReadPascalString();        // Actual script source (not bytecode)
+            Name = stream.ReadPascalString();          // Name of the script
+            Directory = stream.ReadPascalString();     // Likely unused
+            FileName = stream.ReadPascalString();      // External source filename
+            ModifiedBy = stream.ReadPascalString();    // Editor's name
+            Comments = stream.ReadPascalString();      // Comment or notes field
+
+            LinkedPath = stream.ReadPascalString();    // Optional path to linked resource
+            VideoPath = stream.ReadPascalString();     // Optional video path
+
+            ScriptEditInfo = new EditInfo
+            {
+                Rect = stream.ReadRect(),
+                SelStart = stream.ReadInt32(),
+                SelEnd = stream.ReadInt32(),
+                Version = stream.ReadByte(),
+                RulerFlag = stream.ReadByte()
+            };
+
+            ScriptStyle.Read(stream, cast);
 
             TextEditInfo = new EditInfo
             {

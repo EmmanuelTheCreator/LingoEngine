@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Formats.Asn1.AsnWriter;
-
-namespace Director.Primitives
+﻿namespace Director.Primitives
 {
     public static class ResourceTags
     {
@@ -32,7 +22,10 @@ namespace Director.Primitives
         (char)(tag & 0xFF)
     });
         }
-
+        public static uint Imap = MKTAG('i', 'm', 'a', 'p'); // Director Configuration
+        public static uint DRCF = MKTAG('D', 'R', 'C', 'F'); // Director Configuration
+        public static uint KEYStar = MKTAG('K', 'E', 'Y', '*'); 
+        public static uint VWLB = MKTAG('V', 'W', 'L', 'B'); 
         /// <summary>
         ///  / VWFI stands for View File Info. The VWFI resource contains metadata about the movie itself — typically high-level information such as:
         ///  - Movie name or file reference
@@ -64,7 +57,7 @@ namespace Director.Primitives
         public static uint XTRa = MKTAG('X', 'T', 'R', 'a'); // Xtra reference
         public static uint FADE = MKTAG('F', 'A', 'D', 'E'); // Fade definition
         public static uint BMAP = MKTAG('B', 'M', 'A', 'P'); // Alternative bitmap tag
-        public static uint Mmap = MKTAG('M', 'm', 'a', 'p'); // Memory map
+        public static uint Mmap = MKTAG('m', 'm', 'a', 'p'); // Memory map
         public static uint MOA = MKTAG('M', 'O', 'A', ' ');  // MOA Xtra resource
         public static uint GFXM = MKTAG('G', 'F', 'X', 'M'); // Graphics matrix
         public static uint DISP = MKTAG('D', 'I', 'S', 'P'); // Display options
@@ -73,10 +66,28 @@ namespace Director.Primitives
         public static uint FONT = MKTAG('F', 'O', 'N', 'T'); // Font descriptor
         public static uint VWCI = MKTAG('V', 'W', 'C', 'I'); // The tag VWCI is used in Macromedia Director to denote View Information or View Configuration Information, typically related to Score window settings or Movie window settings.
         public static uint VWSC = MKTAG('V', 'W', 'S', 'C'); // View Score — it's the Score view settings chunk. Specifically, it stores how the Score window is configured in the Director authoring environment, including
+        /// <summary>
+        /// This is a chunked Director file using the XF (Extended Format) resource layout.
+        /// </summary>
         public static uint XFIR = MKTAG('X', 'F', 'I', 'R');
         public static uint EERF = MKTAG('e', 'e', 'r', 'f');
         public static uint PAMM = MKTAG('p', 'a', 'm', 'm');
         public static uint Lnam = MKTAG('L', 'n', 'a', 'm');
+        /// <summary>
+        /// 'Lctx' compiled script context, // Native readable
+        /// </summary>
+        public static uint Lctx = MKTAG('L', 'c', 't', 'x');
+        /// <summary>
+        /// Frame/score data
+        /// </summary>
+        public static uint FCRD = MKTAG('L', 'c', 't', 'x');
+        public static uint MV93 = MKTAG('M', 'V', '9', '3');
+        /// <summary>
+        ///  Legacy ScummVM byte order
+        /// </summary>
+        public static uint XtcL = MKTAG('X', 't', 'c', 'L');
+        public static uint VWCR = MKTAG('V', 'W', 'C', 'R');
+        public static uint CASt = MKTAG('C', 'A', 'S', 't');
 
 
     }

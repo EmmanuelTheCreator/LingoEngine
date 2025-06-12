@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <RootNamespace>Director</RootNamespace>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
 </Project>
