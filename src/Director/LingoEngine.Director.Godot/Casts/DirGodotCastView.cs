@@ -18,11 +18,11 @@ namespace LingoEngine.Director.Godot.Casts
         public DirGodotCastViewer(Node2D parent,ILingoMovie lingoMovie)
         {
             _castsViewerNode2D = new Node2D();
-            _castsViewerNode2D.Position = new Vector2(800, 20);
+            _castsViewerNode2D.Position = new Vector2(645, 20);
             parent.AddChild(_castsViewerNode2D);
             _lingoMovie = lingoMovie;
             
-            CastLibViewer = new DirGodotCastView(parent);
+            CastLibViewer = new DirGodotCastView(_castsViewerNode2D);
             Activate(2);
         }
         public void Activate(int castlibNum)
@@ -62,7 +62,10 @@ namespace LingoEngine.Director.Godot.Casts
                 _elements.Add(dirCastItem);
                 _parent.AddChild(dirCastItem.Node);
                 if ((i - 20 + 1) % 12 == 0)
-                    y += dirCastItem.Height;
+                {
+                    y += dirCastItem.Height+5;
+                    x = 0;
+                }
                 x += dirCastItem.Width;
                 dirCastItem.SetPosition(x, y);
                 i++;
@@ -82,23 +85,52 @@ namespace LingoEngine.Director.Godot.Casts
     }
     internal class DirGodotCastItem : IDisposable
     {
-        private readonly CenterContainer _Container2D;
+        private readonly VBoxContainer _root;      // holds everything
+        private readonly ColorRect _bg;
+        private readonly CenterContainer _spriteContainer;
         private readonly Sprite2D _Sprite2D;
         private readonly ILingoMember _lingoMember;
-        public Node Node => _Container2D;
+        private readonly Label _caption;
+        public int LabelHeight { get; set; } = 18;
+        public Node Node => _root;
         public int Width { get; set; } = 50;
         public int Height { get; set; } = 50;
         public DirGodotCastItem(ILingoMember element)
         {
-            _Sprite2D = new Sprite2D();
-            _Container2D = new CenterContainer();
-            _Container2D.AddChild(_Sprite2D);
             _lingoMember = element;
-            Resize(Width, Height- 18);
+            _root = new VBoxContainer { CustomMinimumSize = new Vector2(50, 50) };
+
+            // Solid background
+            _bg = new ColorRect { Color = Colors.DimGray };
+            _bg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _bg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _root.AddChild(_bg);
+
+            // Sprite centered
+            _Sprite2D = new Sprite2D();
+            _spriteContainer = new CenterContainer();
+            _spriteContainer.AddChild(_Sprite2D);
+            _spriteContainer.Position = new Vector2(0, LabelHeight);
+            _root.AddChild(_spriteContainer);
+
+            // Bottom label
+            _caption = new Label
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
+            _caption.LabelSettings = new LabelSettings
+            {
+                FontSize = 8,
+            };
+            _root.AddChild(_caption);
+            _caption.Text = element.Name;
+
+            
+            
         }
         public void SetPosition(int x, int y)
         {
-            _Container2D.Position = new Vector2(x, y);
+            _root.Position = new Vector2(x, y);
         }
       
 
@@ -114,6 +146,7 @@ namespace LingoEngine.Director.Godot.Casts
                     if (godotPicture.Texture == null)
                         return;
                     _Sprite2D.Texture = godotPicture.Texture;
+                    Resize(Width - 1, Height - LabelHeight);
                     break;
                 default:
                     break;
@@ -133,7 +166,7 @@ namespace LingoEngine.Director.Godot.Casts
         public void Dispose()
         {
             _Sprite2D.Dispose();
-            _Container2D.Dispose();
+            _root.Dispose();
         }
     }
 }
