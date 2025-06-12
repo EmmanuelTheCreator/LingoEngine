@@ -51,6 +51,6 @@ namespace LingoEngine.Core
         int FindEmpty();
         ILingoMember Add(LingoMemberType type, int numberInCast, string name, string fileName = "", LingoPoint regPoint = default);
 
-
+        IEnumerable<ILingoMember> GetAll();
     }
 }

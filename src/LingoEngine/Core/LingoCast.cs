@@ -89,5 +89,6 @@ namespace LingoEngine.Core
             }
 
         }
+        public IEnumerable<ILingoMember> GetAll() => _MembersContainer.All;
     }
 }

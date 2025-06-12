@@ -1,0 +1,29 @@
+﻿<Project Sdk="Godot.NET.Sdk/4.5.0-dev.5">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net8</TargetFramework>
+		<!-- Use netstandard for compatibility -->
+		<RootNamespace>LingoEngine.Director.Godot</RootNamespace>
+		<GodotVersion>4.5.0-dev.5</GodotVersion>
+		<LangVersion>12</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Remove="obj\**" />
+		<EmbeddedResource Remove="obj\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Godot.NET.Sdk" Version="4.5.0-dev.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\LingoEngineGodot\LingoEngineGodot.csproj" />
+	  <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
+	  <ProjectReference Include="..\LingoEngine.Director.Core\LingoEngine.Director.Core.csproj" />
+	</ItemGroup>
+
+
+</Project>
