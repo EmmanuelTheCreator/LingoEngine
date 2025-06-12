@@ -697,6 +697,75 @@ namespace Director.Scripts
             //Write(")");
         }
 
+        public void Visit(RepeatWithStmtNode repeatWithStmtNode)
+        {
+            Write($"repeat with {repeatWithStmtNode.Variable} = ");
+            repeatWithStmtNode.Start.Accept(this);
+            Write(" to ");
+            repeatWithStmtNode.End.Accept(this);
+            WriteLine();
+            Indent();
+            repeatWithStmtNode.Body.Accept(this);
+            Unindent();
+            WriteLine("end repeat");
+        }
+
+
+        public void Visit(RepeatUntilStmtNode repeatUntilStmtNode)
+        {
+            Write("repeat until ");
+            repeatUntilStmtNode.Condition.Accept(this);
+            WriteLine();
+            Indent();
+            repeatUntilStmtNode.Body.Accept(this);
+            Unindent();
+            WriteLine("end repeat");
+        }
+
+
+        public void Visit(RepeatForeverStmtNode repeatForeverStmtNode)
+        {
+            WriteLine("repeat");
+            Indent();
+            repeatForeverStmtNode.Body.Accept(this);
+            Unindent();
+            WriteLine("end repeat");
+        }
+
+
+        public void Visit(RepeatTimesStmtNode repeatTimesStmtNode)
+        {
+            Write("repeat ");
+            repeatTimesStmtNode.Count.Accept(this);
+            WriteLine(" times");
+            Indent();
+            repeatTimesStmtNode.Body.Accept(this);
+            Unindent();
+            WriteLine("end repeat");
+        }
+
+
+        public void Visit(ExitRepeatIfStmtNode exitRepeatIfStmtNode)
+        {
+            Write("exit repeat if ");
+            exitRepeatIfStmtNode.Condition.Accept(this);
+            WriteLine();
+        }
+
+
+        public void Visit(NextRepeatIfStmtNode nextRepeatIfStmtNode)
+        {
+            Write("next repeat if ");
+            nextRepeatIfStmtNode.Condition.Accept(this);
+            WriteLine();
+        }
+
+
+        public void Visit(NextStmtNode nextStmtNode)
+        {
+            WriteLine("next");
+        }
+
     }
 
 }

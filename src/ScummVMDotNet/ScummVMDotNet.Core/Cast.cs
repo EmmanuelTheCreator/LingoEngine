@@ -7,7 +7,10 @@ using Director.Scripts;
 using Director.ScummVM;
 using Director.Texts;
 using Director.Tools;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection.PortableExecutable;
+using static Director.IO.ArchiveFileLoader;
 
 namespace Director
 {
@@ -78,9 +81,24 @@ namespace Director
         public LingoArchive LingoArchive => _lingoArchive;
         public Archive CastArchive => _castArchive;
         public int CastLibId => _castLibID;
+        public byte[] MacCharsToWin => _macCharsToWin;
+        public byte[] WinCharsToMac => _winCharsToMac;
+
+
+        public Cast()
+        {
+            _macCharsToWin = new byte[256];
+            _winCharsToMac = new byte[256];
+            for (int i = 0; i < 256; i++)
+            {
+                _macCharsToWin[i] = (byte)i;
+                _winCharsToMac[i] = (byte)i;
+            }
+        }
 
         //public Cast(Movie movie, ushort castLibID, bool isShared = false, bool isExternal = false, ushort libResourceId = 1024)
         public Cast(Archive archive, ushort castLibID, bool isShared = false, bool isExternal = false, ushort libResourceId = 1024)
+            :this()
         {
             _castLibID = castLibID;
             _libResourceId = libResourceId;
@@ -140,7 +158,18 @@ namespace Director
         public void LoadArchive()
         {
             if (!LoadConfig())
-                throw new InvalidOperationException("Failed to load cast config");
+            {
+                LogHelper.DebugWarning("Cast config VWCF#1024 not found. Proceeding without it.");
+                // Fallback defaults:
+                _version = 0x0A; // Assume Director 4+
+                _platform = Platform.Macintosh; // Or Windows
+                _isProtected = false;
+                _castArrayStart = 1;
+                _castArrayEnd = 1024;
+                _frameRate = 30;
+                _stageColor = 0;
+            }
+
             LoadCast();
         }
 
@@ -303,6 +332,32 @@ namespace Director
             if (_castArchive == null)
                 return;
 
+           
+            // XFIR / chunk-based format: use CASt chunk
+            if (_castArchive.HasResource(ResourceTags.CASt, 0))
+            {
+                using SeekableReadStreamEndian stream = _castArchive.GetResource(ResourceTags.CASt, 0);
+                LoadCastIndexCASt(stream);
+                return;
+            }
+
+            // MV93 legacy formats
+            if (_castArchive.HasResource(ResourceTags.MV93, 0))
+            {
+                using var stream = _castArchive.GetResource(ResourceTags.MV93, 0);
+                LoadCastDataVWCR(stream);
+                return;
+            }
+
+            // VWCR-based format (older Director versions)
+            if (_castArchive.HasResource(ResourceTags.VWCR, 1024))
+            {
+                using var stream = _castArchive.GetResource(ResourceTags.VWCR, 1024);
+                LoadCastDataVWCR(stream);
+                return;
+            }
+
+            // Fallback legacy resource loading loop
             for (int id = _castArrayStart; id <= _castArrayEnd; id++)
             {
                 if (_castArchive.HasResource(ResourceTags.VWCI, (ushort)id))
@@ -312,7 +367,77 @@ namespace Director
                     LoadCastLibInfo(_castArchive.GetResource(ResourceTags.VWSC, (ushort)id), (ushort)id);
             }
         }
+        private void LoadCastIndexCASt(SeekableReadStreamEndian stream)
+        {
+            //using var mmap = _castArchive.GetResource(1835884912, 0);
+            //List<MMapEntry> entries = ReadMMapEntries(mmap);
 
+            var reader = new BinaryReader(stream.BaseStream);
+
+            // Read CASt header
+            ushort fieldCount = reader.ReadUInt16BE(); // always 0?
+            ushort maxCastId = reader.ReadUInt16BE();  // maximum used cast ID
+            ushort itemCount = reader.ReadUInt16BE();  // number of items in this table
+            ushort fieldSize = reader.ReadUInt16BE();  // bytes per table entry
+            ushort unknown = reader.ReadUInt16BE();    // unused, often 0
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                int castId = reader.ReadUInt16BE();
+                int offset = reader.ReadInt32BE();
+                int length = reader.ReadInt32BE();
+                byte flags = reader.ReadByte(); // type flags (bitmap, text, script, etc.)
+
+                stream.Seek(1, SeekOrigin.Current); // skip padding byte
+                ushort type = reader.ReadUInt16BE(); // cast type
+
+                LogHelper.DebugWarning($"CASt[{i}] load: {castId}: {offset}");
+                if (offset > 0 && length > 0)
+                {
+                    var slice = new SliceStream(stream.BaseStream, offset, length);
+                    //var memberStream = new SeekableReadStreamEndian(slice, isBigEndian: true);
+                    //CastMember member = CastMemberFactory.Create((CastType)type,this,i+);
+                    //member.ReadFromStream(memberStream);
+
+                    ///member.CastId = castId;
+                    //member.Type = (CastMemberType)type;
+
+                    //_loadedCast[castId] = member;
+                }
+            }
+        }
+        private CastType DetectCastType(BinaryReader reader)
+        {
+            long mark = reader.BaseStream.Position;
+
+            uint typeMarker = reader.ReadUInt32BE();
+            reader.BaseStream.Position = mark;
+
+            return typeMarker switch
+            {
+                0xFE030001 => CastType.Bitmap,
+                0xFE040001 => CastType.Text,
+                0xFE050001 => CastType.Script,
+                _ => CastType.Empty
+            };
+        }
+
+        public void LoadCastDataVWCR(SeekableReadStreamEndian stream)
+        {
+            while (stream.Position < stream.Length)
+            {
+                ushort id = stream.ReadUInt16BE();
+                ushort size = stream.ReadUInt16BE();
+                long pos = stream.Position;
+
+                if (_castArchive != null && _castArchive.HasResource(ResourceTags.VWCI, id))
+                    LoadCastInfo(_castArchive.GetResource(ResourceTags.VWCI, id), id);
+
+                stream.Position = pos + size;
+            }
+        }
+
+   
         public void LoadCastInfo(SeekableReadStreamEndian stream, ushort id)
         {
             if (!_loadedCast.ContainsKey(id))
@@ -461,24 +586,10 @@ namespace Director
             var info = _castsInfo.GetValueOrDefault(id);
             if (info != null)
             {
-                info.LoadScriptMetadata(stream);
+                info.LoadScriptMetadata(stream, this);
             }
         }
-        public void LoadCastDataVWCR(SeekableReadStreamEndian stream)
-        {
-            // Handle versioned cast record loading
-            while (stream.Position < stream.Length)
-            {
-                ushort id = stream.ReadUInt16BE();
-                ushort size = stream.ReadUInt16BE();
-                long pos = stream.Position;
-
-                if (_castArchive != null && _castArchive.HasResource(ResourceTags.VWCI, id))
-                    LoadCastInfo(_castArchive.GetResource(ResourceTags.VWCI, id), id);
-
-                stream.Position = pos + size;
-            }
-        }
+        
 
         public void LoadCastData(SeekableReadStreamEndian stream, ushort id, Resource res)
         {

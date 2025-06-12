@@ -9,6 +9,9 @@ namespace Director
     {
         private readonly Dictionary<(uint tag, int id), byte[]> _resources = new();
         private readonly Dictionary<uint, List<ResourceEntry>> _resourcesByTag = new();
+        private readonly Dictionary<(uint tag, int id), Func<SeekableReadStreamEndian>> _loaders = new();
+
+
         private string _fileName = string.Empty;
         private bool _isBigEndian;
 
@@ -68,6 +71,33 @@ namespace Director
                 Tag = tag
             });
         }
+        // This should be called during archive parsing
+        public void RegisterResource(uint tag, int id, int offset, int size, Func<SeekableReadStreamEndian> loader)
+        {
+            var key = (tag, id);
+            _loaders[key] = loader;
+
+            // Ensure placeholder for tag presence (even if lazy)
+            if (!_resources.ContainsKey(key))
+                _resources[key] = null!;
+
+            if (!_resourcesByTag.TryGetValue(tag, out var list))
+            {
+                list = new List<ResourceEntry>();
+                _resourcesByTag[tag] = list;
+            }
+
+            list.Add(new ResourceEntry
+            {
+                Id = id,
+                Tag = tag,
+                Offset = offset,
+                Size = size,
+                CreateReadStream = loader,
+                Name = null
+            });
+        }
+
 
 
         public bool HasResource(uint tag, int id)
@@ -77,10 +107,47 @@ namespace Director
 
         public SeekableReadStreamEndian GetResource(uint tag, int id)
         {
-            if (!_resources.TryGetValue((tag, id), out var data))
-                throw new InvalidOperationException($"Resource {tag}#{id} not found");
+            var key = (tag, id);
+            if (!_resources.TryGetValue(key, out var data) || data == null)
+            {
+                if (_loaders.TryGetValue(key, out var loader))
+                {
+                    var stream = loader();
+                    using var ms = new MemoryStream();
+                    stream.BaseStream.CopyTo(ms);
+                    data = ms.ToArray();
+                    _resources[key] = data;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Resource {ResourceTags.FromTag(tag)}#{id} not found");
+                }
+            }
+
+            return new SeekableReadStreamEndian(new MemoryStream(data, writable: false), isBigEndian: _isBigEndian);
+        } 
+        public SeekableReadStreamEndian? TryGetResource(uint tag, int id)
+        {
+            var key = (tag, id);
+            if (!_resources.TryGetValue(key, out var data) || data == null)
+            {
+                if (_loaders.TryGetValue(key, out var loader))
+                {
+                    var stream = loader();
+                    using var ms = new MemoryStream();
+                    stream.BaseStream.CopyTo(ms);
+                    data = ms.ToArray();
+                    _resources[key] = data;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
             return new SeekableReadStreamEndian(new MemoryStream(data, writable: false), isBigEndian: _isBigEndian);
         }
+
 
         public IEnumerable<(uint Tag, int Id)> GetAllResourceKeys()
         {
@@ -123,21 +190,35 @@ namespace Director
             return new List<ResourceEntry>();
         }
 
-        // This should be called during archive parsing
-        public void RegisterResource(uint tag, int id, long offset, int size, Func<SeekableReadStreamEndian> streamFactory)
-        {
-            if (!_resourcesByTag.ContainsKey(tag))
-                _resourcesByTag[tag] = new List<ResourceEntry>();
+      
 
-            _resourcesByTag[tag].Add(new ResourceEntry
-            {
-                Id = id,
-                Tag = tag,
-                Offset = offset,
-                Size = size,
-                CreateReadStream = streamFactory
-            });
+        public IEnumerable<uint> ListTags()
+        {
+            return _resources.Keys.Select(k => k.tag).Distinct();
         }
+        public IEnumerable<string> ListTagStrings()
+        {
+            return _resources.Keys.Select(k => ResourceTags.FromTag(k.tag)).Distinct();
+        }
+        public IEnumerable<string> ListTagStringsWithId()
+        {
+            return _resources.Select(k => ResourceTags.FromTag(k.Key.tag)+"="+ k.Key.id).Distinct();
+        }
+
+        /// <summary>
+        /// Gets the file offset of a resource if available.
+        /// </summary>
+        public long? GetResourceOffset(uint tag, int id)
+        {
+            if (_resourcesByTag.TryGetValue(tag, out var list))
+            {
+                var entry = list.FirstOrDefault(e => e.Id == id);
+                return entry?.Offset;
+            }
+
+            return null;
+        }
+
     }
 }
 

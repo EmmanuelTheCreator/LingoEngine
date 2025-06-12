@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace Director.Tools
 {
@@ -12,12 +8,16 @@ namespace Director.Tools
         NoBytecode,
         Compile,
         ImGui,
-        // Add other channels as needed
+        
     }
     public static class LogHelper
     {
+        private static int _level = 1;
+        private static readonly HashSet<DebugChannel> _enabledChannels = new();
+
         public static void DebugWarning(string message)
-           => Console.WriteLine("Warning: " + message);
+            => Console.WriteLine("Warning: " + message);
+
         public static void DebugHexdump(byte[] data, int length)
         {
             const int bytesPerLine = 16;
@@ -44,22 +44,34 @@ namespace Director.Tools
 
                 Console.WriteLine($"{i:X4}: {hex}- {ascii}");
             }
-
-
         }
+
         public static void DebugLog(int level, DebugChannel channel, string message)
         {
-            Console.WriteLine($"[Debug][Level {level}][{channel}] {message}");
+            if (DebugChannelSet(level, channel))
+                Console.WriteLine($"[Debug][Level {level}][{channel}] {message}");
         }
 
-        /// <summary>
-        /// Determines whether the specified debug channel is enabled at the given level.
-        /// This is a stub — extend with real filtering logic if needed.
-        /// </summary>
         public static bool DebugChannelSet(int level, DebugChannel channel)
         {
-            // For now, enable all channels and levels >= 1
-            return level >= 1;
+            if (_level < 0) return true; // Always log
+            return level >= _level && _enabledChannels.Contains(channel);
+        }
+
+        public static void Enable(DebugChannel channel)
+        {
+            _enabledChannels.Add(channel);
+        }
+
+        public static void Disable(DebugChannel channel)
+        {
+            _enabledChannels.Remove(channel);
+        }
+
+        public static void SetLevel(int level)
+        {
+            _level = level;
         }
     }
+
 }

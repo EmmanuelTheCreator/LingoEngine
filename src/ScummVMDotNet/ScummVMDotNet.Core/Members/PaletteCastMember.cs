@@ -9,7 +9,7 @@ namespace Director.Members
         {
             private PaletteV4? _palette;
 
-            public PaletteCastMember(Cast cast, int castId, Stream stream, ushort version)
+            public PaletteCastMember(Cast cast, int castId)
                 : base(cast, castId, CastType.Palette)
             {
                 _palette = null;

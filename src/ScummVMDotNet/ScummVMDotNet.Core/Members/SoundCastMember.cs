@@ -4,7 +4,7 @@ namespace Director.Members
 {
     public class SoundCastMember : CastMember
     {
-        public SoundCastMember(Cast cast, int castId, CastType type) : base(cast, castId, type)
+        public SoundCastMember(Cast cast, int castId) : base(cast, castId, CastType.Sound)
         {
         }
 

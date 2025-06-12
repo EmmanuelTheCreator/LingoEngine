@@ -34,7 +34,7 @@ namespace Director.Members
         public byte Version { get; set; }
         public byte RulerFlag { get; set; }
     }
-    public abstract class CastMember
+    public class CastMember
     {
         private static int _refCount;
         protected Cast _cast;
@@ -50,7 +50,7 @@ namespace Director.Members
         protected bool _loaded;
         protected bool _modified;
         protected List<ResourceChunk> _children = new();
-        protected CastMember(Cast cast, int castId, CastType type)
+        public CastMember(Cast cast, int castId, CastType type)
         {
             _cast = cast;
             _castId = castId;

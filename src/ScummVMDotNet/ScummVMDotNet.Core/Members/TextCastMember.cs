@@ -24,11 +24,10 @@ namespace Director.Members
             : base(parent, id, CastType.Text) { }
 
         public TextCastMember(Cast cast, int castId, SeekableReadStreamEndian stream)
-    : base(cast, castId, stream)
+                : base(cast, castId, stream)
         {
             _type = CastType.Text;
-
-            using var reader = new BinaryReader(stream);
+            var reader = stream;
 
             ushort textLen = reader.ReadUInt16BE();
             Text = reader.ReadString(textLen);
@@ -49,23 +48,23 @@ namespace Director.Members
             Editable = reader.ReadUInt16BE() != 0;
             Scrollable = reader.ReadUInt16BE() != 0;
 
-            if (_cast._fontMap.TryGetValue(FontId, out var mapEntry))
+            if (_cast.FontMap.TryGetValue(FontId, out var mapEntry))
             {
                 FontId = mapEntry.ToFont;
                 FontSize = mapEntry.SizeMap.GetValueOrDefault(FontSize, FontSize);
                 if (mapEntry.RemapChars)
-                    Text = RemapText(Text, _cast._macCharsToWin);
+                    Text = RemapText(Text, _cast.MacCharsToWin);
             }
         }
 
 
-        private string RemapText(string input, Dictionary<byte, byte> charMap)
+        private string RemapText(string input, byte[] charMap)
         {
             var result = new char[input.Length];
             for (int i = 0; i < input.Length; i++)
             {
                 byte c = (byte)input[i];
-                result[i] = (char)(charMap.TryGetValue(c, out var mapped) ? mapped : c);
+                result[i] = (char)charMap[c]; // array lookup is safe
             }
             return new string(result);
         }
@@ -177,7 +176,7 @@ namespace Director.Members
             // TODO: Determine if point is inside visual bounds
             throw new NotImplementedException("IsWithin not implemented");
         }
-        public void Load() => LoadFromStream(Stream.Null, new Resource());
+        
     }
 
 }
