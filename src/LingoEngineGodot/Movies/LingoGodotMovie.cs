@@ -13,7 +13,6 @@ namespace LingoEngineGodot.Movies
         private readonly Action<LingoGodotMovie> _removeMethod;
         private HashSet<LingoGodotSprite> _drawnSprites = new();
         private HashSet<LingoGodotSprite> _allSprites = new();
-        private LingoGodotPlayerControler _controller;
 
         public Node2D GetNode2D() => _MovieNode2D;
 
@@ -27,7 +26,7 @@ namespace LingoEngineGodot.Movies
 
             _MovieNode2D = new Node2D();
             //_MovieNode2D.Position = new Vector2(640/2, 480/2);
-            _controller = new LingoGodotPlayerControler(stage, lingoInstance);
+            
             stage.ShowMovie(this);
         }
 
@@ -83,7 +82,6 @@ namespace LingoEngineGodot.Movies
         {
             Hide();
             RemoveMe();
-            _controller.Dispose();
         }
     }
 }

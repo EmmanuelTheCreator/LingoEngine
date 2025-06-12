@@ -245,7 +245,7 @@ namespace LingoEngine.Movies
         public void SendSprite(string name, Action<ILingoSpriteChannel> actionOnSprite)
         {
             // uses sprite channels, for visibility
-            var sprite = _spriteChannels.Values.FirstOrDefault(x => x.Name == Name);
+            var sprite = _spriteChannels.Values.FirstOrDefault(x => x.Name == name);
             if (sprite == null) return;
             actionOnSprite(sprite);
         }
@@ -253,7 +253,7 @@ namespace LingoEngine.Movies
         public void SendSprite(int spriteNumber, Action<ILingoSpriteChannel> actionOnSprite)
         {
             // uses sprite channels, for visibility
-            var sprite = _spriteChannels.Values.FirstOrDefault(x => x.Name == Name);
+            var sprite = _spriteChannels.Values.FirstOrDefault(x => x.SpriteNum == spriteNumber);
             if (sprite == null) return;
             actionOnSprite(sprite);
         }

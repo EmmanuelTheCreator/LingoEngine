@@ -1,13 +1,14 @@
 ﻿using Godot;
+using LingoEngine.Director.Godot.Casts;
 using LingoEngine.Events;
-using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Movies;
 
-namespace LingoEngineGodot.Movies
+namespace LingoEngine.Director.Godot.Movies
 {
     public class LingoGodotPlayerControler : IHasStepFrameEvent, IDisposable
     {
         private readonly ILingoMovie _lingoMovie;
+        private DirGodotCastViewer _castViewer;
 
         public Node2D Container { get; set; } = new Node2D();
         public Label LabelNode { get; set; } = new Label();
@@ -28,16 +29,18 @@ namespace LingoEngineGodot.Movies
             //    FontSize = 10,
             //};
             //LabelNode.LabelSettings = labelSettings;
+            _castViewer = new DirGodotCastViewer(parent, lingoMovie);
         }
 
         public void StepFrame()
         {
-            LabelNode.Text = "Frame "+_lingoMovie.Frame;
+            LabelNode.Text = "Frame " + _lingoMovie.Frame;
         }
 
         public void Dispose()
         {
             _lingoMovie.ActorList.Remove(this);
+            _castViewer.Dispose();
         }
     }
 }
