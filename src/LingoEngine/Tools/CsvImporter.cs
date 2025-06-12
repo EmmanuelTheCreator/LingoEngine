@@ -11,7 +11,7 @@ namespace LingoEngine.Tools
     {
 
 
-        public record ScvRow
+        public record CsvRow
         {
             public int Number { get; set; }
             public LingoMemberType Type { get; set; }
@@ -19,7 +19,7 @@ namespace LingoEngine.Tools
             public LingoPoint RegPoint { get; set; }
             public string FileName { get; set; }
 
-            public ScvRow(int number, LingoMemberType type, string name, LingoPoint registration, string fileName)
+            public CsvRow(int number, LingoMemberType type, string name, LingoPoint registration, string fileName)
             {
                 Number = number;
                 Type = type;
@@ -64,9 +64,9 @@ namespace LingoEngine.Tools
                     textbased.LoadFile();
             }
         }
-        public IReadOnlyCollection<ScvRow> ImportCsvCastFile(string filePath, bool skipFirstLine = true)
+        public IReadOnlyCollection<CsvRow> ImportCsvCastFile(string filePath, bool skipFirstLine = true)
         {
-            var returnData = new List<ScvRow>();
+            var returnData = new List<CsvRow>();
             var csv = Import(filePath, skipFirstLine);
             foreach (var row in csv)
             {
@@ -77,7 +77,7 @@ namespace LingoEngine.Tools
                 var fileName = row[4];
                 var type1 = LingoMemberType.Unknown;
                 Enum.TryParse(type,true, out type1);
-                returnData.Add(new ScvRow(number, type1, name, (registration[0], registration[1]), fileName));
+                returnData.Add(new CsvRow(number, type1, name, (registration[0], registration[1]), fileName));
             }
             return returnData;
         }
