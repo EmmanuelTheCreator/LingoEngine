@@ -559,22 +559,23 @@ namespace LingoEngine.Movies
 
         public void SetScoreLabel(int frameNumber, string? name)
         {
-            KeyValuePair<string, int>? exists = null;
-            // find existing
+            string? existingLabel = null;
+
+            // search for any label already associated with this frame
             foreach (var item in _scoreLabels)
             {
                 if (item.Value == frameNumber)
-                    exists = item;
-                break;
+                {
+                    existingLabel = item.Key;
+                    break;
+                }
             }
-            if (name == null && exists != null)
-            {
-                // remove existing
-                _scoreLabels.Remove(exists.Value.Key);
-                return;
-            }
-            if (name != null)
-                _scoreLabels.Add(name,frameNumber);
+
+            if (existingLabel != null)
+                _scoreLabels.Remove(existingLabel);
+
+            if (!string.IsNullOrEmpty(name))
+                _scoreLabels[name] = frameNumber;
         }
 
         internal int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);

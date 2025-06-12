@@ -90,7 +90,7 @@ namespace LingoEngine.Core
                 action(subscription);
         }
         /// <summary>
-        /// Subscribe to mouse events
+        /// Subscribe to key events.
         /// </summary>
         public LingoKey Subscribe(ILingoKeyEventHandler handler)
         {
