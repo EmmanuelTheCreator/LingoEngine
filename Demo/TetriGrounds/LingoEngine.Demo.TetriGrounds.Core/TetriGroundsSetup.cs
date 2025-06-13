@@ -8,7 +8,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
 {
     public static class TetriGroundsSetup
     {
-        public static IServiceCollection RegisterServices(this IServiceCollection services, Action<ILingoEngineRegistration> registration)
+        public static IServiceCollection AddTetriGrounds(this IServiceCollection services, Action<ILingoEngineRegistration> registration)
         {
             services
                 .RegisterLingoEngine(config =>
@@ -39,7 +39,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                 ;
             return services;
         }
-        public static ILingoMovie SetupGame(IServiceProvider serviceProvider)
+        public static ILingoMovie SetupGame(this IServiceProvider serviceProvider)
         {
             var game = serviceProvider.GetRequiredService<TetriGroundsGame>();
             return game.LoadMovie();
