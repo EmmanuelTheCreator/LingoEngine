@@ -8,11 +8,17 @@
     /// </summary>
     public class FileIMapData
     {
+        /// <summary>Total number of memory maps available in the file.</summary>
         public int MemoryMapCount { get; internal set; }
+        /// <summary>File position of the first memory map.</summary>
         public int MemoryMapOffset { get; internal set; }
+        /// <summary>Reserved value, usually zero.</summary>
         public short Reserved { get; internal set; }
+        /// <summary>Unknown purpose, kept for compatibility.</summary>
         public short Unknown { get; internal set; }
+        /// <summary>Second reserved integer.</summary>
         public int Reserved2 { get; internal set; }
+        /// <summary>Version of the memory map structure.</summary>
         public int MemoryMapFileVersion { get; internal set; }
     }
 }

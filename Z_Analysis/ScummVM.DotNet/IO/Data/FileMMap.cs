@@ -65,6 +65,7 @@ namespace Director.IO.Data
         /// </summary>
         public int FirstFreeResourceId { get; internal set; }
 
+        /// <summary>Array of resources described by the memory map.</summary>
         public List<MMapEntry> Entries { get; internal set; } = new();
 
         public class MMapEntry
