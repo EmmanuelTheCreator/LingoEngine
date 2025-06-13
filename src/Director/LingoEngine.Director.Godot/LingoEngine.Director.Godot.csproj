@@ -14,13 +14,16 @@
 		<Compile Remove="obj\**" />
 		<EmbeddedResource Remove="obj\**" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Include="ReadMe.md" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Godot.NET.Sdk" Version="4.5.0-dev.5" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\LingoEngineGodot\LingoEngineGodot.csproj" />
+	  <ProjectReference Include="..\..\LingoEngine.Godot\LingoEngine.Godot.csproj" />
 	  <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
 	  <ProjectReference Include="..\LingoEngine.Director.Core\LingoEngine.Director.Core.csproj" />
 	</ItemGroup>

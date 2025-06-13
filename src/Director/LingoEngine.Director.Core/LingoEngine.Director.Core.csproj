@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Media\Icons\" />
+  </ItemGroup>
+
 </Project>
