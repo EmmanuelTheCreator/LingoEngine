@@ -52,6 +52,7 @@ namespace LingoEngine.Inputs
         /// </summary>
         /// <param name="key">A named key defined in the LingoKeyType enum.</param>
         bool KeyPressed(LingoKeyType key);
+        bool KeyPressed(int keyCode);
     }
 
     /// <summary>
@@ -72,15 +73,24 @@ namespace LingoEngine.Inputs
     public class LingoKey : ILingoKey
     {
         private HashSet<ILingoKeyEventHandler> _subscriptions = new();
+        private readonly FrameworkCommunication.ILingoFrameworkKey _frameworkObj;
 
-        public bool ControlDown => false;
-        public bool CommandDown => false;
-        public bool OptionDown => false;
-        public bool ShiftDown => false;
-        public bool KeyPressed(LingoKeyType key) => false;
-        public bool KeyPressed(char key) => false;
-        public string Key => "";
-        public int KeyCode => 10;
+        public LingoKey(FrameworkCommunication.ILingoFrameworkKey frameworkObj)
+        {
+            _frameworkObj = frameworkObj;
+        }
+
+        internal T Framework<T>() where T : FrameworkCommunication.ILingoFrameworkKey => (T)_frameworkObj;
+
+        public bool ControlDown => _frameworkObj.ControlDown;
+        public bool CommandDown => _frameworkObj.CommandDown;
+        public bool OptionDown => _frameworkObj.OptionDown;
+        public bool ShiftDown => _frameworkObj.ShiftDown;
+        public bool KeyPressed(LingoKeyType key) => _frameworkObj.KeyPressed(key);
+        public bool KeyPressed(char key) => _frameworkObj.KeyPressed(key);
+        public bool KeyPressed(int keyCode) => _frameworkObj.KeyPressed(keyCode);
+        public string Key => _frameworkObj.Key;
+        public int KeyCode => _frameworkObj.KeyCode;
 
         public void DoKeyUp() => DoOnAll(x => x.RaiseKeyUp(this));
         public void DoKeyDown() => DoOnAll(x => x.RaiseKeyDown(this));

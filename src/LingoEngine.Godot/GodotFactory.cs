@@ -8,6 +8,7 @@ using LingoEngine.Godot.Pictures;
 using LingoEngine.Godot.Sounds;
 using LingoEngine.Godot.Texts;
 using LingoEngine.Inputs;
+using LingoEngine.Core;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
@@ -108,7 +109,8 @@ namespace LingoEngine.Godot
 
         public LingoStage CreateStage(LingoClock lingoClock)
         {
-            var godotInstance = new LingoGodotStage(_rootNode, lingoClock);
+            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(_rootNode));
+            var godotInstance = new LingoGodotStage(_rootNode, lingoClock, overlay);
             var lingoInstance = new LingoStage(godotInstance);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
@@ -147,6 +149,15 @@ namespace LingoEngine.Godot
             var godotInstance = new LingoGodotMouse(_rootNode, new Lazy<LingoMouse>(() => mouse!));
             mouse = new LingoMouse(stage, godotInstance);
             return mouse;
+        }
+
+        public LingoKey CreateKey()
+        {
+            LingoKey? key = null;
+            var impl = new LingoGodotKey(_rootNode, new Lazy<LingoKey>(() => key!));
+            key = new LingoKey(impl);
+            impl.SetLingoKey(key);
+            return key;
         }
     }
 }
