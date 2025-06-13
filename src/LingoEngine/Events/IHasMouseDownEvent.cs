@@ -1,4 +1,5 @@
 ﻿using LingoEngine.Inputs;
+using LingoEngine.Movies;
 
 namespace LingoEngine.Events
 {
@@ -88,6 +89,11 @@ namespace LingoEngine.Events
     public interface IHasBlurEvent
     {
         void Blur();
+    }
+
+    public interface IHasSpriteSelectedEvent
+    {
+        void SpriteSelected(LingoEngine.Movies.LingoSprite sprite);
     }
 
 }
