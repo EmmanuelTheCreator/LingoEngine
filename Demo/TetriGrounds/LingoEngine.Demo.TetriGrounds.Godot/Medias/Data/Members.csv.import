@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://ckjccodarwcas"
+
+[deps]
+
+files=["res://Medias/Data/Members.Type.translation", "res://Medias/Data/Members.Name.translation", "res://Medias/Data/Members.Registration Point.translation", "res://Medias/Data/Members.Filename.translation"]
+
+source_file="res://Medias/Data/Members.csv"
+dest_files=["res://Medias/Data/Members.Type.translation", "res://Medias/Data/Members.Name.translation", "res://Medias/Data/Members.Registration Point.translation", "res://Medias/Data/Members.Filename.translation"]
+
+[params]
+
+compress=true
+delimiter=0
