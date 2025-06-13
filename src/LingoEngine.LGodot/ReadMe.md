@@ -1,4 +1,7 @@
 # Macromedia Lingo in c# : With the Godot framework
 
-This is the Lingo Engine in c# with the Godot framework as UI Engine
+## Package: LingoEngine.LGodot
 
+Adapter layer that plugs the core Lingo runtime into Godot. It implements the interfaces defined in `src/LingoEngine` using Godot nodes and resources.
+
+See [docs/GodotSetup.md](../../docs/GodotSetup.md) for build instructions and example code.

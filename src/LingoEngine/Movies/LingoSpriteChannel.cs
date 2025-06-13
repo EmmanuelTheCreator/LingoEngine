@@ -4,9 +4,9 @@ using LingoEngine.Primitives;
 namespace LingoEngine.Movies
 {
     /// <summary>
-    /// Sprite Channel
+    /// Sprite Channel.
     /// Represents an individual sprite channel in the Score.
-    /// A Sprite object covers a sprite span, which is a range of frames in a given sprite channel. A Sprite 
+    /// A <see cref="LingoSprite"/> object covers a sprite span, which is a range of frames in a given sprite channel. A <see cref="LingoSprite"/>
     /// Channel object represents an entire sprite channel, regardless of the number of sprites it contains.
     /// Sprite channels are controlled by the Score by default. Use the Sprite Channel object to switch
     /// control of a sprite channel over to script during a Score recording session.
@@ -41,7 +41,7 @@ namespace LingoEngine.Movies
         bool Scripted { get; }
 
         /// <summary>
-        /// Gets the sprite currently assigned to the sprite channel.
+        /// Gets the <see cref="LingoSprite"/> currently assigned to the sprite channel.
         /// </summary>
         ILingoSprite? Sprite { get; }
         /// <summary>
@@ -52,6 +52,8 @@ namespace LingoEngine.Movies
         /// <summary>
         /// Creates a scripted sprite that can be controlled by script.
         /// </summary>
+        /// <param name="member">Optional <see cref="LingoMember"/> to assign to the new sprite.</param>
+        /// <param name="loc">Optional <see cref="LingoPoint"/> location.</param>
         void MakeScriptedSprite(LingoMember? member = null, LingoPoint? loc = null);
 
         /// <summary>
