@@ -405,3 +405,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 src/LingoEngine/CombinedSource.txt
+Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.Godot/.godot/

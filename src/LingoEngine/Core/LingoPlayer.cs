@@ -172,6 +172,14 @@ namespace LingoEngine.Core
             return this;
         }
 
+        public ILingoPlayer AddCastLib(string name, Action<ILingoCast>? configure = null)
+        {
+            var castLib = _castLibsContainer.AddCast(name);
+            if (configure != null)
+                configure(castLib);
+            return this;
+        }
+
         internal void LoadMovieScripts(IEnumerable<LingoMovieScript> enumerable)
         {
             throw new NotImplementedException();

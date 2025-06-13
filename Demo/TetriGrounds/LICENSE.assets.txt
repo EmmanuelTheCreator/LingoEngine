@@ -1,0 +1,7 @@
+Assets License for TetriGrounds
+
+All media assets included in this project (including but not limited to images, sounds, music, and in-game text content) are the exclusive property of the author, EmmanuelTheCreator https://github.com/EmmanuelTheCreator.
+
+These assets are **not licensed for reuse, modification, redistribution, or commercial use**, and are provided solely for the purpose of running and evaluating the TetriGrounds project.
+
+If you wish to use any media from TetriGrounds in your own work, you must obtain explicit written permission from the author.

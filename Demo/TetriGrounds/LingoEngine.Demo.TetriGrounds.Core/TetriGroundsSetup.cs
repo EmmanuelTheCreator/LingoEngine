@@ -1,0 +1,55 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using LingoEngine;
+using LingoEngine.Movies;
+using LingoEngine.Demo.TetriGrounds.Core.MovieScripts;
+using LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals;
+
+namespace LingoEngine.Demo.TetriGrounds.Core
+{
+    public static class TetriGroundsSetup
+    {
+        public static IServiceCollection RegisterServices(this IServiceCollection services, Action<ILingoEngineRegistration> registration)
+        {
+            services
+                .RegisterLingoEngine(config =>
+                {
+                    config
+                        //.AddFont("Arcade", Path.Combine("Media", "Fonts", "arcade.ttf"))
+                        //.AddFont("Bikly", Path.Combine("Media", "Fonts", "bikly.ttf"))
+                        //.AddFont("8Pin Matrix", Path.Combine("Media", "Fonts", "8PinMatrix.ttf"))
+                        //.AddFont("Earth", Path.Combine("Media", "Fonts", "earth.ttf"))
+                        //.AddFont("Tahoma", Path.Combine("Media", "Fonts", "Tahoma.ttf"))
+                        .ForMovie(TetriGroundsGame.MovieName, s => s
+                            .AddMovieScript<StartMoviesScript>()
+                            // Globals
+                            .AddBehavior<MouseDownNavigateBehavior>()
+                            .AddBehavior<MouseDownNavigateWithStayBehavior>()
+                            .AddBehavior<PauseBehaviour>()
+                            .AddBehavior<StartGameBehavior>()
+                            .AddBehavior<StayOnFrameFrameScript>()
+                            .AddBehavior<WaiterFrameScript>()
+                            // Other
+                        );
+                    registration(config);
+                }
+                )
+                .AddSingleton<IArkCore, TetriGroundsCore>()
+                .AddSingleton<TetriGroundsGame, TetriGroundsGame>()
+                .AddSingleton<GlobalVars>()
+                ;
+            return services;
+        }
+        public static ILingoMovie SetupGame(IServiceProvider serviceProvider)
+        {
+            var game = serviceProvider.GetRequiredService<TetriGroundsGame>();
+            return game.LoadMovie();
+        }
+
+        public static TetriGroundsGame StartGame(this IServiceProvider serviceProvider)
+        {
+            var game = serviceProvider.GetRequiredService<TetriGroundsGame>();
+            game.Play();
+            return game;
+        }
+    }
+}
