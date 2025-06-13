@@ -20,12 +20,14 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     private readonly DirGodotFrameHeader _header;
     private readonly DirGodotFrameScriptsBar _frameScripts;
     private readonly DirGodotScoreLabelsBar _labelBar;
-    private bool _dragging;
+    private readonly Button _playButton = new Button();
 
     public DirGodotScoreWindow()
         : base("Score")
     {
         Position = new Vector2(0, 30);
+        Size = new Vector2(800, 600);
+        CustomMinimumSize = Size;
         _grid = new DirGodotScoreGrid();
         _header = new DirGodotFrameHeader();
         _frameScripts = new DirGodotFrameScriptsBar();
@@ -43,8 +45,17 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _scrollContent.AddChild(_header);
         _scrollContent.AddChild(_vScroller);
 
+
+        AddChild(_playButton);
+        _playButton.Position = new Vector2(3, 2);
+        _playButton.CustomMinimumSize = new Vector2(40, 16);
+        _playButton.Text = "Play";
+        _playButton.Pressed += OnPlayButtonPressed;
+
+
         _vScroller.VerticalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
         _vScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
+
         _vScroller.AddChild(_grid);
         _vScroller.Size = new Vector2(800, 520);
         _vScroller.Position = new Vector2(0, 60);
@@ -67,10 +78,28 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _header.SetMovie(movie);
         _frameScripts.SetMovie(movie);
         _labelBar.SetMovie(movie);
+        UpdatePlayButton();
+    }
+    private void OnPlayButtonPressed()
+    {
+        if (_movie == null) return;
+        if (_movie.IsPlaying)
+            _movie.Halt();
+        else
+            _movie.Play();
+        UpdatePlayButton();
+    }
+
+    private void UpdatePlayButton()
+    {
+        if (_movie == null)
+            _playButton.Text = "Play";
+        else
+            _playButton.Text = _movie.IsPlaying ? "Stop" : "Play";
     }
     public override void _GuiInput(InputEvent @event)
     {
-
+        base._GuiInput(@event);
     }
     public override void _Process(double delta)
     {
@@ -113,6 +142,18 @@ public override void _Draw()
             if (f % 5 == 0)
                 DrawString(font, new Vector2(x + 1, font.GetAscent()), f.ToString(),
                     HorizontalAlignment.Left, -1, 10, new Color("#a0a0a0"));
+        }
+    }
+
+    public override void _GuiInput(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed)
+        {
+            if (_movie == null) return;
+            Vector2 pos = GetLocalMousePosition();
+            int frame = Mathf.RoundToInt((pos.X - ChannelInfoWidth) / FrameWidth) + 1;
+            if (frame >= 1 && frame <= _movie.FrameCount)
+                _movie.GoTo(frame);
         }
     }
 }
