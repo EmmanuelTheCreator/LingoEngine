@@ -1,4 +1,6 @@
-﻿using Godot;
+using Godot;
+using LingoEngine.Director.LGodot.Scores;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -14,6 +16,16 @@ namespace LingoEngine.Director.LGodot
             //            )
             //    .WithFrameworkFactory(setup)
             //    ;
+
+            engineRegistration.Services(s =>
+            {
+                s.AddSingleton<DirGodotScoreWindow>(p =>
+                {
+                    var overlay = new DirGodotScoreWindow { Visible = false };
+                    rootNode.AddChild(overlay);
+                    return overlay;
+                });
+            });
             return engineRegistration;
         }
 
