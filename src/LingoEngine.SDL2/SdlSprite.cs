@@ -4,6 +4,8 @@ using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
+using LingoEngineSDL2.Pictures;
+using LingoEngineSDL2.Texts;
 
 namespace LingoEngineSDL2;
 

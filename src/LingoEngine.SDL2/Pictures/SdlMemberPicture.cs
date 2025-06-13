@@ -1,5 +1,3 @@
-using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 using LingoEngine.Pictures;
 using LingoEngine.Pictures.LingoEngine;
@@ -77,13 +75,18 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
         var parts = data.Split(',', 2);
         if (parts.Length != 2) return;
 
+        var bytes = Convert.FromBase64String(parts[1]);
+        GCHandle pinned = GCHandle.Alloc(bytes, GCHandleType.Pinned);
         try
         {
-            var bytes = Convert.FromBase64String(parts[1]);
-            var rw = SDL.SDL_RWFromMem(bytes, bytes.Length);
+            var rw = SDL.SDL_RWFromMem(pinned.AddrOfPinnedObject(), bytes.Length);
             _surface = SDL_image.IMG_Load_RW(rw, 1);
             if (_surface == IntPtr.Zero)
+            {
+                Console.WriteLine("IMG_Load_RW failed: " + SDL_image.IMG_GetError());
                 return;
+            }
+
             var surf = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
             Width = surf.w;
             Height = surf.h;
@@ -94,8 +97,10 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
             _member.Height = Height;
             IsLoaded = true;
         }
-        catch
+        finally
         {
+            pinned.Free();
         }
+
     }
 }

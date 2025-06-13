@@ -12,13 +12,14 @@ internal static class SdlClipboard
 
     public static string GetText()
     {
-        if (SDL.SDL_HasClipboardText() == SDL.SDL_bool.SDL_TRUE)
-        {
-            var ptr = SDL.SDL_GetClipboardText();
-            var text = Marshal.PtrToStringAnsi(ptr) ?? string.Empty;
-            SDL.SDL_free(ptr);
-            return text;
-        }
+        // todo
+        //if (SDL.SDL_HasClipboardText() == SDL.SDL_bool.SDL_TRUE)
+        //{
+        //    var ptr = SDL.SDL_GetClipboardText();
+        //    var text = Marshal.PtrToStringAnsi(ptr) ?? string.Empty;
+        //    SDL.SDL_free(ptr);
+        //    return text;
+        //}
         return string.Empty;
     }
 }

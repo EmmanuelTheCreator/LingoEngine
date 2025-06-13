@@ -1,6 +1,7 @@
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Pictures.LingoEngine;
+using LingoEngineSDL2.Pictures;
 using SDL2;
 using System.Runtime.InteropServices;
 
@@ -24,7 +25,7 @@ public class SdlMouse : ILingoFrameworkMouse
     public void HideMouse(bool state)
     {
         _hidden = state;
-        SDL.SDL_ShowCursor(state ? SDL.SDL_bool.SDL_FALSE : SDL.SDL_bool.SDL_TRUE);
+        SDL.SDL_ShowCursor(state ? 0 : 1);
     }
 
     public void SetCursor(LingoMemberPicture image)
@@ -33,13 +34,24 @@ public class SdlMouse : ILingoFrameworkMouse
         image.Framework<SdlMemberPicture>().Preload();
         var pic = image.Framework<SdlMemberPicture>();
         if (pic.ImageData == null) return;
-        var rw = SDL.SDL_RWFromMem(pic.ImageData, pic.ImageData.Length);
-        var surface = SDL_image.IMG_Load_RW(rw, 1);
-        if (surface == IntPtr.Zero) return;
-        _sdlCursor = SDL.SDL_CreateColorCursor(surface, 0, 0);
-        SDL.SDL_SetCursor(_sdlCursor);
-        SDL.SDL_FreeSurface(surface);
+
+        var handle = GCHandle.Alloc(pic.ImageData, GCHandleType.Pinned);
+        try
+        {
+            var rw = SDL.SDL_RWFromMem(handle.AddrOfPinnedObject(), pic.ImageData.Length);
+            var surface = SDL_image.IMG_Load_RW(rw, 1);
+            if (surface == IntPtr.Zero) return;
+
+            _sdlCursor = SDL.SDL_CreateColorCursor(surface, 0, 0);
+            SDL.SDL_SetCursor(_sdlCursor);
+            SDL.SDL_FreeSurface(surface);
+        }
+        finally
+        {
+            handle.Free();
+        }
     }
+
 
     public void SetCursor(LingoMouseCursor value)
     {
