@@ -1,6 +1,7 @@
 ﻿using Godot;
 using LingoEngine.Pictures;
 using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Tools;
 
 namespace LingoEngineGodot.Pictures
 {
@@ -56,29 +57,13 @@ namespace LingoEngineGodot.Pictures
 
        
 
-        public string GetMimeType(string filename)
-        {
-            // Extract file extension from the filename (case-insensitive)
-            string extension = Path.GetExtension(filename)?.ToLower()!;
-
-            // Use a switch statement to return the MIME type
-            return extension switch
-            {
-                ".png" => "image/png",
-                ".jpg" => "image/jpeg",  // JPEG files usually have the extension ".jpg" or ".jpeg"
-                ".jpeg" => "image/jpeg",
-                ".gif" => "image/gif",
-                ".bmp" => "image/bmp",
-                _ => "application/octet-stream" // Default MIME type for unknown extensions
-            };
-        }
         private void UpdateImageData(Image image)
         {
             Width = image.GetWidth();
             Height = image.GetHeight();
             ImageData = image.GetData();
 
-            Format = GetMimeType(_lingoMemberPicture.FileName);
+            Format = MimeHelper.GetMimeType(_lingoMemberPicture.FileName);
             _lingoMemberPicture.Size = ImageData.Length;
             _lingoMemberPicture.Width = Width;
             _lingoMemberPicture.Height = Height;

@@ -1,10 +1,14 @@
 using LingoEngine.Sounds;
+using SDL2;
+using System.Runtime.InteropServices;
 
 namespace LingoEngineSDL2.Sounds;
 
 public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
 {
     private LingoSoundChannel _channel = null!;
+    private IntPtr _chunk = IntPtr.Zero;
+    private string? _currentFile;
     public int ChannelNumber { get; }
     public int SampleRate => 44100;
     public int Volume { get; set; }
@@ -26,11 +30,69 @@ public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
         _channel = channel;
     }
 
-    public void PlayFile(string stringFilePath) { IsPlaying = true; }
-    public void PlayNow(LingoMemberSound member) { IsPlaying = true; }
-    public void Stop() { IsPlaying = false; }
-    public void Rewind() { CurrentTime = 0; }
-    public void Pause() { IsPlaying = !IsPlaying; }
-    public void Repeat() { CurrentTime = StartTime; IsPlaying = true; }
-    public void Dispose() { }
+    public void PlayFile(string stringFilePath)
+    {
+        Stop();
+        _currentFile = stringFilePath;
+        _chunk = SDL_mixer.Mix_LoadWAV(stringFilePath);
+        if (_chunk == IntPtr.Zero)
+            return;
+        SDL_mixer.Mix_PlayChannel(ChannelNumber, _chunk, 0);
+        IsPlaying = true;
+        CurrentTime = StartTime;
+    }
+
+    public void PlayNow(LingoMemberSound member)
+    {
+        Stop();
+        _currentFile = member.FileName;
+        _chunk = SDL_mixer.Mix_LoadWAV(_currentFile);
+        if (_chunk == IntPtr.Zero)
+            return;
+        SDL_mixer.Mix_PlayChannel(ChannelNumber, _chunk, 0);
+        IsPlaying = true;
+        CurrentTime = StartTime;
+    }
+
+    public void Stop()
+    {
+        SDL_mixer.Mix_HaltChannel(ChannelNumber);
+        if (_chunk != IntPtr.Zero)
+        {
+            SDL_mixer.Mix_FreeChunk(_chunk);
+            _chunk = IntPtr.Zero;
+        }
+        IsPlaying = false;
+        CurrentTime = 0;
+    }
+
+    public void Rewind()
+    {
+        SDL_mixer.Mix_HaltChannel(ChannelNumber);
+        CurrentTime = 0;
+    }
+
+    public void Pause()
+    {
+        if (IsPlaying)
+            SDL_mixer.Mix_Pause(ChannelNumber);
+        else
+            SDL_mixer.Mix_Resume(ChannelNumber);
+        IsPlaying = !IsPlaying;
+    }
+
+    public void Repeat()
+    {
+        if (_chunk != IntPtr.Zero)
+        {
+            SDL_mixer.Mix_HaltChannel(ChannelNumber);
+            SDL_mixer.Mix_PlayChannel(ChannelNumber, _chunk, -1);
+            IsPlaying = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Stop();
+    }
 }
