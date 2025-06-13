@@ -1,4 +1,3 @@
-# Macromedia Director in c# : Core components
+# LingoEngine.Director.Core
 
-These are the core componentes, framework independant
-
+Framework‑independent implementation of classic Director behaviours. These APIs mimic the original Director runtime and are consumed by framework adapters like `LingoEngine.Director.LGodot`.
