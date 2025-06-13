@@ -35,6 +35,7 @@ public class SdlMovie : ILingoFrameworkMovie, IDisposable
             s.Update();
             s.Render(renderer);
         }
+        _stage.RootContext.DebugOverlay.Render();
         SDL.SDL_RenderPresent(renderer);
     }
 
