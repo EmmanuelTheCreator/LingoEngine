@@ -1,7 +1,7 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Pictures.LingoEngine;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Inputs
 {
     public class LingoCursor : ILingoCursor
     {
@@ -21,13 +21,17 @@ namespace LingoEngine.Core
         {
             _frameworkObj = frameworkObj;
         }
-        public LingoMemberPicture? Image { get => image; set { 
+        public LingoMemberPicture? Image
+        {
+            get => image; set
+            {
                 image = value;
                 CursorType = LingoMouseCursor.Custom;
-            } }
+            }
+        }
         public int Cursor
         {
-            get => _cursor; 
+            get => _cursor;
             set
             {
                 _cursor = value;
@@ -39,7 +43,7 @@ namespace LingoEngine.Core
                     _frameworkObj.SetCursor((LingoMouseCursor)value);
             }
         }
-        public LingoMouseCursor CursorType { get => _cursorType; set =>  Cursor = (int)value; }
+        public LingoMouseCursor CursorType { get => _cursorType; set => Cursor = (int)value; }
 
         public bool IsCursorVisible => _isCursorVisible;
 

@@ -3,12 +3,12 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
+using LingoEngine.SDL2.Pictures;
+using LingoEngine.SDL2.SDLL;
+using LingoEngine.SDL2.Texts;
 using LingoEngine.Texts;
-using LingoEngineSDL2.Pictures;
-using LingoEngineSDL2.Texts;
-using SDL2;
 
-namespace LingoEngineSDL2;
+namespace LingoEngine.SDL2;
 
 public class SdlSprite : ILingoFrameworkSprite, IDisposable
 {
@@ -19,10 +19,10 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
     internal bool IsDirty { get; set; } = true;
     internal bool IsDirtyMember { get; set; } = true;
 
-    private readonly IntPtr _renderer;
-    private IntPtr _texture = IntPtr.Zero;
+    private readonly nint _renderer;
+    private nint _texture = nint.Zero;
 
-    public SdlSprite(LingoSprite sprite, IntPtr renderer, Action<SdlSprite> show, Action<SdlSprite> hide, Action<SdlSprite> remove)
+    public SdlSprite(LingoSprite sprite, nint renderer, Action<SdlSprite> show, Action<SdlSprite> hide, Action<SdlSprite> remove)
     {
         _lingoSprite = sprite;
         _renderer = renderer;
@@ -48,10 +48,10 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
     public void RemoveMe() { _remove(this); Dispose(); }
     public void Dispose()
     {
-        if (_texture != IntPtr.Zero)
+        if (_texture != nint.Zero)
         {
             SDL.SDL_DestroyTexture(_texture);
-            _texture = IntPtr.Zero;
+            _texture = nint.Zero;
         }
     }
     public void Show() { _show(this); Update(); }
@@ -72,9 +72,9 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
         }
     }
 
-    internal void Render(IntPtr renderer)
+    internal void Render(nint renderer)
     {
-        if (_texture == IntPtr.Zero) return;
+        if (_texture == nint.Zero) return;
         SDL.SDL_Rect dst = new SDL.SDL_Rect
         {
             x = (int)X,
@@ -82,7 +82,7 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
             w = (int)Width,
             h = (int)Height
         };
-        SDL.SDL_RenderCopy(renderer, _texture, IntPtr.Zero, ref dst);
+        SDL.SDL_RenderCopy(renderer, _texture, nint.Zero, ref dst);
     }
 
     private void UpdateMember()
@@ -93,12 +93,13 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
             case LingoMemberPicture pic:
                 var p = pic.Framework<SdlMemberPicture>();
                 p.Preload();
-                if (_texture != IntPtr.Zero)
+                if (_texture != nint.Zero)
                 {
                     SDL.SDL_DestroyTexture(_texture);
-                    _texture = IntPtr.Zero;
+                    _texture = nint.Zero;
                 }
-                _texture = SDL_image.IMG_LoadTexture(_renderer, pic.FileName);
+                
+                _texture = p.Texture.map;
                 Width = p.Width;
                 Height = p.Height;
                 break;

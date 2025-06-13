@@ -1,14 +1,14 @@
 ﻿using Godot;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Godot.Pictures;
+using LingoEngine.Godot.Texts;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
-using LingoEngineGodot.Pictures;
-using LingoEngineGodot.Texts;
 
-namespace LingoEngineGodot
+namespace LingoEngine.Godot
 {
 
     public partial class LingoGodotSprite : ILingoFrameworkSprite, IDisposable
@@ -25,7 +25,7 @@ namespace LingoEngineGodot
         internal LingoSprite LingoSprite => _lingoSprite;
         internal bool IsDirty { get; set; } = true;
         internal bool IsDirtyMember { get; set; } = true;
-        public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y);  } }
+        public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y); } }
         public float Y { get => _Sprite2D.Position.Y; set { _Sprite2D.Position = new Vector2(_Sprite2D.Position.X, value); } }
         public int ZIndex { get => _Sprite2D.ZIndex; set { _Sprite2D.ZIndex = value; } }
         public LingoPoint RegPoint { get => (_Container2D.Position.X, _Container2D.Position.Y); set { _Container2D.Position = new Vector2(value.X, value.Y); IsDirty = true; } }

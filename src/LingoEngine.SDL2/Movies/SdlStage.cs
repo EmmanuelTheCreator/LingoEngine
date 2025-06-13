@@ -3,7 +3,7 @@ using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 
-namespace LingoEngineSDL2.Movies;
+namespace LingoEngine.SDL2.Movies;
 
 public class SdlStage : ILingoFrameworkStage, IDisposable
 {

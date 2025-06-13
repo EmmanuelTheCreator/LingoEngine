@@ -1,6 +1,6 @@
 using Godot;
 using LingoEngine.Demo.TetriGrounds.Core;
-using LingoEngineGodot;
+using LingoEngine.Godot;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 

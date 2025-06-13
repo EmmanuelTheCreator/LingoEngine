@@ -1,10 +1,11 @@
 ﻿using Godot;
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Events;
 using LingoEngine.Texts;
+using LingoEngine.Texts.FrameworkCommunication;
 
-namespace LingoEngineGodot.Texts
+namespace LingoEngine.Godot.Texts
 {
-    public class LingoGodotMemberField : LingoGodotMemberTextBase<LingoMemberField> , ILingoFrameworkMemberField
+    public class LingoGodotMemberField : LingoGodotMemberTextBase<LingoMemberField>, ILingoFrameworkMemberField
     {
 
 

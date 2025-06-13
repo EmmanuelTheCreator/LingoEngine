@@ -1,4 +1,6 @@
-﻿namespace LingoEngine.Core
+﻿using LingoEngine.Inputs;
+
+namespace LingoEngine.Events
 {
     public interface ILingoKeyEventHandler
     {

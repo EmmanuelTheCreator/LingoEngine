@@ -1,6 +1,6 @@
 using LingoEngine.FrameworkCommunication;
 
-namespace LingoEngineSDL2.Core;
+namespace LingoEngine.SDL2.Core;
 
 public class SdlFrameworkMemberEmpty : ILingoFrameworkMemberEmpty
 {

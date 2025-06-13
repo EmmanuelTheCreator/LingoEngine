@@ -1,7 +1,7 @@
-using SDL2;
+using LingoEngine.SDL2.SDLL;
 using System.Runtime.InteropServices;
 
-namespace LingoEngineSDL2;
+namespace LingoEngine.SDL2;
 
 internal static class SdlClipboard
 {

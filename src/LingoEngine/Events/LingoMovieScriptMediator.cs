@@ -1,4 +1,4 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Inputs;
 
 namespace LingoEngine.Events
 {

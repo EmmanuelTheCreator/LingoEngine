@@ -1,10 +1,10 @@
 ﻿using Godot;
 using LingoEngine;
+using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.FrameworkCommunication.Events;
-using LingoEngineGodot.Core;
+using LingoEngine.Godot.Core;
 using Microsoft.Extensions.DependencyInjection;
-namespace LingoEngineGodot
+namespace LingoEngine.Godot
 {
     public static class LingoGodotSetup
     {
@@ -12,7 +12,7 @@ namespace LingoEngineGodot
         {
             engineRegistration
                 .Services(s => s
-                        .AddSingleton<ILingoFrameworkFactory,GodotFactory>()
+                        .AddSingleton<ILingoFrameworkFactory, GodotFactory>()
                         .AddSingleton<ILingoFontManager, LingoGodotFontManager>()
                         .AddSingleton(p => new LingoGodotRootNode(rootNode))
                         )
@@ -20,6 +20,6 @@ namespace LingoEngineGodot
                 ;
             return engineRegistration;
         }
-       
+
     }
 }

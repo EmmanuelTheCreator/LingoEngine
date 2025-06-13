@@ -1,10 +1,9 @@
-﻿using LingoEngine.Core;
-using LingoEngine.Events;
+﻿using LingoEngine.Inputs;
 
-namespace LingoEngine.Movies
+namespace LingoEngine.Events
 {
 
-    internal class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler , ILingoKeyEventHandler, ILingoSpriteEventHandler
+    internal class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler, ILingoKeyEventHandler, ILingoSpriteEventHandler
     {
         private readonly List<IHasPrepareMovieEvent> _prepareMovies = new();
         private readonly List<IHasStartMovieEvent> _startMovies = new();
@@ -86,7 +85,7 @@ namespace LingoEngine.Movies
         public void RaiseBlur() => _blurs.ForEach(x => x.Blur());
         public void RaiseKeyUp(LingoKey key) => _keyUps.ForEach(x => x.KeyUp(key));
         public void RaiseKeyDown(LingoKey key) => _keyDowns.ForEach(x => x.KeyDown(key));
-        
-       
+
+
     }
 }

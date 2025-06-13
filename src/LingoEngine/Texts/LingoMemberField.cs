@@ -1,6 +1,7 @@
 ﻿
 using LingoEngine.Core;
 using LingoEngine.Primitives;
+using LingoEngine.Texts.FrameworkCommunication;
 
 namespace LingoEngine.Texts
 {

@@ -1,8 +1,8 @@
 ﻿using LingoEngine.Demo.TetriGrounds.Core;
-using LingoEngineSDL2;
+using LingoEngine.SDL2;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LingoEngine.Demo.Tetris.SDL2
+namespace LingoEngine.Demo.TetriGrounds.SDL2
 {
 
     internal class Program
@@ -10,14 +10,13 @@ namespace LingoEngine.Demo.Tetris.SDL2
         static void Main(string[] args)
         {
             var services = new ServiceCollection();
-            TetriGroundsSetup.RegisterServices(services, c => c
+            services.RegisterServices(c => c
                         .WithLingoSdlEngine("TetriGrounds", 640, 480));
             var serviceProvider = services.BuildServiceProvider();
 
             TetriGroundsSetup.SetupGame(serviceProvider);
-            var game = TetriGroundsSetup.StartGame(serviceProvider);
-
-            SdlGameHost.Run(serviceProvider, game.LingoPlayer.Clock);
+            TetriGroundsGame game = serviceProvider.StartGame();
+            serviceProvider.GetRequiredService<SdlRootContext>().Run(game.LingoPlayer);
         }
     }
 

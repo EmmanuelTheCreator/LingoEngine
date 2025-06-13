@@ -1,7 +1,7 @@
 ﻿using Godot;
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Events;
 
-namespace LingoEngineGodot.Core
+namespace LingoEngine.Godot.Core
 {
     internal class LingoGodotFontManager : ILingoFontManager
     {

@@ -1,9 +1,10 @@
-﻿using LingoEngine.Events;
+﻿using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Inputs
 {
     /// <summary>
     /// Provides access to a user’s mouse activity, including mouse movement and mouse clicks.
@@ -96,7 +97,7 @@ namespace LingoEngine.Core
         private ILingoFrameworkMouse _frameworkObj;
         public T Framework<T>() where T : ILingoFrameworkMouse => (T)_frameworkObj;
 
-        public LingoMember? MouseMember { get => _lingoStage.MouseMemberUnderMouse;}
+        public LingoMember? MouseMember { get => _lingoStage.MouseMemberUnderMouse; }
         public LingoPoint MouseLoc => new LingoPoint(MouseH, MouseV);
 
         public float MouseH { get; set; }
@@ -121,10 +122,10 @@ namespace LingoEngine.Core
         {
             _frameworkObj = frameworkMouse;
             _lingoStage = lingoMovieStage;
-            _cursor = new LingoCursor(_frameworkObj);    
+            _cursor = new LingoCursor(_frameworkObj);
         }
 
-        
+
         /// <summary>
         /// Called from communiction framework mouse
         /// </summary>

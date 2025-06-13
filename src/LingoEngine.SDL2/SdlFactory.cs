@@ -1,19 +1,20 @@
 using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Inputs;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
+using LingoEngine.SDL2.Core;
+using LingoEngine.SDL2.Movies;
+using LingoEngine.SDL2.Pictures;
+using LingoEngine.SDL2.Sounds;
+using LingoEngine.SDL2.Texts;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
-using LingoEngineSDL2.Core;
-using LingoEngineSDL2.Movies;
-using LingoEngineSDL2.Pictures;
-using LingoEngineSDL2.Sounds;
-using LingoEngineSDL2.Texts;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LingoEngineSDL2;
+namespace LingoEngine.SDL2;
 
 public class SdlFactory : ILingoFrameworkFactory, IDisposable
 {
@@ -130,7 +131,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
 
     public void Dispose()
     {
-        foreach(var d in _disposables)
+        foreach (var d in _disposables)
             d.Dispose();
     }
 

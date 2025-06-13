@@ -2,7 +2,7 @@
 using LingoEngine.Sounds;
 using System.IO;
 
-namespace LingoEngineGodot.Sounds
+namespace LingoEngine.Godot.Sounds
 {
     public class LingoGodotSoundChannel : ILingoFrameworkSoundChannel, IDisposable
     {
@@ -38,7 +38,7 @@ namespace LingoEngineGodot.Sounds
 
             double normalized = Math.Pow(10.0, db / 20.0);
             return (int)Math.Clamp(normalized * 255.0, 0.0, 255.0);
-        } 
+        }
         #endregion
         public int Pan
         {
@@ -73,7 +73,7 @@ namespace LingoEngineGodot.Sounds
             _audioEffectPanner = new AudioEffectPanner();
             _audioPlayer.Finished += _audioPlayer_Finished;
             parentNode.AddChild(_audioPlayer);
-            
+
             //AudioServer.AddBus(channelNumber);
             //AudioServer.SetBusName(channelNumber, busName);
             //AudioServer.AddBusEffect(channelNumber, _audioEffectPanner, channelNumber);

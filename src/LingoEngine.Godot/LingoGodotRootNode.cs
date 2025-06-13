@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace LingoEngineGodot
+namespace LingoEngine.Godot
 {
     public class LingoGodotRootNode
     {

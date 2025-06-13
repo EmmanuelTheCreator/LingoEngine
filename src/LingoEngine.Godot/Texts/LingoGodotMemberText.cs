@@ -1,7 +1,8 @@
-﻿using LingoEngine.FrameworkCommunication.Events;
+﻿using LingoEngine.Events;
 using LingoEngine.Texts;
+using LingoEngine.Texts.FrameworkCommunication;
 
-namespace LingoEngineGodot.Texts
+namespace LingoEngine.Godot.Texts
 {
     public class LingoGodotMemberText : LingoGodotMemberTextBase<LingoMemberText>, ILingoFrameworkMemberText
     {

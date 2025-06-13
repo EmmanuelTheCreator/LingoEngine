@@ -1,9 +1,10 @@
 ﻿using Godot;
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Events;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
+using LingoEngine.Texts.FrameworkCommunication;
 
-namespace LingoEngineGodot.Texts
+namespace LingoEngine.Godot.Texts
 {
     public abstract class LingoGodotMemberTextBase<TLingoText> : ILingoFrameworkMemberTextBase, IDisposable
          where TLingoText : ILingoMemberTextBase
@@ -131,7 +132,7 @@ namespace LingoEngineGodot.Texts
         }
 
 
-        public bool IsLoaded { get; private set; } 
+        public bool IsLoaded { get; private set; }
         #endregion
 
 #pragma warning disable CS8618
@@ -161,7 +162,7 @@ namespace LingoEngineGodot.Texts
             _lingoMemberText = lingoInstance;
             _parentNode.Name = lingoInstance.Name;
         }
-       
+
         public string ReadText()
         {
             if (!File.Exists(_lingoMemberText.FileName))
@@ -171,7 +172,7 @@ namespace LingoEngineGodot.Texts
             }
             var rawTextData = File.ReadAllText(_lingoMemberText.FileName);
             return rawTextData;
-        } 
+        }
         public string ReadTextRtf()
         {
             var rtfVersion = _lingoMemberText.FileName.Replace(".txt", ".rtf");
@@ -204,7 +205,7 @@ namespace LingoEngineGodot.Texts
         }
 
 
-        
+
         #region Clipboard
         public void ImportFileInto()
         {
@@ -220,7 +221,7 @@ namespace LingoEngineGodot.Texts
             _lingoMemberText.Text = _RAWTextData;
         }
         public void Copy(string text) => DisplayServer.ClipboardSet(text);
-        public string PasteClipboard() => DisplayServer.ClipboardGet(); 
+        public string PasteClipboard() => DisplayServer.ClipboardGet();
         #endregion
     }
 }

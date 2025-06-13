@@ -1,5 +1,6 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Primitives;
+using LingoEngine.Texts.FrameworkCommunication;
 using LingoEngine.Tools;
 
 namespace LingoEngine.Texts

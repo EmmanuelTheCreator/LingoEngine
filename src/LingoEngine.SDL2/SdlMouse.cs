@@ -1,11 +1,11 @@
-using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Inputs;
 using LingoEngine.Pictures.LingoEngine;
-using LingoEngineSDL2.Pictures;
-using SDL2;
+using LingoEngine.SDL2.Pictures;
+using LingoEngine.SDL2.SDLL;
 using System.Runtime.InteropServices;
 
-namespace LingoEngineSDL2;
+namespace LingoEngine.SDL2;
 
 public class SdlMouse : ILingoFrameworkMouse
 {
@@ -13,7 +13,7 @@ public class SdlMouse : ILingoFrameworkMouse
     private bool _hidden;
     private LingoMemberPicture? _cursorImage;
     private LingoMouseCursor _cursor = LingoMouseCursor.Arrow;
-    private IntPtr _sdlCursor = IntPtr.Zero;
+    private nint _sdlCursor = nint.Zero;
 
     public SdlMouse(Lazy<LingoMouse> mouse)
     {
@@ -40,7 +40,7 @@ public class SdlMouse : ILingoFrameworkMouse
         {
             var rw = SDL.SDL_RWFromMem(handle.AddrOfPinnedObject(), pic.ImageData.Length);
             var surface = SDL_image.IMG_Load_RW(rw, 1);
-            if (surface == IntPtr.Zero) return;
+            if (surface == nint.Zero) return;
 
             _sdlCursor = SDL.SDL_CreateColorCursor(surface, 0, 0);
             SDL.SDL_SetCursor(_sdlCursor);
@@ -75,7 +75,7 @@ public class SdlMouse : ILingoFrameworkMouse
             _ => SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW
         };
 
-        if (_sdlCursor != IntPtr.Zero)
+        if (_sdlCursor != nint.Zero)
             SDL.SDL_FreeCursor(_sdlCursor);
 
         _sdlCursor = SDL.SDL_CreateSystemCursor(sysCursor);
@@ -84,7 +84,7 @@ public class SdlMouse : ILingoFrameworkMouse
 
     ~SdlMouse()
     {
-        if (_sdlCursor != IntPtr.Zero)
+        if (_sdlCursor != nint.Zero)
             SDL.SDL_FreeCursor(_sdlCursor);
     }
 }

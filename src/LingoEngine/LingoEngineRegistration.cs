@@ -1,6 +1,6 @@
 ﻿using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Movies;
 using LingoEngine.Xtras.BuddyApi;
 using Microsoft.Extensions.DependencyInjection;
