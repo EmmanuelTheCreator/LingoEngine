@@ -2,22 +2,29 @@ using LingoEngine.FrameworkCommunication;
 
 namespace LingoEngine.Core;
 
-public class LingoDebugOverlay
+public class LingoDebugOverlay : ILingoClockListener
 {
     private readonly ILingoFrameworkDebugOverlay _framework;
     private bool _enabled;
     private float _accum;
     private int _frames;
     private float _fps;
-    private LingoPlayer _player;
+    private float _engineAccum;
+    private int _engineFrames;
+    private float _engineFps;
+    private readonly LingoPlayer _player;
+    private readonly LingoClock _clock;
 
     public LingoDebugOverlay(ILingoFrameworkDebugOverlay framework, LingoPlayer player)
     {
         _framework = framework;
         _player = player;
-        _framework.PrepareLine(1, $"FPS: {_fps:F1}");
-        _framework.PrepareLine(2, $"Sprites:0");
-        _framework.PrepareLine(3, $"Frame: 0");
+        _clock = (LingoClock)player.Clock;
+        _clock.Subscribe(this);
+        _framework.PrepareLine(1, $"UI FPS: {_fps:F1}");
+        _framework.PrepareLine(2, $"Engine FPS: {_engineFps:F1}");
+        _framework.PrepareLine(3, $"Sprites:0");
+        _framework.PrepareLine(4, $"Frame: 0");
     }
 
     public void Toggle()
@@ -32,14 +39,21 @@ public class LingoDebugOverlay
     public void Update(float deltaTime)
     {
         if (!_enabled) return;
-        
+
         _accum += deltaTime;
         _frames++;
+        _engineAccum += deltaTime;
         if (_accum >= 1f)
         {
             _fps = _frames / _accum;
             _accum = 0f;
             _frames = 0;
+        }
+        if (_engineAccum >= 1f)
+        {
+            _engineFps = _engineFrames / _engineAccum;
+            _engineAccum = 0f;
+            _engineFrames = 0;
         }
     }
 
@@ -48,10 +62,16 @@ public class LingoDebugOverlay
         if (!_enabled) return;
         var movie = _player.ActiveMovie as Movies.LingoMovie;
         _framework.Begin();
-        _framework.SetLineText(1, $"FPS: {_fps:F1}");
-        _framework.SetLineText(2, $"Sprites: {movie?.SpriteTotalCount ?? 0}");
-        _framework.SetLineText(3, $"Frame: {movie?.CurrentFrame ?? 0}");
+        _framework.SetLineText(1, $"UI FPS: {_fps:F1}");
+        _framework.SetLineText(2, $"Engine FPS: {_engineFps:F1}");
+        _framework.SetLineText(3, $"Sprites: {movie?.SpriteTotalCount ?? 0}");
+        _framework.SetLineText(4, $"Frame: {movie?.CurrentFrame ?? 0}");
         _framework.End();
+    }
+
+    public void OnTick()
+    {
+        _engineFrames++;
     }
 
     public void Prepare()
