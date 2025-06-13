@@ -23,5 +23,6 @@
         /// Frame labels
         /// </summary>
         public FileVWLBData? VWLB { get; set; }
+        public Archive Archive { get; internal set; }
     }
 }

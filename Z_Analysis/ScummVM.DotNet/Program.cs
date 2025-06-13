@@ -1,4 +1,5 @@
 ﻿using Director.IO;
+using Director.Primitives;
 using Director.ScummVM;
 using Director.Tools;
 
@@ -20,9 +21,28 @@ namespace Director
             LogHelper.Enable(DebugChannel.NoBytecode);
 
             var reader = new ArchiveFileLoader();
-            reader.ReadFile(filePath);
+            var fileData = reader.ReadFile(filePath);
+            if (IsMovieArchive(fileData.Archive))
+            {
+                //var movie = new Movie(archive);
+                //movie.Load();
+            }
+            else
+            {
+                var cast = new Cast(fileData.Archive, castLibID: 0);
+                cast.SetArchive(fileData.Archive);
+                cast.LoadArchive();
+            }
 
             Console.WriteLine("Done.");
+        }
+        private static bool IsMovieArchive(Archive archive)
+        {
+            // Placeholder heuristic:
+            // e.g. presence of specific tags, or a 'MV93' block inside, or Score/Cast resources
+            return archive.HasResource(ResourceTags.MV93, 1)
+                || archive.ListTags().Contains(ResourceTags.Lctx)  // 'Lctx' compiled script context
+                || archive.ListTags().Contains(ResourceTags.FCRD); // Frame/score data
         }
     }
 }
