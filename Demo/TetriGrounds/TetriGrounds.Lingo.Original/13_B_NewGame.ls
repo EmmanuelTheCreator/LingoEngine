@@ -1,0 +1,1 @@
+on mouseUp me  cursor -1  go to "Game"  endon mouseWithin me  cursor 280endon mouseleave me  cursor -1end

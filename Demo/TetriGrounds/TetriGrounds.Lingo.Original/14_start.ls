@@ -1,0 +1,1 @@
+on exitFrame me  go to "Game"end
