@@ -13,9 +13,12 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
 {
     private bool wasToggleKey;
     private LingoMovie? _movie;
-    private readonly ScrollContainer _scroller = new ScrollContainer();
+    private readonly ScrollContainer _hScroller = new ScrollContainer();
+    private readonly ScrollContainer _vScroller = new ScrollContainer();
+    private readonly Control _scrollContent = new Control();
     private readonly DirGodotScoreGrid _grid;
     private readonly DirGodotFrameHeader _header;
+    private readonly DirGodotFrameScriptsBar _frameScripts;
     private readonly DirGodotScoreLabelsBar _labelBar;
     private bool _dragging;
 
@@ -25,14 +28,27 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         Position = new Vector2(0, 30);
         _grid = new DirGodotScoreGrid();
         _header = new DirGodotFrameHeader();
+        _frameScripts = new DirGodotFrameScriptsBar();
         _labelBar = new DirGodotScoreLabelsBar();
-        AddChild(_labelBar);
-        AddChild(_header);
-        AddChild(_scroller);
-        _scroller.AddChild(_grid);
-        _scroller.Size = new Vector2(800, 580);
-        _scroller.Position = new Vector2(0, 60);
-        _labelBar.Position = new Vector2(0, 20);
+
+        AddChild(_hScroller);
+        _hScroller.ScrollVerticalEnabled = false;
+        _hScroller.Size = new Vector2(800, 580);
+        _hScroller.Position = new Vector2(0, 20);
+        _hScroller.AddChild(_scrollContent);
+
+        _scrollContent.AddChild(_labelBar);
+        _scrollContent.AddChild(_frameScripts);
+        _scrollContent.AddChild(_header);
+        _scrollContent.AddChild(_vScroller);
+
+        _vScroller.ScrollHorizontalEnabled = false;
+        _vScroller.AddChild(_grid);
+        _vScroller.Size = new Vector2(800, 520);
+        _vScroller.Position = new Vector2(0, 60);
+
+        _labelBar.Position = new Vector2(0, 0);
+        _frameScripts.Position = new Vector2(0, 20);
         _header.Position = new Vector2(0, 40);
     }
 
@@ -47,6 +63,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _movie = movie;
         _grid.SetMovie(movie);
         _header.SetMovie(movie);
+        _frameScripts.SetMovie(movie);
         _labelBar.SetMovie(movie);
     }
     public override void _GuiInput(InputEvent @event)
@@ -64,7 +81,9 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     {
         _grid.Dispose();
         _labelBar.Dispose();
-        _scroller.Dispose();
+        _frameScripts.Dispose();
+        _vScroller.Dispose();
+        _hScroller.Dispose();
         base.Dispose(disposing);
     }
 }
@@ -79,7 +98,7 @@ internal partial class DirGodotFrameHeader : Control
 
     public void SetMovie(LingoMovie? movie) => _movie = movie;
 
-    public override void _Draw()
+public override void _Draw()
     {
         if (_movie == null) return;
         int frameCount = _movie.FrameCount;
@@ -93,6 +112,59 @@ internal partial class DirGodotFrameHeader : Control
                 DrawString(font, new Vector2(x + 1, font.GetAscent()), f.ToString(),
                     HorizontalAlignment.Left, -1, 10, new Color("#a0a0a0"));
         }
+    }
+}
+
+internal partial class DirGodotFrameScriptsBar : Control
+{
+    private LingoMovie? _movie;
+    private const int ChannelHeight = 16;
+    private const int FrameWidth = 9;
+    private const int ChannelLabelWidth = 54;
+    private const int ChannelInfoWidth = ChannelHeight + ChannelLabelWidth;
+    private readonly List<DirGodotScoreSprite> _sprites = new();
+
+    public void SetMovie(LingoMovie? movie)
+    {
+        _movie = movie;
+        _sprites.Clear();
+        if (_movie == null) return;
+        foreach (var kv in _movie.GetFrameSpriteBehaviors())
+            _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
+    }
+
+    public override void _Draw()
+    {
+        if (_movie == null) return;
+        int frameCount = _movie.FrameCount;
+        var font = ThemeDB.FallbackFont;
+        Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth, 20);
+        DrawRect(new Rect2(0, 0, Size.X, 20), new Color("#f0f0f0"));
+        for (int f = 0; f < frameCount; f++)
+        {
+            float x = ChannelInfoWidth + f * FrameWidth;
+            if (f % 5 == 0)
+                DrawRect(new Rect2(x, 0, FrameWidth, ChannelHeight), new Color(0.3f, 0.3f, 0.3f, 0.2f));
+        }
+        for (int f = 0; f <= frameCount; f++)
+        {
+            float x = ChannelInfoWidth + f * FrameWidth;
+            DrawLine(new Vector2(x, 0), new Vector2(x, ChannelHeight), Colors.DarkGray);
+        }
+        DrawLine(new Vector2(0, 0), new Vector2(ChannelInfoWidth + frameCount * FrameWidth, 0), Colors.DarkGray);
+        DrawLine(new Vector2(0, ChannelHeight), new Vector2(ChannelInfoWidth + frameCount * FrameWidth, ChannelHeight), Colors.DarkGray);
+
+        foreach (var sp in _sprites)
+        {
+            float x = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
+            float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * FrameWidth;
+            sp.Draw(this, new Vector2(x, 0), width, ChannelHeight, font);
+        }
+
+        int cur = _movie.CurrentFrame - 1;
+        if (cur < 0) cur = 0;
+        float barX = ChannelInfoWidth + cur * FrameWidth + FrameWidth / 2f;
+        DrawLine(new Vector2(barX, 0), new Vector2(barX, ChannelHeight), Colors.Red, 2);
     }
 }
 internal partial class DirGodotScoreGrid : Control
@@ -119,8 +191,6 @@ internal partial class DirGodotScoreGrid : Control
             _sprites.Add(new DirGodotScoreSprite((LingoSprite)sp));
             idx++;
         }
-        foreach (var kv in _movie.GetFrameSpriteBehaviors())
-            _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
     }
 
     private void SelectSprite(DirGodotScoreSprite? sprite)
@@ -142,7 +212,7 @@ internal partial class DirGodotScoreGrid : Control
         if (@event is InputEventMouseButton mb)
         {
             Vector2 pos = GetLocalMousePosition();
-            int totalChannels = _movie.MaxSpriteChannelCount + 1;
+            int totalChannels = _movie.MaxSpriteChannelCount;
             int channel = (int)(pos.Y / ChannelHeight);
             if (mb.ButtonIndex == MouseButton.Left)
             {
@@ -160,7 +230,7 @@ internal partial class DirGodotScoreGrid : Control
 
                         foreach (var sp in _sprites)
                         {
-                            int sc = sp.IsFrameBehaviour ? _movie.MaxSpriteChannelCount : sp.Sprite.SpriteNum - 1;
+                            int sc = sp.Sprite.SpriteNum - 1;
                             if (sc == channel)
                             {
                                 float sx = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
@@ -218,7 +288,7 @@ internal partial class DirGodotScoreGrid : Control
     public override void _Draw()
     {
         if (!Visible || _movie == null) return;
-        int channelCount = _movie.MaxSpriteChannelCount + 1;
+        int channelCount = _movie.MaxSpriteChannelCount;
         int frameCount = _movie.FrameCount;
         var font = ThemeDB.FallbackFont;
         Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth, channelCount * ChannelHeight);
@@ -237,32 +307,23 @@ internal partial class DirGodotScoreGrid : Control
             DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * ChannelHeight), Colors.DarkGray);
         }
 
-        for (int c = 0; c <= channelCount; c++)
+        for (int c = 0; c < channelCount; c++)
         {
             float y = c * ChannelHeight;
             DrawLine(new Vector2(0, y), new Vector2(ChannelInfoWidth + frameCount * FrameWidth, y), Colors.DarkGray);
-            if (c < _movie.MaxSpriteChannelCount)
-            {
-                var ch = _movie.Channel(c);
-                Color vis = ch.Visibility ? Colors.LightGray : new Color(0.2f, 0.2f, 0.2f);
-                DrawRect(new Rect2(0, y, ChannelInfoWidth, ChannelHeight), new Color("#f0f0f0"));
-                DrawRect(new Rect2(0, y, ChannelHeight, ChannelHeight), vis);
-                DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6), (c + 1).ToString(),
-                    HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
-            }
-            else if (c == _movie.MaxSpriteChannelCount)
-            {
-                DrawRect(new Rect2(0, y, ChannelInfoWidth, ChannelHeight), new Color("#f0f0f0"));
-                DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6), "Frame",
-                    HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
-            }
+            var ch = _movie.Channel(c);
+            Color vis = ch.Visibility ? Colors.LightGray : new Color(0.2f, 0.2f, 0.2f);
+            DrawRect(new Rect2(0, y, ChannelInfoWidth, ChannelHeight), new Color("#f0f0f0"));
+            DrawRect(new Rect2(0, y, ChannelHeight, ChannelHeight), vis);
+            DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6), (c + 1).ToString(),
+                HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
         }
 
         // Draw sprites
         foreach (var sp in _sprites)
         {
-            int ch = sp.IsFrameBehaviour ? _movie.MaxSpriteChannelCount : sp.Sprite.SpriteNum - 1;
-            if (ch < 0 || ch > channelCount) continue;
+            int ch = sp.Sprite.SpriteNum - 1;
+            if (ch < 0 || ch >= channelCount) continue;
             float x = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
             float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * FrameWidth;
             float y = ch * ChannelHeight;
@@ -294,9 +355,9 @@ internal partial class DirGodotScoreLabelsBar : Control
         foreach (var kv in _movie.GetScoreLabels())
         {
             float x = ChannelInfoWidth + (kv.Value - 1) * FrameWidth;
-            Vector2[] pts = { new Vector2(x, 0), new Vector2(x + 10, 0), new Vector2(x + 5, 10) };
+            Vector2[] pts = { new Vector2(x, 5), new Vector2(x + 10, 5), new Vector2(x + 5, 15) };
             DrawPolygon(pts, new[] { Colors.Black });
-            DrawString(font, new Vector2(x + 12, font.GetAscent()), kv.Key,
+            DrawString(font, new Vector2(x + 12, font.GetAscent() + 5), kv.Key,
                 HorizontalAlignment.Left, -1, 10, Colors.Black);
         }
     }
