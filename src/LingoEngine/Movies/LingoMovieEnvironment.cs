@@ -100,5 +100,10 @@ namespace LingoEngine.Movies
         T? ILingoMovieEnvironment.GetMember<T>(int number, int? castLibNum = null) where T : class => _castLibsContainer.GetMember<T>(number, castLibNum);  
 
         T? ILingoMovieEnvironment.GetMember<T>(string name, int? castLibNum = null) where T : class => _castLibsContainer.GetMember<T>(name, castLibNum);
+
+        public void RaiseSpriteSelected(LingoSprite sprite)
+        {
+            _eventMediator.RaiseSpriteSelected(sprite);
+        }
     }
 }

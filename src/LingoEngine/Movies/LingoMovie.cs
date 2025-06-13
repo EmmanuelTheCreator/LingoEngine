@@ -554,7 +554,7 @@ namespace LingoEngine.Movies
         #endregion
 
 
-        internal LingoMovieEnvironment GetEnvironment() => _environment;
+        public LingoMovieEnvironment GetEnvironment() => _environment;
         public IServiceProvider GetServiceProvider() => _environment.GetServiceProvider();
 
         public void StartTimer() => Timer = 0;
@@ -580,10 +580,10 @@ namespace LingoEngine.Movies
                 _scoreLabels[name] = frameNumber;
         }
 
-        internal IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
-        internal IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
+        public IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
+        public IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
 
-        internal int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);
+        public int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);
 
         public ILingoMemberFactory New => _memberFactory;
 

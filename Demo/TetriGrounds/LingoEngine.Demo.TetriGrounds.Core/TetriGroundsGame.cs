@@ -24,7 +24,11 @@ namespace LingoEngine.Demo.TetriGrounds.Core
         }
         public ILingoMovie LoadMovie()
         {
-            _lingoPlayer.AddCastLib("Data",c => c.Add(LingoMemberType.Bitmap, 1, "MyBG", "/Medias/Data/Game.jpg"));
+            _lingoPlayer
+                .LoadCastLibFromCsv("Data", Path.Combine("Medias", "Data", "Members.csv"))
+                .LoadCastLibFromCsv("InternalExt", Path.Combine("Medias", "InternalExt", "Members.csv"))
+                ;
+            //_lingoPlayer.AddCastLib("Data",c => c.Add(LingoMemberType.Bitmap, 1, "MyBG", "/Medias/Data/Game.jpg"));
             _movie = _lingoPlayer.NewMovie(MovieName);
 
             AddLabels();
@@ -52,7 +56,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
             _movie.AddFrameBehavior<StartGameBehavior>(3);
             _movie.AddFrameBehavior<StayOnFrameFrameScript>(4);
             _movie.AddFrameBehavior<MouseDownNavigateWithStayBehavior>(11, b => b.TickWait = 60);
-            _movie.AddSprite(1, 1, 99, 320, 240).SetMember(MyBG);
+            _movie.AddSprite(1, 1, 15, 320, 240).SetMember(MyBG);
 
         }
 
