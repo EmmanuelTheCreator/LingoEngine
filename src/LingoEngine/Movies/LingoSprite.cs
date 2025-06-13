@@ -200,6 +200,8 @@ When a movie stops, events occur in the following order:
         {
             var member = _environment.GetMember<LingoMember>(memberName, castLibNum);
             _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
+            if (_Member != null)
+                RegPoint = _Member.RegPoint;
             _frameworkSprite.MemberChanged();
         }
 
@@ -208,11 +210,15 @@ When a movie stops, events occur in the following order:
         {
             var member = _environment.GetMember<LingoMember>(memberNumber, castLibNum);
             _Member = member ?? throw new Exception(Name + ":Member not found with number: " + memberNumber);
+            if (_Member != null)
+                RegPoint = _Member.RegPoint;
 
         }
         public void SetMember(ILingoMember? member)
         {
             _Member = member as LingoMember;
+            if (_Member != null)
+                RegPoint = _Member.RegPoint;
             _frameworkSprite.MemberChanged();
         }
 

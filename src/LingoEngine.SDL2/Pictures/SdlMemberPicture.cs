@@ -18,6 +18,7 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
     public int Width { get; private set; }
     public int Height { get; private set; }
     public SDL.SDL_Surface Texture => _surfacePtr;
+    internal nint Surface => _surface;
 
     internal void Init(LingoMemberPicture member)
     {

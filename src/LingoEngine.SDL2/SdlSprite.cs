@@ -75,10 +75,26 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
     internal void Render(nint renderer)
     {
         if (_texture == nint.Zero) return;
+        var offset = new LingoPoint();
+        if (_lingoSprite.Member is { } member)
+        {
+            var baseOffset = member.CenterOffsetFromRegPoint();
+            if (member.Width != 0 && member.Height != 0)
+            {
+                float scaleX = Width / member.Width;
+                float scaleY = Height / member.Height;
+                offset = new LingoPoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
+            }
+            else
+            {
+                offset = baseOffset;
+            }
+        }
+
         SDL.SDL_Rect dst = new SDL.SDL_Rect
         {
-            x = (int)X,
-            y = (int)Y,
+            x = (int)(X + offset.X),
+            y = (int)(Y + offset.Y),
             w = (int)Width,
             h = (int)Height
         };
@@ -98,10 +114,16 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
                     SDL.SDL_DestroyTexture(_texture);
                     _texture = nint.Zero;
                 }
-                
-                _texture = p.Texture.map;
-                Width = p.Width;
-                Height = p.Height;
+
+                if (p.Surface != nint.Zero)
+                {
+                    _texture = SDL.SDL_CreateTextureFromSurface(_renderer, p.Surface);
+                    if (_texture != nint.Zero)
+                    {
+                        Width = p.Width;
+                        Height = p.Height;
+                    }
+                }
                 break;
             case LingoMemberText text:
                 text.Framework<SdlMemberText>().Preload();
