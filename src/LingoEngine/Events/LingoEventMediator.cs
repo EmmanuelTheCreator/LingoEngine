@@ -1,4 +1,5 @@
 ﻿using LingoEngine.Inputs;
+using LingoEngine.Movies;
 
 namespace LingoEngine.Events
 {
@@ -21,6 +22,7 @@ namespace LingoEngine.Events
         private readonly List<IHasExitFrameEvent> _exitFrames = new();
         private readonly List<IHasFocusEvent> _focuss = new();
         private readonly List<IHasBlurEvent> _blurs = new();
+        private readonly List<IHasSpriteSelectedEvent> _spriteSelected = new();
         private readonly List<IHasKeyUpEvent> _keyUps = new();
         private readonly List<IHasKeyDownEvent> _keyDowns = new();
 
@@ -43,6 +45,7 @@ namespace LingoEngine.Events
             if (ms is IHasExitFrameEvent exitFrameEvent) _exitFrames.Add(exitFrameEvent);
             if (ms is IHasFocusEvent focusEvent) _focuss.Add(focusEvent);
             if (ms is IHasBlurEvent blurEvent) _blurs.Add(blurEvent);
+            if (ms is IHasSpriteSelectedEvent spriteSelected) _spriteSelected.Add(spriteSelected);
             if (ms is IHasKeyUpEvent keyUpEvent) _keyUps.Add(keyUpEvent);
             if (ms is IHasKeyDownEvent keyDownEvent) _keyDowns.Add(keyDownEvent);
         }
@@ -64,6 +67,7 @@ namespace LingoEngine.Events
             if (ms is IHasExitFrameEvent exitFrameEvent) _exitFrames.Remove(exitFrameEvent);
             if (ms is IHasFocusEvent focusEvent) _focuss.Remove(focusEvent);
             if (ms is IHasBlurEvent blurEvent) _blurs.Remove(blurEvent);
+            if (ms is IHasSpriteSelectedEvent spriteSelected) _spriteSelected.Remove(spriteSelected);
             if (ms is IHasKeyUpEvent keyUpEvent) _keyUps.Remove(keyUpEvent);
             if (ms is IHasKeyDownEvent keyDownEvent) _keyDowns.Remove(keyDownEvent);
         }
@@ -85,6 +89,7 @@ namespace LingoEngine.Events
         public void RaiseBlur() => _blurs.ForEach(x => x.Blur());
         public void RaiseKeyUp(LingoKey key) => _keyUps.ForEach(x => x.KeyUp(key));
         public void RaiseKeyDown(LingoKey key) => _keyDowns.ForEach(x => x.KeyDown(key));
+        public void RaiseSpriteSelected(LingoSprite sprite) => _spriteSelected.ForEach(x => x.SpriteSelected(sprite));
 
 
     }

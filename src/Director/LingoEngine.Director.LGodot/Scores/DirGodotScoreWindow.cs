@@ -1,6 +1,7 @@
 using Godot;
 using LingoEngine.Movies;
 using System;
+using System.Collections.Generic;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -15,6 +16,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     private readonly ScrollContainer _scroller = new ScrollContainer();
     private readonly DirGodotScoreGrid _grid;
     private readonly DirGodotFrameHeader _header;
+    private readonly DirGodotScoreLabelsBar _labelBar;
     private bool _dragging;
 
     public DirGodotScoreWindow()
@@ -23,12 +25,15 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         Position = new Vector2(0, 30);
         _grid = new DirGodotScoreGrid();
         _header = new DirGodotFrameHeader();
+        _labelBar = new DirGodotScoreLabelsBar();
+        AddChild(_labelBar);
         AddChild(_header);
         AddChild(_scroller);
         _scroller.AddChild(_grid);
         _scroller.Size = new Vector2(800, 580);
-        _scroller.Position = new Vector2(0, 40);
-        _header.Position = new Vector2(0, 20);
+        _scroller.Position = new Vector2(0, 60);
+        _labelBar.Position = new Vector2(0, 20);
+        _header.Position = new Vector2(0, 40);
     }
 
     public void Toggle()
@@ -42,6 +47,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _movie = movie;
         _grid.SetMovie(movie);
         _header.SetMovie(movie);
+        _labelBar.SetMovie(movie);
     }
     public override void _GuiInput(InputEvent @event)
     {
@@ -57,6 +63,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     protected override void Dispose(bool disposing)
     {
         _grid.Dispose();
+        _labelBar.Dispose();
         _scroller.Dispose();
         base.Dispose(disposing);
     }
@@ -98,9 +105,36 @@ internal partial class DirGodotScoreGrid : Control
     private ILingoSprite? _dragSprite;
     private bool _dragBegin;
     private bool _dragEnd;
+    private readonly List<DirGodotScoreSprite> _sprites = new();
+    private DirGodotScoreSprite? _selected;
 
+    public void SetMovie(LingoMovie? movie)
+    {
+        _movie = movie;
+        _sprites.Clear();
+        if (_movie == null) return;
+        int idx = 1;
+        while (_movie.TryGetAllTimeSprite(idx, out var sp))
+        {
+            _sprites.Add(new DirGodotScoreSprite((LingoSprite)sp));
+            idx++;
+        }
+        foreach (var kv in _movie.GetFrameSpriteBehaviors())
+            _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
+    }
 
-    public void SetMovie(LingoMovie? movie) => _movie = movie;
+    private void SelectSprite(DirGodotScoreSprite? sprite)
+    {
+        if (_selected == sprite) return;
+        if (_selected != null) _selected.Selected = false;
+        _selected = sprite;
+        if (_selected != null)
+        {
+            _selected.Selected = true;
+            _movie?.GetEnvironment().Events.RaiseSpriteSelected(_selected.Sprite);
+        }
+        QueueRedraw();
+    }
 
     public override void _Input(InputEvent @event)
     {
@@ -108,14 +142,15 @@ internal partial class DirGodotScoreGrid : Control
         if (@event is InputEventMouseButton mb)
         {
             Vector2 pos = GetLocalMousePosition();
+            int totalChannels = _movie.MaxSpriteChannelCount + 1;
             int channel = (int)(pos.Y / ChannelHeight);
             if (mb.ButtonIndex == MouseButton.Left)
             {
                 if (mb.Pressed)
                 {
-                    if (channel >= 0 && channel < _movie.MaxSpriteChannelCount)
+                    if (channel >= 0 && channel < totalChannels)
                     {
-                        if (pos.X >= 0 && pos.X < ChannelHeight)
+                        if (channel < _movie.MaxSpriteChannelCount && pos.X >= 0 && pos.X < ChannelHeight)
                         {
                             var ch = _movie.Channel(channel);
                             ch.Visibility = !ch.Visibility;
@@ -123,32 +158,34 @@ internal partial class DirGodotScoreGrid : Control
                             return;
                         }
 
-                        int idx = 1;
-                        while (_movie.TryGetAllTimeSprite(idx, out var sp))
+                        foreach (var sp in _sprites)
                         {
-                            int sc = sp.SpriteNum - 1;
+                            int sc = sp.IsFrameBehaviour ? _movie.MaxSpriteChannelCount : sp.Sprite.SpriteNum - 1;
                             if (sc == channel)
                             {
-                                float sx = ChannelInfoWidth + (sp.BeginFrame - 1) * FrameWidth;
-                                float ex = ChannelInfoWidth + sp.EndFrame * FrameWidth;
+                                float sx = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
+                                float ex = ChannelInfoWidth + sp.Sprite.EndFrame * FrameWidth;
                                 if (pos.X >= sx && pos.X <= ex)
                                 {
                                     if (Math.Abs(pos.X - sx) < 3)
                                     {
-                                        _dragSprite = sp;
+                                        _dragSprite = sp.Sprite;
                                         _dragBegin = true;
                                         _dragEnd = false;
                                     }
                                     else if (Math.Abs(pos.X - ex) < 3)
                                     {
-                                        _dragSprite = sp;
+                                        _dragSprite = sp.Sprite;
                                         _dragBegin = false;
                                         _dragEnd = true;
+                                    }
+                                    else
+                                    {
+                                        SelectSprite(sp);
                                     }
                                     break;
                                 }
                             }
-                            idx++;
                         }
                     }
                 }
@@ -181,10 +218,11 @@ internal partial class DirGodotScoreGrid : Control
     public override void _Draw()
     {
         if (!Visible || _movie == null) return;
-        int channelCount = _movie.MaxSpriteChannelCount;
+        int channelCount = _movie.MaxSpriteChannelCount + 1;
         int frameCount = _movie.FrameCount;
         var font = ThemeDB.FallbackFont;
         Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth, channelCount * ChannelHeight);
+        CustomMinimumSize = Size;
 
         for (int f = 0; f < frameCount; f++)
         {
@@ -203,7 +241,7 @@ internal partial class DirGodotScoreGrid : Control
         {
             float y = c * ChannelHeight;
             DrawLine(new Vector2(0, y), new Vector2(ChannelInfoWidth + frameCount * FrameWidth, y), Colors.DarkGray);
-            if (c < channelCount)
+            if (c < _movie.MaxSpriteChannelCount)
             {
                 var ch = _movie.Channel(c);
                 Color vis = ch.Visibility ? Colors.LightGray : new Color(0.2f, 0.2f, 0.2f);
@@ -212,27 +250,54 @@ internal partial class DirGodotScoreGrid : Control
                 DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6), (c + 1).ToString(),
                     HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
             }
+            else if (c == _movie.MaxSpriteChannelCount)
+            {
+                DrawRect(new Rect2(0, y, ChannelInfoWidth, ChannelHeight), new Color("#f0f0f0"));
+                DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6), "Frame",
+                    HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
+            }
         }
 
         // Draw sprites
-        int index = 1;
-        while (_movie.TryGetAllTimeSprite(index, out var sprite))
+        foreach (var sp in _sprites)
         {
-            int ch = sprite.SpriteNum - 1;
-            if (ch < 0 || ch >= channelCount) { index++; continue; }
-            float x = ChannelInfoWidth + (sprite.BeginFrame - 1) * FrameWidth;
-            float width = (sprite.EndFrame - sprite.BeginFrame + 1) * FrameWidth;
+            int ch = sp.IsFrameBehaviour ? _movie.MaxSpriteChannelCount : sp.Sprite.SpriteNum - 1;
+            if (ch < 0 || ch > channelCount) continue;
+            float x = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
+            float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * FrameWidth;
             float y = ch * ChannelHeight;
-            DrawRect(new Rect2(x, y, width, ChannelHeight), new Color("#ccccff"));
-            if (sprite.Member != null)
-                DrawString(font, new Vector2(x + 2, y + font.GetAscent() - 2), sprite.Member.Name ?? string.Empty,
-                    HorizontalAlignment.Left, width - 4, 11, Colors.Black);
-            index++;
+            sp.Draw(this, new Vector2(x, y), width, ChannelHeight, font);
         }
 
         int cur = _movie.CurrentFrame - 1;
         if (cur < 0) cur = 0;
         float barX = ChannelInfoWidth + cur * FrameWidth + FrameWidth / 2f;
         DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * ChannelHeight), Colors.Red, 2);
+    }
+}
+
+internal partial class DirGodotScoreLabelsBar : Control
+{
+    private LingoMovie? _movie;
+    private const int ChannelHeight = 16;
+    private const int FrameWidth = 9;
+    private const int ChannelLabelWidth = 54;
+    private const int ChannelInfoWidth = ChannelHeight + ChannelLabelWidth;
+    public void SetMovie(LingoMovie? movie) => _movie = movie;
+    public override void _Draw()
+    {
+        if (_movie == null) return;
+        int frameCount = _movie.FrameCount;
+        var font = ThemeDB.FallbackFont;
+        Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth, 20);
+        DrawRect(new Rect2(0, 0, Size.X, 20), Colors.White);
+        foreach (var kv in _movie.GetScoreLabels())
+        {
+            float x = ChannelInfoWidth + (kv.Value - 1) * FrameWidth;
+            Vector2[] pts = { new Vector2(x, 0), new Vector2(x + 10, 0), new Vector2(x + 5, 10) };
+            DrawPolygon(pts, new[] { Colors.Black });
+            DrawString(font, new Vector2(x + 12, font.GetAscent()), kv.Key,
+                HorizontalAlignment.Left, -1, 10, Colors.Black);
+        }
     }
 }
