@@ -1,11 +1,16 @@
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Movies;
-using LingoEngine.Pictures;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
+using LingoEngineSDL2.Core;
+using LingoEngineSDL2.Movies;
+using LingoEngineSDL2.Pictures;
+using LingoEngineSDL2.Sounds;
+using LingoEngineSDL2.Texts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngineSDL2;
@@ -73,7 +78,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     }
     public LingoMemberField CreateMemberField(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
     {
-        var impl = new SdlMemberField(new SdlFontManager());
+        var impl = new SdlMemberField(_serviceProvider.GetRequiredService<ILingoFontManager>());
         var member = new LingoMemberField((LingoCast)cast, impl, numberInCast, name, fileName ?? "", regPoint);
         impl.Init(member);
         _disposables.Add(impl);
@@ -81,7 +86,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     }
     public LingoMemberText CreateMemberText(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
     {
-        var impl = new SdlMemberText(new SdlFontManager());
+        var impl = new SdlMemberText(_serviceProvider.GetRequiredService<ILingoFontManager>());
         var member = new LingoMemberText((LingoCast)cast, impl, numberInCast, name, fileName ?? "", regPoint);
         impl.Init(member);
         _disposables.Add(impl);

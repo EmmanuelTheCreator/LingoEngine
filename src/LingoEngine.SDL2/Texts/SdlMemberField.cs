@@ -1,3 +1,4 @@
+using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Texts;
 
 namespace LingoEngineSDL2.Texts;

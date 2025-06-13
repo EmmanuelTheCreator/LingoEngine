@@ -1,12 +1,17 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.Movies;
 
 namespace LingoEngine.Sounds
 {
     public class LingoSoundDevice
     {
-
+        public int Index { get; }
+        public string Name{ get; }
+        public LingoSoundDevice(int i, string name)
+        {
+            Index = i;
+            Name = name;
+        }
     }
     /// <summary>
     /// Represents the sound system in a Lingo movie, including device settings and channel access.
@@ -81,7 +86,7 @@ namespace LingoEngine.Sounds
         public T FrameworkObj<T>() where T : ILingoFrameworkSound => (T)_frameworkSound;
 
         /// <inheritdoc/>
-        public LingoSoundDevice SoundDevice { get; set; } = new LingoSoundDevice();
+        public LingoSoundDevice SoundDevice { get; set; } = new LingoSoundDevice(0,"Default");
 
         /// <inheritdoc/>
         public List<LingoSoundDevice> SoundDeviceList { get => _frameworkSound.SoundDeviceList; }

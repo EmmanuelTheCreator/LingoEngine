@@ -34,7 +34,7 @@ public class SdlSound : ILingoFrameworkSound
         for (int i = 0; i < count; i++)
         {
             var name = SDL.SDL_GetAudioDeviceName(i, 0);
-            _devices.Add(new LingoSoundDevice(i, Marshal.PtrToStringAnsi(name) ?? string.Empty));
+            _devices.Add(new LingoSoundDevice(i, name ?? string.Empty));
         }
     }
 }

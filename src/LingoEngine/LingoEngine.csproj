@@ -5,11 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>12</LangVersion>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="Texts\LingoParagraphs.cs" />
-  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
