@@ -1,4 +1,5 @@
 ﻿using Director.IO;
+using System.IO;
 using Director.Primitives;
 using Director.ScummVM;
 using Director.Tools;
@@ -9,6 +10,15 @@ namespace Director
     {
         public static void Main(string[] args)
         {
+            if (args.Length >= 2 && args[0] == "export-cast")
+            {
+                var input = args[1];
+                var output = args.Length >= 3 ? args[2] : "Export";
+                CastExporter.Export(input, output);
+                Console.WriteLine($"Cast exported to '{output}'.");
+                return;
+            }
+
             //var filePath = args.Length > 0 ? args[0] : "ScoresExt.cst";
             var filePath = args.Length > 0 ? args[0] : "arkanoi3.cxt";
             //var filePath = args.Length > 0 ? args[0] : "AutoDismisser.dir";
