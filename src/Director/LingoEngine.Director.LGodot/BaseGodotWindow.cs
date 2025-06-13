@@ -19,7 +19,7 @@ namespace LingoEngine.Director.LGodot
 
         public override void _Draw()
         {
-            DrawRect(new Rect2(0, 0, Size.X, 20), new Color(0.3f, 0.3f, 0.2f));
+            DrawRect(new Rect2(0, 0, Size.X, 20), new Color("#d2e0ed"));
             DrawLine(new Vector2(0, 20), new Vector2(Size.X, 20), Colors.Black);
         }
 
