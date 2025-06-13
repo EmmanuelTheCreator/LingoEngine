@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c1vflmxnjv02d"
+
+[deps]
+
+files=["res://Medias/InternalExt/Members.Type.translation", "res://Medias/InternalExt/Members.Name.translation", "res://Medias/InternalExt/Members.Registration Point.translation", "res://Medias/InternalExt/Members.Filename.translation"]
+
+source_file="res://Medias/InternalExt/Members.csv"
+dest_files=["res://Medias/InternalExt/Members.Type.translation", "res://Medias/InternalExt/Members.Name.translation", "res://Medias/InternalExt/Members.Registration Point.translation", "res://Medias/InternalExt/Members.Filename.translation"]
+
+[params]
+
+compress=true
+delimiter=0
