@@ -50,7 +50,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
         {
             var MyBG = _movie.Member["MyBG"];
             _movie.AddFrameBehavior<StartGameBehavior>(3);
-            _movie.AddFrameBehavior<StayOnFrameFrameScript>(90000);
+            _movie.AddFrameBehavior<StayOnFrameFrameScript>(4);
             _movie.AddFrameBehavior<MouseDownNavigateWithStayBehavior>(11, b => b.TickWait = 60);
             _movie.AddSprite(1, 1, 99, 320, 240).SetMember(MyBG);
 

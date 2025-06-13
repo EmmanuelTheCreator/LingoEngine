@@ -7,34 +7,41 @@ internal class SdlDebugOverlay : ILingoFrameworkDebugOverlay
 {
     private readonly nint _renderer;
     private nint _font;
+    private bool _show;
+    private SDL.SDL_Color _white;
 
     public SdlDebugOverlay(nint renderer)
     {
         _renderer = renderer;
-        if (SDL_ttf.TTF_Init() != 0)
-            throw new Exception($"TTF_Init failed: {SDL.SDL_GetError()}");
-        string fullFileName = GEtFileName();
+       
+        string fullFileName = GetFileName();
         _font = SDL_ttf.TTF_OpenFont(fullFileName, 12);
         if (_font == IntPtr.Zero)
             throw new Exception($"TTF_OpenFont failed: {SDL.SDL_GetError()}");
+        _white = new SDL.SDL_Color { r = 255, g = 255, b = 255, a = 255 };
     }
 
     public void Begin() { }
-    public void RenderLine(int x, int y, string text)
+   
+    public void ShowDebugger()
     {
-        RenderText(text, x, y);
+        _show = true;
     }
 
-    private static string GEtFileName()
+    public void HideDebugger()
     {
-        return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Fonts" + Path.DirectorySeparatorChar + "Tahoma.ttf";
+        _show = false;
     }
 
-    public void RenderText(string text, int x, int y)
+    public int PrepareLine(int id, string text)
     {
-        SDL.SDL_Color white = new SDL.SDL_Color { r = 255, g = 255, b = 255, a = 255 };
+        return id;
+    }
 
-        IntPtr surface = SDL_ttf.TTF_RenderUTF8_Blended(_font, text, white);
+
+    public void SetLineText(int id, string text)
+    {
+        IntPtr surface = SDL_ttf.TTF_RenderUTF8_Blended(_font, text, _white);
         if (surface == IntPtr.Zero)
             throw new Exception($"TTF_RenderUTF8_Blended failed: {SDL.SDL_GetError()}");
 
@@ -43,13 +50,18 @@ internal class SdlDebugOverlay : ILingoFrameworkDebugOverlay
             throw new Exception($"SDL_CreateTextureFromSurface failed: {SDL.SDL_GetError()}");
 
         SDL.SDL_QueryTexture(texture, out _, out _, out int w, out int h);
-        SDL.SDL_Rect dstRect = new SDL.SDL_Rect { x = x, y = y, w = w, h = h };
+        SDL.SDL_Rect dstRect = new SDL.SDL_Rect { x = 20, y = id*15, w = w, h = h };
 
         SDL.SDL_RenderCopy(_renderer, texture, IntPtr.Zero, ref dstRect);
 
         SDL.SDL_DestroyTexture(texture);
         SDL.SDL_FreeSurface(surface);
     }
+
+
+    private static string GetFileName() => Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Fonts" + Path.DirectorySeparatorChar + "Tahoma.ttf";
+
+   
     public void End() { }
     public void Dispose()
     {
@@ -59,6 +71,8 @@ internal class SdlDebugOverlay : ILingoFrameworkDebugOverlay
             _font = IntPtr.Zero;
         }
 
-        SDL_ttf.TTF_Quit();
+        
     }
+
+   
 }

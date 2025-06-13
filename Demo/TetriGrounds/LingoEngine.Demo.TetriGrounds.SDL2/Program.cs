@@ -15,7 +15,8 @@ namespace LingoEngine.Demo.TetriGrounds.SDL2
 
             var movie = serviceProvider.SetupGame();
             var game = serviceProvider.StartGame();
-            serviceProvider.GetRequiredService<SdlRootContext>().Run(game.LingoPlayer);
+            serviceProvider.GetRequiredService<SdlRootContext>().Run();
+            SdlSetup.Dispose();
         }
     }
 
