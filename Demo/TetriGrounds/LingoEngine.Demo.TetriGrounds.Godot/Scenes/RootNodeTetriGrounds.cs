@@ -37,7 +37,7 @@ public partial class RootNodeTetriGrounds : Node2D
 
 
             _services = new ServiceCollection();
-            TetriGroundsSetup.RegisterServices(_services, c => c
+            TetriGroundsSetup.AddTetriGrounds(_services, c => c
                     .WithLingoGodotEngine(this));
                     //.WithDirectorGodotEngine(this));
             var serviePrider = _services.BuildServiceProvider();
