@@ -15,42 +15,26 @@ namespace Director.IO
     {
         public static byte foreColor { get; private set; }
 
-        public void ReadFile(string fileName)
+        public DirectorFileData ReadFile(string fileName)
         {
             var archive = new Archive(isBigEndian: true);
             LoadInto(archive, fileName);
             LogHelper.DebugLog(2, DebugChannel.Loading, $"Tags: {string.Join(',',archive.ListTagStringsWithId())}");
 
             var dirData = new DirectorFileData();
+            dirData.Archive = archive;
             dirData.IMap = ReadIMap(archive.GetResource(ResourceTags.Imap, 0));
             dirData.MMap = ReadMMap(archive.TryGetResource(ResourceTags.Mmap, 0));
             dirData.KeyStar = ReadKeyStar(archive.GetResource(ResourceTags.KEYStar, 0));
             dirData.DRCF = ReadDRCF(archive.GetResource(ResourceTags.DRCF, 0));
             dirData.VWSC = ReadVWSC(archive.TryGetResource(ResourceTags.VWSC, 0));
             dirData.VWLB = ReadVWLB(archive.TryGetResource(ResourceTags.VWLB, 0));
+            return dirData;
 
-
-            if (IsMovieArchive(archive))
-            {
-                //var movie = new Movie(archive);
-                //movie.Load();
-            }
-            else
-            {
-                var cast = new Cast(archive, castLibID: 0);
-                cast.SetArchive(archive);
-                cast.LoadArchive();
-            }
+            
         }
 
-        private bool IsMovieArchive(Archive archive)
-        {
-            // Placeholder heuristic:
-            // e.g. presence of specific tags, or a 'MV93' block inside, or Score/Cast resources
-            return archive.HasResource(ResourceTags.MV93, 1)
-                || archive.ListTags().Contains(ResourceTags.Lctx)  // 'Lctx' compiled script context
-                || archive.ListTags().Contains(ResourceTags.FCRD); // Frame/score data
-        }
+       
 
         public void LoadInto(Archive archive, string path)
         {
