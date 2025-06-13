@@ -142,4 +142,12 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         mouseImpl.SetLingoMouse(mouse);
         return mouse;
     }
+
+    public LingoKey CreateKey()
+    {
+        var impl = _rootContext.Key;
+        var key = new LingoKey(impl);
+        impl.SetLingoKey(key);
+        return key;
+    }
 }
