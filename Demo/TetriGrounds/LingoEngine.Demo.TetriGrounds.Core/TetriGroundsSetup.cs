@@ -3,6 +3,7 @@ using LingoEngine;
 using LingoEngine.Movies;
 using LingoEngine.Demo.TetriGrounds.Core.MovieScripts;
 using LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals;
+using LingoEngine.Demo.TetriGrounds.Core.ParentScripts;
 
 namespace LingoEngine.Demo.TetriGrounds.Core
 {
@@ -28,6 +29,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                             .AddBehavior<StartGameBehavior>()
                             .AddBehavior<StayOnFrameFrameScript>()
                             .AddBehavior<WaiterFrameScript>()
+                            .AddParentScript<TestParentScript>()
                             // Other
                         );
                     registration(config);

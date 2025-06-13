@@ -10,19 +10,20 @@ namespace Director
     {
         public static void Main(string[] args)
         {
-            if (args.Length >= 2 && args[0] == "export-cast")
-            {
-                var input = args[1];
-                var output = args.Length >= 3 ? args[2] : "Export";
-                CastExporter.Export(input, output);
-                Console.WriteLine($"Cast exported to '{output}'.");
-                return;
-            }
-
-            //var filePath = args.Length > 0 ? args[0] : "ScoresExt.cst";
+            // var filePath = args.Length > 0 ? args[0] : "ScoresExt.cst";
             var filePath = args.Length > 0 ? args[0] : "arkanoi3.cxt";
             //var filePath = args.Length > 0 ? args[0] : "AutoDismisser.dir";
             //var filePath = args.Length > 0 ? args[0] : "pinballV2_21.dir";
+
+            //if (args.Length >= 2 && args[0] == "export-cast")
+            //{
+                var output = args.Length >= 3 ? args[2] : "Export";
+                CastExporter.Export(filePath, output);
+                Console.WriteLine($"Cast exported to '{output}'.");
+                return;
+            //}
+
+            
             ConfMan.SetBool("dump_scripts", true);
             LogHelper.SetLevel(-1); // or a specific level like 3 or 5
             LogHelper.Enable(DebugChannel.Loading);

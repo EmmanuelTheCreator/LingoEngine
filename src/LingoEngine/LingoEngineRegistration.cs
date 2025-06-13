@@ -18,6 +18,7 @@ namespace LingoEngine
     public interface IMovieRegistration
     {
         IMovieRegistration AddBehavior<T>() where T : LingoSpriteBehavior;
+        IMovieRegistration AddParentScript<T>() where T : LingoParentScript;
         IMovieRegistration AddMovieScript<T>() where T : LingoMovieScript;
     }
     public static class LingoEngineRegistrationExtensions
@@ -138,6 +139,11 @@ namespace LingoEngine
                 _MovieScripts.Add(movie => {
                     movie.AddMovieScript<T>();
                     });
+                return this;
+            }
+            public IMovieRegistration AddParentScript<T>() where T : LingoParentScript
+            {
+                _container.AddTransient<T>();
                 return this;
             }
 
