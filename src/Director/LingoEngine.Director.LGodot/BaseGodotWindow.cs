@@ -5,17 +5,22 @@ namespace LingoEngine.Director.LGodot
     public  abstract partial class BaseGodotWindow : Control
     {
         private bool _dragging;
-        private Label _label = new Label();
+        private readonly Label _label = new Label();
 
         public BaseGodotWindow(string name)
         {
-            DrawRect(new Rect2(0, 0, 800, 20), new Color(0.3f, 0.3f, 0.2f));
             AddChild(_label);
             _label.Position = new Vector2(30, 3);
             _label.LabelSettings = new LabelSettings();
             _label.LabelSettings.FontSize = 12;
             _label.LabelSettings.FontColor = new Color(1, 0.3f, 0.2f);
             _label.Text = name;
+        }
+
+        public override void _Draw()
+        {
+            DrawRect(new Rect2(0, 0, Size.X, 20), new Color(0.3f, 0.3f, 0.2f));
+            DrawLine(new Vector2(0, 20), new Vector2(Size.X, 20), Colors.Black);
         }
 
         public override void _GuiInput(InputEvent @event)
