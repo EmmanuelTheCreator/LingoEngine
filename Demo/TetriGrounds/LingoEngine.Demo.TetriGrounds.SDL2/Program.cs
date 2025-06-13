@@ -9,13 +9,15 @@ namespace LingoEngine.Demo.Tetris.SDL2
     {
         static void Main(string[] args)
         {
-            var _services = new ServiceCollection();
-            TetriGroundsSetup.RegisterServices(_services, c => c
-                        .WithLingoSdlEngine());
-            var serviePrider = _services.BuildServiceProvider();
+            var services = new ServiceCollection();
+            TetriGroundsSetup.RegisterServices(services, c => c
+                        .WithLingoSdlEngine("TetriGrounds", 640, 480));
+            var serviceProvider = services.BuildServiceProvider();
 
-            var movie = TetriGroundsSetup.SetupGame(serviePrider);
-            TetriGroundsSetup.StartGame(serviePrider);
+            TetriGroundsSetup.SetupGame(serviceProvider);
+            var game = TetriGroundsSetup.StartGame(serviceProvider);
+
+            SdlGameHost.Run(serviceProvider, game.LingoPlayer.Clock);
         }
     }
 
