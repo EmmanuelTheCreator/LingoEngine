@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
@@ -8,6 +9,7 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
 {
     private readonly LingoClock _clock;
     private LingoStage _stage = null!;
+    private readonly HashSet<SdlMovie> _movies = new();
     private SdlMovie? _activeMovie;
 
     public SdlStage(LingoClock clock)
@@ -22,11 +24,11 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
 
     internal void ShowMovie(SdlMovie movie)
     {
-        // TODO: add to SDL window
+        _movies.Add(movie);
     }
     internal void HideMovie(SdlMovie movie)
     {
-        // TODO: remove from SDL window
+        _movies.Remove(movie);
     }
 
     public void SetActiveMovie(LingoMovie? lingoMovie)
@@ -38,5 +40,5 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
         movie.Show();
     }
 
-    public void Dispose() { }
+    public void Dispose() { _movies.Clear(); }
 }
