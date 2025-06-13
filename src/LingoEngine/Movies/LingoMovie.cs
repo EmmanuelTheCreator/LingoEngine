@@ -580,6 +580,9 @@ namespace LingoEngine.Movies
                 _scoreLabels[name] = frameNumber;
         }
 
+        internal IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
+        internal IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
+
         internal int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);
 
         public ILingoMemberFactory New => _memberFactory;
