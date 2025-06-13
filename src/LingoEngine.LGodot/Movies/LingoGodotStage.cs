@@ -35,7 +35,7 @@ namespace LingoEngine.LGodot.Movies
             {
                 _overlay.Update((float)delta);
                 bool f1 = _player.Key.KeyPressed((int)Key.F1);
-                if (_player.Key.ControlDown && f1 && !_f1Down)
+                if (f1 && !_f1Down)
                     _overlay.Toggle();
                 _f1Down = f1;
                 _overlay.Render();

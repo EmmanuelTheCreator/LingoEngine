@@ -31,28 +31,23 @@ public class SdlRootContext : IDisposable
        
         bool running = true;
         uint last = SDL.SDL_GetTicks();
-        float frameDuration = 1000f / clock.FrameRate;
         while (running)
         {
-            uint frameStart = SDL.SDL_GetTicks();
             while (SDL.SDL_PollEvent(out var e) == 1)
             {
                 if (e.type == SDL.SDL_EventType.SDL_QUIT)
                     running = false;
                 Key.ProcessEvent(e);
             }
-            float delta = (frameStart - last) / 1000f;
-            last = frameStart;
+            uint now = SDL.SDL_GetTicks();
+            float delta = (now - last) / 1000f;
+            last = now;
             DebugOverlay.Update(delta);
             bool f1 = _lPlayer.Key.KeyPressed((int)SDL.SDL_Keycode.SDLK_F1);
-            if (_lPlayer.Key.ControlDown && f1 && !_f1Pressed)
+            if ( f1 && !_f1Pressed)
                 DebugOverlay.Toggle();
             _f1Pressed = f1;
             clock.Tick(delta);
-
-            uint elapsed = SDL.SDL_GetTicks() - frameStart;
-            if (elapsed < frameDuration)
-                SDL.SDL_Delay((uint)(frameDuration - elapsed));
         }
         Dispose();
     }
