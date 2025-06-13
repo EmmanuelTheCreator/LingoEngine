@@ -1,6 +1,8 @@
 namespace LingoEngineSDL2;
 
-public class SdlRootContext
+using SDL2;
+
+public class SdlRootContext : IDisposable
 {
     public IntPtr Window { get; }
     public IntPtr Renderer { get; }
@@ -9,5 +11,19 @@ public class SdlRootContext
     {
         Window = window;
         Renderer = renderer;
+    }
+
+    public void Dispose()
+    {
+        if (Renderer != IntPtr.Zero)
+        {
+            SDL.SDL_DestroyRenderer(Renderer);
+        }
+        if (Window != IntPtr.Zero)
+        {
+            SDL.SDL_DestroyWindow(Window);
+        }
+        SDL_image.IMG_Quit();
+        SDL.SDL_Quit();
     }
 }

@@ -8,14 +8,18 @@ namespace LingoEngineSDL2.Movies;
 public class SdlStage : ILingoFrameworkStage, IDisposable
 {
     private readonly LingoClock _clock;
+    private readonly SdlRootContext _rootContext;
     private LingoStage _stage = null!;
     private readonly HashSet<SdlMovie> _movies = new();
     private SdlMovie? _activeMovie;
 
-    public SdlStage(LingoClock clock)
+    public SdlStage(SdlRootContext rootContext, LingoClock clock)
     {
+        _rootContext = rootContext;
         _clock = clock;
     }
+
+    internal SdlRootContext RootContext => _rootContext;
 
     internal void Init(LingoStage stage)
     {

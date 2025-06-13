@@ -15,6 +15,8 @@ namespace LingoEngine.Demo.TetriGrounds.Core
         private ILingoMovie _movie;
 
 
+        public LingoPlayer LingoPlayer => _lingoPlayer;
+
         public TetriGroundsGame(IServiceProvider serviceProvider)
         {
             _lingoPlayer = serviceProvider.GetRequiredService<ILingoEngineRegistration>().Build();

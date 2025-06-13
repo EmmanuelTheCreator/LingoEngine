@@ -1,6 +1,7 @@
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
+using SDL2;
 
 namespace LingoEngineSDL2.Movies;
 
@@ -25,13 +26,23 @@ public class SdlMovie : ILingoFrameworkMovie, IDisposable
 
     public void UpdateStage()
     {
-        foreach(var s in _drawnSprites)
+        var renderer = _stage.RootContext.Renderer;
+        SDL.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL.SDL_RenderClear(renderer);
+        foreach (var s in _drawnSprites)
+        {
             s.Update();
+            s.Render(renderer);
+        }
+        SDL.SDL_RenderPresent(renderer);
     }
 
     internal void CreateSprite<T>(T lingoSprite) where T : LingoSprite
     {
-        var sprite = new SdlSprite(lingoSprite, s => _drawnSprites.Add(s), s => _drawnSprites.Remove(s), s => { _drawnSprites.Remove(s); _allSprites.Remove(s); });
+        var sprite = new SdlSprite(lingoSprite, _stage.RootContext.Renderer,
+            s => _drawnSprites.Add(s),
+            s => _drawnSprites.Remove(s),
+            s => { _drawnSprites.Remove(s); _allSprites.Remove(s); });
         _allSprites.Add(sprite);
     }
 
