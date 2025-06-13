@@ -1,4 +1,5 @@
 using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.Movies;
 using LingoEngine.Texts;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
     // Converted from 9_Blocks.ls
     public class BlocksParentScript : LingoParentScript, IHasStepFrameEvent
     {
+        private readonly ILingoMovieEnvironment env;
         private readonly GlobalVars _global;
         private readonly GfxParentScript myGfx;
         private readonly ScoreManagerParentScript myScoreManager;
@@ -21,6 +23,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public BlocksParentScript(ILingoMovieEnvironment env, GlobalVars global, GfxParentScript gfx, ScoreManagerParentScript score, int width, int height) : base(env)
         {
+            this.env = env;
             _global = global;
             myGfx = gfx;
             myScoreManager = score;
@@ -65,7 +68,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
         {
             if (y == 0) return false;
             if (myBlocks[x][y] != null) return false;
-            var b = new BlockParentScript(_env, _global, type);
+            var b = new BlockParentScript(env, _global, type);
             b.CreateBlock();
             myGfx.PositionBlock(b.GetSpriteNum(), x, y);
             myBlocks[x][y] = b;

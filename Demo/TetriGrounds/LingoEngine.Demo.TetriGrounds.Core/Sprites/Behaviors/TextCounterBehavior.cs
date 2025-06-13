@@ -25,7 +25,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             if (myValue == -1)
             {
                 myValue = SendSprite<AppliBgBehavior, int>(myDataSpriteNum,
-                    c => c.GetCounterStartData(myDataName)) ?? 0;
+                    c => c.GetCounterStartData(myDataName));
             }
             UpdateMe();
             myWaiter = myWaitbeforeExecute;

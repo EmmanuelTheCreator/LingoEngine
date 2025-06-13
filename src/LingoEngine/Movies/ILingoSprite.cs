@@ -57,7 +57,7 @@ namespace LingoEngine.Movies
         /// <summary>
         /// The ink effect applied to the sprite. Read-only.
         /// </summary>
-        int Ink { get; }
+        int Ink { get; set; }
 
         /// <summary>
         /// Returns TRUE if the sprite’s cast member is linked to an external file. Read-only.
@@ -118,6 +118,7 @@ namespace LingoEngine.Movies
         /// Vertical location of the sprite on the stage. Read/write.
         /// </summary>
         float LocV { get; set; }
+        int LocZ { get; set; }
 
         /// <summary>
         /// List of script instance names or types attached to the sprite.
@@ -144,7 +145,8 @@ namespace LingoEngine.Movies
         /// </summary>
         bool Visibility { get; set; } 
         int MemberNum { get; }
-        
+        bool Puppet { get; set; }
+
 
         /// <summary>
         /// Changes the cast member displayed by this sprite using the cast member number.

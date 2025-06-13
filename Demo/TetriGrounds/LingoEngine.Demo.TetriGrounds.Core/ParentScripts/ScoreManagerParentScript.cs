@@ -51,7 +51,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
                 myLevelUpNeededScore += 20;
             }
             UpdateGfxScore();
-            Member<LingoMemberText>("T_data")?.SetText($"Level {myLevel}");
+            Member<LingoMemberText>("T_data").Text =  ($"Level {myLevel}");
         }
 
         public void LineRemoved1() => myPlayerScore += 5 + myLevel;
@@ -62,7 +62,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public void AddDropedBlock() => myBlocksDroped += 1;
         public void LineRemoved() { myNumberLinesRemoved += 1; myNumberLinesTot += 1; }
         public void BlockFrozen() { myPlayerScore += 1; Refresh(); }
-        public void UpdateGfxScore() => Member<LingoMemberText>("T_Score")?.SetText(myPlayerScore.ToString());
+        public void UpdateGfxScore() => Member<LingoMemberText>("T_Score").Text = (myPlayerScore.ToString());
         public bool GetLevelUp() { var t = myLevelUp; myLevelUp = false; return t; }
         public void GameFinished() => NewText("You're Terminated....");
         public int GetLevel() => myLevel;

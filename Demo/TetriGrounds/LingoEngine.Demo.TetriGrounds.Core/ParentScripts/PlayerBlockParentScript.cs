@@ -1,4 +1,6 @@
 using LingoEngine.Core;
+using LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors;
+using LingoEngine.Events;
 using LingoEngine.Movies;
 using System.Collections.Generic;
 
@@ -7,6 +9,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
     // Converted from 8_PlayerBlock.ls (simplified)
     public class PlayerBlockParentScript : LingoParentScript, IHasStepFrameEvent
     {
+        private readonly ILingoMovieEnvironment env;
         private readonly GlobalVars _global;
         private readonly GfxParentScript myGfx;
         private readonly BlocksParentScript myBlocks;
@@ -36,6 +39,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public PlayerBlockParentScript(ILingoMovieEnvironment env, GlobalVars global, GfxParentScript gfx, BlocksParentScript blocks, ScoreManagerParentScript score, int width, int height) : base(env)
         {
+            this.env = env;
             _global = global;
             myGfx = gfx;
             myBlocks = blocks;
@@ -182,7 +186,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
                     myFinished = true;
                     myBlocks.FinishedBlocks();
                     StopMove();
-                    SendSprite<GameStopBehavior>(1, s => s.HandleMessage("GameFinished", myScoreManager.GetScore()));
+                    SendSprite<AppliBgBehavior>(1, s => s.GameFinished(myScoreManager.GetScore()));
                 }
             }
         }
@@ -294,7 +298,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
             for (int i = 0; i < coords.Count; i++)
             {
                 var dict = new Dictionary<string, object>();
-                var b = new BlockParentScript(_env, _global, myBlockType);
+                var b = new BlockParentScript(env, _global, myBlockType);
                 b.CreateBlock();
                 dict["obj"] = b;
                 dict["xx"] = coords[i].x;
@@ -314,7 +318,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
             foreach (var p in coords)
             {
                 var dict = new Dictionary<string, object>();
-                var b = new BlockParentScript(_env, _global, myNextBlockType);
+                var b = new BlockParentScript(env, _global, myNextBlockType);
                 b.CreateBlock();
                 dict["obj"] = b;
                 dict["xx"] = p.x;

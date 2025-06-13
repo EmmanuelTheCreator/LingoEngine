@@ -12,9 +12,10 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         private BlocksParentScript? myBlocks;
         private ScoreManagerParentScript? myScoreManager;
         private readonly GlobalVars _global;
-
+        ILingoMovieEnvironment _env;
         public BgScriptBehavior(ILingoMovieEnvironment env, GlobalVars global) : base(env)
         {
+            _env = env;
             _global = global;
         }
 

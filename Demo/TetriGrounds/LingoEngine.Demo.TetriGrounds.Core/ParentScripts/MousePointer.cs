@@ -61,7 +61,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
                     else
                         myDir = 1;
                 }
-                Sprite(myNum).MemberNum = myAnimateNum + myStartMember;
+                Sprite(myNum).SetMember(myAnimateNum + myStartMember);
             }
         }
 

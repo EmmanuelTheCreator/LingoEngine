@@ -31,7 +31,7 @@ namespace LingoEngine.Movies
         /// <summary>
         /// This represents the puppetsprite controlled by script.
         /// </summary>
-        public bool IsPuppetSprite { get; internal set; }
+        public bool Puppet { get; set; }
 
         public string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
         public int MemberNum
@@ -43,7 +43,7 @@ namespace LingoEngine.Movies
             }
         }
         public int SpriteNum { get; private set; }
-        public int Ink { get; private set; }
+        public int Ink { get; set; }
         public bool Visibility
         {
             get => _frameworkSprite.Visibility; set

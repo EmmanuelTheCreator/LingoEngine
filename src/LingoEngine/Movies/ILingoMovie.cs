@@ -198,6 +198,6 @@ namespace LingoEngine.Movies
 
         int Timer { get; }
         void SetScoreLabel(int frameNumber, string name);
-
+        void PuppetSprite(int myNum, bool state);
     }
 }
