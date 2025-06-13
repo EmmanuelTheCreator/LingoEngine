@@ -553,7 +553,7 @@ namespace Director.IO
             var headerType = reader.ReadMotorolaInt32(); // always -3?
             var spritePropertiesOffsetsCountOffset = reader.ReadMotorolaInt32(); // offset of spritePropertiesOffsetsCount from beginning of chunk, must be twelve
             var spritePropertiesOffsetsCount = reader.ReadMotorolaInt32();
-            // dott know : var notationOffset = readerScoreBuffer.readInt32() * 4 + 12 + scoreSpritePropertiesOffsetsCountOffset; // this has been confirmed in IDA to be true
+            // TODO: don't know : var notationOffset = readerScoreBuffer.readInt32() * 4 + 12 + scoreSpritePropertiesOffsetsCountOffset; // this has been confirmed in IDA to be true
             var notationAndSpritePropertiesSize = reader.ReadMotorolaInt32();
             var spritePropertiesOffsets = new List<short>();
             for (int i = 0; i < spritePropertiesOffsetsCountOffset; i++)
@@ -567,7 +567,7 @@ namespace Director.IO
             result.ChannelSize = reader.ReadInt16();
             result.LastChannelMax = reader.ReadInt16();
             result.LastChannel = reader.ReadInt16();
-
+            //TODO : is his correct?
             for (int i = 0; i < result.FramesSize; i++)
             {
                 var frame = new FrameData();
@@ -586,8 +586,8 @@ namespace Director.IO
                 for (int s = 0; s < spritePropertiesOffsetElementCount; s++)
                     frame.PropertiesOffsets.Add(reader.ReadInt32());
             }
-            
 
+            //TODO : is his correct?
             // each of these are 0x2C long and are loaded immediately, contain the start and end frame and channel number - the channels start at 6 for bitmaps because the five others from D5 are still there but hidden
             for (int i = 0; i < result.FramesSize; i++)
             {
@@ -607,7 +607,7 @@ namespace Director.IO
 
 
             // If read correctly, the resulting buffer looks like this.
-
+            //TODO : this needs tobe implemented corrctly
             // Array channels[
             // only investigated for bitmaps, may be different for sounds
             // where is ink mask and behaviors?
