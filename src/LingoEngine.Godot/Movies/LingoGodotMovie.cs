@@ -3,7 +3,7 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
 
-namespace LingoEngineGodot.Movies
+namespace LingoEngine.Godot.Movies
 {
     public partial class LingoGodotMovie : ILingoFrameworkMovie, IDisposable
     {
@@ -26,7 +26,7 @@ namespace LingoEngineGodot.Movies
 
             _MovieNode2D = new Node2D();
             //_MovieNode2D.Position = new Vector2(640/2, 480/2);
-            
+
             stage.ShowMovie(this);
         }
 
@@ -51,7 +51,7 @@ namespace LingoEngineGodot.Movies
             {
                 // Show Sprite
                 _drawnSprites.Add(s);
-            },s =>
+            }, s =>
             {
                 // Hide sprite
                 // Remove the sprite from the timeLine
@@ -65,7 +65,7 @@ namespace LingoEngineGodot.Movies
             });
             _allSprites.Add(godotSprite);
         }
-       
+
         public void RemoveMe()
         {
             _removeMethod(this);

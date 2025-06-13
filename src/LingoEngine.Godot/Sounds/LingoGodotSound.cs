@@ -1,7 +1,7 @@
 ﻿using Godot;
 using LingoEngine.Sounds;
 
-namespace LingoEngineGodot.Sounds
+namespace LingoEngine.Godot.Sounds
 {
     public class LingoGodotSound : ILingoFrameworkSound
     {

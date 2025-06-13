@@ -1,4 +1,5 @@
 ﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Inputs;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;

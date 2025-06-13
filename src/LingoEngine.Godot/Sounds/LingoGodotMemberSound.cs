@@ -2,7 +2,7 @@
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 
-namespace LingoEngineGodot.Sounds
+namespace LingoEngine.Godot.Sounds
 {
     public class LingoGodotMemberSound : ILingoFrameworkMemberSound, IDisposable
     {
@@ -21,7 +21,7 @@ namespace LingoEngineGodot.Sounds
         public LingoGodotMemberSound()
 #pragma warning restore CS8618 
         {
-            
+
         }
 
         internal void Init(LingoMemberSound memberSound)

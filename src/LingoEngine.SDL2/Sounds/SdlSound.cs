@@ -1,9 +1,9 @@
 using System;
-using SDL2;
 using System.Runtime.InteropServices;
 using LingoEngine.Sounds;
+using LingoEngine.SDL2.SDLL;
 
-namespace LingoEngineSDL2.Sounds;
+namespace LingoEngine.SDL2.Sounds;
 
 public class SdlSound : ILingoFrameworkSound
 {

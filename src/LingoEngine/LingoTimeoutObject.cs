@@ -1,6 +1,6 @@
 ﻿using System.Xml.Linq;
 
-namespace LingoEngine.Core
+namespace LingoEngine
 {
     public interface ILingoTimeoutObject
     {
@@ -56,7 +56,7 @@ timeout(2).forget()
 
         public ILingoTimeoutObject New(string name, int period, Action tickAction)
         {
-            var obj = new LingoTimeoutObject(name, period, tickAction,(e) => _elements.Remove(e));
+            var obj = new LingoTimeoutObject(name, period, tickAction, (e) => _elements.Remove(e));
             _elements.Add(obj);
             return obj;
         }

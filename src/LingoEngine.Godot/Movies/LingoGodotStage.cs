@@ -3,7 +3,7 @@ using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 
-namespace LingoEngineGodot.Movies
+namespace LingoEngine.Godot.Movies
 {
     public partial class LingoGodotStage : Node2D, ILingoFrameworkStage, IDisposable
     {

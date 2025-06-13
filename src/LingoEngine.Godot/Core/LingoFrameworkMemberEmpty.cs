@@ -1,6 +1,6 @@
 ﻿using LingoEngine.FrameworkCommunication;
 
-namespace LingoEngineGodot.Core
+namespace LingoEngine.Godot.Core
 {
     public class LingoFrameworkMemberEmpty : ILingoFrameworkMemberEmpty
     {

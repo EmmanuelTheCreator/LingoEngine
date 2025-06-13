@@ -1,4 +1,4 @@
-﻿namespace LingoEngine.FrameworkCommunication.Events
+﻿namespace LingoEngine.Events
 {
     public interface ILingoFontManager
     {

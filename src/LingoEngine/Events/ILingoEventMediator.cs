@@ -1,4 +1,4 @@
-﻿namespace LingoEngine.Movies
+﻿namespace LingoEngine.Events
 {
     public interface ILingoEventMediator
     {

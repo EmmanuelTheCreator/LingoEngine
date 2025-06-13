@@ -1,7 +1,7 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Texts
+namespace LingoEngine.Texts.FrameworkCommunication
 {
     public interface ILingoFrameworkMemberTextBase : ILingoFrameworkMember
     {

@@ -1,9 +1,11 @@
 using System.IO;
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Events;
 using LingoEngine.Primitives;
+using LingoEngine.SDL2;
 using LingoEngine.Texts;
+using LingoEngine.Texts.FrameworkCommunication;
 
-namespace LingoEngineSDL2.Texts;
+namespace LingoEngine.SDL2.Texts;
 
 public abstract class SdlMemberTextBase<TText> : ILingoFrameworkMemberTextBase, IDisposable where TText : ILingoMemberTextBase
 {
@@ -27,7 +29,7 @@ public abstract class SdlMemberTextBase<TText> : ILingoFrameworkMemberTextBase, 
     public string FontName { get; set; } = string.Empty;
     public int FontSize { get; set; }
     public LingoTextStyle FontStyle { get; set; }
-    public LingoColor TextColor { get; set; } = LingoColor.FromRGB(0,0,0);
+    public LingoColor TextColor { get; set; } = LingoColor.FromRGB(0, 0, 0);
     public LingoTextAlignment Alignment { get; set; }
     public int Margin { get; set; }
     public bool IsLoaded { get; private set; }

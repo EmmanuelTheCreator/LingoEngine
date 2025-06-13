@@ -1,13 +1,13 @@
+using LingoEngine.SDL2.SDLL;
 using LingoEngine.Sounds;
-using SDL2;
 using System.Runtime.InteropServices;
 
-namespace LingoEngineSDL2.Sounds;
+namespace LingoEngine.SDL2.Sounds;
 
 public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
 {
     private LingoSoundChannel _channel = null!;
-    private IntPtr _chunk = IntPtr.Zero;
+    private nint _chunk = nint.Zero;
     private string? _currentFile;
     public int ChannelNumber { get; }
     public int SampleRate => 44100;
@@ -35,7 +35,7 @@ public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
         Stop();
         _currentFile = stringFilePath;
         _chunk = SDL_mixer.Mix_LoadWAV(stringFilePath);
-        if (_chunk == IntPtr.Zero)
+        if (_chunk == nint.Zero)
             return;
         SDL_mixer.Mix_PlayChannel(ChannelNumber, _chunk, 0);
         IsPlaying = true;
@@ -47,7 +47,7 @@ public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
         Stop();
         _currentFile = member.FileName;
         _chunk = SDL_mixer.Mix_LoadWAV(_currentFile);
-        if (_chunk == IntPtr.Zero)
+        if (_chunk == nint.Zero)
             return;
         SDL_mixer.Mix_PlayChannel(ChannelNumber, _chunk, 0);
         IsPlaying = true;
@@ -57,10 +57,10 @@ public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
     public void Stop()
     {
         SDL_mixer.Mix_HaltChannel(ChannelNumber);
-        if (_chunk != IntPtr.Zero)
+        if (_chunk != nint.Zero)
         {
             SDL_mixer.Mix_FreeChunk(_chunk);
-            _chunk = IntPtr.Zero;
+            _chunk = nint.Zero;
         }
         IsPlaying = false;
         CurrentTime = 0;
@@ -83,7 +83,7 @@ public class SdlSoundChannel : ILingoFrameworkSoundChannel, IDisposable
 
     public void Repeat()
     {
-        if (_chunk != IntPtr.Zero)
+        if (_chunk != nint.Zero)
         {
             SDL_mixer.Mix_HaltChannel(ChannelNumber);
             SDL_mixer.Mix_PlayChannel(ChannelNumber, _chunk, -1);

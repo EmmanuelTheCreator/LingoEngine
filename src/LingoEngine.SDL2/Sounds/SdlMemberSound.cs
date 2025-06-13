@@ -1,14 +1,14 @@
 using System.IO;
-using SDL2;
 using System.Runtime.InteropServices;
 using LingoEngine.Sounds;
+using LingoEngine.SDL2.SDLL;
 
-namespace LingoEngineSDL2.Sounds;
+namespace LingoEngine.SDL2.Sounds;
 
 public class SdlMemberSound : ILingoFrameworkMemberSound, IDisposable
 {
     private LingoMemberSound _member = null!;
-    private IntPtr _chunk = IntPtr.Zero;
+    private nint _chunk = nint.Zero;
     public bool Stereo { get; private set; }
     public double Length { get; private set; }
     public bool IsLoaded { get; private set; }
@@ -29,7 +29,7 @@ public class SdlMemberSound : ILingoFrameworkMemberSound, IDisposable
             return;
 
         _chunk = SDL_mixer.Mix_LoadWAV(_member.FileName);
-        if (_chunk == IntPtr.Zero)
+        if (_chunk == nint.Zero)
             return;
 
         var fi = new FileInfo(_member.FileName);
@@ -40,10 +40,10 @@ public class SdlMemberSound : ILingoFrameworkMemberSound, IDisposable
     }
     public void Unload()
     {
-        if (_chunk != IntPtr.Zero)
+        if (_chunk != nint.Zero)
         {
             SDL_mixer.Mix_FreeChunk(_chunk);
-            _chunk = IntPtr.Zero;
+            _chunk = nint.Zero;
         }
         IsLoaded = false;
     }

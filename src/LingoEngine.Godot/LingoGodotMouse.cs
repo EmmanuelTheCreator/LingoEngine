@@ -1,6 +1,12 @@
 ﻿using Godot;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.Godot.Pictures;
+using LingoEngine.Inputs;
+using LingoEngine.Pictures.LingoEngine;
+using static Godot.Input;
 
-namespace LingoEngineGodot
+
+namespace LingoEngine.Godot
 {
 
     /*
@@ -12,13 +18,6 @@ add_child(lingoGodotMouse)  # Add it to the scene
     /// <summary>
     /// Communication between the Godot engine and the Lingo mouse object
     /// </summary>
-    using Godot;
-    using LingoEngine.Core;
-    using LingoEngine.FrameworkCommunication;
-    using LingoEngine.Pictures.LingoEngine;
-    using LingoEngineGodot.Pictures;
-    using System;
-    using static Godot.Input;
 
     public partial class LingoGodotMouse : Area2D, ILingoFrameworkMouse
     {

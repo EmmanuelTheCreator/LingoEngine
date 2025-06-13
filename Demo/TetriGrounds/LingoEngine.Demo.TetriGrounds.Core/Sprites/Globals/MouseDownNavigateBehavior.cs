@@ -1,5 +1,5 @@
-﻿using LingoEngine.Core;
-using LingoEngine.Events;
+﻿using LingoEngine.Events;
+using LingoEngine.Inputs;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals

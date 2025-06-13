@@ -1,25 +1,44 @@
-namespace LingoEngineSDL2;
-
-using SDL2;
+namespace LingoEngine.SDL2;
+using LingoEngine.Core;
+using LingoEngine.SDL2.SDLL;
 
 public class SdlRootContext : IDisposable
 {
-    public IntPtr Window { get; }
-    public IntPtr Renderer { get; }
+    public nint Window { get; }
+    public nint Renderer { get; }
 
-    public SdlRootContext(IntPtr window, IntPtr renderer)
+    public SdlRootContext(nint window, nint renderer)
     {
         Window = window;
         Renderer = renderer;
     }
+    public void Run(ILingoPlayer player)
+    {
+        var clock = (LingoClock)((LingoPlayer)player).Clock;
+        bool running = true;
+        uint last = SDL.SDL_GetTicks();
+        while (running)
+        {
+            while (SDL.SDL_PollEvent(out var e) == 1)
+            {
+                if (e.type == SDL.SDL_EventType.SDL_QUIT)
+                    running = false;
+            }
+            uint now = SDL.SDL_GetTicks();
+            float delta = (now - last) / 1000f;
+            last = now;
+            clock.Tick(delta);
+        }
+        Dispose();
+    }
 
     public void Dispose()
     {
-        if (Renderer != IntPtr.Zero)
+        if (Renderer != nint.Zero)
         {
             SDL.SDL_DestroyRenderer(Renderer);
         }
-        if (Window != IntPtr.Zero)
+        if (Window != nint.Zero)
         {
             SDL.SDL_DestroyWindow(Window);
         }

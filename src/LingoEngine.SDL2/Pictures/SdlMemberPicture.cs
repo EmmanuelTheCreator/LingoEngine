@@ -1,20 +1,23 @@
 using System.Runtime.InteropServices;
 using LingoEngine.Pictures;
 using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.SDL2;
+using LingoEngine.SDL2.SDLL;
 using LingoEngine.Tools;
-using SDL2;
 
-namespace LingoEngineSDL2.Pictures;
+namespace LingoEngine.SDL2.Pictures;
 
 public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
 {
     private LingoMemberPicture _member = null!;
-    private IntPtr _surface = IntPtr.Zero;
+    private nint _surface = nint.Zero;
+    private SDL.SDL_Surface _surfacePtr;
     public byte[]? ImageData { get; private set; }
     public bool IsLoaded { get; private set; }
     public string Format { get; private set; } = "image/unknown";
     public int Width { get; private set; }
     public int Height { get; private set; }
+    public SDL.SDL_Surface Texture => _surfacePtr;
 
     internal void Init(LingoMemberPicture member)
     {
@@ -25,18 +28,20 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
     {
         if (IsLoaded)
             return;
-        if (!File.Exists(_member.FileName))
+        // For some unknown reason Path.Combine is not working :(
+        var fullFileName = Directory.GetCurrentDirectory()+ _member.FileName;
+        if (!File.Exists(fullFileName))
             return;
 
-        _surface = SDL_image.IMG_Load(_member.FileName);
-        if (_surface == IntPtr.Zero)
+        _surface = SDL_image.IMG_Load(fullFileName);
+        if (_surface == nint.Zero)
             return;
 
-        var surf = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
-        Width = surf.w;
-        Height = surf.h;
+        _surfacePtr = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
+        Width = _surfacePtr.w;
+        Height = _surfacePtr.h;
 
-        ImageData = File.ReadAllBytes(_member.FileName);
+        ImageData = File.ReadAllBytes(fullFileName);
         Format = MimeHelper.GetMimeType(_member.FileName);
         _member.Size = ImageData.Length;
         _member.Width = Width;
@@ -46,10 +51,10 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
 
     public void Unload()
     {
-        if (_surface != IntPtr.Zero)
+        if (_surface != nint.Zero)
         {
             SDL.SDL_FreeSurface(_surface);
-            _surface = IntPtr.Zero;
+            _surface = nint.Zero;
         }
         IsLoaded = false;
     }
@@ -81,7 +86,7 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
         {
             var rw = SDL.SDL_RWFromMem(pinned.AddrOfPinnedObject(), bytes.Length);
             _surface = SDL_image.IMG_Load_RW(rw, 1);
-            if (_surface == IntPtr.Zero)
+            if (_surface == nint.Zero)
             {
                 Console.WriteLine("IMG_Load_RW failed: " + SDL_image.IMG_GetError());
                 return;

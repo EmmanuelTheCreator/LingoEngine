@@ -1,7 +1,8 @@
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Events;
 using LingoEngine.Texts;
+using LingoEngine.Texts.FrameworkCommunication;
 
-namespace LingoEngineSDL2.Texts;
+namespace LingoEngine.SDL2.Texts;
 
 public class SdlMemberField : SdlMemberTextBase<LingoMemberField>, ILingoFrameworkMemberField
 {

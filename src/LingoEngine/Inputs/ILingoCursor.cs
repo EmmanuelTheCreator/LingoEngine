@@ -1,6 +1,6 @@
 ﻿using LingoEngine.Pictures.LingoEngine;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Inputs
 {
     /// <summary>
     /// Provides access to and control over the mouse cursor.
@@ -13,15 +13,15 @@ namespace LingoEngine.Core
         /// Lingo: the cursor
         /// </summary>
         int Cursor { get; set; }
-        
+
         /// <summary>
         /// Sets a custom image for the mouse cursor
         /// </summary>
         LingoMemberPicture? Image { get; set; }
 
-         /// <summary>
-         /// Determines whether the cursor is currently visible.
-         /// </summary>
+        /// <summary>
+        /// Determines whether the cursor is currently visible.
+        /// </summary>
         bool IsCursorVisible { get; }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace LingoEngine.Core
         /// </summary>
         void HideCursor();
 
-       
+
 
         /// <summary>
         /// Resets the cursor to the system default.

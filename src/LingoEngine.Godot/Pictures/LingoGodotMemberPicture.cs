@@ -3,7 +3,7 @@ using LingoEngine.Pictures;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Tools;
 
-namespace LingoEngineGodot.Pictures
+namespace LingoEngine.Godot.Pictures
 {
     public class LingoGodotMemberPicture : ILingoFrameworkMemberPicture, IDisposable
     {
@@ -12,23 +12,23 @@ namespace LingoEngineGodot.Pictures
         private Image? _image;
 
         public ImageTexture? Texture => _imageTexture;
-        public byte[]? ImageData {get;private set;}
+        public byte[]? ImageData { get; private set; }
 
-        public bool IsLoaded {get;private set;}
+        public bool IsLoaded { get; private set; }
         /// <summary>
         /// Optional MIME type or encoding format (e.g., "image/png", "image/jpeg")
         /// </summary>
-        public string Format {get;private set;} = "image/unknown";
+        public string Format { get; private set; } = "image/unknown";
 
-        public int Width {get;private set;}
+        public int Width { get; private set; }
 
-        public int Height {get;private set;}
+        public int Height { get; private set; }
 
 #pragma warning disable CS8618 
         public LingoGodotMemberPicture()
 #pragma warning restore CS8618 
         {
-            
+
         }
 
         internal void Init(LingoMemberPicture lingoInstance)
@@ -43,19 +43,19 @@ namespace LingoEngineGodot.Pictures
         {
             // Create a new Image object
             _image = new Image();
-            
-            
+
+
             // Load the image from the byte array (assuming PNG/JPEG format)
             var error = _image.Load($"res://{_lingoMemberPicture.FileName}");
             if (error != Error.Ok)
             {
-                GD.PrintErr("Failed to load image data.:"+ _lingoMemberPicture.FileName+":" +error);
+                GD.PrintErr("Failed to load image data.:" + _lingoMemberPicture.FileName + ":" + error);
                 return;
             }
             UpdateImageData(_image);
         }
 
-       
+
 
         private void UpdateImageData(Image image)
         {
@@ -75,7 +75,7 @@ namespace LingoEngineGodot.Pictures
             ImageData = null;
             IsLoaded = false;
         }
-    
+
 
         public void Preload()
         {

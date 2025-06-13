@@ -1,4 +1,4 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Inputs;
 using LingoEngine.Pictures.LingoEngine;
 
 namespace LingoEngine.FrameworkCommunication

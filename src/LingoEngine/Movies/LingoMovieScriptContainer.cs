@@ -1,4 +1,6 @@
 ﻿
+using LingoEngine.Events;
+
 namespace LingoEngine.Movies
 {
     internal class LingoMovieScriptContainer

@@ -1,4 +1,4 @@
-﻿namespace LingoEngine.Core
+﻿namespace LingoEngine.Inputs
 {
     /// <summary>
     /// Represents standard Lingo-compatible mouse cursor types.

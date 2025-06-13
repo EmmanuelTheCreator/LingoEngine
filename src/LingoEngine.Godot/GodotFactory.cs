@@ -1,20 +1,21 @@
 ﻿using Godot;
 using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.FrameworkCommunication.Events;
+using LingoEngine.Godot.Core;
+using LingoEngine.Godot.Movies;
+using LingoEngine.Godot.Pictures;
+using LingoEngine.Godot.Sounds;
+using LingoEngine.Godot.Texts;
+using LingoEngine.Inputs;
 using LingoEngine.Movies;
 using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
-using LingoEngineGodot.Core;
-using LingoEngineGodot.Movies;
-using LingoEngineGodot.Pictures;
-using LingoEngineGodot.Sounds;
-using LingoEngineGodot.Texts;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LingoEngineGodot
+namespace LingoEngine.Godot
 {
     public class GodotFactory : ILingoFrameworkFactory, IDisposable
     {
@@ -32,7 +33,7 @@ namespace LingoEngineGodot
         public T CreateMovieScript<T>(LingoMovie lingoMovie) where T : LingoMovieScript => lingoMovie.GetServiceProvider().GetRequiredService<T>();
 
         #region Sound
-       
+
         public LingoSound CreateSound(ILingoCastLibsContainer castLibsContainer)
         {
             var lingoSound = new LingoGodotSound();
@@ -66,7 +67,7 @@ namespace LingoEngineGodot
         public LingoMemberSound CreateMemberSound(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var lingoMemberSound = new LingoGodotMemberSound();
-            var memberSound = new LingoMemberSound(lingoMemberSound, (LingoCast)cast, numberInCast, name,fileName ?? "");
+            var memberSound = new LingoMemberSound(lingoMemberSound, (LingoCast)cast, numberInCast, name, fileName ?? "");
             lingoMemberSound.Init(memberSound);
             _disposables.Add(lingoMemberSound);
             return memberSound;
@@ -74,7 +75,7 @@ namespace LingoEngineGodot
         public LingoMemberPicture CreateMemberPicture(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var godotInstance = new LingoGodotMemberPicture();
-            var lingoInstance = new LingoMemberPicture((LingoCast)cast, godotInstance, numberInCast, name, fileName ??"", regPoint);
+            var lingoInstance = new LingoMemberPicture((LingoCast)cast, godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
@@ -82,15 +83,15 @@ namespace LingoEngineGodot
         public LingoMemberField CreateMemberField(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var godotInstance = new LingoGodotMemberField(_serviceProvider.GetRequiredService<ILingoFontManager>());
-            var lingoInstance = new LingoMemberField((LingoCast)cast,godotInstance, numberInCast, name, fileName ?? "", regPoint);
+            var lingoInstance = new LingoMemberField((LingoCast)cast, godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
-        } 
+        }
         public LingoMemberText CreateMemberText(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
             var godotInstance = new LingoGodotMemberText(_serviceProvider.GetRequiredService<ILingoFontManager>());
-            var lingoInstance = new LingoMemberText((LingoCast)cast,godotInstance, numberInCast, name, fileName ?? "", regPoint);
+            var lingoInstance = new LingoMemberText((LingoCast)cast, godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
             return lingoInstance;
@@ -99,7 +100,7 @@ namespace LingoEngineGodot
             LingoPoint regPoint = default)
         {
             var godotInstance = new LingoFrameworkMemberEmpty();
-            var lingoInstance = new LingoMember(godotInstance, LingoMemberType.Empty,(LingoCast)cast, numberInCast, name, fileName ?? "", regPoint);
+            var lingoInstance = new LingoMember(godotInstance, LingoMemberType.Empty, (LingoCast)cast, numberInCast, name, fileName ?? "", regPoint);
             return lingoInstance;
         }
         #endregion

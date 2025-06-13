@@ -5,6 +5,23 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <StartupObject>LingoEngine.Demo.TetriGrounds.SDL2.Program</StartupObject>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LingoEngine.Demo.TetriGrounds.Godot\Medias\Data\Game.jpg" Link="Medias\Data\Game.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LingoEngine.SDL2\LingoEngine.SDL2.csproj" />
+    <ProjectReference Include="..\LingoEngine.Demo.TetriGrounds.Core\LingoEngine.Demo.TetriGrounds.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Medias\Data\" />
+  </ItemGroup>
 
 </Project>

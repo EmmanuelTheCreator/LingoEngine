@@ -1,9 +1,10 @@
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
-using SDL2;
+using LingoEngine.SDL2;
+using LingoEngine.SDL2.SDLL;
 
-namespace LingoEngineSDL2.Movies;
+namespace LingoEngine.SDL2.Movies;
 
 public class SdlMovie : ILingoFrameworkMovie, IDisposable
 {
@@ -51,7 +52,7 @@ public class SdlMovie : ILingoFrameworkMovie, IDisposable
         _removeMethod(this);
     }
 
-    LingoPoint ILingoFrameworkMovie.GetGlobalMousePosition() => (0,0);
+    LingoPoint ILingoFrameworkMovie.GetGlobalMousePosition() => (0, 0);
 
     public void Dispose()
     {

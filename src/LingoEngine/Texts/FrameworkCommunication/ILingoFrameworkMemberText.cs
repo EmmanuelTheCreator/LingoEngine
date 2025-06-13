@@ -1,8 +1,8 @@
-﻿namespace LingoEngine.Texts
+﻿namespace LingoEngine.Texts.FrameworkCommunication
 {
     public interface ILingoFrameworkMemberText : ILingoFrameworkMemberTextBase
     {
-        
-       
-    } 
+
+
+    }
 }

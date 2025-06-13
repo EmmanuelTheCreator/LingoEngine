@@ -1,6 +1,6 @@
 ﻿using LingoEngine.Events;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Inputs
 {
     /// <summary>
     /// Used to monitor a user’s keyboard activity.
