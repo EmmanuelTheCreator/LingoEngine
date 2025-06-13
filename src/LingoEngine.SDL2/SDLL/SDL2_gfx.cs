@@ -33,7 +33,7 @@ using System.Runtime.InteropServices;
 
 namespace LingoEngine.SDL2.SDLL
 {
-    public static class SDL_gfx
+    public static partial class SDL_gfx
     {
         #region SDL2# Variables
 

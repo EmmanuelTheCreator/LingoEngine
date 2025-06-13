@@ -103,9 +103,9 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     }
     #endregion
 
-    public LingoStage CreateStage(LingoClock clock)
+    public LingoStage CreateStage(LingoPlayer player)
     {
-        var impl = new SdlStage(_rootContext, clock);
+        var impl = new SdlStage(_rootContext, (LingoClock)player.Clock);
         var stage = new LingoStage(impl);
         impl.Init(stage);
         _disposables.Add(impl);

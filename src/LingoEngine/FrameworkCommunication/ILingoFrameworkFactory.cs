@@ -10,7 +10,7 @@ namespace LingoEngine.FrameworkCommunication
 {
     public interface ILingoFrameworkFactory
     {
-        LingoStage CreateStage(LingoClock lingoClock);
+        LingoStage CreateStage(LingoPlayer lingoPlayer);
         LingoMovie AddMovie(LingoStage stage, LingoMovie lingoMovie);
 
 
