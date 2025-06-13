@@ -20,6 +20,7 @@ namespace LingoEngine.Director.Godot.Casts
         {
             _castsViewerNode2D = new Node2D();
             _castsViewerNode2D.Position = new Vector2(650, 20);
+            _tabs = new TabContainer();
             InitTabs();
 
             parent.AddChild(_castsViewerNode2D);
@@ -43,11 +44,16 @@ namespace LingoEngine.Director.Godot.Casts
 
         private void InitTabs()
         {
-            _tabs = new TabContainer();
             _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _tabs.Size = new Vector2(350, 600);
             _castsViewerNode2D.AddChild(_tabs);
+            var existingFont = _tabs.GetThemeFont("font", "TabContainer");
+            if (existingFont != null)
+            {
+                _tabs.AddThemeFontOverride("font", existingFont);
+                _tabs.AddThemeFontSizeOverride("font_size", 10);
+            }
         }
 
         private void OnSelectElement(DirGodotCastItem castItem)

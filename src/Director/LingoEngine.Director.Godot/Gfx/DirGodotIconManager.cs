@@ -2,7 +2,7 @@
 
 namespace LingoEngine.Director.Godot.Gfx
 {
-    public class IconManager
+    public class DirGodotIconManager
     {
         // todo : Media\Icons\AssetInfoMapIcon12_Color.png
         private class IconSheet
