@@ -589,5 +589,10 @@ namespace LingoEngine.Movies
 
         public LingoMember? MouseMemberUnderMouse() // todo : implement
             => null;
+
+        public void RaiseSpriteSelected(LingoSprite sprite)
+        {
+            _EventMediator.RaiseSpriteSelected(sprite);
+        }
     }
 }
