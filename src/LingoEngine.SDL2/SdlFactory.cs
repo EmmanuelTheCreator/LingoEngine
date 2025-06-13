@@ -19,10 +19,12 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
 {
     private readonly List<IDisposable> _disposables = new();
     private readonly IServiceProvider _serviceProvider;
+    private readonly SdlRootContext _rootContext;
 
-    public SdlFactory(IServiceProvider serviceProvider)
+    public SdlFactory(IServiceProvider serviceProvider, SdlRootContext rootContext)
     {
         _serviceProvider = serviceProvider;
+        _rootContext = rootContext;
     }
 
     public T CreateBehavior<T>(LingoMovie movie) where T : LingoSpriteBehavior
@@ -102,7 +104,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
 
     public LingoStage CreateStage(LingoClock clock)
     {
-        var impl = new SdlStage(clock);
+        var impl = new SdlStage(_rootContext, clock);
         var stage = new LingoStage(impl);
         impl.Init(stage);
         _disposables.Add(impl);
