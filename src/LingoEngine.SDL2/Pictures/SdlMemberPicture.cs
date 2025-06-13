@@ -30,7 +30,7 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
         if (IsLoaded)
             return;
         // For some unknown reason Path.Combine is not working :(
-        var fullFileName = Directory.GetCurrentDirectory()+ _member.FileName;
+        var fullFileName = Directory.GetCurrentDirectory()+Path.DirectorySeparatorChar+ _member.FileName;
         if (!File.Exists(fullFileName))
             return;
 

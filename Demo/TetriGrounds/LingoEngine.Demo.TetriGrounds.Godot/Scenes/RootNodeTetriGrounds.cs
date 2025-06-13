@@ -1,8 +1,7 @@
 using Godot;
 using LingoEngine.Demo.TetriGrounds.Core;
-using LingoEngine.Godot;
-using LingoEngine.Godot.Movies;
-using LingoEngine.Movies;
+using LingoEngine.LGodot;
+using LingoEngine.LGodot.Movies;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -42,11 +41,12 @@ public partial class RootNodeTetriGrounds : Node2D
             TetriGroundsSetup.AddTetriGrounds(_services, c => c
                     .WithLingoGodotEngine(this));
                     //.WithDirectorGodotEngine(this));
-            var serviePrider = _services.BuildServiceProvider();
+            var serviceProvider = _services.BuildServiceProvider();
 
-            var movie = TetriGroundsSetup.SetupGame(serviePrider);
-            var game = TetriGroundsSetup.StartGame(serviePrider);
-            game.LingoPlayer.Stage.Framework<LingoGodotStage>().SetPlayer(game.LingoPlayer);
+            var movie = TetriGroundsSetup.SetupGame(serviceProvider);
+            var game = TetriGroundsSetup.StartGame(serviceProvider);
+            
+
         }
         catch (Exception ex)
         {
