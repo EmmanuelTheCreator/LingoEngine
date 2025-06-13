@@ -31,6 +31,8 @@ namespace LingoEngine.Core
         public ILingoFrameworkFactory Factory { get; private set; }
 
         public ILingoClock Clock => _clock;
+        internal LingoKey Key => _LingoKey;
+        public LingoStage Stage => _Stage;
         /// <inheritdoc/>
         public ILingoCast ActiveCastLib => _castLibsContainer.ActiveCast;
         /// <inheritdoc/>
@@ -76,7 +78,7 @@ namespace LingoEngine.Core
             _sound = Factory.CreateSound(_castLibsContainer);
             _window = new LingoWindow();
             _clock = new LingoClock();
-            _LingoKey = new LingoKey();
+            _LingoKey = Factory.CreateKey();
             _Stage = Factory.CreateStage(_clock);
             _Mouse = Factory.CreateMouse(_Stage);
             _System = new LingoSystem();
