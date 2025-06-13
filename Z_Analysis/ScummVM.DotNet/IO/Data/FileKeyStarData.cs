@@ -24,16 +24,24 @@
     /// </summary>
     public class FileKeyStarData
     {
+        /// <summary>Size in bytes of the properties section.</summary>
         public short PropertiesSize { get; internal set; }
+        /// <summary>Size of each key entry.</summary>
         public short KeySize { get; internal set; }
+        /// <summary>Maximum number of key entries allowed.</summary>
         public int MaxKeyCount { get; internal set; }
+        /// <summary>Number of key entries currently used.</summary>
         public int UsedKeyCount { get; internal set; }
 
+        /// <summary>All key table entries.</summary>
         public List<KeyEntryData> Keys { get; internal set; } = new();
         public class KeyEntryData
         {
+            /// <summary>ID of the resource being referenced.</summary>
             public int OwnedResourceID { get; internal set; }
+            /// <summary>Resource ID of the owner.</summary>
             public int OwnerResourceID { get; internal set; }
+            /// <summary>Chunk ID tag of the owned resource.</summary>
             public string OwnedChunkID { get; internal set; }
         }
     }

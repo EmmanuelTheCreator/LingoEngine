@@ -29,6 +29,7 @@ namespace Director.IO
             dirData.DRCF = ReadDRCF(archive.GetResource(ResourceTags.DRCF, 0));
             dirData.VWSC = ReadVWSC(archive.TryGetResource(ResourceTags.VWSC, 0));
             dirData.VWLB = ReadVWLB(archive.TryGetResource(ResourceTags.VWLB, 0));
+            dirData.CASt = ReadCASt(archive.TryGetResource(ResourceTags.CASt, 0));
             return dirData;
 
             
@@ -549,15 +550,15 @@ namespace Director.IO
             //This is what is saved to the file, and needs to be decompressed.
             var reader = new BinaryReader(streamm.BaseStream);
             var result = new FileVWSCData();
-            var memHandleSize = reader.ReadMotorolaInt32(); // this is interpreted as the beginning of a memHandle, the size of it
-            var headerType = reader.ReadMotorolaInt32(); // always -3?
-            var spritePropertiesOffsetsCountOffset = reader.ReadMotorolaInt32(); // offset of spritePropertiesOffsetsCount from beginning of chunk, must be twelve
-            var spritePropertiesOffsetsCount = reader.ReadMotorolaInt32();
-            // TODO: don't know : var notationOffset = readerScoreBuffer.readInt32() * 4 + 12 + scoreSpritePropertiesOffsetsCountOffset; // this has been confirmed in IDA to be true
-            var notationAndSpritePropertiesSize = reader.ReadMotorolaInt32();
-            var spritePropertiesOffsets = new List<short>();
-            for (int i = 0; i < spritePropertiesOffsetsCountOffset; i++)
-                spritePropertiesOffsets.Add(reader.ReadInt16());
+            result.MemHandleSize = reader.ReadMotorolaInt32(); // this is interpreted as the beginning of a memHandle, the size of it
+            result.HeaderType = reader.ReadMotorolaInt32(); // always -3?
+            result.SpritePropertiesOffsetsCountOffset = reader.ReadMotorolaInt32(); // offset of spritePropertiesOffsetsCount from beginning of chunk, must be twelve
+            result.SpritePropertiesOffsetsCount = reader.ReadMotorolaInt32();
+            int notationBase = reader.ReadInt32();
+            result.NotationOffset = notationBase * 4 + 12 + result.SpritePropertiesOffsetsCountOffset;
+            result.NotationAndSpritePropertiesSize = reader.ReadMotorolaInt32();
+            for (int i = 0; i < result.SpritePropertiesOffsetsCountOffset; i++)
+                result.SpritePropertiesOffsets.Add(reader.ReadInt16());
             // the first one is unused
             // notation
             result.FramesEndOffset = reader.ReadMotorolaInt32();
@@ -567,7 +568,7 @@ namespace Director.IO
             result.ChannelSize = reader.ReadInt16();
             result.LastChannelMax = reader.ReadInt16();
             result.LastChannel = reader.ReadInt16();
-            //TODO : is his correct?
+            // Read frame definitions
             for (int i = 0; i < result.FramesSize; i++)
             {
                 var frame = new FrameData();
@@ -587,8 +588,9 @@ namespace Director.IO
                     frame.PropertiesOffsets.Add(reader.ReadInt32());
             }
 
-            //TODO : is his correct?
-            // each of these are 0x2C long and are loaded immediately, contain the start and end frame and channel number - the channels start at 6 for bitmaps because the five others from D5 are still there but hidden
+            // Read frame interval descriptors
+            // each descriptor is 0x2C bytes long and contains the start and end frame
+            // and channel information for a particular sprite
             for (int i = 0; i < result.FramesSize; i++)
             {
                 var frame = result.Frames[i];
@@ -602,43 +604,54 @@ namespace Director.IO
                 reader.ReadBytes(28);
             }
 
+            // Read channel default properties
+            for (int i = 0; i < result.LastChannelMax; i++)
+            {
+                var channel = new ChannelData();
+                var sprite = new SpriteData();
+                byte flags = reader.ReadByte();
+                channel.MultipleMembers = ((flags & 0x10) >> 4) == 0;
+                byte temp = reader.ReadByte();
+                channel.InkFlag = (temp & 0x80) >> 7;
+                sprite.Ink = temp & 0x7F;
+                sprite.ForeColor = reader.ReadByte();
+                sprite.BackColor = reader.ReadByte();
+                sprite.DisplayMember = reader.ReadMotorolaUInt32();
+                reader.ReadBytes(2);
+                channel.SpritePropertiesOffset = reader.ReadMotorolaUInt16();
+                sprite.LocV = reader.ReadMotorolaUInt16();
+                sprite.LocH = reader.ReadMotorolaUInt16();
+                sprite.Height = reader.ReadMotorolaUInt16();
+                sprite.Width = reader.ReadMotorolaUInt16();
+                byte flags2 = reader.ReadByte();
+                sprite.Editable = (flags2 & 0x40) >> 6;
+                sprite.ScoreColor = flags2 & 0x0F;
+                sprite.Blend = reader.ReadByte();
+                byte flags3 = reader.ReadByte();
+                sprite.FlipV = (flags3 & 0x04) >> 2;
+                sprite.FlipH = (flags3 & 0x02) >> 1;
+                reader.ReadBytes(5);
+                sprite.Rotation = reader.ReadFloat32BE();
+                sprite.Skew = reader.ReadFloat32BE();
+                reader.ReadBytes(12);
+                channel.Sprite = sprite;
+                result.ChannelInfo.Add(channel);
+            }
 
-
-
-
-            // If read correctly, the resulting buffer looks like this.
-            //TODO : this needs tobe implemented corrctly
-            // Array channels[
-            // only investigated for bitmaps, may be different for sounds
-            // where is ink mask and behaviors?
-            var channel = new ChannelData();
-            var sprite = new SpriteData();
-            var flags = reader.ReadByte();
-            channel.MultipleMembers = !((flags & 0x10 >> 4) ==1);
-            var temp = reader.ReadByte();
-            channel.InkFlag = temp & 0x80 >> 7;
-            sprite.Ink = temp & 0x7F;
-            sprite.ForeColor = reader.ReadByte();
-            sprite.BackColor = reader.ReadByte();
-            sprite.DisplayMember = reader.ReadMotorolaUInt32();
-            reader.ReadBytes(2);
-            var spritePropertiesOffset = reader.ReadMotorolaUInt16();
-            sprite.LocV = reader.ReadMotorolaUInt16();
-            sprite.LocH = reader.ReadMotorolaUInt16();
-            sprite.Height = reader.ReadMotorolaUInt16();
-            sprite.Width = reader.ReadMotorolaUInt16();
-            var flags2 = reader.ReadByte();
-            sprite.Editable = flags2 & 0x40 >> 6;
-            sprite.ScoreColor = flags2 & 0x0F; // ????= reader.ReadByte();
-            sprite.Blend = reader.ReadByte();
-            var flags3 = reader.ReadByte(); // is 0x81 one frame after sprite start, why?
-            sprite.FlipV = flags3 & 0x04 >> 2;
-            sprite.FlipH = flags3 & 0x02 >> 1;
-            reader.ReadBytes(5);
-            sprite.Rotation = reader.ReadFloat32BE();
-            sprite.Skew = reader.ReadFloat32BE();
-            reader.ReadBytes(12);
-//]
+            // Link sprite data to channel via same index in Frames if needed
+            for (int f = 0; f < result.Frames.Count; f++)
+            {
+                var frame = result.Frames[f];
+                for (int i = 0; i < frame.Channels.Count && i < result.ChannelInfo.Count; i++)
+                {
+                    var src = result.ChannelInfo[i];
+                    var dest = frame.Channels[i];
+                    dest.Sprite = src.Sprite;
+                    dest.InkFlag = src.InkFlag;
+                    dest.MultipleMembers = src.MultipleMembers;
+                    dest.SpritePropertiesOffset = src.SpritePropertiesOffset;
+                }
+            }
 
 
 
@@ -659,6 +672,46 @@ namespace Director.IO
             {
                 result.Labels.Add(new FileVWLBData.LabelTimeLine { Frame = labelFrames[i], Label = labels[i] });
             }
+            return result;
+        }
+
+        private static FileCAStData ReadCASt(SeekableReadStreamEndian? stream)
+        {
+            var result = new FileCAStData();
+            if (stream == null)
+                return result;
+
+            var reader = new BinaryReader(stream.BaseStream);
+            ushort fieldCount = reader.ReadUInt16BE();
+            ushort maxCastId = reader.ReadUInt16BE();
+            ushort itemCount = reader.ReadUInt16BE();
+            ushort fieldSize = reader.ReadUInt16BE();
+            ushort _unused = reader.ReadUInt16BE();
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                ushort castId = reader.ReadUInt16BE();
+                int offset = reader.ReadInt32BE();
+                int length = reader.ReadInt32BE();
+                byte flags = reader.ReadByte();
+                reader.ReadByte(); // padding
+                ushort type = reader.ReadUInt16BE();
+
+                long save = stream.Position;
+                if (offset > 0 && length > 0 && offset + length <= stream.Length)
+                {
+                    stream.Position = offset;
+                    byte[] data = reader.ReadBytes(length);
+                    result.MembersData.Add(new FileCAStData.MemberData
+                    {
+                        Id = castId,
+                        Type = type,
+                        Data = data
+                    });
+                }
+                stream.Position = save;
+            }
+
             return result;
         }
 
