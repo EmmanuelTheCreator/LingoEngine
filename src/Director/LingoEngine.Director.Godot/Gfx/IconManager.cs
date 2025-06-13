@@ -1,14 +1,10 @@
 ﻿using Godot;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LingoEngine.Director.Godot.Gfx
 {
     public class IconManager
     {
+        // todo : Media\Icons\AssetInfoMapIcon12_Color.png
         private class IconSheet
         {
             public Image Image {get;set;}
