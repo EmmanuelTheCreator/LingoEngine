@@ -3,6 +3,16 @@ using LingoEngine.Movies;
 
 namespace LingoEngine.Events
 {
+   
+
+    public interface IHasMouseWithinEvent
+    {
+        void MouseWithin(ILingoMouse mouse);
+    }
+    public interface IHasMouseLeaveEvent
+    {
+        void MouseLeave(ILingoMouse mouse);
+    }
     public interface IHasPrepareMovieEvent
     {
         void PrepareMovie();

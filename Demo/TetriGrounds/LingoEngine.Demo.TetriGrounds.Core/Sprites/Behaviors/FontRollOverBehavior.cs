@@ -1,12 +1,12 @@
 using System.Numerics;
 using LingoEngine.Events;
+using LingoEngine.Inputs;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 12_B_FontRollOver.ls
-    public class FontRollOverBehavior : LingoSpriteBehavior, IHasBeginSpriteEvent, IHasMouseDownEvent, IHasMouseWithinEvent, IHasMouseLeaveEvent
+    public class FontRollOverBehavior : LingoSpriteBehavior, IHasBeginSpriteEvent, IHasMouseDownEvent, IHasMouseWithinEvent, IHasMouseExitEvent
     {
         public Vector3 myColor = new(0,0,0);
         public Vector3 myColorOver = new(100,0,0);
@@ -41,7 +41,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
-        public void MouseLeave(ILingoMouse mouse)
+        public void MouseExit(ILingoMouse mouse)
         {
             if (!myLock)
             {

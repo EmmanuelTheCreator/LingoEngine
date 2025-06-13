@@ -1,4 +1,5 @@
 using LingoEngine.Core;
+using LingoEngine.Events;
 using LingoEngine.Movies;
 using LingoEngine.Texts;
 
@@ -15,13 +16,13 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public string Text { get; set; } = string.Empty;
         public int LocV { get; set; } = 100;
         public ScoreManagerParentScript? Parent { get; set; }
-;
+
         public OverScreenTextParentScript(ILingoMovieEnvironment env, GlobalVars global) : base(env)
         {
             _global = global;
             _Movie.ActorList.Add(this);
-            Sprite(myNum).Puppet = true;
-            Sprite(myNum2).Puppet = true;
+            //Sprite(myNum).Puppet = true;
+            //Sprite(myNum2).Puppet = true;
             Sprite(myNum).SetMember("T_OverScreen");
             Sprite(myNum2).SetMember("T_OverScreen2");
             Sprite(myNum).LocZ = 1000;
@@ -50,8 +51,8 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
             if (blend < 0) blend = 0;
             Sprite(myNum).Blend = (int)blend;
             Sprite(myNum2).Blend = (int)blend;
-            Member<LingoMemberText>("T_OverScreen")?.SetText(Text);
-            Member<LingoMemberText>("T_OverScreen2")?.SetText(Text);
+            Member<LingoMemberText>("T_OverScreen").Text = Text;
+            Member<LingoMemberText>("T_OverScreen2").Text = Text;
         }
 
         public void Destroy()

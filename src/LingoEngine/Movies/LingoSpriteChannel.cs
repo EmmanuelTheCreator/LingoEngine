@@ -44,6 +44,8 @@ namespace LingoEngine.Movies
         /// Gets the <see cref="LingoSprite"/> currently assigned to the sprite channel.
         /// </summary>
         ILingoSprite? Sprite { get; }
+        bool Puppet { get; set; }
+
         /// <summary>
         /// Has a loaded sprite in the timeline on this channel
         /// </summary>
@@ -121,7 +123,7 @@ namespace LingoEngine.Movies
         public int EndFrame { get => _sprite.EndFrame; set => _sprite.EndFrame = value; }
         public LingoColor ForeColor { get => _sprite.ForeColor; set => _sprite.ForeColor = value; }
         public bool Hilite { get => _sprite.Hilite; set => _sprite.Hilite = value; }
-        public int Ink => _sprite.Ink;
+        public int Ink { get => _sprite.Ink; set => _sprite.Ink = value; }
         public bool Linked => _sprite.Linked;
         public bool Loaded => _sprite.Loaded;
         public byte[] Media { get => _sprite.Media; set => _sprite.Media = value; }
@@ -138,12 +140,15 @@ namespace LingoEngine.Movies
         public LingoPoint Loc { get => _sprite.Loc; set => _sprite.Loc = value; }
         public float LocH { get => _sprite.LocH; set => _sprite.LocH = value; }
         public float LocV { get => _sprite.LocV; set => _sprite.LocV = value; }
+        public int LocZ { get => _sprite.LocZ; set => _sprite.LocZ = value; }
         public List<string> ScriptInstanceList => _sprite.ScriptInstanceList;
         public int Size => _sprite.Size;
         public int SpriteNum => _sprite.SpriteNum;
         public byte[] Thumbnail { get => _sprite.Thumbnail; set => _sprite.Thumbnail = value; }
         
         public int MemberNum => _sprite.MemberNum;
+
+        public bool Puppet { get => _sprite.Puppet; set => _sprite.Puppet = value; }
 
         public void SetMember(int memberNumber, int? castLibNum = null) => _sprite.SetMember(memberNumber, castLibNum);
         public void SetMember(string memberName, int? castLibNum = null) => _sprite.SetMember(memberName, castLibNum);
