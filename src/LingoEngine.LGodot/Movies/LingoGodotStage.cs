@@ -33,7 +33,7 @@ namespace LingoEngine.LGodot.Movies
             _lingoClock.Tick((float)delta);
             if (_player != null)
             {
-                _overlay.Update((float)delta, _player);
+                _overlay.Update((float)delta);
                 bool f1 = _player.Key.KeyPressed((int)Key.F1);
                 if (_player.Key.ControlDown && f1 && !_f1Down)
                     _overlay.Toggle();

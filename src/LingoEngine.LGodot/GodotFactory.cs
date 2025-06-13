@@ -110,7 +110,7 @@ namespace LingoEngine.LGodot
         public LingoStage CreateStage(LingoPlayer lingoPlayer)
         {
             var clock = (LingoClock)lingoPlayer.Clock;
-            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(_rootNode));
+            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(_rootNode), lingoPlayer);
             var godotInstance = new LingoGodotStage(_rootNode, clock, overlay);
             var lingoInstance = new LingoStage(godotInstance);
             godotInstance.Init(lingoInstance, lingoPlayer);

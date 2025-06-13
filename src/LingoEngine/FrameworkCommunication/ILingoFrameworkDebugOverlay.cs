@@ -2,8 +2,12 @@ namespace LingoEngine.FrameworkCommunication
 {
     public interface ILingoFrameworkDebugOverlay
     {
+        int PrepareLine(int id,string text);
+        void ShowDebugger();
+        void HideDebugger();
+
         void Begin();
-        void RenderLine(int x, int y, string text);
+        void SetLineText(int id, string text);
         void End();
     }
 }
