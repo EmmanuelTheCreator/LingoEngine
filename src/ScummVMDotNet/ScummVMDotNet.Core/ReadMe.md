@@ -1,1 +1,0 @@
-This is purely an experimental conversion from ScummVM to have a better understanding of the internal working of Lingo an Director.
