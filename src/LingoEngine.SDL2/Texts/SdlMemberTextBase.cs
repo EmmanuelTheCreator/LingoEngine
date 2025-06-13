@@ -1,3 +1,4 @@
+using System.IO;
 using LingoEngine.FrameworkCommunication.Events;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
@@ -32,14 +33,18 @@ public abstract class SdlMemberTextBase<TText> : ILingoFrameworkMemberTextBase, 
     public bool IsLoaded { get; private set; }
 
     public void Dispose() { }
-    public void Copy(string text) { }
-    public string PasteClipboard() => string.Empty;
-    public string ReadText() => string.Empty;
-    public string ReadTextRtf() => string.Empty;
-    public void CopyToClipboard() { }
-    public void Erase() { }
+    public void Copy(string text) => SdlClipboard.SetText(text);
+    public string PasteClipboard() => SdlClipboard.GetText();
+    public string ReadText() => File.Exists(_lingoMemberText.FileName) ? File.ReadAllText(_lingoMemberText.FileName) : string.Empty;
+    public string ReadTextRtf()
+    {
+        var rtf = Path.ChangeExtension(_lingoMemberText.FileName, ".rtf");
+        return File.Exists(rtf) ? File.ReadAllText(rtf) : string.Empty;
+    }
+    public void CopyToClipboard() => SdlClipboard.SetText(Text);
+    public void Erase() { Unload(); }
     public void ImportFileInto() { }
-    public void PasteClipboardInto() { }
+    public void PasteClipboardInto() => _lingoMemberText.Text = SdlClipboard.GetText();
     public void Preload() { IsLoaded = true; }
     public void Unload() { IsLoaded = false; }
 }

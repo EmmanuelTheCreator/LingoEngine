@@ -46,6 +46,37 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
 
     public void MemberChanged() { IsDirtyMember = true; }
 
-    internal void Update() { }
+    internal void Update()
+    {
+        if (IsDirtyMember)
+            UpdateMember();
+        if (IsDirty)
+        {
+            if (SetDesiredWidth != 0) Width = SetDesiredWidth;
+            if (SetDesiredHeight != 0) Height = SetDesiredHeight;
+            IsDirty = false;
+        }
+    }
+
+    private void UpdateMember()
+    {
+        IsDirtyMember = false;
+        switch (_lingoSprite.Member)
+        {
+            case LingoMemberPicture pic:
+                var p = pic.Framework<SdlMemberPicture>();
+                p.Preload();
+                Width = p.Width;
+                Height = p.Height;
+                break;
+            case LingoMemberText text:
+                text.Framework<SdlMemberText>().Preload();
+                break;
+            case LingoMemberField field:
+                field.Framework<SdlMemberField>().Preload();
+                break;
+        }
+    }
+
     public void Resize(float w, float h) { Width = w; Height = h; }
 }
