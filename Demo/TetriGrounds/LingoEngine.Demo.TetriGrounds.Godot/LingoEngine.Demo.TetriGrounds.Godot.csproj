@@ -18,6 +18,7 @@
 	  <None Include="Medias\Data\Game.jpg.import" />
 	</ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Director\LingoEngine.Director.LGodot\LingoEngine.Director.LGodot.csproj" />
     <ProjectReference Include="..\..\..\src\LingoEngine.LGodot\LingoEngine.LGodot.csproj" />
     <ProjectReference Include="..\LingoEngine.Demo.TetriGrounds.Core\LingoEngine.Demo.TetriGrounds.Core.csproj" />
   </ItemGroup>

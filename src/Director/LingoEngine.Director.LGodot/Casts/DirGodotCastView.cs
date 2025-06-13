@@ -92,7 +92,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _elementsContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             _elementsContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _ScrollContainer.AddChild(_elementsContainer);
-            this._onSelectItem = onSelect;
+            _onSelectItem = onSelect;
         }
 
         public void Show(ILingoCast cast)

@@ -55,7 +55,7 @@ namespace LingoEngine.Movies
 
         public int Frame => _currentFrame;
         public int CurrentFrame => _currentFrame;
-        public int FrameCount => 60; // Arbitrary default, to be replaced with actual timeline data
+        public int FrameCount => 620; 
         public int Timer { get; private set; }
         public int SpriteTotalCount => _activeSprites.Count;
         public int SpriteMaxNumber => _activeSprites.Keys.Max();

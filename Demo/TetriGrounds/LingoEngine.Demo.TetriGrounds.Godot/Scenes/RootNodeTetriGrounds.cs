@@ -1,5 +1,7 @@
 using Godot;
 using LingoEngine.Demo.TetriGrounds.Core;
+using LingoEngine.Director.LGodot;
+using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.LGodot;
 using LingoEngine.LGodot.Movies;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +10,8 @@ using System;
 public partial class RootNodeTetriGrounds : Node2D
 {
     private ServiceCollection _services;
+    private LingoGodotPlayerControler _controller;
+
     //private LingoGodotPlayerControler _controller;
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
@@ -39,13 +43,18 @@ public partial class RootNodeTetriGrounds : Node2D
 
             _services = new ServiceCollection();
             TetriGroundsSetup.AddTetriGrounds(_services, c => c
-                    .WithLingoGodotEngine(this));
-                    //.WithDirectorGodotEngine(this));
+                    .WithLingoGodotEngine(this)
+#if DEBUG
+                    .WithDirectorGodotEngine(this)
+#endif
+                    );
             var serviceProvider = _services.BuildServiceProvider();
 
             var movie = TetriGroundsSetup.SetupGame(serviceProvider);
             var game = TetriGroundsSetup.StartGame(serviceProvider);
-            
+#if DEBUG
+            _controller = new LingoGodotPlayerControler((Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode, movie);
+#endif
 
         }
         catch (Exception ex)
