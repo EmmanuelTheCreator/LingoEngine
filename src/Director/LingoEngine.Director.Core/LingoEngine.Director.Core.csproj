@@ -14,4 +14,10 @@
     <Folder Include="Media\Icons\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Media\Icons\AssetInfoMapIcon12_Color.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

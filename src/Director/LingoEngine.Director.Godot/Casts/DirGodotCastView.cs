@@ -20,14 +20,7 @@ namespace LingoEngine.Director.Godot.Casts
         {
             _castsViewerNode2D = new Node2D();
             _castsViewerNode2D.Position = new Vector2(650, 20);
-
-            
-
-            _tabs = new TabContainer();
-            _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            _tabs.Size = new Vector2(350, 600);
-            _castsViewerNode2D.AddChild(_tabs);
+            InitTabs();
 
             parent.AddChild(_castsViewerNode2D);
             _lingoMovie = lingoMovie;
@@ -39,7 +32,7 @@ namespace LingoEngine.Director.Godot.Casts
                 {
                     Name = cast.Name,
                 };
-                
+
                 tabContent.AddChild(castLibViewer.Node);
                 _tabs.AddChild(tabContent);
             }
@@ -47,6 +40,16 @@ namespace LingoEngine.Director.Godot.Casts
             _selectedItem.Position = new Vector2(0, 620);
             _castsViewerNode2D.AddChild(_selectedItem);
         }
+
+        private void InitTabs()
+        {
+            _tabs = new TabContainer();
+            _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _tabs.Size = new Vector2(350, 600);
+            _castsViewerNode2D.AddChild(_tabs);
+        }
+
         private void OnSelectElement(DirGodotCastItem castItem)
         {
             _selectedItem.Load(castItem.LingoMember);
