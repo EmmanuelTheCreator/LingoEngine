@@ -32,7 +32,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _labelBar = new DirGodotScoreLabelsBar();
 
         AddChild(_hScroller);
-        _hScroller.ScrollVerticalEnabled = false;
+        _hScroller.VerticalScrollMode = ScrollContainer.ScrollMode.Disabled;
+        _hScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
         _hScroller.Size = new Vector2(800, 580);
         _hScroller.Position = new Vector2(0, 20);
         _hScroller.AddChild(_scrollContent);
@@ -42,7 +43,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _scrollContent.AddChild(_header);
         _scrollContent.AddChild(_vScroller);
 
-        _vScroller.ScrollHorizontalEnabled = false;
+        _vScroller.VerticalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
+        _vScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
         _vScroller.AddChild(_grid);
         _vScroller.Size = new Vector2(800, 520);
         _vScroller.Position = new Vector2(0, 60);
@@ -201,7 +203,7 @@ internal partial class DirGodotScoreGrid : Control
         if (_selected != null)
         {
             _selected.Selected = true;
-            _movie?.GetEnvironment().Events.RaiseSpriteSelected(_selected.Sprite);
+            _movie?.RaiseSpriteSelected(_selected.Sprite);
         }
         QueueRedraw();
     }
