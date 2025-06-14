@@ -5,25 +5,27 @@ using LingoEngine.Movies;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal class DirGodotCastViewer : IDisposable
+    internal class DirGodotCastWindow : BaseGodotWindow, IDisposable
     {
         private readonly TabContainer _tabs;
         private readonly DirGodotCastMemberPropViewer _selectedItem;
-        private readonly Node2D _castsViewerNode2D;
-        
+
         private readonly ILingoMovie _lingoMovie;
+        private bool _wasToggleKey;
 
         public ILingoCast? ActiveCastLib { get; private set; }
         public DirGodotCastView CastLibViewer { get; }
 
-        public DirGodotCastViewer(Node2D parent,ILingoMovie lingoMovie)
+        public DirGodotCastWindow(Node parent, ILingoMovie lingoMovie)
+            : base("Cast")
         {
-            _castsViewerNode2D = new Node2D();
-            _castsViewerNode2D.Position = new Vector2(650, 20);
+            Position = new Vector2(650, 20);
+            Size = new Vector2(360, 620);
+            CustomMinimumSize = Size;
             _tabs = new TabContainer();
             InitTabs();
 
-            parent.AddChild(_castsViewerNode2D);
+            parent.AddChild(this);
             _lingoMovie = lingoMovie;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
@@ -38,8 +40,19 @@ namespace LingoEngine.Director.LGodot.Casts
                 _tabs.AddChild(tabContent);
             }
             _selectedItem = new DirGodotCastMemberPropViewer();
-            _selectedItem.Position = new Vector2(0, 620);
-            _castsViewerNode2D.AddChild(_selectedItem);
+            parent.AddChild(_selectedItem);
+        }
+
+        public void Toggle()
+        {
+            Visible = !Visible;
+        }
+
+        public override void _Process(double delta)
+        {
+            if (Input.IsKeyPressed(Key.F3) && !_wasToggleKey)
+                Toggle();
+            _wasToggleKey = Input.IsKeyPressed(Key.F3);
         }
 
         private void InitTabs()
@@ -47,7 +60,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _tabs.Size = new Vector2(350, 600);
-            _castsViewerNode2D.AddChild(_tabs);
+            AddChild(_tabs);
             var existingFont = _tabs.GetThemeFont("font", "TabContainer");
             if (existingFont != null)
             {
@@ -70,7 +83,6 @@ namespace LingoEngine.Director.LGodot.Casts
         public void Dispose()
         {
             CastLibViewer.Hide();
-            _castsViewerNode2D.Dispose();
         }
     }
     internal class DirGodotCastView : IDirFrameworkCast
@@ -119,26 +131,34 @@ namespace LingoEngine.Director.LGodot.Casts
        
 
     }
-    public partial class DirGodotCastMemberPropViewer : VBoxContainer
+    public partial class DirGodotCastMemberPropViewer : BaseGodotWindow
     {
         private Label _labelName;
         private readonly Label _labelType;
         private readonly Label _labelSize;
         private readonly Label _labelCastNumber;
         private readonly Label _labelFileSize;
+        private readonly ColorPickerButton _colorButton;
 
         public DirGodotCastMemberPropViewer()
+            : base("Member")
         {
             _labelName = new Label{Text = "" };
             _labelType = new Label{Text = "" };
             _labelSize = new Label{Text = "" };
             _labelCastNumber = new Label{Text = "" };
             _labelFileSize = new Label{Text = "" };
+            _colorButton = new ColorPickerButton();
+            _colorButton.Position = new Vector2(10, 70);
+            Position = new Vector2(500, 300);
+            Size = new Vector2(200, 100);
+            CustomMinimumSize = Size;
             AddChild(_labelName);
             AddChild(_labelType);
             AddChild(_labelSize);
             AddChild(_labelCastNumber);
             AddChild(_labelFileSize);
+            AddChild(_colorButton);
             
         }
         public void Load(ILingoMember lingoMember)
