@@ -226,6 +226,18 @@ namespace Director.IO
             BaseStream.Seek(originalPos, SeekOrigin.Begin);
         }
 
+        public uint ReadVarInt()
+        {
+            uint value = 0;
+            byte b;
+            do
+            {
+                b = ReadByte();
+                value = (value << 7) | (uint)(b & 0x7F);
+            } while ((b & 0x80) != 0);
+            return value;
+        }
+
 
 
     }
