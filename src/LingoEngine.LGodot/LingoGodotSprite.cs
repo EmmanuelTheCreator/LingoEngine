@@ -67,6 +67,18 @@ namespace LingoEngine.LGodot
         public float SetDesiredWidth { get => _DesiredWidth; set { _DesiredWidth = value; IsDirty = true; } }
         public float SetDesiredHeight { get => _DesiredHeight; set { _DesiredHeight = value; IsDirty = true; } }
 
+        public float Rotation { get => _Sprite2D.RotationDegrees; set => _Sprite2D.RotationDegrees = value; }
+        public float SkewX
+        {
+            get => _Sprite2D.Skew.X;
+            set { var s = _Sprite2D.Skew; s.X = value; _Sprite2D.Skew = s; }
+        }
+        public float SkewY
+        {
+            get => _Sprite2D.Skew.Y;
+            set { var s = _Sprite2D.Skew; s.Y = value; _Sprite2D.Skew = s; }
+        }
+
 
 #pragma warning disable CS8618
         public LingoGodotSprite(LingoSprite lingoSprite, Node2D parentNode, Action<LingoGodotSprite> showMethod, Action<LingoGodotSprite> hideMethod, Action<LingoGodotSprite> removeMethod)

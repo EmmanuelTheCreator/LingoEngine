@@ -3,6 +3,7 @@ using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Primitives;
+using LingoEngine.Animations;
 
 namespace LingoEngine.Movies
 {
@@ -21,6 +22,7 @@ namespace LingoEngine.Movies
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
         private bool _isFocus = false;
+        public Animations.LingoSpriteAnimator Animator { get; private set; }
 
 
         #region Properties
@@ -62,6 +64,9 @@ namespace LingoEngine.Movies
         public float LocV { get => _frameworkSprite.Y; set => _frameworkSprite.Y = value; }
         public int LocZ { get => _frameworkSprite.ZIndex; set => _frameworkSprite.ZIndex = value; }
         public LingoPoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
+
+        public float Rotation { get => _frameworkSprite.Rotation; set => _frameworkSprite.Rotation = value; }
+        public float Skew { get => _frameworkSprite.SkewX; set => _frameworkSprite.SkewX = value; }
 
         public LingoPoint RegPoint { get; set; }
         public LingoColor ForeColor { get; set; }
@@ -108,11 +113,12 @@ namespace LingoEngine.Movies
 
 #pragma warning disable CS8618
         public LingoSprite(ILingoMovieEnvironment environment)
-#pragma warning restore CS8618 
+#pragma warning restore CS8618
             : base(environment)
         {
             _environment = environment;
             _eventMediator = (LingoEventMediator) _environment.Events;
+            Animator = new Animations.LingoSpriteAnimator(this, environment);
         }
         public void Init(ILingoFrameworkSprite frameworkSprite)
         {
@@ -165,6 +171,7 @@ When a movie stops, events occur in the following order:
         internal virtual void DoBeginSprite()
         {
             // Subscribe all behaviors
+            _eventMediator.Subscribe(Animator);
             _behaviors.ForEach(b =>
             {
                 _eventMediator.Subscribe(b);
@@ -182,6 +189,7 @@ When a movie stops, events occur in the following order:
                 _eventMediator.Unsubscribe(b);
                 if (b is IHasEndSpriteEvent endSpriteEvent) endSpriteEvent.EndSprite();
             });
+            _eventMediator.Unsubscribe(Animator);
             EndSprite();
         }
         protected virtual void EndSprite() { }
@@ -361,6 +369,7 @@ When a movie stops, events occur in the following order:
         {
             LocH = mouse.MouseH;
             LocV = mouse.MouseV;
+            _environment.Player.Stage.AddKeyFrame(this);
             MouseDrag(mouse);
         }
         protected virtual void MouseDrag(LingoMouse mouse) { }
@@ -404,6 +413,7 @@ When a movie stops, events occur in the following order:
             if (behavior == null) return default;
             return actionOnSpriteBehaviour(behavior);
         }
+
 
         public void RemoveMe()
         {

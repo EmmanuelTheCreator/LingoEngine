@@ -21,6 +21,15 @@ namespace LingoEngine.FrameworkCommunication
         float SetDesiredWidth { get; set; }
         int ZIndex { get; set; }
 
+        /// <summary>Rotation of the sprite in degrees.</summary>
+        float Rotation { get; set; }
+
+        /// <summary>Horizontal skew angle of the sprite in degrees.</summary>
+        float SkewX { get; set; }
+
+        /// <summary>Vertical skew angle of the sprite in degrees.</summary>
+        float SkewY { get; set; }
+
         /// <summary>Notify that the underlying member changed.</summary>
         void MemberChanged();
 
