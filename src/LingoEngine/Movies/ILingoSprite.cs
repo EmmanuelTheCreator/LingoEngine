@@ -121,6 +121,16 @@ namespace LingoEngine.Movies
         int LocZ { get; set; }
 
         /// <summary>
+        /// Rotation of the sprite in degrees.
+        /// </summary>
+        float Rotation { get; set; }
+
+        /// <summary>
+        /// Skew angle of the sprite in degrees.
+        /// </summary>
+        float Skew { get; set; }
+
+        /// <summary>
         /// List of script instance names or types attached to the sprite.
         /// </summary>
         List<string> ScriptInstanceList { get; }
