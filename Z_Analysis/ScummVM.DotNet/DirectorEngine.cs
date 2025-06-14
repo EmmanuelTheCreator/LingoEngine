@@ -1,4 +1,4 @@
-﻿using Director.Primitives;
+using Director.Primitives;
 
 namespace Director
 {
@@ -9,13 +9,32 @@ namespace Director
     {
         public StageWindow Stage { get; set; }
 
-        public DirectorEngine(StageWindow stage)
+        public DirectorGameDescription Description { get; }
+
+        public ushort Version { get; private set; }
+
+        public Platform Platform => Description.Platform;
+
+        public uint GameFlags => Description.Flags;
+
+        public string GameId => Description.GameId;
+
+        public DirectorEngine(StageWindow stage, DirectorGameDescription desc)
         {
             Stage = stage;
+            Description = desc;
+            Version = desc.Version;
         }
 
+        public void SetVersion(ushort version)
+        {
+            Version = version;
+        }
 
-
+        public void ParseOptions()
+        {
+            // TODO: implement option parsing
+        }
 
         /// <summary>
         /// Converts a 16-bit RGB 555 color to a LingoColor (full RGB).

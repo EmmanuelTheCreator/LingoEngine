@@ -11,6 +11,7 @@ namespace Director.Scripts
         void Visit(NewObjNode node);
         void Visit(LiteralNode node);
         void Visit(IfStmtNode node);
+        void Visit(IfElseStmtNode node);
         void Visit(EndCaseNode node);
         void Visit(ObjCallNode node);
         void Visit(PutStmtNode node);
@@ -18,6 +19,7 @@ namespace Director.Scripts
         void Visit(BinaryOpNode node);
         void Visit(CaseStmtNode node);
         void Visit(ExitStmtNode node);
+        void Visit(ReturnStmtNode node);
         void Visit(TellStmtNode node);
         void Visit(WhenStmtNode node);
         void Visit(OtherwiseNode node);
@@ -39,6 +41,9 @@ namespace Director.Scripts
         void Visit(SpritePropExprNode node);
         void Visit(ChunkDeleteStmtNode node);
         void Visit(ChunkHiliteStmtNode node);
+        void Visit(GlobalDeclStmtNode node);
+        void Visit(PropertyDeclStmtNode node);
+        void Visit(InstanceDeclStmtNode node);
         void Visit(RepeatWhileStmtNode node);
         void Visit(MenuItemPropExprNode node);
         void Visit(ObjPropIndexExprNode node);
@@ -160,21 +165,17 @@ namespace Director.Scripts
         }
 
         public void Visit(ExitStmtNode node) => Write("exit");
+        public void Visit(ReturnStmtNode node)
+        {
+            Write("return");
+            if (node.Value != null)
+            {
+                Write(" ");
+                node.Value.Accept(this);
+            }
+        }
         public void Visit(VarNode node) => Write(node.VarName);
 
-        //public void Visit(ExitRepeatStmtNode node) => Write("exit repeat");
-
-        //public void Visit(NextRepeatStmtNode node) => Write("next repeat");
-
-
-        //public void Visit(NotOpNode node)
-        //{
-        //    Write("not ");
-        //    bool parenOperand = node.Operand.HasSpaces(_dot);
-        //    if (parenOperand) Write("(");
-        //    node.Operand.Accept(this);
-        //    if (parenOperand) Write(")");
-        //}
         private void Write(Datum datum)
         {
             switch (datum.Type)
@@ -316,6 +317,18 @@ namespace Director.Scripts
             Write("end if");
         }
 
+        public void Visit(IfElseStmtNode node)
+        {
+            Write("if ");
+            node.Condition.Accept(this);
+            Write(" then");
+            WriteLine();
+            node.ThenBlock.Accept(this);
+            WriteLine("else");
+            node.ElseBlock.Accept(this);
+            Write("end if");
+        }
+
         public void Visit(EndCaseNode node)
         {
             Write("end case");
@@ -446,16 +459,9 @@ namespace Director.Scripts
 
 
 
-        // These methods assume the node classes are defined with the correct properties
-        // and that you have suitable helper methods like Write, WriteLine, Indent, Unindent, etc.
-
-      
         public void Visit(ChunkExprNode node)
         {
-            //Write("the ");
-            //node.ChunkType.Accept(this);
-            //Write(" of ");
-            //node.Container.Accept(this);
+            node.Expr.Accept(this);
         }
 
         public void Visit(InverseOpNode node)
@@ -466,78 +472,59 @@ namespace Director.Scripts
 
         public void Visit(ObjCallV4Node node)
         {
-            //node.Object.Accept(this);
-            //Write(".");
-            //node.Function.Accept(this);
-            //Write("(");
-            //for (int i = 0; i < node.Args.Count; i++)
-            //{
-            //    if (i > 0) Write(", ");
-            //    node.Args[i].Accept(this);
-            //}
-            //Write(")");
+            node.Object.Accept(this);
+            Write(".");
+            Write(node.Name.Value.AsString());
+            Write("(");
+            node.ArgList.Accept(this);
+            Write(")");
         }
 
         public void Visit(MemberExprNode node)
         {
-            //Write("member ");
-            //node.Index.Accept(this);
+            Write("member ");
+            node.Expr.Accept(this);
         }
 
         public void Visit(ObjPropExprNode node)
         {
-            //node.Object.Accept(this);
-            //Write(".");
-            //Write(node.Property);
+            node.Object.Accept(this);
+            Write(".");
+            node.Property.Accept(this);
         }
 
         public void Visit(PlayCmdStmtNode node)
         {
-            //Write("play");
-            //if (node.Channel != null)
-            //{
-            //    Write(" channel ");
-            //    node.Channel.Accept(this);
-            //}
-            //if (node.Member != null)
-            //{
-            //    Write(" member ");
-            //    node.Member.Accept(this);
-            //}
-            //WriteLine();
+            Write("play ");
+            node.Command.Accept(this);
         }
 
         public void Visit(ThePropExprNode node)
         {
-            //Write("the ");
-            //Write(node.Prop);
+            Write("the ");
+            node.Property.Accept(this);
         }
 
         public void Visit(MenuPropExprNode node)
         {
-            //Write("menu ");
-            //node.MenuExpr.Accept(this);
-            //Write(".");
-            //Write(node.Prop);
+            Write("the ");
+            node.Property.Accept(this);
+            Write(" of ");
+            node.Menu.Accept(this);
         }
 
         public void Visit(SoundCmdStmtNode node)
         {
-            //Write(node.Command);
-            //if (node.Args != null)
-            //{
-            //    Write(" ");
-            //    node.Args.Accept(this);
-            //}
-            WriteLine();
+            Write("sound ");
+            node.Command.Accept(this);
         }
 
         public void Visit(SoundPropExprNode node)
         {
-            //Write("sound ");
-            //node.Channel.Accept(this);
-            //Write(".");
-            //Write(node.Property);
+            Write("the ");
+            node.Property.Accept(this);
+            Write(" of sound ");
+            node.Sound.Accept(this);
         }
 
         public void Visit(AssignmentStmtNode node)
@@ -568,28 +555,40 @@ namespace Director.Scripts
 
         public void Visit(SpritePropExprNode node)
         {
-            //Write("sprite ");
-            //node.Sprite.Accept(this);
-            //Write(".");
-            //Write(node.Property);
+            Write("sprite ");
+            node.Sprite.Accept(this);
+            Write(".");
+            node.Property.Accept(this);
         }
 
         public void Visit(ChunkDeleteStmtNode node)
         {
-            //Write("delete the ");
-            //node.ChunkType.Accept(this);
-            //Write(" of ");
-            //node.Container.Accept(this);
-            //WriteLine();
+            Write("delete ");
+            node.Chunk.Accept(this);
         }
 
         public void Visit(ChunkHiliteStmtNode node)
         {
-            //Write("hilite the ");
-            //node.ChunkType.Accept(this);
-            //Write(" of ");
-            //node.Container.Accept(this);
-            //WriteLine();
+            Write("hilite ");
+            node.Chunk.Accept(this);
+        }
+
+        public void Visit(GlobalDeclStmtNode node)
+        {
+            Write("global ");
+            Write(string.Join(", ", node.Names));
+        }
+
+        public void Visit(PropertyDeclStmtNode node)
+        {
+            Write("property ");
+            Write(string.Join(", ", node.Names));
+        }
+
+        public void Visit(InstanceDeclStmtNode node)
+        {
+            Write("instance ");
+            Write(string.Join(", ", node.Names));
         }
 
         public void Visit(RepeatWhileStmtNode node)
@@ -605,10 +604,10 @@ namespace Director.Scripts
 
         public void Visit(MenuItemPropExprNode node)
         {
-            //Write("menuItem ");
-            //node.MenuItem.Accept(this);
-            //Write(".");
-            //Write(node.Property);
+            Write("menuItem ");
+            node.MenuItem.Accept(this);
+            Write(".");
+            node.Property.Accept(this);
         }
 
         public void Visit(ObjPropIndexExprNode node)
@@ -649,34 +648,30 @@ namespace Director.Scripts
 
         public void Visit(SpriteWithinExprNode node)
         {
-            //Write("sprite ");
-            //node.Left.Accept(this);
-            //Write(" within sprite ");
-            //node.Right.Accept(this);
+            Write("sprite ");
+            node.SpriteA.Accept(this);
+            Write(" within ");
+            node.SpriteB.Accept(this);
         }
 
         public void Visit(LastStringChunkExprNode node)
         {
-            //Write("the last ");
-            //node.ChunkType.Accept(this);
-            //Write(" of ");
-            //node.Container.Accept(this);
+            Write("the last chunk of ");
+            node.Source.Accept(this);
         }
 
         public void Visit(SpriteIntersectsExprNode node)
         {
-            //Write("sprite ");
-            //node.Left.Accept(this);
-            //Write(" intersects sprite ");
-            //node.Right.Accept(this);
+            Write("sprite ");
+            node.SpriteA.Accept(this);
+            Write(" intersects ");
+            node.SpriteB.Accept(this);
         }
 
         public void Visit(StringChunkCountExprNode node)
         {
-            //Write("the number of ");
-            //node.ChunkType.Accept(this);
-            //Write(" in ");
-            //node.Container.Accept(this);
+            Write("the number of chunks in ");
+            node.Source.Accept(this);
         }
 
         public void Visit(NotOpNode node)
@@ -687,14 +682,10 @@ namespace Director.Scripts
 
         public void Visit(CallNode node)
         {
-            //node.Callee.Accept(this);
-            //Write("(");
-            //for (int i = 0; i < node.Arguments.Count; i++)
-            //{
-            //    if (i > 0) Write(", ");
-            //    node.Args[i].Accept(this);
-            //}
-            //Write(")");
+            node.Callee.Accept(this);
+            Write("(");
+            node.Arguments.Accept(this);
+            Write(")");
         }
 
         public void Visit(RepeatWithStmtNode repeatWithStmtNode)
