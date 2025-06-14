@@ -171,7 +171,7 @@ When a movie stops, events occur in the following order:
         internal virtual void DoBeginSprite()
         {
             // Subscribe all behaviors
-            _eventMediator.Subscribe(Animator);
+            //_eventMediator.Subscribe(Animator);
             _behaviors.ForEach(b =>
             {
                 _eventMediator.Subscribe(b);
@@ -189,7 +189,7 @@ When a movie stops, events occur in the following order:
                 _eventMediator.Unsubscribe(b);
                 if (b is IHasEndSpriteEvent endSpriteEvent) endSpriteEvent.EndSprite();
             });
-            _eventMediator.Unsubscribe(Animator);
+           // _eventMediator.Unsubscribe(Animator);
             EndSprite();
         }
         protected virtual void EndSprite() { }
@@ -369,7 +369,7 @@ When a movie stops, events occur in the following order:
         {
             LocH = mouse.MouseH;
             LocV = mouse.MouseV;
-            _environment.Player.Stage.AddKeyFrame(this);
+            //_environment.Player.Stage.AddKeyFrame(this);
             MouseDrag(mouse);
         }
         protected virtual void MouseDrag(LingoMouse mouse) { }

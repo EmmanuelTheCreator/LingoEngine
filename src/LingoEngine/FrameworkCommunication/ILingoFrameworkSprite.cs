@@ -27,8 +27,8 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Horizontal skew angle of the sprite in degrees.</summary>
         float SkewX { get; set; }
 
-        /// <summary>Vertical skew angle of the sprite in degrees.</summary>
-        float SkewY { get; set; }
+        // <summary>Vertical skew angle of the sprite in degrees.</summary>
+        //float SkewY { get; set; }
 
         /// <summary>Notify that the underlying member changed.</summary>
         void MemberChanged();

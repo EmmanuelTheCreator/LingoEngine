@@ -39,7 +39,7 @@ namespace LingoEngine.Animations
 
         public void EnterFrame()
         {
-            Apply(_movie.CurrentFrame);
+            //Apply(_movie.CurrentFrame);
         }
     }
 }

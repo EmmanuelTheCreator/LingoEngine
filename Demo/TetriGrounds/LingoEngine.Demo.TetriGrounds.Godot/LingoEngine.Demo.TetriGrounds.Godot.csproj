@@ -317,7 +317,6 @@
 	  <None Include="Medias\Data\9_Bg.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
-	  <Content Include="Medias\Data\Game.jpg" />
 	  <None Include="Medias\InternalExt\24.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
@@ -390,7 +389,6 @@
 	  <None Include="Medias\Data\8.rtf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
-	  <None Include="Medias\Data\Game.jpg.import" />
 	  <None Include="Medias\Data\Members.csv">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
