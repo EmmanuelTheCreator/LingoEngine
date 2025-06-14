@@ -5,7 +5,10 @@ namespace LingoEngine.Director.LGodot
     public  abstract partial class BaseGodotWindow : Control
     {
         private bool _dragging;
+        private bool _resizing;
         private readonly Label _label = new Label();
+        private readonly Button _closeButton = new Button();
+        private const int ResizeHandle = 10;
 
         public BaseGodotWindow(string name)
         {
@@ -15,12 +18,21 @@ namespace LingoEngine.Director.LGodot
             _label.LabelSettings.FontSize = 12;
             _label.LabelSettings.FontColor = new Color(1, 0.3f, 0.2f);
             _label.Text = name;
+
+            AddChild(_closeButton);
+            _closeButton.Text = "X";
+            _closeButton.CustomMinimumSize = new Vector2(20, 16);
+            _closeButton.Pressed += () => Visible = false;
         }
 
         public override void _Draw()
         {
             DrawRect(new Rect2(0, 0, Size.X, 20), new Color("#d2e0ed"));
             DrawLine(new Vector2(0, 20), new Vector2(Size.X, 20), Colors.Black);
+            _closeButton.Position = new Vector2(Size.X - 22, 2);
+            // draw resize handle
+            DrawLine(new Vector2(Size.X - ResizeHandle, Size.Y), new Vector2(Size.X, Size.Y - ResizeHandle), Colors.DarkGray);
+            DrawLine(new Vector2(Size.X - ResizeHandle/2f, Size.Y), new Vector2(Size.X, Size.Y - ResizeHandle/2f), Colors.DarkGray);
         }
 
         public override void _GuiInput(InputEvent @event)
@@ -30,14 +42,26 @@ namespace LingoEngine.Director.LGodot
                 Vector2 pos = GetLocalMousePosition();
                 if (pos.Y < 20)
                 {
-                    if (mb.Pressed)
-                        _dragging = true;
-                    else
-                        _dragging = false;
+                    _dragging = mb.Pressed;
+                    _resizing = false;
+                }
+                else if (pos.X >= Size.X - ResizeHandle && pos.Y >= Size.Y - ResizeHandle)
+                {
+                    _resizing = mb.Pressed;
+                    _dragging = false;
                 }
             }
-            else if (@event is InputEventMouseMotion motion && _dragging)
-                Position += motion.Relative;
+            else if (@event is InputEventMouseMotion motion)
+            {
+                if (_dragging)
+                    Position += motion.Relative;
+                else if (_resizing)
+                {
+                    Size += new Vector2(motion.Relative.X, motion.Relative.Y);
+                    CustomMinimumSize = Size;
+                    QueueRedraw();
+                }
+            }
         }
     }
 }
