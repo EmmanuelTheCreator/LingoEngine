@@ -10,6 +10,8 @@ namespace LingoEngine.Movies
     {
         private readonly ILingoFrameworkStage _lingoFrameworkMovieStage;
 
+        public bool RecordKeyframes { get; set; }
+
         public LingoMovie? ActiveMovie { get; private set; }
         public LingoMember? MouseMemberUnderMouse
         {
@@ -25,6 +27,14 @@ namespace LingoEngine.Movies
         public LingoStage(ILingoFrameworkStage godotInstance)
         {
             _lingoFrameworkMovieStage = godotInstance;
+        }
+
+        internal void AddKeyFrame(LingoSprite sprite)
+        {
+            if (!RecordKeyframes || ActiveMovie == null)
+                return;
+            int frame = ActiveMovie.CurrentFrame;
+            sprite.Animator.AddKeyFrame(frame, sprite.LocH, sprite.LocV, sprite.Rotation, sprite.Skew);
         }
 
         public void SetActiveMovie(LingoMovie? lingoMovie)
