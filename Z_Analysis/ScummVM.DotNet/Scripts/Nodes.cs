@@ -43,6 +43,18 @@ namespace Director.Scripts
         }
         public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
+
+    public class ReturnStmtNode : Node
+    {
+        public ReturnStmtNode(Node? value)
+        {
+            Value = value;
+        }
+
+        public Node? Value { get; }
+
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
+    }
     public class NextRepeatIfStmtNode : Node
     {
         public Node Condition { get; }
@@ -90,6 +102,22 @@ namespace Director.Scripts
         public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
+    public class IfElseStmtNode : Node
+    {
+        public IfElseStmtNode(Node condition, BlockNode thenBlock, BlockNode elseBlock)
+        {
+            Condition = condition;
+            ThenBlock = thenBlock;
+            ElseBlock = elseBlock;
+        }
+
+        public Node Condition { get; }
+        public BlockNode ThenBlock { get; }
+        public BlockNode ElseBlock { get; }
+
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
+    }
+
     public class EndCaseNode : Node
     {
         public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
@@ -115,6 +143,24 @@ namespace Director.Scripts
         public Node Variable { get; set; }
         public Node Target { get; }
 
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
+    }
+
+    public class GlobalDeclStmtNode : Node
+    {
+        public List<string> Names { get; } = new();
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
+    }
+
+    public class PropertyDeclStmtNode : Node
+    {
+        public List<string> Names { get; } = new();
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
+    }
+
+    public class InstanceDeclStmtNode : Node
+    {
+        public List<string> Names { get; } = new();
         public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
