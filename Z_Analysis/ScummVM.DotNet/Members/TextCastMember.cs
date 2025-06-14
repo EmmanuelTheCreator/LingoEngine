@@ -24,7 +24,7 @@ namespace Director.Members
             : base(parent, id, CastType.Text) { }
 
         public TextCastMember(Cast cast, int castId, SeekableReadStreamEndian stream)
-                : base(cast, castId, stream)
+            : base(cast, castId, stream)
         {
             _type = CastType.Text;
             var reader = stream;
@@ -55,6 +55,31 @@ namespace Director.Members
                 if (mapEntry.RemapChars)
                     Text = RemapText(Text, _cast.MacCharsToWin);
             }
+        }
+
+        public TextCastMember(Cast cast, int castId, TextCastMember source)
+            : base(cast, castId, CastType.Text)
+        {
+            source.Load();
+            _loaded = true;
+            _initialRect = source._initialRect;
+            _boundingRect = source._boundingRect;
+            if (cast == source._cast)
+                _children = source._children;
+
+            Text = source.Text;
+            FontName = source.FontName;
+            FontSize = source.FontSize;
+            FontId = source.FontId;
+            Bold = source.Bold;
+            Italic = source.Italic;
+            Underline = source.Underline;
+            ForeColor = source.ForeColor;
+            BackColor = source.BackColor;
+            Alignment = source.Alignment;
+            WordWrap = source.WordWrap;
+            Editable = source.Editable;
+            Scrollable = source.Scrollable;
         }
 
 
@@ -121,9 +146,14 @@ namespace Director.Members
             return GetLineCount() * GetLineHeight();
         }
 
-        public string FormatInfo()
+        public override CastMember Duplicate(Cast cast, int castId)
         {
-            return $"FontID: {FontId}, Size: {FontSize}, Style: {(Bold ? "B" : "")}{(Italic ? "I" : "")}{(Underline ? "U" : "")}";
+            return new TextCastMember(cast, castId, this);
+        }
+
+        public override string FormatInfo()
+        {
+            return $"FontID:{FontId} Size:{FontSize} Style:{(Bold ? "B" : "")}{(Italic ? "I" : "")}{(Underline ? "U" : "")}";
         }
 
         // Placeholder implementations for less-used parts
@@ -136,45 +166,59 @@ namespace Director.Members
 
         public void ImportRTE(object rte)
         {
-            // TODO: Parse RTE data and extract text + formatting
-            // Placeholder until RTE structure is defined
-            throw new NotImplementedException("ImportRTE is not yet implemented");
+            switch (rte)
+            {
+                case Director.Primitives.RTE1 r:
+                    Text = System.Text.Encoding.ASCII.GetString(r.RawData);
+                    break;
+                case byte[] bytes:
+                    Text = System.Text.Encoding.ASCII.GetString(bytes);
+                    break;
+                case string str:
+                    Text = str;
+                    break;
+            }
         }
         public void ImportStxt(object stxt)
         {
-            // TODO: Parse Stxt and load into text member
-            throw new NotImplementedException("ImportStxt is not yet implemented");
+            if (stxt is Director.Tools.Stxt s)
+            {
+                Text = s.PrintableText;
+                FontId = s.Style.FontId;
+                FontSize = s.Style.FontSize;
+                Bold = (s.Style.TextSlant & 0x01) != 0;
+                Italic = (s.Style.TextSlant & 0x02) != 0;
+                Underline = (s.Style.TextSlant & 0x04) != 0;
+                ForeColor = new LingoColor((byte)(s.Style.R >> 8), (byte)(s.Style.G >> 8), (byte)(s.Style.B >> 8));
+            }
         }
 
         public void CreateWidget()
         {
-            // TODO: Create platform-specific widget representation
-            throw new NotImplementedException("CreateWidget not implemented");
+            // Widgets are not currently supported in this C# version.
         }
         public void CreateWindowOrWidget()
         {
-            // TODO: Initialize window or UI element for editing/display
-            throw new NotImplementedException("CreateWindowOrWidget not implemented");
+            // Widgets are not currently supported in this C# version.
         }
         public void UpdateFromWidget()
         {
-            // TODO: Update internal text based on widget state
-            throw new NotImplementedException("UpdateFromWidget not implemented");
+            // Placeholder for widget sync logic
         }
-        public void Unload()
+        public override void Unload()
         {
-            // TODO: Dispose widget and release resources
-            throw new NotImplementedException("Unload not implemented");
+            Text = string.Empty;
+            _loaded = false;
         }
         public object GetWidget()
         {
-            // TODO: Return current widget instance if any
-            throw new NotImplementedException("GetWidget not implemented");
+            // Widgets are not currently supported in this C# version.
+            return null!;
         }
         public bool IsWithin(int x, int y)
         {
-            // TODO: Determine if point is inside visual bounds
-            throw new NotImplementedException("IsWithin not implemented");
+            return x >= _boundingRect.Left && x <= _boundingRect.Right &&
+                   y >= _boundingRect.Top && y <= _boundingRect.Bottom;
         }
         
     }
