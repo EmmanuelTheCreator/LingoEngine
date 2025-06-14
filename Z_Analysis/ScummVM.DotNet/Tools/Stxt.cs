@@ -15,6 +15,26 @@ namespace Director.Tools
         private string _ftext = string.Empty; // formatted
         private string _ptext = string.Empty; // printable
 
+        /// <summary>
+        /// Gets the style information extracted from the STXT chunk.
+        /// </summary>
+        public FontStyle Style => _style;
+
+        /// <summary>
+        /// Gets the raw text data as stored in the STXT resource.
+        /// </summary>
+        public string RawText => _rtext;
+
+        /// <summary>
+        /// Gets the formatted text including style escape sequences.
+        /// </summary>
+        public string FormattedText => _ftext;
+
+        /// <summary>
+        /// Gets the printable UTF-8 representation of the text.
+        /// </summary>
+        public string PrintableText => _ptext;
+
         public Stxt(Cast cast, SeekableReadStreamEndian textStream)
         {
             _cast = cast;

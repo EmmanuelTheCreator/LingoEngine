@@ -150,6 +150,80 @@ namespace Director.Members
             PixelData = reader.ReadBytes(ImageSize);
         }
 
+        /// <summary>
+        /// Copy constructor used when duplicating bitmap members.
+        /// </summary>
+        public BitmapCastMember(Cast cast, int castId, BitmapCastMember source)
+            : base(cast, castId, CastType.Bitmap)
+        {
+            source.Load();
+            _loaded = true;
+
+            _initialRect = source._initialRect;
+            _boundingRect = source._boundingRect;
+            if (cast == source._cast)
+                _children = source._children;
+
+            _picture = new Picture(source._picture.Width, source._picture.Height, source._picture.BitsPerPixel, source._picture.Pixels, source._picture.Clut);
+            _ditheredImg = null;
+            _matte = null;
+            _pitch = source._pitch;
+            _regX = source._regX;
+            _regY = source._regY;
+            _flags2 = source._flags2;
+            _bytes = source._bytes;
+            _clut = source._clut;
+            _ditheredTargetClut = source._ditheredTargetClut;
+            _bitsPerPixel = source._bitsPerPixel;
+            _tag = source._tag;
+            _noMatte = source._noMatte;
+            _external = source._external;
+
+            Width = source.Width;
+            Height = source.Height;
+            BitsPerPixel = source.BitsPerPixel;
+            RowBytes = source.RowBytes;
+            ImageDepth = source.ImageDepth;
+            FormatFlags = source.FormatFlags;
+            IsCompressed = source.IsCompressed;
+            ImageSize = source.ImageSize;
+            PixelData = (byte[])source.PixelData.Clone();
+        }
+
+        /// <summary>
+        /// Creates a duplicate of this cast member.
+        /// </summary>
+        public override CastMember Duplicate(Cast cast, int castId)
+        {
+            return new BitmapCastMember(cast, castId, this);
+        }
+
+        public override string FormatInfo()
+        {
+            return $"initialRect:{_initialRect.Width}x{_initialRect.Height}@{_initialRect.Left},{_initialRect.Top}, " +
+                   $"boundingRect:{_boundingRect.Width}x{_boundingRect.Height}@{_boundingRect.Left},{_boundingRect.Top}, " +
+                   $"regX:{_regX}, regY:{_regY}, pitch:{_pitch}, bpp:{_bitsPerPixel}";
+        }
+
+        public LingoPoint GetRegistrationOffset()
+            => new LingoPoint(_regX - _initialRect.Left, _regY - _initialRect.Top);
+
+        public LingoPoint GetRegistrationOffset(int width, int height)
+        {
+            var offset = GetRegistrationOffset();
+            return new LingoPoint(offset.X * width / Math.Max(1, _initialRect.Width),
+                                  offset.Y * height / Math.Max(1, _initialRect.Height));
+        }
+
+        public bool IsModified() => _modified;
+
+        public override void Unload()
+        {
+            PixelData = Array.Empty<byte>();
+            _picture = new Picture();
+            _loaded = false;
+        }
+
     }
 
 }
