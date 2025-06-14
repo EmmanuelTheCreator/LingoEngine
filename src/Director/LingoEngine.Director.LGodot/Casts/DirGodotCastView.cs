@@ -5,7 +5,7 @@ using LingoEngine.Movies;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal class DirGodotCastWindow : BaseGodotWindow, IDisposable
+    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable
     {
         private readonly TabContainer _tabs;
         private readonly DirGodotCastMemberPropViewer _selectedItem;
