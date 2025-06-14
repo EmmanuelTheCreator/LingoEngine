@@ -187,7 +187,7 @@ internal partial class DirGodotFrameScriptsBar : Control
         {
             float x = ChannelInfoWidth + f * FrameWidth;
             if (f % 5 == 0)
-                DrawRect(new Rect2(x, 0, FrameWidth, ChannelHeight), new Color(0.3f, 0.3f, 0.3f, 0.2f));
+                DrawRect(new Rect2(x, 0, FrameWidth, ChannelHeight), Colors.DarkGray);
         }
         for (int f = 0; f <= frameCount; f++)
         {
@@ -337,11 +337,13 @@ internal partial class DirGodotScoreGrid : Control
         Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth, channelCount * ChannelHeight);
         CustomMinimumSize = Size;
 
+        DrawRect(new Rect2(0, 0, Size.X, Size.Y), Colors.White);
+
         for (int f = 0; f < frameCount; f++)
         {
             float x = ChannelInfoWidth + f * FrameWidth;
             if (f % 5 == 0)
-                DrawRect(new Rect2(x, 0, FrameWidth, channelCount * ChannelHeight), new Color(0.3f, 0.3f, 0.3f, 0.2f));
+                DrawRect(new Rect2(x, 0, FrameWidth, channelCount * ChannelHeight), Colors.DarkGray);
         }
 
         for (int f = 0; f <= frameCount; f++)

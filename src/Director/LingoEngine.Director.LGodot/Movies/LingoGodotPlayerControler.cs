@@ -9,7 +9,7 @@ namespace LingoEngine.Director.LGodot.Movies
     public class LingoGodotPlayerControler : IHasStepFrameEvent, IDisposable
     {
         private readonly ILingoMovie _lingoMovie;
-        private DirGodotCastViewer _castViewer;
+        private DirGodotCastWindow _castViewer;
         private DirGodotScoreWindow _overlay;
 
         public Node2D Container { get; set; } = new Node2D();
@@ -31,7 +31,7 @@ namespace LingoEngine.Director.LGodot.Movies
             //    FontSize = 10,
             //};
             //LabelNode.LabelSettings = labelSettings;
-            _castViewer = new DirGodotCastViewer(parent, lingoMovie);
+            _castViewer = new DirGodotCastWindow(parent, lingoMovie) { Visible = false };
             _overlay = new DirGodotScoreWindow { Visible = false };
             _overlay.SetMovie((LingoMovie)lingoMovie);
             parent.AddChild(_overlay);
