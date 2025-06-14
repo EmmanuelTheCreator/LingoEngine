@@ -1,0 +1,12 @@
+.DS_STORE
+.vscode
+
+*.bin
+*.json
+*.lasm
+*.ls
+
+fontmaps/*.h
+*.o
+/projectorrays
+/projectorrays.exe
