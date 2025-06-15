@@ -1,6 +1,8 @@
 ﻿using Godot;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Director.LGodot.Casts
@@ -8,6 +10,7 @@ namespace LingoEngine.Director.LGodot.Casts
     internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable
     {
         private readonly TabContainer _tabs;
+        private readonly Inspector.DirGodotObjectInspector _inspector;
         private readonly DirGodotCastMemberPropViewer _selectedItem;
         private readonly Control _topBar = new Control();
         private readonly Button _rewindButton = new Button();
@@ -16,14 +19,13 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Button _rewindButton;
         private readonly Button _playButton;
 
-
         private readonly ILingoMovie _lingoMovie;
         private bool _wasToggleKey;
 
         public ILingoCast? ActiveCastLib { get; private set; }
         public DirGodotCastView CastLibViewer { get; }
 
-        public DirGodotCastWindow(Node parent, ILingoMovie lingoMovie)
+        public DirGodotCastWindow(Node parent, ILingoMovie lingoMovie, IDirectorEventMediator mediator)
             : base("Cast")
         {
             Position = new Vector2(650, 20);
@@ -78,6 +80,9 @@ namespace LingoEngine.Director.LGodot.Casts
                 tabContent.AddChild(castLibViewer.Node);
                 _tabs.AddChild(tabContent);
             }
+
+            _inspector = new Inspector.DirGodotObjectInspector(mediator) { Visible = false };
+            parent.AddChild(_inspector);
             _selectedItem = new DirGodotCastMemberPropViewer();
             parent.AddChild(_selectedItem);
 
@@ -98,6 +103,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private void UpdatePlayButton()
         {
             _playButton.Text = _lingoMovie.IsPlaying ? "Stop" : "Play";
+
         }
 
         public void Toggle()
@@ -143,7 +149,8 @@ namespace LingoEngine.Director.LGodot.Casts
 
         private void OnSelectElement(DirGodotCastItem castItem)
         {
-            _selectedItem.Load(castItem.LingoMember);
+            _inspector.Visible = true;
+            _inspector.ShowObject(castItem.LingoMember);
         }
         public void Activate(int castlibNum)
         {
@@ -202,45 +209,5 @@ namespace LingoEngine.Director.LGodot.Casts
         }
        
 
-    }
-    public partial class DirGodotCastMemberPropViewer : BaseGodotWindow
-    {
-        private Label _labelName;
-        private readonly Label _labelType;
-        private readonly Label _labelSize;
-        private readonly Label _labelCastNumber;
-        private readonly Label _labelFileSize;
-        private readonly ColorPickerButton _colorButton;
-
-        public DirGodotCastMemberPropViewer()
-            : base("Member")
-        {
-            _labelName = new Label{Text = "" };
-            _labelType = new Label{Text = "" };
-            _labelSize = new Label{Text = "" };
-            _labelCastNumber = new Label{Text = "" };
-            _labelFileSize = new Label{Text = "" };
-            _colorButton = new ColorPickerButton();
-            _colorButton.Position = new Vector2(10, 70);
-            Position = new Vector2(500, 300);
-            Size = new Vector2(200, 100);
-            CustomMinimumSize = Size;
-            AddChild(_labelName);
-            AddChild(_labelType);
-            AddChild(_labelSize);
-            AddChild(_labelCastNumber);
-            AddChild(_labelFileSize);
-            AddChild(_colorButton);
-            
-        }
-        public void Load(ILingoMember lingoMember)
-        {
-            _labelName.Text = lingoMember.NumberInCast + ". " + lingoMember.Name;
-            _labelType.Text = "Type:" + lingoMember.Type;
-            _labelSize.Text = "CastNumber:" + lingoMember.CastLibNum;
-            _labelCastNumber.Text = "Size:" + lingoMember.Width + "x" + lingoMember.Height;
-            _labelFileSize.Text = "File Size:" + lingoMember.Size + " bytes";
-           
-        }
     }
 }
