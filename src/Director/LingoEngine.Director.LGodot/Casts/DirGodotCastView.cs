@@ -9,6 +9,9 @@ namespace LingoEngine.Director.LGodot.Casts
     {
         private readonly TabContainer _tabs;
         private readonly DirGodotCastMemberPropViewer _selectedItem;
+        private readonly HBoxContainer _topBar;
+        private readonly Button _rewindButton;
+        private readonly Button _playButton;
 
         private readonly ILingoMovie _lingoMovie;
         private bool _wasToggleKey;
@@ -22,9 +25,17 @@ namespace LingoEngine.Director.LGodot.Casts
             Position = new Vector2(650, 20);
             Size = new Vector2(360, 620);
             CustomMinimumSize = Size;
+            _topBar = new HBoxContainer();
+            _topBar.Position = new Vector2(0, TitleBarHeight);
+            _rewindButton = new Button { Text = "<<" };
+            _playButton = new Button { Text = "Play" };
+            _topBar.AddChild(_rewindButton);
+            _topBar.AddChild(_playButton);
+            AddChild(_topBar);
+
             _tabs = new TabContainer();
             InitTabs();
-            _tabs.Position = new Vector2(0, 20);
+            _tabs.Position = new Vector2(0, TitleBarHeight + 20);
 
             parent.AddChild(this);
             _lingoMovie = lingoMovie;
@@ -42,6 +53,24 @@ namespace LingoEngine.Director.LGodot.Casts
             }
             _selectedItem = new DirGodotCastMemberPropViewer();
             parent.AddChild(_selectedItem);
+
+            _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
+            _playButton.Pressed += OnPlayPressed;
+            UpdatePlayButton();
+        }
+
+        private void OnPlayPressed()
+        {
+            if (_lingoMovie.IsPlaying)
+                _lingoMovie.Halt();
+            else
+                _lingoMovie.Play();
+            UpdatePlayButton();
+        }
+
+        private void UpdatePlayButton()
+        {
+            _playButton.Text = _lingoMovie.IsPlaying ? "Stop" : "Play";
         }
 
         public void Toggle()
