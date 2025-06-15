@@ -1,10 +1,10 @@
-﻿namespace Director.Scripts
+﻿namespace LingoEngine.Lingo.Core.Tokenizer
 {
     /// <summary>
     /// Flags used when registering or processing Lingo scripts.
     /// </summary>
     [Flags]
-    public enum ScriptFlags
+    public enum LingoScriptFlags
     {
         /// <summary>No special behavior.</summary>
         None = 0,

@@ -1,17 +1,16 @@
-﻿
-namespace Director.Scripts
+﻿namespace LingoEngine.Lingo.Core.Tokenizer
 {
     /// <summary>
     /// Parses a Lingo script source string into an abstract syntax tree (AST).
     /// </summary>
     public class LingoAstParser
     {
-        private Tokenizer _tokenizer = null!;
+        private LingoTokenizer _tokenizer = null!;
         private LingoToken _currentToken;
 
         public Node Parse(string source)
         {
-            _tokenizer = new Tokenizer(source);
+            _tokenizer = new LingoTokenizer(source);
             AdvanceToken();
             // Placeholder for now
             return ParseHandlerBody();
@@ -73,7 +72,7 @@ namespace Director.Scripts
                 var value = ParseExpression();
                 return new AssignmentStmtNode
                 {
-                    Target = new DatumNode(new Datum(ident.Lexeme, isSymbol: true)),
+                    Target = new DatumNode(new LingoDatum(ident.Lexeme, isSymbol: true)),
                     Value = value
                 };
             }
@@ -129,7 +128,7 @@ namespace Director.Scripts
                     return ParseIfStatement();
 
                 default:
-                    return new DatumNode(new Datum(keywordToken.Lexeme));
+                    return new DatumNode(new LingoDatum(keywordToken.Lexeme));
             }
         }
 
@@ -139,18 +138,18 @@ namespace Director.Scripts
             {
                 case LingoTokenType.Number:
                 case LingoTokenType.String:
-                    var literal = new DatumNode(new Datum(_currentToken.Lexeme));
+                    var literal = new DatumNode(new LingoDatum(_currentToken.Lexeme));
                     AdvanceToken();
                     return literal;
 
                 case LingoTokenType.Identifier:
-                    var ident = new DatumNode(new Datum(_currentToken.Lexeme, isSymbol: true));
+                    var ident = new DatumNode(new LingoDatum(_currentToken.Lexeme, isSymbol: true));
                     AdvanceToken();
                     return ident;
 
                 default:
                     // fallback: unknown expressions are treated as raw datum
-                    var fallback = new DatumNode(new Datum(_currentToken.Lexeme));
+                    var fallback = new DatumNode(new LingoDatum(_currentToken.Lexeme));
                     AdvanceToken();
                     return fallback;
             }
