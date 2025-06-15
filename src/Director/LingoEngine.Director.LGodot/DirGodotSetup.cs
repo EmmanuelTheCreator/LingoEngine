@@ -1,6 +1,8 @@
 using Godot;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Scores;
+using LingoEngine.Director.LGodot.Movies;
+using LingoEngine.FrameworkCommunication;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Director.LGodot
@@ -11,6 +13,7 @@ namespace LingoEngine.Director.LGodot
         {
             engineRegistration.Services(s =>
             {
+
                 IServiceCollection serviceCollection = s
                     .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
                     .AddSingleton(p =>
@@ -19,6 +22,7 @@ namespace LingoEngine.Director.LGodot
                         rootNode.AddChild(overlay);
                         return overlay;
                     });
+
             });
             return engineRegistration;
         }

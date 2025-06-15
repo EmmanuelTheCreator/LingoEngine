@@ -24,6 +24,7 @@ namespace LingoEngine.Director.LGodot.Casts
             CustomMinimumSize = Size;
             _tabs = new TabContainer();
             InitTabs();
+            _tabs.Position = new Vector2(0, 20);
 
             parent.AddChild(this);
             _lingoMovie = lingoMovie;
