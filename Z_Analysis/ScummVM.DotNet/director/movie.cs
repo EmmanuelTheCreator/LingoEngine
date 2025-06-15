@@ -18,6 +18,7 @@ namespace Director
     public class Movie
     {
         private bool _allowOutdatedLingo;
+        public bool AllowOutdatedLingo => _allowOutdatedLingo;
         private bool _remapPalettesWhenNeeded;
         private string _script = "";
         private string _changedBy = "";
