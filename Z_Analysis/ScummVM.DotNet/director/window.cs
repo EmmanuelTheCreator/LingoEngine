@@ -47,7 +47,9 @@ namespace Director
         /// </summary>
         public void Center(object centerStage)
         {
-            // TODO: platform-specific logic
+            // This stub simply resets the surface's origin. Real window
+            // managers would move the native window.
+            // centerStage is ignored for now.
         }
     }
 

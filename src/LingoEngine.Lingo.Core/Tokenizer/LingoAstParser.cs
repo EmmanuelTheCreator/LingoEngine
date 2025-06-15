@@ -137,10 +137,37 @@
             switch (_currentToken.Type)
             {
                 case LingoTokenType.Number:
-                case LingoTokenType.String:
-                    var literal = new LingoDatumNode(new LingoDatum(_currentToken.Lexeme));
+                    var text = _currentToken.Lexeme;
+                    LingoDatum datum;
+                    if (text.StartsWith("$"))
+                    {
+                        if (int.TryParse(text[1..], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out var hex))
+                            datum = new LingoDatum(hex);
+                        else
+                            datum = new LingoDatum(text);
+                    }
+                    else if (text.Contains('.'))
+                    {
+                        if (float.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var f))
+                            datum = new LingoDatum(f);
+                        else
+                            datum = new LingoDatum(text);
+                    }
+                    else if (int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var i))
+                    {
+                        datum = new LingoDatum(i);
+                    }
+                    else
+                    {
+                        datum = new LingoDatum(text);
+                    }
                     AdvanceToken();
-                    return literal;
+                    return new LingoDatumNode(datum);
+
+                case LingoTokenType.String:
+                    var strLiteral = new LingoDatumNode(new LingoDatum(_currentToken.Lexeme));
+                    AdvanceToken();
+                    return strLiteral;
 
                 case LingoTokenType.Identifier:
                     var ident = new LingoDatumNode(new LingoDatum(_currentToken.Lexeme, isSymbol: true));

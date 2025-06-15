@@ -30,7 +30,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         : base("Score")
     {
         _directorMediator = directorMediator;
-        Position = new Vector2(0, 30);
+        Position = new Vector2(0, 60);
         Size = new Vector2(800, 600);
         CustomMinimumSize = Size;
         _grid = new DirGodotScoreGrid(directorMediator);
@@ -320,7 +320,9 @@ internal partial class DirGodotScoreGrid : Control
         int channelCount = _movie.MaxSpriteChannelCount;
         int frameCount = _movie.FrameCount;
         var font = ThemeDB.FallbackFont;
-        const int ExtraMargin = 10;
+
+        const int ExtraMargin = 20;
+
         Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth + ExtraMargin,
             channelCount * ChannelHeight + ExtraMargin);
         CustomMinimumSize = Size;
