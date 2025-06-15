@@ -6,5 +6,9 @@
     <Nullable>enable</Nullable>
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LingoEngine/LingoEngine.csproj" />
+    <ProjectReference Include="../LingoEngine.IO.Data/LingoEngine.IO.Data.csproj" />
+  </ItemGroup>
 
 </Project>
