@@ -22,7 +22,7 @@ namespace LingoEngine.LGodot
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         private readonly IServiceProvider _serviceProvider;
-        private readonly Node _rootNode;
+        private Node _rootNode;
 
         public GodotFactory(IServiceProvider serviceProvider, LingoGodotRootNode rootNode)
         {
@@ -109,12 +109,20 @@ namespace LingoEngine.LGodot
 
         public LingoStage CreateStage(LingoPlayer lingoPlayer)
         {
+            var stageWindow = _serviceProvider.GetService<ILingoFrameworkStageWindow>();
+            Node parent = stageWindow as Node ?? _rootNode;
+            if (stageWindow is Node)
+                _rootNode = parent;
+
             var clock = (LingoClock)lingoPlayer.Clock;
-            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(_rootNode), lingoPlayer);
-            var godotInstance = new LingoGodotStage(_rootNode, clock, overlay);
-            var lingoInstance = new LingoStage(godotInstance);
+            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(parent), lingoPlayer);
+            var godotInstance = new LingoGodotStage(parent, clock, overlay);
+            var lingoInstance = new LingoStage(stageWindow as ILingoFrameworkStage ?? godotInstance);
             godotInstance.Init(lingoInstance, lingoPlayer);
             _disposables.Add(godotInstance);
+
+            stageWindow?.SetStage(godotInstance);
+
             return lingoInstance;
         }
         public LingoMovie AddMovie(LingoStage stage, LingoMovie lingoMovie)
@@ -123,6 +131,7 @@ namespace LingoEngine.LGodot
             var godotInstance = new LingoGodotMovie(godotStage, lingoMovie, m => _disposables.Remove(m));
             lingoMovie.Init(godotInstance);
             _disposables.Add(godotInstance);
+
             return lingoMovie;
         }
 
