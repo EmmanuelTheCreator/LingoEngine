@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Text;
+using System.Collections.Generic;
 
 namespace LingoEngine.Lingo.Core.Tokenizer
 {
