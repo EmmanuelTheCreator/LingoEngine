@@ -8,6 +8,7 @@ namespace LingoEngine.Director.LGodot
         private bool _resizing;
         private readonly Label _label = new Label();
         private readonly Button _closeButton = new Button();
+        protected const int TitleBarHeight = 20;
         private const int ResizeHandle = 10;
 
         public BaseGodotWindow(string name)
@@ -27,8 +28,8 @@ namespace LingoEngine.Director.LGodot
 
         public override void _Draw()
         {
-            DrawRect(new Rect2(0, 0, Size.X, 20), new Color("#d2e0ed"));
-            DrawLine(new Vector2(0, 20), new Vector2(Size.X, 20), Colors.Black);
+            DrawRect(new Rect2(0, 0, Size.X, TitleBarHeight), new Color("#d2e0ed"));
+            DrawLine(new Vector2(0, TitleBarHeight), new Vector2(Size.X, TitleBarHeight), Colors.Black);
             _closeButton.Position = new Vector2(Size.X - 22, 2);
             // draw resize handle
             DrawLine(new Vector2(Size.X - ResizeHandle, Size.Y), new Vector2(Size.X, Size.Y - ResizeHandle), Colors.DarkGray);
@@ -40,7 +41,7 @@ namespace LingoEngine.Director.LGodot
             if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
             {
                 Vector2 pos = GetLocalMousePosition();
-                if (pos.Y < 20)
+                if (pos.Y < TitleBarHeight)
                 {
                     _dragging = mb.Pressed;
                     _resizing = false;
