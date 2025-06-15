@@ -17,6 +17,7 @@ namespace LingoEngine.Director.LGodot
 
                 IServiceCollection serviceCollection = s
                     .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
+                    .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
                     .AddSingleton(p =>
                     {
                         var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
