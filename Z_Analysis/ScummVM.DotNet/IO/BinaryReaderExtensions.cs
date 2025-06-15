@@ -132,6 +132,36 @@ namespace Director.IO
             byte[] bytes = reader.ReadBytes(length);
             return Encoding.ASCII.GetString(bytes);
         }
+
+        public static uint ReadVarInt(this BinaryReader reader)
+        {
+            uint value = 0;
+            byte b;
+            do
+            {
+                b = reader.ReadByte();
+                value = (value << 7) | (uint)(b & 0x7F);
+            } while ((b & 0x80) != 0);
+            return value;
+        }
+
+        public static Guid ReadGuidBE(this BinaryReader reader)
+        {
+            uint d1 = reader.ReadUInt32BE();
+            ushort d2 = reader.ReadUInt16BE();
+            ushort d3 = reader.ReadUInt16BE();
+            byte[] d4 = reader.ReadBytes(8);
+            return new Guid((int)d1, (short)d2, (short)d3, d4);
+        }
+
+        public static string ReadCString(this BinaryReader reader)
+        {
+            using var ms = new MemoryStream();
+            byte ch;
+            while ((ch = reader.ReadByte()) != 0)
+                ms.WriteByte(ch);
+            return Encoding.ASCII.GetString(ms.ToArray());
+        }
     }
 
 }

@@ -1,9 +1,11 @@
 ﻿using Director.IO.Data;
 using Director.Primitives;
 using Director.Tools;
+using Director.Fonts;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.IO.Compression;
 using static Director.IO.Data.FileVWSCData;
 
 namespace Director.IO
@@ -42,25 +44,37 @@ namespace Director.IO
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
             using var reader = new BinaryReader(fs);
 
-            // Detect MV93 (Director MX 2004 and later)
             fs.Seek(0, SeekOrigin.Begin);
-            uint header = reader.ReadUInt32();
-            // Handle XFIR-based formats
-            if (header == 1380533848) // 'XFIR' in big-endian
+            uint metaFourCC = reader.ReadUInt32BE();
+            bool littleEndian = metaFourCC == ResourceTags.XFIR;
+
+            Func<uint> read32 = littleEndian ? reader.ReadUInt32 : reader.ReadUInt32BE;
+            Func<ushort> read16 = littleEndian ? reader.ReadUInt16 : reader.ReadUInt16BE;
+
+            uint metaLength = read32();
+            uint codec = read32();
+
+            if (codec == ResourceTags.MV93)
+            {
+                LogHelper.DebugLog(1, DebugChannel.Loading, "Detected MV93-format Director file (Director 9+). Using MV93 loader.");
+                fs.Seek(0, SeekOrigin.Begin);
+                LoadMv93Format(archive, fs, reader);
+                return;
+            }
+            if (codec == ResourceTags.MKTAG('F','G','D','M') || codec == ResourceTags.MKTAG('F','G','D','C'))
+            {
+                LogHelper.DebugLog(1, DebugChannel.Loading, "Detected Afterburner Director file");
+                LoadAfterburnerFormat(archive, fs, reader, littleEndian);
+                return;
+            }
+            if (metaFourCC == ResourceTags.XFIR)
             {
                 LogHelper.DebugLog(1, DebugChannel.Loading, "Detected XFIR-format Director file");
-                // Here you can optionally handle XFIR-specific logic
+                fs.Seek(0, SeekOrigin.Begin);
                 ParseXfir(fs, archive);
                 return;
             }
 
-            if (header == ResourceTags.MV93)
-            {
-                LogHelper.DebugLog(1, DebugChannel.Loading, "Detected MV93-format Director file (Director 9+). Using MV93 loader.");
-                fs.Seek(0, SeekOrigin.Begin); // Reset position for full read
-                LoadMv93Format(archive, fs, reader);
-                return;
-            }
             fs.Seek(0, SeekOrigin.Begin);
 
             var directory = new List<(uint tag, int id, int offset)>();
@@ -335,6 +349,148 @@ namespace Director.IO
 
                 archive.AddResource(tag, id, data);
                 LogHelper.DebugLog(2, DebugChannel.Loading, $"Read XFIR chunk {ResourceTags.FromTag(tag)}#{id} size={size}");
+            }
+        }
+
+        private class ChunkInfo
+        {
+            public int Id { get; set; }
+            public uint Tag { get; set; }
+            public int Offset { get; set; }
+            public int Size { get; set; }
+            public int UncompressedSize { get; set; }
+            public int CompressionIndex { get; set; }
+        }
+
+        private static byte[] DecompressZlib(byte[] data)
+        {
+            using var input = new MemoryStream(data);
+            using var z = new System.IO.Compression.ZLibStream(input, System.IO.Compression.CompressionMode.Decompress);
+            using var ms = new MemoryStream();
+            z.CopyTo(ms);
+            return ms.ToArray();
+        }
+
+        private void LoadAfterburnerFormat(Archive archive, Stream fs, BinaryReader reader, bool littleEndian)
+        {
+            Func<uint> read32 = littleEndian ? reader.ReadUInt32 : reader.ReadUInt32BE;
+
+            // Fver block
+            uint tag = read32();
+            if (tag != ResourceTags.MKTAG('F','v','e','r'))
+                return;
+
+            uint fverLength = reader.ReadVarInt();
+            long blockStart = fs.Position;
+            uint fverVersion = reader.ReadVarInt();
+            int directorVersion = 0;
+            if (fverVersion >= 0x401)
+            {
+                reader.ReadVarInt(); // imapVersion
+                directorVersion = (int)reader.ReadVarInt(); // directorVersion
+            }
+            if (fverVersion >= 0x501)
+            {
+                int len = reader.ReadByte();
+                reader.ReadBytes(len); // version string
+            }
+            int humanVersion = VersionHelper.HumanVersion(directorVersion);
+            fs.Seek(blockStart + fverLength, SeekOrigin.Begin);
+
+            // Fcdr compression table
+            tag = read32();
+            if (tag != ResourceTags.MKTAG('F','c','d','r'))
+                return;
+
+            uint fcdrLength = reader.ReadVarInt();
+            byte[] fcdrComp = reader.ReadBytes((int)fcdrLength);
+            byte[] fcdrBuf = DecompressZlib(fcdrComp);
+            var fcdrReader = new BinaryReader(new MemoryStream(fcdrBuf));
+            ushort compTypeCount = littleEndian ? fcdrReader.ReadUInt16() : fcdrReader.ReadUInt16BE();
+            var compressionIDs = new List<Guid>();
+            for (int i = 0; i < compTypeCount; i++)
+                compressionIDs.Add(fcdrReader.ReadGuidBE());
+            var compressionDescs = new List<string>();
+            for (int i = 0; i < compTypeCount; i++)
+                compressionDescs.Add(fcdrReader.ReadCString());
+
+            // ABMP map
+            tag = read32();
+            if (tag != ResourceTags.MKTAG('A','B','M','P'))
+                return;
+
+            uint abmpLength = reader.ReadVarInt();
+            long abmpEnd = fs.Position + abmpLength;
+            reader.ReadVarInt(); // compression type
+            reader.ReadVarInt(); // uncompressed length
+            byte[] abmpComp = reader.ReadBytes((int)(abmpEnd - fs.Position));
+            byte[] abmpBuf = DecompressZlib(abmpComp);
+            var abmpReader = new BinaryReader(new MemoryStream(abmpBuf));
+
+            abmpReader.ReadVarInt(); // unk1
+            abmpReader.ReadVarInt(); // unk2
+            uint resCount = abmpReader.ReadVarInt();
+
+            var infos = new Dictionary<int, ChunkInfo>();
+            for (int i = 0; i < resCount; i++)
+            {
+                int resId = (int)abmpReader.ReadVarInt();
+                int offset = (int)abmpReader.ReadVarInt();
+                uint compSize = abmpReader.ReadVarInt();
+                uint uncompSize = abmpReader.ReadVarInt();
+                int compType = (int)abmpReader.ReadVarInt();
+                uint resTag = littleEndian ? abmpReader.ReadUInt32() : abmpReader.ReadUInt32BE();
+
+                infos[resId] = new ChunkInfo
+                {
+                    Id = resId,
+                    Tag = resTag,
+                    Offset = offset,
+                    Size = (int)compSize,
+                    UncompressedSize = (int)uncompSize,
+                    CompressionIndex = compType
+                };
+
+                archive.RegisterResource(resTag, resId, offset, (int)compSize, () =>
+                {
+                    fs.Seek(offset, SeekOrigin.Begin);
+                    byte[] raw = reader.ReadBytes((int)compSize);
+                    if (compType < compressionIDs.Count)
+                    {
+                        var guid = compressionIDs[compType];
+                        if (guid == CompressionGuids.FontMap)
+                        {
+                            string text = FontMapDefaults.GetFontMapText(humanVersion);
+                            raw = Encoding.ASCII.GetBytes(text);
+                        }
+                        else if (compressionDescs[compType].Contains("zlib", StringComparison.OrdinalIgnoreCase))
+                        {
+                            raw = DecompressZlib(raw);
+                        }
+                    }
+                    return new SeekableReadStreamEndian(new MemoryStream(raw, false), isBigEndian: true);
+                });
+            }
+
+            // Initial load segment
+            if (!infos.TryGetValue(2, out var ilsInfo))
+                return;
+
+            tag = read32();
+            if (tag != ResourceTags.MKTAG('F','G','E','I'))
+                return;
+
+            reader.ReadVarInt(); // unk
+            byte[] ilsComp = reader.ReadBytes(ilsInfo.Size);
+            byte[] ilsBuf = DecompressZlib(ilsComp);
+            var ilsReader = new BinaryReader(new MemoryStream(ilsBuf));
+            while (ilsReader.BaseStream.Position < ilsReader.BaseStream.Length)
+            {
+                int resId = (int)ilsReader.ReadVarInt();
+                if (!infos.TryGetValue(resId, out var info))
+                    break;
+                byte[] chunk = ilsReader.ReadBytes(info.Size);
+                archive.AddResource(info.Tag, resId, chunk);
             }
         }
 
