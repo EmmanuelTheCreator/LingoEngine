@@ -20,7 +20,6 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     private readonly DirGodotFrameHeader _header;
     private readonly DirGodotFrameScriptsBar _frameScripts;
     private readonly DirGodotScoreLabelsBar _labelBar;
-    private readonly Button _playButton = new Button();
 
     public DirGodotScoreWindow()
         : base("Score")
@@ -44,13 +43,6 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _scrollContent.AddChild(_frameScripts);
         _scrollContent.AddChild(_header);
         _scrollContent.AddChild(_vScroller);
-
-
-        AddChild(_playButton);
-        _playButton.Position = new Vector2(3, 2);
-        _playButton.CustomMinimumSize = new Vector2(40, 16);
-        _playButton.Text = "Play";
-        _playButton.Pressed += OnPlayButtonPressed;
 
 
         _vScroller.VerticalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
@@ -78,24 +70,6 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _header.SetMovie(movie);
         _frameScripts.SetMovie(movie);
         _labelBar.SetMovie(movie);
-        UpdatePlayButton();
-    }
-    private void OnPlayButtonPressed()
-    {
-        if (_movie == null) return;
-        if (_movie.IsPlaying)
-            _movie.Halt();
-        else
-            _movie.Play();
-        UpdatePlayButton();
-    }
-
-    private void UpdatePlayButton()
-    {
-        if (_movie == null)
-            _playButton.Text = "Play";
-        else
-            _playButton.Text = _movie.IsPlaying ? "Stop" : "Play";
     }
     public override void _GuiInput(InputEvent @event)
     {
@@ -334,7 +308,9 @@ internal partial class DirGodotScoreGrid : Control
         int channelCount = _movie.MaxSpriteChannelCount;
         int frameCount = _movie.FrameCount;
         var font = ThemeDB.FallbackFont;
-        Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth, channelCount * ChannelHeight);
+        const int ExtraMargin = 10;
+        Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth + ExtraMargin,
+            channelCount * ChannelHeight + ExtraMargin);
         CustomMinimumSize = Size;
 
         DrawRect(new Rect2(0, 0, Size.X, Size.Y), Colors.White);
