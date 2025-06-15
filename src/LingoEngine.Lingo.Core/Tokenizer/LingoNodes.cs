@@ -1,92 +1,92 @@
 ﻿
 namespace LingoEngine.Lingo.Core.Tokenizer
 {
-    public abstract class Node
+    public abstract class LingoNode
     {
-        public Node? Parent { get; set; }
+        public LingoNode? Parent { get; set; }
         public abstract void Accept(ILingoAstVisitor visitor);
     }
 
-    public class HandlerNode : Node
+    public class LingoHandlerNode : LingoNode
     {
         public LingoHandler Handler { get; set; }
-        public BlockNode Block { get; set; }
+        public LingoBlockNode Block { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ErrorNode : Node
+    public class LingoErrorNode : LingoNode
     {
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class ExitRepeatIfStmtNode : Node
+    public class LingoExitRepeatIfStmtNode : LingoNode
     {
-        public Node Condition { get; }
+        public LingoNode Condition { get; }
 
-        public ExitRepeatIfStmtNode(Node condition)
+        public LingoExitRepeatIfStmtNode(LingoNode condition)
         {
             Condition = condition;
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class ExitStmtNode : Node
+    public class LingoExitStmtNode : LingoNode
     {
-        public ExitStmtNode()
+        public LingoExitStmtNode()
         {
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class NextStmtNode : Node
+    public class LingoNextStmtNode : LingoNode
     {
-        public NextStmtNode()
+        public LingoNextStmtNode()
         {
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ReturnStmtNode : Node
+    public class LingoReturnStmtNode : LingoNode
     {
-        public ReturnStmtNode(Node? value)
+        public LingoReturnStmtNode(LingoNode? value)
         {
             Value = value;
         }
 
-        public Node? Value { get; }
+        public LingoNode? Value { get; }
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class NextRepeatIfStmtNode : Node
+    public class LingoNextRepeatIfStmtNode : LingoNode
     {
-        public Node Condition { get; }
+        public LingoNode Condition { get; }
 
-        public NextRepeatIfStmtNode(Node condition)
+        public LingoNextRepeatIfStmtNode(LingoNode condition)
         {
             Condition = condition;
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class CommentNode : Node
+    public class LingoCommentNode : LingoNode
     {
         public string Text { get; set; } = string.Empty;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class NewObjNode : Node
+    public class LingoNewObjNode : LingoNode
     {
         public string ObjType { get; set; } = string.Empty;
-        public Node ObjArgs { get; set; }
+        public LingoNode ObjArgs { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class LiteralNode : Node
+    public class LingoLiteralNode : LingoNode
     {
         public LingoDatum Value { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
 
-    public class IfStmtNode : Node
+    public class LingoIfStmtNode : LingoNode
     {
-        public IfStmtNode(Node condition, Node thenBlock, Node? elseBlock)
+        public LingoIfStmtNode(LingoNode condition, LingoNode thenBlock, LingoNode? elseBlock)
         {
             Condition = condition;
             ThenBlock = thenBlock;
@@ -94,107 +94,107 @@ namespace LingoEngine.Lingo.Core.Tokenizer
         }
 
         public bool HasElse => ElseBlock != null;
-        public Node Condition { get; set; }
-        public Node ThenBlock { get; }
-        public Node? ElseBlock { get; }
+        public LingoNode Condition { get; set; }
+        public LingoNode ThenBlock { get; }
+        public LingoNode? ElseBlock { get; }
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class IfElseStmtNode : Node
+    public class LingoIfElseStmtNode : LingoNode
     {
-        public IfElseStmtNode(Node condition, BlockNode thenBlock, BlockNode elseBlock)
+        public LingoIfElseStmtNode(LingoNode condition, LingoBlockNode thenBlock, LingoBlockNode elseBlock)
         {
             Condition = condition;
             ThenBlock = thenBlock;
             ElseBlock = elseBlock;
         }
 
-        public Node Condition { get; }
-        public BlockNode ThenBlock { get; }
-        public BlockNode ElseBlock { get; }
+        public LingoNode Condition { get; }
+        public LingoBlockNode ThenBlock { get; }
+        public LingoBlockNode ElseBlock { get; }
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class EndCaseNode : Node
+    public class LingoEndCaseNode : LingoNode
     {
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ObjCallNode : Node
+    public class LingoObjCallNode : LingoNode
     {
-        public LiteralNode Name { get; set; }
-        public DatumNode ArgList { get; set; }
+        public LingoLiteralNode Name { get; set; }
+        public LingoDatumNode ArgList { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class PutStmtNode : Node
+    public class LingoPutStmtNode : LingoNode
     {
-        public PutStmtNode(Node value, Node target)
+        public LingoPutStmtNode(LingoNode value, LingoNode target)
         {
             Value = value;
             Target = target;
         }
 
-        public Node Value { get; set; }
+        public LingoNode Value { get; set; }
         public LingoPutType Type { get; set; }
-        public Node Variable { get; set; }
-        public Node Target { get; }
+        public LingoNode Variable { get; set; }
+        public LingoNode Target { get; }
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class GlobalDeclStmtNode : Node
+    public class LingoGlobalDeclStmtNode : LingoNode
     {
         public List<string> Names { get; } = new();
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class PropertyDeclStmtNode : Node
+    public class LingoPropertyDeclStmtNode : LingoNode
     {
         public List<string> Names { get; } = new();
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class InstanceDeclStmtNode : Node
+    public class LingoInstanceDeclStmtNode : LingoNode
     {
         public List<string> Names { get; } = new();
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class TheExprNode : Node
+    public class LingoTheExprNode : LingoNode
     {
         public string Prop { get; set; } = string.Empty;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class BinaryOpNode : Node
+    public class LingoBinaryOpNode : LingoNode
     {
-        public Node Left { get; set; }
-        public Node Right { get; set; }
+        public LingoNode Left { get; set; }
+        public LingoNode Right { get; set; }
         public LingoBinaryOpcode Opcode { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
     #region Switch case
 
-    public class CaseStmtNode : Node
+    public class LingoCaseStmtNode : LingoNode
     {
-        public Node Value { get; set; }
-        public Node? FirstLabel { get; set; }
-        public OtherwiseNode? Otherwise { get; set; }
+        public LingoNode Value { get; set; }
+        public LingoNode? FirstLabel { get; set; }
+        public LingoOtherwiseNode? Otherwise { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class CaseLabelNode : Node
+    public class LingoCaseLabelNode : LingoNode
     {
-        public Node Value { get; set; }
-        public Node? Block { get; set; }
+        public LingoNode Value { get; set; }
+        public LingoNode? Block { get; set; }
 
-        public CaseLabelNode? NextOr { get; set; }
-        public CaseLabelNode? NextLabel { get; set; }
+        public LingoCaseLabelNode? NextOr { get; set; }
+        public LingoCaseLabelNode? NextLabel { get; set; }
 
-        public CaseStmtNode? Parent { get; set; }
+        public LingoCaseStmtNode? Parent { get; set; }
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
@@ -202,41 +202,41 @@ namespace LingoEngine.Lingo.Core.Tokenizer
     #endregion
 
 
-    public class TellStmtNode : Node
+    public class LingoTellStmtNode : LingoNode
     {
-        public Node Window { get; set; }
-        public BlockNode Block { get; set; }
+        public LingoNode Window { get; set; }
+        public LingoBlockNode Block { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class WhenStmtNode : Node
+    public class LingoWhenStmtNode : LingoNode
     {
         public int Event { get; set; }
         public string Script { get; set; } = string.Empty;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class OtherwiseNode : Node
+    public class LingoOtherwiseNode : LingoNode
     {
-        public BlockNode Block { get; set; }
+        public LingoBlockNode Block { get; set; }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class BlockNode : Node
+    public class LingoBlockNode : LingoNode
     {
-        public List<Node> Children { get; set; } = new();
+        public List<LingoNode> Children { get; set; } = new();
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class VarNode : Node
+    public class LingoVarNode : LingoNode
     {
         public string VarName { get; set; } = string.Empty;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class DatumNode : Node
+    public class LingoDatumNode : LingoNode
     {
-        public DatumNode(LingoDatum datum)
+        public LingoDatumNode(LingoDatum datum)
         {
             Datum = datum;
         }
@@ -249,132 +249,132 @@ namespace LingoEngine.Lingo.Core.Tokenizer
 
 
 
-    public class ChunkExprNode : Node
+    public class LingoChunkExprNode : LingoNode
     {
-        public Node Expr { get; set; } = null!;
+        public LingoNode Expr { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class InverseOpNode : Node
+    public class LingoInverseOpNode : LingoNode
     {
-        public Node Expr { get; set; } = null!;
+        public LingoNode Expr { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ObjCallV4Node : Node
+    public class LingoObjCallV4Node : LingoNode
     {
-        public Node Object { get; set; } = null!;
-        public LiteralNode Name { get; set; } = null!;
-        public DatumNode ArgList { get; set; } = null!;
+        public LingoNode Object { get; set; } = null!;
+        public LingoLiteralNode Name { get; set; } = null!;
+        public LingoDatumNode ArgList { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class MemberExprNode : Node
+    public class LingoMemberExprNode : LingoNode
     {
-        public Node Expr { get; set; } = null!;
+        public LingoNode Expr { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ObjPropExprNode : Node
+    public class LingoObjPropExprNode : LingoNode
     {
-        public Node Object { get; set; } = null!;
-        public Node Property { get; set; } = null!;
+        public LingoNode Object { get; set; } = null!;
+        public LingoNode Property { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class PlayCmdStmtNode : Node
+    public class LingoPlayCmdStmtNode : LingoNode
     {
-        public Node Command { get; set; } = null!;
+        public LingoNode Command { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ThePropExprNode : Node
+    public class LingoThePropExprNode : LingoNode
     {
-        public Node Property { get; set; } = null!;
+        public LingoNode Property { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class MenuPropExprNode : Node
+    public class LingoMenuPropExprNode : LingoNode
     {
-        public Node Menu { get; set; } = null!;
-        public Node Property { get; set; } = null!;
+        public LingoNode Menu { get; set; } = null!;
+        public LingoNode Property { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class SoundCmdStmtNode : Node
+    public class LingoSoundCmdStmtNode : LingoNode
     {
-        public Node Command { get; set; } = null!;
+        public LingoNode Command { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class SoundPropExprNode : Node
+    public class LingoSoundPropExprNode : LingoNode
     {
-        public Node Sound { get; set; } = null!;
-        public Node Property { get; set; } = null!;
+        public LingoNode Sound { get; set; } = null!;
+        public LingoNode Property { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class AssignmentStmtNode : Node
+    public class LingoAssignmentStmtNode : LingoNode
     {
-        public Node Target { get; set; } = null!;
-        public Node Value { get; set; } = null!;
+        public LingoNode Target { get; set; } = null!;
+        public LingoNode Value { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ExitRepeatStmtNode : Node
-    {
-        public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
-    }
-
-    public class NextRepeatStmtNode : Node
+    public class LingoExitRepeatStmtNode : LingoNode
     {
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ObjBracketExprNode : Node
+    public class LingoNextRepeatStmtNode : LingoNode
     {
-        public Node Object { get; set; } = null!;
-        public Node Index { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class SpritePropExprNode : Node
+    public class LingoObjBracketExprNode : LingoNode
     {
-        public Node Sprite { get; set; } = null!;
-        public Node Property { get; set; } = null!;
+        public LingoNode Object { get; set; } = null!;
+        public LingoNode Index { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ChunkDeleteStmtNode : Node
+    public class LingoSpritePropExprNode : LingoNode
     {
-        public Node Chunk { get; set; } = null!;
+        public LingoNode Sprite { get; set; } = null!;
+        public LingoNode Property { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ChunkHiliteStmtNode : Node
+    public class LingoChunkDeleteStmtNode : LingoNode
     {
-        public Node Chunk { get; set; } = null!;
+        public LingoNode Chunk { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class RepeatWhileStmtNode : Node
+    public class LingoChunkHiliteStmtNode : LingoNode
     {
-        public RepeatWhileStmtNode(Node condition, BlockNode body)
+        public LingoNode Chunk { get; set; } = null!;
+        public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
+    }
+
+    public class LingoRepeatWhileStmtNode : LingoNode
+    {
+        public LingoRepeatWhileStmtNode(LingoNode condition, LingoBlockNode body)
         {
             Condition = condition;
             Body = body;
         }
 
-        public Node Condition { get; set; } = null!;
-        public Node Body { get; set; } = null!;
+        public LingoNode Condition { get; set; } = null!;
+        public LingoNode Body { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class RepeatUntilStmtNode : Node
+    public class LingoRepeatUntilStmtNode : LingoNode
     {
-        public Node Condition { get; }
-        public BlockNode Body { get; }
+        public LingoNode Condition { get; }
+        public LingoBlockNode Body { get; }
 
-        public RepeatUntilStmtNode(Node condition, BlockNode body)
+        public LingoRepeatUntilStmtNode(LingoNode condition, LingoBlockNode body)
         {
             Condition = condition;
             Body = body;
@@ -382,14 +382,14 @@ namespace LingoEngine.Lingo.Core.Tokenizer
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class RepeatWithStmtNode : Node
+    public class LingoRepeatWithStmtNode : LingoNode
     {
         public string Variable { get; }
-        public Node Start { get; }
-        public Node End { get; }
-        public BlockNode Body { get; }
+        public LingoNode Start { get; }
+        public LingoNode End { get; }
+        public LingoBlockNode Body { get; }
 
-        public RepeatWithStmtNode(string variable, Node start, Node end, BlockNode body)
+        public LingoRepeatWithStmtNode(string variable, LingoNode start, LingoNode end, LingoBlockNode body)
         {
             Variable = variable;
             Start = start;
@@ -398,95 +398,95 @@ namespace LingoEngine.Lingo.Core.Tokenizer
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class RepeatTimesStmtNode : Node
+    public class LingoRepeatTimesStmtNode : LingoNode
     {
-        public Node Count { get; }
-        public BlockNode Body { get; }
+        public LingoNode Count { get; }
+        public LingoBlockNode Body { get; }
 
-        public RepeatTimesStmtNode(Node count, BlockNode body)
+        public LingoRepeatTimesStmtNode(LingoNode count, LingoBlockNode body)
         {
             Count = count;
             Body = body;
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class RepeatForeverStmtNode : Node
+    public class LingoRepeatForeverStmtNode : LingoNode
     {
-        public BlockNode Body { get; }
+        public LingoBlockNode Body { get; }
 
-        public RepeatForeverStmtNode(BlockNode body)
+        public LingoRepeatForeverStmtNode(LingoBlockNode body)
         {
             Body = body;
         }
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
-    public class MenuItemPropExprNode : Node
+    public class LingoMenuItemPropExprNode : LingoNode
     {
-        public Node MenuItem { get; set; } = null!;
-        public Node Property { get; set; } = null!;
+        public LingoNode MenuItem { get; set; } = null!;
+        public LingoNode Property { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class ObjPropIndexExprNode : Node
+    public class LingoObjPropIndexExprNode : LingoNode
     {
-        public Node Object { get; set; } = null!;
-        public Node PropertyIndex { get; set; } = null!;
+        public LingoNode Object { get; set; } = null!;
+        public LingoNode PropertyIndex { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class RepeatWithInStmtNode : Node
+    public class LingoRepeatWithInStmtNode : LingoNode
     {
         public string Variable { get; set; } = string.Empty;
-        public Node List { get; set; } = null!;
-        public Node Body { get; set; } = null!;
+        public LingoNode List { get; set; } = null!;
+        public LingoNode Body { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class RepeatWithToStmtNode : Node
+    public class LingoRepeatWithToStmtNode : LingoNode
     {
         public string Variable { get; set; } = string.Empty;
-        public Node Start { get; set; } = null!;
-        public Node End { get; set; } = null!;
-        public Node Body { get; set; } = null!;
+        public LingoNode Start { get; set; } = null!;
+        public LingoNode End { get; set; } = null!;
+        public LingoNode Body { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class SpriteWithinExprNode : Node
+    public class LingoSpriteWithinExprNode : LingoNode
     {
-        public Node SpriteA { get; set; } = null!;
-        public Node SpriteB { get; set; } = null!;
+        public LingoNode SpriteA { get; set; } = null!;
+        public LingoNode SpriteB { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class LastStringChunkExprNode : Node
+    public class LingoLastStringChunkExprNode : LingoNode
     {
-        public Node Source { get; set; } = null!;
+        public LingoNode Source { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class SpriteIntersectsExprNode : Node
+    public class LingoSpriteIntersectsExprNode : LingoNode
     {
-        public Node SpriteA { get; set; } = null!;
-        public Node SpriteB { get; set; } = null!;
+        public LingoNode SpriteA { get; set; } = null!;
+        public LingoNode SpriteB { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class StringChunkCountExprNode : Node
+    public class LingoStringChunkCountExprNode : LingoNode
     {
-        public Node Source { get; set; } = null!;
+        public LingoNode Source { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class NotOpNode : Node
+    public class LingoNotOpNode : LingoNode
     {
-        public Node Expr { get; set; } = null!;
+        public LingoNode Expr { get; set; } = null!;
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public class CallNode : Node
+    public class LingoCallNode : LingoNode
     {
-        public Node Callee { get; set; } = null!;
-        public DatumNode Arguments { get; set; } = null!;
+        public LingoNode Callee { get; set; } = null!;
+        public LingoDatumNode Arguments { get; set; } = null!;
         public string Name { get; set; } = "";
 
         public override void Accept(ILingoAstVisitor visitor) => visitor.Visit(this);
