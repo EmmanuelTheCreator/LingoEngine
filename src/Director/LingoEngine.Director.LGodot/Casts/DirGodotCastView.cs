@@ -11,6 +11,13 @@ namespace LingoEngine.Director.LGodot.Casts
     {
         private readonly TabContainer _tabs;
         private readonly Inspector.DirGodotObjectInspector _inspector;
+        private readonly DirGodotCastMemberPropViewer _selectedItem;
+        private readonly Control _topBar = new Control();
+        private readonly Button _rewindButton = new Button();
+        private readonly Button _playButton = new Button();
+        private readonly HBoxContainer _topBar;
+        private readonly Button _rewindButton;
+        private readonly Button _playButton;
 
         private readonly ILingoMovie _lingoMovie;
         private bool _wasToggleKey;
@@ -24,12 +31,43 @@ namespace LingoEngine.Director.LGodot.Casts
             Position = new Vector2(650, 20);
             Size = new Vector2(360, 620);
             CustomMinimumSize = Size;
+
+            _lingoMovie = lingoMovie;
             _tabs = new TabContainer();
             InitTabs();
-            _tabs.Position = new Vector2(0, 20);
+            _tabs.Position = new Vector2(0, 40);
+
+            _topBar.Position = new Vector2(0, 20);
+            _topBar.Size = new Vector2(340, 20);
+            AddChild(_topBar);
+
+            _rewindButton.Position = new Vector2(3, 2);
+            _rewindButton.CustomMinimumSize = new Vector2(20, 16);
+            _rewindButton.Text = "<<";
+            _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
+            _topBar.AddChild(_rewindButton);
+
+            _playButton.Position = new Vector2(26, 2);
+            _playButton.CustomMinimumSize = new Vector2(40, 16);
+            _playButton.Text = "Play";
+            _playButton.Pressed += OnPlayPressed;
+            _topBar.AddChild(_playButton);
+            UpdatePlayButton();
+
+            _topBar = new HBoxContainer();
+            _topBar.Position = new Vector2(0, TitleBarHeight);
+            _rewindButton = new Button { Text = "<<" };
+            _playButton = new Button { Text = "Play" };
+            _topBar.AddChild(_rewindButton);
+            _topBar.AddChild(_playButton);
+            AddChild(_topBar);
+
+            _tabs = new TabContainer();
+            InitTabs();
+            _tabs.Position = new Vector2(0, TitleBarHeight + 20);
+
 
             parent.AddChild(this);
-            _lingoMovie = lingoMovie;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
                 var castLibViewer = new DirGodotCastView(OnSelectElement);
@@ -42,8 +80,30 @@ namespace LingoEngine.Director.LGodot.Casts
                 tabContent.AddChild(castLibViewer.Node);
                 _tabs.AddChild(tabContent);
             }
+
             _inspector = new Inspector.DirGodotObjectInspector(mediator) { Visible = false };
             parent.AddChild(_inspector);
+            _selectedItem = new DirGodotCastMemberPropViewer();
+            parent.AddChild(_selectedItem);
+
+            _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
+            _playButton.Pressed += OnPlayPressed;
+            UpdatePlayButton();
+        }
+
+        private void OnPlayPressed()
+        {
+            if (_lingoMovie.IsPlaying)
+                _lingoMovie.Halt();
+            else
+                _lingoMovie.Play();
+            UpdatePlayButton();
+        }
+
+        private void UpdatePlayButton()
+        {
+            _playButton.Text = _lingoMovie.IsPlaying ? "Stop" : "Play";
+
         }
 
         public void Toggle()
@@ -58,11 +118,26 @@ namespace LingoEngine.Director.LGodot.Casts
             _wasToggleKey = Input.IsKeyPressed(Key.F3);
         }
 
+        private void OnPlayPressed()
+        {
+            if (_lingoMovie == null) return;
+            if (_lingoMovie.IsPlaying)
+                _lingoMovie.Halt();
+            else
+                _lingoMovie.Play();
+            UpdatePlayButton();
+        }
+
+        private void UpdatePlayButton()
+        {
+            _playButton.Text = _lingoMovie != null && _lingoMovie.IsPlaying ? "Stop" : "Play";
+        }
+
         private void InitTabs()
         {
             _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            _tabs.Size = new Vector2(350, 600);
+            _tabs.Size = new Vector2(350, 580);
             AddChild(_tabs);
             var existingFont = _tabs.GetThemeFont("font", "TabContainer");
             if (existingFont != null)
