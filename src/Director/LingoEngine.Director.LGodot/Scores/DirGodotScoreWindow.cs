@@ -30,7 +30,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         : base("Score")
     {
         _directorMediator = directorMediator;
-        Position = new Vector2(0, 30);
+        Position = new Vector2(0, 60);
         Size = new Vector2(800, 600);
         CustomMinimumSize = Size;
         _grid = new DirGodotScoreGrid(directorMediator);
