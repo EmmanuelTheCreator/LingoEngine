@@ -1,4 +1,5 @@
 using Godot;
+using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Scores;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,15 +9,17 @@ namespace LingoEngine.Director.LGodot
     {
         public static ILingoEngineRegistration WithDirectorGodotEngine(this ILingoEngineRegistration engineRegistration, Node rootNode)
         {
-            //engineRegistration.Services(s =>
-            //{
-            //    IServiceCollection serviceCollection = s.AddSingleton(p =>
-            //    {
-            //        var overlay = new DirGodotScoreWindow { Visible = false };
-            //        rootNode.AddChild(overlay);
-            //        return overlay;
-            //    });
-            //});
+            engineRegistration.Services(s =>
+            {
+                IServiceCollection serviceCollection = s
+                    .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
+                    .AddSingleton(p =>
+                    {
+                        var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
+                        rootNode.AddChild(overlay);
+                        return overlay;
+                    });
+            });
             return engineRegistration;
         }
 
