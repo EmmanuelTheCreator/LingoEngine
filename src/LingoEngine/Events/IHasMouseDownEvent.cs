@@ -101,9 +101,4 @@ namespace LingoEngine.Events
         void Blur();
     }
 
-    public interface IHasSpriteSelectedEvent
-    {
-        void SpriteSelected(LingoEngine.Movies.LingoSprite sprite);
-    }
-
 }

@@ -1,4 +1,5 @@
 using Godot;
+using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Scores;
 using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.FrameworkCommunication;
@@ -12,7 +13,16 @@ namespace LingoEngine.Director.LGodot
         {
             engineRegistration.Services(s =>
             {
-                s.AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode) { Visible = false });
+
+                IServiceCollection serviceCollection = s
+                    .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
+                    .AddSingleton(p =>
+                    {
+                        var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
+                        rootNode.AddChild(overlay);
+                        return overlay;
+                    });
+
             });
             return engineRegistration;
         }
