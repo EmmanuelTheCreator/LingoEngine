@@ -8,7 +8,7 @@
         private LingoTokenizer _tokenizer = null!;
         private LingoToken _currentToken;
 
-        public Node Parse(string source)
+        public LingoNode Parse(string source)
         {
             _tokenizer = new LingoTokenizer(source);
             AdvanceToken();
@@ -34,9 +34,9 @@
         }
 
 
-        private Node ParseHandlerBody()
+        private LingoNode ParseHandlerBody()
         {
-            var block = new BlockNode();
+            var block = new LingoBlockNode();
 
             while (_currentToken.Type != LingoTokenType.Eof)
             {
@@ -63,25 +63,25 @@
         }
 
 
-        private Node ParseCallOrAssignment()
+        private LingoNode ParseCallOrAssignment()
         {
             var ident = Expect(LingoTokenType.Identifier);
 
             if (Match(LingoTokenType.Equals))
             {
                 var value = ParseExpression();
-                return new AssignmentStmtNode
+                return new LingoAssignmentStmtNode
                 {
-                    Target = new DatumNode(new LingoDatum(ident.Lexeme, isSymbol: true)),
+                    Target = new LingoDatumNode(new LingoDatum(ident.Lexeme, isSymbol: true)),
                     Value = value
                 };
             }
 
-            return new CallNode { Name = ident.Lexeme };
+            return new LingoCallNode { Name = ident.Lexeme };
         }
 
 
-        private Node ParseKeywordStatement()
+        private LingoNode ParseKeywordStatement()
         {
             var keywordToken = _currentToken;
             AdvanceToken(); // consume the keyword
@@ -97,12 +97,12 @@
                         {
                             AdvanceToken(); // consume 'if'
                             var condition = ParseExpression();
-                            return new ExitRepeatIfStmtNode(condition);
+                            return new LingoExitRepeatIfStmtNode(condition);
                         }
 
-                        return new ExitRepeatStmtNode();
+                        return new LingoExitRepeatStmtNode();
                     }
-                    return new ExitStmtNode();
+                    return new LingoExitStmtNode();
 
                 case LingoTokenType.Next:
                     if (_currentToken.Type == LingoTokenType.Repeat)
@@ -113,13 +113,13 @@
                         {
                             AdvanceToken(); // consume 'if'
                             var condition = ParseExpression();
-                            return new NextRepeatIfStmtNode(condition);
+                            return new LingoNextRepeatIfStmtNode(condition);
                         }
 
-                        return new NextRepeatStmtNode();
+                        return new LingoNextRepeatStmtNode();
                     }
 
-                    return new NextStmtNode(); // fallback, if you want to allow generic "next"
+                    return new LingoNextStmtNode(); // fallback, if you want to allow generic "next"
 
                 case LingoTokenType.Put:
                     return ParsePutStatement();
@@ -128,34 +128,34 @@
                     return ParseIfStatement();
 
                 default:
-                    return new DatumNode(new LingoDatum(keywordToken.Lexeme));
+                    return new LingoDatumNode(new LingoDatum(keywordToken.Lexeme));
             }
         }
 
-        private Node ParseExpression()
+        private LingoNode ParseExpression()
         {
             switch (_currentToken.Type)
             {
                 case LingoTokenType.Number:
                 case LingoTokenType.String:
-                    var literal = new DatumNode(new LingoDatum(_currentToken.Lexeme));
+                    var literal = new LingoDatumNode(new LingoDatum(_currentToken.Lexeme));
                     AdvanceToken();
                     return literal;
 
                 case LingoTokenType.Identifier:
-                    var ident = new DatumNode(new LingoDatum(_currentToken.Lexeme, isSymbol: true));
+                    var ident = new LingoDatumNode(new LingoDatum(_currentToken.Lexeme, isSymbol: true));
                     AdvanceToken();
                     return ident;
 
                 default:
                     // fallback: unknown expressions are treated as raw datum
-                    var fallback = new DatumNode(new LingoDatum(_currentToken.Lexeme));
+                    var fallback = new LingoDatumNode(new LingoDatum(_currentToken.Lexeme));
                     AdvanceToken();
                     return fallback;
             }
         }
 
-        private Node ParsePutStatement()
+        private LingoNode ParsePutStatement()
         {
             // At this point, the "put" keyword has already been consumed
 
@@ -168,11 +168,11 @@
             // Parse the destination expression (where to put)
             var target = ParseExpression();
 
-            return new PutStmtNode(value, target);
+            return new LingoPutStmtNode(value, target);
         }
 
 
-        private Node ParseIfStatement()
+        private LingoNode ParseIfStatement()
         {
             // "if" already consumed
 
@@ -181,7 +181,7 @@
 
             var thenBlock = ParseBlock();
 
-            Node? elseBlock = null;
+            LingoNode? elseBlock = null;
             if (_currentToken.Type == LingoTokenType.Else)
             {
                 AdvanceToken(); // consume 'else'
@@ -191,12 +191,12 @@
             Expect(LingoTokenType.End);
             Expect(LingoTokenType.If);
 
-            return new IfStmtNode(condition, thenBlock, elseBlock);
+            return new LingoIfStmtNode(condition, thenBlock, elseBlock);
         }
 
-        private BlockNode ParseBlock()
+        private LingoBlockNode ParseBlock()
         {
-            var block = new BlockNode();
+            var block = new LingoBlockNode();
 
             while (_currentToken.Type != LingoTokenType.End &&
                    _currentToken.Type != LingoTokenType.Else &&
@@ -224,7 +224,7 @@
             return block;
         }
 
-        private Node ParseRepeatStatement()
+        private LingoNode ParseRepeatStatement()
         {
             // "repeat" already consumed
 
@@ -235,7 +235,7 @@
                 var body = ParseBlock();
                 Expect(LingoTokenType.End);
                 Expect(LingoTokenType.Repeat);
-                return new RepeatWhileStmtNode(condition, body);
+                return new LingoRepeatWhileStmtNode(condition, body);
             }
             else if (_currentToken.Type == LingoTokenType.Until)
             {
@@ -244,7 +244,7 @@
                 var body = ParseBlock();
                 Expect(LingoTokenType.End);
                 Expect(LingoTokenType.Repeat);
-                return new RepeatUntilStmtNode(condition, body);
+                return new LingoRepeatUntilStmtNode(condition, body);
             }
             else if (_currentToken.Type == LingoTokenType.With)
             {
@@ -257,7 +257,7 @@
                 var body = ParseBlock();
                 Expect(LingoTokenType.End);
                 Expect(LingoTokenType.Repeat);
-                return new RepeatWithStmtNode(varToken.Lexeme, start, end, body);
+                return new LingoRepeatWithStmtNode(varToken.Lexeme, start, end, body);
             }
             else if (_currentToken.Type == LingoTokenType.Number)
             {
@@ -267,7 +267,7 @@
                 var body = ParseBlock();
                 Expect(LingoTokenType.End);
                 Expect(LingoTokenType.Repeat);
-                return new RepeatTimesStmtNode(countExpr, body);
+                return new LingoRepeatTimesStmtNode(countExpr, body);
             }
             else
             {
@@ -275,7 +275,7 @@
                 var body = ParseBlock();
                 Expect(LingoTokenType.End);
                 Expect(LingoTokenType.Repeat);
-                return new RepeatForeverStmtNode(body);
+                return new LingoRepeatForeverStmtNode(body);
             }
         }
 

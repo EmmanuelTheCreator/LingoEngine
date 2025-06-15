@@ -85,24 +85,24 @@ namespace LingoEngine.Lingo.Core
             if (_indent > 0)
                 _indent--;
         }
-        public void Visit(ErrorNode node) => Write("ERROR");
+        public void Visit(LingoErrorNode node) => Write("ERROR");
 
-        public void Visit(CommentNode node)
+        public void Visit(LingoCommentNode node)
         {
             Write("-- ");
             Write(node.Text);
         }
 
-        public void Visit(LiteralNode node) => Write(node.Value);
+        public void Visit(LingoLiteralNode node) => Write(node.Value);
 
-        public void Visit(TheExprNode node)
+        public void Visit(LingoTheExprNode node)
         {
             Write("the ");
             Write(node.Prop);
         }
 
-        public void Visit(ExitStmtNode node) => Write("exit");
-        public void Visit(ReturnStmtNode node)
+        public void Visit(LingoExitStmtNode node) => Write("exit");
+        public void Visit(LingoReturnStmtNode node)
         {
             Write("return");
             if (node.Value != null)
@@ -111,7 +111,7 @@ namespace LingoEngine.Lingo.Core
                 node.Value.Accept(this);
             }
         }
-        public void Visit(VarNode node) => Write(node.VarName);
+        public void Visit(LingoVarNode node) => Write(node.VarName);
 
         private void Write(LingoDatum datum)
         {
@@ -160,7 +160,7 @@ namespace LingoEngine.Lingo.Core
                         if (datum.Type == LingoDatum.DatumType.List)
                             Write("[");
 
-                        if (datum.Value is List<Node> list)
+                        if (datum.Value is List<LingoNode> list)
                         {
                             for (int i = 0; i < list.Count; i++)
                             {
@@ -177,7 +177,7 @@ namespace LingoEngine.Lingo.Core
                 case LingoDatum.DatumType.PropList:
                     {
                         Write("[");
-                        if (datum.Value is List<Node> list)
+                        if (datum.Value is List<LingoNode> list)
                         {
                             if (list.Count == 0)
                             {
@@ -217,20 +217,20 @@ namespace LingoEngine.Lingo.Core
                 default: Write('"' + c.ToString() + '"'); break;
             }
         }
-        private static bool HasSpaces(Node node, bool dotSyntax)
+        private static bool HasSpaces(LingoNode node, bool dotSyntax)
         {
-            // Currently only handles BinaryOpNode precedence as in original logic.
-            return node is BinaryOpNode;
+            // Currently only handles LingoBinaryOpNode precedence as in original logic.
+            return node is LingoBinaryOpNode;
         }
 
 
-        public void Visit(HandlerNode node)
+        public void Visit(LingoHandlerNode node)
         {
             // Implementation can be expanded as needed
             node.Block?.Accept(this);
         }
 
-        public void Visit(NewObjNode node)
+        public void Visit(LingoNewObjNode node)
         {
             Write("new ");
             Write(node.ObjType);
@@ -239,7 +239,7 @@ namespace LingoEngine.Lingo.Core
             Write(")");
         }
 
-        public void Visit(IfStmtNode node)
+        public void Visit(LingoIfStmtNode node)
         {
             Write("if ");
             node.Condition.Accept(this);
@@ -254,7 +254,7 @@ namespace LingoEngine.Lingo.Core
             Write("end if");
         }
 
-        public void Visit(IfElseStmtNode node)
+        public void Visit(LingoIfElseStmtNode node)
         {
             Write("if ");
             node.Condition.Accept(this);
@@ -266,12 +266,12 @@ namespace LingoEngine.Lingo.Core
             Write("end if");
         }
 
-        public void Visit(EndCaseNode node)
+        public void Visit(LingoEndCaseNode node)
         {
             Write("end case");
         }
 
-        public void Visit(ObjCallNode node)
+        public void Visit(LingoObjCallNode node)
         {
             Write(node.Name.Value?.AsString() ?? "unknown");
             Write("(");
@@ -280,7 +280,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(PutStmtNode node)
+        public void Visit(LingoPutStmtNode node)
         {
             Write("put ");
             node.Value.Accept(this);
@@ -290,10 +290,10 @@ namespace LingoEngine.Lingo.Core
             node.Variable.Accept(this);
         }
 
-        public void Visit(BinaryOpNode node)
+        public void Visit(LingoBinaryOpNode node)
         {
-            bool needsParensLeft = node.Left is BinaryOpNode;
-            bool needsParensRight = node.Right is BinaryOpNode;
+            bool needsParensLeft = node.Left is LingoBinaryOpNode;
+            bool needsParensRight = node.Right is LingoBinaryOpNode;
 
             if (needsParensLeft) Write("(");
             node.Left.Accept(this);
@@ -308,14 +308,14 @@ namespace LingoEngine.Lingo.Core
             if (needsParensRight) Write(")");
         }
 
-        public void Visit(CaseStmtNode node)
+        public void Visit(LingoCaseStmtNode node)
         {
             Write("case ");
             node.Value.Accept(this);
             WriteLine(" of");
             Indent();
 
-            var currentLabel = node.FirstLabel as CaseLabelNode;
+            var currentLabel = node.FirstLabel as LingoCaseLabelNode;
             while (currentLabel != null)
             {
                 currentLabel.Accept(this);
@@ -327,7 +327,7 @@ namespace LingoEngine.Lingo.Core
             Unindent();
             Write("end case");
         }
-        public void Visit(CaseLabelNode node)
+        public void Visit(LingoCaseLabelNode node)
         {
             bool parenValue = HasSpaces(node.Value, _dot);
             if (parenValue)
@@ -352,7 +352,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(TellStmtNode node)
+        public void Visit(LingoTellStmtNode node)
         {
             Write("tell ");
             node.Window.Accept(this);
@@ -361,7 +361,7 @@ namespace LingoEngine.Lingo.Core
             Write("end tell");
         }
 
-        public void Visit(WhenStmtNode node)
+        public void Visit(LingoWhenStmtNode node)
         {
             Write("when ");
             Write(node.Event);
@@ -370,13 +370,13 @@ namespace LingoEngine.Lingo.Core
             Write(node.Script);
         }
 
-        public void Visit(OtherwiseNode node)
+        public void Visit(LingoOtherwiseNode node)
         {
             WriteLine("otherwise:");
             node.Block.Accept(this);
         }
 
-        public void Visit(BlockNode node)
+        public void Visit(LingoBlockNode node)
         {
             Indent();
             foreach (var child in node.Children)
@@ -387,7 +387,7 @@ namespace LingoEngine.Lingo.Core
             Unindent();
         }
 
-        public void Visit(DatumNode datumNode)
+        public void Visit(LingoDatumNode datumNode)
         {
             Write(datumNode.Value);
         }
@@ -396,18 +396,18 @@ namespace LingoEngine.Lingo.Core
 
 
 
-        public void Visit(ChunkExprNode node)
+        public void Visit(LingoChunkExprNode node)
         {
             node.Expr.Accept(this);
         }
 
-        public void Visit(InverseOpNode node)
+        public void Visit(LingoInverseOpNode node)
         {
             Write("not ");
             node.Expr.Accept(this);
         }
 
-        public void Visit(ObjCallV4Node node)
+        public void Visit(LingoObjCallV4Node node)
         {
             node.Object.Accept(this);
             Write(".");
@@ -417,32 +417,32 @@ namespace LingoEngine.Lingo.Core
             Write(")");
         }
 
-        public void Visit(MemberExprNode node)
+        public void Visit(LingoMemberExprNode node)
         {
             Write("member ");
             node.Expr.Accept(this);
         }
 
-        public void Visit(ObjPropExprNode node)
+        public void Visit(LingoObjPropExprNode node)
         {
             node.Object.Accept(this);
             Write(".");
             node.Property.Accept(this);
         }
 
-        public void Visit(PlayCmdStmtNode node)
+        public void Visit(LingoPlayCmdStmtNode node)
         {
             Write("play ");
             node.Command.Accept(this);
         }
 
-        public void Visit(ThePropExprNode node)
+        public void Visit(LingoThePropExprNode node)
         {
             Write("the ");
             node.Property.Accept(this);
         }
 
-        public void Visit(MenuPropExprNode node)
+        public void Visit(LingoMenuPropExprNode node)
         {
             Write("the ");
             node.Property.Accept(this);
@@ -450,13 +450,13 @@ namespace LingoEngine.Lingo.Core
             node.Menu.Accept(this);
         }
 
-        public void Visit(SoundCmdStmtNode node)
+        public void Visit(LingoSoundCmdStmtNode node)
         {
             Write("sound ");
             node.Command.Accept(this);
         }
 
-        public void Visit(SoundPropExprNode node)
+        public void Visit(LingoSoundPropExprNode node)
         {
             Write("the ");
             node.Property.Accept(this);
@@ -464,7 +464,7 @@ namespace LingoEngine.Lingo.Core
             node.Sound.Accept(this);
         }
 
-        public void Visit(AssignmentStmtNode node)
+        public void Visit(LingoAssignmentStmtNode node)
         {
             node.Target.Accept(this);
             Write(" = ");
@@ -472,17 +472,17 @@ namespace LingoEngine.Lingo.Core
             WriteLine();
         }
 
-        public void Visit(ExitRepeatStmtNode node)
+        public void Visit(LingoExitRepeatStmtNode node)
         {
             WriteLine("exit repeat");
         }
 
-        public void Visit(NextRepeatStmtNode node)
+        public void Visit(LingoNextRepeatStmtNode node)
         {
             WriteLine("next repeat");
         }
 
-        public void Visit(ObjBracketExprNode node)
+        public void Visit(LingoObjBracketExprNode node)
         {
             node.Object.Accept(this);
             Write("[");
@@ -490,7 +490,7 @@ namespace LingoEngine.Lingo.Core
             Write("]");
         }
 
-        public void Visit(SpritePropExprNode node)
+        public void Visit(LingoSpritePropExprNode node)
         {
             Write("sprite ");
             node.Sprite.Accept(this);
@@ -498,37 +498,37 @@ namespace LingoEngine.Lingo.Core
             node.Property.Accept(this);
         }
 
-        public void Visit(ChunkDeleteStmtNode node)
+        public void Visit(LingoChunkDeleteStmtNode node)
         {
             Write("delete ");
             node.Chunk.Accept(this);
         }
 
-        public void Visit(ChunkHiliteStmtNode node)
+        public void Visit(LingoChunkHiliteStmtNode node)
         {
             Write("hilite ");
             node.Chunk.Accept(this);
         }
 
-        public void Visit(GlobalDeclStmtNode node)
+        public void Visit(LingoGlobalDeclStmtNode node)
         {
             Write("global ");
             Write(string.Join(", ", node.Names));
         }
 
-        public void Visit(PropertyDeclStmtNode node)
+        public void Visit(LingoPropertyDeclStmtNode node)
         {
             Write("property ");
             Write(string.Join(", ", node.Names));
         }
 
-        public void Visit(InstanceDeclStmtNode node)
+        public void Visit(LingoInstanceDeclStmtNode node)
         {
             Write("instance ");
             Write(string.Join(", ", node.Names));
         }
 
-        public void Visit(RepeatWhileStmtNode node)
+        public void Visit(LingoRepeatWhileStmtNode node)
         {
             Write("repeat while ");
             node.Condition.Accept(this);
@@ -539,7 +539,7 @@ namespace LingoEngine.Lingo.Core
             WriteLine("end repeat");
         }
 
-        public void Visit(MenuItemPropExprNode node)
+        public void Visit(LingoMenuItemPropExprNode node)
         {
             Write("menuItem ");
             node.MenuItem.Accept(this);
@@ -547,7 +547,7 @@ namespace LingoEngine.Lingo.Core
             node.Property.Accept(this);
         }
 
-        public void Visit(ObjPropIndexExprNode node)
+        public void Visit(LingoObjPropIndexExprNode node)
         {
             node.Object.Accept(this);
             Write(".prop[");
@@ -555,7 +555,7 @@ namespace LingoEngine.Lingo.Core
             Write("]");
         }
 
-        public void Visit(RepeatWithInStmtNode node)
+        public void Visit(LingoRepeatWithInStmtNode node)
         {
             Write("repeat with ");
             Write(node.Variable);
@@ -568,7 +568,7 @@ namespace LingoEngine.Lingo.Core
             WriteLine("end repeat");
         }
 
-        public void Visit(RepeatWithToStmtNode node)
+        public void Visit(LingoRepeatWithToStmtNode node)
         {
             Write("repeat with ");
             Write(node.Variable);
@@ -583,7 +583,7 @@ namespace LingoEngine.Lingo.Core
             WriteLine("end repeat");
         }
 
-        public void Visit(SpriteWithinExprNode node)
+        public void Visit(LingoSpriteWithinExprNode node)
         {
             Write("sprite ");
             node.SpriteA.Accept(this);
@@ -591,13 +591,13 @@ namespace LingoEngine.Lingo.Core
             node.SpriteB.Accept(this);
         }
 
-        public void Visit(LastStringChunkExprNode node)
+        public void Visit(LingoLastStringChunkExprNode node)
         {
             Write("the last chunk of ");
             node.Source.Accept(this);
         }
 
-        public void Visit(SpriteIntersectsExprNode node)
+        public void Visit(LingoSpriteIntersectsExprNode node)
         {
             Write("sprite ");
             node.SpriteA.Accept(this);
@@ -605,19 +605,19 @@ namespace LingoEngine.Lingo.Core
             node.SpriteB.Accept(this);
         }
 
-        public void Visit(StringChunkCountExprNode node)
+        public void Visit(LingoStringChunkCountExprNode node)
         {
             Write("the number of chunks in ");
             node.Source.Accept(this);
         }
 
-        public void Visit(NotOpNode node)
+        public void Visit(LingoNotOpNode node)
         {
             Write("not ");
             node.Expr.Accept(this);
         }
 
-        public void Visit(CallNode node)
+        public void Visit(LingoCallNode node)
         {
             node.Callee.Accept(this);
             Write("(");
@@ -625,7 +625,7 @@ namespace LingoEngine.Lingo.Core
             Write(")");
         }
 
-        public void Visit(RepeatWithStmtNode repeatWithStmtNode)
+        public void Visit(LingoRepeatWithStmtNode repeatWithStmtNode)
         {
             Write($"repeat with {repeatWithStmtNode.Variable} = ");
             repeatWithStmtNode.Start.Accept(this);
@@ -639,7 +639,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(RepeatUntilStmtNode repeatUntilStmtNode)
+        public void Visit(LingoRepeatUntilStmtNode repeatUntilStmtNode)
         {
             Write("repeat until ");
             repeatUntilStmtNode.Condition.Accept(this);
@@ -651,7 +651,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(RepeatForeverStmtNode repeatForeverStmtNode)
+        public void Visit(LingoRepeatForeverStmtNode repeatForeverStmtNode)
         {
             WriteLine("repeat");
             Indent();
@@ -661,7 +661,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(RepeatTimesStmtNode repeatTimesStmtNode)
+        public void Visit(LingoRepeatTimesStmtNode repeatTimesStmtNode)
         {
             Write("repeat ");
             repeatTimesStmtNode.Count.Accept(this);
@@ -673,7 +673,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(ExitRepeatIfStmtNode exitRepeatIfStmtNode)
+        public void Visit(LingoExitRepeatIfStmtNode exitRepeatIfStmtNode)
         {
             Write("exit repeat if ");
             exitRepeatIfStmtNode.Condition.Accept(this);
@@ -681,7 +681,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(NextRepeatIfStmtNode nextRepeatIfStmtNode)
+        public void Visit(LingoNextRepeatIfStmtNode nextRepeatIfStmtNode)
         {
             Write("next repeat if ");
             nextRepeatIfStmtNode.Condition.Accept(this);
@@ -689,7 +689,7 @@ namespace LingoEngine.Lingo.Core
         }
 
 
-        public void Visit(NextStmtNode nextStmtNode)
+        public void Visit(LingoNextStmtNode nextStmtNode)
         {
             WriteLine("next");
         }
