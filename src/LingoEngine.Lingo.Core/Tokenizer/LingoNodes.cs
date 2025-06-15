@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections.Generic;
+
 namespace LingoEngine.Lingo.Core.Tokenizer
 {
     public abstract class LingoNode
