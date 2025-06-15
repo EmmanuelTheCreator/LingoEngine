@@ -320,7 +320,9 @@ internal partial class DirGodotScoreGrid : Control
         int channelCount = _movie.MaxSpriteChannelCount;
         int frameCount = _movie.FrameCount;
         var font = ThemeDB.FallbackFont;
-        const int ExtraMargin = 16;
+
+        const int ExtraMargin = 20;
+
         Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth + ExtraMargin,
             channelCount * ChannelHeight + ExtraMargin);
         CustomMinimumSize = Size;
