@@ -30,9 +30,9 @@
     /// </summary>
     public class HandlerAst
     {
-        public Node? Root { get; set; }
+        public LingoNode? Root { get; set; }
 
-        public HandlerAst(Node? root)
+        public HandlerAst(LingoNode? root)
         {
             Root = root;
         }

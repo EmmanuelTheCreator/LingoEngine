@@ -99,7 +99,7 @@ namespace LingoEngine.Lingo.Core.Tokenizer
 
         private string WriteList()
         {
-            if (Value is not List<Node> list)
+            if (Value is not List<LingoNode> list)
                 return "[]";
 
             var sb = new StringBuilder();
@@ -115,7 +115,7 @@ namespace LingoEngine.Lingo.Core.Tokenizer
 
         private string WritePropList()
         {
-            if (Value is not List<Node> list)
+            if (Value is not List<LingoNode> list)
                 return "[:";
 
             var sb = new StringBuilder("[");
