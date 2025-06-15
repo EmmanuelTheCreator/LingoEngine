@@ -1,4 +1,6 @@
-﻿namespace LingoEngine.Lingo.Core.Tokenizer
+﻿using System.Collections.Generic;
+
+namespace LingoEngine.Lingo.Core.Tokenizer
 {
   /// <summary>
     /// Represents a Lingo handler (method or event).
