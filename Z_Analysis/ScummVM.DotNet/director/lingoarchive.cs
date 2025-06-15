@@ -55,7 +55,14 @@ namespace Director
         #endregion
         public void PatchScriptHandler(ScriptType type, CastMemberID id)
         {
-            // TODO: hook into the engine to update script dispatch tables
+            // Placeholder implementation. In the real engine this would update
+            // script dispatch tables so that new Lingo handlers become
+            // immediately callable.
+            if (_scriptContexts.TryGetValue(type, out var ctxs) && ctxs.TryGetValue(id.Id, out var ctx))
+            {
+                // For now simply ensure the context is tracked in LctxContexts
+                LctxContexts[id.Id] = ctx;
+            }
         }
 
 

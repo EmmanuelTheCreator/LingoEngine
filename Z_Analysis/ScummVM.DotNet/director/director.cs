@@ -1,4 +1,5 @@
 using Director.Primitives;
+using Director.ScummVM;
 
 namespace Director
 {
@@ -33,7 +34,10 @@ namespace Director
 
         public void ParseOptions()
         {
-            // TODO: implement option parsing
+            // Basic option parsing from the ConfMan dictionary. At the moment
+            // we only handle a version override.
+            if (ConfMan.GetBool("force_d3"))
+                Version = FileVersion.Ver400;
         }
 
         /// <summary>
