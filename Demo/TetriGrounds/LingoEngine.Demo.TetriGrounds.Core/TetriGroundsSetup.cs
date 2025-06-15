@@ -52,6 +52,11 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                             .AddParentScript<PlayerBlockParentScript>()
                             .AddParentScript<ScoreManagerParentScript>()
                             .AddParentScript<SpriteManagerParentScript>()
+                            .AddParentScript<ScoreGetParentScript>()
+                            .AddParentScript<ScoreSaveParentScript>()
+                            .AddParentScript<ClassSubscibeParentScript>()
+                            .AddParentScript<StartDataGetParentScript>()
+                            .AddParentScript<StartDataSaveParentScript>()
                             // Other
                         );
                     registration(config);
