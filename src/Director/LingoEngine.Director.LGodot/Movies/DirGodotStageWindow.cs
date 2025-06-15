@@ -16,7 +16,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, ILingoFrameworkSta
     public DirGodotStageWindow(Node root)
         : base("Stage")
     {
-        Position = new Vector2(20, 20);
+        Position = new Vector2(20, 60);
         Size = new Vector2(640, 480);
         CustomMinimumSize = Size;
         root.AddChild(this);
