@@ -1,5 +1,6 @@
 using Godot;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core.Events;
 using System;
 using System.Collections.Generic;
 
@@ -21,13 +22,18 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     private readonly DirGodotFrameScriptsBar _frameScripts;
     private readonly DirGodotScoreLabelsBar _labelBar;
 
-    public DirGodotScoreWindow()
+    private readonly Button _playButton = new Button();
+    private readonly IDirectorEventMediator _directorMediator;
+
+
+    public DirGodotScoreWindow(IDirectorEventMediator directorMediator)
         : base("Score")
     {
+        _directorMediator = directorMediator;
         Position = new Vector2(0, 30);
         Size = new Vector2(800, 600);
         CustomMinimumSize = Size;
-        _grid = new DirGodotScoreGrid();
+        _grid = new DirGodotScoreGrid(directorMediator);
         _header = new DirGodotFrameHeader();
         _frameScripts = new DirGodotFrameScriptsBar();
         _labelBar = new DirGodotScoreLabelsBar();
@@ -196,6 +202,12 @@ internal partial class DirGodotScoreGrid : Control
     private bool _dragEnd;
     private readonly List<DirGodotScoreSprite> _sprites = new();
     private DirGodotScoreSprite? _selected;
+    private readonly IDirectorEventMediator _mediator;
+
+    public DirGodotScoreGrid(IDirectorEventMediator mediator)
+    {
+        _mediator = mediator;
+    }
 
     public void SetMovie(LingoMovie? movie)
     {
@@ -218,7 +230,7 @@ internal partial class DirGodotScoreGrid : Control
         if (_selected != null)
         {
             _selected.Selected = true;
-            _movie?.RaiseSpriteSelected(_selected.Sprite);
+            _mediator.RaiseSpriteSelected(_selected.Sprite);
         }
         QueueRedraw();
     }
