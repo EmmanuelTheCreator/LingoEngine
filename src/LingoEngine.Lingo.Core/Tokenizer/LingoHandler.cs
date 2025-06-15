@@ -1,10 +1,9 @@
-﻿
-namespace Director.Scripts
+﻿namespace LingoEngine.Lingo.Core.Tokenizer
 {
-    /// <summary>
+  /// <summary>
     /// Represents a Lingo handler (method or event).
     /// </summary>
-    public class Handler
+    public class LingoHandler
     {
         public LingoScript Script { get; set; } = null!;
         public string Name { get; set; } = string.Empty;

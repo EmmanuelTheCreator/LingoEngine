@@ -1,72 +1,9 @@
-﻿using System.Text;
-using static Director.Scripts.Datum;
+﻿using LingoEngine.Lingo.Core.Tokenizer;
+using System.Text;
 
-namespace Director.Scripts
+namespace LingoEngine.Lingo.Core
 {
-    public interface IAstVisitor
-    {
-        void Visit(HandlerNode node);
-        void Visit(ErrorNode node);
-        void Visit(CommentNode node);
-        void Visit(NewObjNode node);
-        void Visit(LiteralNode node);
-        void Visit(IfStmtNode node);
-        void Visit(IfElseStmtNode node);
-        void Visit(EndCaseNode node);
-        void Visit(ObjCallNode node);
-        void Visit(PutStmtNode node);
-        void Visit(TheExprNode node);
-        void Visit(BinaryOpNode node);
-        void Visit(CaseStmtNode node);
-        void Visit(ExitStmtNode node);
-        void Visit(ReturnStmtNode node);
-        void Visit(TellStmtNode node);
-        void Visit(WhenStmtNode node);
-        void Visit(OtherwiseNode node);
-        void Visit(CaseLabelNode node);
-        void Visit(ChunkExprNode node);
-        void Visit(InverseOpNode node);
-        void Visit(ObjCallV4Node node);
-        void Visit(MemberExprNode node);
-        void Visit(ObjPropExprNode node);
-        void Visit(PlayCmdStmtNode node);
-        void Visit(ThePropExprNode node);
-        void Visit(MenuPropExprNode node);
-        void Visit(SoundCmdStmtNode node);
-        void Visit(SoundPropExprNode node);
-        void Visit(AssignmentStmtNode node);
-        void Visit(ExitRepeatStmtNode node);
-        void Visit(NextRepeatStmtNode node);
-        void Visit(ObjBracketExprNode node);
-        void Visit(SpritePropExprNode node);
-        void Visit(ChunkDeleteStmtNode node);
-        void Visit(ChunkHiliteStmtNode node);
-        void Visit(GlobalDeclStmtNode node);
-        void Visit(PropertyDeclStmtNode node);
-        void Visit(InstanceDeclStmtNode node);
-        void Visit(RepeatWhileStmtNode node);
-        void Visit(MenuItemPropExprNode node);
-        void Visit(ObjPropIndexExprNode node);
-        void Visit(RepeatWithInStmtNode node);
-        void Visit(RepeatWithToStmtNode node);
-        void Visit(SpriteWithinExprNode node);
-        void Visit(LastStringChunkExprNode node);
-        void Visit(SpriteIntersectsExprNode node);
-        void Visit(StringChunkCountExprNode node);
-        void Visit(NotOpNode node);
-        void Visit(CallNode node);
-        void Visit(VarNode node);
-        void Visit(BlockNode node);
-        void Visit(DatumNode datumNode);
-        void Visit(RepeatWithStmtNode repeatWithStmtNode);
-        void Visit(RepeatUntilStmtNode repeatUntilStmtNode);
-        void Visit(RepeatForeverStmtNode repeatForeverStmtNode);
-        void Visit(RepeatTimesStmtNode repeatTimesStmtNode);
-        void Visit(ExitRepeatIfStmtNode exitRepeatIfStmtNode);
-        void Visit(NextRepeatIfStmtNode nextRepeatIfStmtNode);
-        void Visit(NextStmtNode nextStmtNode);
-    }
-    public class CodeWriterVisitor : IAstVisitor
+    public class LingoCodeWriterVisitor : ILingoAstVisitor
     {
         private readonly bool _dot;
         private readonly bool _sum;
@@ -78,7 +15,7 @@ namespace Director.Scripts
         private readonly StringBuilder _builder = new();
         public int Length => _builder.Length;
         public string Result => _builder.ToString();
-        public CodeWriterVisitor(bool dot, bool sum, string lineEnding = "\n")
+        public LingoCodeWriterVisitor(bool dot, bool sum, string lineEnding = "\n")
         {
             _dot = dot;
             _sum = sum;
@@ -130,13 +67,13 @@ namespace Director.Scripts
             _lineWidth = _indent * _indentation.Length;
         }
 
-     
 
-       
 
-       
 
-        
+
+
+
+
 
         private void Indent()
         {
@@ -176,23 +113,23 @@ namespace Director.Scripts
         }
         public void Visit(VarNode node) => Write(node.VarName);
 
-        private void Write(Datum datum)
+        private void Write(LingoDatum datum)
         {
             switch (datum.Type)
             {
-                case Datum.DatumType.Void:
+                case LingoDatum.DatumType.Void:
                     Write("VOID");
                     break;
 
-                case Datum.DatumType.Symbol:
+                case LingoDatum.DatumType.Symbol:
                     Write("#" + datum.AsSymbol());
                     break;
 
-                case Datum.DatumType.VarRef:
+                case LingoDatum.DatumType.VarRef:
                     Write(datum.AsString());
                     break;
 
-                case Datum.DatumType.String:
+                case LingoDatum.DatumType.String:
                     var str = datum.AsString();
                     if (string.IsNullOrEmpty(str))
                     {
@@ -208,19 +145,19 @@ namespace Director.Scripts
                     }
                     break;
 
-                case Datum.DatumType.Integer:
+                case LingoDatum.DatumType.Integer:
                     Write(datum.AsInt().ToString());
                     break;
 
-                case Datum.DatumType.Float:
+                case LingoDatum.DatumType.Float:
                     Write(datum.AsFloat().ToString("G"));
                     break;
 
-                case Datum.DatumType.List:
-                case Datum.DatumType.ArgList:
-                case Datum.DatumType.ArgListNoRet:
+                case LingoDatum.DatumType.List:
+                case LingoDatum.DatumType.ArgList:
+                case LingoDatum.DatumType.ArgListNoRet:
                     {
-                        if (datum.Type == Datum.DatumType.List)
+                        if (datum.Type == LingoDatum.DatumType.List)
                             Write("[");
 
                         if (datum.Value is List<Node> list)
@@ -232,12 +169,12 @@ namespace Director.Scripts
                             }
                         }
 
-                        if (datum.Type == Datum.DatumType.List)
+                        if (datum.Type == LingoDatum.DatumType.List)
                             Write("]");
                         break;
                     }
 
-                case Datum.DatumType.PropList:
+                case LingoDatum.DatumType.PropList:
                     {
                         Write("[");
                         if (datum.Value is List<Node> list)

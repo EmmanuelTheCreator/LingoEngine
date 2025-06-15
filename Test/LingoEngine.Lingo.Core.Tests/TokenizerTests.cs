@@ -1,5 +1,5 @@
 using System.Linq;
-using Director.Scripts;
+using LingoEngine.Lingo.Core.Tokenizer;
 using Xunit;
 
 namespace LingoEngine.Lingo.Core.Tests;
@@ -10,7 +10,7 @@ public class TokenizerTests
     public void RoundTripSimpleScript()
     {
         var source = "put 1 into x";
-        var tokenizer = new Tokenizer(source);
+        var tokenizer = new LingoTokenizer(source);
         var tokens = new System.Collections.Generic.List<LingoToken>();
         while (!tokenizer.End)
         {

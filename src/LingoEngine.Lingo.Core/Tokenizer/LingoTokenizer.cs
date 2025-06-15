@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Text;
 
-namespace Director.Scripts
+namespace LingoEngine.Lingo.Core.Tokenizer
 {
     /// <summary>
     /// Token types used by the Lingo tokenizer.
@@ -87,7 +87,7 @@ namespace Director.Scripts
 
         public override string ToString() => $"{Type}: \"{Lexeme}\" (line {Line})";
     }
-    public class Tokenizer
+    public class LingoTokenizer
     {
         private readonly string _source;
         private int _start = 0;
@@ -124,11 +124,11 @@ namespace Director.Scripts
                 { "or", LingoTokenType.Or },
                 { "not", LingoTokenType.Not },
                 { "loop", LingoTokenType.Repeat },
-                { "forever", LingoTokenType.Forever }, 
+                { "forever", LingoTokenType.Forever },
                 { "times", LingoTokenType.Times }
             };
 
-        public Tokenizer(string source)
+        public LingoTokenizer(string source)
         {
             _source = source;
             _position = 0;
@@ -271,7 +271,7 @@ namespace Director.Scripts
             if (Current == '\n') Advance();
         }
 
-       
+
         private LingoToken Number()
         {
             // Hexadecimal check: starts with $
@@ -301,7 +301,7 @@ namespace Director.Scripts
         }
 
         private bool IsHexDigit(char c) =>
-            char.IsDigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+            char.IsDigit(c) || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
 
 
 
