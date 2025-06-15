@@ -23,6 +23,23 @@ Detailed setup instructions are available for:
 - [Godot](docs/GodotSetup.md)
 - [SDL2](docs/SDLSetup.md)
 
+## Running Tests
+
+This repository uses the **.NET SDK**. Make sure `dotnet` is available in your
+`PATH` before running the test suite:
+
+```bash
+dotnet test
+```
+
+Refer to the [official installation guide](https://learn.microsoft.com/dotnet/core/install/) if the `dotnet` command is missing.
+
+You can automatically install the SDK by executing the helper script:
+
+```bash
+./scripts/install-dotnet.sh
+```
+
 ## License
 
 This project is licensed under the terms of the [MIT License](LICENSE).
