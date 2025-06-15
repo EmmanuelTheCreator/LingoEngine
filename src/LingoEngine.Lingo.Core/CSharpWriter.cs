@@ -74,7 +74,7 @@ public class CSharpWriter : ILingoAstVisitor
 
     public void Visit(LingoNewObjNode node) => Unsupported(node);
 
-    public void Visit(LingoLiteralNode node) => Append(node.Value);
+    public void Visit(LingoLiteralNode node) => Append(node.Value.ToString());
 
     public void Visit(LingoIfStmtNode node) => Unsupported(node);
 
