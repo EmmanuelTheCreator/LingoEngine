@@ -21,6 +21,12 @@ namespace LingoEngine.Director.LGodot
                         var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
                         rootNode.AddChild(overlay);
                         return overlay;
+                    })
+                    .AddSingleton(p =>
+                    {
+                        var inspector = new Inspector.DirGodotObjectInspector(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
+                        rootNode.AddChild(inspector);
+                        return inspector;
                     });
 
             });

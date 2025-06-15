@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Demo.TetriGrounds.Core;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.LGodot.Movies;
+using LingoEngine.Director.Core.Events;
 using LingoEngine.LGodot;
 using LingoEngine.LGodot.Movies;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +54,10 @@ public partial class RootNodeTetriGrounds : Node2D
             var movie = TetriGroundsSetup.SetupGame(serviceProvider);
             var game = TetriGroundsSetup.StartGame(serviceProvider);
 #if DEBUG
-            _controller = new LingoGodotPlayerControler((Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode, movie);
+            _controller = new LingoGodotPlayerControler(
+                (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode,
+                movie,
+                serviceProvider.GetRequiredService<IDirectorEventMediator>());
 #endif
 
         }
