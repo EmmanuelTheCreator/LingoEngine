@@ -26,9 +26,17 @@ namespace LingoEngine.Director.LGodot
                     })
                     .AddSingleton(p =>
                     {
+
+                        var inspector = new Inspector.DirGodotObjectInspector(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
+                        rootNode.AddChild(inspector);
+                        return inspector;
+                    })
+                  .AddSingleton(p =>
+                    {
                         var menu = new DirGodotMainMenu();
                         rootNode.AddChild(menu);
                         return menu;
+
                     });
 
             });
