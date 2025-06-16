@@ -180,6 +180,7 @@ namespace LingoEngine.Lingo.Core.Tokenizer
                 '=' => MakeToken(LingoTokenType.Equals),
                 '<' => MakeToken(LingoTokenType.LessThan),
                 '>' => MakeToken(LingoTokenType.GreaterThan),
+                '#' => new LingoToken(LingoTokenType.Identifier, ReadIdentifier(), _line),
                 _ => MakeToken(LingoTokenType.Symbol)
             };
         }

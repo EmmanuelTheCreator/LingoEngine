@@ -45,11 +45,17 @@
                     case LingoTokenType.Identifier:
                         block.Children.Add(ParseCallOrAssignment());
                         break;
+                    case LingoTokenType.On:
+                        AdvanceToken();
+                        if (_currentToken.Type == LingoTokenType.Identifier)
+                            AdvanceToken();
+                        break;
 
                     case LingoTokenType.If:
                     case LingoTokenType.Put:
                     case LingoTokenType.Exit:
                     case LingoTokenType.Next:
+                    case LingoTokenType.Repeat:
                         block.Children.Add(ParseKeywordStatement());
                         break;
 
@@ -66,6 +72,16 @@
         private LingoNode ParseCallOrAssignment()
         {
             var ident = Expect(LingoTokenType.Identifier);
+
+            if (string.Equals(ident.Lexeme, "sendSprite", System.StringComparison.OrdinalIgnoreCase))
+            {
+                var sprite = ParseExpression();
+                if (Match(LingoTokenType.Comma))
+                {
+                    var message = ParseExpression();
+                    return new LingoSendSpriteStmtNode { Sprite = sprite, Message = message };
+                }
+            }
 
             if (Match(LingoTokenType.Equals))
             {
@@ -126,6 +142,9 @@
 
                 case LingoTokenType.If:
                     return ParseIfStatement();
+
+                case LingoTokenType.Repeat:
+                    return ParseRepeatStatement();
 
                 default:
                     return new LingoDatumNode(new LingoDatum(keywordToken.Lexeme));
@@ -233,6 +252,11 @@
                 {
                     case LingoTokenType.Identifier:
                         block.Children.Add(ParseCallOrAssignment());
+                        break;
+                    case LingoTokenType.On:
+                        AdvanceToken();
+                        if (_currentToken.Type == LingoTokenType.Identifier)
+                            AdvanceToken();
                         break;
 
                     case LingoTokenType.If:

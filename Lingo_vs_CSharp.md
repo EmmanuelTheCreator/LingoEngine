@@ -31,10 +31,14 @@ translated C# versions.
 | `"A" & "B"` | `"A" + "B"` |
 | `<>` (not equal) | `!=` |
 | `voidp(x)` | `x == null` |
+| `sendSprite 2, #doIt` | `SendSprite<B2>(2, b2 => b2.doIt());` |
+| `myMovieHandler` | `CallMovieScript<M1>(m1 => m1.myMovieHandler());` |
 
 Additional notes:
 
 - Lingo lists and collections are 1‑based, whereas C# arrays and lists are
   0‑based.
 - Lingo requires `then` and `end if` around conditionals; C# uses curly braces.
+- To access text members, use the generic `Member<T>` helper, e.g.
+  `member("Name").text` becomes `Member<LingoMemberText>("Name").Text`.
 
