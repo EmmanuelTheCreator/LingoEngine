@@ -87,6 +87,12 @@ public class ScriptContext
         }
     }
 
+    public void ParseScripts()
+    {
+        foreach (var script in Scripts.Values)
+            script.Parse();
+    }
+
     public bool ValidName(int id) => Lnam != null && Lnam.ValidName(id);
     public string GetName(int id) => Lnam != null ? Lnam.GetName(id) : $"NAME_{id}";
 }

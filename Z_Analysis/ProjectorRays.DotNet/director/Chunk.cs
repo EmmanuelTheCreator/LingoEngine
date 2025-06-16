@@ -16,7 +16,8 @@ public enum ChunkType
     MemoryMapChunk,
     ScriptChunk,
     ScriptContextChunk,
-    ScriptNamesChunk
+    ScriptNamesChunk,
+    ScoreChunk
 }
 
 public abstract class Chunk
@@ -121,16 +122,70 @@ public class CastChunk : Chunk
 
     public override void Read(ReadStream stream)
     {
-        stream.Endianness = Endianness.BigEndian;
+        // The memory map entries follow the same byte order as the parent file.
+        // Use the endianness of the owning DirectorFile instead of forcing
+        // big endian. Movies created on Windows use little endian here.
+        stream.Endianness = Dir?.Endianness ?? Endianness.BigEndian;
         while (!stream.Eof)
             MemberIDs.Add(stream.ReadInt32());
     }
 
+    /// <summary>
+    /// Serialize this cast chunk to JSON. The member list is written as an
+    /// array of integers since <see cref="JSONWriter"/> only handles
+    /// primitives directly.
+    /// </summary>
     public override void WriteJSON(JSONWriter json)
     {
         json.StartObject();
-        json.WriteField("memberIDs", MemberIDs);
+        json.WriteKey("memberIDs");
+        json.StartArray();
+        foreach (var id in MemberIDs)
+            json.WriteVal(id);
+        json.EndArray();
         json.EndObject();
+    }
+
+    /// <summary>
+    /// Populate this cast chunk by loading all referenced members and linking
+    /// script resources. This mirrors the original C++ populate() method and is
+    /// required so that script restoration knows which member owns which script.
+    /// </summary>
+    public void Populate(string castName, int id, ushort minMember)
+    {
+        Name = castName;
+
+        // Look up the script context for this cast using the key table.
+        foreach (var entry in Dir!.KeyTable!.Entries)
+        {
+            if (entry.CastID == id &&
+               (entry.FourCC == DirectorFile.FOURCC('L','c','t','x') ||
+                entry.FourCC == DirectorFile.FOURCC('L','c','t','X')) &&
+               Dir.ChunkExists(entry.FourCC, entry.SectionID))
+            {
+                Lctx = (ScriptContextChunk)Dir.GetChunk(entry.FourCC, entry.SectionID);
+                break;
+            }
+        }
+
+        // Load each member chunk referenced by this cast and assign an ID.
+        for (int i = 0; i < MemberIDs.Count; i++)
+        {
+            int sectionID = MemberIDs[i];
+            if (sectionID <= 0) continue;
+
+            var member = (CastMemberChunk)Dir.GetChunk(DirectorFile.FOURCC('C','A','S','t'), sectionID);
+            member.Id = (ushort)(i + minMember);
+            Members[member.Id] = member;
+
+            uint scriptId = member.GetScriptID();
+            if (scriptId != 0 && Dir.ChunkExists(DirectorFile.FOURCC('L','s','c','r'), (int)scriptId))
+            {
+                var scriptChunk = (ScriptChunk)Dir.GetChunk(DirectorFile.FOURCC('L','s','c','r'), (int)scriptId);
+                member.Script = scriptChunk;
+                scriptChunk.Member = member;
+            }
+        }
     }
 }
 
@@ -155,7 +210,10 @@ public class CastListChunk : ListChunk
 
     public override void Read(ReadStream stream)
     {
-        stream.Endianness = Endianness.BigEndian;
+        // Use the same byte order as the movie itself. Older Director versions
+        // store this table in little endian on Windows, so rely on the parent
+        // file to specify the correct endianness.
+        stream.Endianness = Dir?.Endianness ?? Endianness.BigEndian;
         base.Read(stream);
         for (int i = 0; i < CastCount; i++)
         {
@@ -175,10 +233,18 @@ public class CastListChunk : ListChunk
         }
     }
 
+    /// <summary>
+    /// Serialize this cast list chunk. Each entry is written through
+    /// <see cref="CastListEntry.WriteJSON"/> so we emit an array manually.
+    /// </summary>
     public override void WriteJSON(JSONWriter json)
     {
         json.StartObject();
-        json.WriteField("entries", Entries);
+        json.WriteKey("entries");
+        json.StartArray();
+        foreach (var e in Entries)
+            e.WriteJSON(json);
+        json.EndArray();
         json.EndObject();
     }
 }
@@ -203,7 +269,8 @@ public class CastMemberChunk : Chunk
 
     public override void Read(ReadStream stream)
     {
-        stream.Endianness = Endianness.BigEndian;
+        // Respect the movie's byte order for configuration data as well.
+        stream.Endianness = Dir?.Endianness ?? Endianness.BigEndian;
         Type = (MemberType)stream.ReadUint32();
         InfoLen = stream.ReadUint32();
         SpecificDataLen = stream.ReadUint32();
@@ -222,8 +289,18 @@ public class CastMemberChunk : Chunk
         json.StartObject();
         json.WriteField("type", Type.ToString());
         json.WriteField("id", Id);
+        if (Info != null)
+        {
+            json.WriteKey("info");
+            Info.WriteJSON(json);
+        }
         json.EndObject();
     }
+
+    public uint GetScriptID() => Info?.ScriptId ?? 0;
+    public string GetScriptText() => Info?.ScriptSrcText ?? string.Empty;
+    public void SetScriptText(string val) { if (Info != null) Info.ScriptSrcText = val; }
+    public string GetName() => Info?.Name ?? string.Empty;
 }
 
 public class CastInfoChunk : ListChunk
@@ -248,6 +325,27 @@ public class CastInfoChunk : ListChunk
     public override void Read(ReadStream stream)
     {
         base.Read(stream);
+        if (OffsetTableLen > 0 && Items.Count >= 1)
+            ScriptSrcText = ReadString(0);
+        if (OffsetTableLen > 1 && Items.Count >= 2)
+            Name = ReadPascalString(1);
+        if (OffsetTableLen == 0)
+        {
+            // Ensure there is one entry so decompilation results can be stored
+            OffsetTableLen = 1;
+            OffsetTable.Add(0);
+        }
+    }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("dataOffset", DataOffset);
+        json.WriteField("flags", Flags);
+        json.WriteField("scriptId", ScriptId);
+        json.WriteField("scriptSrcText", ScriptSrcText);
+        json.WriteField("name", Name);
+        json.EndObject();
     }
 }
 
@@ -255,6 +353,7 @@ public class ConfigChunk : Chunk
 {
     public short FileVersion;
     public short DirectorVersion;
+    public short MinMember;
 
     public ConfigChunk(DirectorFile? dir) : base(dir, ChunkType.ConfigChunk)
     {
@@ -263,10 +362,27 @@ public class ConfigChunk : Chunk
 
     public override void Read(ReadStream stream)
     {
-        stream.Endianness = Endianness.BigEndian;
+        // Use the director file's byte order so configuration values are
+        // interpreted correctly on both Windows (little endian) and Mac
+        // (big endian) authored movies.
+        stream.Endianness = Dir?.Endianness ?? Endianness.BigEndian;
+        short len = stream.ReadInt16();
         FileVersion = stream.ReadInt16();
-        stream.Skip(66);
+        stream.Skip(8); // movie rect
+        MinMember = stream.ReadInt16();
+        stream.Skip(2); // maxMember
+        stream.Seek(36);
         DirectorVersion = stream.ReadInt16();
+        stream.Seek(len); // skip the remainder
+    }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("fileVersion", FileVersion);
+        json.WriteField("minMember", MinMember);
+        json.WriteField("directorVersion", DirectorVersion);
+        json.EndObject();
     }
 }
 
@@ -286,6 +402,14 @@ public class InitialMapChunk : Chunk
         MmapOffset = stream.ReadUint32();
         stream.Skip(12);
     }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("version", Version);
+        json.WriteField("mmapOffset", MmapOffset);
+        json.EndObject();
+    }
 }
 
 public class KeyTableChunk : Chunk
@@ -296,7 +420,8 @@ public class KeyTableChunk : Chunk
 
     public override void Read(ReadStream stream)
     {
-        stream.Endianness = Endianness.BigEndian;
+        // Use the movie's endianness to decode the key table correctly.
+        stream.Endianness = Dir?.Endianness ?? Endianness.BigEndian;
         ushort entrySize = stream.ReadUint16();
         stream.Skip(2);
         uint count = stream.ReadUint32();
@@ -307,6 +432,20 @@ public class KeyTableChunk : Chunk
             entry.Read(stream);
             Entries.Add(entry);
         }
+    }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("entries", Entries.Count);
+        json.WriteKey("entriesList");
+        json.StartArray();
+        foreach (var e in Entries)
+        {
+            e.WriteJSON(json);
+        }
+        json.EndArray();
+        json.EndObject();
     }
 }
 
@@ -321,12 +460,15 @@ public class MemoryMapChunk : Chunk
 
     public override void Read(ReadStream stream)
     {
-        stream.Endianness = Endianness.BigEndian;
+        // Memory map data uses the same byte order as the movie container.
+        stream.Endianness = Dir?.Endianness ?? Endianness.BigEndian;
         short headerLen = stream.ReadInt16();
         short entryLen = stream.ReadInt16();
         int countMax = stream.ReadInt32();
         int countUsed = stream.ReadInt32();
-        stream.Skip(12);
+        int junkHead = stream.ReadInt32();
+        int junkHead2 = stream.ReadInt32();
+        int freeHead = stream.ReadInt32();
         for (int i = 0; i < countUsed; i++)
         {
             var entry = new MemoryMapEntry();
@@ -334,43 +476,105 @@ public class MemoryMapChunk : Chunk
             MapArray.Add(entry);
         }
     }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("entries", MapArray.Count);
+        json.WriteKey("mapArray");
+        json.StartArray();
+        foreach (var e in MapArray)
+            e.WriteJSON(json);
+        json.EndArray();
+        json.EndObject();
+    }
 }
 
-public class ScriptChunk : Chunk, Script
+public class ScriptChunk : Chunk
 {
     public CastMemberChunk? Member;
+    public Script Script;
 
-    public ScriptChunk(DirectorFile? dir) : base(dir, ChunkType.ScriptChunk) {}
+    public ScriptChunk(DirectorFile? dir) : base(dir, ChunkType.ScriptChunk)
+    {
+        Script = new Script(dir?.Version ?? 0);
+    }
 
     public override void Read(ReadStream stream)
     {
-        // not implemented
+        Script.Read(stream);
     }
 
     public override void WriteJSON(JSONWriter json)
     {
         json.StartObject();
+        json.WriteField("scriptNumber", Script.ScriptNumber);
+        json.WriteField("handlersCount", Script.HandlersCount);
+        json.WriteKey("handlers");
+        json.StartArray();
+        foreach (var h in Script.Handlers)
+            WriteHandlerJSON(h, json);
+        json.EndArray();
+        json.EndObject();
+    }
+
+    private static void WriteHandlerJSON(Handler h, JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("nameID", h.NameID);
+        json.WriteField("argumentCount", h.ArgumentCount);
+        json.WriteField("localsCount", h.LocalsCount);
+        json.WriteField("globalsCount", h.GlobalsCount);
         json.EndObject();
     }
 }
 
-public class ScriptContextChunk : Chunk, ScriptContext
+public class ScriptContextChunk : Chunk
 {
-    public ScriptContextChunk(DirectorFile? dir) : base(dir, ChunkType.ScriptContextChunk) {}
+    public ScriptContext Context;
+
+    public ScriptContextChunk(DirectorFile? dir) : base(dir, ChunkType.ScriptContextChunk)
+    {
+        Context = new ScriptContext(dir?.Version ?? 0, dir!);
+    }
 
     public override void Read(ReadStream stream)
     {
-        // placeholder
+        Context.Read(stream);
+    }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("entryCount", Context.EntryCount);
+        json.WriteField("flags", Context.Flags);
+        json.EndObject();
     }
 }
 
-public class ScriptNamesChunk : Chunk, ScriptNames
+public class ScriptNamesChunk : Chunk
 {
-    public List<string> Names = new();
-    public ScriptNamesChunk(DirectorFile? dir) : base(dir, ChunkType.ScriptNamesChunk) {}
+    public ScriptNames Names;
+
+    public ScriptNamesChunk(DirectorFile? dir) : base(dir, ChunkType.ScriptNamesChunk)
+    {
+        Names = new ScriptNames(dir?.Version ?? 0);
+    }
 
     public override void Read(ReadStream stream)
     {
-        // placeholder
+        Names.Read(stream);
+    }
+
+    public override void WriteJSON(JSONWriter json)
+    {
+        json.StartObject();
+        json.WriteField("namesCount", Names.Names.Count);
+        json.WriteKey("names");
+        json.StartArray();
+        foreach (var n in Names.Names)
+            json.WriteVal(n);
+        json.EndArray();
+        json.EndObject();
     }
 }

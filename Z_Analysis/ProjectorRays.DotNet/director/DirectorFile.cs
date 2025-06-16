@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using ProjectorRays.Common;
 using ProjectorRays.LingoDec;
+using ProjectorRays.IO;
 
 namespace ProjectorRays.Director;
 
@@ -12,7 +13,7 @@ public class ChunkInfo
     public uint Len;
     public uint UncompressedLen;
     public int Offset;
-    public MoaID CompressionID;
+    public LingoGuid CompressionID;
 }
 
 public class DirectorFile : ChunkResolver
@@ -39,14 +40,21 @@ public class DirectorFile : ChunkResolver
 
     public List<CastChunk> Casts = new();
 
+    public ScoreChunk? Score;
+
     public InitialMapChunk? InitialMap;
     public MemoryMapChunk? MemoryMap;
 
-    private static uint FOURCC(char a, char b, char c, char d)
+    public static uint FOURCC(char a, char b, char c, char d)
         => ((uint)a << 24) | ((uint)b << 16) | ((uint)c << 8) | (uint)d;
 
     public DirectorFile() { }
 
+    /// <summary>
+    /// Entry point for loading a Director movie. Depending on the codec this
+    /// will either read the standard memory map or the Afterburner tables.
+    /// Returns <c>true</c> on success.
+    /// </summary>
     public virtual bool Read(ReadStream stream)
     {
         Stream = stream;
@@ -78,19 +86,11 @@ public class DirectorFile : ChunkResolver
         if (!ReadKeyTable()) return false;
         if (!ReadConfig()) return false;
         if (!ReadCasts()) return false;
+        ReadScore();
 
         return true;
     }
 
-    public override Script? GetScript(int id)
-    {
-        return null;
-    }
-
-    public override ScriptNames? GetScriptNames(int id)
-    {
-        return null;
-    }
 
     public bool ChunkExists(uint fourCC, int id)
     {
@@ -108,6 +108,10 @@ public class DirectorFile : ChunkResolver
         list.Add(info.Id);
     }
 
+    /// <summary>
+    /// Load the standard movie memory map. This resolves the initial and
+    /// memory map chunks so subsequent chunk lookups know their offsets.
+    /// </summary>
     private void ReadMemoryMap()
     {
         InitialMap = (InitialMapChunk)ReadChunk(FOURCC('i','m','a','p'));
@@ -130,12 +134,17 @@ public class DirectorFile : ChunkResolver
                 Len = entry.Len,
                 UncompressedLen = entry.Len,
                 Offset = entry.Offset,
-                CompressionID = GuidConstants.NULL_COMPRESSION_GUID
+                CompressionID = LingoGuidConstants.NULL_COMPRESSION_GUID
             };
             AddChunkInfo(info);
         }
     }
 
+    /// <summary>
+    /// Parse the Afterburner resource table used by protected movies. This
+    /// mirrors the C++ implementation and decodes the zlib-compressed mapping
+    /// tables describing every chunk in the file.
+    /// </summary>
     private bool ReadAfterburnerMap()
     {
         var s = Stream!;
@@ -164,10 +173,10 @@ public class DirectorFile : ChunkResolver
         if (fcdrUncomp <= 0) return false;
         var fcdrStream = new ReadStream(fcdrBuf, fcdrUncomp, Endianness);
         ushort compCount = fcdrStream.ReadUint16();
-        var compIDs = new List<MoaID>();
+        var compIDs = new List<LingoGuid>();
         for (int i = 0; i < compCount; i++)
         {
-            var id = new MoaID();
+            var id = new LingoGuid();
             id.Read(fcdrStream);
             compIDs.Add(id);
         }
@@ -262,7 +271,7 @@ public class DirectorFile : ChunkResolver
                     if (sectionID > 0)
                     {
                         var cast = (CastChunk)GetChunk(FOURCC('C','A','S','*'), sectionID);
-                        cast.Name = entry.Name;
+                        cast.Populate(entry.Name, entry.Id, entry.MinMember);
                         Casts.Add(cast);
                     }
                 }
@@ -278,11 +287,24 @@ public class DirectorFile : ChunkResolver
         if (def != null)
         {
             var cast = (CastChunk)GetChunk(def.FourCC, def.Id);
-            cast.Name = internalCast ? "Internal" : "External";
+            cast.Populate(internalCast ? "Internal" : "External", 1024, Config!.MinMember);
             Casts.Add(cast);
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Attempt to load the VWSC score chunk if present. Failure is ignored
+    /// as some files may omit this information.
+    /// </summary>
+    private void ReadScore()
+    {
+        var info = GetFirstChunkInfo(FOURCC('V','W','S','C'));
+        if (info != null)
+        {
+            Score = (ScoreChunk)GetChunk(info.FourCC, info.Id);
+        }
     }
 
     private ChunkInfo? GetFirstChunkInfo(uint fourCC)
@@ -323,19 +345,19 @@ public class DirectorFile : ChunkResolver
             {
                 int actual = -1;
                 _cachedChunkBufs[id] = new byte[info.UncompressedLen];
-                if (info.CompressionID.Equals(GuidConstants.ZLIB_COMPRESSION_GUID))
+                if (info.CompressionID.Equals(LingoGuidConstants.ZLIB_COMPRESSION_GUID))
                     actual = s.ReadZlibBytes((int)info.Len, _cachedChunkBufs[id], _cachedChunkBufs[id].Length);
-                else if (info.CompressionID.Equals(GuidConstants.SND_COMPRESSION_GUID))
+                else if (info.CompressionID.Equals(LingoGuidConstants.SND_COMPRESSION_GUID))
                 {
+                    // Sound decompression not implemented
                     BufferView chunkView = s.ReadByteView((int)info.Len);
-                    var chunkStream = new ReadStream(chunkView, Endianness);
-                    var uncompStream = new WriteStream(_cachedChunkBufs[id], _cachedChunkBufs[id].Length, Endianness);
-                    actual = Sound.DecompressSnd(chunkStream, uncompStream, id);
+                    _cachedChunkViews[id] = chunkView;
+                    actual = chunkView.Size;
                 }
                 if (actual < 0) throw new IOException($"Chunk {id}: Could not decompress");
                 _cachedChunkViews[id] = new BufferView(_cachedChunkBufs[id], actual);
             }
-            else if (info.CompressionID.Equals(GuidConstants.FONTMAP_COMPRESSION_GUID))
+            else if (info.CompressionID.Equals(LingoGuidConstants.FONTMAP_COMPRESSION_GUID))
             {
                 _cachedChunkViews[id] = FontMap.GetFontMap((int)Version);
             }
@@ -385,6 +407,7 @@ public class DirectorFile : ChunkResolver
             var v when v == FOURCC('L','s','c','r') => new ScriptChunk(this),
             var v when v == FOURCC('V','W','C','F') || v == FOURCC('D','R','C','F') => new ConfigChunk(this),
             var v when v == FOURCC('M','C','s','L') => new CastListChunk(this),
+            var v when v == FOURCC('V','W','S','C') => new ScoreChunk(this),
             _ => throw new IOException($"Could not deserialize '{Common.Util.FourCCToString(fourCC)}' chunk")
         };
         var chunkStream = new ReadStream(view, Endianness);
@@ -392,9 +415,57 @@ public class DirectorFile : ChunkResolver
         return chunk;
     }
 
-    public override Script? GetScript(int id) => (ScriptChunk)GetChunk(FOURCC('L','s','c','r'), id);
-    public override ScriptNames? GetScriptNames(int id) => (ScriptNamesChunk)GetChunk(FOURCC('L','n','a','m'), id);
+    public Script? GetScript(int id)
+    {
+        var chunk = (ScriptChunk)GetChunk(FOURCC('L','s','c','r'), id);
+        return chunk.Script;
+    }
 
-    private static bool CompressionImplemented(MoaID id) =>
-        id.Equals(GuidConstants.ZLIB_COMPRESSION_GUID) || id.Equals(GuidConstants.SND_COMPRESSION_GUID);
+    public ScriptNames? GetScriptNames(int id)
+    {
+        var chunk = (ScriptNamesChunk)GetChunk(FOURCC('L','n','a','m'), id);
+        return chunk.Names;
+    }
+
+    /// <summary>
+    /// Parse all scripts referenced by every cast so the bytecode is converted
+    /// into a minimal AST. This mirrors the C++ <c>parseScripts()</c> helper.
+    /// </summary>
+    public void ParseScripts()
+    {
+        foreach (var cast in Casts)
+        {
+            cast.Lctx?.Context.ParseScripts();
+        }
+    }
+
+    /// <summary>
+    /// Restore the source text for script members by decompiling the compiled
+    /// bytecode and storing it back into the cast member info structures.
+    /// </summary>
+    public void RestoreScriptText()
+    {
+        foreach (var cast in Casts)
+        {
+            var ctx = cast.Lctx?.Context;
+            if (ctx == null) continue;
+
+            foreach (var pair in ctx.Scripts)
+            {
+                uint id = pair.Key;
+                var script = pair.Value;
+                if (!ChunkExists(FOURCC('L','s','c','r'), (int)id))
+                    continue;
+                var scriptChunk = (ScriptChunk)GetChunk(FOURCC('L','s','c','r'), (int)id);
+                var member = scriptChunk.Member;
+                if (member != null)
+                {
+                    member.SetScriptText(script.ScriptText(FileIO.PlatformLineEnding, DotSyntax));
+                }
+            }
+        }
+    }
+
+    private static bool CompressionImplemented(LingoGuid id) =>
+        id.Equals(LingoGuidConstants.ZLIB_COMPRESSION_GUID) || id.Equals(LingoGuidConstants.SND_COMPRESSION_GUID);
 }
