@@ -10,9 +10,9 @@ namespace LingoEngine.Director.LGodot.Casts
     {
         private readonly TabContainer _tabs;
         private readonly Inspector.DirGodotObjectInspector _inspector;
-        private readonly Button _rewindButton = new Button();
-        private readonly Button _playButton = new Button();
         private readonly HBoxContainer _topBar;
+        private readonly Button _rewindButton;
+        private readonly Button _playButton;
 
         private readonly ILingoMovie _lingoMovie;
         private bool _wasToggleKey;
@@ -28,39 +28,30 @@ namespace LingoEngine.Director.LGodot.Casts
             CustomMinimumSize = Size;
 
             _lingoMovie = lingoMovie;
-            _tabs = new TabContainer();
-            InitTabs();
-            _tabs.Position = new Vector2(0, 40);
-
-            _topBar.Position = new Vector2(0, 20);
-            _topBar.Size = new Vector2(340, 20);
-            AddChild(_topBar);
-
-            _rewindButton.Position = new Vector2(3, 2);
-            _rewindButton.CustomMinimumSize = new Vector2(20, 16);
-            _rewindButton.Text = "<<";
-            _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
-            _topBar.AddChild(_rewindButton);
-
-            _playButton.Position = new Vector2(26, 2);
-            _playButton.CustomMinimumSize = new Vector2(40, 16);
-            _playButton.Text = "Play";
-            _playButton.Pressed += OnPlayPressed;
-            _topBar.AddChild(_playButton);
-            UpdatePlayButton();
 
             _topBar = new HBoxContainer();
             _topBar.Position = new Vector2(0, TitleBarHeight);
+
             _rewindButton = new Button { Text = "<<" };
-            _playButton = new Button { Text = "Play" };
+            _rewindButton.CustomMinimumSize = new Vector2(20, 16);
+            _rewindButton.Position = new Vector2(3, 2);
+            _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
             _topBar.AddChild(_rewindButton);
+
+            _playButton = new Button { Text = "Play" };
+            _playButton.CustomMinimumSize = new Vector2(40, 16);
+            _playButton.Position = new Vector2(26, 2);
+            _playButton.Pressed += OnPlayPressed;
             _topBar.AddChild(_playButton);
+
             AddChild(_topBar);
+            UpdatePlayButton();
 
             _tabs = new TabContainer();
             InitTabs();
             _tabs.Position = new Vector2(0, TitleBarHeight + 20);
 
+            AddChild(_tabs);
 
             parent.AddChild(this);
             foreach (var cast in lingoMovie.CastLib.GetAll())
