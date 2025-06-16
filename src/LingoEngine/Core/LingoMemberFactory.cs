@@ -1,6 +1,6 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Pictures;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 

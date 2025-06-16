@@ -23,6 +23,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\LingoEngine.IO.Data\LingoEngine.IO.Data.csproj" />
+	  <ProjectReference Include="..\..\LingoEngine.IO\LingoEngine.IO.csproj" />
 	  <ProjectReference Include="..\..\LingoEngine.LGodot\LingoEngine.LGodot.csproj" />
 	  <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
 	  <ProjectReference Include="..\LingoEngine.Director.Core\LingoEngine.Director.Core.csproj" />

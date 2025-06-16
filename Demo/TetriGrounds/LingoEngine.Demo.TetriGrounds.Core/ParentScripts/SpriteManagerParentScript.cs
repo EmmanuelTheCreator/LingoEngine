@@ -1,7 +1,5 @@
 using LingoEngine.Core;
 using LingoEngine.Movies;
-using LingoEngine.Primitives;
-using System.Collections.Generic;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {

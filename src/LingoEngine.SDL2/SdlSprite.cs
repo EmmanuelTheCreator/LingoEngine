@@ -2,7 +2,7 @@ using System;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.SDL2.Pictures;
 using LingoEngine.SDL2.SDLL;

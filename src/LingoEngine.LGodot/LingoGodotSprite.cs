@@ -4,7 +4,7 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Texts;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
 

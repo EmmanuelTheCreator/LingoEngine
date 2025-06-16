@@ -1,11 +1,9 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Sounds;
 using LingoEngine.Tools;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace LingoEngine.Core
 {

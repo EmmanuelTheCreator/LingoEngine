@@ -1,3 +1,4 @@
+using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.Movies;
 using System;
@@ -23,13 +24,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public void PostScore(string name, int score)
         {
-            int encrypt = Encryptke(name, score);
-            int encrypt2 = 123456 + Random.Shared.Next(123456);
-            myDone = false;
-            myErr = string.Empty;
-            // TODO: perform network post, store handle in myNetID
-            myNetID = null;
-            _Movie.ActorList.Add(this);
+          
         }
 
         public void StepFrame()
@@ -51,26 +46,8 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public int Encryptke(string name, int score)
         {
-            int total = 0;
-            foreach (char c in name)
-                total += c;
-            foreach (char c in score.ToString())
-                total += c;
-            total *= 12;
-            int shiftreg = total;
-            for (int i = 0; i < 3; i++)
-            {
-                int flag1 = (shiftreg & 1) != 0 ? 1 : 0;
-                int flag2 = (shiftreg & 2) != 0 ? 1 : 0;
-                int flag3 = (shiftreg & 3) != 0 ? 1 : 0;
-                int flag4 = (shiftreg & 5) != 0 ? 1 : 0;
-                int flag5 = (shiftreg & 7) != 0 ? 1 : 0;
-                int shiftreg2 = shiftreg * 2;
-                shiftreg2 = (flag1 ^ flag2 ^ flag3 ^ flag4 ^ flag5) | shiftreg2;
-                shiftreg2 &= 0x7FFFFFFF;
-                shiftreg = shiftreg2;
-            }
-            return shiftreg;
+           
+            return 0;
         }
     }
 }

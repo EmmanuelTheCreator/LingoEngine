@@ -16,7 +16,7 @@ namespace LingoEngine.Director.LGodot
             {
 
                 IServiceCollection serviceCollection = s
-                    .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
+                  
                     .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
                     .AddSingleton(p =>
                     {
