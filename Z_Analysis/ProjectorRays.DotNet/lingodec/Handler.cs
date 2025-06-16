@@ -35,6 +35,8 @@ public class Handler
     public string Name = string.Empty;
 
     public bool IsGenericEvent = false;
+    public BlockNode? Ast;
+
 
     public Handler(Script script)
     {
@@ -98,6 +100,105 @@ public class Handler
         GlobalNameIDs = ReadVarnamesTable(stream, GlobalsCount, GlobalsOffset);
     }
 
+    /// <summary>
+    /// Convert the bytecode stored in <see cref="BytecodeArray"/> into a very
+    /// small abstract syntax tree. Only a subset of instructions are
+    /// recognized; unknown opcodes result in <see cref="UnknownOpNode"/> entries.
+    /// The parser uses a simple stack machine mirroring the original bytecode
+    /// evaluation order.
+    /// </summary>
+    public void Parse()
+    {
+        Ast = new BlockNode();
+        var stack = new Stack<AstNode>();
+        foreach (var bc in BytecodeArray)
+        {
+            switch (bc.Opcode)
+            {
+                case OpCode.kOpPushZero:
+                    stack.Push(new LiteralNode(new Datum(0)));
+                    break;
+                case OpCode.kOpPushInt8:
+                case OpCode.kOpPushInt16:
+                case OpCode.kOpPushInt32:
+                    stack.Push(new LiteralNode(new Datum(bc.Obj)));
+                    break;
+                case OpCode.kOpPushFloat32:
+                    stack.Push(new LiteralNode(new Datum(BitConverter.Int32BitsToSingle(bc.Obj))));
+                    break;
+                case OpCode.kOpPushSymb:
+                    stack.Push(new LiteralNode(new Datum(DatumType.kDatumSymbol, GetName(bc.Obj))));
+                    break;
+                case OpCode.kOpPushVarRef:
+                    stack.Push(new LiteralNode(new Datum(DatumType.kDatumVarRef, GetName(bc.Obj))));
+                    break;
+                case OpCode.kOpGetGlobal:
+                case OpCode.kOpGetGlobal2:
+                    stack.Push(new VarNode(GetName(bc.Obj)));
+                    break;
+                case OpCode.kOpGetParam:
+                    stack.Push(new VarNode(GetArgumentName(bc.Obj / VariableMultiplier())));
+                    break;
+                case OpCode.kOpGetLocal:
+                    stack.Push(new VarNode(GetLocalName(bc.Obj / VariableMultiplier())));
+                    break;
+                case OpCode.kOpMul:
+                case OpCode.kOpAdd:
+                case OpCode.kOpSub:
+                case OpCode.kOpDiv:
+                case OpCode.kOpMod:
+                case OpCode.kOpJoinStr:
+                case OpCode.kOpJoinPadStr:
+                case OpCode.kOpLt:
+                case OpCode.kOpLtEq:
+                case OpCode.kOpNtEq:
+                case OpCode.kOpEq:
+                case OpCode.kOpGt:
+                case OpCode.kOpGtEq:
+                case OpCode.kOpAnd:
+                case OpCode.kOpOr:
+                case OpCode.kOpContainsStr:
+                case OpCode.kOpContains0Str:
+                    if (stack.Count >= 2) { var right = stack.Pop(); var left = stack.Pop(); stack.Push(new BinaryOpNode(bc.Opcode, left, right)); } else { Ast.Statements.Add(new UnknownOpNode(bc)); }
+                    break;
+                case OpCode.kOpInv:
+                case OpCode.kOpNot:
+                    if (stack.Count >= 1) { var opnd = stack.Pop(); stack.Push(new UnaryOpNode(bc.Opcode, opnd)); } else { Ast.Statements.Add(new UnknownOpNode(bc)); }
+                    break;
+                case OpCode.kOpPushArgList:
+                case OpCode.kOpPushArgListNoRet:
+                    { int n = bc.Obj; var list = new List<AstNode>(); for (int i=0;i<n;i++) list.Insert(0, stack.Pop()); stack.Push(new ArgListNode(list, bc.Opcode == OpCode.kOpPushArgListNoRet)); }
+                    break;
+                case OpCode.kOpLocalCall:
+                    { var args = stack.Pop() as ArgListNode ?? new ArgListNode(new List<AstNode>(), false); string name = bc.Obj >=0 && bc.Obj < Script.Handlers.Count ? Script.Handlers[bc.Obj].Name :  $"handler_{bc.Obj}"; var call = new CallNode(name, args.Args, args.NoReturn); if (args.NoReturn) Ast.Statements.Add(call); else stack.Push(call); }
+                    break;
+                case OpCode.kOpExtCall:
+                    { var args = stack.Pop() as ArgListNode ?? new ArgListNode(new List<AstNode>(), false); var call = new CallNode(GetName(bc.Obj), args.Args, args.NoReturn); if (args.NoReturn) Ast.Statements.Add(call); else stack.Push(call); }
+                    break;
+                case OpCode.kOpSetGlobal:
+                case OpCode.kOpSetGlobal2:
+                    if (stack.Count > 0) { var val = stack.Pop(); Ast.Statements.Add(new AssignmentNode(new VarNode(GetName(bc.Obj)), val)); }
+                    break;
+                case OpCode.kOpSetParam:
+                    if (stack.Count > 0) { var val = stack.Pop(); Ast.Statements.Add(new AssignmentNode(new VarNode(GetArgumentName(bc.Obj / VariableMultiplier())), val)); }
+                    break;
+                case OpCode.kOpSetLocal:
+                    if (stack.Count > 0) { var val = stack.Pop(); Ast.Statements.Add(new AssignmentNode(new VarNode(GetLocalName(bc.Obj / VariableMultiplier())), val)); }
+                    break;
+                case OpCode.kOpRet:
+                case OpCode.kOpRetFactory:
+                    Ast.Statements.Add(new ReturnNode(stack.Count > 0 ? stack.Pop() : null));
+                    break;
+                case OpCode.kOpPop:
+                    if (stack.Count > 0) stack.Pop();
+                    break;
+                default:
+                    Ast.Statements.Add(new UnknownOpNode(bc)); stack.Clear();
+                    break;
+            }
+        }
+    }
+
     public List<short> ReadVarnamesTable(ReadStream stream, ushort count, uint offset)
     {
         stream.Seek((int)offset);
@@ -145,6 +246,18 @@ public class Handler
             return GetName(LocalNameIDs[id]);
         return $"UNKNOWN_LOCAL_{id}";
     }
+    /// <summary>
+    /// Earlier Director versions store variable indices multiplied by a
+    /// constant. This helper returns the appropriate multiplier so bytecode
+    /// offsets can be converted back to plain indices.
+    /// </summary>
+    private int VariableMultiplier()
+    {
+        if (Script.Version >= 850) return 1;
+        if (Script.Version >= 500) return 8;
+        return 6;
+    }
+
 
     private static string PosToString(int pos)
     {
@@ -206,6 +319,45 @@ public class Handler
             }
             code.WriteLine();
         }
+        if (!IsGenericEvent)
+        {
+            code.Unindent();
+            if (!isMethod)
+                code.WriteLine("end");
+        }
+    }
+
+    /// <summary>
+    /// Write the decompiled script for this handler using the parsed AST. This
+    /// is a simplified printer that only understands the small subset of nodes
+    /// produced by <see cref="Parse"/>.
+    /// </summary>
+    public void WriteScriptText(CodeWriter code)
+    {
+        bool isMethod = Script.IsFactory();
+
+        if (!IsGenericEvent)
+        {
+            if (isMethod)
+                code.Write("method ");
+            else
+                code.Write("on ");
+            code.Write(Name);
+            if (ArgumentNames.Count > 0)
+            {
+                code.Write(" ");
+                for (int i = 0; i < ArgumentNames.Count; i++)
+                {
+                    if (i > 0) code.Write(", ");
+                    code.Write(ArgumentNames[i]);
+                }
+            }
+            code.WriteLine();
+            code.Indent();
+        }
+
+        Ast?.WriteScriptText(code);
+
         if (!IsGenericEvent)
         {
             code.Unindent();

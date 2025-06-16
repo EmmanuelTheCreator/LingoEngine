@@ -191,7 +191,63 @@ public class Script
         }
     }
 
+    /// <summary>
+    /// Write the decompiled source code of this script using the parsed AST.
+    /// Only a very small subset of the original syntax is supported.
+    /// </summary>
+    public void WriteScriptText(CodeWriter code, bool dotSyntax)
+    {
+        int orig = code.Size;
+        WriteVarDeclarations(code);
+        if (IsFactory())
+        {
+            if (code.Size != orig)
+                code.WriteLine();
+            code.Write("factory ");
+            code.WriteLine(FactoryName);
+        }
+        for (int i = 0; i < Handlers.Count; i++)
+        {
+            if ((!IsFactory() || i > 0) && code.Size != orig)
+                code.WriteLine();
+            Handlers[i].WriteScriptText(code);
+        }
+        foreach (var f in Factories)
+        {
+            if (code.Size != orig)
+                code.WriteLine();
+            f.WriteScriptText(code, dotSyntax);
+        }
+    }
+
+    /// <summary>Return the decompiled script using platform line endings.</summary>
+    public string ScriptText(string lineEnding, bool dotSyntax)
+    {
+        var cw = new CodeWriter(lineEnding);
+        WriteScriptText(cw, dotSyntax);
+        return cw.ToString();
+    }
+
+    /// <summary>Return the bytecode listing using platform line endings.</summary>
+    public string BytecodeText(string lineEnding, bool dotSyntax)
+    {
+        var cw = new CodeWriter(lineEnding);
+        WriteBytecodeText(cw, dotSyntax);
+        return cw.ToString();
+    }
+
     public bool IsFactory() => (ScriptFlags & (uint)ScriptFlag.kScriptFlagFactoryDef) != 0;
+
+    /// <summary>
+    /// Parse all handlers in this script, building an AST for each one. This
+    /// step is optional and only required when the caller wants to decompile the
+    /// script back to Lingo source.
+    /// </summary>
+    public void Parse()
+    {
+        foreach (var h in Handlers)
+            h.Parse();
+    }
 }
 
 public class LiteralStore

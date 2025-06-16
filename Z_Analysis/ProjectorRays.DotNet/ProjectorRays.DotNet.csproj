@@ -5,7 +5,16 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <RootNamespace>ProjectorRays</RootNamespace>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+    <Compile Remove="director/Sound.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fontmaps\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
