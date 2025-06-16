@@ -72,17 +72,57 @@ public class CSharpWriter : ILingoAstVisitor
         AppendLine();
     }
 
-    public void Visit(LingoNewObjNode node) => Unsupported(node);
+    public void Visit(LingoNewObjNode node)
+    {
+        Append("new ");
+        Append(node.ObjType);
+        Append("(");
+        node.ObjArgs.Accept(this);
+        Append(")");
+    }
 
     public void Visit(LingoLiteralNode node) => Append(node.Value.ToString());
 
-    public void Visit(LingoIfStmtNode node) => Unsupported(node);
+    public void Visit(LingoIfStmtNode node)
+    {
+        Append("if (");
+        node.Condition.Accept(this);
+        AppendLine(")");
+        AppendLine("{");
+        node.ThenBlock.Accept(this);
+        AppendLine("}");
+        if (node.HasElse)
+        {
+            AppendLine("else");
+            AppendLine("{");
+            node.ElseBlock!.Accept(this);
+            AppendLine("}");
+        }
+    }
 
-    public void Visit(LingoIfElseStmtNode node) => Unsupported(node);
+    public void Visit(LingoIfElseStmtNode node)
+    {
+        Append("if (");
+        node.Condition.Accept(this);
+        AppendLine(")");
+        AppendLine("{");
+        node.ThenBlock.Accept(this);
+        AppendLine("}");
+        AppendLine("else");
+        AppendLine("{");
+        node.ElseBlock.Accept(this);
+        AppendLine("}");
+    }
 
     public void Visit(LingoEndCaseNode node) => Unsupported(node);
 
-    public void Visit(LingoObjCallNode node) => Unsupported(node);
+    public void Visit(LingoObjCallNode node)
+    {
+        Append(node.Name.Value.AsString());
+        Append("(");
+        node.ArgList.Accept(this);
+        AppendLine(");");
+    }
 
     public void Visit(LingoPutStmtNode node)
     {
@@ -94,7 +134,45 @@ public class CSharpWriter : ILingoAstVisitor
 
     public void Visit(LingoTheExprNode node) => Unsupported(node);
 
-    public void Visit(LingoBinaryOpNode node) => Unsupported(node);
+    public void Visit(LingoBinaryOpNode node)
+    {
+        bool needsParensLeft = node.Left is LingoBinaryOpNode;
+        bool needsParensRight = node.Right is LingoBinaryOpNode;
+
+        if (needsParensLeft) Append("(");
+        node.Left.Accept(this);
+        if (needsParensLeft) Append(")");
+
+        Append(" ");
+        Append(BinaryOpcodeToString(node.Opcode));
+        Append(" ");
+
+        if (needsParensRight) Append("(");
+        node.Right.Accept(this);
+        if (needsParensRight) Append(")");
+    }
+
+    private static string BinaryOpcodeToString(LingoBinaryOpcode opcode)
+    {
+        return opcode switch
+        {
+            LingoBinaryOpcode.Add => "+",
+            LingoBinaryOpcode.Subtract => "-",
+            LingoBinaryOpcode.Multiply => "*",
+            LingoBinaryOpcode.Divide => "/",
+            LingoBinaryOpcode.Modulo => "%",
+            LingoBinaryOpcode.And => "&&",
+            LingoBinaryOpcode.Or => "||",
+            LingoBinaryOpcode.Concat => "+",
+            LingoBinaryOpcode.Equals => "==",
+            LingoBinaryOpcode.NotEquals => "!=",
+            LingoBinaryOpcode.GreaterThan => ">",
+            LingoBinaryOpcode.GreaterOrEqual => ">=",
+            LingoBinaryOpcode.LessThan => "<",
+            LingoBinaryOpcode.LessOrEqual => "<=",
+            _ => opcode.ToString()
+        };
+    }
 
     public void Visit(LingoCaseStmtNode node) => Unsupported(node);
 
@@ -147,9 +225,9 @@ public class CSharpWriter : ILingoAstVisitor
         AppendLine(";");
     }
 
-    public void Visit(LingoExitRepeatStmtNode node) => Unsupported(node);
+    public void Visit(LingoExitRepeatStmtNode node) => AppendLine("break;");
 
-    public void Visit(LingoNextRepeatStmtNode node) => Unsupported(node);
+    public void Visit(LingoNextRepeatStmtNode node) => AppendLine("continue;");
 
     public void Visit(LingoObjBracketExprNode node) => Unsupported(node);
 
@@ -165,27 +243,107 @@ public class CSharpWriter : ILingoAstVisitor
 
     public void Visit(LingoInstanceDeclStmtNode node) => Unsupported(node);
 
-    public void Visit(LingoRepeatWhileStmtNode node) => Unsupported(node);
+    public void Visit(LingoRepeatWhileStmtNode node)
+    {
+        Append("while (");
+        node.Condition.Accept(this);
+        AppendLine(")");
+        AppendLine("{");
+        node.Body.Accept(this);
+        AppendLine("}");
+    }
 
-    public void Visit(LingoMenuItemPropExprNode node) => Unsupported(node);
+    public void Visit(LingoMenuItemPropExprNode node)
+    {
+        Append("menuItem(");
+        node.MenuItem.Accept(this);
+        Append(").");
+        node.Property.Accept(this);
+    }
 
-    public void Visit(LingoObjPropIndexExprNode node) => Unsupported(node);
+    public void Visit(LingoObjPropIndexExprNode node)
+    {
+        node.Object.Accept(this);
+        Append(".prop[");
+        node.PropertyIndex.Accept(this);
+        Append("]");
+    }
 
-    public void Visit(LingoRepeatWithInStmtNode node) => Unsupported(node);
+    public void Visit(LingoRepeatWithInStmtNode node)
+    {
+        Append($"foreach (var {node.Variable} in ");
+        node.List.Accept(this);
+        AppendLine(")");
+        AppendLine("{");
+        node.Body.Accept(this);
+        AppendLine("}");
+    }
 
-    public void Visit(LingoRepeatWithToStmtNode node) => Unsupported(node);
+    public void Visit(LingoRepeatWithToStmtNode node)
+    {
+        Append($"for (var {node.Variable} = ");
+        node.Start.Accept(this);
+        Append($"; {node.Variable} <= ");
+        node.End.Accept(this);
+        Append($"; {node.Variable}++)");
+        AppendLine();
+        AppendLine("{");
+        node.Body.Accept(this);
+        AppendLine("}");
+    }
 
-    public void Visit(LingoSpriteWithinExprNode node) => Unsupported(node);
+    public void Visit(LingoSpriteWithinExprNode node)
+    {
+        Append("SpriteWithin(");
+        node.SpriteA.Accept(this);
+        Append(", ");
+        node.SpriteB.Accept(this);
+        Append(")");
+    }
 
-    public void Visit(LingoLastStringChunkExprNode node) => Unsupported(node);
+    public void Visit(LingoLastStringChunkExprNode node)
+    {
+        Append("LastChunkOf(");
+        node.Source.Accept(this);
+        Append(")");
+    }
 
-    public void Visit(LingoSpriteIntersectsExprNode node) => Unsupported(node);
+    public void Visit(LingoSpriteIntersectsExprNode node)
+    {
+        Append("SpriteIntersects(");
+        node.SpriteA.Accept(this);
+        Append(", ");
+        node.SpriteB.Accept(this);
+        Append(")");
+    }
 
-    public void Visit(LingoStringChunkCountExprNode node) => Unsupported(node);
+    public void Visit(LingoStringChunkCountExprNode node)
+    {
+        Append("ChunkCount(");
+        node.Source.Accept(this);
+        Append(")");
+    }
 
-    public void Visit(LingoNotOpNode node) => Unsupported(node);
+    public void Visit(LingoNotOpNode node)
+    {
+        Append("!(");
+        node.Expr.Accept(this);
+        Append(")");
+    }
 
-    public void Visit(LingoCallNode node) => Unsupported(node);
+    public void Visit(LingoCallNode node)
+    {
+        if (!string.IsNullOrEmpty(node.Name))
+        {
+            AppendLine($"{node.Name}();");
+            return;
+        }
+
+        node.Callee.Accept(this);
+        Append("(");
+        node.Arguments.Accept(this);
+        Append(")");
+    }
 
     public void Visit(LingoVarNode node) => Append(node.VarName);
 
@@ -202,17 +360,61 @@ public class CSharpWriter : ILingoAstVisitor
         Append(DatumToCSharp(datumNode.Datum));
     }
 
-    public void Visit(LingoRepeatWithStmtNode repeatWithStmtNode) => Unsupported(repeatWithStmtNode);
+    public void Visit(LingoRepeatWithStmtNode repeatWithStmtNode)
+    {
+        Append($"for (var {repeatWithStmtNode.Variable} = ");
+        repeatWithStmtNode.Start.Accept(this);
+        Append($"; {repeatWithStmtNode.Variable} <= ");
+        repeatWithStmtNode.End.Accept(this);
+        Append($"; {repeatWithStmtNode.Variable}++)");
+        AppendLine();
+        AppendLine("{");
+        repeatWithStmtNode.Body.Accept(this);
+        AppendLine("}");
+    }
 
-    public void Visit(LingoRepeatUntilStmtNode repeatUntilStmtNode) => Unsupported(repeatUntilStmtNode);
+    public void Visit(LingoRepeatUntilStmtNode repeatUntilStmtNode)
+    {
+        AppendLine("do");
+        AppendLine("{");
+        repeatUntilStmtNode.Body.Accept(this);
+        Append("}");
+        Append(" while (!(");
+        repeatUntilStmtNode.Condition.Accept(this);
+        AppendLine("));");
+    }
 
-    public void Visit(LingoRepeatForeverStmtNode repeatForeverStmtNode) => Unsupported(repeatForeverStmtNode);
+    public void Visit(LingoRepeatForeverStmtNode repeatForeverStmtNode)
+    {
+        AppendLine("while (true)");
+        AppendLine("{");
+        repeatForeverStmtNode.Body.Accept(this);
+        AppendLine("}");
+    }
 
-    public void Visit(LingoRepeatTimesStmtNode repeatTimesStmtNode) => Unsupported(repeatTimesStmtNode);
+    public void Visit(LingoRepeatTimesStmtNode repeatTimesStmtNode)
+    {
+        Append("for (int i = 1; i <= ");
+        repeatTimesStmtNode.Count.Accept(this);
+        AppendLine("; i++)");
+        AppendLine("{");
+        repeatTimesStmtNode.Body.Accept(this);
+        AppendLine("}");
+    }
 
-    public void Visit(LingoExitRepeatIfStmtNode exitRepeatIfStmtNode) => Unsupported(exitRepeatIfStmtNode);
+    public void Visit(LingoExitRepeatIfStmtNode exitRepeatIfStmtNode)
+    {
+        Append("if (");
+        exitRepeatIfStmtNode.Condition.Accept(this);
+        AppendLine(") break;");
+    }
 
-    public void Visit(LingoNextRepeatIfStmtNode nextRepeatIfStmtNode) => Unsupported(nextRepeatIfStmtNode);
+    public void Visit(LingoNextRepeatIfStmtNode nextRepeatIfStmtNode)
+    {
+        Append("if (");
+        nextRepeatIfStmtNode.Condition.Accept(this);
+        AppendLine(") continue;");
+    }
 
-    public void Visit(LingoNextStmtNode nextStmtNode) => Unsupported(nextStmtNode);
+    public void Visit(LingoNextStmtNode nextStmtNode) => AppendLine("// next");
 }
