@@ -12,11 +12,11 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
         private bool myDone;
         private string myErr = string.Empty;
         private int phpErr;
-        private readonly ClassSubscibeParentScript ancestor;
+        private readonly ClassSubscribeParentScript ancestor;
 
         public ScoreSaveParentScript(ILingoMovieEnvironment env) : base(env)
         {
-            ancestor = new ClassSubscibeParentScript(env);
+            ancestor = new ClassSubscribeParentScript(env);
         }
 
         public void SetURL(string scriptURL) => myURL = scriptURL;
@@ -45,7 +45,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public void Destroy()
         {
-            ancestor.Subscriberdestroy();
+            ancestor.SubscribersDestroy();
             _Movie.ActorList.Remove(this);
         }
 

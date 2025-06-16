@@ -54,7 +54,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                             .AddParentScript<SpriteManagerParentScript>()
                             .AddParentScript<ScoreGetParentScript>()
                             .AddParentScript<ScoreSaveParentScript>()
-                            .AddParentScript<ClassSubscibeParentScript>()
+                            .AddParentScript<ClassSubscribeParentScript>()
                             .AddParentScript<StartDataGetParentScript>()
                             .AddParentScript<StartDataSaveParentScript>()
                             // Other
