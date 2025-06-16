@@ -18,7 +18,6 @@ namespace LingoEngine.Director.LGodot.Casts
         private bool _wasToggleKey;
 
         public ILingoCast? ActiveCastLib { get; private set; }
-        public DirGodotCastView CastLibViewer { get; }
 
         public DirGodotCastWindow(Node parent, ILingoMovie lingoMovie, IDirectorEventMediator mediator)
             : base("Cast")
@@ -69,10 +68,6 @@ namespace LingoEngine.Director.LGodot.Casts
 
             _inspector = new Inspector.DirGodotObjectInspector(mediator) { Visible = false };
             parent.AddChild(_inspector);
-
-            _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
-            _playButton.Pressed += OnPlayPressed;
-            UpdatePlayButton();
         }
 
        
@@ -110,7 +105,6 @@ namespace LingoEngine.Director.LGodot.Casts
             _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _tabs.Size = new Vector2(350, 580);
-            AddChild(_tabs);
             var existingFont = _tabs.GetThemeFont("font", "TabContainer");
             if (existingFont != null)
             {
@@ -133,7 +127,6 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public void Dispose()
         {
-            CastLibViewer.Hide();
         }
     }
     internal class DirGodotCastView : IDirFrameworkCast
