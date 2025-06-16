@@ -19,4 +19,6 @@ public class LingoSpriteDTO
     public float Height { get; set; }
     public int BeginFrame { get; set; }
     public int EndFrame { get; set; }
+
+    public LingoSpriteAnimatorDTO? Animator { get; set; }
 }
