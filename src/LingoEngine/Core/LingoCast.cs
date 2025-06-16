@@ -81,8 +81,9 @@ namespace LingoEngine.Core
             switch (type)
             {
                 case LingoMemberType.Bitmap:return  _factory.CreateMemberPicture(this, numberInCast, name, fileName, regPoint); 
-                case LingoMemberType.Sound: return _factory.CreateMemberSound(this, numberInCast, name, fileName, regPoint); 
-                case LingoMemberType.Text: return _factory.CreateMemberText(this, numberInCast, name, fileName, regPoint); 
+                case LingoMemberType.Sound: return _factory.CreateMemberSound(this, numberInCast, name, fileName, regPoint);
+                case LingoMemberType.FilmLoop: return _factory.CreateMemberFilmLoop(this, numberInCast, name, fileName, regPoint);
+                case LingoMemberType.Text: return _factory.CreateMemberText(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.Field: return _factory.CreateMemberField(this, numberInCast, name, fileName, regPoint); 
                 default:
                     return _factory.CreateEmpty(this, numberInCast, name, fileName, regPoint);
