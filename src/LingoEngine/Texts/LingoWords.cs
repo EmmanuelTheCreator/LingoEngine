@@ -54,7 +54,7 @@ namespace LingoEngine.Texts
 
         private void Parse()
         {
-            _words = _text.Split([' '], StringSplitOptions.RemoveEmptyEntries).Select(x => new LingoWords(x)).ToArray();
+            _words = _text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(x => new LingoWords(x)).ToArray();
             _hasParsed = true;
         }
 
