@@ -6,12 +6,12 @@ using System.Reflection;
 namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 19_ClassSubscibe.ls
-    public class ClassSubscibeParentScript : LingoParentScript
+    public class ClassSubscribeParentScript : LingoParentScript
     {
         private readonly List<object> mySubscribers = new();
         private readonly List<Dictionary<string, string>> mySubscribersData = new();
 
-        public ClassSubscibeParentScript(ILingoMovieEnvironment env) : base(env) { }
+        public ClassSubscribeParentScript(ILingoMovieEnvironment env) : base(env) { }
 
         public int Subscribe(object obj, string function)
         {
@@ -30,7 +30,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
             return mySubscribers[val - 1];
         }
 
-        public void ExecuteAllSubscibed(string data)
+        public void ExecuteAllSubscribed(string data)
         {
             for (int i = 0; i < mySubscribers.Count; i++)
             {
@@ -45,7 +45,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
-        public void Subscriberdestroy()
+        public void SubscribersDestroy()
         {
             mySubscribers.Clear();
             mySubscribersData.Clear();
