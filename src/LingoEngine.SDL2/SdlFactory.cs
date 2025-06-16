@@ -3,7 +3,7 @@ using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.SDL2.Core;
 using LingoEngine.SDL2.Movies;

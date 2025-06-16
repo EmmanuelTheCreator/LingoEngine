@@ -2,7 +2,6 @@
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.Core.Events;
-using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Director.LGodot.Casts
@@ -11,13 +10,9 @@ namespace LingoEngine.Director.LGodot.Casts
     {
         private readonly TabContainer _tabs;
         private readonly Inspector.DirGodotObjectInspector _inspector;
-        private readonly DirGodotCastMemberPropViewer _selectedItem;
-        private readonly Control _topBar = new Control();
         private readonly Button _rewindButton = new Button();
         private readonly Button _playButton = new Button();
         private readonly HBoxContainer _topBar;
-        private readonly Button _rewindButton;
-        private readonly Button _playButton;
 
         private readonly ILingoMovie _lingoMovie;
         private bool _wasToggleKey;
@@ -83,29 +78,15 @@ namespace LingoEngine.Director.LGodot.Casts
 
             _inspector = new Inspector.DirGodotObjectInspector(mediator) { Visible = false };
             parent.AddChild(_inspector);
-            _selectedItem = new DirGodotCastMemberPropViewer();
-            parent.AddChild(_selectedItem);
 
             _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
             _playButton.Pressed += OnPlayPressed;
             UpdatePlayButton();
         }
 
-        private void OnPlayPressed()
-        {
-            if (_lingoMovie.IsPlaying)
-                _lingoMovie.Halt();
-            else
-                _lingoMovie.Play();
-            UpdatePlayButton();
-        }
+       
 
-        private void UpdatePlayButton()
-        {
-            _playButton.Text = _lingoMovie.IsPlaying ? "Stop" : "Play";
-
-        }
-
+       
         public void Toggle()
         {
             Visible = !Visible;

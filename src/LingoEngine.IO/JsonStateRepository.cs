@@ -1,15 +1,11 @@
-using System.IO;
 using System.Text.Json;
 using System.Reflection;
-using System.Linq;
-using System.Collections.Generic;
 using LingoEngine.Movies;
 using LingoEngine.Core;
 using LingoEngine.Texts;
 using LingoEngine.Sounds;
-using LingoEngine.Pictures.LingoEngine;
-using LingoEngine.Primitives;
 using LingoEngine.IO.Data.DTO;
+using LingoEngine.Pictures;
 
 namespace LingoEngine.IO;
 

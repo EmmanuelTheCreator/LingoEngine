@@ -1,6 +1,6 @@
 ﻿using LingoEngine.Events;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
+using LingoEngine.Pictures;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
 {

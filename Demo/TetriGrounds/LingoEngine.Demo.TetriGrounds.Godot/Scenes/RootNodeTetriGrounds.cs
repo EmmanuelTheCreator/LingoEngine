@@ -7,6 +7,7 @@ using LingoEngine.LGodot;
 using LingoEngine.LGodot.Movies;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using LingoEngine.Director.Core;
 
 public partial class RootNodeTetriGrounds : Node2D
 {
@@ -46,6 +47,7 @@ public partial class RootNodeTetriGrounds : Node2D
             TetriGroundsSetup.AddTetriGrounds(_services, c => c
                     .WithLingoGodotEngine(this)
 #if DEBUG
+                    .WithDirectorEngine()
                     .WithDirectorGodotEngine(this)
 #endif
                     );

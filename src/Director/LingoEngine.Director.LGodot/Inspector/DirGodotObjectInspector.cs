@@ -4,6 +4,7 @@ using LingoEngine.Movies;
 using LingoEngine.Core;
 using System;
 using System.Reflection;
+using LingoEngine.Pictures;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -56,13 +57,13 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
             case Texts.LingoMemberText text:
                 AddTab("Text", text);
                 break;
-            case Pictures.LingoMemberPicture pic:
+            case LingoMemberPicture pic:
                 AddTab("Picture", pic);
                 break;
             case Sounds.LingoMemberSound sound:
                 AddTab("Sound", sound);
                 break;
-            case Movies.LingoMemberFilmLoop film:
+            case LingoMemberFilmLoop film:
                 AddTab("FilmLoop", film);
                 break;
         }

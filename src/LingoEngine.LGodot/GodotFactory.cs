@@ -8,13 +8,12 @@ using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Sounds;
 using LingoEngine.LGodot.Texts;
 using LingoEngine.Inputs;
-using LingoEngine.Core;
 using LingoEngine.Movies;
-using LingoEngine.Pictures.LingoEngine;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 using Microsoft.Extensions.DependencyInjection;
+using LingoEngine.Pictures;
 
 namespace LingoEngine.LGodot
 {
