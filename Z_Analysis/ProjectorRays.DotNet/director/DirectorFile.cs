@@ -291,8 +291,8 @@ public class DirectorFile : ChunkResolver
                 internalCast = false;
             }
         }
-        var info5 = ChunkInfoMap[7];
-        Logger.LogTrace($"CAS* Compression: {info5.CompressionID}");
+        //var info5 = ChunkInfoMap[7];
+        //Logger.LogTrace($"CAS* Compression: {info5.CompressionID}");
         var def = GetFirstChunkInfo(FOURCC('C','A','S','*'));
         //if (def != null)
         //{
