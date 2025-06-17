@@ -4,7 +4,6 @@ using ProjectorRays.Director;
 using System.Buffers.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
-using LingoEngine.Texts;
 using static ProjectorRays.CastMembers.XmedChunkParser;
 
 namespace ProjectorRays.CastMembers
@@ -67,6 +66,18 @@ namespace ProjectorRays.CastMembers
             return result;
         }
     }
+    public enum TextAlignment
+    {
+        /// <summary>Left-aligned text (Lingo: 0)</summary>
+        Left = 0,
+
+        /// <summary>Center-aligned text (Lingo: 1)</summary>
+        Center = 1,
+
+        /// <summary>Right-aligned text (Lingo: 2)</summary>
+        Right = 2
+    }
+
     public class TextRun
     {
         public int Offset { get; set; }
@@ -104,7 +115,7 @@ namespace ProjectorRays.CastMembers
         public bool Underline { get; set; }
         public LingoColor ForeColor { get; set; }
         public LingoColor BackColor { get; set; }
-        public LingoTextAlignment Alignment { get; set; }
+        public TextAlignment Alignment { get; set; }
         public bool WordWrap { get; set; }
         public bool Editable { get; set; }
         public bool Scrollable { get; set; }
@@ -167,9 +178,9 @@ namespace ProjectorRays.CastMembers
 
                 result.Alignment = flagsByte switch
                 {
-                    0x1A when styleByte == 0xBE => LingoTextAlignment.Left,
-                    0x15 when styleByte == 0xD0 => LingoTextAlignment.Right,
-                    _ => LingoTextAlignment.Center
+                    0x1A when styleByte == 0xBE => TextAlignment.Left,
+                    0x15 when styleByte == 0xD0 => TextAlignment.Right,
+                    _ => TextAlignment.Center
                 };
 
                 result.Bold = !(styleByte == 0xB8 && flagsByte == 0x17);
