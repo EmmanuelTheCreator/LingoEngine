@@ -3,6 +3,8 @@ using System.IO;
 using ProjectorRays.Common;
 using ProjectorRays.LingoDec;
 using ProjectorRays.IO;
+using Microsoft.Extensions.Logging;
+using ProjectorRays.director.Chunks;
 
 namespace ProjectorRays.Director;
 
@@ -44,11 +46,11 @@ public class DirectorFile : ChunkResolver
 
     public InitialMapChunk? InitialMap;
     public MemoryMapChunk? MemoryMap;
-
+    public ILogger Logger;
     public static uint FOURCC(char a, char b, char c, char d)
         => ((uint)a << 24) | ((uint)b << 16) | ((uint)c << 8) | (uint)d;
 
-    public DirectorFile() { }
+    public DirectorFile(ILogger logger) { Logger = logger; }
 
     /// <summary>
     /// Entry point for loading a Director movie. Depending on the codec this
@@ -57,13 +59,19 @@ public class DirectorFile : ChunkResolver
     /// </summary>
     public virtual bool Read(ReadStream stream)
     {
+        //var rawBytes = stream.ReadByteView(stream.Size);
+        //Logger.LogInformation.WriteLine("Raw CASt chunk bytes: " + BitConverter.ToString(rawBytes.Data, rawBytes.Offset, rawBytes.Size));
+        //stream.Seek(0); // reset
         Stream = stream;
         stream.Endianness = Endianness.BigEndian;
-
         uint metaFourCC = stream.ReadUint32();
         if (metaFourCC == FOURCC('X', 'F', 'I', 'R'))
             stream.Endianness = Endianness.LittleEndian;
         Endianness = stream.Endianness;
+        Logger.LogInformation($"File endianness: {Endianness}");
+
+        
+
         stream.ReadUint32(); // meta length
         Codec = stream.ReadUint32();
 
@@ -137,6 +145,7 @@ public class DirectorFile : ChunkResolver
                 CompressionID = LingoGuidConstants.NULL_COMPRESSION_GUID
             };
             AddChunkInfo(info);
+            Logger.LogInformation($"Registering chunk {Common.Util.FourCCToString(info.FourCC)} with ID {info.Id}");
         }
     }
 
@@ -282,12 +291,20 @@ public class DirectorFile : ChunkResolver
                 internalCast = false;
             }
         }
-
+        var info5 = ChunkInfoMap[7];
+        Logger.LogTrace($"CAS* Compression: {info5.CompressionID}");
         var def = GetFirstChunkInfo(FOURCC('C','A','S','*'));
-        if (def != null)
+        //if (def != null)
+        //{
+        //    var cast = (CastChunk)GetChunk(def.FourCC, def.Id);
+        //    cast.Populate(internalCast ? "Internal" : "External", 1024, (ushort) Config!.MinMember);
+        //    Casts.Add(cast);
+        //}
+        if (def != null && def.FourCC == FOURCC('C', 'A', 'S', '*'))
         {
-            var cast = (CastChunk)GetChunk(def.FourCC, def.Id);
-            cast.Populate(internalCast ? "Internal" : "External", 1024, Config!.MinMember);
+            // You expect a CastChunk, but chunk type must actually be 'CAS*'
+            var cast = (CastChunk)GetChunk(FOURCC('C', 'A', 'S', '*'), def.Id);
+            cast.Populate(internalCast ? "Internal" : "External", 1024, (ushort)Config!.MinMember);
             Casts.Add(cast);
         }
 
@@ -408,9 +425,15 @@ public class DirectorFile : ChunkResolver
             var v when v == FOURCC('V','W','C','F') || v == FOURCC('D','R','C','F') => new ConfigChunk(this),
             var v when v == FOURCC('M','C','s','L') => new CastListChunk(this),
             var v when v == FOURCC('V','W','S','C') => new ScoreChunk(this),
+            var v when v == FOURCC('X', 'M', 'E', 'D') => new XmedChunk(this, ChunkType.StyledText),
             _ => throw new IOException($"Could not deserialize '{Common.Util.FourCCToString(fourCC)}' chunk")
         };
-        var chunkStream = new ReadStream(view, Endianness);
+        var isCasStart = fourCC == FOURCC('C', 'A', 'S', '*') || fourCC == FOURCC('C', 'A', 'S', 't');
+        if (isCasStart)
+        {
+
+        }
+        var chunkStream = new ReadStream(view, isCasStart ? Endianness.BigEndian : Endianness);
         chunk.Read(chunkStream);
         return chunk;
     }

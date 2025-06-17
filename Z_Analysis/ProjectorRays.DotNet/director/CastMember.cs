@@ -16,7 +16,10 @@ public enum MemberType
     MovieMember = 9,
     DigitalVideoMember = 10,
     ScriptMember = 11,
-    RTEMember = 12
+    RTEMember = 12,
+    FontMember = 13,        // some references use 13
+    XrayMember = 14,        // internal metadata
+    FieldMember = 15,
 }
 
 public class CastMember

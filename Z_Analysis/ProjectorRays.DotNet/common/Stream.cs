@@ -38,6 +38,7 @@ public class BufferView
     public int Size => _size;
     public byte[] Data => _data;
     public int Offset => _offset;
+    public static readonly BufferView Empty = new BufferView(Array.Empty<byte>(), 0, 0);
 }
 
 public class Stream : BufferView
@@ -103,7 +104,16 @@ public class ReadStream : Stream
         _pos += len;
         return view;
     }
+    public byte[] ReadBytes(int len)
+    {
+        if (PastEOF || _pos + len > _size)
+            throw new InvalidOperationException("ReadStream.ReadBytes: Read past end of stream!");
 
+        var result = new byte[len];
+        Array.Copy(_data, _offset + _pos, result, 0, len);
+        _pos += len;
+        return result;
+    }
     public int ReadUpToBytes(int len, byte[] dest)
     {
         if (Eof)
@@ -246,6 +256,22 @@ public class ReadStream : Stream
     {
         int len = ReadUint8();
         return ReadString(len);
+    }
+
+    public byte PeekChar()
+    {
+        if (_pos >= _size)
+            throw new InvalidOperationException("PeekChar: position out of bounds.");
+        return _data[_offset + _pos];
+    }
+
+    public byte[] PeekBytes(int count)
+    {
+        if (_pos + count > _size)
+            count = _size - _pos;
+        var buffer = new byte[count];
+        Array.Copy(_data, _offset + _pos, buffer, 0, count);
+        return buffer;
     }
 }
 

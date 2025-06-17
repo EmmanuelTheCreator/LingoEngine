@@ -1,14 +1,31 @@
 using System;
 using System.IO;
+using Microsoft.Extensions.Logging;
+using ProjectorRays.CastMembers;
 using ProjectorRays.Common;
+using ProjectorRays.director.Chunks;
 using ProjectorRays.Director;
 using ProjectorRays.IO;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProjectorRays.DotNet.Test;
 
 public class DirectorFileTests
 {
+    private readonly ILogger<DirectorFileTests> _logger;
+
+    public DirectorFileTests(ITestOutputHelper output)
+    {
+        var factory = LoggerFactory.Create(builder =>
+        {
+            builder.AddProvider(new XunitLoggerProvider(output));
+        });
+
+        _logger = factory.CreateLogger<DirectorFileTests>();
+    }
+
+
     [Theory]
     [InlineData("Dir_With_One_Img_Sprite_Hallo.dir")]
     [InlineData("Dir_With_One_Tex_Sprite_Hallo.dir")]
@@ -17,7 +34,7 @@ public class DirectorFileTests
         var path = GetPath(fileName);
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
     }
 
@@ -28,7 +45,7 @@ public class DirectorFileTests
         var path = GetPath("ImgCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         bool found = false;
@@ -53,7 +70,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         string text = string.Empty;
@@ -62,9 +79,18 @@ public class DirectorFileTests
             foreach (var id in dir.Casts[0].MemberIDs)
             {
                 var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
-                if (chunk.Type == MemberType.TextMember)
+                dir.Logger.LogInformation($"CastMember Type={chunk.Type}, Name='{chunk.GetName()}', ScriptText='{chunk.GetScriptText()}'");
+                dir.Logger.LogInformation("Raw SpecificData: " + BitConverter.ToString(chunk.SpecificData.Data, chunk.SpecificData.Offset, chunk.SpecificData.Size));
+                if (chunk.Type == MemberType.FieldMember)
                 {
-                    text = chunk.GetScriptText();
+                    var field = (CastMemberChunk)dir.GetChunk(CASt, id);
+                    if (field.DecodedText is CastMemberTextRead styled)
+                    {
+                        //   var reader = CastMemberTextRead.FromSpecificData(chunk.SpecificData);
+                        //Console.WriteLine(reader.Text); // e.g. "Hallo"
+                        text = styled.Text;
+
+                    }
                     break;
                 }
             }
@@ -78,7 +104,7 @@ public class DirectorFileTests
         var path = GetPath("Dir_With_One_Tex_Sprite_Hallo.dir");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         string text = string.Empty;
@@ -87,7 +113,7 @@ public class DirectorFileTests
             foreach (var id in cast.MemberIDs)
             {
                 var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
-                if (chunk.Type == MemberType.TextMember)
+                if (chunk.Type == MemberType.FieldMember)
                 {
                     text = chunk.GetScriptText();
                     break;
@@ -104,7 +130,7 @@ public class DirectorFileTests
         var path = GetPath("Dir_With_One_Img_Sprite_Hallo.dir");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
 
         Assert.NotNull(dir.Score);
@@ -119,7 +145,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
 
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
@@ -150,7 +176,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile();
+        var dir = new DirectorFile(_logger);
         Assert.True(dir.Read(stream));
 
         dir.ParseScripts();

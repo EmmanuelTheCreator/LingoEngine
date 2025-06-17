@@ -1,4 +1,4 @@
-using ProjectorRays.Common;
+﻿using ProjectorRays.Common;
 
 namespace ProjectorRays.Director;
 
@@ -66,25 +66,28 @@ public struct MemoryMapEntry
     }
 }
 
-public struct KeyTableEntry
+public class KeyTableEntry
 {
-    public int SectionID;
-    public int CastID;
     public uint FourCC;
+    public ushort ResourceID;
+    public ushort SectionID;
+    public int CastID;
 
     public void Read(ReadStream stream)
     {
-        SectionID = stream.ReadInt32();
-        CastID = stream.ReadInt32();
         FourCC = stream.ReadUint32();
+        ResourceID = stream.ReadUint16();   // ← this line is **likely missing**
+        SectionID = stream.ReadUint16();
+        CastID = stream.ReadInt32();
     }
 
     public void WriteJSON(JSONWriter json)
     {
         json.StartObject();
+        json.WriteField("fourCC", Common.Util.FourCCToString(FourCC));
+        json.WriteField("resourceID", ResourceID);
         json.WriteField("sectionID", SectionID);
         json.WriteField("castID", CastID);
-        json.WriteFourCCField("fourCC", FourCC);
         json.EndObject();
     }
 }

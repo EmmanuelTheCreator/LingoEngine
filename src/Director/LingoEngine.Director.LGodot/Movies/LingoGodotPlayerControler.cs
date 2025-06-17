@@ -11,7 +11,7 @@ namespace LingoEngine.Director.LGodot.Movies
     {
         private readonly ILingoMovie _lingoMovie;
         private readonly Node2D _directorParent;
-        private DirGodotCastWindow _castViewer;
+        //private DirGodotCastWindow _castViewer;
         private DirGodotScoreWindow _overlay;
         private readonly IDirectorEventMediator _mediator;
 
@@ -37,7 +37,7 @@ namespace LingoEngine.Director.LGodot.Movies
             //    FontSize = 10,
             //};
             //LabelNode.LabelSettings = labelSettings;
-            _castViewer = new DirGodotCastWindow(_directorParent, lingoMovie, mediator) { Visible = false };
+            //_castViewer = new DirGodotCastWindow(_directorParent, lingoMovie, mediator) { Visible = false };
             _overlay = new DirGodotScoreWindow(mediator) { Visible = false };
             _overlay.SetMovie((LingoMovie)lingoMovie);
             _directorParent.AddChild(_overlay);
@@ -52,7 +52,7 @@ namespace LingoEngine.Director.LGodot.Movies
         {
             _lingoMovie.ActorList.Remove(this);
             _overlay.Dispose();
-            _castViewer.Dispose();
+            //_castViewer.Dispose();
         }
     }
 }
