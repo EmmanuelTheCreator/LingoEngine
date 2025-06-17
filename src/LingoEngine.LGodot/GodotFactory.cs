@@ -14,6 +14,7 @@ using LingoEngine.Sounds;
 using LingoEngine.Texts;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Pictures;
+using LingoEngine.LGodot.Stages;
 
 namespace LingoEngine.LGodot
 {
@@ -117,20 +118,12 @@ namespace LingoEngine.LGodot
 
         public LingoStage CreateStage(LingoPlayer lingoPlayer)
         {
-            var stageWindow = _serviceProvider.GetService<ILingoFrameworkStageWindow>();
-            Node parent = stageWindow as Node ?? _rootNode;
-            if (stageWindow is Node)
-                _rootNode = parent;
-
-            var clock = (LingoClock)lingoPlayer.Clock;
-            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(parent), lingoPlayer);
-            var godotInstance = new LingoGodotStage(parent, clock, overlay);
-            var lingoInstance = new LingoStage(stageWindow as ILingoFrameworkStage ?? godotInstance);
+            var stageContainer = (LingoGodotStageContainer)_serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
+            var godotInstance = new LingoGodotStage(lingoPlayer);
+            var lingoInstance = new LingoStage(godotInstance);
+            stageContainer.SetStage(godotInstance);
             godotInstance.Init(lingoInstance, lingoPlayer);
             _disposables.Add(godotInstance);
-
-            stageWindow?.SetStage(godotInstance);
-
             return lingoInstance;
         }
         public LingoMovie AddMovie(LingoStage stage, LingoMovie lingoMovie)

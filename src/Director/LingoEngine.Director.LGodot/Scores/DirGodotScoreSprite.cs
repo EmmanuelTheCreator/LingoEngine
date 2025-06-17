@@ -34,8 +34,8 @@ internal class DirGodotScoreSprite
 
         if (ShowLabel && Sprite.Member != null)
         {
-            canvas.DrawString(font, new Vector2(position.X + 8, position.Y + font.GetAscent() - 2),
-                Sprite.Member.Name ?? string.Empty, HorizontalAlignment.Left, width - 8, 11, Colors.Black);
+            canvas.DrawString(font, new Vector2(position.X + 8, position.Y + font.GetAscent() - 6),
+                Sprite.Member.Name ?? string.Empty, HorizontalAlignment.Left, width - 8, 9, Colors.Black);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
 
         public TetriGroundsGame(IServiceProvider serviceProvider)
         {
-            _lingoPlayer = serviceProvider.GetRequiredService<ILingoEngineRegistration>().Build();
+            _lingoPlayer = serviceProvider.GetRequiredService<ILingoEngineRegistration>().Build(serviceProvider);
             _serviceProvider = serviceProvider;
         }
         public ILingoMovie LoadMovie()
@@ -53,13 +53,15 @@ namespace LingoEngine.Demo.TetriGrounds.Core
         }
         public void InitSprites()
         {
-            var MyBG = _movie.Member["MyBG"];
-            _movie.AddFrameBehavior<GameStopBehavior>(3);
-            //_movie.AddFrameBehavior<StayOnFrameFrameScript>(4);
+            var MyBG = _movie.Member["Game"];
+            //_movie.AddFrameBehavior<GameStopBehavior>(3);
+            _movie.AddFrameBehavior<StayOnFrameFrameScript>(4);
             //_movie.AddFrameBehavior<MouseDownNavigateWithStayBehavior>(11, b => b.TickWait = 60);
-            _movie.AddSprite(1, 1, 15, 320, 240).AddBehavior<AppliBgBehavior>().SetMember(MyBG);
+            _movie.AddSprite(1, 1, 15, 320, 240)
+            //.AddBehavior<AppliBgBehavior>()
+                    .SetMember(MyBG);
             _movie.AddSprite(2, 1, 5, 320, 240).SetMember(25);
-            _movie.AddSprite(4, 3, 15, 320, 240).AddBehavior<BgScriptBehavior>().SetMember("Game");
+            //_movie.AddSprite(4, 3, 15, 320, 240).AddBehavior<BgScriptBehavior>().SetMember("Game");
             _movie.AddSprite(5, 1, 5, 320, 240).SetMember("TetriGrounds_s");
             _movie.AddSprite(7, 11, 15, 320, 240).SetMember("T_data");
             _movie.AddSprite(9, 11, 15, 320, 240).SetMember("B_Play");

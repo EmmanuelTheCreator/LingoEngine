@@ -1,7 +1,18 @@
+using LingoEngine.Core;
+using LingoEngine.Movies;
+
 namespace LingoEngine.Director.Core.Events
 {
     public interface IHasSpriteSelectedEvent
     {
-        void SpriteSelected(LingoEngine.Movies.LingoSprite sprite);
+        void SpriteSelected(ILingoSprite sprite);
+    }
+    public interface IHasMemberSelectedEvent
+    {
+        void MemberSelected(ILingoMember member);
+    }
+    public interface IHasMenuItemSelectedEvent
+    {
+        void MenuItemSelected(string menuCode);
     }
 }
