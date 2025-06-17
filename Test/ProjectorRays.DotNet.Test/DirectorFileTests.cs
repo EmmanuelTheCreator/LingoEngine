@@ -67,7 +67,7 @@ public class DirectorFileTests
     [Fact]
     public void TextCastTextContainsHallo()
     {
-        var path = GetPath("TextCast.cst");
+        var path = GetPath("Text_Hallo_fontsize14.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
         var dir = new DirectorFile(_logger);

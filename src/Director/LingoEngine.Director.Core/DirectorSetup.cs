@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Director.Core
 {
-    public static class DirSetup
+    public static class DirectorSetup
     {
         public static ILingoEngineRegistration WithDirectorEngine(this ILingoEngineRegistration engineRegistration)
         {

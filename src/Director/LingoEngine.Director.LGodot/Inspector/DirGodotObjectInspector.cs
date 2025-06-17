@@ -5,29 +5,44 @@ using LingoEngine.Core;
 using System;
 using System.Reflection;
 using LingoEngine.Pictures;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
-public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelectedEvent
+public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelectedEvent, IHasMemberSelectedEvent 
 {
     private readonly IDirectorEventMediator _mediator;
+    private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly TabContainer _tabs = new TabContainer();
 
     public DirGodotObjectInspector(IDirectorEventMediator mediator) : base("Inspector")
     {
         _mediator = mediator;
-        Position = new Vector2(500, 20);
+        _mediator.SubscribeToMenu(MenuCodes.ObjectInspector, () => Visible = !Visible);
+        
+        //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
         CustomMinimumSize = Size;
         _tabs.Position = new Vector2(0, 20);
+        _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30);
+        
         AddChild(_tabs);
+
+        //_vScroller.AddChild(_tabs);
+        //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
+        //_vScroller.Position = new Vector2(0, 60);
+        _tabs.AddChild(_vScroller);
+
         _mediator.Subscribe(this);
     }
-
-    public void SpriteSelected(LingoSprite sprite)
+    protected override void OnResizing(Vector2 size)
     {
-        ShowObject(sprite);
+        base.OnResizing(size);
+        _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30);
+        //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
     }
+    public void SpriteSelected(ILingoSprite sprite) => ShowObject(sprite);
+    public void MemberSelected(ILingoMember member) => ShowObject(member);
 
     public void ShowObject(object obj)
     {
@@ -71,10 +86,14 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
 
     private void AddTab(string name, object obj)
     {
+        //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
+        //_vScroller.Position = new Vector2(0, 60);
+        var vScroller = new ScrollContainer();
+        vScroller.Name = name;
+        _tabs.AddChild(vScroller);
         var container = new VBoxContainer();
-        container.Name = name;
         BuildProperties(container, obj);
-        _tabs.AddChild(container);
+        vScroller.AddChild(container);
     }
 
     private void BuildProperties(VBoxContainer root, object obj)
@@ -131,4 +150,6 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
         if (t.IsEnum) return Enum.Parse(t, text);
         return Convert.ChangeType(text, t);
     }
+
+   
 }

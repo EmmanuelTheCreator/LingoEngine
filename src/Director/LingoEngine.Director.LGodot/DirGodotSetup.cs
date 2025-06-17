@@ -1,10 +1,6 @@
 using Godot;
-using LingoEngine.Director.Core.Events;
-using LingoEngine.Director.LGodot.Scores;
-using LingoEngine.Director.LGodot.Movies;
-using LingoEngine.Director.LGodot;
-using LingoEngine.FrameworkCommunication;
-using Microsoft.Extensions.DependencyInjection;
+using LingoEngine.Director.Core;
+using LingoEngine.LGodot;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -12,32 +8,35 @@ namespace LingoEngine.Director.LGodot
     {
         public static ILingoEngineRegistration WithDirectorGodotEngine(this ILingoEngineRegistration engineRegistration, Node rootNode)
         {
+            engineRegistration
+                .WithLingoGodotEngine(rootNode,true)
+                .WithDirectorEngine()
+                ;
             engineRegistration.Services(s =>
             {
 
-                IServiceCollection serviceCollection = s
-                  
-                    .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
-                    .AddSingleton(p =>
-                    {
-                        var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
-                        rootNode.AddChild(overlay);
-                        return overlay;
-                    })
-                    .AddSingleton(p =>
-                    {
+                //IServiceCollection serviceCollection = s
+                  //  .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
+                  //  .AddSingleton(p =>
+                  //  {
+                  //      var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
+                  //      rootNode.AddChild(overlay);
+                  //      return overlay;
+                  //  })
+                  //  .AddSingleton(p =>
+                  //  {
 
-                        var inspector = new Inspector.DirGodotObjectInspector(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
-                        rootNode.AddChild(inspector);
-                        return inspector;
-                    })
-                  .AddSingleton(p =>
-                    {
-                        var menu = new DirGodotMainMenu();
-                        rootNode.AddChild(menu);
-                        return menu;
+                //      var inspector = new Inspector.DirGodotObjectInspector(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
+                //      rootNode.AddChild(inspector);
+                //      return inspector;
+                //  })
+                //.AddSingleton(p =>
+                //  {
+                //      var menu = new DirGodotMainMenu();
+                //      rootNode.AddChild(menu);
+                //      return menu;
 
-                    });
+                //  });
 
             });
             return engineRegistration;

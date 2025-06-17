@@ -1,0 +1,90 @@
+﻿using Godot;
+using LingoEngine.Core;
+using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Movies;
+
+namespace LingoEngine.Director.LGodot.Casts
+{
+    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable
+    {
+        private readonly TabContainer _tabs;
+        
+
+        private readonly ILingoMovie _lingoMovie;
+        private readonly IDirectorEventMediator _mediator;
+
+        public ILingoCast? ActiveCastLib { get; private set; }
+
+        public DirGodotCastWindow(IDirectorEventMediator mediator, ILingoMovie lingoMovie)
+            : base("Cast")
+        {
+            _lingoMovie = lingoMovie;
+            _mediator = mediator;
+            _mediator.SubscribeToMenu(MenuCodes.CastWindow, () => Visible = !Visible);
+
+            Size = new Vector2(360, 620);
+            CustomMinimumSize = Size;
+
+
+            _tabs = new TabContainer();
+            InitTabs();
+            _tabs.Position = new Vector2(0, TitleBarHeight + 20);
+
+            AddChild(_tabs);
+
+            foreach (var cast in lingoMovie.CastLib.GetAll())
+            {
+                var castLibViewer = new DirGodotCastView(OnSelectElement);
+                castLibViewer.Show(cast);
+                var tabContent = new VBoxContainer
+                {
+                    Name = cast.Name,
+                };
+
+                tabContent.AddChild(castLibViewer.Node);
+                _tabs.AddChild(tabContent);
+            }
+           
+        }
+
+
+        protected override void OnResizing(Vector2 size)
+        {
+            base.OnResizing(size);
+            _tabs.Size = new Vector2(Size.X - 10, Size.Y- TitleBarHeight -30);
+        }
+
+
+
+
+        private void InitTabs()
+        {
+            _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _tabs.Size = new Vector2(Size.X - 10, Size.Y - TitleBarHeight - 30);
+            var existingFont = _tabs.GetThemeFont("font", "TabContainer");
+            if (existingFont != null)
+            {
+                _tabs.AddThemeFontOverride("font", existingFont);
+                _tabs.AddThemeFontSizeOverride("font_size", 10);
+            }
+        }
+
+        private void OnSelectElement(DirGodotCastItem castItem)
+        {
+            _mediator.RaiseMemberSelected(castItem.LingoMember);
+            
+        }
+        public void Activate(int castlibNum)
+        {
+            //ActiveCastLib = _lingoMovie.CastLib.GetCast(castlibNum);
+            //if (ActiveCastLib != null)
+            //    CastLibViewer.Show(ActiveCastLib);
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+}
