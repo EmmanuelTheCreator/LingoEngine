@@ -4,6 +4,7 @@ using ProjectorRays.Director;
 using System.Buffers.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
+using LingoEngine.Texts;
 using static ProjectorRays.CastMembers.XmedChunkParser;
 
 namespace ProjectorRays.CastMembers
@@ -78,6 +79,8 @@ namespace ProjectorRays.CastMembers
         public bool Underline { get; set; }
         public LingoColor ForeColor { get; set; }
         public LingoColor BackColor { get; set; }
+        public string HexBefore { get; set; } = string.Empty;
+        public string HexAfter { get; set; } = string.Empty;
     }
     /*
     var hex = BitConverter.ToString(view.Data, view.Offset, Math.Min(64, view.Size));
@@ -92,14 +95,16 @@ namespace ProjectorRays.CastMembers
         public List<TextStyleRun> Styles { get; set; } = new();
         public BufferView RtfBytes { get; set; } = BufferView.Empty;
         public List<TextRun> Runs { get; set; } = new();
+        public int TextLength { get; private set; }
         public ushort FontSize { get; set; }
+        public uint LetterSpacing { get; set; }
         public ushort FontId { get; set; }
         public bool Bold { get; set; }
         public bool Italic { get; set; }
         public bool Underline { get; set; }
         public LingoColor ForeColor { get; set; }
         public LingoColor BackColor { get; set; }
-        public short Alignment { get; set; }
+        public LingoTextAlignment Alignment { get; set; }
         public bool WordWrap { get; set; }
         public bool Editable { get; set; }
         public bool Scrollable { get; set; }
@@ -109,113 +114,81 @@ namespace ProjectorRays.CastMembers
         public static CastMemberTextRead FromXmedChunk(BufferView view, DirectorFile dir)
         {
             var result = new CastMemberTextRead();
-            var hex = BitConverter.ToString(view.Data, view.Offset, view.Size);
-            dir.Logger.LogInformation($"XMED all : {hex}");
-            return result;
-            // Read as raw ASCII string
-            string rawAscii = Encoding.ASCII.GetString(view.Data, view.Offset, view.Size);
-            dir.Logger.LogInformation($"XMED raw ASCII: {rawAscii.Substring(0, Math.Min(128, rawAscii.Length))}");
 
-            // Try to find embedded RTF block
-            int rtfStart = rawAscii.IndexOf(@"{\rtf", StringComparison.OrdinalIgnoreCase);
-            if (rtfStart < 0)
+            // Dump the raw payload for debugging. The format is still largely
+            // unknown so we treat it as opaque ASCII for now.
+            var ascii = Encoding.Latin1.GetString(view.Data, view.Offset, view.Size);
+            dir.Logger.LogInformation($"XMED all : {BitConverter.ToString(view.Data, view.Offset, view.Size)}");
+
+            result.RtfText = ascii;
+
+            // Extract text runs. The pattern normally looks like
+            //  "5,<text>\x03"  or  "1F,<text>\x03" for multi line entries.
+            var runRegex = new Regex("\x00(5,|1F,)([^\x03]+)\x03", RegexOptions.Compiled);
+            foreach (Match m in runRegex.Matches(ascii))
             {
-                throw new InvalidOperationException("Could not find RTF start marker in XMED chunk.");
+                var run = new TextRun { Text = m.Groups[2].Value };
+                run.Length = run.Text.Length;
+                result.TextLength += run.Length;
+
+                int byteIndex = m.Index;
+                int beforeStart = Math.Max(0, byteIndex - 8);
+                int beforeLen = byteIndex - beforeStart;
+                run.HexBefore = BitConverter.ToString(view.Data, view.Offset + beforeStart, beforeLen);
+
+                int afterLen = Math.Min(16, ascii.Length - (m.Index + m.Length));
+                run.HexAfter = BitConverter.ToString(view.Data, view.Offset + m.Index + m.Length, afterLen);
+
+                result.Runs.Add(run);
             }
 
-            string rtf = rawAscii.Substring(rtfStart).TrimEnd('\0');
-            result.RtfText = rtf;
-
-            // Optional: Extract preview/plain text (basic fallback)
-            //result.Text = ExtractPlainText(rtf);
-
-            // Heuristic: Try to extract font name
-            var fontMatch = Regex.Match(rawAscii, @"([A-Za-z0-9 \*]+)\?{8,}");
-            if (fontMatch.Success)
+            if (result.Runs.Count > 0)
             {
-                result.FontName = fontMatch.Groups[1].Value.Trim();
+                // Join runs using new lines to provide a readable Text value
+                result.Text = string.Join("\n", result.Runs.ConvertAll(r => r.Text));
+                result.TextLength = result.Text.Length;
+            }
+
+            // Try to capture font names. They appear after a "40," marker
+            // followed by a single control byte and a null terminator.
+            var fontMatches = Regex.Matches(ascii, "40,.([A-Za-z0-9 \\*]+)\x00");
+            if (fontMatches.Count > 0)
+            {
+                // The last entry usually corresponds to the active font.
+                result.FontName = fontMatches[^1].Groups[1].Value;
             }
 
 
+            // Alignment and style flags appear around offsets 0x18-0x19
+            if (view.Size > 0x19)
+            {
+                byte styleByte = view.Data[view.Offset + 0x18];
+                byte flagsByte = view.Data[view.Offset + 0x19];
 
+                result.Alignment = flagsByte switch
+                {
+                    0x1A when styleByte == 0xBE => LingoTextAlignment.Left,
+                    0x15 when styleByte == 0xD0 => LingoTextAlignment.Right,
+                    _ => LingoTextAlignment.Center
+                };
 
-            //var stream = new ReadStream(view, Endianness.BigEndian);
-            //var result = new CastMemberTextRead();
+                result.Bold = !(styleByte == 0xB8 && flagsByte == 0x17);
+                result.Italic = styleByte == 0x30 && flagsByte == 0x1A;
+                result.Underline = styleByte == 0x9C && flagsByte == 0x16;
+                result.WordWrap = !(styleByte == 0xF4 && flagsByte == 0x19);
+            }
 
-            //dir.Logger.LogInformation($"XMED Begin Parse at stream.Pos={stream.Pos}, Size={stream.Size}");
+            // Font size seems to be stored as a 32-bit little endian value at offset 0x40
+            if (view.Size > 0x44)
+            {
+                result.FontSize = (ushort)BinaryPrimitives.ReadUInt32LittleEndian(view.Data.AsSpan(view.Offset + 0x40, 4));
+            }
 
-            //var marker = new byte[] { 0x44, 0x45, 0x4D, 0x58 }; // 'DEMX'
-            //int markerOffset = stream.Data.AsSpan().IndexOf(marker);
-
-            //if (markerOffset < 0)
-            //    throw new InvalidOperationException("Could not find RTF start marker (DEMX)");
-
-            //dir.Logger.LogInformation($"XMED markerOffset={markerOffset}");
-
-            //// After DEMX: [4 bytes flags] + [4 bytes RTF size] = 8 bytes
-            //int rtfLenOffset = markerOffset + 8;
-
-            //if (rtfLenOffset + 4 > stream.Size)
-            //    throw new InvalidOperationException("XMED header too short to contain RTF length");
-
-            //uint textLen = BinaryPrimitives.ReadUInt32LittleEndian(
-            //    new ReadOnlySpan<byte>(stream.Data, rtfLenOffset, 4)
-            //);
-            //textLen = 1083;
-            //int rtfStart = rtfLenOffset + 4;
-            //int remaining = stream.Size - rtfStart;
-
-            //if (textLen > remaining)
-            //    throw new InvalidOperationException($"XMED textLen={textLen} too large for remaining stream. rtfStart={rtfStart},remaining={remaining},stream.Size={stream.Size} ");
-
-            //var rtfBytes = new BufferView(stream.Data, rtfStart, (int)textLen);
-            //result.Rtf = Encoding.UTF8.GetString(rtfBytes.Data, rtfBytes.Offset, rtfBytes.Size).TrimEnd('\0');
-
-            //// DO NOT parse styles here — it's in another block, not in RTF data.
-            //dir.Logger.LogInformation("RTF Preview (clean): " + Regex.Replace(result.Rtf, @"[^\x20-\x7E]", "?"));
-
-            //var stream = new ReadStream(view, Endianness.BigEndian);
-            //var result = new CastMemberTextRead();
-
-            //// Skip 8-byte XMED header (XFIR signature, version, etc.)
-            //stream.Seek(8);
-
-            //// Skip variable-length header block until RTF text start marker (e.g., ASCII "SRVF", 0x53525646)
-            //int markerOffset = stream.Data.AsSpan().IndexOf(new byte[] { 0x53, 0x52, 0x45, 0x56 }); // 'SREV'
-            //if (markerOffset < 0)
-            //    throw new InvalidOperationException("XMED chunk missing expected text marker.");
-
-            //// Extract full RTF stream starting at marker
-            //stream.Seek(markerOffset);
-            //int remaining = stream.Size - stream.Pos;
-            //var rtfBytes = stream.ReadByteView(remaining);
-            ////result.RtfBytes = rtfBytes.Slice(); // or .ToArray() if you prefer
-
-            //// (Optional) Try to extract readable ASCII text as preview/debug
-            //string asciiPreview = Regex.Replace(Encoding.ASCII.GetString(rtfBytes.Data, rtfBytes.Offset, rtfBytes.Size), @"[^\x20-\x7E]", "?");
-            //dir.Logger.LogInformation($"ASCII preview: {asciiPreview}");
-            //result.RtfBytes = rtfBytes;
-            //var rtfSpan = new ReadOnlySpan<byte>(rtfBytes.Data, rtfBytes.Offset, rtfBytes.Size);
-            //int styleRunCount = 0;
-            //for (int i = 0; i <= rtfSpan.Length - 12; i += 12)
-            //{
-            //    int start = BinaryPrimitives.ReadInt32BigEndian(rtfSpan.Slice(i, 4));
-            //    int length = BinaryPrimitives.ReadInt32BigEndian(rtfSpan.Slice(i + 4, 4));
-            //    int fontId = BinaryPrimitives.ReadInt32BigEndian(rtfSpan.Slice(i + 8, 4));
-
-            //    if (start < 0 || length <= 0 || start + length > 10000) break;
-
-            //    result.Styles.Add(new TextStyleRun
-            //    {
-            //        Start = start,
-            //        Length = length,
-            //        FontName = $"FontID_{fontId}", // Placeholder
-            //        FontSize = 12 // Placeholder
-            //    });
-
-            //    styleRunCount++;
-            //    if (styleRunCount > 100) break;
-            //}
+            // Letter spacing byte at 0x18 changes with the letterSpace_6 variant
+            if (view.Size > 0x18)
+            {
+                result.LetterSpacing = view.Data[view.Offset + 0x18];
+            }
 
             return result;
         }
