@@ -7,7 +7,7 @@ namespace LingoEngine.Movies
     /// Internal helper that plays a <see cref="LingoMemberFilmLoop"/> on a sprite.
     /// It subscribes to sprite events but is not exposed as a behaviour.
     /// </summary>
-    internal class LingoFilmLoopPlayer : IPlayableActor
+    public class LingoFilmLoopPlayer : IPlayableActor
     {
         private readonly LingoSprite _sprite;
         private readonly ILingoEventMediator _mediator;

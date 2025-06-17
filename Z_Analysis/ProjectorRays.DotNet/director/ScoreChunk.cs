@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProjectorRays.Common;
+using ProjectorRays.director.Chunks;
 
 namespace ProjectorRays.Director;
 
