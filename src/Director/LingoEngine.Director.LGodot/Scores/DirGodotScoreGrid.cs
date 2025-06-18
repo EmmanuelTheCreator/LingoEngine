@@ -18,10 +18,14 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private readonly List<DirGodotScoreSprite> _sprites = new();
     private DirGodotScoreSprite? _selected;
     private readonly IDirectorEventMediator _mediator;
+    private readonly PopupMenu _contextMenu = new();
+    private DirGodotScoreSprite? _contextSprite;
 
     public DirGodotScoreGrid(IDirectorEventMediator mediator)
     {
         _mediator = mediator;
+        AddChild(_contextMenu);
+        _contextMenu.IdPressed += OnContextMenuItem;
     }
 
     public void SetMovie(LingoMovie? movie)
@@ -110,6 +114,21 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                     _dragBegin = _dragEnd = false;
                 }
             }
+            else if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
+            {
+                if (channel >= 0 && channel < totalChannels)
+                {
+                    var sp = GetSpriteAt(pos, channel);
+                    if (sp != null && sp.Sprite.Member != null)
+                    {
+                        _contextSprite = sp;
+                        _contextMenu.Clear();
+                        _contextMenu.AddItem("Find Cast Member", 1);
+                        var gp = GetGlobalMousePosition();
+                        _contextMenu.Popup(new Rect2I((int)gp.X, (int)gp.Y, 0, 0));
+                    }
+                }
+            }
         }
         else if (@event is InputEventMouseMotion motion && _dragSprite != null)
         {
@@ -133,6 +152,31 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     {
         var match = _sprites.FirstOrDefault(x => x.Sprite == sprite);
         SelectSprite(match, false);
+    }
+
+    private DirGodotScoreSprite? GetSpriteAt(Vector2 pos, int channel)
+    {
+        foreach (var sp in _sprites)
+        {
+            int sc = sp.Sprite.SpriteNum - 1;
+            if (sc == channel)
+            {
+                float sx = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
+                float ex = ChannelInfoWidth + sp.Sprite.EndFrame * FrameWidth;
+                if (pos.X >= sx && pos.X <= ex)
+                    return sp;
+            }
+        }
+        return null;
+    }
+
+    private void OnContextMenuItem(long id)
+    {
+        if (id == 1 && _contextSprite?.Sprite.Member != null)
+        {
+            _mediator.RaiseFindMember(_contextSprite.Sprite.Member);
+        }
+        _contextSprite = null;
     }
     
 

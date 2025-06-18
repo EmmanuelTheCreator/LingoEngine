@@ -2,6 +2,7 @@
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.LGodot;
+using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -50,7 +51,17 @@ namespace LingoEngine.Director.LGodot.Casts
             }
             _elements.Clear();
         }
-       
+
+        public DirGodotCastItem? FindItem(ILingoMember member)
+        {
+            return _elements.FirstOrDefault(e => e.LingoMember == member);
+        }
+
+        public void SelectItem(DirGodotCastItem item)
+        {
+            _onSelectItem(item);
+        }
+
 
     }
 }
