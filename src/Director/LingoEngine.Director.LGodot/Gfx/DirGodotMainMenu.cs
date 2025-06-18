@@ -23,6 +23,7 @@ internal partial class DirGodotMainMenu : Control
     {
         _mediator = mediator;
         _lingoMovie = lingoMovie;
+        _lingoMovie.PlayStateChanged += OnPlayStateChanged;
 
         AddChild(_menuBar);
         _menuBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
@@ -91,6 +92,10 @@ internal partial class DirGodotMainMenu : Control
             _lingoMovie.Halt();
         else
             _lingoMovie.Play();
+    }
+
+    private void OnPlayStateChanged(bool isPlaying)
+    {
         UpdatePlayButton();
     }
 
@@ -101,4 +106,10 @@ internal partial class DirGodotMainMenu : Control
 
 
     public HBoxContainer IconBar => _iconBar;
+
+    protected override void Dispose(bool disposing)
+    {
+        _lingoMovie.PlayStateChanged -= OnPlayStateChanged;
+        base.Dispose(disposing);
+    }
 }

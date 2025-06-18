@@ -36,6 +36,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         Size = new Vector2(width, height);
         CustomMinimumSize = Size;
         _grid = new DirGodotScoreGrid(directorMediator);
+        _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader();
         _frameScripts = new DirGodotFrameScriptsBar();
         _labelBar = new DirGodotScoreLabelsBar();
@@ -110,6 +111,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _frameScripts.Dispose();
         _vScroller.Dispose();
         _hScroller.Dispose();
+        _mediator.Unsubscribe(_grid);
         base.Dispose(disposing);
     }
 }

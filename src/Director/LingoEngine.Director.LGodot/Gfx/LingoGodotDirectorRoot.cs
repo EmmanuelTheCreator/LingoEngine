@@ -6,6 +6,7 @@ using LingoEngine.Movies;
 using LingoEngine.FrameworkCommunication;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.LGodot.Stages;
+using LingoEngine.Core;
 using LingoEngine.LGodot;
 using LingoEngine.Director.LGodot.Casts;
 using LingoEngine.Director.LGodot.Inspector;
@@ -25,12 +26,14 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly IDirectorEventMediator _mediator;
         private readonly DirGodotStageWindow _stageWindow;
         private readonly DirGodotMainMenu _dirGodotMainMenu;
+        private readonly LingoPlayer _player;
 
 
-        public LingoGodotDirectorRoot(ILingoMovie lingoMovie, IServiceProvider serviceProvider)
+        public LingoGodotDirectorRoot(ILingoMovie lingoMovie, LingoPlayer player, IServiceProvider serviceProvider)
         {
             _mediator = serviceProvider.GetRequiredService<IDirectorEventMediator>();
             _lingoMovie = lingoMovie;
+            _player = player;
 
             // set up root
             var parent = (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode;
@@ -42,7 +45,7 @@ namespace LingoEngine.Director.LGodot.Gfx
 
             // Setup stage
             var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
-            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator);
+            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, player);
 
 
             _dirGodotMainMenu = new DirGodotMainMenu(_mediator, lingoMovie);

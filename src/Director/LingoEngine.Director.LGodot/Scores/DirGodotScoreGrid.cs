@@ -1,10 +1,11 @@
 ﻿using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
+using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
-internal partial class DirGodotScoreGrid : Control
+internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 {
     private LingoMovie? _movie;
     private const int ChannelHeight = 16;
@@ -36,7 +37,7 @@ internal partial class DirGodotScoreGrid : Control
         }
     }
 
-    private void SelectSprite(DirGodotScoreSprite? sprite)
+    private void SelectSprite(DirGodotScoreSprite? sprite, bool raiseEvent = true)
     {
         if (_selected == sprite) return;
         if (_selected != null) _selected.Selected = false;
@@ -44,7 +45,8 @@ internal partial class DirGodotScoreGrid : Control
         if (_selected != null)
         {
             _selected.Selected = true;
-            _mediator.RaiseSpriteSelected(_selected.Sprite);
+            if (raiseEvent)
+                _mediator.RaiseSpriteSelected(_selected.Sprite);
         }
         QueueRedraw();
     }
@@ -125,6 +127,12 @@ internal partial class DirGodotScoreGrid : Control
     {
         if (Visible)
             QueueRedraw();
+    }
+
+    public void SpriteSelected(ILingoSprite sprite)
+    {
+        var match = _sprites.FirstOrDefault(x => x.Sprite == sprite);
+        SelectSprite(match, false);
     }
     
 
