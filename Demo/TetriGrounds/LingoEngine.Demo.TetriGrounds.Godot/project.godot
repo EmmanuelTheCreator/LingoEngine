@@ -27,7 +27,7 @@ project/assembly_name="LingoEngine.Demo.TetriGrounds.Godot"
 
 [gui]
 
-theme/custom="uid://xc6qaca8t4t6"
+; theme/custom="uid://xc6qaca8t4t6" ; replaced by DirectorStyle.CreateTheme()
 
 [rendering]
 

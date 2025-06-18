@@ -11,7 +11,7 @@
 	  <EmbeddedResource Remove="obj\**" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Include="directorTheme.tres" />
+  <!-- <None Include="directorTheme.tres" /> Theme moved to DirectorStyle.cs -->
 	  <None Include="Medias\Data\100_bell0031.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
