@@ -13,6 +13,8 @@ using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core;
+using LingoEngine.Director.Core.Commands;
+using LingoEngine.Commands;
 using System.Reflection.Emit;
 
 namespace LingoEngine.Director.LGodot.Gfx
@@ -50,7 +52,9 @@ namespace LingoEngine.Director.LGodot.Gfx
 
             // Setup stage
             var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
-            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, player);
+            var commandManager = serviceProvider.GetRequiredService<ICommandManager>();
+            var scaleHandler = serviceProvider.GetRequiredService<SetStageScaleCommandHandler>();
+            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, commandManager, scaleHandler, player);
 
 
             _dirGodotMainMenu = new DirGodotMainMenu(_mediator, lingoMovie);
