@@ -15,4 +15,9 @@ namespace LingoEngine.Director.Core.Events
     {
         void MenuItemSelected(string menuCode);
     }
+
+    public interface IHasFindMemberEvent
+    {
+        void FindMember(ILingoMember member);
+    }
 }
