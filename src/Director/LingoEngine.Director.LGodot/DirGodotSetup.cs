@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Director.Core;
 using LingoEngine.LGodot;
 using Microsoft.Extensions.DependencyInjection;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -17,7 +18,8 @@ namespace LingoEngine.Director.LGodot
             {
                 s.AddSingleton<DirectorStyle>();
                 s.AddSingleton<Theme>(p => p.GetRequiredService<DirectorStyle>().Theme);
-
+                s.AddSingleton<DirGodotProjectSettingsWindow>();
+            
                 //IServiceCollection serviceCollection = s
                   //  .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
                   //  .AddSingleton(p =>
