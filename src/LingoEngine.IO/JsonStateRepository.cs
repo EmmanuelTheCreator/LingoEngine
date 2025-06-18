@@ -82,6 +82,7 @@ public class JsonStateRepository
             var sprite = movie.AddSprite<LingoSprite>(sDto.SpriteNum, sDto.Name, s =>
             {
                 s.Puppet = sDto.Puppet;
+                s.Lock = sDto.Lock;
                 s.Visibility = sDto.Visibility;
                 s.LocH = sDto.LocH;
                 s.LocV = sDto.LocV;
@@ -259,6 +260,7 @@ public class JsonStateRepository
             SpriteNum = sprite.SpriteNum,
             MemberNum = sprite.MemberNum,
             Puppet = sprite.Puppet,
+            Lock = sprite.Lock,
             Visibility = sprite.Visibility,
             LocH = sprite.LocH,
             LocV = sprite.LocV,
