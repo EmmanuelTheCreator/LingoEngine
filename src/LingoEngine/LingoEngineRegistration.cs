@@ -3,6 +3,7 @@ using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Xtras.BuddyApi;
+using LingoEngine.Commands;
 using Microsoft.Extensions.DependencyInjection;
 namespace LingoEngine
 {
@@ -78,6 +79,8 @@ namespace LingoEngine
             player.SetActionOnNewMovie(ActionOnNewMovie);
             if (_FrameworkFactorySetup != null)
                 _FrameworkFactorySetup(serviceProvider.GetRequiredService<ILingoFrameworkFactory>());
+            serviceProvider.GetRequiredService<ICommandManager>()
+                .DiscoverAndSubscribe(serviceProvider);
             return player;
         }
 

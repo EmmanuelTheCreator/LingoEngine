@@ -3,6 +3,7 @@ using LingoEngine.Director.Core;
 using LingoEngine.LGodot;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.Core.Commands;
 
 namespace LingoEngine.Director.LGodot
 {

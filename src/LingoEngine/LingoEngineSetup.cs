@@ -1,6 +1,7 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.Movies;
+using LingoEngine.Commands;
 using LingoEngine.Xtras.BuddyApi;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +23,7 @@ namespace LingoEngine
                    .AddScoped<ILingoEventMediator, LingoEventMediator>()
                    // Xtras
                    .AddScoped<IBuddyAPI, BuddyAPI>()
+                   .AddSingleton<ICommandManager, CommandManager>()
                    ;
 
             return services;
