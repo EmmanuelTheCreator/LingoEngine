@@ -17,7 +17,7 @@ namespace LingoEngine.Core
         private readonly LingoSound _sound;
         private readonly ILingoWindow _window;
         private readonly IServiceProvider _serviceProvider;
-        private readonly Action<LingoMovie> _actionOnNewMovie;
+        private Action<LingoMovie> _actionOnNewMovie;
         private Dictionary<string, LingoMovieEnvironment> _moviesByName = new();
         private List<LingoMovieEnvironment> _movies = new();
 
@@ -69,10 +69,10 @@ namespace LingoEngine.Core
         public ILingoMovie? ActiveMovie { get; private set; }
         public event Action<ILingoMovie?>? ActiveMovieChanged;
 
-        internal LingoPlayer(IServiceProvider serviceProvider, Action<LingoMovie> actionOnNewMovie)
+        public LingoPlayer(IServiceProvider serviceProvider)
         {
+            _actionOnNewMovie= m => { };
             _serviceProvider = serviceProvider;
-            _actionOnNewMovie = actionOnNewMovie;
             Factory = serviceProvider.GetRequiredService<ILingoFrameworkFactory>();
             _castLibsContainer = new LingoCastLibsContainer(Factory);
             _sound = Factory.CreateSound(_castLibsContainer);
@@ -194,6 +194,11 @@ namespace LingoEngine.Core
         internal void LoadMovieScripts(IEnumerable<LingoMovieScript> enumerable)
         {
             throw new NotImplementedException();
+        }
+
+        internal void SetActionOnNewMovie(Action<LingoMovie> actionOnNewMovie)
+        {
+            _actionOnNewMovie = actionOnNewMovie;
         }
     }
 }

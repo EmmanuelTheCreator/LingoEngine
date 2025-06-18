@@ -1,8 +1,8 @@
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.IO;
-using System.IO;
-using LingoEngine;
+using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Movies;
 
 namespace LingoEngine.Director.Core;
 
@@ -23,15 +23,15 @@ public class DirectorProjectManager
         _player = player;
         _mediator = mediator;
 
-        _mediator.SubscribeToMenu(MenuCodes.FileSave, SaveMovie);
-        _mediator.SubscribeToMenu(MenuCodes.FileLoad, LoadMovie);
+        _mediator.SubscribeToMenu(DirectorMenuCodes.FileSave, SaveMovie);
+        _mediator.SubscribeToMenu(DirectorMenuCodes.FileLoad, LoadMovie);
     }
 
     private bool SaveMovie()
     {
         if (!_settings.HasValidSettings)
         {
-            _mediator.RaiseMenuSelected(MenuCodes.ProjectSettingsWindow);
+            _mediator.RaiseMenuSelected(DirectorMenuCodes.ProjectSettingsWindow);
             return true;
         }
         if (_player.ActiveMovie is not LingoMovie movie)
@@ -47,7 +47,7 @@ public class DirectorProjectManager
     {
         if (!_settings.HasValidSettings)
         {
-            _mediator.RaiseMenuSelected(MenuCodes.ProjectSettingsWindow);
+            _mediator.RaiseMenuSelected(DirectorMenuCodes.ProjectSettingsWindow);
             return true;
         }
         var path = _settings.GetMoviePath(_settings.ProjectName);

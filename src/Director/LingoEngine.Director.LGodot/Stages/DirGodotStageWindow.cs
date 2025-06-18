@@ -114,7 +114,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
 
         UpdatePlayButton();
 
-        directorEventMediator.SubscribeToMenu(MenuCodes.StageWindow, () => Visible = !Visible);
+        directorEventMediator.SubscribeToMenu(DirectorMenuCodes.StageWindow, () => Visible = !Visible);
     }
     protected override void OnResizing(Vector2 size)
     {

@@ -12,7 +12,6 @@ namespace LingoEngine.LGodot
         public static ILingoEngineRegistration WithLingoGodotEngine(this ILingoEngineRegistration engineRegistration, Node rootNode, bool withStageInWindow = false, Action<GodotFactory>? setup = null)
         {
             engineRegistration
-                .WithGodotEngine()
                 .Services(s => s
                         .AddSingleton<ILingoFrameworkFactory, GodotFactory>()
                         .AddSingleton<ILingoFrameworkStageContainer, LingoGodotStageContainer>()

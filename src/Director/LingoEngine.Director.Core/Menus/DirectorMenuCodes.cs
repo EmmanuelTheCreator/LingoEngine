@@ -1,6 +1,6 @@
 ﻿namespace LingoEngine.Director.LGodot.Gfx
 {
-    internal class MenuCodes
+    public class DirectorMenuCodes
     {
         public const string ScriptWindow = "ScriptWindow";
         public const string StageWindow = "StageWindow";

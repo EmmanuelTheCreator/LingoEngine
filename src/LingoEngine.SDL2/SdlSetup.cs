@@ -52,7 +52,6 @@ public static class SdlSetup
     private static void RegisterServices(ILingoEngineRegistration reg, Action<SdlFactory>? setup, SdlRootContext rootContext)
     {
         reg
-            .WithGodotEngine()
             .Services(s => s
                     .AddSingleton<ILingoFrameworkFactory, SdlFactory>()
                     .AddSingleton<ILingoFontManager, SdlFontManager>()

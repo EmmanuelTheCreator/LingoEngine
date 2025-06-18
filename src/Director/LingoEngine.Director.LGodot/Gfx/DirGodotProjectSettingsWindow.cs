@@ -15,7 +15,7 @@ internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow
         : base("Project Settings")
     {
         _settings = settings;
-        mediator.SubscribeToMenu(MenuCodes.ProjectSettingsWindow, () => Visible = !Visible);
+        mediator.SubscribeToMenu(DirectorMenuCodes.ProjectSettingsWindow, () => Visible = !Visible);
 
         Size = new Vector2(300, 120);
         CustomMinimumSize = Size;
