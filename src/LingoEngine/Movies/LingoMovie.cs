@@ -1,4 +1,5 @@
-﻿using LingoEngine.Core;
+﻿using System;
+using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
@@ -86,6 +87,8 @@ namespace LingoEngine.Movies
             }
         }
         public bool IsPlaying => _isPlaying;
+
+        public event Action<bool>? PlayStateChanged;
 
         public ActorList ActorList => _actorList;
         public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
@@ -458,6 +461,7 @@ namespace LingoEngine.Movies
             // BeginSprite
             // StartMovie
             _isPlaying = true;
+            PlayStateChanged?.Invoke(true);
             OnTick();
             _needToRaiseStartMovie = false;
            
@@ -466,6 +470,7 @@ namespace LingoEngine.Movies
         private void OnStop()
         {
             _isPlaying = false;
+            PlayStateChanged?.Invoke(false);
             DoEndSprite();
             _EventMediator.RaiseStopMovie();
             // EndSprite
@@ -500,6 +505,7 @@ namespace LingoEngine.Movies
             {
                 _currentFrame = frame;
                 _isPlaying = false;
+                PlayStateChanged?.Invoke(false);
             }
         }
 
