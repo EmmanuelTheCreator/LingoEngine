@@ -30,6 +30,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly LingoPlayer _player;
         private readonly DirGodotProjectSettingsWindow _projectSettingsWindow;
         private readonly DirectorProjectManager _projectManager;
+        private readonly TextableMemberWindow _textEditWindow;
 
 
         public LingoGodotDirectorRoot(ILingoMovie lingoMovie, LingoPlayer player, IServiceProvider serviceProvider)
@@ -57,11 +58,13 @@ namespace LingoEngine.Director.LGodot.Gfx
             _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
             _scoreWindow = new DirGodotScoreWindow(_mediator);
             _inspector = new DirGodotObjectInspector(_mediator);
+            _textEditWindow = new TextableMemberWindow(_mediator);
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
             _directorParent.AddChild(_dirGodotMainMenu);
             _directorParent.AddChild(_projectSettingsWindow);
             _directorParent.AddChild(_castViewer);
             _directorParent.AddChild(_scoreWindow);
+            _directorParent.AddChild(_textEditWindow);
 
 
             //var hContainer = new HBoxContainer
@@ -81,6 +84,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _castViewer.Position = new Vector2(830, 25);
             _scoreWindow.Position = new Vector2(20, 540);
             _inspector.Position = new Vector2(1330, 25);
+            _textEditWindow.Position = new Vector2(900, 500);
 
         }
 
@@ -92,6 +96,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _scoreWindow.Dispose();
             _castViewer.Dispose();
             _inspector.Dispose();
+            _textEditWindow.Dispose();
         }
     }
 }

@@ -13,6 +13,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Sprite2D _Sprite2D;
         private readonly ILingoMember _lingoMember;
         private readonly Action<DirGodotCastItem> _onSelect;
+        private readonly Action<DirGodotCastItem>? _onDoubleClick;
         private readonly Label _caption;
         public int LabelHeight { get; set; } = 18;
         public int Width { get; set; } = 50;
@@ -22,10 +23,11 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             _selectionBg.Visible = selected;
         }
-        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor)
+        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, Action<DirGodotCastItem>? onDoubleClick = null)
         {
             _lingoMember = element;
             _onSelect = onSelect;
+            _onDoubleClick = onDoubleClick;
             CustomMinimumSize = new Vector2(50, 50);
 
             // Selection background - slightly larger than the item itself
@@ -78,22 +80,25 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.ButtonIndex == MouseButton.Left)
             {
+                if (mouseEvent.DoubleClick)
+                {
+                    _onDoubleClick?.Invoke(this);
+                    return;
+                }
+
                 if (!wasClicked && mouseEvent.Pressed)
                 {
                     Vector2 mousePos = GetGlobalMousePosition();
-
                     Rect2 bounds = new Rect2(GlobalPosition - CustomMinimumSize * 0.5f, CustomMinimumSize);
-
                     if (bounds.HasPoint(mousePos))
                     {
                         _onSelect(this);
                         wasClicked = true;
                     }
                     return;
-                } 
+                }
                 else if (wasClicked && !mouseEvent.Pressed)
                 {
-                    _onSelect(this);
                     wasClicked = false;
                 }
             }

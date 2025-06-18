@@ -9,6 +9,7 @@
         public const string CastWindow = "CastWindow";
         public const string ScoreWindow = "ScoreWindow";
         public const string ProjectSettingsWindow = "ProjectSettingsWindow";
+        public const string TextEditWindow = "TextEditWindow";
         public const string FileSave = "FileSave";
         public const string FileLoad = "FileLoad";
     }
