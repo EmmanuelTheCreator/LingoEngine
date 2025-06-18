@@ -32,6 +32,9 @@ Compared with `Text_Hallo.cst`. Showing first 5 differing bytes and length diffe
 | Text_Hallo_subscript.cst | length 7352 vs 3213 | 0x0004:86->B0, 0x0005:0C->1C, 0x0018:2C->40, 0x0019:00->1A, 0x002C:70->2A |
 | Text_Hallo_superscript.cst | length 6776 vs 3213 | 0x0004:86->70, 0x0005:0C->1A, 0x0018:2C->00, 0x0019:00->18 |
 | Text_Hallo_with_name.cst | length 4982 vs 3213 | 0x0004:86->6E, 0x0005:0C->13, 0x0018:2C->FE, 0x0019:00->10 |
+| Text_Multi_Line_Multi_Style.cst | length 11165 vs 3213 | 0x0004:86->96, 0x0005:0C->2B, 0x0018:2C->5E, 0x0019:00->07, 0x002C:70->2A |
+| Text_Single_Line_Multi_Style.cst | length 10904 vs 3213 | 0x0004:86->90, 0x0005:0C->2A, 0x0018:2C->6A, 0x0019:00->07, 0x002C:70->2A |
+| Text_Wider_Width4.cst | length 6642 vs 3213 | 0x0004:86->EA, 0x0005:0C->19, 0x0018:2C->7A, 0x0019:00->17 |
 
 ## Extracted text and font (heuristic)
 
@@ -59,6 +62,9 @@ Compared with `Text_Hallo.cst`. Showing first 5 differing bytes and length diffe
 | Text_Hallo_subscript.cst | Hallo | Arcade * |
 | Text_Hallo_superscript.cst | Hallo | Arcade * |
 | Text_Hallo_with_name.cst | Hallo | Arcade * |
+| Text_Multi_Line_Multi_Style.cst | This text is red, Arial,12px, centered\rThe text is yellow, Tahoma, 9px, left aligned, bold, italic, underline\rThe text is green, font Terminal, 18px, left aligned, with spacing of 39\rThe text is orange, Tahoma, 9px, left aligned, bold, italic, underline\rThis text is red, Arial,12px, centered again | Arial |
+| Text_Single_Line_Multi_Style.cst | This text is red, Arial,12px, The text is yellow, Tahoma, 9px, bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again | Arial |
+| Text_Wider_Width4.cst | Hallo | Arcade * |
 
 ### Multi-font run example
 
@@ -94,6 +100,35 @@ finally "Arcade *" again.
 | Text_Hallo_subscript.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
 | Text_Hallo_superscript.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
 | Text_Hallo_with_name.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
+| Text_Multi_Line_Multi_Style.cst | 5, | This text is red, Arial,12px, centered\rThe text is yellow, Tahoma, 9px, left aligned, bold, italic, underline\rThe text is green, font Terminal, 18px, left aligned, with spacing of 39\rThe text is orange, Tahoma, 9px, left aligned, bold, italic, underline\rThis text is red, Arial,12px, centered again | 3030303030303030 | 30303034303030303030303930303030 |
+| Text_Single_Line_Multi_Style.cst | 5, | This text is red, Arial,12px,  The text is yellow, Tahoma, 9px,  bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again | 3030303030303030 | 30303034303030303030303930303030 |
+| Text_Wider_Width4.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
+# Differences: Text_Hallo_subscript.cst vs Text_Hallo.cst
+
+The table below lists the first few bytes that differ when comparing `Text_Hallo_subscript.cst` against `Text_Hallo.cst`.
+
+| Offset | Base value | Subscript value |
+|-------:|-----------:|----------------:|
+| 0x0004 | 0x86 | 0xB0 |
+| 0x0005 | 0x0C | 0x1C |
+| 0x0018 | 0x2C | 0x40 |
+| 0x0019 | 0x00 | 0x1A |
+| 0x002C | 0x70 | 0x2A |
+| 0x002D | 0x61 | 0x59 |
+| 0x002E | 0x6D | 0x45 |
+| 0x002F | 0x6D | 0x4B |
+
+# Differences: Text_Hallo_superscript.cst vs Text_Hallo.cst
+
+The table below lists the first few bytes that differ when comparing `Text_Hallo_superscript.cst` against `Text_Hallo.cst`.
+
+| Offset | Base value | Superscript value |
+|-------:|-----------:|------------------:|
+| 0x0004 | 0x86 | 0x70 |
+| 0x0005 | 0x0C | 0x1A |
+| 0x0018 | 0x2C | 0x00 |
+| 0x0019 | 0x00 | 0x18 |
+
 | Text_Hallo_multiLine.cst | 1F, | Hallomulti lineis longerYES! | 3030303030303030 | 30303034303030303030304130303030 |
 | Text_Hallo_tab_true.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
 | Text_Hallo_textAlignLeft.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
@@ -250,6 +285,9 @@ files do not include these names.
 `FF0000` value seen in the other text casts. The first changed long at offset
 `0x0018` (`0x000017D2`) appears to encode this color.
 
+Subscript uses style byte `0x40` while superscript uses `0x00`. Their flag bytes at
+offset `0x0019` are `0x1A` and `0x18` respectively.
+
 ### Color table bytes
 
 The ASCII sequence `FFFF0000 000600040001` appears in both casts. In the color
@@ -327,6 +365,130 @@ Example byte locations:
 The snippet below comes from `Text_Hallo_multifont.cst`. It shows the text run followed by the two font table entries used in that cast.
 
 The region just before the font strings contains a block of numbers that appear
+### Style blocks in multi-style samples
+
+`Text_Multi_Line_Multi_Style.cst` and `Text_Single_Line_Multi_Style.cst`
+include a larger table of similar entries. Each line style appears as a
+20‑digit ASCII sequence of five four‑digit numbers. Two copies of this table
+occur in the multi-line file. The first few offsets are:
+
+```
+00001334: 00040000002900000008
+00001371: 00050000001F00000006
+000013A4: 0006000002730000000B
+0000162B: 00070000007000000003
+000016AF: 00080000036600000005
+00001A29: 00090000001500000002
+
+0000230C: 00040000002900000008
+00002349: 00050000001F00000006
+0000237C: 0006000002730000000B
+00002603: 00070000007000000003
+00002687: 00080000036600000005
+00002A01: 00090000001500000002
+```
+
+The single-line variant stores a comparable list near the end of the file:
+
+```
+000022CB: 00040000001E00000006
+000022FD: 00050000000A00000002
+0000231B: 0006000001FF00000009
+0000252E: 00070000004800000002
+0000258A: 00080000036600000005
+00002904: 00090000001300000002
+
+### Example style block
+
+The first table entry `00040000002900000008` describes the line
+"This text is red, Arial,12px, centered again". A nearby style
+record begins at offset `0x16A8`:
+
+```
+000016A8: 3082 C1 03 C2 12 03 30 30 30 38 30 30 30 30
+000016B8: 33 36 36 30 30 30 30 30 30 30 35 00 34 30 2C 05
+000016C8: 41 72 69 61 6C 00 ...
+```
+
+These bytes repeat the style ID `0008` and embed the font
+name `Arial`. About 0x18 bytes into the block appears the
+sequence `30 30 35`, matching the style/flag pair offsets in
+other single-style casts. The small `40,` fragment directly
+before the font name likely stores a font-size value. This
+structure resembles the single-style blocks but lists each
+style sequentially.
+
+### Multi-style entry table
+
+The 20-digit strings split into five four-digit fields.  Field five
+matches the style record's ID while field three appears to reflect the
+length of the associated text line.
+
+| Offset | F1 | F2 | F3 | F4 | F5 | Notes |
+|------:|----:|----:|----:|----:|----:|------|
+| 0x1334 | 0004 | 0000 | 0029 | 0000 | 0008 | line 1: red, Arial, centered |
+| 0x1371 | 0005 | 0000 | 001F | 0000 | 0006 | line 2: yellow, Tahoma |
+| 0x13A4 | 0006 | 0000 | 0273 | 0000 | 000B | line 3: green, Terminal |
+| 0x162B | 0007 | 0000 | 0070 | 0000 | 0003 | line 4: orange, Tahoma |
+| 0x16AF | 0008 | 0000 | 0366 | 0000 | 0005 | line 5: red again |
+| 0x1A29 | 0009 | 0000 | 0015 | 0000 | 0002 | table terminator |
+
+Later in the file the same entries repeat starting at offset `0x230C`.
+
+The single line variant holds a similar table:
+
+| Offset | F1 | F2 | F3 | F4 | F5 | Notes |
+|------:|----:|----:|----:|----:|----:|------|
+| 0x22CB | 0004 | 0000 | 001E | 0000 | 0006 | first style |
+| 0x22FD | 0005 | 0000 | 000A | 0000 | 0002 | second style |
+| 0x231B | 0006 | 0000 | 01FF | 0000 | 0009 | third style |
+| 0x252E | 0007 | 0000 | 0048 | 0000 | 0002 | fourth style |
+| 0x258A | 0008 | 0000 | 0366 | 0000 | 0005 | fifth style |
+| 0x2904 | 0009 | 0000 | 0013 | 0000 | 0002 | terminator |
+### Style ID to font mapping
+
+The table above lists the style indices for each line of the multi-style samples. Each index also appears near a style descriptor block that embeds the font name and size. A few offsets extracted from `Text_Multi_Line_Multi_Style.cst` illustrate this relationship:
+
+| Style ID | Descriptor offset | Font | Notes |
+|--------:|------------------:|------|------|
+| 0008 | 0x16A8 | Arial,12px | style used for first and last lines |
+| 0006 | 0x18C4 | Tahoma,9px | yellow line style |
+| 000B | 0x196E | Terminal,18px | green line style |
+| 0003 | 0x1A30 | Tahoma,9px | orange line style |
+| 0005 | 0x26A8 | Arial,12px | duplicate of style 0008 |
+
+### Per-style alignment and color bytes
+
+Each descriptor begins with a short binary header. The first two bytes mirror
+the style/flag pair used in single-style casts (offsets `0x0018`–`0x0019`).
+Immediately after this header the style ID appears as four ASCII digits followed
+by extra numbers. One of these numbers matches a color entry from the table that
+starts near `0x1110`.
+
+Example offsets from `Text_Multi_Line_Multi_Style.cst`:
+
+```
+0x16A8: 30 82 C1 03 ... "0008" ... "40," 'Arial'    ; centered red line
+0x18C4: 02 30 82 02 ... "0006" ... "40," 'Tahoma'   ; yellow left aligned
+0x196E: 30 30 30 38 ... "000B" ... "40," 'Terminal' ; green left aligned
+```
+
+The color table itself stores RGB hex pairs prefixed by `0x01`.  A fragment from
+the changed-color sample at `0x1354` reads:
+
+```
+00001354: 01 CC 00 01 FF 00 01 66 00 01 30 01 46 46 46 46
+```
+
+The final digits in each style block select one of these color entries.
+
+
+### Width byte comparison
+
+`Text_Wider_Width4.cst` stores a much larger 32‑bit value at offset `0x0018`
+(`7A 17 00 00` little endian) compared with `Text_Hallo.cst` which has
+`2C 00 00 00`. Converting from twips, this roughly equals four inches of
+field width.
 to map style indices to character positions.  In this example the bytes around
 `0x1700` reference two styles so that characters 0‑2 use *Arcade ***, the middle
 letters switch to *Trajan Pro*, and the last letter reverts back.
