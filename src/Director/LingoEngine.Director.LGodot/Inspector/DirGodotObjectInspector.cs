@@ -18,7 +18,7 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
     public DirGodotObjectInspector(IDirectorEventMediator mediator) : base("Inspector")
     {
         _mediator = mediator;
-        _mediator.SubscribeToMenu(MenuCodes.ObjectInspector, () => Visible = !Visible);
+        _mediator.SubscribeToMenu(DirectorMenuCodes.ObjectInspector, () => Visible = !Visible);
         
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);

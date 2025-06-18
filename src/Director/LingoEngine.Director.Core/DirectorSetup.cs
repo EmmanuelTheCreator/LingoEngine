@@ -13,7 +13,6 @@ namespace LingoEngine.Director.Core
 
                 IServiceCollection serviceCollection = s
                     .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
-                    .AddSingleton<ProjectSettings>()
                     .AddSingleton<DirectorProjectManager>()
                     ;
 

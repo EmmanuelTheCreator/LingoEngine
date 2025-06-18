@@ -39,8 +39,8 @@ namespace LingoEngine
         private readonly Dictionary<string, MovieRegistration> _Movies = new();
         private readonly List<(string Name, string FileName)> _Fonts = new();
         private Action<ILingoFrameworkFactory>? _FrameworkFactorySetup;
-        private ProjectSettings? _projectSettings;
         private IServiceProvider? _serviceProvider;
+        private Action<ProjectSettings> _projectSettingsSetup = p => { };
 
         public LingoEngineRegistration(IServiceCollection container)
         {
@@ -48,15 +48,7 @@ namespace LingoEngine
         }
         public void RegisterCommonServices()
         {
-            _container
-               .AddTransient<LingoSprite>()
-               .AddTransient<ILingoMemberFactory, LingoMemberFactory>()
-               .AddTransient(p => new Lazy<ILingoMemberFactory>(() => p.GetRequiredService<ILingoMemberFactory>()))
-               .AddScoped<ILingoMovieEnvironment, LingoMovieEnvironment>()
-               // Xtras
-               .AddScoped<IBuddyAPI, BuddyAPI>()
-               .AddScoped<ILingoEventMediator, LingoEventMediator>()
-               ;
+            _container.WithGodotEngine();
         }
 
         public ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class,ILingoFrameworkFactory
@@ -69,9 +61,7 @@ namespace LingoEngine
 
         public ILingoEngineRegistration WithProjectSettings(Action<ProjectSettings> setup)
         {
-            _projectSettings = new ProjectSettings();
-            setup(_projectSettings);
-            _container.AddSingleton(_projectSettings);
+            _projectSettingsSetup = setup;
             return this;
         }
      
@@ -82,8 +72,10 @@ namespace LingoEngine
         public LingoPlayer Build(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _projectSettingsSetup(serviceProvider.GetRequiredService<ProjectSettings>());
             LoadFonts(serviceProvider);
-            var player = new LingoPlayer(serviceProvider, ActionOnNewMovie);
+            var player = serviceProvider.GetRequiredService<LingoPlayer>();
+            player.SetActionOnNewMovie(ActionOnNewMovie);
             if (_FrameworkFactorySetup != null)
                 _FrameworkFactorySetup(serviceProvider.GetRequiredService<ILingoFrameworkFactory>());
             return player;

@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\LingoEngine.IO\LingoEngine.IO.csproj" />
     <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
   </ItemGroup>
 

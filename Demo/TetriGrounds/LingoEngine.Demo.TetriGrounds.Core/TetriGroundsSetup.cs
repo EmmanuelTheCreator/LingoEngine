@@ -21,6 +21,11 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                         //.AddFont("8Pin Matrix", Path.Combine("Media", "Fonts", "8PinMatrix.ttf"))
                         //.AddFont("Earth", Path.Combine("Media", "Fonts", "earth.ttf"))
                         //.AddFont("Tahoma", Path.Combine("Media", "Fonts", "Tahoma.ttf"))
+                        .WithProjectSettings(s =>
+                        {
+                            s.ProjectFolder = "TetriGrounds";
+                            s.ProjectName = "TetriGrounds";
+                        })
                         .ForMovie(TetriGroundsGame.MovieName, s => s
                             //.AddMovieScript<StartMoviesScript>()
                             //.AddMovieScript<StarMovieScript>()

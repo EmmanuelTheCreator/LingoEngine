@@ -25,7 +25,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _lingoMovie = lingoMovie;
             _mediator = mediator;
             _style = style;
-            _mediator.SubscribeToMenu(MenuCodes.CastWindow, () => Visible = !Visible);
+            _mediator.SubscribeToMenu(DirectorMenuCodes.CastWindow, () => Visible = !Visible);
 
             Size = new Vector2(360, 620);
             CustomMinimumSize = Size;

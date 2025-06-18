@@ -29,7 +29,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         : base("Score")
     {
         _mediator = directorMediator;
-        _mediator.SubscribeToMenu(MenuCodes.ScoreWindow, () => Visible = !Visible);
+        _mediator.SubscribeToMenu(DirectorMenuCodes.ScoreWindow, () => Visible = !Visible);
         var height = 400;
         var width = 800;
         
@@ -59,7 +59,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
 
         _vScroller.AddChild(_grid);
         _grid.Resized += UpdateScrollSize;
-        _vScroller.Size = new Vector2(Size.X - 10, Size.Y- 60);
+        _vScroller.Size = new Vector2(Size.X - 10, Size.Y- 90);
         _vScroller.Position = new Vector2(0, 60);
 
         _labelBar.Position = new Vector2(0, 0);
@@ -73,7 +73,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     {
         base.OnResizing(size);
         _hScroller.Size = new Vector2(size.X - 10, size.Y - 20);
-        _vScroller.Size = new Vector2(size.X - 10, size.Y - 60);
+        _vScroller.Size = new Vector2(size.X - 10, size.Y - 90);
         UpdateScrollSize();
     }
 

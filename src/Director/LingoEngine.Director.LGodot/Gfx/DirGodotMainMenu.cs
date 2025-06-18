@@ -55,19 +55,19 @@ internal partial class DirGodotMainMenu : Control
         // FileMenu
         _menuBar.AddChild(_fileMenu);
         var popupFile = _fileMenu.GetPopup();
+        popupFile.AddItem("Load", 1);
         popupFile.AddItem("Save", 2);
-        popupFile.AddItem("Load", 3);
-        popupFile.AddItem("Quit", 1);
+        popupFile.AddItem("Quit", 3);
         popupFile.IdPressed += id =>
         {
             switch (id)
             {
-                case 1:
+                case 1: mediator.RaiseMenuSelected(DirectorMenuCodes.FileLoad); break;
+                case 2: mediator.RaiseMenuSelected(DirectorMenuCodes.FileSave); break;
+                case 3:
                     // TODO: check project for unsaved changes before quitting
                     GetTree().Quit();
                     break;
-                case 2: mediator.RaiseMenuSelected(MenuCodes.FileSave); break;
-                case 3: mediator.RaiseMenuSelected(MenuCodes.FileLoad); break;
             }
         };
 
@@ -76,7 +76,7 @@ internal partial class DirGodotMainMenu : Control
         popupEdit.AddItem("Project Settings", 20);
         popupEdit.IdPressed += id =>
         {
-            if (id == 20) mediator.RaiseMenuSelected(MenuCodes.ProjectSettingsWindow);
+            if (id == 20) mediator.RaiseMenuSelected(DirectorMenuCodes.ProjectSettingsWindow);
         };
 
         // Window Menu
@@ -92,12 +92,12 @@ internal partial class DirGodotMainMenu : Control
         {
             switch (id)
             {
-                case 5: mediator.RaiseMenuSelected(MenuCodes.ScriptWindow); break;
-                case 6: mediator.RaiseMenuSelected(MenuCodes.StageWindow); break;
-                case 7: mediator.RaiseMenuSelected(MenuCodes.ControlPanel); break;
-                case 8: mediator.RaiseMenuSelected(MenuCodes.CastWindow); break;
-                case 9: mediator.RaiseMenuSelected(MenuCodes.ScoreWindow); break;
-                case 15: mediator.RaiseMenuSelected(MenuCodes.ObjectInspector); break;
+                case 5: mediator.RaiseMenuSelected(DirectorMenuCodes.ScriptWindow); break;
+                case 6: mediator.RaiseMenuSelected(DirectorMenuCodes.StageWindow); break;
+                case 7: mediator.RaiseMenuSelected(DirectorMenuCodes.ControlPanel); break;
+                case 8: mediator.RaiseMenuSelected(DirectorMenuCodes.CastWindow); break;
+                case 9: mediator.RaiseMenuSelected(DirectorMenuCodes.ScoreWindow); break;
+                case 15: mediator.RaiseMenuSelected(DirectorMenuCodes.ObjectInspector); break;
                 default:
                     break;
             }
