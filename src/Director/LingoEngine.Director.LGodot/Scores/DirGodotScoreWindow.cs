@@ -44,6 +44,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         AddChild(_hScroller);
         _hScroller.VerticalScrollMode = ScrollContainer.ScrollMode.Disabled;
         _hScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
+        _hScroller.ZIndex = 100;
         _hScroller.Size = new Vector2(Size.X- 10, Size.Y-20);
         _hScroller.Position = new Vector2(0, 20);
         _hScroller.AddChild(_scrollContent);
@@ -56,6 +57,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
 
         _vScroller.VerticalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
         _vScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
+        _vScroller.ZIndex = 100;
 
         _vScroller.AddChild(_grid);
         _grid.Resized += UpdateScrollSize;
