@@ -1,4 +1,5 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using System;
+using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
 using LingoEngine.Sounds;
@@ -66,6 +67,7 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         bool ILingoPlayer.SafePlayer { get; set; }
         public ILingoMovie? ActiveMovie { get; private set; }
+        public event Action<ILingoMovie?>? ActiveMovieChanged;
 
         internal LingoPlayer(IServiceProvider serviceProvider, Action<LingoMovie> actionOnNewMovie)
         {
@@ -150,8 +152,7 @@ namespace LingoEngine.Core
             // Activate him;
             if (andActivate)
             {
-                ActiveMovie = movieEnv.Movie;
-                _Stage.SetActiveMovie(movieTyped);
+                SetActiveMovie(movieTyped);
             }
             return movieEnv.Movie;
         }
@@ -180,6 +181,15 @@ namespace LingoEngine.Core
                 configure(castLib);
             return this;
         }
+
+        public void SetActiveMovie(LingoMovie? movie)
+        {
+            ActiveMovie = movie;
+            _Stage.SetActiveMovie(movie);
+            ActiveMovieChanged?.Invoke(movie);
+        }
+
+        void ILingoPlayer.SetActiveMovie(ILingoMovie? movie) => SetActiveMovie(movie as LingoMovie);
 
         internal void LoadMovieScripts(IEnumerable<LingoMovieScript> enumerable)
         {

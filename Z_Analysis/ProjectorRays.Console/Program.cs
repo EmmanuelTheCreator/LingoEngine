@@ -1,5 +1,6 @@
 using ProjectorRays.Common;
 using ProjectorRays.Director;
+using Microsoft.Extensions.Logging.Abstractions;
 
 if (args.Length == 0 || args[0] == "-h" || args[0] == "--help")
 {
@@ -20,7 +21,7 @@ for (int i = 1; i < args.Length; i++)
 
 byte[] data = System.IO.File.ReadAllBytes(inputPath);
 var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-var dir = new DirectorFile();
+var dir = new DirectorFile(NullLogger.Instance);
 if (!dir.Read(stream))
 {
     System.Console.WriteLine("Failed to read Director file");
