@@ -1,4 +1,5 @@
-﻿using LingoEngine.Core;
+﻿using System;
+using LingoEngine.Core;
 
 namespace LingoEngine.Movies
 {
@@ -38,6 +39,11 @@ namespace LingoEngine.Movies
         /// Indicates whether the movie is currently playing.
         /// </summary>
         bool IsPlaying { get; }
+
+        /// <summary>
+        /// Occurs when the play state changes. Parameter indicates whether the movie is now playing.
+        /// </summary>
+        event Action<bool> PlayStateChanged;
 
         /// <summary>
         /// Jumps to the specified frame and continues playing.

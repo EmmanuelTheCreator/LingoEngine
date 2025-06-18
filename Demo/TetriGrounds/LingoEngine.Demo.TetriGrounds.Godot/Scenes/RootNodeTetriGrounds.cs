@@ -51,11 +51,15 @@ public partial class RootNodeTetriGrounds : Node2D
                     );
             var serviceProvider = _services.BuildServiceProvider();
 
+#if DEBUG
             var movie = TetriGroundsSetup.SetupGame(serviceProvider);
             var game = TetriGroundsSetup.StartGame(serviceProvider);
-#if DEBUG
-            _director = new LingoGodotDirectorRoot(movie, serviceProvider);
+            _director = new LingoGodotDirectorRoot(movie, game.LingoPlayer, serviceProvider);
+#else
+            TetriGroundsSetup.SetupGame(serviceProvider);
+            TetriGroundsSetup.StartGame(serviceProvider);
 #endif
+
 
         }
         catch (Exception ex)
