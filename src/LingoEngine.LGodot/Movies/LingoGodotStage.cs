@@ -16,6 +16,8 @@ namespace LingoEngine.LGodot.Movies
 
         private LingoGodotMovie? _activeMovie;
 
+        float ILingoFrameworkStage.Scale { get => base.Scale.X; set => base.Scale = new Vector2(value,value); }
+
         public LingoGodotStage(LingoPlayer lingoPlayer)
         {
             _lingoClock = (LingoClock)lingoPlayer.Clock;
@@ -68,6 +70,11 @@ namespace LingoEngine.LGodot.Movies
             var godotMovie = lingoMovie.Framework<LingoGodotMovie>();
             _activeMovie = godotMovie;
             godotMovie.Show();
+        }
+
+        internal void SetScale(float scale)
+        {
+            Scale = new Vector2(scale, scale);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿
-using LingoEngine.Core;
+using LingoEngine.Casts;
+using LingoEngine.Members;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.Pictures

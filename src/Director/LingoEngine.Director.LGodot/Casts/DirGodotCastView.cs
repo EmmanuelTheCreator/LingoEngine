@@ -1,7 +1,8 @@
 ﻿using Godot;
-using LingoEngine.Core;
+using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Members;
 using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Casts

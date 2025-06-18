@@ -1,5 +1,5 @@
-﻿using LingoEngine.Core;
-using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 
 namespace LingoEngine.Movies
 {
@@ -23,6 +23,7 @@ namespace LingoEngine.Movies
         }
              
 
+        public ILingoFrameworkStage FrameworkObj() => _lingoFrameworkMovieStage;
         public T Framework<T>() where T : class, ILingoFrameworkStage => (T)_lingoFrameworkMovieStage;
         public LingoStage(ILingoFrameworkStage godotInstance)
         {

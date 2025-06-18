@@ -3,7 +3,6 @@ using LingoEngine.Director.Core;
 using LingoEngine.LGodot;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Director.LGodot.Gfx;
-using LingoEngine.Director.Core.Commands;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -18,7 +17,6 @@ namespace LingoEngine.Director.LGodot
             engineRegistration.Services(s =>
             {
                 s.AddSingleton<DirectorStyle>();
-                s.AddSingleton<Theme>(p => p.GetRequiredService<DirectorStyle>().Theme);
                 s.AddSingleton<DirGodotProjectSettingsWindow>();
             
                 //IServiceCollection serviceCollection = s

@@ -4,7 +4,7 @@ using LingoEngine.Pictures;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Members
 {
     public interface ILingoMemberFactory
     {
@@ -30,6 +30,6 @@ namespace LingoEngine.Core
         public LingoMemberPicture Picture(int numberInCast = 0, string name = "") => _frameworkFactory.CreateMemberPicture(_environment.CastLibsContainer.ActiveCast, numberInCast, name);
         public LingoMemberSound Sound(int numberInCast = 0, string name = "") => _frameworkFactory.CreateMemberSound(_environment.CastLibsContainer.ActiveCast, numberInCast, name);
         public LingoMemberFilmLoop FilmLoop(int numberInCast = 0, string name = "") => _frameworkFactory.CreateMemberFilmLoop(_environment.CastLibsContainer.ActiveCast, numberInCast, name);
-        public LingoMemberText Text(int numberInCast= 0, string name = "") => _frameworkFactory.CreateMemberText(_environment.CastLibsContainer.ActiveCast, numberInCast,name);
+        public LingoMemberText Text(int numberInCast = 0, string name = "") => _frameworkFactory.CreateMemberText(_environment.CastLibsContainer.ActiveCast, numberInCast, name);
     }
 }

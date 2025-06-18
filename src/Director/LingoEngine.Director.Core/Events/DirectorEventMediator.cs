@@ -1,4 +1,4 @@
-using LingoEngine.Core;
+using LingoEngine.Members;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Director.Core.Events

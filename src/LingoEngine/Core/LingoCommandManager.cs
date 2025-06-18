@@ -1,18 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using LingoEngine.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LingoEngine.Commands;
+namespace LingoEngine.Core;
 
-internal sealed class CommandManager : ICommandManager
+internal sealed class LingoCommandManager : ILingoCommandManager
 {
     private readonly IServiceProvider _provider;
     private readonly Dictionary<Type, Type> _handlers = new();
 
-    public CommandManager(IServiceProvider provider) => _provider = provider;
+    public LingoCommandManager(IServiceProvider provider) => _provider = provider;
 
-    public void Subscribe(Type handlerType)
+    public void Register<THandler, TCommand>()
+        where THandler : ICommandHandler<TCommand>
+        where TCommand : ILingoCommand
+        => Register(typeof(THandler));
+
+    public void Register(Type handlerType)
     {
         foreach (var iface in handlerType.GetInterfaces()
                      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
@@ -32,8 +35,7 @@ internal sealed class CommandManager : ICommandManager
             dynamic c = command;
             if (h.CanExecute(c))
             {
-                h.Handle(c);
-                return true;
+                return h.Handle(c);
             }
         }
         return false;

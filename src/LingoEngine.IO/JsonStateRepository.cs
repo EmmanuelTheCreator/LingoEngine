@@ -9,6 +9,8 @@ using LingoEngine.Pictures;
 using LingoEngine.Animations;
 using LingoEngine.Primitives;
 using System.Linq;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine.IO;
 

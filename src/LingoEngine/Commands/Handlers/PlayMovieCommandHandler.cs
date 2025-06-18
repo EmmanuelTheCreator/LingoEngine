@@ -10,14 +10,15 @@ internal sealed class PlayMovieCommandHandler : ICommandHandler<PlayMovieCommand
 
     public bool CanExecute(PlayMovieCommand command) => _player.ActiveMovie is LingoMovie;
 
-    public void Handle(PlayMovieCommand command)
+    public bool Handle(PlayMovieCommand command)
     {
-        if (_player.ActiveMovie is not LingoMovie movie) return;
+        if (_player.ActiveMovie is not LingoMovie movie) return true;
         if (command.Frame.HasValue)
             movie.GoTo(command.Frame.Value);
         if (movie.IsPlaying)
             movie.Halt();
         else
             movie.Play();
+        return true;
     }
 }
