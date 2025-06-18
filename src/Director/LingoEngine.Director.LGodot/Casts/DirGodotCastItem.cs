@@ -8,6 +8,7 @@ namespace LingoEngine.Director.LGodot.Casts
     internal partial class DirGodotCastItem : VBoxContainer
     {
         private readonly ColorRect _bg;
+        private readonly ColorRect _selectionBg;
         //private readonly CenterContainer _spriteContainer;
         private readonly Sprite2D _Sprite2D;
         private readonly ILingoMember _lingoMember;
@@ -17,11 +18,29 @@ namespace LingoEngine.Director.LGodot.Casts
         public int Width { get; set; } = 50;
         public int Height { get; set; } = 50;
         public ILingoMember LingoMember => _lingoMember;
-        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect)
+        public void SetSelected(bool selected)
+        {
+            _selectionBg.Visible = selected;
+        }
+        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor)
         {
             _lingoMember = element;
             _onSelect = onSelect;
             CustomMinimumSize = new Vector2(50, 50);
+
+            // Selection background - slightly larger than the item itself
+            _selectionBg = new ColorRect { Color = selectedColor, Visible = false };
+            _selectionBg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _selectionBg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _selectionBg.AnchorLeft = 0;
+            _selectionBg.AnchorTop = 0;
+            _selectionBg.AnchorRight = 1;
+            _selectionBg.AnchorBottom = 1;
+            _selectionBg.OffsetLeft = -1;
+            _selectionBg.OffsetTop = -1;
+            _selectionBg.OffsetRight = 1;
+            _selectionBg.OffsetBottom = 1;
+            AddChild(_selectionBg);
 
             // Solid background
             _bg = new ColorRect { Color = Colors.DimGray };

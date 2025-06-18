@@ -38,6 +38,7 @@ namespace LingoEngine.Director.LGodot.Gfx
 
             // Apply Director UI theme from IoC
             _directorParent.Theme = serviceProvider.GetRequiredService<Theme>();
+            var style = serviceProvider.GetRequiredService<DirectorStyle>();
 
             // Setup stage
             var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
@@ -45,7 +46,7 @@ namespace LingoEngine.Director.LGodot.Gfx
 
 
             _dirGodotMainMenu = new DirGodotMainMenu(_mediator, lingoMovie);
-            _castViewer = new DirGodotCastWindow(_mediator, lingoMovie);
+            _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
             _scoreWindow = new DirGodotScoreWindow(_mediator);
             _inspector = new DirGodotObjectInspector(_mediator);
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);

@@ -9,6 +9,10 @@ namespace LingoEngine.Director.LGodot;
 public sealed class DirectorStyle
 {
     public Theme Theme { get; }
+    /// <summary>
+    /// Highlight color for selected elements in the Director UI.
+    /// </summary>
+    public Color SelectedColor { get; } = Colors.DodgerBlue;
 
     public DirectorStyle()
     {

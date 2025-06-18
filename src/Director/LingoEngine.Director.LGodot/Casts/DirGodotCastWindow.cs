@@ -2,6 +2,7 @@
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.LGodot;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Director.LGodot.Casts
@@ -13,14 +14,17 @@ namespace LingoEngine.Director.LGodot.Casts
 
         private readonly ILingoMovie _lingoMovie;
         private readonly IDirectorEventMediator _mediator;
+        private readonly DirectorStyle _style;
+        private DirGodotCastItem? _selectedItem;
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, ILingoMovie lingoMovie)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, ILingoMovie lingoMovie, DirectorStyle style)
             : base("Cast")
         {
             _lingoMovie = lingoMovie;
             _mediator = mediator;
+            _style = style;
             _mediator.SubscribeToMenu(MenuCodes.CastWindow, () => Visible = !Visible);
 
             Size = new Vector2(360, 620);
@@ -35,7 +39,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
-                var castLibViewer = new DirGodotCastView(OnSelectElement);
+                var castLibViewer = new DirGodotCastView(OnSelectElement, _style);
                 castLibViewer.Show(cast);
                 var tabContent = new VBoxContainer
                 {
@@ -73,8 +77,11 @@ namespace LingoEngine.Director.LGodot.Casts
 
         private void OnSelectElement(DirGodotCastItem castItem)
         {
+            _selectedItem?.SetSelected(false);
+            castItem.SetSelected(true);
+            _selectedItem = castItem;
             _mediator.RaiseMemberSelected(castItem.LingoMember);
-            
+
         }
         public void Activate(int castlibNum)
         {
