@@ -12,6 +12,7 @@ namespace LingoEngine
         ILingoEngineRegistration AddFont(string name,string pathAndName);
         ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action);
         ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class, ILingoFrameworkFactory;
+        ILingoEngineRegistration WithProjectSettings(Action<ProjectSettings> setup);
         LingoPlayer Build();
         LingoPlayer Build(IServiceProvider serviceProvider);
     }
@@ -38,6 +39,7 @@ namespace LingoEngine
         private readonly Dictionary<string, MovieRegistration> _Movies = new();
         private readonly List<(string Name, string FileName)> _Fonts = new();
         private Action<ILingoFrameworkFactory>? _FrameworkFactorySetup;
+        private ProjectSettings? _projectSettings;
         private IServiceProvider? _serviceProvider;
 
         public LingoEngineRegistration(IServiceCollection container)
@@ -62,6 +64,14 @@ namespace LingoEngine
             _container.AddSingleton<ILingoFrameworkFactory, T>();
             if (setup != null)
                 _FrameworkFactorySetup = f => setup((T)f);
+            return this;
+        }
+
+        public ILingoEngineRegistration WithProjectSettings(Action<ProjectSettings> setup)
+        {
+            _projectSettings = new ProjectSettings();
+            setup(_projectSettings);
+            _container.AddSingleton(_projectSettings);
             return this;
         }
      
