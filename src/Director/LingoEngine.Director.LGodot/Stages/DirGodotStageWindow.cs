@@ -5,6 +5,8 @@ using LingoEngine.LGodot.Movies;
 using LingoEngine.LGodot.Stages;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.Core.Commands;
+using LingoEngine.Commands;
 using LingoEngine.Core;
 using System.Linq;
 
@@ -16,8 +18,11 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private readonly LingoGodotStageContainer _stageContainer;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
+    private readonly ICommandManager _commandManager;
+    private readonly SetStageScaleCommandHandler _scaleHandler;
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private readonly HSlider _zoomSlider = new HSlider();
+    private readonly OptionButton _zoomDropdown = new OptionButton();
     private readonly Button _rewindButton = new Button();
     private readonly Button _playButton = new Button();
     private readonly Button _prevFrameButton = new Button();
@@ -32,12 +37,14 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private ILingoFrameworkStage? _stage;
     private LingoSprite? _selectedSprite;
 
-    public DirGodotStageWindow(Node root, LingoGodotStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoPlayer player)
+    public DirGodotStageWindow(Node root, LingoGodotStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ICommandManager commandManager, SetStageScaleCommandHandler scaleHandler, ILingoPlayer player)
         : base("Stage")
     {
         _stageContainer = stageContainer;
         _mediator = directorEventMediator;
         _player = player;
+        _commandManager = commandManager;
+        _scaleHandler = scaleHandler;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
         _mediator.Subscribe(this);
         
@@ -70,38 +77,59 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
 
         // bottom icon bar
         AddChild(_iconBar);
-        _iconBar.Position = new Vector2(0, Size.Y - IconBarHeight);
-        _iconBar.CustomMinimumSize = new Vector2(Size.X, IconBarHeight);
-        _iconBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _iconBar.AnchorLeft = 0;
+        _iconBar.AnchorRight = 1;
+        _iconBar.AnchorTop = 1;
+        _iconBar.AnchorBottom = 1;
+        _iconBar.OffsetLeft = 0;
+        _iconBar.OffsetRight = 0;
+        _iconBar.OffsetTop = -IconBarHeight;
+        _iconBar.OffsetBottom = 0;
 
         _rewindButton.Text = "|<";
         _rewindButton.CustomMinimumSize = new Vector2(20, IconBarHeight);
-        _rewindButton.Pressed += () => _movie?.GoTo(1);
+        _rewindButton.Pressed += () => _commandManager.Handle(new RewindMovieCommand());
         _iconBar.AddChild(_rewindButton);
 
         _playButton.CustomMinimumSize = new Vector2(60, IconBarHeight);
         _playButton.AddThemeFontSizeOverride("font_size", 8);
-        _playButton.Pressed += OnPlayPressed;
+        _playButton.Pressed += () => _commandManager.Handle(new PlayMovieCommand());
         _iconBar.AddChild(_playButton);
 
         _prevFrameButton.Text = "<";
         _prevFrameButton.CustomMinimumSize = new Vector2(20, IconBarHeight);
-        _prevFrameButton.Pressed += () => _movie?.PrevFrame();
+        _prevFrameButton.Pressed += () => _commandManager.Handle(new StepFrameCommand(-1));
         _iconBar.AddChild(_prevFrameButton);
 
         _nextFrameButton.Text = ">";
         _nextFrameButton.CustomMinimumSize = new Vector2(20, IconBarHeight);
-        _nextFrameButton.Pressed += () => _movie?.NextFrame();
+        _nextFrameButton.Pressed += () => _commandManager.Handle(new StepFrameCommand(1));
         _iconBar.AddChild(_nextFrameButton);
 
-        _zoomSlider.MinValue = 0.1f;
-        _zoomSlider.MaxValue = 3f;
+        _zoomSlider.MinValue = 0.5f;
+        _zoomSlider.MaxValue = 1.5f;
         _zoomSlider.Step = 0.1f;
         _zoomSlider.Value = 1f;
-        _zoomSlider.CustomMinimumSize = new Vector2(100, IconBarHeight);
-        _zoomSlider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        _zoomSlider.ValueChanged += value => UpdateZoom((float)value);
+        _zoomSlider.CustomMinimumSize = new Vector2(150, IconBarHeight);
+        _zoomSlider.ValueChanged += value =>
+        {
+            float scale = (float)value;
+            _commandManager.Handle(new SetStageScaleCommand(scale));
+            UpdateScaleDropdown(scale);
+        };
         _iconBar.AddChild(_zoomSlider);
+
+        for (int i = 50; i <= 150; i += 10)
+            _zoomDropdown.AddItem($"{i}%");
+        _zoomDropdown.Select(5); // 100%
+        _zoomDropdown.CustomMinimumSize = new Vector2(60, IconBarHeight);
+        _zoomDropdown.ItemSelected += id =>
+        {
+            float scale = (50 + id * 10) / 100f;
+            _zoomSlider.Value = scale;
+            _commandManager.Handle(new SetStageScaleCommand(scale));
+        };
+        _iconBar.AddChild(_zoomDropdown);
 
         _colorDisplay.Color = Colors.Black;
         _colorDisplay.CustomMinimumSize = new Vector2(IconBarHeight, IconBarHeight);
@@ -119,8 +147,6 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
-        _iconBar.Position = new Vector2(0, size.Y - IconBarHeight);
-        _iconBar.CustomMinimumSize = new Vector2(size.X, IconBarHeight);
     }
 
     public void SetStage(ILingoFrameworkStage stage)
@@ -135,6 +161,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             }
             if (node is Node2D node2D)
                 node2D.Position = new Vector2(0, TitleBarHeight);
+            _scaleHandler.SetStage(stage);
         }
     }
 
@@ -159,15 +186,6 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         SetActiveMovie(movie as LingoMovie);
     }
 
-    private void OnPlayPressed()
-    {
-        if (_movie == null) return;
-        if (_movie.IsPlaying)
-            _movie.Halt();
-        else
-            _movie.Play();
-    }
-
     private void OnPlayStateChanged(bool isPlaying)
     {
         UpdatePlayButton();
@@ -182,16 +200,19 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _playButton.Text = _movie != null && _movie.IsPlaying ? "stop !" : "Play >";
     }
 
-    private void UpdateZoom(float value)
-    {
-        if (_stage is Node2D node2D)
-            node2D.Scale = new Vector2(value, value);
-    }
 
     private void OnColorChanged(Color color)
     {
         _stageBgRect.Color = color;
         _colorDisplay.Color = color;
+    }
+
+    private void UpdateScaleDropdown(float value)
+    {
+        int percent = (int)Mathf.Round(value * 100);
+        int index = (percent - 50) / 10;
+        if (index >= 0 && index < _zoomDropdown.ItemCount)
+            _zoomDropdown.Select(index);
     }
 
     public void SpriteSelected(ILingoSprite sprite)

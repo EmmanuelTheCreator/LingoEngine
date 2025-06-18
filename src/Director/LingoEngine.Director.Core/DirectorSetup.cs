@@ -1,5 +1,6 @@
 using LingoEngine.Director.Core.Events;
 using LingoEngine;
+using LingoEngine.Director.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Director.Core
@@ -14,6 +15,7 @@ namespace LingoEngine.Director.Core
                 IServiceCollection serviceCollection = s
                     .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
                     .AddSingleton<DirectorProjectManager>()
+                    .AddSingleton<SetStageScaleCommandHandler>()
                     ;
 
             });
