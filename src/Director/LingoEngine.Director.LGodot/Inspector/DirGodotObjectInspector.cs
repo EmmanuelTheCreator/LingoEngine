@@ -6,6 +6,7 @@ using System;
 using System.Reflection;
 using LingoEngine.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Texts;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -93,6 +94,16 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
         _tabs.AddChild(vScroller);
         var container = new VBoxContainer();
         BuildProperties(container, obj);
+        if (obj is ILingoMemberTextBase textMember)
+        {
+            var edit = new Button { Text = "Edit" };
+            edit.Pressed += () =>
+            {
+                _mediator.RaiseMemberSelected(textMember);
+                _mediator.RaiseMenuSelected(DirectorMenuCodes.TextEditWindow);
+            };
+            container.AddChild(edit);
+        }
         vScroller.AddChild(container);
     }
 

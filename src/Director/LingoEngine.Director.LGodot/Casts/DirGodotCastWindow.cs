@@ -4,6 +4,7 @@ using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Movies;
+using LingoEngine.Texts;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -39,7 +40,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
-                var castLibViewer = new DirGodotCastView(OnSelectElement, _style);
+                var castLibViewer = new DirGodotCastView(OnSelectElement, OnItemDoubleClick, _style);
                 castLibViewer.Show(cast);
                 var tabContent = new VBoxContainer
                 {
@@ -82,6 +83,15 @@ namespace LingoEngine.Director.LGodot.Casts
             _selectedItem = castItem;
             _mediator.RaiseMemberSelected(castItem.LingoMember);
 
+        }
+
+        private void OnItemDoubleClick(DirGodotCastItem castItem)
+        {
+            if (castItem.LingoMember is ILingoMemberTextBase textMember)
+            {
+                _mediator.RaiseMemberSelected(textMember);
+                _mediator.RaiseMenuSelected(DirectorMenuCodes.TextEditWindow);
+            }
         }
         public void Activate(int castlibNum)
         {
