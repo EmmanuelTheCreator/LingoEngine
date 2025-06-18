@@ -37,7 +37,12 @@ public override void _Draw()
             Vector2 pos = GetLocalMousePosition();
             int frame = Mathf.RoundToInt((pos.X - ChannelInfoWidth) / FrameWidth) + 1;
             if (frame >= 1 && frame <= _movie.FrameCount)
-                _movie.GoTo(frame);
+            {
+                if (_movie.IsPlaying)
+                    _movie.GoTo(frame);
+                else
+                    _movie.GoToAndStop(frame);
+            }
         }
     }
 }
