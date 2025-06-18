@@ -1,34 +1,35 @@
-[gd_resource type="Theme" format=3 uid="uid://xc6qaca8t4t6"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x1qcu"]
-bg_color = Color(0.39215687, 0.03137255, 0.03137255, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bskpx"]
-bg_color = Color(0.39215687, 0.03137255, 0.03137255, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0q5se"]
-bg_color = Color(0.23529412, 0.011764706, 0.011764706, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vdb74"]
-bg_color = Color(0.6666667, 0.08627451, 0.08235294, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qagqd"]
-bg_color = Color(0.23529412, 0.011764706, 0.011764706, 1)
-
-[resource]
-Button/font_sizes/font_size = 10
-CloseButton/base_type = &"Button"
-CloseButton/colors/font_color = Color(1, 1, 1, 1)
-CloseButton/font_sizes/font_size = 10
-CloseButton/styles/focus = SubResource("StyleBoxFlat_x1qcu")
-CloseButton/styles/hover = SubResource("StyleBoxFlat_bskpx")
-CloseButton/styles/hover_pressed = null
-CloseButton/styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_0q5se")
-CloseButton/styles/normal = SubResource("StyleBoxFlat_vdb74")
-CloseButton/styles/pressed = SubResource("StyleBoxFlat_qagqd")
-Label/font_sizes/font_size = 13
-LineEdit/font_sizes/font_size = 13
-TabBar/font_sizes/font_size = 10
-TextEdit/font_sizes/font_size = 13
-Tree/font_sizes/font_size = 11
-Tree/font_sizes/title_button_font_size = 12
+; Director style is now defined in DirectorStyle.cs
+; [gd_resource type="Theme" format=3 uid="uid://xc6qaca8t4t6"]
+;
+; [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x1qcu"]
+; bg_color = Color(0.39215687, 0.03137255, 0.03137255, 1)
+;
+; [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bskpx"]
+; bg_color = Color(0.39215687, 0.03137255, 0.03137255, 1)
+;
+; [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0q5se"]
+; bg_color = Color(0.23529412, 0.011764706, 0.011764706, 1)
+;
+; [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vdb74"]
+; bg_color = Color(0.6666667, 0.08627451, 0.08235294, 1)
+;
+; [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qagqd"]
+; bg_color = Color(0.23529412, 0.011764706, 0.011764706, 1)
+;
+; [resource]
+; Button/font_sizes/font_size = 10
+; CloseButton/base_type = &"Button"
+; CloseButton/colors/font_color = Color(1, 1, 1, 1)
+; CloseButton/font_sizes/font_size = 10
+; CloseButton/styles/focus = SubResource("StyleBoxFlat_x1qcu")
+; CloseButton/styles/hover = SubResource("StyleBoxFlat_bskpx")
+; CloseButton/styles/hover_pressed = null
+; CloseButton/styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_0q5se")
+; CloseButton/styles/normal = SubResource("StyleBoxFlat_vdb74")
+; CloseButton/styles/pressed = SubResource("StyleBoxFlat_qagqd")
+; Label/font_sizes/font_size = 13
+; LineEdit/font_sizes/font_size = 13
+; TabBar/font_sizes/font_size = 10
+; TextEdit/font_sizes/font_size = 13
+; Tree/font_sizes/font_size = 11
+; Tree/font_sizes/title_button_font_size = 12
