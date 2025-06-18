@@ -22,6 +22,7 @@ namespace LingoEngine.Movies
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
+        private bool _lock = false;
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
         private bool _isFocus = false;
@@ -83,6 +84,11 @@ namespace LingoEngine.Movies
         public int EndFrame { get; set; }
 
         public bool Editable { get; set; }
+        public bool Lock
+        {
+            get => _lock;
+            set => _lock = value;
+        }
         public bool IsDraggable
         {
             get => isDraggable;

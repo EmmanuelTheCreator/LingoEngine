@@ -109,7 +109,22 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
             h.AddChild(label);
             Control editor;
             object? val = prop.GetValue(obj);
-            if (prop.PropertyType == typeof(bool))
+            if (obj is ILingoSprite && prop.Name == "Lock" && prop.PropertyType == typeof(bool))
+            {
+                var btn = new Button { Text = val is bool b && b ? "🔒" : "🔓" };
+                if (prop.CanWrite)
+                    btn.Pressed += () =>
+                    {
+                        bool current = prop.GetValue(obj) is bool b && b;
+                        bool newVal = !current;
+                        prop.SetValue(obj, newVal);
+                        btn.Text = newVal ? "🔒" : "🔓";
+                    };
+                else
+                    btn.Disabled = true;
+                editor = btn;
+            }
+            else if (prop.PropertyType == typeof(bool))
             {
                 var cb = new CheckBox { ButtonPressed = val is bool b && b };
                 if (prop.CanWrite)
