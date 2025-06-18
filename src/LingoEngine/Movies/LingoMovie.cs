@@ -99,7 +99,7 @@ namespace LingoEngine.Movies
 
 
 #pragma warning disable CS8618
-        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe)
+        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe, ProjectSettings projectSettings)
 #pragma warning restore CS8618 
         {
             _castLibContainer = castLibContainer;
@@ -115,7 +115,7 @@ namespace LingoEngine.Movies
             _MovieScripts = new(environment, mediator);
             _lingoMouse = (LingoMouse)environment.Mouse;
             _lingoClock = (LingoClock)environment.Clock;
-            MaxSpriteChannelCount = 1000;
+            MaxSpriteChannelCount = projectSettings.MaxSpriteChannelCount;
         }
         public void Init(ILingoFrameworkMovie frameworkMovie)
         {
