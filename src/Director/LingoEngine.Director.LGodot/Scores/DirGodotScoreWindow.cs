@@ -57,12 +57,15 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _vScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
 
         _vScroller.AddChild(_grid);
+        _grid.Resized += UpdateScrollSize;
         _vScroller.Size = new Vector2(Size.X - 10, Size.Y- 60);
         _vScroller.Position = new Vector2(0, 60);
 
         _labelBar.Position = new Vector2(0, 0);
         _frameScripts.Position = new Vector2(0, 20);
         _header.Position = new Vector2(0, 40);
+
+        UpdateScrollSize();
     }
 
     protected override void OnResizing(Vector2 size)
@@ -70,6 +73,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         base.OnResizing(size);
         _hScroller.Size = new Vector2(size.X - 10, size.Y - 20);
         _vScroller.Size = new Vector2(size.X - 10, size.Y - 60);
+        UpdateScrollSize();
     }
 
     public void SetMovie(LingoMovie? movie)
@@ -79,8 +83,25 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _header.SetMovie(movie);
         _frameScripts.SetMovie(movie);
         _labelBar.SetMovie(movie);
+        UpdateScrollSize();
     }
-    
+
+    private void UpdateScrollSize()
+    {
+        if (_movie == null) return;
+
+        const int ChannelHeight = 16;
+        const int FrameWidth = 9;
+        const int ChannelLabelWidth = 54;
+        const int ChannelInfoWidth = ChannelHeight + ChannelLabelWidth;
+        const int ExtraMargin = 20;
+
+        float gridWidth = ChannelInfoWidth + _movie.FrameCount * FrameWidth + ExtraMargin;
+        float gridHeight = _movie.MaxSpriteChannelCount * ChannelHeight + ExtraMargin;
+
+        _scrollContent.CustomMinimumSize = new Vector2(gridWidth, 60 + gridHeight);
+    }
+
 
     protected override void Dispose(bool disposing)
     {
