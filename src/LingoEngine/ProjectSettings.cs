@@ -11,6 +11,8 @@ public class ProjectSettings
         !string.IsNullOrWhiteSpace(ProjectName) &&
         !string.IsNullOrWhiteSpace(ProjectFolder);
 
+    public int MaxSpriteChannelCount { get; set; } = 1000;
+
     public ProjectSettings()
     {
         

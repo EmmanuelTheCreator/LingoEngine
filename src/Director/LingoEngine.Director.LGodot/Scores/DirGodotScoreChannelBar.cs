@@ -5,14 +5,14 @@ namespace LingoEngine.Director.LGodot.Scores;
 
 internal partial class DirGodotScoreChannelBar : Control
 {
-    private const int ChannelHeight = 16;
-    private const int ChannelLabelWidth = 54;
-    private const int ChannelInfoWidth = ChannelHeight + ChannelLabelWidth;
+
+    DirGodotScoreGfxValues _gfxValues;
 
     private LingoMovie? _movie;
 
-    public DirGodotScoreChannelBar()
+    public DirGodotScoreChannelBar(DirGodotScoreGfxValues gfxValues)
     {
+        _gfxValues = gfxValues;
         ClipContents = true;
     }
 
@@ -31,13 +31,13 @@ internal partial class DirGodotScoreChannelBar : Control
 
         for (int c = 0; c < channelCount; c++)
         {
-            float y = c * ChannelHeight;
+            float y = c * _gfxValues.ChannelHeight;
             var ch = _movie.Channel(c);
             Color vis = ch.Visibility ? Colors.LightGray : new Color(0.2f, 0.2f, 0.2f);
 
-            DrawRect(new Rect2(0, y, ChannelInfoWidth, ChannelHeight), new Color("#f0f0f0"));
-            DrawRect(new Rect2(0, y, ChannelHeight, ChannelHeight), vis);
-            DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6),
+            DrawRect(new Rect2(0, y, _gfxValues.ChannelInfoWidth, _gfxValues.ChannelHeight), new Color("#f0f0f0"));
+            DrawRect(new Rect2(0, y, _gfxValues.ChannelHeight, _gfxValues.ChannelHeight), vis);
+            DrawString(font, new Vector2(_gfxValues.ChannelHeight + 2, y + font.GetAscent() - 6),
                 (c + 1).ToString(), HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
         }
     }
@@ -54,8 +54,8 @@ internal partial class DirGodotScoreChannelBar : Control
         if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {
             Vector2 pos = GetLocalMousePosition();
-            int channel = (int)(pos.Y / ChannelHeight);
-            if (channel >= 0 && channel < _movie.MaxSpriteChannelCount && pos.X >= 0 && pos.X < ChannelHeight)
+            int channel = (int)(pos.Y / _gfxValues.ChannelHeight);
+            if (channel >= 0 && channel < _movie.MaxSpriteChannelCount && pos.X >= 0 && pos.X < _gfxValues.ChannelHeight)
             {
                 var ch = _movie.Channel(channel);
                 ch.Visibility = !ch.Visibility;

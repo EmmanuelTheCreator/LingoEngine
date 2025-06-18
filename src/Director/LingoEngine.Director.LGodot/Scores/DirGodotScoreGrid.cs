@@ -8,10 +8,7 @@ namespace LingoEngine.Director.LGodot.Scores;
 internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 {
     private LingoMovie? _movie;
-    private const int ChannelHeight = 16;
-    private const int FrameWidth = 9;
-    private const int ChannelLabelWidth = 0;
-    private const int ChannelInfoWidth = ChannelHeight + ChannelLabelWidth;
+   
     private ILingoSprite? _dragSprite;
     private bool _dragBegin;
     private bool _dragEnd;
@@ -20,9 +17,10 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private readonly IDirectorEventMediator _mediator;
     private readonly PopupMenu _contextMenu = new();
     private DirGodotScoreSprite? _contextSprite;
-
-    public DirGodotScoreGrid(IDirectorEventMediator mediator)
+    private readonly DirGodotScoreGfxValues _gfxValues;
+    public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues)
     {
+        _gfxValues = gfxValues;
         _mediator = mediator;
         AddChild(_contextMenu);
         _contextMenu.IdPressed += OnContextMenuItem;
@@ -62,7 +60,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         {
             Vector2 pos = GetLocalMousePosition();
             int totalChannels = _movie.MaxSpriteChannelCount;
-            int channel = (int)(pos.Y / ChannelHeight);
+            int channel = (int)(pos.Y / _gfxValues.ChannelHeight);
             if (mb.ButtonIndex == MouseButton.Left)
             {
                 if (mb.Pressed)
@@ -74,8 +72,8 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                             int sc = sp.Sprite.SpriteNum - 1;
                             if (sc == channel)
                             {
-                                float sx = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
-                                float ex = ChannelInfoWidth + sp.Sprite.EndFrame * FrameWidth;
+                                float sx = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
+                                float ex = _gfxValues.LeftMargin + sp.Sprite.EndFrame * _gfxValues.FrameWidth;
                                 if (pos.X >= sx && pos.X <= ex)
                                 {
                                     if (Math.Abs(pos.X - sx) < 3)
@@ -124,7 +122,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         }
         else if (@event is InputEventMouseMotion motion && _dragSprite != null)
         {
-            float frame = (GetLocalMousePosition().X - ChannelInfoWidth) / FrameWidth;
+            float frame = (GetLocalMousePosition().X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth;
             int newFrame = Math.Max(1, Mathf.RoundToInt(frame) + 1);
             if (_dragBegin)
                 _dragSprite.BeginFrame = Math.Min(newFrame, _dragSprite.EndFrame);
@@ -153,8 +151,8 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             int sc = sp.Sprite.SpriteNum - 1;
             if (sc == channel)
             {
-                float sx = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
-                float ex = ChannelInfoWidth + sp.Sprite.EndFrame * FrameWidth;
+                float sx = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
+                float ex = _gfxValues.LeftMargin + sp.Sprite.EndFrame * _gfxValues.FrameWidth;
                 if (pos.X >= sx && pos.X <= ex)
                     return sp;
             }
@@ -181,23 +179,23 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
         const int ExtraMargin = 20;
 
-        Size = new Vector2(ChannelInfoWidth + frameCount * FrameWidth + ExtraMargin,
-            channelCount * ChannelHeight + ExtraMargin);
+        Size = new Vector2(_gfxValues.LeftMargin + frameCount * _gfxValues.FrameWidth + ExtraMargin,
+            channelCount * _gfxValues.ChannelHeight + ExtraMargin);
         CustomMinimumSize = Size;
 
         DrawRect(new Rect2(0, 0, Size.X, Size.Y), Colors.White);
 
         for (int f = 0; f < frameCount; f++)
         {
-            float x = ChannelInfoWidth + f * FrameWidth;
+            float x = _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
             if (f % 5 == 0)
-                DrawRect(new Rect2(x, 0, FrameWidth, channelCount * ChannelHeight), Colors.DarkGray);
+                DrawRect(new Rect2(x, 0, _gfxValues.FrameWidth, channelCount * _gfxValues.ChannelHeight), Colors.DarkGray);
         }
 
         for (int f = 0; f <= frameCount; f++)
         {
-            float x = ChannelInfoWidth + f * FrameWidth;
-            DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * ChannelHeight), Colors.DarkGray);
+            float x = _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
+            DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * _gfxValues.ChannelHeight), Colors.DarkGray);
         }
 
         // Draw sprites
@@ -205,15 +203,15 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         {
             int ch = sp.Sprite.SpriteNum - 1;
             if (ch < 0 || ch >= channelCount) continue;
-            float x = ChannelInfoWidth + (sp.Sprite.BeginFrame - 1) * FrameWidth;
-            float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * FrameWidth;
-            float y = ch * ChannelHeight;
-            sp.Draw(this, new Vector2(x, y), width, ChannelHeight, font);
+            float x = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
+            float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * _gfxValues.FrameWidth;
+            float y = ch * _gfxValues.ChannelHeight;
+            sp.Draw(this, new Vector2(x, y), width, _gfxValues.ChannelHeight, font);
         }
 
         int cur = _movie.CurrentFrame - 1;
         if (cur < 0) cur = 0;
-        float barX = ChannelInfoWidth + cur * FrameWidth + FrameWidth / 2f;
-        DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * ChannelHeight), Colors.Red, 2);
+        float barX = _gfxValues.LeftMargin + cur * _gfxValues.FrameWidth + _gfxValues.FrameWidth / 2f;
+        DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _gfxValues.ChannelHeight), Colors.Red, 2);
     }
 }
