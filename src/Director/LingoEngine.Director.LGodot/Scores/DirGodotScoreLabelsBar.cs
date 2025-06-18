@@ -13,13 +13,18 @@ internal partial class DirGodotScoreLabelsBar : Control
         _gfxValues = gfxValues;
     }
 
-    public void SetMovie(LingoMovie? movie) => _movie = movie;
+    public void SetMovie(LingoMovie? movie)
+    {
+        _movie = movie;
+        Size = new Vector2(_gfxValues.LeftMargin + (_movie?.FrameCount ?? 0) * _gfxValues.FrameWidth, 20);
+    }
+
     public override void _Draw()
     {
         if (_movie == null) return;
         int frameCount = _movie.FrameCount;
         var font = ThemeDB.FallbackFont;
-        Size = new Vector2(_gfxValues.LeftMargin + frameCount * _gfxValues.FrameWidth, 20);
+        Size = new Vector2(_gfxValues.LeftMargin + (frameCount) * _gfxValues.FrameWidth, 20);
         DrawRect(new Rect2(0, 0, Size.X, 20), Colors.White);
         foreach (var kv in _movie.GetScoreLabels())
         {

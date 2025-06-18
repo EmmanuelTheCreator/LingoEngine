@@ -20,6 +20,7 @@ internal partial class DirGodotFrameScriptsBar : Control
         if (_movie == null) return;
         foreach (var kv in _movie.GetFrameSpriteBehaviors())
             _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
+        Size = new Vector2(_gfxValues.LeftMargin + ((_movie?.FrameCount )?? 0) * _gfxValues.FrameWidth, 20);
     }
 
     public override void _Draw()

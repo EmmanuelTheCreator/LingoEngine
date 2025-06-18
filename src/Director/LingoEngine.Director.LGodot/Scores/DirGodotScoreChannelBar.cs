@@ -29,16 +29,16 @@ internal partial class DirGodotScoreChannelBar : Control
         var font = ThemeDB.FallbackFont;
         int channelCount = _movie.MaxSpriteChannelCount;
 
-        for (int c = 0; c < channelCount; c++)
+        for (int c = 1; c < channelCount+1; c++)
         {
-            float y = c * _gfxValues.ChannelHeight;
+            float y = (c-1) * _gfxValues.ChannelHeight;
             var ch = _movie.Channel(c);
             Color vis = ch.Visibility ? Colors.LightGray : new Color(0.2f, 0.2f, 0.2f);
 
             DrawRect(new Rect2(0, y, _gfxValues.ChannelInfoWidth, _gfxValues.ChannelHeight), new Color("#f0f0f0"));
-            DrawRect(new Rect2(0, y, _gfxValues.ChannelHeight, _gfxValues.ChannelHeight), vis);
+            DrawRect(new Rect2(2, y+2, _gfxValues.ChannelHeight-4, _gfxValues.ChannelHeight-4), vis);
             DrawString(font, new Vector2(_gfxValues.ChannelHeight + 2, y + font.GetAscent() - 6),
-                (c + 1).ToString(), HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
+                (c ).ToString(), HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
         }
     }
 
@@ -53,7 +53,7 @@ internal partial class DirGodotScoreChannelBar : Control
 
         if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {
-            Vector2 pos = GetLocalMousePosition();
+            Vector2 pos = GetLocalMousePosition()+ new Vector2(0, _gfxValues.ChannelHeight);
             int channel = (int)(pos.Y / _gfxValues.ChannelHeight);
             if (channel >= 0 && channel < _movie.MaxSpriteChannelCount && pos.X >= 0 && pos.X < _gfxValues.ChannelHeight)
             {
