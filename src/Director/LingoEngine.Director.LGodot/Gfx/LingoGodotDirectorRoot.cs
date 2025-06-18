@@ -10,6 +10,7 @@ using LingoEngine.LGodot;
 using LingoEngine.Director.LGodot.Casts;
 using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
+using LingoEngine.Director.LGodot;
 using System.Reflection.Emit;
 
 namespace LingoEngine.Director.LGodot.Gfx
@@ -34,6 +35,9 @@ namespace LingoEngine.Director.LGodot.Gfx
             // set up root
             var parent = (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode;
             parent.AddChild(_directorParent);
+
+            // Apply Director UI theme from IoC
+            _directorParent.Theme = serviceProvider.GetRequiredService<Theme>();
 
             // Setup stage
             var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
