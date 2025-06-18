@@ -12,6 +12,7 @@ using LingoEngine.Director.LGodot.Casts;
 using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Director.Core;
 using System.Reflection.Emit;
 
 namespace LingoEngine.Director.LGodot.Gfx
@@ -27,6 +28,8 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly DirGodotStageWindow _stageWindow;
         private readonly DirGodotMainMenu _dirGodotMainMenu;
         private readonly LingoPlayer _player;
+        private readonly DirGodotProjectSettingsWindow _projectSettingsWindow;
+        private readonly DirectorProjectManager _projectManager;
 
 
         public LingoGodotDirectorRoot(ILingoMovie lingoMovie, LingoPlayer player, IServiceProvider serviceProvider)
@@ -34,6 +37,8 @@ namespace LingoEngine.Director.LGodot.Gfx
             _mediator = serviceProvider.GetRequiredService<IDirectorEventMediator>();
             _lingoMovie = lingoMovie;
             _player = player;
+            _projectSettingsWindow = serviceProvider.GetRequiredService<DirGodotProjectSettingsWindow>();
+            _projectManager = serviceProvider.GetRequiredService<DirectorProjectManager>();
 
             // set up root
             var parent = (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode;
@@ -54,6 +59,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _inspector = new DirGodotObjectInspector(_mediator);
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
             _directorParent.AddChild(_dirGodotMainMenu);
+            _directorParent.AddChild(_projectSettingsWindow);
             _directorParent.AddChild(_castViewer);
             _directorParent.AddChild(_scoreWindow);
 

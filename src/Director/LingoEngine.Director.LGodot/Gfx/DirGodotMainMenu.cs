@@ -12,6 +12,7 @@ internal partial class DirGodotMainMenu : Control
 {
     private readonly HBoxContainer _menuBar = new HBoxContainer();
     private readonly MenuButton _fileMenu = new MenuButton() { Text = "File" };
+    private readonly MenuButton _editMenu = new MenuButton() { Text = "Edit" };
     private readonly MenuButton _WindowMenu = new MenuButton() { Text = "Window" };
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private IDirectorEventMediator _mediator;
@@ -54,10 +55,28 @@ internal partial class DirGodotMainMenu : Control
         // FileMenu
         _menuBar.AddChild(_fileMenu);
         var popupFile = _fileMenu.GetPopup();
+        popupFile.AddItem("Save", 2);
+        popupFile.AddItem("Load", 3);
         popupFile.AddItem("Quit", 1);
         popupFile.IdPressed += id =>
         {
-            if (id == 1) GetTree().Quit();
+            switch (id)
+            {
+                case 1:
+                    // TODO: check project for unsaved changes before quitting
+                    GetTree().Quit();
+                    break;
+                case 2: mediator.RaiseMenuSelected(MenuCodes.FileSave); break;
+                case 3: mediator.RaiseMenuSelected(MenuCodes.FileLoad); break;
+            }
+        };
+
+        _menuBar.AddChild(_editMenu);
+        var popupEdit = _editMenu.GetPopup();
+        popupEdit.AddItem("Project Settings", 20);
+        popupEdit.IdPressed += id =>
+        {
+            if (id == 20) mediator.RaiseMenuSelected(MenuCodes.ProjectSettingsWindow);
         };
 
         // Window Menu
@@ -103,7 +122,6 @@ internal partial class DirGodotMainMenu : Control
     {
         _playButton.Text = _lingoMovie != null && _lingoMovie.IsPlaying ? "Stop" : "Play";
     }
-
 
     public HBoxContainer IconBar => _iconBar;
 
