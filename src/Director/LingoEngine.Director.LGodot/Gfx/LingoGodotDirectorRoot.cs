@@ -13,9 +13,6 @@ using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core;
-using LingoEngine.Director.Core.Commands;
-using LingoEngine.Commands;
-using System.Reflection.Emit;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -41,21 +38,24 @@ namespace LingoEngine.Director.LGodot.Gfx
             _player = player;
             _projectSettingsWindow = serviceProvider.GetRequiredService<DirGodotProjectSettingsWindow>();
             _projectManager = serviceProvider.GetRequiredService<DirectorProjectManager>();
+           
 
             // set up root
             var parent = (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode;
             parent.AddChild(_directorParent);
 
             // Apply Director UI theme from IoC
-            _directorParent.Theme = serviceProvider.GetRequiredService<Theme>();
             var style = serviceProvider.GetRequiredService<DirectorStyle>();
+            _directorParent.Theme = style.Theme;
 
             // Setup stage
             var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
-            var commandManager = serviceProvider.GetRequiredService<ICommandManager>();
-            var scaleHandler = serviceProvider.GetRequiredService<SetStageScaleCommandHandler>();
-            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, commandManager, scaleHandler, player);
+            var commandManager = serviceProvider.GetRequiredService<ILingoCommandManager>();
+            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, commandManager, player);
 
+            // project settings
+            _projectSettingsWindow.Visible = false;
+            _projectSettingsWindow.Position = new Vector2(100, 100);
 
             _dirGodotMainMenu = new DirGodotMainMenu(_mediator, lingoMovie);
             _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
@@ -83,7 +83,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _directorParent.AddChild(_inspector);
             _stageWindow.Position = new Vector2(40, 25); 
             _castViewer.Position = new Vector2(830, 25);
-            _scoreWindow.Position = new Vector2(20, 540);
+            _scoreWindow.Position = new Vector2(20, 560);
             _inspector.Position = new Vector2(1330, 25);
 
         }

@@ -1,11 +1,11 @@
 using Godot;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Movies;
-using LingoEngine.Core;
 using System;
 using System.Reflection;
 using LingoEngine.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Members;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 

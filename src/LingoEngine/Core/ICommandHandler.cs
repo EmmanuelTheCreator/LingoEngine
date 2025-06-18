@@ -1,7 +1,9 @@
-namespace LingoEngine.Commands;
+using LingoEngine.Commands;
+
+namespace LingoEngine.Core;
 
 public interface ICommandHandler<TCommand> where TCommand : ILingoCommand
 {
     bool CanExecute(TCommand command) => true;
-    void Handle(TCommand command);
+    bool Handle(TCommand command);
 }

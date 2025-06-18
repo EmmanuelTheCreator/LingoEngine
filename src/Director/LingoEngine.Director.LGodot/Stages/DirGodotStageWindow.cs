@@ -1,14 +1,11 @@
 using Godot;
 using LingoEngine.Movies;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.LGodot.Movies;
 using LingoEngine.LGodot.Stages;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
-using LingoEngine.Director.Core.Commands;
-using LingoEngine.Commands;
 using LingoEngine.Core;
-using System.Linq;
+using LingoEngine.Commands;
 
 namespace LingoEngine.Director.LGodot.Movies;
 
@@ -18,8 +15,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private readonly LingoGodotStageContainer _stageContainer;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
-    private readonly ICommandManager _commandManager;
-    private readonly SetStageScaleCommandHandler _scaleHandler;
+    private readonly ILingoCommandManager _commandManager;
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private readonly HSlider _zoomSlider = new HSlider();
     private readonly OptionButton _zoomDropdown = new OptionButton();
@@ -37,14 +33,13 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private ILingoFrameworkStage? _stage;
     private LingoSprite? _selectedSprite;
 
-    public DirGodotStageWindow(Node root, LingoGodotStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ICommandManager commandManager, SetStageScaleCommandHandler scaleHandler, ILingoPlayer player)
+    public DirGodotStageWindow(Node root, LingoGodotStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player)
         : base("Stage")
     {
         _stageContainer = stageContainer;
         _mediator = directorEventMediator;
         _player = player;
         _commandManager = commandManager;
-        _scaleHandler = scaleHandler;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
         _mediator.Subscribe(this);
         
@@ -114,8 +109,8 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _zoomSlider.ValueChanged += value =>
         {
             float scale = (float)value;
-            _commandManager.Handle(new SetStageScaleCommand(scale));
             UpdateScaleDropdown(scale);
+            _stageContainer.SetScale(scale);
         };
         _iconBar.AddChild(_zoomSlider);
 
@@ -127,7 +122,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         {
             float scale = (50 + id * 10) / 100f;
             _zoomSlider.Value = scale;
-            _commandManager.Handle(new SetStageScaleCommand(scale));
+            _stageContainer.SetScale(scale);
         };
         _iconBar.AddChild(_zoomDropdown);
 
@@ -161,7 +156,6 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             }
             if (node is Node2D node2D)
                 node2D.Position = new Vector2(0, TitleBarHeight);
-            _scaleHandler.SetStage(stage);
         }
     }
 
@@ -218,7 +212,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     public void SpriteSelected(ILingoSprite sprite)
     {
         _selectedSprite = sprite as LingoSprite;
-        if (_movie != null && !_movie.IsPlaying)
+        if (_movie != null && !_movie.IsPlaying && _selectedSprite != null)
             UpdateSelectionBox(_selectedSprite);
     }
 

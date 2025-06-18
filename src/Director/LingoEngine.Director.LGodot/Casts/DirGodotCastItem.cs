@@ -1,6 +1,6 @@
 ﻿using Godot;
-using LingoEngine.Core;
 using LingoEngine.LGodot.Pictures;
+using LingoEngine.Members;
 using LingoEngine.Pictures;
 
 namespace LingoEngine.Director.LGodot.Casts

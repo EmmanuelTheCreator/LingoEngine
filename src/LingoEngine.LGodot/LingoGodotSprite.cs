@@ -1,5 +1,5 @@
 ﻿using Godot;
-using LingoEngine.Core;
+using LingoEngine.Casts;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Texts;
@@ -67,19 +67,11 @@ namespace LingoEngine.LGodot
         public float SetDesiredWidth { get => _DesiredWidth; set { _DesiredWidth = value; IsDirty = true; } }
         public float SetDesiredHeight { get => _DesiredHeight; set { _DesiredHeight = value; IsDirty = true; } }
 
-        public float Rotation { 
-            get => _Sprite2D.RotationDegrees; 
-            set => _Sprite2D.RotationDegrees = value; }
-        public float SkewX
-        {
-            get => _Sprite2D.Skew;
-            set { _Sprite2D.Skew = value; }
+        public float Rotation {
+            get => Mathf.RadToDeg(_Sprite2D.Rotation);
+            set => _Sprite2D.Rotation = Mathf.DegToRad(value);
         }
-        //public float SkewY
-        //{
-        //    get => _Sprite2D.Skew.Y;
-        //    set { var s = _Sprite2D.Skew; s.Y = value; _Sprite2D.Skew = s; }
-        //}
+        public float Skew { get; set; }
 
 
 #pragma warning disable CS8618

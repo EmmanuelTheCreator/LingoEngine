@@ -10,9 +10,10 @@ internal sealed class RewindMovieCommandHandler : ICommandHandler<RewindMovieCom
 
     public bool CanExecute(RewindMovieCommand command) => _player.ActiveMovie is LingoMovie;
 
-    public void Handle(RewindMovieCommand command)
+    public bool Handle(RewindMovieCommand command)
     {
         if (_player.ActiveMovie is LingoMovie movie)
             movie.GoTo(1);
+        return true;
     }
 }

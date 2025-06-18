@@ -11,9 +11,9 @@ internal sealed class StepFrameCommandHandler : ICommandHandler<StepFrameCommand
 
     public bool CanExecute(StepFrameCommand command) => _player.ActiveMovie is LingoMovie;
 
-    public void Handle(StepFrameCommand command)
+    public bool Handle(StepFrameCommand command)
     {
-        if (_player.ActiveMovie is not LingoMovie movie) return;
+        if (_player.ActiveMovie is not LingoMovie movie) return true;
         int offset = command.Offset;
         if (movie.IsPlaying)
         {
@@ -29,5 +29,6 @@ internal sealed class StepFrameCommandHandler : ICommandHandler<StepFrameCommand
             var target = Math.Clamp(movie.Frame + offset, 1, movie.FrameCount);
             movie.GoToAndStop(target);
         }
+        return true;
     }
 }

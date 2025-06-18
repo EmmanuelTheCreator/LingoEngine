@@ -11,6 +11,11 @@ public class ProjectSettings
         !string.IsNullOrWhiteSpace(ProjectName) &&
         !string.IsNullOrWhiteSpace(ProjectFolder);
 
+    public ProjectSettings()
+    {
+        
+    }
+
     public string GetMoviePath(string movieName)
     {
         var file = movieName + ".json";

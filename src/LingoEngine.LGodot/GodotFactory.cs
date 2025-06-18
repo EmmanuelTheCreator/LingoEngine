@@ -15,6 +15,8 @@ using LingoEngine.Texts;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Pictures;
 using LingoEngine.LGodot.Stages;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine.LGodot
 {

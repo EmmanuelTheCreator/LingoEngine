@@ -10,7 +10,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private LingoMovie? _movie;
     private const int ChannelHeight = 16;
     private const int FrameWidth = 9;
-    private const int ChannelLabelWidth = 54;
+    private const int ChannelLabelWidth = 0;
     private const int ChannelInfoWidth = ChannelHeight + ChannelLabelWidth;
     private ILingoSprite? _dragSprite;
     private bool _dragBegin;
@@ -69,14 +69,6 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                 {
                     if (channel >= 0 && channel < totalChannels)
                     {
-                        if (channel < _movie.MaxSpriteChannelCount && pos.X >= 0 && pos.X < ChannelHeight)
-                        {
-                            var ch = _movie.Channel(channel);
-                            ch.Visibility = !ch.Visibility;
-                            QueueRedraw();
-                            return;
-                        }
-
                         foreach (var sp in _sprites)
                         {
                             int sc = sp.Sprite.SpriteNum - 1;
@@ -206,18 +198,6 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         {
             float x = ChannelInfoWidth + f * FrameWidth;
             DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * ChannelHeight), Colors.DarkGray);
-        }
-
-        for (int c = 0; c < channelCount; c++)
-        {
-            float y = c * ChannelHeight;
-            DrawLine(new Vector2(0, y), new Vector2(ChannelInfoWidth + frameCount * FrameWidth, y), Colors.DarkGray);
-            var ch = _movie.Channel(c);
-            Color vis = ch.Visibility ? Colors.LightGray : new Color(0.2f, 0.2f, 0.2f);
-            DrawRect(new Rect2(0, y, ChannelInfoWidth, ChannelHeight), new Color("#f0f0f0"));
-            DrawRect(new Rect2(0, y, ChannelHeight, ChannelHeight), vis);
-            DrawString(font, new Vector2(ChannelHeight + 2, y + font.GetAscent() - 6), (c + 1).ToString(),
-                HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
         }
 
         // Draw sprites
