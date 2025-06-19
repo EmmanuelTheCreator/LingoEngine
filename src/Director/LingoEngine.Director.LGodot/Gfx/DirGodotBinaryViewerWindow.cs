@@ -1,10 +1,11 @@
-using Godot;
+﻿using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.TestData;
 using LingoEngine.Director.LGodot.Gfx;
+using System.Diagnostics;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -12,20 +13,42 @@ namespace LingoEngine.Director.LGodot.Gfx
     {
         private readonly IDirectorEventMediator _mediator;
         private readonly LineEdit _pathEdit = new LineEdit();
-        private readonly VBoxContainer _hexRows = new VBoxContainer();
-        private readonly VBoxContainer _descTable = new VBoxContainer();
+        //private VBoxContainer _hexRows = new VBoxContainer();
+        private VBoxContainer _descTable = new VBoxContainer();
         private readonly ScrollContainer _scroll = new ScrollContainer();
         private readonly Dictionary<int, string> _knownOffsets = new();
         private readonly Dictionary<int, Color> _colors = new();
         private readonly HashSet<int> _styleBlocks = new();
         private XmedFileHints? _currentHints;
+        private SubViewport _viewport;
+        private TextureRect _textureRect;
 
         public DirGodotBinaryViewerWindow(IDirectorEventMediator mediator) : base("Binary Viewer")
         {
             _mediator = mediator;
             _mediator.SubscribeToMenu(DirectorMenuCodes.BinaryViewerWindow, () => Visible = !Visible);
-            Size = new Vector2(1600, 600);
+            Size = new Vector2(1400, 600);
             CustomMinimumSize = Size;
+
+            //_viewport = new SubViewport();
+            //_viewport.SetDisable3D(true);
+            //_viewport.TransparentBg = false;
+            //_viewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+            //_viewport.SetSize(new Vector2I(1400, 4000));
+
+            _viewport = new SubViewport();
+            _viewport.SetDisable3D(true);
+            _viewport.TransparentBg = false;
+            _viewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+            AddChild(_viewport);
+
+            _textureRect = new TextureRect
+            {
+                Texture = _viewport.GetTexture(),
+                CustomMinimumSize = new Vector2(1200, 4000) // placeholder
+            };
+            _scroll.AddChild(_textureRect);
+
 
             var root = new VBoxContainer();
             root.Position = new Vector2(0, TitleBarHeight);
@@ -52,12 +75,24 @@ namespace LingoEngine.Director.LGodot.Gfx
             root.AddChild(topBar);
 
             var body = new HBoxContainer();
-            _scroll.AddChild(_hexRows);
+            
             body.AddChild(_scroll);
             body.AddChild(_descTable);
             root.AddChild(body);
-        }
+            _scroll.SizeFlagsVertical = Control.SizeFlags.Expand;
+            _scroll.SizeFlagsHorizontal = Control.SizeFlags.Expand;
+            _scroll.CustomMinimumSize = new Vector2(1200, 400);
+            //_hexRows.SizeFlagsVertical = Control.SizeFlags.Expand;
+            //_hexRows.CustomMinimumSize = new Vector2(800, 400);
+            //_hexRows.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = Colors.Green });
 
+            _textureRect.QueueRedraw();
+            _scroll.QueueRedraw();
+        }
+        public override void _Ready()
+        {
+            QueueRedraw(); // force _Draw() to run
+        }
         private void LoadFromPath(string path)
         {
             if (File.Exists(path))
@@ -69,33 +104,56 @@ namespace LingoEngine.Director.LGodot.Gfx
         private void LoadBytes(byte[] data, XmedFileHints? hints = null)
         {
             _currentHints = hints;
-            _hexRows.QueueFree();
-            _hexRows.Clear();
-            _descTable.QueueFree();
-            _descTable.Clear();
+            _knownOffsets.Clear();
+            _colors.Clear();
+            _styleBlocks.Clear();
+            ClearChildren(_descTable);
 
             var interp = XmedInterpreter.Interpret(data, hints?.Offsets, hints?.StyleBlocks);
-            _knownOffsets.Clear();
-            _styleBlocks.Clear();
             foreach (var kv in interp.Offsets)
                 _knownOffsets[kv.Key] = kv.Value;
             foreach (var b in interp.StyleBlocks)
                 _styleBlocks.Add(b);
 
-            RenderHex(data);
+            // Cleanup previous draw content from viewport
+            foreach (var child in _viewport.GetChildren())
+                _viewport.RemoveChild((Node)child);
+
+            // Setup new drawing control
+            var drawControl = new HexDrawControl(data, _knownOffsets, _colors, _styleBlocks);
+
+            // Determine render size (based on byte count)
+            var rowHeight = 24;
+            var totalRows = (int)Math.Ceiling(data.Length / 32.0);
+            var contentSize = new Vector2(1400, totalRows * rowHeight);
+
+            drawControl.CustomMinimumSize = contentSize;
+            drawControl.Size = contentSize;
+            drawControl.CallDeferred("queue_redraw");
+
+            _viewport.SetSize(new Vector2I((int)contentSize.X, (int)contentSize.Y));
+            _viewport.AddChild(drawControl);
+
+            _textureRect.SetTexture(_viewport.GetTexture());
+            _textureRect.SetStretchMode(TextureRect.StretchModeEnum.Scale); // fallback: use "Stretch" or "Keep"
+            _textureRect.CustomMinimumSize = contentSize;
+
             RenderDescriptions();
         }
+
+
+
 
         private void RenderHex(byte[] data)
         {
             int colorIndex = 0;
-            for (int i = 0; i < data.Length; i += 16)
+            for (int i = 0; i < data.Length; i += 32)
             {
                 var row = new HBoxContainer();
                 var hexPart = new HBoxContainer();
                 var asciiPart = new Label();
                 string ascii = string.Empty;
-                for (int j = 0; j < 16 && i + j < data.Length; j++)
+                for (int j = 0; j < 32 && i + j < data.Length; j++)
                 {
                     if (j == 8)
                         hexPart.AddChild(new Control { CustomMinimumSize = new Vector2(10,1) });
@@ -116,7 +174,10 @@ namespace LingoEngine.Director.LGodot.Gfx
                         var style = new StyleBoxFlat { BgColor = c };
                         if (_styleBlocks.Contains(i + j))
                         {
-                            style.BorderWidthAll = 1;
+                            style.BorderWidthLeft = 1;
+                            style.BorderWidthRight = 1;
+                            style.BorderWidthTop = 1;
+                            style.BorderWidthBottom = 1;
                             style.BorderColor = Colors.Black;
                         }
                         lbl.AddThemeStyleboxOverride("panel", style);
@@ -134,8 +195,11 @@ namespace LingoEngine.Director.LGodot.Gfx
                 row.AddChild(hexPart);
                 row.AddChild(new Control { CustomMinimumSize = new Vector2(20,1) });
                 row.AddChild(asciiPart);
-                _hexRows.AddChild(row);
+                //_hexRows.AddChild(row);
+                //Console.WriteLine($"RenderHex: added 1 rows");
             }
+            //Console.WriteLine($"_hexRows.ChildCount = {_hexRows.GetChildCount()}");
+
         }
 
         private void RenderDescriptions()
@@ -154,7 +218,10 @@ namespace LingoEngine.Director.LGodot.Gfx
                 var style = new StyleBoxFlat { BgColor = c };
                 if (_styleBlocks.Contains(kv.Key))
                 {
-                    style.BorderWidthAll = 1;
+                    style.BorderWidthLeft = 1;
+                    style.BorderWidthRight = 1;
+                    style.BorderWidthTop = 1;
+                    style.BorderWidthBottom = 1;
                     style.BorderColor = Colors.Black;
                 }
                 offsetLabel.AddThemeStyleboxOverride("panel", style);
@@ -167,5 +234,14 @@ namespace LingoEngine.Director.LGodot.Gfx
         }
 
         public void MenuItemSelected(string code) {}
+
+        private void ClearChildren(Container container)
+        {
+            foreach (var child in container.GetChildren().ToArray())
+            {
+                if (child is Node node)
+                    node.QueueFree();
+            }
+        }
     }
 }

@@ -29,7 +29,7 @@ internal partial class DirGodotScoreChannelBar : Control
         var font = ThemeDB.FallbackFont;
         int channelCount = _movie.MaxSpriteChannelCount;
 
-        for (int c = 1; c < channelCount+1; c++)
+        for (int c = 1; c < channelCount; c++)
         {
             float y = (c-1) * _gfxValues.ChannelHeight;
             var ch = _movie.Channel(c);
