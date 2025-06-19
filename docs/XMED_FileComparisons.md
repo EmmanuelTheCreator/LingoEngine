@@ -1,3 +1,7 @@
+# XMED File Comparisons
+
+This file lists the byte differences between sample casts. For a summary of known offsets see [XMED_Offsets.md](XMED_Offsets.md).
+
 # Text CST Byte Differences
 
 Compared with `Text_Hallo.cst`. Showing first 5 differing bytes and length difference if any.
@@ -72,37 +76,6 @@ Compared with `Text_Hallo.cst`. Showing first 5 differing bytes and length diffe
 "Arcade *" for the first run, then "Trajan Pro" for the middle letters, and
 finally "Arcade *" again.
 
-# CST Text Blocks
-
-| File | Marker | Text | Before(hex) | After(hex) |
-|------|--------|------|------------|-----------|
-| Text_Hallo.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo2.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_2line_linespace_Default.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_NoBold.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_NoBold.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_editable_true.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_editable_true.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_font_Vivaldi.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_font_Vivaldi.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_fontsize14.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_fontsize14.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_italic.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_italic.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_letterSpace_6.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_letterSpace_6.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_multiLine.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_changed_color.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_text_transform_all_on.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_margin_spacing_FirstInd.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_multifont.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_strikeout.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_subscript.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_superscript.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Hallo_with_name.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Multi_Line_Multi_Style.cst | 5, | This text is red, Arial,12px, centered\rThe text is yellow, Tahoma, 9px, left aligned, bold, italic, underline\rThe text is green, font Terminal, 18px, left aligned, with spacing of 39\rThe text is orange, Tahoma, 9px, left aligned, bold, italic, underline\rThis text is red, Arial,12px, centered again | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Single_Line_Multi_Style.cst | 5, | This text is red, Arial,12px,  The text is yellow, Tahoma, 9px,  bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again | 3030303030303030 | 30303034303030303030303930303030 |
-| Text_Wider_Width4.cst | 5, | Hallo | 3030303030303030 | 30303034303030303030303930303030 |
 # Differences: Text_Hallo_subscript.cst vs Text_Hallo.cst
 
 The table below lists the first few bytes that differ when comparing `Text_Hallo_subscript.cst` against `Text_Hallo.cst`.
@@ -277,8 +250,12 @@ files do not include these names.
 | File | Offset | Name |
 |------|------:|------|
 | Text_Hallo_with_name.cst | 0x0EF7 | MyText |
-| Field_Hallo2.cst | 0x0EF7 | My field |
-
+| 0x0018 | — | Width value (twips) | `2C 00 00 00` |
+| 0x001C | +0x04 | Style flags (bold/italic/underline) | `0x2C` |
+| 0x001D | +0x01 | Alignment/tab/wrap flags | `0x00` |
+| 0x003C | +0x1F | Line spacing value | `0F 00 00 00` |
+| 0x04DE | +0x04 | Right margin value | `00 00 00 3F` |
+| 0x04E2 | +0x04 | First indent value | `00 00 00 3F` |
 ## Color change
 
 `Text_Hallo_changed_color.cst` uses foreground color `CCFF66` rather than the
@@ -426,6 +403,11 @@ length of the associated text line.
 
 | Offset | F1 | F2 | F3 | F4 | F5 | Notes |
 |------:|----:|----:|----:|----:|----:|------|
+Single-style casts such as `Text_Hallo.cst` use the same descriptor layout. They
+contain only one style entry, matching ID `0008` from the table above, which
+defines an Arial 12&nbsp;px font with centered alignment. This shows that the
+multi-style table structure also applies to the simpler Hallo files.
+
 | 0x1334 | 0004 | 0000 | 0029 | 0000 | 0008 | line 1: red, Arial, centered |
 | 0x1371 | 0005 | 0000 | 001F | 0000 | 0006 | line 2: yellow, Tahoma |
 | 0x13A4 | 0006 | 0000 | 0273 | 0000 | 000B | line 3: green, Terminal |
