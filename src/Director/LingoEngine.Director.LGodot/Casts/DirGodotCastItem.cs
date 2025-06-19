@@ -78,6 +78,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private bool wasClicked;
         public override void _Input(InputEvent @event)
         {
+            base._Input(@event);
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.ButtonIndex == MouseButton.Left)
             {
                 if (mouseEvent.DoubleClick)
