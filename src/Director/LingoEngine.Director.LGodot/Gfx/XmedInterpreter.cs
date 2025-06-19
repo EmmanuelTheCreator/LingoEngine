@@ -68,7 +68,11 @@ namespace LingoEngine.Director.LGodot.Gfx
             AddOffset(0x4DA, "left margin");
             AddOffset(0x4DE, "right margin");
             AddOffset(0x4E2, "first indent");
+            AddOffset(0x0622, "color table");
+            AddOffset(0x0983, "font name");
             AddOffset(0x0CAE, "spacing before");
+            AddOffset(0x0EF7, "member name");
+            AddOffset(0x1354, "color table");
             AddOffset(0x1970, "spacing after");
 
             for (int i = 0; i <= data.Length - 4; i++)
@@ -76,6 +80,25 @@ namespace LingoEngine.Director.LGodot.Gfx
                 if (data[i] == 0x58 && data[i + 1] == 0x46 && data[i + 2] == 0x49 && data[i + 3] == 0x52)
                 {
                     AddOffset(i, "XFIR");
+                }
+            }
+
+            // Look for color table ASCII header
+            var colorHeader = System.Text.Encoding.ASCII.GetBytes("FFFF0000000600040001");
+            for (int i = 0; i <= data.Length - colorHeader.Length; i++)
+            {
+                bool match = true;
+                for (int j = 0; j < colorHeader.Length; j++)
+                {
+                    if (data[i + j] != colorHeader[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match)
+                {
+                    AddOffset(i, "color table");
                 }
             }
 
