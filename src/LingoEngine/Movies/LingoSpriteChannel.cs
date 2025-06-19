@@ -1,4 +1,5 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Casts;
+using LingoEngine.Members;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.Movies
@@ -120,6 +121,7 @@ namespace LingoEngine.Movies
         public LingoCast? Cast => _sprite.Cast;
         public LingoColor Color { get => _sprite.Color; set => _sprite.Color = value; }
         public bool Editable { get => _sprite.Editable; set => _sprite.Editable = value; }
+        public bool Lock { get => _sprite.Lock; set => _sprite.Lock = value; }
         public int EndFrame { get => _sprite.EndFrame; set => _sprite.EndFrame = value; }
         public LingoColor ForeColor { get => _sprite.ForeColor; set => _sprite.ForeColor = value; }
         public bool Hilite { get => _sprite.Hilite; set => _sprite.Hilite = value; }

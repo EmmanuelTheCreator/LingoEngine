@@ -78,6 +78,8 @@ namespace LingoEngine
             player.SetActionOnNewMovie(ActionOnNewMovie);
             if (_FrameworkFactorySetup != null)
                 _FrameworkFactorySetup(serviceProvider.GetRequiredService<ILingoFrameworkFactory>());
+            serviceProvider.GetRequiredService<ILingoCommandManager>()
+                .DiscoverAndSubscribe(serviceProvider);
             return player;
         }
 

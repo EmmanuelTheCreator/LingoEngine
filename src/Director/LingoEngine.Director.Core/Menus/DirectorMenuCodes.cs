@@ -12,5 +12,6 @@
         public const string TextEditWindow = "TextEditWindow";
         public const string FileSave = "FileSave";
         public const string FileLoad = "FileLoad";
+        public const string BinaryViewerWindow = "BinaryViewerWindow";
     }
 }

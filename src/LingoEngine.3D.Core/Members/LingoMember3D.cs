@@ -1,4 +1,5 @@
-using LingoEngine.Core;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Primitives;
 

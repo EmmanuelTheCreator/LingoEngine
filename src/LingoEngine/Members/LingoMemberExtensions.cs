@@ -1,6 +1,6 @@
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Core;
+namespace LingoEngine.Members;
 
 public static class LingoMemberExtensions
 {

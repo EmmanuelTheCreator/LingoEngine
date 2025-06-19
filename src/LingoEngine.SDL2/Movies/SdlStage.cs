@@ -12,6 +12,7 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
     private LingoStage _stage = null!;
     private readonly HashSet<SdlMovie> _movies = new();
     private SdlMovie? _activeMovie;
+    private float _scale = 1.0f;
 
     public SdlStage(SdlRootContext rootContext, LingoClock clock)
     {
@@ -42,6 +43,12 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
         var movie = lingoMovie.Framework<SdlMovie>();
         _activeMovie = movie;
         movie.Show();
+    }
+
+    float ILingoFrameworkStage.Scale
+    {
+        get => _scale;
+        set => _scale = value;
     }
 
     public void Dispose() { _movies.Clear(); }

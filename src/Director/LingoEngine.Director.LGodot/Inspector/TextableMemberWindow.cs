@@ -3,6 +3,7 @@ using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Texts;
 using LingoEngine.Core;
+using LingoEngine.Members;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 

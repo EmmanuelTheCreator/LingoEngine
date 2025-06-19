@@ -1,5 +1,4 @@
-﻿
-namespace LingoEngine.Core
+﻿namespace LingoEngine.Members
 {
     public interface ILingoMembersContainer
     {
@@ -33,7 +32,7 @@ namespace LingoEngine.Core
         /// </summary>
         internal IReadOnlyCollection<LingoMember> All => _members.Values.ToArray();
         public int Count => _members.Count;
-        internal LingoMembersContainer(bool containerForAll,Dictionary<string, LingoMember>? membersByName = null)
+        internal LingoMembersContainer(bool containerForAll, Dictionary<string, LingoMember>? membersByName = null)
         {
             this.containerForAll = containerForAll;
             _membersByName = membersByName ?? new();
@@ -41,7 +40,7 @@ namespace LingoEngine.Core
         internal void Add(LingoMember member)
         {
             if (containerForAll)
-                _members.Add(member.Number,member);
+                _members.Add(member.Number, member);
             else
             {
                 if (member.NumberInCast == 0)
@@ -73,11 +72,11 @@ namespace LingoEngine.Core
         public ILingoMember? this[int number] => _members.TryGetValue(number, out var member) ? member : null;
         public ILingoMember? this[string name] => _membersByName.TryGetValue(name, out var theValue) ? theValue : null;
 
-        public T? Member<T>(int number) where T : class, ILingoMember => _members.TryGetValue(number, out var member) ? member as T: null;
+        public T? Member<T>(int number) where T : class, ILingoMember => _members.TryGetValue(number, out var member) ? member as T : null;
         public T? Member<T>(string name) where T : class, ILingoMember => _membersByName.TryGetValue(name, out var theValue) ? theValue as T : null;
-        public int GetNextNumber() => _members.Keys.Any()? _members.Keys.Max() + 1 : 1;
+        public int GetNextNumber() => _members.Keys.Any() ? _members.Keys.Max() + 1 : 1;
 
-        private int _lastHighestNumber =1;
+        private int _lastHighestNumber = 1;
         internal int FindEmpty()
         {
             var newNumber = 1;
