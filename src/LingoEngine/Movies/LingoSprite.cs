@@ -20,6 +20,8 @@ namespace LingoEngine.Movies
         private readonly List<LingoSpriteBehavior> _behaviors = new();
         private readonly List<object> _spriteActors = new();
 
+        public IReadOnlyList<LingoSpriteBehavior> Behaviors => _behaviors;
+
         private ILingoFrameworkSprite _frameworkSprite;
         private bool isMouseInside = false;
         private bool isDragging = false;
