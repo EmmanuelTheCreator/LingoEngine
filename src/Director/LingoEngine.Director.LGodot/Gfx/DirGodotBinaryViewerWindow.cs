@@ -14,11 +14,14 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly IDirectorEventMediator _mediator;
         private readonly LineEdit _pathEdit = new LineEdit();
         //private VBoxContainer _hexRows = new VBoxContainer();
-        private VBoxContainer _descTable = new VBoxContainer();
+        private readonly VBoxContainer _descTable = new VBoxContainer();
         private readonly ScrollContainer _scroll = new ScrollContainer();
+        private readonly ScrollContainer _descScroll = new ScrollContainer();
         private readonly Dictionary<int, string> _knownOffsets = new();
-        private readonly Dictionary<int, Color> _colors = new();
-        private readonly HashSet<int> _styleBlocks = new();
+        private readonly Dictionary<int, int> _blockIndexByOffset = new();
+        private readonly Dictionary<int, Color> _blockColors = new();
+        private readonly HashSet<int> _styleOffsets = new();
+        private readonly List<XmedBlock> _blocks = new();
         private XmedFileHints? _currentHints;
         private SubViewport _viewport;
         private TextureRect _textureRect;
@@ -75,13 +78,16 @@ namespace LingoEngine.Director.LGodot.Gfx
             root.AddChild(topBar);
 
             var body = new HBoxContainer();
-            
+
             body.AddChild(_scroll);
-            body.AddChild(_descTable);
+            _descScroll.AddChild(_descTable);
+            body.AddChild(_descScroll);
             root.AddChild(body);
             _scroll.SizeFlagsVertical = Control.SizeFlags.Expand;
             _scroll.SizeFlagsHorizontal = Control.SizeFlags.Expand;
             _scroll.CustomMinimumSize = new Vector2(1200, 400);
+            _descScroll.SizeFlagsVertical = Control.SizeFlags.Expand;
+            _descScroll.CustomMinimumSize = new Vector2(200, 400);
             //_hexRows.SizeFlagsVertical = Control.SizeFlags.Expand;
             //_hexRows.CustomMinimumSize = new Vector2(800, 400);
             //_hexRows.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = Colors.Green });
@@ -103,24 +109,53 @@ namespace LingoEngine.Director.LGodot.Gfx
 
         private void LoadBytes(byte[] data, XmedFileHints? hints = null)
         {
+            int start = hints?.StartOffset ?? XmedInterpreter.FindXmedStart(data);
+            if (start > 0 && start < data.Length)
+                data = data[start..];
+
             _currentHints = hints;
             _knownOffsets.Clear();
-            _colors.Clear();
-            _styleBlocks.Clear();
+            _blockIndexByOffset.Clear();
+            _blockColors.Clear();
+            _styleOffsets.Clear();
+            _blocks.Clear();
             ClearChildren(_descTable);
 
-            var interp = XmedInterpreter.Interpret(data, hints?.Offsets, hints?.StyleBlocks);
-            foreach (var kv in interp.Offsets)
-                _knownOffsets[kv.Key] = kv.Value;
-            foreach (var b in interp.StyleBlocks)
-                _styleBlocks.Add(b);
+            var interp = XmedInterpreter.Interpret(data, hints?.Blocks);
+            var rawBlocks = new List<XmedBlock>(interp.Blocks);
+            rawBlocks.Sort((a, b) => a.Start.CompareTo(b.Start));
+            _blocks.AddRange(rawBlocks);
+
+            int colorIndex = 0;
+            for (int idx = 0; idx < _blocks.Count; idx++)
+            {
+                var block = _blocks[idx];
+                var hue = (colorIndex * 0.1f) % 1f;
+                var color = Color.FromHsv(hue, 0.3f, 1f);
+                _blockColors[idx] = color;
+                for (int i = 0; i < block.Length; i++)
+                {
+                    int off = block.Start + i;
+                    _blockIndexByOffset[off] = idx;
+                    _knownOffsets[off] = block.Description;
+                    if (block.IsStyle)
+                        _styleOffsets.Add(off);
+                }
+                colorIndex++;
+            }
 
             // Cleanup previous draw content from viewport
             foreach (var child in _viewport.GetChildren())
-                _viewport.RemoveChild((Node)child);
+            {
+                if (child is Node node)
+                {
+                    _viewport.RemoveChild(node);
+                    node.QueueFree();
+                }
+            }
 
             // Setup new drawing control
-            var drawControl = new HexDrawControl(data, _knownOffsets, _colors, _styleBlocks);
+            var drawControl = new HexDrawControl(data, _blocks, _blockColors, _blockIndexByOffset, _styleOffsets);
 
             // Determine render size (based on byte count)
             var rowHeight = 24;
@@ -146,7 +181,6 @@ namespace LingoEngine.Director.LGodot.Gfx
 
         private void RenderHex(byte[] data)
         {
-            int colorIndex = 0;
             for (int i = 0; i < data.Length; i += 32)
             {
                 var row = new HBoxContainer();
@@ -162,17 +196,11 @@ namespace LingoEngine.Director.LGodot.Gfx
                     var lbl = new Label { Text = $"{b:X2}" };
                     lbl.LabelSettings = new LabelSettings { FontSize = 14 };
                     string tag = "";
-                    if (_knownOffsets.TryGetValue(i + j, out var desc))
+                    if (_blockIndexByOffset.TryGetValue(i + j, out var idx))
                     {
-                        if (!_colors.ContainsKey(i + j))
-                        {
-                            var hue = (colorIndex * 0.1f) % 1f;
-                            _colors[i + j] = Color.FromHsv(hue, 0.3f, 1f);
-                            colorIndex++;
-                        }
-                        var c = _colors[i + j];
+                        var c = _blockColors.TryGetValue(idx, out var col) ? col : Colors.LightGray;
                         var style = new StyleBoxFlat { BgColor = c };
-                        if (_styleBlocks.Contains(i + j))
+                        if (_styleOffsets.Contains(i + j))
                         {
                             style.BorderWidthLeft = 1;
                             style.BorderWidthRight = 1;
@@ -181,7 +209,9 @@ namespace LingoEngine.Director.LGodot.Gfx
                             style.BorderColor = Colors.Black;
                         }
                         lbl.AddThemeStyleboxOverride("panel", style);
-                        tag = desc.Length > 6 ? desc.Substring(0,6) : desc;
+                        var block = _blocks[idx];
+                        if (i + j == block.Start)
+                            tag = block.Description.Length > 6 ? block.Description.Substring(0,6) : block.Description;
                     }
                     v.AddChild(lbl);
                     var tagLbl = new Label { Text = tag };
@@ -205,18 +235,19 @@ namespace LingoEngine.Director.LGodot.Gfx
         private void RenderDescriptions()
         {
             int idx = 0;
-            foreach (var kv in _knownOffsets)
+            foreach (var block in _blocks)
             {
                 var h = new HBoxContainer();
-                var offsetLabel = new Label { Text = $"0x{kv.Key:X4}" };
-                var descLabel = new Label { Text = kv.Value };
-                if (!_colors.TryGetValue(kv.Key, out var c))
-                {
-                    c = Color.FromHsv((idx * 0.1f) % 1f, 0.3f, 1f);
-                    _colors[kv.Key] = c;
-                }
+                var range = block.Length == 1
+                    ? $"0x{block.Start:X4}"
+                    : $"0x{block.Start:X4}-0x{block.Start + block.Length - 1:X4}";
+                var offsetLabel = new Label { Text = range };
+                var descLabel = new Label { Text = block.Description };
+                var detailLabel = new Label { Text = block.Detail };
+
+                var c = _blockColors.TryGetValue(idx, out var col) ? col : Color.FromHsv((idx * 0.1f) % 1f, 0.3f, 1f);
                 var style = new StyleBoxFlat { BgColor = c };
-                if (_styleBlocks.Contains(kv.Key))
+                if (block.IsStyle)
                 {
                     style.BorderWidthLeft = 1;
                     style.BorderWidthRight = 1;
@@ -226,8 +257,11 @@ namespace LingoEngine.Director.LGodot.Gfx
                 }
                 offsetLabel.AddThemeStyleboxOverride("panel", style);
                 descLabel.AddThemeStyleboxOverride("panel", style);
+                detailLabel.AddThemeStyleboxOverride("panel", style);
                 h.AddChild(offsetLabel);
                 h.AddChild(descLabel);
+                if (block.Detail != block.Description)
+                    h.AddChild(detailLabel);
                 _descTable.AddChild(h);
                 idx++;
             }
