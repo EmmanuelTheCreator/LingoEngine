@@ -3,6 +3,7 @@ using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Members;
+using LingoEngine.Core;
 using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Casts
@@ -14,10 +15,11 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly List<DirGodotCastItem> _elements = new List<DirGodotCastItem>();
         private readonly Action<DirGodotCastItem> _onSelectItem;
         private readonly DirectorStyle _style;
+        private readonly ILingoCommandManager _commandManager;
 
         public Node Node => _ScrollContainer;
 
-        public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorStyle style)
+        public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorStyle style, ILingoCommandManager commandManager)
         {
             _ScrollContainer = new ScrollContainer();
             _ScrollContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
@@ -29,6 +31,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _ScrollContainer.AddChild(_elementsContainer);
             _onSelectItem = onSelect;
             _style = style;
+            _commandManager = commandManager;
         }
 
         public void Show(ILingoCast cast)
@@ -37,7 +40,7 @@ namespace LingoEngine.Director.LGodot.Casts
             var i = 0;
             foreach (var castItem in cast.GetAll())
             {
-                var dirCastItem = new DirGodotCastItem(castItem, i+1, _onSelectItem, _style.SelectedColor);
+                var dirCastItem = new DirGodotCastItem(castItem, i+1, _onSelectItem, _style.SelectedColor, _commandManager);
                 dirCastItem.Init();
                 _elements.Add(dirCastItem);
                 _elementsContainer.AddChild(dirCastItem);
