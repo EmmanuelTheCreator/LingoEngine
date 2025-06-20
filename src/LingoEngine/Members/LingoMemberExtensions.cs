@@ -13,8 +13,6 @@ public static class LingoMemberExtensions
     public static LingoPoint CenterOffsetFromRegPoint(this ILingoMember member)
     {
         var center = new LingoPoint(member.Width / 2f, member.Height / 2f);
-        var regTopLeft = new LingoPoint(member.Width - member.RegPoint.X,
-            member.Height - member.RegPoint.Y);
-        return regTopLeft - center;
+        return member.RegPoint - center;
     }
 }
