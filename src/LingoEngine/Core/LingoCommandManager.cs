@@ -30,7 +30,9 @@ internal sealed class LingoCommandManager : ILingoCommandManager
         var type = command.GetType();
         if (_handlers.TryGetValue(type, out var handlerType))
         {
-            var handlerObj = _provider.GetService(handlerType) ?? ActivatorUtilities.CreateInstance(_provider, handlerType);
+            var handlerObj = _provider.GetService(handlerType);// ?? ActivatorUtilities.CreateInstance(_provider, handlerType);
+            if (handlerObj ==null)
+                throw new Exception("Handler not found for command: " + type.FullName); 
             dynamic h = handlerObj;
             dynamic c = command;
             if (h.CanExecute(c))
