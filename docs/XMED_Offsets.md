@@ -58,5 +58,9 @@ Line spacing is stored at `0x003C`; font size at `0x0040`. Margins and indent by
 
 Multi-style casts contain descriptor blocks beginning at offsets such as `0x16A8`.
 Each block repeats the style and flag bytes, followed by an ASCII style ID,
-color index and font name. Single-style files use the same layout with just one block.
+a **one‑byte color index** and the font name.  The color index selects one of
+the values from the table near the start of the file.
+Single-style files use the same layout with just one block.
+
+Mapping tables reference these descriptors via 20‑digit entries. These hold a line length and up to three style IDs. The final ID picks the descriptor that overrides the parent style values.
 
