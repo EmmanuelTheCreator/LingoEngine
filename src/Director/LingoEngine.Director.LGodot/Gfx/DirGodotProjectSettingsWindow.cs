@@ -1,21 +1,20 @@
 using Godot;
 using LingoEngine.Director.Core;
-using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.Core.Windows;
 using LingoEngine;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
-internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow
+internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow, IDirFrameworkProjectSettingsWindow
 {
     private readonly ProjectSettings _settings;
     private readonly LineEdit _nameEdit = new LineEdit();
     private readonly LineEdit _folderEdit = new LineEdit();
 
-    public DirGodotProjectSettingsWindow(IDirectorEventMediator mediator, ProjectSettings settings)
+    public DirGodotProjectSettingsWindow(ProjectSettings settings)
         : base("Project Settings")
     {
         _settings = settings;
-        mediator.SubscribeToMenu(DirectorMenuCodes.ProjectSettingsWindow, () => Visible = !Visible);
 
         Size = new Vector2(300, 120);
         CustomMinimumSize = Size;
@@ -47,4 +46,9 @@ internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow
         _settings.ProjectFolder = _folderEdit.Text.Trim();
         Visible = false;
     }
+
+    public bool IsOpen => Visible;
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
 }

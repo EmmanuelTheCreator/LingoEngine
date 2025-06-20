@@ -3,13 +3,14 @@ using LingoEngine.Movies;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Stages;
 using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 
 namespace LingoEngine.Director.LGodot.Movies;
 
-internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelectedEvent
+internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelectedEvent, IDirFrameworkStageWindow
 {
     private const int IconBarHeight = 12;
     private readonly LingoGodotStageContainer _stageContainer;
@@ -136,8 +137,6 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _iconBar.AddChild(_colorPicker);
 
         UpdatePlayButton();
-
-        directorEventMediator.SubscribeToMenu(DirectorMenuCodes.StageWindow, () => Visible = !Visible);
     }
     protected override void OnResizing(Vector2 size)
     {
@@ -258,4 +257,8 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             DrawRect(_rect, Colors.Yellow, false, 1);
         }
     }
+    public bool IsOpen => Visible;
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
 }
