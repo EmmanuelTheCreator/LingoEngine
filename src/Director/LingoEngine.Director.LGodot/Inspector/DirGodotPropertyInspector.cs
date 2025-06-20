@@ -11,6 +11,7 @@ using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Texts;
+using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -20,6 +21,9 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly ILingoCommandManager _commandManager;
     private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly TabContainer _tabs = new TabContainer();
+    private readonly PanelContainer _behaviorPanel = new PanelContainer();
+    private readonly VBoxContainer _behaviorBox = new VBoxContainer();
+    private readonly Button _behaviorClose = new Button();
 
     public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
@@ -36,6 +40,18 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         
         AddChild(_tabs);
 
+        _behaviorPanel.Visible = false;
+        AddChild(_behaviorPanel);
+        _behaviorPanel.AddChild(_behaviorBox);
+        var closeRow = new HBoxContainer();
+        closeRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        _behaviorClose.Text = "X";
+        _behaviorClose.Modulate = Colors.Red;
+        _behaviorClose.CustomMinimumSize = new Vector2(12, 12);
+        _behaviorClose.Pressed += () => { _behaviorPanel.Visible = false; OnResizing(Size); };
+        closeRow.AddChild(_behaviorClose);
+        _behaviorBox.AddChild(closeRow);
+
         //_vScroller.AddChild(_tabs);
         //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
         //_vScroller.Position = new Vector2(0, 60);
@@ -46,7 +62,17 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
-        _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30);
+        if (_behaviorPanel.Visible)
+        {
+            var half = (Size.Y - 30) / 2f;
+            _tabs.Size = new Vector2(Size.X - 10, half);
+            _behaviorPanel.Position = new Vector2(0, 20 + half);
+            _behaviorPanel.Size = new Vector2(Size.X - 10, half);
+        }
+        else
+        {
+            _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30);
+        }
         //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
     }
     public void SpriteSelected(ILingoSprite sprite) => ShowObject(sprite);
@@ -119,6 +145,18 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         }
 
         BuildProperties(container, obj);
+
+        if (obj is LingoSprite sprite)
+        {
+            var behLabel = new Label { Text = "Behaviors" };
+            container.AddChild(behLabel);
+            var list = new ItemList();
+            foreach (var b in sprite.Behaviors)
+                list.AddItem(b.GetType().Name);
+            list.ItemActivated += idx => ShowBehavior(sprite.Behaviors[idx]);
+            container.AddChild(list);
+        }
+
         vScroller.AddChild(container);
     }
 
@@ -208,6 +246,20 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             h.AddChild(editor);
             root.AddChild(h);
         }
+    }
+
+    private void ShowBehavior(LingoSpriteBehavior behavior)
+    {
+        foreach (var child in _behaviorBox.GetChildren().ToArray())
+        {
+            if (child != _behaviorBox.GetChild(0))
+                _behaviorBox.RemoveChild(child);
+        }
+        var container = new VBoxContainer();
+        BuildProperties(container, behavior);
+        _behaviorBox.AddChild(container);
+        _behaviorPanel.Visible = true;
+        OnResizing(Size);
     }
 
     private static bool IsSimpleType(Type t)
