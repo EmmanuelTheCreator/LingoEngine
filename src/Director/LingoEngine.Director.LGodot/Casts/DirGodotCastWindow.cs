@@ -8,6 +8,7 @@ using LingoEngine.Director.Core.Casts;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Core;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -21,16 +22,18 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Dictionary<int, DirGodotCastView> _castViews = new();
         private DirGodotCastItem? _selectedItem;
         private ILingoPlayer _player;
+        private readonly ILingoCommandManager _commandManager;
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager)
             : base(DirectorMenuCodes.CastWindow, "Cast", windowManager)
         {
             _mediator = mediator;
             _style = style;
             directorCastWindow.Init(this);
             _player = player;
+            _commandManager = commandManager;
             _player.ActiveMovieChanged += OnActiveMovieChanged;
             _mediator.Subscribe(this);
 
@@ -67,7 +70,7 @@ namespace LingoEngine.Director.LGodot.Casts
             if (lingoMovie == null) return;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
-                var castLibViewer = new DirGodotCastView(OnSelectElement, _style);
+                var castLibViewer = new DirGodotCastView(OnSelectElement, _style, _commandManager);
                 castLibViewer.Show(cast);
                 _castViews.Add(cast.Number, castLibViewer);
                 var tabContent = new VBoxContainer
