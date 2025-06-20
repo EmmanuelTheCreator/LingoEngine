@@ -43,7 +43,6 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     {
         _mediator = directorMediator;
         _commandManager = commandManager;
-        _mediator.SubscribeToMenu(DirectorMenuCodes.ScoreWindow, () => Visible = !Visible);
         var height = 400;
         var width = 800;
 
@@ -65,6 +64,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _masterScroller.VerticalScrollMode= ScrollContainer.ScrollMode.ShowAlways;
         _masterScroller.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, Size.Y - _gfxValues.TopStripHeight- _footerMargin);
         _masterScroller.Position = new Vector2(_gfxValues.ChannelInfoWidth, _gfxValues.TopStripHeight);
+        
         _masterScroller.AddChild(_scrollContent);
         AddChild(_masterScroller);
 
