@@ -1,4 +1,5 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Casts;
+using LingoEngine.Members;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.Movies
@@ -153,7 +154,8 @@ namespace LingoEngine.Movies
         /// <summary>
         /// Controls whether the sprite is visible on the Stage. Read/write.
         /// </summary>
-        bool Visibility { get; set; } 
+        bool Visibility { get; set; }
+        bool Lock { get; set; }
         int MemberNum { get; }
         bool Puppet { get; set; }
 

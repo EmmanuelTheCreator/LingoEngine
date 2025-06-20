@@ -1,8 +1,7 @@
-﻿
+﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 
-using LingoEngine.FrameworkCommunication;
-
-namespace LingoEngine.Core
+namespace LingoEngine.Casts
 {
     public interface ILingoCastLibsContainer
     {
@@ -35,11 +34,13 @@ namespace LingoEngine.Core
         public ILingoMembersContainer Member => _allMembersContainer;
         public int Count => _casts.Count;
 
-        public ILingoCast ActiveCast { get => activeCast; set
+        public ILingoCast ActiveCast
+        {
+            get => activeCast; set
             {
                 if (_casts.Contains(value))
                     activeCast = value;
-            } 
+            }
         }
         public LingoCastLibsContainer(ILingoFrameworkFactory factory)
         {
@@ -77,7 +78,7 @@ namespace LingoEngine.Core
         public T? GetMember<T>(int number, int? castLibNum = null) where T : class, ILingoMember
             => !castLibNum.HasValue
              ? _allMembersContainer.Member<T>(number)
-             : _casts[castLibNum.Value- 1].GetMember<T>(number);
+             : _casts[castLibNum.Value - 1].GetMember<T>(number);
 
         public T? GetMember<T>(string name, int? castLibNum = null) where T : class, ILingoMember
             => !castLibNum.HasValue

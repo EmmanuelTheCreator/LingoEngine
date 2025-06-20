@@ -1,4 +1,5 @@
 ﻿using System;
+using LingoEngine.Casts;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
@@ -69,19 +70,19 @@ namespace LingoEngine.Core
         public ILingoMovie? ActiveMovie { get; private set; }
         public event Action<ILingoMovie?>? ActiveMovieChanged;
 
-        public LingoPlayer(IServiceProvider serviceProvider)
+        public LingoPlayer(IServiceProvider serviceProvider, ILingoFrameworkFactory factory, ILingoCastLibsContainer castLibsContainer, ILingoWindow window, ILingoClock lingoClock, ILingoSystem lingoSystem)
         {
             _actionOnNewMovie= m => { };
             _serviceProvider = serviceProvider;
-            Factory = serviceProvider.GetRequiredService<ILingoFrameworkFactory>();
-            _castLibsContainer = new LingoCastLibsContainer(Factory);
+            Factory = factory;
+            _castLibsContainer = (LingoCastLibsContainer)castLibsContainer;
             _sound = Factory.CreateSound(_castLibsContainer);
-            _window = new LingoWindow();
-            _clock = new LingoClock();
+            _window = window;
+            _clock = (LingoClock)lingoClock;
+            _System = (LingoSystem)lingoSystem;
             _LingoKey = Factory.CreateKey();
             _Stage = Factory.CreateStage(this);
             _Mouse = Factory.CreateMouse(_Stage);
-            _System = new LingoSystem();
         }
 
 

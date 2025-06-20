@@ -25,6 +25,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                         {
                             s.ProjectFolder = "TetriGrounds";
                             s.ProjectName = "TetriGrounds";
+                            s.MaxSpriteChannelCount = 300;
                         })
                         .ForMovie(TetriGroundsGame.MovieName, s => s
                             //.AddMovieScript<StartMoviesScript>()

@@ -3,6 +3,8 @@ using LingoEngine.Events;
 using LingoEngine.Movies;
 using LingoEngine.Xtras.BuddyApi;
 using Microsoft.Extensions.DependencyInjection;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine
 {
@@ -14,7 +16,15 @@ namespace LingoEngine
             services
                    .AddSingleton<LingoPlayer>()
                    .AddSingleton<ProjectSettings>()
-                   .AddTransient<ILingoPlayer>(p => p.GetRequiredService<ILingoPlayer>())
+                   .AddSingleton<LingoCastLibsContainer>()
+                   .AddSingleton<LingoWindow>()
+                   .AddSingleton<LingoClock>()
+                   .AddSingleton<LingoSystem>()
+                   .AddTransient<ILingoPlayer>(p => p.GetRequiredService<LingoPlayer>())
+                   .AddTransient<ILingoCastLibsContainer>(p => p.GetRequiredService<LingoCastLibsContainer>())
+                   .AddTransient<ILingoWindow>(p => p.GetRequiredService<LingoWindow>())
+                   .AddTransient<ILingoClock>(p => p.GetRequiredService<LingoClock>())
+                   .AddTransient<ILingoSystem>(p => p.GetRequiredService<LingoSystem>())
                    .AddTransient<LingoSprite>()
                    .AddTransient<ILingoMemberFactory, LingoMemberFactory>()
                    .AddTransient(p => new Lazy<ILingoMemberFactory>(() => p.GetRequiredService<ILingoMemberFactory>()))
@@ -22,6 +32,7 @@ namespace LingoEngine
                    .AddScoped<ILingoEventMediator, LingoEventMediator>()
                    // Xtras
                    .AddScoped<IBuddyAPI, BuddyAPI>()
+                   .AddSingleton<ILingoCommandManager, LingoCommandManager>()
                    ;
 
             return services;

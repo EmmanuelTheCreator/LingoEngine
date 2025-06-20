@@ -13,7 +13,6 @@ using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core;
-using System.Reflection.Emit;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -31,6 +30,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly LingoPlayer _player;
         private readonly DirGodotProjectSettingsWindow _projectSettingsWindow;
         private readonly DirectorProjectManager _projectManager;
+        private readonly DirGodotBinaryViewerWindow _binaryViewer;
 
 
         public LingoGodotDirectorRoot(ILingoMovie lingoMovie, LingoPlayer player, IServiceProvider serviceProvider)
@@ -40,31 +40,39 @@ namespace LingoEngine.Director.LGodot.Gfx
             _player = player;
             _projectSettingsWindow = serviceProvider.GetRequiredService<DirGodotProjectSettingsWindow>();
             _projectManager = serviceProvider.GetRequiredService<DirectorProjectManager>();
+           
 
             // set up root
             var parent = (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode;
             parent.AddChild(_directorParent);
 
             // Apply Director UI theme from IoC
-            _directorParent.Theme = serviceProvider.GetRequiredService<Theme>();
             var style = serviceProvider.GetRequiredService<DirectorStyle>();
+            _directorParent.Theme = style.Theme;
 
             // Setup stage
             var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
-            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, player);
+            var commandManager = serviceProvider.GetRequiredService<ILingoCommandManager>();
+            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, commandManager, player);
 
+            // project settings
+            _projectSettingsWindow.Visible = false;
+            _projectSettingsWindow.Position = new Vector2(100, 100);
 
             _dirGodotMainMenu = new DirGodotMainMenu(_mediator, lingoMovie);
             _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
             _scoreWindow = new DirGodotScoreWindow(_mediator);
             _inspector = new DirGodotObjectInspector(_mediator);
             _toolsWindow = new DirGodotToolsWindow(_mediator);
+            _binaryViewer = new DirGodotBinaryViewerWindow(_mediator);
+
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
             _directorParent.AddChild(_dirGodotMainMenu);
             _directorParent.AddChild(_projectSettingsWindow);
             _directorParent.AddChild(_castViewer);
             _directorParent.AddChild(_scoreWindow);
             _directorParent.AddChild(_toolsWindow);
+            _directorParent.AddChild(_binaryViewer);
 
 
             //var hContainer = new HBoxContainer
@@ -82,9 +90,10 @@ namespace LingoEngine.Director.LGodot.Gfx
             _directorParent.AddChild(_inspector);
             _stageWindow.Position = new Vector2(100, 25);
             _castViewer.Position = new Vector2(830, 25);
-            _scoreWindow.Position = new Vector2(20, 540);
+            _scoreWindow.Position = new Vector2(20, 560);
             _inspector.Position = new Vector2(1330, 25);
             _toolsWindow.Position = new Vector2(10, 25);
+            _binaryViewer.Position = new Vector2(20, 120);
 
         }
 
@@ -97,6 +106,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _castViewer.Dispose();
             _inspector.Dispose();
             _toolsWindow.Dispose();
+            _binaryViewer.Dispose();
         }
     }
 }

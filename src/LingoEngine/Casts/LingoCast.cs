@@ -1,7 +1,9 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.Core;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Casts
 {
     public class CastMemberSelection
     {
@@ -11,7 +13,7 @@ namespace LingoEngine.Core
     /// <inheritdoc/>
     public class LingoCast : ILingoCast
     {
-        
+
         private readonly LingoCastLibsContainer _castLibsContainer;
         private readonly ILingoFrameworkFactory _factory;
         private readonly LingoMembersContainer _MembersContainer = new(false);
@@ -28,7 +30,7 @@ namespace LingoEngine.Core
         public CastMemberSelection? Selection { get; set; } = null;
 
         public ILingoMembersContainer Member => _MembersContainer;
-        
+
         internal LingoCast(LingoCastLibsContainer castLibsContainer, ILingoFrameworkFactory factory, string name)
         {
             _castLibsContainer = castLibsContainer;
@@ -76,15 +78,15 @@ namespace LingoEngine.Core
                 Remove(member);
         }
 
-        public ILingoMember Add(LingoMemberType type,int numberInCast, string name, string fileName = "", LingoPoint regPoint =default)
+        public ILingoMember Add(LingoMemberType type, int numberInCast, string name, string fileName = "", LingoPoint regPoint = default)
         {
             switch (type)
             {
-                case LingoMemberType.Bitmap:return  _factory.CreateMemberPicture(this, numberInCast, name, fileName, regPoint); 
+                case LingoMemberType.Bitmap: return _factory.CreateMemberPicture(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.Sound: return _factory.CreateMemberSound(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.FilmLoop: return _factory.CreateMemberFilmLoop(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.Text: return _factory.CreateMemberText(this, numberInCast, name, fileName, regPoint);
-                case LingoMemberType.Field: return _factory.CreateMemberField(this, numberInCast, name, fileName, regPoint); 
+                case LingoMemberType.Field: return _factory.CreateMemberField(this, numberInCast, name, fileName, regPoint);
                 default:
                     return _factory.CreateEmpty(this, numberInCast, name, fileName, regPoint);
             }

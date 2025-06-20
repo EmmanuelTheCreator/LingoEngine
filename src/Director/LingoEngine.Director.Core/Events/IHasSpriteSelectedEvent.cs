@@ -1,4 +1,4 @@
-using LingoEngine.Core;
+using LingoEngine.Members;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Director.Core.Events
@@ -14,5 +14,10 @@ namespace LingoEngine.Director.Core.Events
     public interface IHasMenuItemSelectedEvent
     {
         void MenuItemSelected(string menuCode);
+    }
+
+    public interface IHasFindMemberEvent
+    {
+        void FindMember(ILingoMember member);
     }
 }

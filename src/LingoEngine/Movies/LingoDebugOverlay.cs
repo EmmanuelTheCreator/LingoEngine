@@ -1,6 +1,7 @@
+using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 
-namespace LingoEngine.Core;
+namespace LingoEngine.Movies;
 
 public class LingoDebugOverlay : ILingoClockListener
 {
@@ -30,9 +31,9 @@ public class LingoDebugOverlay : ILingoClockListener
     public void Toggle()
     {
         _enabled = !_enabled;
-        if (_enabled) 
+        if (_enabled)
             _framework.ShowDebugger();
-        else 
+        else
             _framework.HideDebugger();
     }
 
@@ -60,7 +61,7 @@ public class LingoDebugOverlay : ILingoClockListener
     public void Render()
     {
         if (!_enabled) return;
-        var movie = _player.ActiveMovie as Movies.LingoMovie;
+        var movie = _player.ActiveMovie as LingoMovie;
         _framework.Begin();
         _framework.SetLineText(1, $"UI FPS: {_fps:F1}");
         _framework.SetLineText(2, $"Engine FPS: {_engineFps:F1}");

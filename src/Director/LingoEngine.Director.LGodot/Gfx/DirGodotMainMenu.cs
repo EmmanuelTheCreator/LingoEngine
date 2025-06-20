@@ -89,6 +89,7 @@ internal partial class DirGodotMainMenu : Control
         popupWindow.AddItem("Score", 9);
         popupWindow.AddItem("Object Inspector", 15);
         popupWindow.AddItem("Tools", 16);
+        popupWindow.AddItem("Binary Viewer", 17);
         popupWindow.IdPressed += id =>
         {
             switch (id)
@@ -100,6 +101,7 @@ internal partial class DirGodotMainMenu : Control
                 case 9: mediator.RaiseMenuSelected(DirectorMenuCodes.ScoreWindow); break;
                 case 15: mediator.RaiseMenuSelected(DirectorMenuCodes.ObjectInspector); break;
                 case 16: mediator.RaiseMenuSelected(DirectorMenuCodes.ToolsWindow); break;
+                case 16: mediator.RaiseMenuSelected(DirectorMenuCodes.BinaryViewerWindow); break;
                 default:
                     break;
             }
