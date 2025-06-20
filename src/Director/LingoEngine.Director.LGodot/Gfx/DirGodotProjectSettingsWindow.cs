@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Director.Core;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -11,8 +12,8 @@ internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow, IDirFram
     private readonly LineEdit _nameEdit = new LineEdit();
     private readonly LineEdit _folderEdit = new LineEdit();
 
-    public DirGodotProjectSettingsWindow(ProjectSettings settings)
-        : base("Project Settings")
+    public DirGodotProjectSettingsWindow(ProjectSettings settings, GodotWindowManager windowManager)
+        : base("Project Settings", windowManager)
     {
         _settings = settings;
 

@@ -8,6 +8,7 @@ using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Stages;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Movies;
 
@@ -35,8 +36,8 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private ILingoFrameworkStage? _stage;
     private LingoSprite? _selectedSprite;
 
-    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player, DirectorStageWindow directorStageWindow)
-        : base("Stage")
+    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player, DirectorStageWindow directorStageWindow, GodotWindowManager windowManager)
+        : base("Stage", windowManager)
     {
         _stageContainer = (LingoGodotStageContainer)stageContainer;
         _mediator = directorEventMediator;

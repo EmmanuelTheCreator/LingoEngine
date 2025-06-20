@@ -4,6 +4,7 @@ namespace LingoEngine.Director.LGodot
 {
     public abstract partial class BaseGodotWindow : Panel
     {
+        private readonly GodotWindowManager _windowManager;
         protected bool _dragging;
         protected bool _resizing;
         private readonly Label _label = new Label();
@@ -15,8 +16,9 @@ namespace LingoEngine.Director.LGodot
         private Vector2 _resizeStartMousePos;
 
 
-        public BaseGodotWindow(string name)
+        public BaseGodotWindow(string name, GodotWindowManager windowManager)
         {
+            _windowManager = windowManager;
             MouseFilter = MouseFilterEnum.Stop;
             AddChild(_label);
             _label.Position = new Vector2(5, 1);
@@ -55,30 +57,36 @@ namespace LingoEngine.Director.LGodot
 
         public override void _GuiInput(InputEvent @event)
         {
-            if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+            if (@event is InputEventMouseButton mb)
             {
-                Vector2 pos = GetLocalMousePosition();
-
                 if (mb.Pressed)
+                    _windowManager.SetActiveWindow(this);
+
+                if (mb.ButtonIndex == MouseButton.Left)
                 {
-                    if (pos.Y < TitleBarHeight)
+                    Vector2 pos = GetLocalMousePosition();
+
+                    if (mb.Pressed)
                     {
-                        _dragging = true;
-                        _resizing = false;
-                        _dragOffset = pos;
+                        if (pos.Y < TitleBarHeight)
+                        {
+                            _dragging = true;
+                            _resizing = false;
+                            _dragOffset = pos;
+                        }
+                        else if (pos.X >= Size.X - ResizeHandle && pos.Y >= Size.Y - ResizeHandle)
+                        {
+                            _resizing = true;
+                            _dragging = false;
+                            _resizeStartMousePos = GetGlobalMousePosition();
+                            _resizeStartSize = Size;
+                        }
                     }
-                    else if (pos.X >= Size.X - ResizeHandle && pos.Y >= Size.Y - ResizeHandle)
+                    else // Mouse button released
                     {
-                        _resizing = true;
                         _dragging = false;
-                        _resizeStartMousePos = GetGlobalMousePosition();
-                        _resizeStartSize = Size;
+                        _resizing = false;
                     }
-                }
-                else // Mouse button released
-                {
-                    _dragging = false;
-                    _resizing = false;
                 }
             }
             else if (@event is InputEventMouseMotion)
@@ -136,8 +144,31 @@ namespace LingoEngine.Director.LGodot
         }
 
         public bool IsOpen => Visible;
-        public virtual void OpenWindow() => Visible = true;
+        public virtual void OpenWindow()
+        {
+            Visible = true;
+            EnsureInBounds();
+        }
         public virtual void CloseWindow() => Visible = false;
         public virtual void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+
+        private void EnsureInBounds()
+        {
+            var viewportRect = GetViewport().GetVisibleRect();
+            Vector2 pos = Position;
+            Vector2 size = Size;
+
+            if (pos.X < viewportRect.Position.X)
+                pos.X = viewportRect.Position.X;
+            if (pos.Y < viewportRect.Position.Y)
+                pos.Y = viewportRect.Position.Y;
+
+            if (pos.X + size.X > viewportRect.Position.X + viewportRect.Size.X)
+                pos.X = viewportRect.Position.X + viewportRect.Size.X - size.X;
+            if (pos.Y + size.Y > viewportRect.Position.Y + viewportRect.Size.Y)
+                pos.Y = viewportRect.Position.Y + viewportRect.Size.Y - size.Y;
+
+            Position = pos;
+        }
     }
 }

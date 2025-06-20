@@ -25,6 +25,7 @@ namespace LingoEngine.Director.LGodot
             engineRegistration.Services(s =>
             {
                 s.AddSingleton<DirectorStyle>();
+                s.AddSingleton<GodotWindowManager>();
                 s.AddSingleton<DirGodotProjectSettingsWindow>();
                 s.AddSingleton<DirGodotToolsWindow>();
                 s.AddSingleton<DirGodotCastWindow>();
