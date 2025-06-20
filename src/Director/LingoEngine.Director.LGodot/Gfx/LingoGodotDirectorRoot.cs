@@ -13,6 +13,7 @@ using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core;
+using LingoEngine.Director.Core.Windows;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -22,7 +23,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly Control _directorParent = new();
         private readonly DirGodotCastWindow _castViewer;
         private readonly DirGodotScoreWindow _scoreWindow;
-        private readonly DirGodotObjectInspector _inspector;
+        private readonly DirGodotPropertyInspector _propertyInspector;
         private readonly DirGodotToolsWindow _toolsWindow;
         private readonly IDirectorEventMediator _mediator;
         private readonly DirGodotStageWindow _stageWindow;
@@ -59,11 +60,12 @@ namespace LingoEngine.Director.LGodot.Gfx
             _projectSettingsWindow.Visible = false;
             _projectSettingsWindow.Position = new Vector2(100, 100);
 
-            _dirGodotMainMenu = new DirGodotMainMenu(_mediator, lingoMovie);
+            var windowManager = serviceProvider.GetRequiredService<IDirectorWindowManager>();
+            _dirGodotMainMenu = new DirGodotMainMenu(windowManager, _projectManager, lingoMovie);
             _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
             _scoreWindow = new DirGodotScoreWindow(_mediator);
-            _inspector = new DirGodotObjectInspector(_mediator);
-            _toolsWindow = new DirGodotToolsWindow(_mediator) { Visible = true};
+            _propertyInspector = new DirGodotPropertyInspector(_mediator);
+            _toolsWindow = new DirGodotToolsWindow() { Visible = true};
             _binaryViewer = new DirGodotBinaryViewerWindow(_mediator) { Visible = false };
 
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
@@ -75,23 +77,25 @@ namespace LingoEngine.Director.LGodot.Gfx
             _directorParent.AddChild(_binaryViewer);
 
 
+
+
             //var hContainer = new HBoxContainer
             //{
             //    SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             //};
             ////var spacer = new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
             ////hContainer.AddChild(spacer);
-            ////hContainer.AddChild(_inspector);
+            ////hContainer.AddChild(_propertyInspector);
             ////_directorParent.AddChild(hContainer);
-            ////_inspector.AnchorLeft = 1.0f;
-            //_inspector.AnchorRight = 1.0f;
-            //_inspector.OffsetLeft = -150; // Adjust to control width
-            //_inspector.OffsetRight = 0;
-            _directorParent.AddChild(_inspector);
+            ////_propertyInspector.AnchorLeft = 1.0f;
+            //_propertyInspector.AnchorRight = 1.0f;
+            //_propertyInspector.OffsetLeft = -150; // Adjust to control width
+            //_propertyInspector.OffsetRight = 0;
+            _directorParent.AddChild(_propertyInspector);
             _stageWindow.Position = new Vector2(100, 25);
             _castViewer.Position = new Vector2(830, 25);
             _scoreWindow.Position = new Vector2(20, 560);
-            _inspector.Position = new Vector2(1330, 25);
+            _propertyInspector.Position = new Vector2(1330, 25);
             _toolsWindow.Position = new Vector2(10, 25);
             _binaryViewer.Position = new Vector2(20, 120);
 
@@ -104,7 +108,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _stageWindow.Dispose();
             _scoreWindow.Dispose();
             _castViewer.Dispose();
-            _inspector.Dispose();
+            _propertyInspector.Dispose();
             _toolsWindow.Dispose();
             _binaryViewer.Dispose();
         }

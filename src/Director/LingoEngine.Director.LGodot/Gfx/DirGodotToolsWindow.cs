@@ -1,19 +1,18 @@
 using Godot;
 using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.Core.Windows;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
-internal partial class DirGodotToolsWindow : BaseGodotWindow
+internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkToolsWindow
 {
     private readonly GridContainer _grid = new GridContainer();
     private readonly DirGodotIconManager _iconManager = new DirGodotIconManager();
 
     public event Action<int>? IconPressed;
 
-    public DirGodotToolsWindow(IDirectorEventMediator mediator) : base("Tools")
+    public DirGodotToolsWindow() : base("Tools")
     {
-        mediator.SubscribeToMenu(DirectorMenuCodes.ToolsWindow, () => Visible = !Visible);
-
         Size = new Vector2(80, 200);
         CustomMinimumSize = Size;
 
@@ -38,4 +37,9 @@ internal partial class DirGodotToolsWindow : BaseGodotWindow
             }
         }
     }
+
+    public bool IsOpen => Visible;
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
 }

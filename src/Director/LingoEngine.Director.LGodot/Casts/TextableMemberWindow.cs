@@ -1,12 +1,13 @@
 ﻿using Godot;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.Core.Windows;
 using LingoEngine.Texts;
 using LingoEngine.Members;
 
 namespace LingoEngine.Director.LGodot.Casts;
 
-internal partial class TextableMemberWindow : BaseGodotWindow, IHasMemberSelectedEvent
+internal partial class TextableMemberWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkTextEditWindow
 {
     private readonly TextEdit _textEdit = new TextEdit();
     private readonly Button _alignLeft = new Button();
@@ -19,7 +20,6 @@ internal partial class TextableMemberWindow : BaseGodotWindow, IHasMemberSelecte
     public TextableMemberWindow(IDirectorEventMediator mediator) : base("Edit Text")
     {
         mediator.Subscribe(this);
-        mediator.SubscribeToMenu(DirectorMenuCodes.TextEditWindow, ToggleVisible);
 
         Size = new Vector2(300, 200);
         CustomMinimumSize = Size;
@@ -71,12 +71,6 @@ internal partial class TextableMemberWindow : BaseGodotWindow, IHasMemberSelecte
         }
     }
 
-    private bool ToggleVisible()
-    {
-        Visible = !Visible;
-        return true;
-    }
-
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
@@ -88,4 +82,9 @@ internal partial class TextableMemberWindow : BaseGodotWindow, IHasMemberSelecte
         if (_member != null)
             _member.Alignment = alignment;
     }
+
+    public bool IsOpen => Visible;
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
 }

@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.Core.Windows;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LingoEngine.Director.LGodot.Scores;
@@ -10,7 +11,7 @@ namespace LingoEngine.Director.LGodot.Scores;
 /// Simple timeline overlay showing the Score channels and frames.
 /// Toggled with F2.
 /// </summary>
-public partial class DirGodotScoreWindow : BaseGodotWindow
+public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWindow
 {
    
     
@@ -38,7 +39,6 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         : base("Score")
     {
         _mediator = directorMediator;
-        _mediator.SubscribeToMenu(DirectorMenuCodes.ScoreWindow, () => Visible = !Visible);
         var height = 400;
         var width = 800;
 
@@ -213,5 +213,10 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
             DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark);
             DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight);
         }
+
+        public bool IsOpen => Visible;
+        public void OpenWindow() => Visible = true;
+        public void CloseWindow() => Visible = false;
+        public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
     }
 }
