@@ -8,6 +8,8 @@ namespace LingoEngine.Director.Core.Menus
     {
         IDirectorWindowManager Register<TWindow>(string windowCode, Func<IServiceProvider, IDirectorWindow> constructor, DirectorShortCutMap? shortCutMap = null)
              where TWindow : IDirectorWindow;
+        IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null)
+             where TWindow : IDirectorWindow, new();
         bool OpenWindow(string windowCode);
         bool CloseWindow(string windowCode);
     }
@@ -38,6 +40,24 @@ namespace LingoEngine.Director.Core.Menus
 
             return this;
         }
+        public IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null) 
+            where TWindow : IDirectorWindow, new()
+        {
+            if (_windowRegistrations.ContainsKey(windowCode))
+                throw new InvalidOperationException($"Window with code '{windowCode}' is already registered.");
+
+            _windowRegistrations[windowCode] = new WindowRegistration(windowCode, () =>
+            {
+                var instance = new TWindow();
+                return instance;
+            }, shortCutMap);
+
+            return this;
+        }
+
+
+
+
         public bool OpenWindow(string windowCode)
         {
             if (!_windowRegistrations.TryGetValue(windowCode, out var registration)) return false;
@@ -66,6 +86,9 @@ namespace LingoEngine.Director.Core.Menus
             registration.Instance.CloseWindow();
             return true;
         }
+
+      
+
         private class WindowRegistration
         {
             private Func<IDirectorWindow> _constructor;
