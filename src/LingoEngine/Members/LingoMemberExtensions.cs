@@ -13,9 +13,7 @@ public static class LingoMemberExtensions
     public static LingoPoint CenterOffsetFromRegPoint(this ILingoMember member)
     {
         var center = new LingoPoint(member.Width / 2f, member.Height / 2f);
-        // RegPoint coordinates originate from the picture's top-right corner
-        var regFromTopRight = new LingoPoint(member.Width - member.RegPoint.X,
-            member.RegPoint.Y);
-        return regFromTopRight - center;
+        // RegPoint coordinates originate from the picture's top-left corner
+        return member.RegPoint - center;
     }
 }
