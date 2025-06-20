@@ -88,7 +88,6 @@ namespace LingoEngine.Director.LGodot.Casts
             _Sprite2D.Position = new Vector2(+Width/2, LabelHeight-1);
             AddChild(_Sprite2D);
 
-
             // Bottom label
             _caption = new Label
             {
@@ -183,7 +182,6 @@ namespace LingoEngine.Director.LGodot.Casts
                         return;
                     _Sprite2D.Texture = godotPicture.Texture;
                     Resize(Width - 1, Height - LabelHeight);
-                    ApplyRegPoint(pic);
                     break;
                 case ILingoMemberTextBase textMember:
                     var godotText = textMember.FrameworkObj;
@@ -203,7 +201,6 @@ namespace LingoEngine.Director.LGodot.Casts
                     _textViewport.AddChild(label);
                     _Sprite2D.Texture = _textViewport.GetTexture();
                     Resize(Width - 1, Height - LabelHeight);
-                    ApplyRegPoint(textMember);
                     break;
                 default:
                     break;
@@ -220,17 +217,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
         }
 
-        private void ApplyRegPoint(ILingoMember member)
-        {
-            var offset = member.CenterOffsetFromRegPoint();
-            if (member.Width != 0 && member.Height != 0)
-            {
-                float scaleX = (Width - 1) / (float)member.Width;
-                float scaleY = (Height - LabelHeight) / (float)member.Height;
-                offset = new Primitives.LingoPoint(offset.X * scaleX, offset.Y * scaleY);
-            }
-            _Sprite2D.Position = new Vector2(Width / 2f + offset.X, LabelHeight - 1 + offset.Y);
-        }
+
 
         private static string GetPreviewText(ILingoMemberTextBase text)
         {
