@@ -182,7 +182,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         if (areaSize == Vector2.Zero)
             areaSize = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
         float factor = Math.Min(areaSize.X / texture.GetWidth(), areaSize.Y / texture.GetHeight());
-        factor = Mathf.Clamp(factor, _zoomSlider.MinValue, _zoomSlider.MaxValue);
+        factor = (float)Mathf.Clamp(factor, _zoomSlider.MinValue, _zoomSlider.MaxValue);
         _zoomSlider.Value = factor;
         OnZoomChanged(factor);
     }
