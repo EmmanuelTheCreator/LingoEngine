@@ -4,6 +4,5 @@ namespace LingoEngine.Director.Core.Gfx
 {
     public class DirectorProjectSettingsWindow : DirectorWindow<IDirFrameworkProjectSettingsWindow>
     {
-        public DirectorProjectSettingsWindow(IDirFrameworkProjectSettingsWindow framework) : base(framework) { }
     }
 }

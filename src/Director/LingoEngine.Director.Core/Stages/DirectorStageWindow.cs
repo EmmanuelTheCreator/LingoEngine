@@ -4,6 +4,5 @@ namespace LingoEngine.Director.Core.Stages
 {
     public class DirectorStageWindow : DirectorWindow<IDirFrameworkStageWindow>
     {
-        public DirectorStageWindow(IDirFrameworkStageWindow framework) : base(framework) { }
     }
 }

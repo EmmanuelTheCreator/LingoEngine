@@ -1,12 +1,11 @@
 using Godot;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Movies;
-using System;
 using System.Reflection;
 using LingoEngine.Pictures;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Members;
 using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.Core.Inspector;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -16,10 +15,11 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly TabContainer _tabs = new TabContainer();
 
-    public DirGodotPropertyInspector(IDirectorEventMediator mediator) : base("Inspector")
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator, DirectorPropertyInspectorWindow inspectorWindow) : base("Inspector")
     {
         _mediator = mediator;
-        
+        inspectorWindow.Init(this);
+
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
         CustomMinimumSize = Size;

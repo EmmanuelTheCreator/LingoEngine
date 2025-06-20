@@ -53,24 +53,24 @@ namespace LingoEngine.Director.LGodot.Gfx
             _directorParent.Theme = style.Theme;
 
             // Setup stage
-            var stageContainer = (LingoGodotStageContainer)serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
-            var commandManager = serviceProvider.GetRequiredService<ILingoCommandManager>();
-            _stageWindow = new DirGodotStageWindow(_directorParent, stageContainer,_mediator, commandManager, player);
+            _stageWindow = serviceProvider.GetRequiredService<DirGodotStageWindow>(); 
 
             // project settings
             _projectSettingsWindow.Visible = false;
             _projectSettingsWindow.Position = new Vector2(100, 100);
 
             var windowManager = serviceProvider.GetRequiredService<IDirectorWindowManager>();
-            _dirGodotMainMenu = new DirGodotMainMenu(windowManager, _projectManager, lingoMovie);
-            _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
+            _dirGodotMainMenu =  new DirGodotMainMenu(windowManager, _projectManager, lingoMovie);
+            _castViewer = serviceProvider.GetRequiredService<DirGodotCastWindow>(); 
 
-            _scoreWindow = new DirGodotScoreWindow(_mediator, commandManager);
-            _propertyInspector = new DirGodotPropertyInspector(_mediator);
-            _toolsWindow = new DirGodotToolsWindow() { Visible = true};
-            _binaryViewer = new DirGodotBinaryViewerWindow(_mediator) { Visible = false };
+            _scoreWindow = serviceProvider.GetRequiredService<DirGodotScoreWindow>();
+            _propertyInspector = serviceProvider.GetRequiredService<DirGodotPropertyInspector>();
+            _toolsWindow = serviceProvider.GetRequiredService<DirGodotToolsWindow>(); 
+            _binaryViewer = serviceProvider.GetRequiredService<DirGodotBinaryViewerWindow>(); 
 
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
+
+            _directorParent.AddChild(_stageWindow);
             _directorParent.AddChild(_dirGodotMainMenu);
             _directorParent.AddChild(_projectSettingsWindow);
             _directorParent.AddChild(_castViewer);
@@ -78,6 +78,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _directorParent.AddChild(_toolsWindow);
             _directorParent.AddChild(_binaryViewer);
 
+            _castViewer.LoadMovie(lingoMovie);
 
 
             //var hContainer = new HBoxContainer

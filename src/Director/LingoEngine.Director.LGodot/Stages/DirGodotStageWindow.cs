@@ -7,6 +7,7 @@ using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Stages;
 
 namespace LingoEngine.Director.LGodot.Movies;
 
@@ -34,13 +35,15 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private ILingoFrameworkStage? _stage;
     private LingoSprite? _selectedSprite;
 
-    public DirGodotStageWindow(Node root, LingoGodotStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player)
+    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player, DirectorStageWindow directorStageWindow)
         : base("Stage")
     {
-        _stageContainer = stageContainer;
+        _stageContainer = (LingoGodotStageContainer)stageContainer;
         _mediator = directorEventMediator;
         _player = player;
         _commandManager = commandManager;
+        directorStageWindow.Init(this);
+
         _player.ActiveMovieChanged += OnActiveMovieChanged;
         _mediator.Subscribe(this);
         
@@ -57,7 +60,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _scrollContainer.OffsetTop = 0;
         _scrollContainer.OffsetRight = -10;
         _scrollContainer.OffsetBottom = -IconBarHeight - 5;
-        root.AddChild(this);
+        
 
         _scrollContainer.Position = new Vector2(0, 20);
         _stageBgRect.Color = Colors.Black;
@@ -65,8 +68,8 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stageBgRect.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _stageBgRect.SizeFlagsVertical = SizeFlags.ExpandFill;
         _scrollContainer.AddChild(_stageBgRect);
-        _scrollContainer.AddChild(stageContainer.Container);
-        stageContainer.Container.AddChild(_selectionBox);
+        _scrollContainer.AddChild(_stageContainer.Container);
+        _stageContainer.Container.AddChild(_selectionBox);
         _selectionBox.Visible = false;
         _selectionBox.ZIndex = 1000;
         AddChild(_scrollContainer);

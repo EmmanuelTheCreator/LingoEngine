@@ -1,11 +1,10 @@
 ﻿using Godot;
 using LingoEngine.Director.Core.Events;
-using LingoEngine.Director.LGodot.Gfx;
-using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Movies;
 using LingoEngine.Members;
 using LingoEngine.Casts;
+using LingoEngine.Director.Core.Casts;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -14,7 +13,6 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly TabContainer _tabs;
         
 
-        private readonly ILingoMovie _lingoMovie;
         private readonly IDirectorEventMediator _mediator;
         private readonly DirectorStyle _style;
         private readonly Dictionary<int, DirGodotCastView> _castViews = new();
@@ -22,12 +20,12 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, ILingoMovie lingoMovie, DirectorStyle style)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow)
             : base("Cast")
         {
-            _lingoMovie = lingoMovie;
             _mediator = mediator;
             _style = style;
+            directorCastWindow.Init(this);
             _mediator.Subscribe(this);
 
             Size = new Vector2(360, 620);
@@ -39,7 +37,23 @@ namespace LingoEngine.Director.LGodot.Casts
             _tabs.Position = new Vector2(0, TitleBarHeight + 20);
 
             AddChild(_tabs);
+        }
 
+
+        protected override void OnResizing(Vector2 size)
+        {
+            base.OnResizing(size);
+            _tabs.Size = new Vector2(Size.X - 10, Size.Y- TitleBarHeight -30);
+        }
+
+        public void LoadMovie(ILingoMovie lingoMovie)
+        {
+            for (int i = _tabs.GetChildCount() - 1; i >= 0; i--)
+            {
+                var child = _tabs.GetChild(i);
+                _tabs.RemoveChild(child);
+                child.QueueFree();
+            }
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
                 var castLibViewer = new DirGodotCastView(OnSelectElement, _style);
@@ -53,17 +67,7 @@ namespace LingoEngine.Director.LGodot.Casts
                 tabContent.AddChild(castLibViewer.Node);
                 _tabs.AddChild(tabContent);
             }
-           
         }
-
-
-        protected override void OnResizing(Vector2 size)
-        {
-            base.OnResizing(size);
-            _tabs.Size = new Vector2(Size.X - 10, Size.Y- TitleBarHeight -30);
-        }
-
-
 
 
         private void InitTabs()

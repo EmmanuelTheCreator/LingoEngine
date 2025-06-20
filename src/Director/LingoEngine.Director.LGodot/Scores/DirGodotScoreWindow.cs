@@ -5,6 +5,7 @@ using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Windows;
 using static System.Net.Mime.MediaTypeNames;
+using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -38,11 +39,13 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     public bool IsOpen => Visible;
 
-    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager)
+    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, DirectorScoreWindow directorScoreWindow)
         : base("Score")
     {
         _mediator = directorMediator;
         _commandManager = commandManager;
+        directorScoreWindow.Init(this);
+
         var height = 400;
         var width = 800;
 
