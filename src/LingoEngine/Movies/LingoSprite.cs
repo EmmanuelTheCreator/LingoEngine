@@ -99,7 +99,16 @@ namespace LingoEngine.Movies
 
         public LingoColor Color { get; set; }
         public LingoColor BackColor { get; set; }
-        public new LingoRect Rect => new LingoRect(LocH, LocV, LocH + Width, LocV + Height);
+        public new LingoRect Rect
+        {
+            get
+            {
+                var offset = GetRegPointOffset();
+                float left = LocH + offset.X;
+                float top = LocV + offset.Y;
+                return new LingoRect(left, top, left + Width, top + Height);
+            }
+        }
 
         public int Size => Media.Length;
 
@@ -115,6 +124,22 @@ namespace LingoEngine.Movies
         public bool IsActive { get; internal set; }
 
         #endregion
+
+        private LingoPoint GetRegPointOffset()
+        {
+            if (_Member is { } member)
+            {
+                var baseOffset = member.CenterOffsetFromRegPoint();
+                if (member.Width != 0 && member.Height != 0)
+                {
+                    float scaleX = Width / member.Width;
+                    float scaleY = Height / member.Height;
+                    return new LingoPoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
+                }
+                return baseOffset;
+            }
+            return new LingoPoint();
+        }
 
 
 
@@ -266,8 +291,7 @@ When a movie stops, events occur in the following order:
 
         public bool PointInSprite(LingoPoint point)
         {
-            var bounds = new LingoRect(LocH, LocV, LocH + Width, LocV + Height);
-            return bounds.Contains(point);
+            return Rect.Contains(point);
         }
 
         public void SetMember(string memberName, int? castLibNum = null)
@@ -366,31 +390,23 @@ When a movie stops, events occur in the following order:
 
         public bool Intersects(ILingoSprite other)
         {
-            return LocH < other.LocH + other.Width &&
-                   LocH + Width > other.LocH &&
-                   LocV < other.LocV + other.Height &&
-                   LocV + Height > other.LocV;
+            return Rect.Intersects(other.Rect);
         }
+
         public bool Within(ILingoSprite other)
         {
-            var thisCenterX = LocH + Width / 2;
-            var thisCenterY = LocV + Height / 2;
-
-            return thisCenterX >= other.LocH &&
-                   thisCenterX <= other.LocH + other.Width &&
-                   thisCenterY >= other.LocV &&
-                   thisCenterY <= other.LocV + other.Height;
+            var center = Rect.Center;
+            return other.Rect.Contains(center);
         }
+
         public (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad()
         {
-            float x = LocH;
-            float y = LocV;
-
+            var rect = Rect;
             return (
-                new LingoPoint(x, y),                             // top-left
-                new LingoPoint(x + Width, y),                     // top-right
-                new LingoPoint(x + Width, y + Height),            // bottom-right
-                new LingoPoint(x, y + Height)                     // bottom-left
+                rect.TopLeft,
+                new LingoPoint(rect.Right, rect.Top),
+                rect.BottomRight,
+                new LingoPoint(rect.Left, rect.Bottom)
             );
         }
 
@@ -491,7 +507,8 @@ When a movie stops, events occur in the following order:
         /// <summary>
         /// Check if the mouse position is inside the bounding box of the sprite
         /// </summary>
-        public bool IsMouseInsideBoundingBox(LingoMouse mouse) => mouse.MouseH >= LocH && mouse.MouseH <= LocH + Width && mouse.MouseV >= LocV && mouse.MouseV <= LocV + Height;
+        public bool IsMouseInsideBoundingBox(LingoMouse mouse)
+            => Rect.Contains((mouse.MouseH, mouse.MouseV));
 
         internal void CallBehavior<T>(Action<T> actionOnSpriteBehaviour) where T : LingoSpriteBehavior
         {
