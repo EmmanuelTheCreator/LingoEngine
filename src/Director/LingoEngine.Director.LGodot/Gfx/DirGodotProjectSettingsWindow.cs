@@ -3,6 +3,7 @@ using LingoEngine.Director.Core;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Director.Core.Gfx;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -12,11 +13,11 @@ internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow, IDirFram
     private readonly LineEdit _nameEdit = new LineEdit();
     private readonly LineEdit _folderEdit = new LineEdit();
 
-    public DirGodotProjectSettingsWindow(ProjectSettings settings, IDirGodotWindowManager windowManager)
+    public DirGodotProjectSettingsWindow(ProjectSettings settings, IDirGodotWindowManager windowManager, DirectorProjectSettingsWindow directorProjectSettingsWindow)
         : base(DirectorMenuCodes.ProjectSettingsWindow, "Project Settings", windowManager)
     {
         _settings = settings;
-
+        directorProjectSettingsWindow.Init(this);
         Size = new Vector2(300, 120);
         CustomMinimumSize = Size;
 
