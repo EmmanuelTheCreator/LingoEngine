@@ -76,6 +76,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _centerContainer.OffsetTop = TitleBarHeight + IconBarHeight;
         _centerContainer.OffsetRight = 0;
         _centerContainer.OffsetBottom = -BottomBarHeight;
+        _centerContainer.PivotOffset = new Vector2(Size.X / 2f,
+            (Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight)) / 2f);
 
         _imageRect.StretchMode = TextureRect.StretchModeEnum.Keep;
         _centerContainer.AddChild(_imageRect);
@@ -235,7 +237,8 @@ internal partial class DirGodotPictureMemberEditorWindow
             Vector2 offset = new((areaSize.X - texSize.X * factor) / 2f,
                                  (areaSize.Y - texSize.Y * factor) / 2f);
 
-            Vector2 pos = new Vector2(member.RegPoint.X, member.RegPoint.Y) * factor + offset;
+            // Convert from top-right regPoint origin
+            Vector2 pos = new Vector2(member.Width - member.RegPoint.X, member.RegPoint.Y) * factor + offset;
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
