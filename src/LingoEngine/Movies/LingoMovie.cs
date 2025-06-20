@@ -513,7 +513,13 @@ namespace LingoEngine.Movies
         {
             if (frame >= 1 && frame <= FrameCount)
             {
-                _currentFrame = frame;
+                // Jump directly to the requested frame while ensuring sprite
+                // lifecycle events are fired. The existing AdvanceFrame logic
+                // already handles begin/end sprite events when the playhead
+                // moves to a new frame, so reuse it by setting the next frame
+                // and manually advancing once.
+                _NextFrame = frame;
+                AdvanceFrame();
                 _isPlaying = false;
                 PlayStateChanged?.Invoke(false);
             }
