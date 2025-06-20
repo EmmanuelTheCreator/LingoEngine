@@ -227,7 +227,7 @@ namespace LingoEngine.Director.LGodot.Casts
             {
                 float scaleX = (Width - 1) / (float)member.Width;
                 float scaleY = (Height - LabelHeight) / (float)member.Height;
-                offset = new LingoPoint(offset.X * scaleX, offset.Y * scaleY);
+                offset = new Primitives.LingoPoint(offset.X * scaleX, offset.Y * scaleY);
             }
             _Sprite2D.Position = new Vector2(Width / 2f + offset.X, LabelHeight - 1 + offset.Y);
         }
