@@ -153,7 +153,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             var list = new ItemList();
             foreach (var b in sprite.Behaviors)
                 list.AddItem(b.GetType().Name);
-            list.ItemActivated += idx => ShowBehavior(sprite.Behaviors[idx]);
+            list.ItemActivated += idx => ShowBehavior(sprite.Behaviors[(int)idx]);
             container.AddChild(list);
         }
 
