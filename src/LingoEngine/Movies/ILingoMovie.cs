@@ -168,6 +168,11 @@ namespace LingoEngine.Movies
         void SetSpriteMember(int number, int memberNumber);
 
         /// <summary>
+        /// Raised whenever sprites are added or removed from the movie.
+        /// </summary>
+        event Action? SpriteListChanged;
+
+        /// <summary>
         /// Gets the total number of sprite channels in the Score.
         /// Lingo: the spriteCount
         /// </summary>
