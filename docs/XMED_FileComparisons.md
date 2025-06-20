@@ -368,32 +368,76 @@ occur in the multi-line file. The first few offsets are:
 The single-line variant stores a comparable list near the end of the file:
 
 ```
-000022CB: 00040000001E00000006
-000022FD: 00050000000A00000002
-0000231B: 0006000001FF00000009
-0000252E: 00070000004800000002
-0000258A: 00080000036600000005
-00002904: 00090000001300000002
+The 20‑digit strings split into five four‑digit fields. Field three holds the
+line length while field five clearly matches the style descriptor ID used for
+that line. Field one also resembles a style index and may point to a parent
+style for inheritance. To explore this possibility the table below labels the
+numeric fields as **StyleId1**, **Unknown** (F2), **Length**, **StyleId2** (F4)
+and **StyleId3** (F5).
 
-### Example style block
+| Map offset | StyleId1 | F2 | Length | StyleId2 | StyleId3 | Descriptor offset | Δ prev desc | Notes |
+|-----------:|--------:|---:|-------:|---------:|---------:|------------------:|-------------:|-------|
+| 0x1334 | 0004 | 0000 | 0029 | 0000 | 0008 | 0x16A8 | — | first/last line |
+| 0x1371 | 0005 | 0000 | 001F | 0000 | 0006 | 0x18C4 | 0x021C | yellow line |
+| 0x13A4 | 0006 | 0000 | 0273 | 0000 | 000B | 0x196E | 0x00AA | green line |
+| 0x162B | 0007 | 0000 | 0070 | 0000 | 0003 | 0x1A30 | 0x00C2 | orange line |
+| 0x16AF | 0008 | 0000 | 0366 | 0000 | 0005 | 0x26A8 | 0x0C78 | duplicate of 0008 |
+| 0x1A29 | 0009 | 0000 | 0015 | 0000 | 0002 | — | — | terminator |
 
-The first table entry `00040000002900000008` describes the line
-"This text is red, Arial,12px, centered again". A nearby style
-record begins at offset `0x16A8`:
+Here StyleId1 increments with each row, perhaps referencing the default style
+chain. StyleId3 corresponds to the descriptor blocks at offsets `0x16A8` and
+later. The zero values in the StyleId2 column mean no intermediate style was
+used for these lines.
+| Offset | StyleId1 | F2 | Length | StyleId2 | StyleId3 | Notes |
+|------:|--------:|---:|-------:|---------:|---------:|------|
 
-```
-000016A8: 3082 C1 03 C2 12 03 30 30 30 38 30 30 30 30
-000016B8: 33 36 36 30 30 30 30 30 30 30 35 00 34 30 2C 05
-000016C8: 41 72 69 61 6C 00 ...
-```
+StyleId1 climbs from `0004` upward, implying a simple line index. StyleId3
+matches the descriptor IDs from the table below. StyleId2 is zero for all rows,
+so no chained inheritance appears in this sample. When a descriptor is applied
+its font and alignment override the default style.
+| Style ID | Descriptor offset | Δ prev desc | Font | Notes |
+|--------:|------------------:|------------:|------|------|
+| 0008 | 0x16A8 | — | Arial,12px | style used for first and last lines |
+| 0006 | 0x18C4 | 0x021C | Tahoma,9px | yellow line style |
+| 000B | 0x196E | 0x00AA | Terminal,18px | green line style |
+| 0003 | 0x1A30 | 0x00C2 | Tahoma,9px | orange line style |
+| 0008 | 0x2680 | 0x0C50 | Arial,12px | duplicate of style 0008 |
+| 0005 | 0x26A8 | 0x0028 | Arial,12px | duplicate after map table |
+| 0006 | 0x289C | 0x01F4 | Tahoma,9px | duplicate yellow line |
+| 000B | 0x2946 | 0x00AA | Terminal,18px | duplicate green line |
 
-These bytes repeat the style ID `0008` and embed the font
-name `Arial`. About 0x18 bytes into the block appears the
-sequence `30 30 35`, matching the style/flag pair offsets in
-other single-style casts. The small `40,` fragment directly
-before the font name likely stores a font-size value. This
-structure resembles the single-style blocks but lists each
-style sequentially.
+### Color table values
+
+The multi-style file stores a short color table near the start of the XMED data.
+Each color entry begins with the byte `0x01` followed by four ASCII hex digits.
+This means a single entry uses **five bytes** total rather than the six or
+eight bytes normally seen in 24‑ or 32‑bit colour formats.
+
+| Index | Offset | Color value |
+|-----:|------:|------------|
+| 1 | 0x0B6A | FFFF |
+| 2 | 0x1128 | 77AA |
+| 3 | 0x1189 | FF00 |
+| 4 | 0x11D9 | 8C00 |
+| 5 | 0x1601 | 9900 |
+| 6 | 0x1A08 | 60FF |
+
+Style `0008` references color index `0005`, pointing to the final entry above.
+Other style descriptors use indices `0006` and `0008`, suggesting the table
+can hold additional colours beyond the six shown here.
+
+### XMED layout overview
+
+An XMED text member begins with a short header and a default style block.
+Immediately after the header the color table appears around offset `0x1100`.
+The visible text follows twice: once near `0x120A` and again near `0x21E1`.
+Between these copies sits a table of style map entries and the per-style
+descriptor blocks containing font and alignment data.  The descriptors end with
+a small index that points back to one of the colors in the table above.
+
+Comparing 200 bytes from the two text locations shows the first 125 bytes are
+identical, confirming the entire string is duplicated with different numeric
+prefixes.
 
 ### Multi-style entry table
 
