@@ -186,10 +186,18 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     {
         if (@event is InputEventMouseButton mb && !mb.IsPressed())
         {
-            if (mb.ButtonIndex == MouseButton.WheelUp)
-                _masterScroller.ScrollVertical -= 20;
-            else if (mb.ButtonIndex == MouseButton.WheelDown)
-                _masterScroller.ScrollVertical += 20;
+            if (mb.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
+            {
+                var mousePos = GetGlobalMousePosition();
+                Rect2 bounds = new Rect2(_masterScroller.GlobalPosition, _masterScroller.Size);
+                if (bounds.HasPoint(mousePos))
+                {
+                    if (mb.ButtonIndex == MouseButton.WheelUp)
+                        _masterScroller.ScrollVertical -= 20;
+                    else
+                        _masterScroller.ScrollVertical += 20;
+                }
+            }
         }
     }
 
