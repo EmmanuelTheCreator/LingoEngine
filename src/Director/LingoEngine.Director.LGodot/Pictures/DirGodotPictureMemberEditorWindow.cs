@@ -15,7 +15,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
 
+    private readonly ScrollContainer _scrollContainer = new ScrollContainer();
     private readonly CenterContainer _centerContainer = new CenterContainer();
+    private readonly ColorRect _background = new ColorRect();
     private readonly TextureRect _imageRect = new TextureRect();
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private readonly HBoxContainer _bottomBar = new HBoxContainer();
@@ -66,18 +68,32 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         };
         _iconBar.AddChild(_toggleRegPointButton);
 
-        // Image display container
-        AddChild(_centerContainer);
+        // Image display container with scrollbars
+        AddChild(_scrollContainer);
+        _scrollContainer.HorizontalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
+        _scrollContainer.VerticalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
+        _scrollContainer.AnchorLeft = 0;
+        _scrollContainer.AnchorTop = 0;
+        _scrollContainer.AnchorRight = 1;
+        _scrollContainer.AnchorBottom = 1;
+        _scrollContainer.OffsetLeft = 0;
+        _scrollContainer.OffsetTop = TitleBarHeight + IconBarHeight;
+        _scrollContainer.OffsetRight = 0;
+        _scrollContainer.OffsetBottom = -BottomBarHeight;
+
+        _background.Color = Colors.White;
+        _background.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _background.SizeFlagsVertical = SizeFlags.ExpandFill;
+        _scrollContainer.AddChild(_background);
+
+        _scrollContainer.AddChild(_centerContainer);
         _centerContainer.AnchorLeft = 0;
         _centerContainer.AnchorTop = 0;
-        _centerContainer.AnchorRight = 1;
-        _centerContainer.AnchorBottom = 1;
+        _centerContainer.AnchorRight = 0;
+        _centerContainer.AnchorBottom = 0;
         _centerContainer.OffsetLeft = 0;
-        _centerContainer.OffsetTop = TitleBarHeight + IconBarHeight;
-        _centerContainer.OffsetRight = 0;
-        _centerContainer.OffsetBottom = -BottomBarHeight;
-        _centerContainer.PivotOffset = new Vector2(Size.X / 2f,
-            (Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight)) / 2f);
+        _centerContainer.OffsetTop = 0;
+        _centerContainer.PivotOffset = Vector2.Zero;
 
         _imageRect.StretchMode = TextureRect.StretchModeEnum.Keep;
         _centerContainer.AddChild(_imageRect);
@@ -196,12 +212,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _bottomBar.Position = new Vector2(0, size.Y - BottomBarHeight);
         _bottomBar.CustomMinimumSize = new Vector2(size.X, BottomBarHeight);
 
-        _centerContainer.OffsetTop = TitleBarHeight + IconBarHeight;
-        _centerContainer.OffsetBottom = -BottomBarHeight;
-        _centerContainer.OffsetLeft = 0;
-        _centerContainer.OffsetRight = 0;
-        _centerContainer.PivotOffset = new Vector2(size.X / 2f,
-            (size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight)) / 2f);
+        _scrollContainer.OffsetTop = TitleBarHeight + IconBarHeight;
+        _scrollContainer.OffsetBottom = -BottomBarHeight;
+        _scrollContainer.OffsetLeft = 0;
+        _scrollContainer.OffsetRight = 0;
+        _centerContainer.PivotOffset = Vector2.Zero;
         _regPointCanvas.QueueRedraw();
     }
 
@@ -237,8 +252,8 @@ internal partial class DirGodotPictureMemberEditorWindow
             Vector2 offset = new((areaSize.X - texSize.X * factor) / 2f,
                                  (areaSize.Y - texSize.Y * factor) / 2f);
 
-            // Convert from top-right regPoint origin
-            Vector2 pos = new Vector2(member.Width - member.RegPoint.X, member.RegPoint.Y) * factor + offset;
+            // RegPoint origin is the texture's top-left corner
+            Vector2 pos = new Vector2(member.RegPoint.X, member.RegPoint.Y) * factor + offset;
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
