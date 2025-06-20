@@ -2,13 +2,14 @@
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Director.Core.Windows;
 using LingoEngine.Movies;
 using LingoEngine.Members;
 using LingoEngine.Casts;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable, IHasFindMemberEvent
+    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable, IHasFindMemberEvent, IDirFrameworkCastWindow
     {
         private readonly TabContainer _tabs;
         
@@ -27,7 +28,6 @@ namespace LingoEngine.Director.LGodot.Casts
             _lingoMovie = lingoMovie;
             _mediator = mediator;
             _style = style;
-            _mediator.SubscribeToMenu(DirectorMenuCodes.CastWindow, () => Visible = !Visible);
             _mediator.Subscribe(this);
 
             Size = new Vector2(360, 620);
@@ -109,5 +109,10 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             _mediator.Unsubscribe(this);
         }
+
+        public bool IsOpen => Visible;
+        public void OpenWindow() => Visible = true;
+        public void CloseWindow() => Visible = false;
+        public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
     }
 }

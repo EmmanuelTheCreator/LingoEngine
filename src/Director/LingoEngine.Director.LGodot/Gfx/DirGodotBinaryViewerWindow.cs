@@ -5,11 +5,12 @@ using System.IO;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.TestData;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.Core.Windows;
 using System.Diagnostics;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
-    internal partial class DirGodotBinaryViewerWindow : BaseGodotWindow, IHasMenuItemSelectedEvent
+    internal partial class DirGodotBinaryViewerWindow : BaseGodotWindow, IDirFrameworkBinaryViewerWindow
     {
         private readonly IDirectorEventMediator _mediator;
         private readonly LineEdit _pathEdit = new LineEdit();
@@ -29,7 +30,6 @@ namespace LingoEngine.Director.LGodot.Gfx
         public DirGodotBinaryViewerWindow(IDirectorEventMediator mediator) : base("Binary Viewer")
         {
             _mediator = mediator;
-            _mediator.SubscribeToMenu(DirectorMenuCodes.BinaryViewerWindow, () => Visible = !Visible);
             Size = new Vector2(1400, 600);
             CustomMinimumSize = Size;
 
@@ -267,8 +267,6 @@ namespace LingoEngine.Director.LGodot.Gfx
             }
         }
 
-        public void MenuItemSelected(string code) {}
-
         private void ClearChildren(Container container)
         {
             foreach (var child in container.GetChildren().ToArray())
@@ -277,5 +275,10 @@ namespace LingoEngine.Director.LGodot.Gfx
                     node.QueueFree();
             }
         }
+
+        public bool IsOpen => Visible;
+        public void OpenWindow() => Visible = true;
+        public void CloseWindow() => Visible = false;
+        public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
     }
 }
