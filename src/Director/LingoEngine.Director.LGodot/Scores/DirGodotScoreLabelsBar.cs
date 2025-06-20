@@ -25,7 +25,6 @@ internal partial class DirGodotScoreLabelsBar : Control
         _editField.Visible = false;
         _editField.Size = new Vector2(60, 16);
         _editField.TextSubmitted += _ => CommitEdit();
-        _editField.FocusExited += () => CommitEdit();
     }
 
     public void SetMovie(LingoMovie? movie)
@@ -71,11 +70,20 @@ internal partial class DirGodotScoreLabelsBar : Control
                         _activeLabel = kv.Key;
                         _activeFrame = kv.Value;
                         _startFrame = kv.Value;
-                        _dragging = true;
-                        _editField.Text = kv.Key;
-                        UpdateEditFieldPosition();
-                        _editField.Visible = true;
-                        _editField.GrabFocus();
+                        if (mb.DoubleClick)
+                        {
+                            // Open the edit field on double click
+                            _dragging = false;
+                            _editField.Text = kv.Key;
+                            UpdateEditFieldPosition();
+                            _editField.Visible = true;
+                            _editField.GrabFocus();
+                        }
+                        else
+                        {
+                            // Start dragging to reposition the label
+                            _dragging = true;
+                        }
                         break;
                     }
                 }
