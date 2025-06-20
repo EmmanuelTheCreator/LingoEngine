@@ -21,9 +21,15 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                         //.AddFont("8Pin Matrix", Path.Combine("Media", "Fonts", "8PinMatrix.ttf"))
                         //.AddFont("Earth", Path.Combine("Media", "Fonts", "earth.ttf"))
                         //.AddFont("Tahoma", Path.Combine("Media", "Fonts", "Tahoma.ttf"))
+                        .WithProjectSettings(s =>
+                        {
+                            s.ProjectFolder = "TetriGrounds";
+                            s.ProjectName = "TetriGrounds";
+                            s.MaxSpriteChannelCount = 300;
+                        })
                         .ForMovie(TetriGroundsGame.MovieName, s => s
-                            .AddMovieScript<StartMoviesScript>()
-                            .AddMovieScript<StarMovieScript>()
+                            //.AddMovieScript<StartMoviesScript>()
+                            //.AddMovieScript<StarMovieScript>()
                             // Globals
                             .AddBehavior<MouseDownNavigateBehavior>()
                             .AddBehavior<MouseDownNavigateWithStayBehavior>()
@@ -43,20 +49,20 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                             .AddBehavior<StopMenuBehavior>()
                             .AddBehavior<TextCounterBehavior>()
 
-                            .AddParentScript<BlockParentScript>()
-                            .AddParentScript<BlocksParentScript>()
-                            .AddParentScript<GfxParentScript>()
-                            .AddParentScript<InterestingEncryptoParentScript>()
-                            .AddParentScript<MousePointer>()
-                            .AddParentScript<OverScreenTextParentScript>()
-                            .AddParentScript<PlayerBlockParentScript>()
-                            .AddParentScript<ScoreManagerParentScript>()
-                            .AddParentScript<SpriteManagerParentScript>()
-                            .AddParentScript<ScoreGetParentScript>()
-                            .AddParentScript<ScoreSaveParentScript>()
-                            .AddParentScript<ClassSubscribeParentScript>()
-                            .AddParentScript<StartDataGetParentScript>()
-                            .AddParentScript<StartDataSaveParentScript>()
+                            //.AddParentScript<BlockParentScript>()
+                            //.AddParentScript<BlocksParentScript>()
+                            //.AddParentScript<GfxParentScript>()
+                            //.AddParentScript<InterestingEncryptoParentScript>()
+                            //.AddParentScript<MousePointer>()
+                            //.AddParentScript<OverScreenTextParentScript>()
+                            //.AddParentScript<PlayerBlockParentScript>()
+                            //.AddParentScript<ScoreManagerParentScript>()
+                            //.AddParentScript<SpriteManagerParentScript>()
+                            //.AddParentScript<ScoreGetParentScript>()
+                            //.AddParentScript<ScoreSaveParentScript>()
+                            //.AddParentScript<ClassSubscribeParentScript>()
+                            //.AddParentScript<StartDataGetParentScript>()
+                            //.AddParentScript<StartDataSaveParentScript>()
                             // Other
                         );
                     registration(config);

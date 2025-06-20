@@ -14,6 +14,9 @@ using LingoEngine.Sounds;
 using LingoEngine.Texts;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Pictures;
+using LingoEngine.LGodot.Stages;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine.LGodot
 {
@@ -62,6 +65,7 @@ namespace LingoEngine.LGodot
                 Type t when t == typeof(LingoMemberText) => (CreateMemberText(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberField) => (CreateMemberField(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberSound) => (CreateMemberSound(cast, numberInCast, name) as T)!,
+                Type t when t == typeof(LingoMemberFilmLoop) => (CreateMemberFilmLoop(cast, numberInCast, name) as T)!,
             };
         }
         public LingoMemberSound CreateMemberSound(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
@@ -71,6 +75,14 @@ namespace LingoEngine.LGodot
             lingoMemberSound.Init(memberSound);
             _disposables.Add(lingoMemberSound);
             return memberSound;
+        }
+        public LingoMemberFilmLoop CreateMemberFilmLoop(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+        {
+            var impl = new LingoGodotMemberFilmLoop();
+            var member = new LingoMemberFilmLoop(impl, (LingoCast)cast, numberInCast, name, fileName ?? "", regPoint);
+            impl.Init(member);
+            _disposables.Add(impl);
+            return member;
         }
         public LingoMemberPicture CreateMemberPicture(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
@@ -108,20 +120,12 @@ namespace LingoEngine.LGodot
 
         public LingoStage CreateStage(LingoPlayer lingoPlayer)
         {
-            var stageWindow = _serviceProvider.GetService<ILingoFrameworkStageWindow>();
-            Node parent = stageWindow as Node ?? _rootNode;
-            if (stageWindow is Node)
-                _rootNode = parent;
-
-            var clock = (LingoClock)lingoPlayer.Clock;
-            var overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(parent), lingoPlayer);
-            var godotInstance = new LingoGodotStage(parent, clock, overlay);
-            var lingoInstance = new LingoStage(stageWindow as ILingoFrameworkStage ?? godotInstance);
+            var stageContainer = (LingoGodotStageContainer)_serviceProvider.GetRequiredService<ILingoFrameworkStageContainer>();
+            var godotInstance = new LingoGodotStage(lingoPlayer);
+            var lingoInstance = new LingoStage(godotInstance);
+            stageContainer.SetStage(godotInstance);
             godotInstance.Init(lingoInstance, lingoPlayer);
             _disposables.Add(godotInstance);
-
-            stageWindow?.SetStage(godotInstance);
-
             return lingoInstance;
         }
         public LingoMovie AddMovie(LingoStage stage, LingoMovie lingoMovie)

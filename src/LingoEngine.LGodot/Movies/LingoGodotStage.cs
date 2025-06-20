@@ -2,7 +2,7 @@
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
-using LingoEngine.Inputs;
+using LingoEngine.LGodot.Stages;
 
 namespace LingoEngine.LGodot.Movies
 {
@@ -16,11 +16,12 @@ namespace LingoEngine.LGodot.Movies
 
         private LingoGodotMovie? _activeMovie;
 
-        public LingoGodotStage(Node rootNode, LingoClock lingoClock, LingoDebugOverlay overlay)
+        float ILingoFrameworkStage.Scale { get => base.Scale.X; set => base.Scale = new Vector2(value,value); }
+
+        public LingoGodotStage(LingoPlayer lingoPlayer)
         {
-            _lingoClock = lingoClock;
-            _overlay = overlay;
-            rootNode.AddChild(this);
+            _lingoClock = (LingoClock)lingoPlayer.Clock;
+            _overlay = new LingoDebugOverlay(new Core.LingoGodotDebugOverlay(this), lingoPlayer);
         }
 
         public override void _Ready()
@@ -69,6 +70,11 @@ namespace LingoEngine.LGodot.Movies
             var godotMovie = lingoMovie.Framework<LingoGodotMovie>();
             _activeMovie = godotMovie;
             godotMovie.Show();
+        }
+
+        internal void SetScale(float scale)
+        {
+            Scale = new Vector2(scale, scale);
         }
     }
 }

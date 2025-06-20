@@ -4,6 +4,10 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Primitives;
 using LingoEngine.Animations;
+using LingoEngine.Pictures;
+using System.Linq;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine.Movies
 {
@@ -13,16 +17,17 @@ namespace LingoEngine.Movies
     {
         private readonly ILingoMovieEnvironment _environment;
         private readonly LingoEventMediator _eventMediator;
-        private readonly List<LingoSpriteBehavior> _behaviors = new List<LingoSpriteBehavior>();
+        private readonly List<LingoSpriteBehavior> _behaviors = new();
+        private readonly List<object> _spriteActors = new();
 
         private ILingoFrameworkSprite _frameworkSprite;
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
+        private bool _lock = false;
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
         private bool _isFocus = false;
-        public Animations.LingoSpriteAnimator Animator { get; private set; }
 
 
         #region Properties
@@ -66,7 +71,7 @@ namespace LingoEngine.Movies
         public LingoPoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
         public float Rotation { get => _frameworkSprite.Rotation; set => _frameworkSprite.Rotation = value; }
-        public float Skew { get => _frameworkSprite.SkewX; set => _frameworkSprite.SkewX = value; }
+        public float Skew { get => _frameworkSprite.Skew; set => _frameworkSprite.Skew = value; }
 
         public LingoPoint RegPoint { get; set; }
         public LingoColor ForeColor { get; set; }
@@ -81,6 +86,11 @@ namespace LingoEngine.Movies
         public int EndFrame { get; set; }
 
         public bool Editable { get; set; }
+        public bool Lock
+        {
+            get => _lock;
+            set => _lock = value;
+        }
         public bool IsDraggable
         {
             get => isDraggable;
@@ -89,7 +99,16 @@ namespace LingoEngine.Movies
 
         public LingoColor Color { get; set; }
         public LingoColor BackColor { get; set; }
-        public new LingoRect Rect => new LingoRect(LocH, LocV, LocH + Width, LocV + Height);
+        public new LingoRect Rect
+        {
+            get
+            {
+                var offset = GetRegPointOffset();
+                float left = LocH + offset.X;
+                float top = LocV + offset.Y;
+                return new LingoRect(left, top, left + Width, top + Height);
+            }
+        }
 
         public int Size => Media.Length;
 
@@ -106,6 +125,22 @@ namespace LingoEngine.Movies
 
         #endregion
 
+        private LingoPoint GetRegPointOffset()
+        {
+            if (_Member is { } member)
+            {
+                var baseOffset = member.CenterOffsetFromRegPoint();
+                if (member.Width != 0 && member.Height != 0)
+                {
+                    float scaleX = Width / member.Width;
+                    float scaleY = Height / member.Height;
+                    return new LingoPoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
+                }
+                return baseOffset;
+            }
+            return new LingoPoint();
+        }
+
 
 
         // Not used in c#
@@ -117,8 +152,7 @@ namespace LingoEngine.Movies
             : base(environment)
         {
             _environment = environment;
-            _eventMediator = (LingoEventMediator) _environment.Events;
-            Animator = new Animations.LingoSpriteAnimator(this, environment);
+            _eventMediator = (LingoEventMediator)_environment.Events;
         }
         public void Init(ILingoFrameworkSprite frameworkSprite)
         {
@@ -140,8 +174,56 @@ namespace LingoEngine.Movies
             var behavior = _environment.Factory.CreateBehavior<T>((LingoMovie)_environment.Movie);
             behavior.SetMe(this);
             _behaviors.Add(behavior);
-            
+
             return behavior;
+        }
+
+        /// <summary>
+        /// Adds animation keyframes for this sprite. When invoked for the first time
+        /// it lazily creates a <see cref="LingoSpriteAnimator"/> actor and stores it
+        /// in the internal sprite actors list.
+        /// </summary>
+        /// <param name="keyframes">Tuple list containing frame number, X, Y, rotation and skew values.</param>
+        public void AddKeyframes(params (int Frame, float X, float Y, float Rotation, float Skew)[] keyframes)
+        {
+            if (keyframes == null || keyframes.Length == 0)
+                return;
+
+            var animator = _spriteActors.OfType<LingoSpriteAnimator>().FirstOrDefault();
+            if (animator == null)
+            {
+                animator = new Animations.LingoSpriteAnimator(this, _environment);
+                AddActor(animator);
+            }
+
+            animator.AddKeyFrames(keyframes);
+        }
+
+        public void UpdateKeyframe(int frame, float x, float y, float rotation, float skew)
+        {
+            var animator = _spriteActors.OfType<LingoSpriteAnimator>().FirstOrDefault();
+            if (animator == null)
+            {
+                animator = new Animations.LingoSpriteAnimator(this, _environment);
+                AddActor(animator);
+            }
+            animator.UpdateKeyFrame(frame, x, y, rotation, skew);
+            animator.RecalculateCache();
+        }
+
+        public void SetSpriteTweenOptions(bool positionEnabled, bool rotationEnabled, bool skewEnabled,
+            bool foregroundColorEnabled, bool backgroundColorEnabled, bool blendEnabled,
+            float curvature, bool continuousAtEnds, bool speedSmooth, float easeIn, float easeOut)
+        {
+            var animator = _spriteActors.OfType<LingoSpriteAnimator>().FirstOrDefault();
+            if (animator == null)
+            {
+                animator = new Animations.LingoSpriteAnimator(this, _environment);
+                AddActor(animator);
+            }
+            animator.SetTweenOptions(positionEnabled, rotationEnabled, skewEnabled,
+                foregroundColorEnabled, backgroundColorEnabled, blendEnabled,
+                curvature, continuousAtEnds, speedSmooth, easeIn, easeOut);
         }
 
         /*
@@ -170,13 +252,18 @@ When a movie stops, events occur in the following order:
 
         internal virtual void DoBeginSprite()
         {
+            // Subscribe all actors
+            foreach (var actor in _spriteActors)
+            {
+                _eventMediator.Subscribe(actor);
+                if (actor is IHasBeginSpriteEvent begin) begin.BeginSprite();
+            }
             // Subscribe all behaviors
-            //_eventMediator.Subscribe(Animator);
             _behaviors.ForEach(b =>
             {
                 _eventMediator.Subscribe(b);
                 if (b is IHasBeginSpriteEvent beginSpriteEvent) beginSpriteEvent.BeginSprite();
-                
+
             });
             BeginSprite();
         }
@@ -189,7 +276,11 @@ When a movie stops, events occur in the following order:
                 _eventMediator.Unsubscribe(b);
                 if (b is IHasEndSpriteEvent endSpriteEvent) endSpriteEvent.EndSprite();
             });
-           // _eventMediator.Unsubscribe(Animator);
+            foreach (var actor in _spriteActors)
+            {
+                if (actor is IHasEndSpriteEvent end) end.EndSprite();
+                _eventMediator.Unsubscribe(actor);
+            }
             EndSprite();
         }
         protected virtual void EndSprite() { }
@@ -200,8 +291,7 @@ When a movie stops, events occur in the following order:
 
         public bool PointInSprite(LingoPoint point)
         {
-            var bounds = new LingoRect(LocH, LocV, LocH + Width, LocV + Height);
-            return bounds.Contains(point);
+            return Rect.Contains(point);
         }
 
         public void SetMember(string memberName, int? castLibNum = null)
@@ -210,7 +300,8 @@ When a movie stops, events occur in the following order:
             _Member = member ?? throw new Exception(Name + ":Member not found with name " + memberName);
             if (_Member != null)
                 RegPoint = _Member.RegPoint;
-            _frameworkSprite.MemberChanged();
+
+            MemberHaschanged();
         }
 
 
@@ -221,12 +312,37 @@ When a movie stops, events occur in the following order:
             if (_Member != null)
                 RegPoint = _Member.RegPoint;
 
+            MemberHaschanged();
         }
         public void SetMember(ILingoMember? member)
         {
             _Member = member as LingoMember;
             if (_Member != null)
                 RegPoint = _Member.RegPoint;
+
+            MemberHaschanged();
+        }
+
+        private void MemberHaschanged()
+        {
+            var existingPlayer = _spriteActors.OfType<LingoFilmLoopPlayer>().FirstOrDefault();
+            if (_Member is LingoMemberFilmLoop)
+            {
+                if (existingPlayer == null)
+                {
+                    existingPlayer = new LingoFilmLoopPlayer(this, _environment);
+                    AddActor(existingPlayer);
+                }
+                if (IsActive)
+                    existingPlayer.BeginSprite();
+            }
+            else if (existingPlayer != null)
+            {
+                if (IsActive)
+                    existingPlayer.EndSprite();
+                RemoveActor(existingPlayer);
+            }
+
             _frameworkSprite.MemberChanged();
         }
 
@@ -274,31 +390,23 @@ When a movie stops, events occur in the following order:
 
         public bool Intersects(ILingoSprite other)
         {
-            return LocH < other.LocH + other.Width &&
-                   LocH + Width > other.LocH &&
-                   LocV < other.LocV + other.Height &&
-                   LocV + Height > other.LocV;
+            return Rect.Intersects(other.Rect);
         }
+
         public bool Within(ILingoSprite other)
         {
-            var thisCenterX = LocH + Width / 2;
-            var thisCenterY = LocV + Height / 2;
-
-            return thisCenterX >= other.LocH &&
-                   thisCenterX <= other.LocH + other.Width &&
-                   thisCenterY >= other.LocV &&
-                   thisCenterY <= other.LocV + other.Height;
+            var center = Rect.Center;
+            return other.Rect.Contains(center);
         }
+
         public (LingoPoint topLeft, LingoPoint topRight, LingoPoint bottomRight, LingoPoint bottomLeft) Quad()
         {
-            float x = LocH;
-            float y = LocV;
-
+            var rect = Rect;
             return (
-                new LingoPoint(x, y),                             // top-left
-                new LingoPoint(x + Width, y),                     // top-right
-                new LingoPoint(x + Width, y + Height),            // bottom-right
-                new LingoPoint(x, y + Height)                     // bottom-left
+                rect.TopLeft,
+                new LingoPoint(rect.Right, rect.Top),
+                rect.BottomRight,
+                new LingoPoint(rect.Left, rect.Bottom)
             );
         }
 
@@ -399,7 +507,8 @@ When a movie stops, events occur in the following order:
         /// <summary>
         /// Check if the mouse position is inside the bounding box of the sprite
         /// </summary>
-        public bool IsMouseInsideBoundingBox(LingoMouse mouse) => mouse.MouseH >= LocH && mouse.MouseH <= LocH + Width && mouse.MouseV >= LocV && mouse.MouseV <= LocV + Height;
+        public bool IsMouseInsideBoundingBox(LingoMouse mouse)
+            => Rect.Contains((mouse.MouseH, mouse.MouseV));
 
         internal void CallBehavior<T>(Action<T> actionOnSpriteBehaviour) where T : LingoSpriteBehavior
         {
@@ -412,6 +521,40 @@ When a movie stops, events occur in the following order:
             var behavior = _behaviors.FirstOrDefault(x => x is T) as T;
             if (behavior == null) return default;
             return actionOnSpriteBehaviour(behavior);
+        }
+
+        internal void CallActor<T>(Action<T> actionOnActor) where T : class
+        {
+            var actor = _spriteActors.OfType<T>().FirstOrDefault();
+            if (actor == null) return;
+            actionOnActor(actor);
+        }
+
+        internal TResult? CallActor<T, TResult>(Func<T, TResult> func) where T : class
+        {
+            var actor = _spriteActors.OfType<T>().FirstOrDefault();
+            if (actor == null) return default;
+            return func(actor);
+        }
+
+        private void AddActor(object actor)
+        {
+            _spriteActors.Add(actor);
+            if (IsActive)
+            {
+                _eventMediator.Subscribe(actor);
+                if (actor is IHasBeginSpriteEvent begin) begin.BeginSprite();
+            }
+        }
+
+        private void RemoveActor(object actor)
+        {
+            if (IsActive)
+            {
+                if (actor is IHasEndSpriteEvent end) end.EndSprite();
+                _eventMediator.Unsubscribe(actor);
+            }
+            _spriteActors.Remove(actor);
         }
 
 

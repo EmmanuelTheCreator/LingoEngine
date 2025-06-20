@@ -11,5 +11,6 @@ namespace LingoEngine.FrameworkCommunication
     {
         /// <summary>Sets the currently active movie.</summary>
         void SetActiveMovie(LingoMovie? lingoMovie);
+        float Scale { get; set; }
     }
 }

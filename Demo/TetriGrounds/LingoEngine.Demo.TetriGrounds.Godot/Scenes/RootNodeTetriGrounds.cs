@@ -1,18 +1,20 @@
 using Godot;
 using LingoEngine.Demo.TetriGrounds.Core;
+#if DEBUG
 using LingoEngine.Director.LGodot;
-using LingoEngine.Director.LGodot.Movies;
-using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.LGodot.Gfx;
+#else
 using LingoEngine.LGodot;
-using LingoEngine.LGodot.Movies;
+#endif
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using LingoEngine.Director.Core;
 
 public partial class RootNodeTetriGrounds : Node2D
 {
     private ServiceCollection _services;
-    private LingoGodotPlayerControler _controller;
+#if DEBUG
+    private LingoGodotDirectorRoot _director;
+#endif
 
     //private LingoGodotPlayerControler _controller;
     // Called when the node enters the scene tree for the first time.
@@ -20,47 +22,44 @@ public partial class RootNodeTetriGrounds : Node2D
     {
         try
         {
-            //#if DEBUG
-            //            var timer = new Timer
-            //            {
-            //                WaitTime = 0.1,
-            //                OneShot = true,
-            //                Autostart = true
-            //            };
+#if DEBUG
+            ProjectSettings.SetSetting("display/window/stretch/mode", "disabled");
+            ProjectSettings.SetSetting("display/window/stretch/aspect", "ignore");
+            DisplayServer.WindowSetSize(new Vector2I(1600, 1000));
+#else
+            ProjectSettings.SetSetting("display/window/size/initial_position_type","3");
+            ProjectSettings.SetSetting("display/window/stretch/mode","canvas_items");
+            ProjectSettings.SetSetting("display/window/stretch/aspect", "keep");
+            DisplayServer.WindowSetSize(new Vector2I(730, 546));
+#endif            
+            //DisplayServer.WindowSetPosition((DisplayServer.ScreenGetSize() - DisplayServer.WindowGetSize()) / 2);
 
-            //            // Add the timer to the scene
-            //            AddChild(timer);
+            var screenSize = DisplayServer.ScreenGetSize();
+            var windowSize = DisplayServer.WindowGetSize();
 
-            //            // Connect timeout to move the window to second screen
-            //            timer.Timeout += () =>
-            //            {
-            //                int targetScreen = 1; // 0 = primary, 1 = second monitor
-            //                //Vector2I screenPosition = DisplayServer.ScreenGetPosition(targetScreen);
-            //                //DisplayServer.WindowSetPosition(screenPosition);
-            //                DisplayServer.WindowSetPosition(new Vector2I(2000, 250));
-            //                RemoveChild(timer);
-            //            };
-            //#endif
+            var centeredPos = (screenSize - windowSize) / 2;
+            centeredPos.Y += 400; // Shift window down by 200px
 
-
+            DisplayServer.WindowSetPosition(centeredPos);
             _services = new ServiceCollection();
             TetriGroundsSetup.AddTetriGrounds(_services, c => c
-                    .WithLingoGodotEngine(this)
 #if DEBUG
-                    .WithDirectorEngine()
                     .WithDirectorGodotEngine(this)
+#else
+                    .WithLingoGodotEngine(this)
 #endif
                     );
             var serviceProvider = _services.BuildServiceProvider();
 
+#if DEBUG
             var movie = TetriGroundsSetup.SetupGame(serviceProvider);
             var game = TetriGroundsSetup.StartGame(serviceProvider);
-#if DEBUG
-            _controller = new LingoGodotPlayerControler(
-                (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode,
-                movie,
-                serviceProvider.GetRequiredService<IDirectorEventMediator>());
+           // _director = new LingoGodotDirectorRoot(movie, game.LingoPlayer, serviceProvider);
+#else
+            TetriGroundsSetup.SetupGame(serviceProvider);
+            TetriGroundsSetup.StartGame(serviceProvider);
 #endif
+
 
         }
         catch (Exception ex)

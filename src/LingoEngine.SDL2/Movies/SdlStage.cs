@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
@@ -12,6 +11,7 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
     private LingoStage _stage = null!;
     private readonly HashSet<SdlMovie> _movies = new();
     private SdlMovie? _activeMovie;
+    public float Scale { get ; set; }
 
     public SdlStage(SdlRootContext rootContext, LingoClock clock)
     {
@@ -20,6 +20,7 @@ public class SdlStage : ILingoFrameworkStage, IDisposable
     }
 
     internal SdlRootContext RootContext => _rootContext;
+
 
     internal void Init(LingoStage stage)
     {

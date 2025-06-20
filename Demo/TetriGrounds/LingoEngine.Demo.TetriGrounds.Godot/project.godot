@@ -17,14 +17,17 @@ config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=1000
-window/size/viewport_height=800
 window/size/initial_position_type=3
-window/stretch/mode="viewport"
+window/size/initial_position=Vector2i(0, 200)
 
 [dotnet]
 
 project/assembly_name="LingoEngine.Demo.TetriGrounds.Godot"
+
+
+[gui]
+
+; theme/custom="uid://xc6qaca8t4t6" ; replaced by DirectorStyle.CreateTheme()
 
 [rendering]
 
