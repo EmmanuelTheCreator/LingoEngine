@@ -7,6 +7,7 @@ using LingoEngine.Director.Core;
 using LingoEngine.Director.Core.Menus;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Gfx;
+using System.Collections.Generic;
 
 namespace LingoEngine.Director.LGodot;
 
@@ -23,16 +24,31 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
     private readonly IDirectorWindowManager _windowManager;
     private readonly DirectorProjectManager _projectManager;
     private readonly LingoPlayer _player;
+    private readonly IDirectorShortCutManager _shortCutManager;
+    private readonly List<ShortCutInfo> _shortCuts = new();
     private readonly Button _rewindButton;
     private readonly Button _playButton;
     private ILingoMovie? _lingoMovie;
 
-    public DirGodotMainMenu(IDirectorWindowManager windowManager, DirectorProjectManager projectManager, LingoPlayer player, DirectorMainMenu directorMainMenu)
+    private class ShortCutInfo
+    {
+        public DirectorShortCutMap Map { get; init; } = null!;
+        public string Key { get; init; } = string.Empty;
+        public bool Ctrl { get; init; }
+        public bool Alt { get; init; }
+        public bool Shift { get; init; }
+        public bool Meta { get; init; }
+    }
+
+    public DirGodotMainMenu(IDirectorWindowManager windowManager, DirectorProjectManager projectManager, LingoPlayer player, IDirectorShortCutManager shortCutManager, DirectorMainMenu directorMainMenu)
     {
         _windowManager = windowManager;
         _projectManager = projectManager;
         _player = player;
+        _shortCutManager = shortCutManager;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
+        _shortCutManager.ShortCutAdded += OnShortCutAdded;
+        _shortCutManager.ShortCutRemoved += OnShortCutRemoved;
         directorMainMenu.Init(this);
 
         AddChild(_menuBar);
@@ -56,6 +72,9 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         _iconBar.AddChild(_playButton);
 
         UpdatePlayButton();
+
+        foreach (var sc in _shortCutManager.GetShortCuts())
+            _shortCuts.Add(ParseShortCut(sc));
     }
 
     private void ComposeMenu()
@@ -151,6 +170,29 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         _playButton.Text = _lingoMovie != null && _lingoMovie.IsPlaying ? "Stop" : "Play";
     }
 
+    private void OnShortCutAdded(DirectorShortCutMap map)
+        => _shortCuts.Add(ParseShortCut(map));
+
+    private void OnShortCutRemoved(DirectorShortCutMap map)
+        => _shortCuts.RemoveAll(s => s.Map == map);
+
+    private ShortCutInfo ParseShortCut(DirectorShortCutMap map)
+    {
+        bool ctrl = false, alt = false, shift = false, meta = false;
+        string key = string.Empty;
+        var parts = map.KeyCombination.Split('+');
+        foreach (var p in parts)
+        {
+            var token = p.Trim();
+            if (token.Equals("CTRL", System.StringComparison.OrdinalIgnoreCase)) ctrl = true;
+            else if (token.Equals("ALT", System.StringComparison.OrdinalIgnoreCase)) alt = true;
+            else if (token.Equals("SHIFT", System.StringComparison.OrdinalIgnoreCase)) shift = true;
+            else if (token.Equals("CMD", System.StringComparison.OrdinalIgnoreCase) || token.Equals("META", System.StringComparison.OrdinalIgnoreCase)) meta = true;
+            else key = token;
+        }
+        return new ShortCutInfo { Map = map, Key = key.ToUpperInvariant(), Ctrl = ctrl, Alt = alt, Shift = shift, Meta = meta };
+    }
+
     public HBoxContainer IconBar => _iconBar;
 
     public bool IsOpen => throw new NotImplementedException();
@@ -159,7 +201,31 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
     {
         OnActiveMovieChanged(null);
         _player.ActiveMovieChanged -= OnActiveMovieChanged;
+        _shortCutManager.ShortCutAdded -= OnShortCutAdded;
+        _shortCutManager.ShortCutRemoved -= OnShortCutRemoved;
         base.Dispose(disposing);
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is InputEventKey k && k.Pressed && !k.Echo)
+        {
+            var label = k.KeyLabel.ToString().ToUpperInvariant();
+            bool ctrl = Input.IsKeyPressed(Key.Ctrl);
+            bool alt = Input.IsKeyPressed(Key.Alt);
+            bool shift = Input.IsKeyPressed(Key.Shift);
+            bool meta = Input.IsKeyPressed(Key.Meta);
+
+            foreach (var sc in _shortCuts)
+            {
+                if (sc.Key == label && sc.Ctrl == ctrl && sc.Alt == alt && sc.Shift == shift && sc.Meta == meta)
+                {
+                    _shortCutManager.Execute(sc.Map.KeyCombination);
+                    GetTree().SetInputAsHandled();
+                    break;
+                }
+            }
+        }
     }
 
     public void OpenWindow()
