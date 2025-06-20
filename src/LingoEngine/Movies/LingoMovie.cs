@@ -38,6 +38,10 @@ namespace LingoEngine.Movies
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
         private bool _IsManualUpdateStage;
+        public event Action? SpriteListChanged;
+
+        private void RaiseSpriteListChanged()
+            => SpriteListChanged?.Invoke();
         private LingoSprite? _currentFrameSprite;
 
         // Movie Script subscriptions
@@ -163,7 +167,8 @@ namespace LingoEngine.Movies
             var sprite = _environment.Factory.CreateSprite<LingoSprite>(this, s =>
             {
                 // On remove method
-                var index = _frameSpriteBehaviors.Remove(frameNumber);
+                _frameSpriteBehaviors.Remove(frameNumber);
+                RaiseSpriteListChanged();
             });
             sprite.Init(0, "FrameSprite_"+frameNumber);
             if (_frameSpriteBehaviors.ContainsKey(frameNumber))
@@ -176,6 +181,7 @@ namespace LingoEngine.Movies
             var behaviour = sprite.SetBehavior<TBehaviour>();
             if (configureBehaviour != null) configureBehaviour(behaviour);
             if (configure != null) configure(sprite);
+            RaiseSpriteListChanged();
             return sprite;
         }
           
@@ -198,6 +204,7 @@ namespace LingoEngine.Movies
                 var index = _allTimeSprites.IndexOf(s);
                 _allTimeSprites.RemoveAt(index);
                 _spritesByName.Remove(name);
+                RaiseSpriteListChanged();
             });
             sprite.Init(num, name);
             //var sprite = new LingoSprite(_environment, this, name, num);
@@ -208,6 +215,7 @@ namespace LingoEngine.Movies
                 _maxSpriteNum = num;
             if (configure != null)
                 configure(sprite);
+            RaiseSpriteListChanged();
             return sprite;
         }
         public bool RemoveSprite(string name)
