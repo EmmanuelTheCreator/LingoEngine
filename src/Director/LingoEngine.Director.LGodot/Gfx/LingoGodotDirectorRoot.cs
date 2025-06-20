@@ -6,6 +6,8 @@ using LingoEngine.LGodot;
 using LingoEngine.Director.LGodot.Casts;
 using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
+using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.LGodot.Pictures;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -21,6 +23,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly DirGodotProjectSettingsWindow _projectSettingsWindow;
         private readonly DirGodotBinaryViewerWindow _binaryViewer;
         private readonly DirGodotTextableMemberWindow _textWindow;
+        private readonly DirGodotPictureMemberEditorWindow _picture;
 
         public LingoGodotDirectorRoot(LingoPlayer player, IServiceProvider serviceProvider)
         {
@@ -43,7 +46,9 @@ namespace LingoEngine.Director.LGodot.Gfx
             _toolsWindow = serviceProvider.GetRequiredService<DirGodotToolsWindow>();
             _binaryViewer = serviceProvider.GetRequiredService<DirGodotBinaryViewerWindow>();
             _textWindow = serviceProvider.GetRequiredService<DirGodotTextableMemberWindow>();
+            _picture = serviceProvider.GetRequiredService<DirGodotPictureMemberEditorWindow>();
 
+            _directorParent.AddChild(_picture);
             _directorParent.AddChild(_stageWindow);
             _directorParent.AddChild(_dirGodotMainMenu);
             _directorParent.AddChild(_projectSettingsWindow);
@@ -61,6 +66,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _projectSettingsWindow.CloseWindow();
             _binaryViewer.CloseWindow();
             _textWindow.CloseWindow();
+            _picture.CloseWindow();
 
         }
 
@@ -74,10 +80,12 @@ namespace LingoEngine.Director.LGodot.Gfx
             _binaryViewer.Position = new Vector2(20, 120);
             _projectSettingsWindow.Position = new Vector2(100, 100);
             _textWindow.Position = new Vector2(20, 120);
+            _picture.Position = new Vector2(20, 120);
         }
 
         public void Dispose()
         {
+            _picture.Dispose();
             _textWindow.Dispose();
             _stageWindow.Dispose();
             _scoreWindow.Dispose();

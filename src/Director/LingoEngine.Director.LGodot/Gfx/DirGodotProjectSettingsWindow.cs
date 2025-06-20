@@ -12,8 +12,8 @@ internal partial class DirGodotProjectSettingsWindow : BaseGodotWindow, IDirFram
     private readonly LineEdit _nameEdit = new LineEdit();
     private readonly LineEdit _folderEdit = new LineEdit();
 
-    public DirGodotProjectSettingsWindow(ProjectSettings settings, GodotWindowManager windowManager)
-        : base("Project Settings", windowManager)
+    public DirGodotProjectSettingsWindow(ProjectSettings settings, IDirGodotWindowManager windowManager)
+        : base(DirectorMenuCodes.ProjectSettingsWindow, "Project Settings", windowManager)
     {
         _settings = settings;
 

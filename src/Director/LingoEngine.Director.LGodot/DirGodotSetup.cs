@@ -11,6 +11,7 @@ using LingoEngine.Director.LGodot.Movies;
 using System.IO;
 using System;
 using LingoEngine.Core;
+using LingoEngine.Director.LGodot.Pictures;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -25,7 +26,6 @@ namespace LingoEngine.Director.LGodot
             engineRegistration.Services(s =>
             {
                 s.AddSingleton<DirectorStyle>();
-                s.AddSingleton<GodotWindowManager>();
                 s.AddSingleton<DirGodotProjectSettingsWindow>();
                 s.AddSingleton<DirGodotToolsWindow>();
                 s.AddSingleton<DirGodotCastWindow>();
@@ -34,7 +34,9 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotBinaryViewerWindow>();
                 s.AddSingleton<DirGodotPropertyInspector>();
                 s.AddSingleton<DirGodotTextableMemberWindow>();
+                s.AddSingleton<DirGodotPictureMemberEditorWindow>();
                 s.AddSingleton<DirGodotMainMenu>();
+                s.AddSingleton<IDirGodotWindowManager, DirGodotWindowManager>();
 
                 s.AddSingleton<IDirFrameworkProjectSettingsWindow>(p => p.GetRequiredService<DirGodotProjectSettingsWindow>());
                 s.AddSingleton<IDirFrameworkToolsWindow>(p => p.GetRequiredService<DirGodotToolsWindow>());
@@ -43,7 +45,7 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<IDirFrameworkStageWindow>(p => p.GetRequiredService<DirGodotStageWindow>());
                 s.AddSingleton<IDirFrameworkBinaryViewerWindow>(p => p.GetRequiredService<DirGodotBinaryViewerWindow>());
                 s.AddSingleton<IDirFrameworkPropertyInspectorWindow>(p => p.GetRequiredService<DirGodotPropertyInspector>());
-                s.AddSingleton<IDirFrameworkTextEditWindow>(p => p.GetRequiredService<DirGodotTextableMemberWindow>());
+                s.AddSingleton<IDirFrameworkPictureEditWindow>(p => p.GetRequiredService<DirGodotPictureMemberEditorWindow>());
 
 
             });

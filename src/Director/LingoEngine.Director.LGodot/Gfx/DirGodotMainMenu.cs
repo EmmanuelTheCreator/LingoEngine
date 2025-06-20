@@ -221,7 +221,7 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
                 if (sc.Key == label && sc.Ctrl == ctrl && sc.Alt == alt && sc.Shift == shift && sc.Meta == meta)
                 {
                     _shortCutManager.Execute(sc.Map.KeyCombination);
-                    GetTree().SetInputAsHandled();
+                    GetViewport().SetInputAsHandled();
                     break;
                 }
             }

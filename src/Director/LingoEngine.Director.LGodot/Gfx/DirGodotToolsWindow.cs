@@ -12,7 +12,8 @@ internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkTools
 
     public event Action<int>? IconPressed;
 
-    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow, GodotWindowManager windowManager) : base("Tools", windowManager)
+    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow, IDirGodotWindowManager windowManager) 
+        : base(DirectorMenuCodes.ToolsWindow, "Tools", windowManager)
     {
         directorToolsWindow.Init(this);
 
