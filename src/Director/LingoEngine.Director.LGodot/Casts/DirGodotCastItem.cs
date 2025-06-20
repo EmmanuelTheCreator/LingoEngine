@@ -6,6 +6,9 @@ using LingoEngine.Pictures;
 using LingoEngine.Texts;
 using System.Text;
 using System;
+using LingoEngine.Core;
+using LingoEngine.Commands;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -18,6 +21,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly SubViewport _textViewport = new();
         private readonly ILingoMember _lingoMember;
         private readonly Action<DirGodotCastItem> _onSelect;
+        private readonly ILingoCommandManager _commandManager;
         private readonly Label _caption;
         public int LabelHeight { get; set; } = 18;
         public int Width { get; set; } = 50;
@@ -27,10 +31,11 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             _selectionBg.Visible = selected;
         }
-        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor)
+        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager)
         {
             _lingoMember = element;
             _onSelect = onSelect;
+            _commandManager = commandManager;
             CustomMinimumSize = new Vector2(50, 50);
 
             // Selection background - slightly larger than the item itself
@@ -89,6 +94,13 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.ButtonIndex == MouseButton.Left)
             {
+                if (mouseEvent.Pressed && mouseEvent.DoubleClick)
+                {
+                    _onSelect(this);
+                    OpenEditor();
+                    return;
+                }
+
                 if (!wasClicked && mouseEvent.Pressed)
                 {
                     Vector2 mousePos = GetGlobalMousePosition();
@@ -101,13 +113,26 @@ namespace LingoEngine.Director.LGodot.Casts
                         wasClicked = true;
                     }
                     return;
-                } 
+                }
                 else if (wasClicked && !mouseEvent.Pressed)
                 {
                     _onSelect(this);
                     wasClicked = false;
                 }
             }
+        }
+
+        private void OpenEditor()
+        {
+            string? windowCode = _lingoMember switch
+            {
+                ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
+                LingoMemberPicture => DirectorMenuCodes.PictureEditWindow,
+                _ => null
+            };
+
+            if (windowCode != null)
+                _commandManager.Handle(new OpenWindowCommand(windowCode));
         }
 
         public void Init()
