@@ -15,6 +15,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
 
+    private readonly CenterContainer _centerContainer = new CenterContainer();
     private readonly TextureRect _imageRect = new TextureRect();
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private readonly HBoxContainer _bottomBar = new HBoxContainer();
@@ -65,17 +66,19 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         };
         _iconBar.AddChild(_toggleRegPointButton);
 
-        // Image display
-        _imageRect.StretchMode = TextureRect.StretchModeEnum.KeepAspect;
-        _imageRect.AnchorLeft = 0;
-        _imageRect.AnchorTop = 0;
-        _imageRect.AnchorRight = 1;
-        _imageRect.AnchorBottom = 1;
-        _imageRect.OffsetLeft = 0;
-        _imageRect.OffsetTop = TitleBarHeight + IconBarHeight;
-        _imageRect.OffsetRight = 0;
-        _imageRect.OffsetBottom = -BottomBarHeight;
-        AddChild(_imageRect);
+        // Image display container
+        AddChild(_centerContainer);
+        _centerContainer.AnchorLeft = 0;
+        _centerContainer.AnchorTop = 0;
+        _centerContainer.AnchorRight = 1;
+        _centerContainer.AnchorBottom = 1;
+        _centerContainer.OffsetLeft = 0;
+        _centerContainer.OffsetTop = TitleBarHeight + IconBarHeight;
+        _centerContainer.OffsetRight = 0;
+        _centerContainer.OffsetBottom = -BottomBarHeight;
+
+        _imageRect.StretchMode = TextureRect.StretchModeEnum.Keep;
+        _centerContainer.AddChild(_imageRect);
 
         _regPointCanvas = new RegPointCanvas(this);
         _regPointCanvas.AnchorLeft = 0;
@@ -83,11 +86,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _regPointCanvas.AnchorRight = 1;
         _regPointCanvas.AnchorBottom = 1;
         _regPointCanvas.OffsetLeft = 0;
-        _regPointCanvas.OffsetTop = TitleBarHeight + IconBarHeight;
+        _regPointCanvas.OffsetTop = 0;
         _regPointCanvas.OffsetRight = 0;
-        _regPointCanvas.OffsetBottom = -BottomBarHeight;
+        _regPointCanvas.OffsetBottom = 0;
         _regPointCanvas.Visible = true;
-        AddChild(_regPointCanvas);
+        _centerContainer.AddChild(_regPointCanvas);
 
         // Bottom zoom bar
         AddChild(_bottomBar);
@@ -118,7 +121,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         var godotPicture = picture.Framework<LingoGodotMemberPicture>();
         godotPicture.Preload();
         if (godotPicture.Texture != null)
+        {
             _imageRect.Texture = godotPicture.Texture;
+            _imageRect.CustomMinimumSize = new Vector2(godotPicture.Width, godotPicture.Height);
+            FitImageToView();
+        }
         _member = picture;
         _regPointCanvas.QueueRedraw();
     }
@@ -142,8 +149,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private void OnZoomChanged(float value)
     {
         _scale = value;
-        _imageRect.Scale = new Vector2(_scale, _scale);
-        _regPointCanvas.Scale = new Vector2(_scale, _scale);
+        _centerContainer.Scale = new Vector2(_scale, _scale);
         _regPointCanvas.QueueRedraw();
 
         int percent = Mathf.RoundToInt(_scale * 100);
@@ -168,16 +174,32 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         }
     }
 
+    private void FitImageToView()
+    {
+        var texture = _imageRect.Texture;
+        if (texture == null) return;
+        Vector2 areaSize = _centerContainer.Size;
+        if (areaSize == Vector2.Zero)
+            areaSize = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
+        float factor = Math.Min(areaSize.X / texture.GetWidth(), areaSize.Y / texture.GetHeight());
+        factor = Mathf.Clamp(factor, _zoomSlider.MinValue, _zoomSlider.MaxValue);
+        _zoomSlider.Value = factor;
+        OnZoomChanged(factor);
+    }
+
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
         _iconBar.CustomMinimumSize = new Vector2(size.X, IconBarHeight);
         _bottomBar.Position = new Vector2(0, size.Y - BottomBarHeight);
         _bottomBar.CustomMinimumSize = new Vector2(size.X, BottomBarHeight);
-        _imageRect.OffsetTop = TitleBarHeight + IconBarHeight;
-        _imageRect.OffsetBottom = -BottomBarHeight;
-        _regPointCanvas.OffsetTop = TitleBarHeight + IconBarHeight;
-        _regPointCanvas.OffsetBottom = -BottomBarHeight;
+
+        _centerContainer.OffsetTop = TitleBarHeight + IconBarHeight;
+        _centerContainer.OffsetBottom = -BottomBarHeight;
+        _centerContainer.OffsetLeft = 0;
+        _centerContainer.OffsetRight = 0;
+        _centerContainer.PivotOffset = new Vector2(size.X / 2f,
+            (size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight)) / 2f);
         _regPointCanvas.QueueRedraw();
     }
 
