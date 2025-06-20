@@ -5,6 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Director.Core.Menus
 {
+    public interface IDirFrameworkWindowManager
+    {
+        void SetActiveWindow(IDirectorWindowRegistration window);
+    }
+    public interface IDirectorWindowRegistration
+    {
+        string WindowCode { get; }
+    }
     public interface IDirectorWindowManager
     {
         IDirectorWindowManager Register<TWindow>(string windowCode, Func<IServiceProvider, IDirectorWindow> constructor, DirectorShortCutMap? shortCutMap = null)
@@ -13,6 +21,8 @@ namespace LingoEngine.Director.Core.Menus
              where TWindow : IDirectorWindow;
         bool OpenWindow(string windowCode);
         bool CloseWindow(string windowCode);
+        void Init(IDirFrameworkWindowManager frameworkWindowManager);
+        void SetActiveWindow(string windowCode);
     }
     public class DirectorWindowManager : IDirectorWindowManager,
         ICommandHandler<OpenWindowCommand>,
@@ -21,10 +31,19 @@ namespace LingoEngine.Director.Core.Menus
     {
         private readonly Dictionary<string, WindowRegistration> _windowRegistrations = new();
         private readonly IServiceProvider _serviceProvider;
+        private IDirFrameworkWindowManager _frameworkWindowManager;
+        private IDirectorWindowRegistration _ActiveWindow;
 
+#pragma warning disable CS8618
         public DirectorWindowManager(IServiceProvider serviceProvider)
+#pragma warning restore CS8618 
         {
             _serviceProvider = serviceProvider;
+        }
+
+        public void Init(IDirFrameworkWindowManager frameworkWindowManager)
+        {
+            _frameworkWindowManager = frameworkWindowManager;
         }
 
         public IDirectorWindowManager Register<TWindow>(string windowCode, Func<IServiceProvider, IDirectorWindow> constructor, DirectorShortCutMap? shortCutMap = null)
@@ -41,6 +60,9 @@ namespace LingoEngine.Director.Core.Menus
 
             return this;
         }
+
+
+
         public IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null) 
             where TWindow : IDirectorWindow
         {
@@ -56,13 +78,22 @@ namespace LingoEngine.Director.Core.Menus
             return this;
         }
 
-
+        public void SetActiveWindow(string windowCode)
+            => SetActiveWindow(_windowRegistrations[windowCode]);
+        public void SetActiveWindow(IDirectorWindowRegistration window)
+        {
+            if (window is not WindowRegistration registration)
+                throw new ArgumentException("Invalid window registration type.", nameof(window));
+            _ActiveWindow = window;
+            _frameworkWindowManager.SetActiveWindow(registration);
+        }
 
 
         public bool OpenWindow(string windowCode)
         {
             if (!_windowRegistrations.TryGetValue(windowCode, out var registration)) return false;
             registration.Instance.OpenWindow();
+            SetActiveWindow(registration);
             return true;
         } 
         public bool CloseWindow(string windowCode)
@@ -88,9 +119,9 @@ namespace LingoEngine.Director.Core.Menus
             return true;
         }
 
-      
+       
 
-        private class WindowRegistration
+        private class WindowRegistration : IDirectorWindowRegistration
         {
             private Func<IDirectorWindow> _constructor;
             private IDirectorWindow? _instance;

@@ -5,6 +5,7 @@ using LingoEngine.Core;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -37,8 +38,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly ILingoCommandManager _commandManager;
 
 
-    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, DirectorScoreWindow directorScoreWindow, ILingoPlayer player, GodotWindowManager windowManager)
-        : base("Score", windowManager)
+    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, DirectorScoreWindow directorScoreWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
+        : base(DirectorMenuCodes.ScoreWindow, "Score", windowManager)
     {
         _mediator = directorMediator;
         _commandManager = commandManager;

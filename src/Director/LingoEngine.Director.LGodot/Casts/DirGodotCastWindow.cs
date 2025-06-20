@@ -7,6 +7,7 @@ using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -23,8 +24,8 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, GodotWindowManager windowManager)
-            : base("Cast", windowManager)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
+            : base(DirectorMenuCodes.CastWindow, "Cast", windowManager)
         {
             _mediator = mediator;
             _style = style;

@@ -36,8 +36,8 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private ILingoFrameworkStage? _stage;
     private LingoSprite? _selectedSprite;
 
-    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player, DirectorStageWindow directorStageWindow, GodotWindowManager windowManager)
-        : base("Stage", windowManager)
+    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, ILingoPlayer player, DirectorStageWindow directorStageWindow, IDirGodotWindowManager windowManager)
+        : base(DirectorMenuCodes.StageWindow, "Stage", windowManager)
     {
         _stageContainer = (LingoGodotStageContainer)stageContainer;
         _mediator = directorEventMediator;

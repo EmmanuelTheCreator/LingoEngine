@@ -3,10 +3,12 @@ using LingoEngine.Pictures;
 using LingoEngine.LGodot.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.LGodot;
+using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.Core.Windows;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
-internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow
+internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDirFrameworkPictureEditWindow
 {
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
@@ -21,9 +23,10 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow
 
     private float _scale = 1f;
 
-    public DirGodotPictureMemberEditorWindow(GodotWindowManager windowManager) : base("Picture Editor", windowManager)
+    public DirGodotPictureMemberEditorWindow(IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
         Size = new Vector2(400, 300);
+        directorPictureEditWindow.Init(this);
         CustomMinimumSize = Size;
 
         // Icon bar at the top

@@ -4,7 +4,7 @@ namespace LingoEngine.Director.LGodot
 {
     public abstract partial class BaseGodotWindow : Panel
     {
-        private readonly GodotWindowManager _windowManager;
+        private readonly IDirGodotWindowManager _windowManager;
         protected bool _dragging;
         protected bool _resizing;
         private readonly Label _label = new Label();
@@ -15,9 +15,13 @@ namespace LingoEngine.Director.LGodot
         private Vector2 _resizeStartSize;
         private Vector2 _resizeStartMousePos;
 
+        public string WindowCode { get; private set; }
+        public string WindowName { get; private set; }
 
-        public BaseGodotWindow(string name, GodotWindowManager windowManager)
+        public BaseGodotWindow(string windowCode,string name, IDirGodotWindowManager windowManager)
         {
+            WindowName = name;
+            WindowCode = windowCode;
             _windowManager = windowManager;
             MouseFilter = MouseFilterEnum.Stop;
             AddChild(_label);
@@ -42,7 +46,7 @@ namespace LingoEngine.Director.LGodot
             //    BgColor = new Color(1, 1, 1, 1.0f) // RGBA
             //};
             //AddThemeStyleboxOverride("panel", styleBox);
-
+            windowManager.Register(this);
         }
 
         public override void _Draw()
@@ -59,14 +63,15 @@ namespace LingoEngine.Director.LGodot
         {
             if (@event is InputEventMouseButton mb)
             {
-                if (mb.Pressed)
+                var pressed = mb.Pressed;
+                if (pressed)
                     _windowManager.SetActiveWindow(this);
 
                 if (mb.ButtonIndex == MouseButton.Left)
                 {
                     Vector2 pos = GetLocalMousePosition();
 
-                    if (mb.Pressed)
+                    if (pressed)
                     {
                         if (pos.Y < TitleBarHeight)
                         {
@@ -144,6 +149,9 @@ namespace LingoEngine.Director.LGodot
         }
 
         public bool IsOpen => Visible;
+
+        
+
         public virtual void OpenWindow()
         {
             Visible = true;

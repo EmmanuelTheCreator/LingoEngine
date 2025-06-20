@@ -31,6 +31,7 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<DirectorBinaryViewerWindow>()
                     .AddSingleton<DirectorStageWindow>()
                     .AddSingleton<DirectorTextEditWindow>()
+                    .AddSingleton<DirectorPictureEditWindow>()
                     );
             engineRegistration.AddBuildAction(
                 (serviceProvider) =>
