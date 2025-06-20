@@ -16,7 +16,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private const int BottomBarHeight = 20;
 
     private readonly ScrollContainer _scrollContainer = new ScrollContainer();
-    private readonly CenterContainer _centerContainer = new CenterContainer();
+    private readonly Control _centerContainer = new Control();
     private readonly ColorRect _background = new ColorRect();
     private readonly TextureRect _imageRect = new TextureRect();
     private readonly HBoxContainer _iconBar = new HBoxContainer();
@@ -93,9 +93,15 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _centerContainer.AnchorBottom = 0;
         _centerContainer.OffsetLeft = 0;
         _centerContainer.OffsetTop = 0;
-        _centerContainer.PivotOffset = Vector2.Zero;
+        _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
 
         _imageRect.StretchMode = TextureRect.StretchModeEnum.Keep;
+        _imageRect.AnchorLeft = 0;
+        _imageRect.AnchorTop = 0;
+        _imageRect.AnchorRight = 0;
+        _imageRect.AnchorBottom = 0;
+        _imageRect.OffsetLeft = 0;
+        _imageRect.OffsetTop = 0;
         _centerContainer.AddChild(_imageRect);
 
         _regPointCanvas = new RegPointCanvas(this);
@@ -141,7 +147,10 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         if (godotPicture.Texture != null)
         {
             _imageRect.Texture = godotPicture.Texture;
-            _imageRect.CustomMinimumSize = new Vector2(godotPicture.Width, godotPicture.Height);
+            Vector2 size = new(godotPicture.Width, godotPicture.Height);
+            _imageRect.CustomMinimumSize = size;
+            _centerContainer.CustomMinimumSize = size;
+            _centerContainer.PivotOffset = size / 2f;
             FitImageToView();
         }
         _member = picture;
@@ -196,7 +205,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     {
         var texture = _imageRect.Texture;
         if (texture == null) return;
-        Vector2 areaSize = _centerContainer.Size;
+        Vector2 areaSize = _scrollContainer.Size;
         if (areaSize == Vector2.Zero)
             areaSize = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
         float factor = Math.Min(areaSize.X / texture.GetWidth(), areaSize.Y / texture.GetHeight());
@@ -216,7 +225,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.OffsetBottom = -BottomBarHeight;
         _scrollContainer.OffsetLeft = 0;
         _scrollContainer.OffsetRight = 0;
-        _centerContainer.PivotOffset = Vector2.Zero;
+        _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
         _regPointCanvas.QueueRedraw();
     }
 
@@ -242,18 +251,12 @@ internal partial class DirGodotPictureMemberEditorWindow
         {
             if (!_owner._showRegPoint) return;
             var member = _owner._member;
-            var texture = _owner._imageRect.Texture;
-            if (member == null || texture == null) return;
+            if (member == null || _owner._imageRect.Texture == null) return;
 
-            Vector2 texSize = new(texture.GetWidth(), texture.GetHeight());
-            Vector2 areaSize = _owner._imageRect.Size;
-
-            float factor = Math.Min(areaSize.X / texSize.X, areaSize.Y / texSize.Y);
-            Vector2 offset = new((areaSize.X - texSize.X * factor) / 2f,
-                                 (areaSize.Y - texSize.Y * factor) / 2f);
+            Vector2 areaSize = Size;
 
             // RegPoint origin is the texture's top-left corner
-            Vector2 pos = new Vector2(member.RegPoint.X, member.RegPoint.Y) * factor + offset;
+            Vector2 pos = new Vector2(member.RegPoint.X, member.RegPoint.Y);
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
