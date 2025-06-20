@@ -89,41 +89,55 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             Position = new Vector2(x, y);
         }
-        private bool wasClicked;
+        private bool _wasClicked;
+        private static bool _openingEditor;
+        private static object _lock = new object();
         public override void _Input(InputEvent @event)
         {
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.ButtonIndex == MouseButton.Left)
             {
-                if (mouseEvent.Pressed && mouseEvent.DoubleClick)
+                Vector2 mousePos = GetGlobalMousePosition();
+
+                Rect2 bounds = new Rect2(GlobalPosition - CustomMinimumSize * 0.5f, CustomMinimumSize);
+
+                if (mouseEvent.Pressed && mouseEvent.DoubleClick && !_openingEditor && bounds.HasPoint(mousePos))
                 {
-                    _onSelect(this);
+                    
                     OpenEditor();
+                    _onSelect(this);
                     return;
                 }
-
-                if (!wasClicked && mouseEvent.Pressed)
+                else if (_openingEditor && !mouseEvent.Pressed)
                 {
-                    Vector2 mousePos = GetGlobalMousePosition();
+                    _openingEditor = false;
+                }
 
-                    Rect2 bounds = new Rect2(GlobalPosition - CustomMinimumSize * 0.5f, CustomMinimumSize);
 
+                if (!_wasClicked && mouseEvent.Pressed)
+                {
                     if (bounds.HasPoint(mousePos))
                     {
                         _onSelect(this);
-                        wasClicked = true;
+                        _wasClicked = true;
                     }
                     return;
                 }
-                else if (wasClicked && !mouseEvent.Pressed)
+                else if (_wasClicked && !mouseEvent.Pressed)
                 {
-                    _onSelect(this);
-                    wasClicked = false;
+                    //_onSelect(this);
+                    _wasClicked = false;
+                    
                 }
             }
         }
 
         private void OpenEditor()
         {
+            lock (_lock)
+            {
+                if (_openingEditor) return;
+                _openingEditor = true;
+            }
             string? windowCode = _lingoMember switch
             {
                 ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,

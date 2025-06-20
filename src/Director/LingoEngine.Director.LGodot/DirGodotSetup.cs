@@ -36,16 +36,18 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotTextableMemberWindow>();
                 s.AddSingleton<DirGodotPictureMemberEditorWindow>();
                 s.AddSingleton<DirGodotMainMenu>();
-                s.AddSingleton<IDirGodotWindowManager, DirGodotWindowManager>();
+                s.AddSingleton<DirGodotWindowManager>();
+                s.AddSingleton<DirGodotWindowManager>();
 
-                s.AddSingleton<IDirFrameworkProjectSettingsWindow>(p => p.GetRequiredService<DirGodotProjectSettingsWindow>());
-                s.AddSingleton<IDirFrameworkToolsWindow>(p => p.GetRequiredService<DirGodotToolsWindow>());
-                s.AddSingleton<IDirFrameworkCastWindow>(p => p.GetRequiredService<DirGodotCastWindow>());
-                s.AddSingleton<IDirFrameworkScoreWindow>(p => p.GetRequiredService<DirGodotScoreWindow>());
-                s.AddSingleton<IDirFrameworkStageWindow>(p => p.GetRequiredService<DirGodotStageWindow>());
-                s.AddSingleton<IDirFrameworkBinaryViewerWindow>(p => p.GetRequiredService<DirGodotBinaryViewerWindow>());
-                s.AddSingleton<IDirFrameworkPropertyInspectorWindow>(p => p.GetRequiredService<DirGodotPropertyInspector>());
-                s.AddSingleton<IDirFrameworkPictureEditWindow>(p => p.GetRequiredService<DirGodotPictureMemberEditorWindow>());
+                s.AddTransient<IDirFrameworkProjectSettingsWindow>(p => p.GetRequiredService<DirGodotProjectSettingsWindow>());
+                s.AddTransient<IDirFrameworkToolsWindow>(p => p.GetRequiredService<DirGodotToolsWindow>());
+                s.AddTransient<IDirFrameworkCastWindow>(p => p.GetRequiredService<DirGodotCastWindow>());
+                s.AddTransient<IDirFrameworkScoreWindow>(p => p.GetRequiredService<DirGodotScoreWindow>());
+                s.AddTransient<IDirFrameworkStageWindow>(p => p.GetRequiredService<DirGodotStageWindow>());
+                s.AddTransient<IDirFrameworkBinaryViewerWindow>(p => p.GetRequiredService<DirGodotBinaryViewerWindow>());
+                s.AddTransient<IDirFrameworkPropertyInspectorWindow>(p => p.GetRequiredService<DirGodotPropertyInspector>());
+                s.AddTransient<IDirFrameworkPictureEditWindow>(p => p.GetRequiredService<DirGodotPictureMemberEditorWindow>());
+                s.AddTransient<IDirGodotWindowManager>(p => p.GetRequiredService<DirGodotWindowManager>());
 
 
             });
