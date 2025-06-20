@@ -16,6 +16,7 @@ namespace LingoEngine.Director.LGodot.Casts
     {
         private readonly ColorRect _bg;
         private readonly ColorRect _selectionBg;
+        private readonly Color _selectedColor;
         //private readonly CenterContainer _spriteContainer;
         private readonly Sprite2D _Sprite2D;
         private readonly SubViewport _textViewport = new();
@@ -30,12 +31,14 @@ namespace LingoEngine.Director.LGodot.Casts
         public void SetSelected(bool selected)
         {
             _selectionBg.Visible = selected;
+            _bg.Color = selected ? _selectedColor : Colors.DimGray;
         }
         public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager)
         {
             _lingoMember = element;
             _onSelect = onSelect;
             _commandManager = commandManager;
+            _selectedColor = selectedColor;
             CustomMinimumSize = new Vector2(50, 50);
 
             // Selection background - slightly larger than the item itself
@@ -83,6 +86,7 @@ namespace LingoEngine.Director.LGodot.Casts
             };
             AddChild(_caption);
             _caption.Text = !string.IsNullOrWhiteSpace(element.Name)? element.NumberInCast+"."+ element.Name: number.ToString();
+            _caption.AddThemeColorOverride("font_color", Colors.Black);
             
         }
         public void SetPosition(int x, int y)
