@@ -1,4 +1,4 @@
-﻿namespace LingoEngine.Director.LGodot.Gfx
+namespace LingoEngine.Director.LGodot.Gfx
 {
     public class DirectorMenuCodes
     {
@@ -9,6 +9,7 @@
         public const string CastWindow = "CastWindow";
         public const string ScoreWindow = "ScoreWindow";
         public const string ProjectSettingsWindow = "ProjectSettingsWindow";
+        public const string ToolsWindow = "ToolsWindow";
         public const string FileSave = "FileSave";
         public const string FileLoad = "FileLoad";
         public const string BinaryViewerWindow = "BinaryViewerWindow";
