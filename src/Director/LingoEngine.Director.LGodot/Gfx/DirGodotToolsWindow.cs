@@ -1,6 +1,7 @@
 using Godot;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -11,7 +12,7 @@ internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkTools
 
     public event Action<int>? IconPressed;
 
-    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow) : base("Tools")
+    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow, GodotWindowManager windowManager) : base("Tools", windowManager)
     {
         directorToolsWindow.Init(this);
 
