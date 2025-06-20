@@ -25,8 +25,10 @@ namespace LingoEngine.LGodot
         internal LingoSprite LingoSprite => _lingoSprite;
         internal bool IsDirty { get; set; } = true;
         internal bool IsDirtyMember { get; set; } = true;
-        public float X { get => _Sprite2D.Position.X; set { _Sprite2D.Position = new Vector2(value, _Sprite2D.Position.Y); } }
-        public float Y { get => _Sprite2D.Position.Y; set { _Sprite2D.Position = new Vector2(_Sprite2D.Position.X, value); } }
+        private float _x;
+        private float _y;
+        public float X { get => _x; set { _x = value; IsDirty = true; } }
+        public float Y { get => _y; set { _y = value; IsDirty = true; } }
         public int ZIndex { get => _Sprite2D.ZIndex; set { _Sprite2D.ZIndex = value; } }
         public LingoPoint RegPoint { get => (_Container2D.Position.X, _Container2D.Position.Y); set { _Container2D.Position = new Vector2(value.X, value.Y); IsDirty = true; } }
 
@@ -123,8 +125,9 @@ namespace LingoEngine.LGodot
 
         public void SetPosition(LingoPoint lingoPoint)
         {
-            _Sprite2D.Position = new Vector2(lingoPoint.X, lingoPoint.Y);
-            //IsDirty = true;
+            _x = lingoPoint.X;
+            _y = lingoPoint.Y;
+            IsDirty = true;
         }
 
         public void MemberChanged()
@@ -140,7 +143,7 @@ namespace LingoEngine.LGodot
                 return;
             }
             Width = _Sprite2D.Texture.GetWidth();
-            Height = _Sprite2D.Texture.GetWidth();
+            Height = _Sprite2D.Texture.GetHeight();
         }
         internal void Update()
         {
@@ -162,6 +165,8 @@ namespace LingoEngine.LGodot
                 }
                 IsDirty = false;
             }
+            var offset = GetRegPointOffset();
+            _Sprite2D.Position = new Vector2(_x + offset.X, _y + offset.Y);
         }
 
 
@@ -222,6 +227,22 @@ namespace LingoEngine.LGodot
             float scaleFactorW = targetWidth / width;
             float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
+        }
+
+        private LingoPoint GetRegPointOffset()
+        {
+            if (_lingoSprite.Member is { } member)
+            {
+                var baseOffset = member.CenterOffsetFromRegPoint();
+                if (member.Width != 0 && member.Height != 0)
+                {
+                    float scaleX = _Sprite2D.Scale.X;
+                    float scaleY = _Sprite2D.Scale.Y;
+                    return new LingoPoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
+                }
+                return baseOffset;
+            }
+            return new LingoPoint();
         }
     }
 }
