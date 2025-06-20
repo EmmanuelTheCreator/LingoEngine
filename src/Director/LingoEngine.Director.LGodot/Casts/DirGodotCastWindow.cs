@@ -20,6 +20,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly IDirectorEventMediator _mediator;
         private readonly DirectorStyle _style;
         private readonly Dictionary<int, DirGodotCastView> _castViews = new();
+        private readonly Dictionary<int, int> _castTabIndices = new();
         private DirGodotCastItem? _selectedItem;
         private ILingoPlayer _player;
         private readonly ILingoCommandManager _commandManager;
@@ -67,12 +68,18 @@ namespace LingoEngine.Director.LGodot.Casts
                 _tabs.RemoveChild(child);
                 child.QueueFree();
             }
+            _castViews.Clear();
+            _castTabIndices.Clear();
+
             if (lingoMovie == null) return;
+
+            int index = 0;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
                 var castLibViewer = new DirGodotCastView(OnSelectElement, _style, _commandManager);
                 castLibViewer.Show(cast);
                 _castViews.Add(cast.Number, castLibViewer);
+                _castTabIndices.Add(cast.Number, index);
                 var tabContent = new VBoxContainer
                 {
                     Name = cast.Name,
@@ -80,6 +87,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
                 tabContent.AddChild(castLibViewer.Node);
                 _tabs.AddChild(tabContent);
+                index++;
             }
         }
 
@@ -110,7 +118,8 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             if (_castViews.TryGetValue(member.CastLibNum, out var view))
             {
-                _tabs.CurrentTab = member.CastLibNum - 1;
+                if (_castTabIndices.TryGetValue(member.CastLibNum, out var index))
+                    _tabs.CurrentTab = index;
                 var item = view.FindItem(member);
                 if (item != null)
                     view.SelectItem(item);
