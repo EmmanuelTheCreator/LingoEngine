@@ -35,12 +35,9 @@ internal partial class DirGodotFrameScriptsBar : Control
         _spriteViewport.AddChild(_spriteCanvas);
 
         _gridTexture.Texture = _gridViewport.GetTexture();
-        // Draw textures above the window background
-        _gridTexture.ZIndex = 0;
         _gridTexture.MouseFilter = MouseFilterEnum.Ignore;
 
         _spriteTexture.Texture = _spriteViewport.GetTexture();
-        _spriteTexture.ZIndex = 1;
         _spriteTexture.MouseFilter = MouseFilterEnum.Ignore;
 
         AddChild(_gridViewport);
