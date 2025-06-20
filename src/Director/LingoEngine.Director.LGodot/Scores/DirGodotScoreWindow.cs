@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Core;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LingoEngine.Director.LGodot.Scores;
@@ -30,14 +31,16 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     private readonly DirGodotFrameScriptsBar _frameScripts;
     private readonly DirGodotScoreLabelsBar _labelBar;
     private readonly DirGodotScoreChannelBar _channelBar;
-    
+
     private readonly IDirectorEventMediator _mediator;
+    private readonly ILingoCommandManager _commandManager;
 
 
-    public DirGodotScoreWindow(IDirectorEventMediator directorMediator)
+    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager)
         : base("Score")
     {
         _mediator = directorMediator;
+        _commandManager = commandManager;
         _mediator.SubscribeToMenu(DirectorMenuCodes.ScoreWindow, () => Visible = !Visible);
         var height = 400;
         var width = 800;
@@ -52,7 +55,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
         _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader(_gfxValues);
         _frameScripts = new DirGodotFrameScriptsBar(_gfxValues);
-        _labelBar = new DirGodotScoreLabelsBar(_gfxValues);
+        _labelBar = new DirGodotScoreLabelsBar(_gfxValues, commandManager);
         
 
         // The grid inside master scoller
