@@ -213,7 +213,7 @@ internal partial class DirGodotPictureMemberEditorWindow
             Vector2 offset = new((areaSize.X - texSize.X * factor) / 2f,
                                  (areaSize.Y - texSize.Y * factor) / 2f);
 
-            Vector2 pos = new(member.RegPoint.X, member.RegPoint.Y) * factor + offset;
+            Vector2 pos = new Vector2(member.RegPoint.X, member.RegPoint.Y) * factor + offset;
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
