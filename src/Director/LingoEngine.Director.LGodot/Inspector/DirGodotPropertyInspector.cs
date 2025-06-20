@@ -8,19 +8,24 @@ using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Core;
+using LingoEngine.Commands;
+using LingoEngine.Texts;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
 public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSelectedEvent, IHasMemberSelectedEvent, IDirFrameworkPropertyInspectorWindow
 {
     private readonly IDirectorEventMediator _mediator;
+    private readonly ILingoCommandManager _commandManager;
     private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly TabContainer _tabs = new TabContainer();
 
-    public DirGodotPropertyInspector(IDirectorEventMediator mediator, DirectorPropertyInspectorWindow inspectorWindow, IDirGodotWindowManager windowManager) 
-        : base(DirectorMenuCodes.PropertyInspector, "Inspector", windowManager)
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, IDirGodotWindowManager windowManager)
+        : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
     {
         _mediator = mediator;
+        _commandManager = commandManager;
         inspectorWindow.Init(this);
 
         //Position = new Vector2(500, 20);
@@ -95,6 +100,24 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         vScroller.Name = name;
         _tabs.AddChild(vScroller);
         var container = new VBoxContainer();
+
+        if (obj is LingoMemberPicture || obj is ILingoMemberTextBase)
+        {
+            var editBtn = new Button { Text = "Edit" };
+            editBtn.Pressed += () =>
+            {
+                string code = obj switch
+                {
+                    LingoMemberPicture => DirectorMenuCodes.PictureEditWindow,
+                    ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
+                    _ => string.Empty
+                };
+                if (!string.IsNullOrEmpty(code))
+                    _commandManager.Handle(new Commands.OpenWindowCommand(code));
+            };
+            container.AddChild(editBtn);
+        }
+
         BuildProperties(container, obj);
         vScroller.AddChild(container);
     }
@@ -105,7 +128,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         {
             if (!prop.CanRead)
                 continue;
-            if (!IsSimpleType(prop.PropertyType))
+            if (!IsSimpleType(prop.PropertyType) && prop.PropertyType != typeof(LingoEngine.Primitives.LingoPoint))
                 continue;
             var h = new HBoxContainer();
             var label = new Label { Text = prop.Name, CustomMinimumSize = new Vector2(80, 16) };
@@ -135,6 +158,36 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
                 else
                     cb.Disabled = true;
                 editor = cb;
+            }
+            else if (prop.PropertyType == typeof(LingoEngine.Primitives.LingoPoint))
+            {
+                var point = val is LingoEngine.Primitives.LingoPoint p ? p : new LingoEngine.Primitives.LingoPoint();
+                var xSpin = new SpinBox { Value = point.X, CustomMinimumSize = new Vector2(50, 16) };
+                var ySpin = new SpinBox { Value = point.Y, CustomMinimumSize = new Vector2(50, 16) };
+                if (prop.CanWrite)
+                {
+                    xSpin.ValueChanged += v =>
+                    {
+                        var pVal = (LingoEngine.Primitives.LingoPoint)prop.GetValue(obj);
+                        pVal.X = (float)v;
+                        prop.SetValue(obj, pVal);
+                    };
+                    ySpin.ValueChanged += v =>
+                    {
+                        var pVal = (LingoEngine.Primitives.LingoPoint)prop.GetValue(obj);
+                        pVal.Y = (float)v;
+                        prop.SetValue(obj, pVal);
+                    };
+                }
+                else
+                {
+                    xSpin.Editable = false;
+                    ySpin.Editable = false;
+                }
+                h.AddChild(xSpin);
+                h.AddChild(ySpin);
+                root.AddChild(h);
+                continue;
             }
             else
             {
