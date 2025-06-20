@@ -3,6 +3,7 @@ using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
+using LingoEngine.Director.Core.Windows;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LingoEngine.Director.LGodot.Scores;
@@ -11,7 +12,7 @@ namespace LingoEngine.Director.LGodot.Scores;
 /// Simple timeline overlay showing the Score channels and frames.
 /// Toggled with F2.
 /// </summary>
-public partial class DirGodotScoreWindow : BaseGodotWindow
+public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWindow
 {
    
     
@@ -35,6 +36,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
 
+    public bool IsOpen => Visible;
 
     public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager)
         : base("Score")
@@ -180,6 +182,11 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
                 _masterScroller.ScrollVertical += 20;
         }
     }
+
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+
     internal partial class DirGodotCastLeftTopLabels : Control
     {
         private DirGodotScoreGfxValues _gfxValues;
@@ -216,5 +223,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow
             DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark);
             DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight);
         }
+
+      
     }
 }

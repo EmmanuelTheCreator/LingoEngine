@@ -293,7 +293,6 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _owner._gfxValues.ChannelHeight), Colors.Red, 2);
         }
     }
-    
 
-    // drawing handled by SubViewports
 }
+
