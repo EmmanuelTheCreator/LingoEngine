@@ -144,8 +144,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             container.AddChild(editBtn);
         }
 
-        BuildProperties(container, obj);
-
         if (obj is LingoSprite sprite)
         {
             var behLabel = new Label { Text = "Behaviors" };
@@ -156,6 +154,8 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             list.ItemActivated += idx => ShowBehavior(sprite.Behaviors[idx]);
             container.AddChild(list);
         }
+
+        BuildProperties(container, obj);
 
         vScroller.AddChild(container);
     }
