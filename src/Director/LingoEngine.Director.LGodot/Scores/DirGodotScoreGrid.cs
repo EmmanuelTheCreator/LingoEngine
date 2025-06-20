@@ -48,11 +48,12 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
         _gridTexture.Texture = _gridViewport.GetTexture();
         _gridTexture.Position = Vector2.Zero;
-        _gridTexture.ZIndex = -20;
+        // Ensure textures draw above the window background
+        _gridTexture.ZIndex = 0;
         _gridTexture.MouseFilter = MouseFilterEnum.Ignore;
         _spriteTexture.Texture = _spriteViewport.GetTexture();
         _spriteTexture.Position = Vector2.Zero;
-        _spriteTexture.ZIndex = -10;
+        _spriteTexture.ZIndex = 1;
         _spriteTexture.MouseFilter = MouseFilterEnum.Ignore;
 
         AddChild(_gridViewport);
