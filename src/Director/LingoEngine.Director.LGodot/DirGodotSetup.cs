@@ -19,6 +19,7 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirectorStyle>();
                 s.AddSingleton<Theme>(p => p.GetRequiredService<DirectorStyle>().Theme);
                 s.AddSingleton<DirGodotProjectSettingsWindow>();
+                s.AddSingleton<DirGodotToolsWindow>();
             
                 //IServiceCollection serviceCollection = s
                   //  .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
