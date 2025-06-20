@@ -1,7 +1,11 @@
 ﻿using Godot;
 using LingoEngine.LGodot.Pictures;
+using LingoEngine.LGodot.Texts;
 using LingoEngine.Members;
 using LingoEngine.Pictures;
+using LingoEngine.Texts;
+using System.Text;
+using System;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -11,6 +15,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly ColorRect _selectionBg;
         //private readonly CenterContainer _spriteContainer;
         private readonly Sprite2D _Sprite2D;
+        private readonly SubViewport _textViewport = new();
         private readonly ILingoMember _lingoMember;
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly Label _caption;
@@ -47,6 +52,12 @@ namespace LingoEngine.Director.LGodot.Casts
             _bg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _bg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             AddChild(_bg);
+
+            // Text viewport for text previews
+            _textViewport.SetDisable3D(true);
+            _textViewport.TransparentBg = true;
+            _textViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+            AddChild(_textViewport);
 
             // Sprite centered
             _Sprite2D = new Sprite2D();
@@ -113,6 +124,25 @@ namespace LingoEngine.Director.LGodot.Casts
                     _Sprite2D.Texture = godotPicture.Texture;
                     Resize(Width - 1, Height - LabelHeight);
                     break;
+                case ILingoMemberTextBase textMember:
+                    var godotText = textMember.Framework<LingoGodotMemberText>();
+                    godotText.Preload();
+
+                    string prev = GetPreviewText(textMember);
+                    var label = new Label
+                    {
+                        Text = prev,
+                        LabelSettings = new LabelSettings { FontSize = 8 },
+                        AutowrapMode = TextServer.AutowrapMode.Word,
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        VerticalAlignment = VerticalAlignment.Top
+                    };
+                    _textViewport.SetSize(new Vector2I((int)(Width - 1), (int)(Height - LabelHeight)));
+                    label.Size = new Vector2(Width - 1, Height - LabelHeight);
+                    _textViewport.AddChild(label);
+                    _Sprite2D.Texture = _textViewport.GetTexture();
+                    Resize(Width - 1, Height - LabelHeight);
+                    break;
                 default:
                     break;
             }
@@ -126,6 +156,23 @@ namespace LingoEngine.Director.LGodot.Casts
             float scaleFactorW = targetWidth / width;
             float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
+        }
+
+        private static string GetPreviewText(ILingoMemberTextBase text)
+        {
+            var lines = text.Text.Replace("\r", "").Split('\n');
+            var sb = new StringBuilder();
+            int count = Math.Min(4, lines.Length);
+            for (int i = 0; i < count; i++)
+            {
+                var line = lines[i];
+                if (line.Length > 14)
+                    line = line.Substring(0, 14);
+                sb.Append(line);
+                if (i < count - 1)
+                    sb.Append('\n');
+            }
+            return sb.ToString();
         }
 
     }
