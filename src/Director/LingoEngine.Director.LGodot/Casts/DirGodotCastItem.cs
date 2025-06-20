@@ -98,6 +98,8 @@ namespace LingoEngine.Director.LGodot.Casts
         private static object _lock = new object();
         public override void _Input(InputEvent @event)
         {
+            if (!IsVisibleInTree()) return;
+
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.ButtonIndex == MouseButton.Left)
             {
                 Vector2 mousePos = GetGlobalMousePosition();
