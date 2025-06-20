@@ -1,18 +1,26 @@
 ﻿
 using LingoEngine.Commands;
 using LingoEngine.Core;
+using System;
 
 namespace LingoEngine.Director.Core.Menus
 {
     public interface IDirectorShortCutManager
     {
+        event Action<DirectorShortCutMap>? ShortCutAdded;
+        event Action<DirectorShortCutMap>? ShortCutRemoved;
         bool Execute(string keyCombination);
         DirectorShortCutMap CreateShortCut(string name, string keyCombination, Func<DirectorShortCutMap, ILingoCommand> command, string? description = null);
+        void RemoveShortCut(string name);
+        IEnumerable<DirectorShortCutMap> GetShortCuts();
     }
     public class DirectorShortCutManager : IDirectorShortCutManager
     {
-        private Dictionary<string, DirectorShortCutMap> _shortCuts = new();
+        private readonly Dictionary<string, DirectorShortCutMap> _shortCuts = new();
         private readonly ILingoCommandManager _lingoCommandManager;
+
+        public event Action<DirectorShortCutMap>? ShortCutAdded;
+        public event Action<DirectorShortCutMap>? ShortCutRemoved;
 
         public DirectorShortCutManager(ILingoCommandManager lingoCommandManager)
         {
@@ -21,10 +29,16 @@ namespace LingoEngine.Director.Core.Menus
 
         public DirectorShortCutMap CreateShortCut(string name, string keyCombination,Func<DirectorShortCutMap, ILingoCommand> command, string? description = null)
         {
-            // Implementation for creating a shortcut
             var shortcut = new DirectorShortCutMap(name, command, description, keyCombination);
             _shortCuts[name] = shortcut;
+            ShortCutAdded?.Invoke(shortcut);
             return shortcut;
+        }
+
+        public void RemoveShortCut(string name)
+        {
+            if (_shortCuts.Remove(name, out var map))
+                ShortCutRemoved?.Invoke(map);
         }
 
         public bool Execute(string keyCombination)
@@ -40,5 +54,7 @@ namespace LingoEngine.Director.Core.Menus
             }
             throw new KeyNotFoundException($"Shortcut with key combination '{keyCombination}' not found.");
         }
+
+        public IEnumerable<DirectorShortCutMap> GetShortCuts() => _shortCuts.Values;
     }
 }
