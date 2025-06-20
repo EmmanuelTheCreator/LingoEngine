@@ -5,10 +5,12 @@ using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.Core.Events;
+using LingoEngine.Members;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
-internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDirFrameworkPictureEditWindow
+internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkPictureEditWindow
 {
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
@@ -18,13 +20,20 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDir
     private readonly HBoxContainer _bottomBar = new HBoxContainer();
     private readonly Button _flipHButton = new Button();
     private readonly Button _flipVButton = new Button();
+    private readonly Button _toggleRegPointButton = new Button();
     private readonly HSlider _zoomSlider = new HSlider();
     private readonly OptionButton _scaleDropdown = new OptionButton();
+    private readonly RegPointCanvas _regPointCanvas;
+    private readonly IDirectorEventMediator _mediator;
+    private LingoMemberPicture? _member;
+    private bool _showRegPoint = true;
 
     private float _scale = 1f;
 
-    public DirGodotPictureMemberEditorWindow(IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
+    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
+        _mediator = mediator;
+        _mediator.Subscribe(this);
         Size = new Vector2(400, 300);
         directorPictureEditWindow.Init(this);
         CustomMinimumSize = Size;
@@ -44,6 +53,18 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDir
         _flipVButton.Pressed += OnFlipV;
         _iconBar.AddChild(_flipVButton);
 
+        _toggleRegPointButton.Text = "Reg";
+        _toggleRegPointButton.ToggleMode = true;
+        _toggleRegPointButton.ButtonPressed = true;
+        _toggleRegPointButton.CustomMinimumSize = new Vector2(40, IconBarHeight);
+        _toggleRegPointButton.Toggled += pressed =>
+        {
+            _showRegPoint = pressed;
+            _regPointCanvas.Visible = pressed;
+            _regPointCanvas.QueueRedraw();
+        };
+        _iconBar.AddChild(_toggleRegPointButton);
+
         // Image display
         _imageRect.StretchMode = TextureRect.StretchModeEnum.KeepAspect;
         _imageRect.AnchorLeft = 0;
@@ -55,6 +76,18 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDir
         _imageRect.OffsetRight = 0;
         _imageRect.OffsetBottom = -BottomBarHeight;
         AddChild(_imageRect);
+
+        _regPointCanvas = new RegPointCanvas(this);
+        _regPointCanvas.AnchorLeft = 0;
+        _regPointCanvas.AnchorTop = 0;
+        _regPointCanvas.AnchorRight = 1;
+        _regPointCanvas.AnchorBottom = 1;
+        _regPointCanvas.OffsetLeft = 0;
+        _regPointCanvas.OffsetTop = TitleBarHeight + IconBarHeight;
+        _regPointCanvas.OffsetRight = 0;
+        _regPointCanvas.OffsetBottom = -BottomBarHeight;
+        _regPointCanvas.Visible = true;
+        AddChild(_regPointCanvas);
 
         // Bottom zoom bar
         AddChild(_bottomBar);
@@ -86,6 +119,14 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDir
         godotPicture.Preload();
         if (godotPicture.Texture != null)
             _imageRect.Texture = godotPicture.Texture;
+        _member = picture;
+        _regPointCanvas.QueueRedraw();
+    }
+
+    public void MemberSelected(ILingoMember member)
+    {
+        if (member is LingoMemberPicture pic)
+            SetPicture(pic);
     }
 
     private void OnFlipH()
@@ -102,6 +143,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDir
     {
         _scale = value;
         _imageRect.Scale = new Vector2(_scale, _scale);
+        _regPointCanvas.Scale = new Vector2(_scale, _scale);
+        _regPointCanvas.QueueRedraw();
 
         int percent = Mathf.RoundToInt(_scale * 100);
         for (int i = 0; i < _scaleDropdown.ItemCount; i++)
@@ -133,5 +176,47 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IDir
         _bottomBar.CustomMinimumSize = new Vector2(size.X, BottomBarHeight);
         _imageRect.OffsetTop = TitleBarHeight + IconBarHeight;
         _imageRect.OffsetBottom = -BottomBarHeight;
+        _regPointCanvas.OffsetTop = TitleBarHeight + IconBarHeight;
+        _regPointCanvas.OffsetBottom = -BottomBarHeight;
+        _regPointCanvas.QueueRedraw();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        _mediator.Unsubscribe(this);
+        base.Dispose(disposing);
+    }
+}
+
+internal partial class DirGodotPictureMemberEditorWindow
+{
+    private partial class RegPointCanvas : Control
+    {
+        private readonly DirGodotPictureMemberEditorWindow _owner;
+        public RegPointCanvas(DirGodotPictureMemberEditorWindow owner)
+        {
+            _owner = owner;
+            MouseFilter = MouseFilterEnum.Ignore;
+        }
+
+        public override void _Draw()
+        {
+            if (!_owner._showRegPoint) return;
+            var member = _owner._member;
+            var texture = _owner._imageRect.Texture;
+            if (member == null || texture == null) return;
+
+            Vector2 texSize = new(texture.GetWidth(), texture.GetHeight());
+            Vector2 areaSize = _owner._imageRect.Size;
+
+            float factor = Math.Min(areaSize.X / texSize.X, areaSize.Y / texSize.Y);
+            Vector2 offset = new((areaSize.X - texSize.X * factor) / 2f,
+                                 (areaSize.Y - texSize.Y * factor) / 2f);
+
+            Vector2 pos = new(member.RegPoint.X, member.RegPoint.Y) * factor + offset;
+
+            DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
+            DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
+        }
     }
 }
