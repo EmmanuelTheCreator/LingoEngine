@@ -1,7 +1,9 @@
 using Godot;
 using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core;
 
 namespace LingoEngine.Director.LGodot;
 
@@ -15,21 +17,23 @@ internal partial class DirGodotMainMenu : Control
     private readonly MenuButton _editMenu = new MenuButton() { Text = "Edit" };
     private readonly MenuButton _WindowMenu = new MenuButton() { Text = "Window" };
     private readonly HBoxContainer _iconBar = new HBoxContainer();
-    private IDirectorEventMediator _mediator;
+    private readonly IDirectorWindowManager _windowManager;
+    private readonly DirectorProjectManager _projectManager;
     private readonly Button _rewindButton;
     private readonly Button _playButton;
     private readonly ILingoMovie _lingoMovie;
 
-    public DirGodotMainMenu(IDirectorEventMediator mediator, ILingoMovie lingoMovie)
+    public DirGodotMainMenu(IDirectorWindowManager windowManager, DirectorProjectManager projectManager, ILingoMovie lingoMovie)
     {
-        _mediator = mediator;
+        _windowManager = windowManager;
+        _projectManager = projectManager;
         _lingoMovie = lingoMovie;
         _lingoMovie.PlayStateChanged += OnPlayStateChanged;
 
         AddChild(_menuBar);
         _menuBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
-        ComposeMenu(mediator);
+        ComposeMenu();
 
         AddChild(_iconBar);
         _iconBar.Position = new Vector2(300, 0);
@@ -50,7 +54,7 @@ internal partial class DirGodotMainMenu : Control
         UpdatePlayButton();
     }
 
-    private void ComposeMenu(IDirectorEventMediator mediator)
+    private void ComposeMenu()
     {
         // FileMenu
         _menuBar.AddChild(_fileMenu);
@@ -62,8 +66,8 @@ internal partial class DirGodotMainMenu : Control
         {
             switch (id)
             {
-                case 1: mediator.RaiseMenuSelected(DirectorMenuCodes.FileLoad); break;
-                case 2: mediator.RaiseMenuSelected(DirectorMenuCodes.FileSave); break;
+                case 1: _projectManager.LoadMovie(); break;
+                case 2: _projectManager.SaveMovie(); break;
                 case 3:
                     // TODO: check project for unsaved changes before quitting
                     GetTree().Quit();
@@ -76,32 +80,32 @@ internal partial class DirGodotMainMenu : Control
         popupEdit.AddItem("Project Settings", 20);
         popupEdit.IdPressed += id =>
         {
-            if (id == 20) mediator.RaiseMenuSelected(DirectorMenuCodes.ProjectSettingsWindow);
+            if (id == 20) _windowManager.OpenWindow(DirectorMenuCodes.ProjectSettingsWindow);
         };
 
         // Window Menu
         _menuBar.AddChild(_WindowMenu);
         var popupWindow = _WindowMenu.GetPopup();
         //popupWindow.AddItem("Script", 5);
-        popupWindow.AddItem("Stage", 6);
-        //popupWindow.AddItem("Control Panel", 7);
-        popupWindow.AddItem("Cast", 8);
-        popupWindow.AddItem("Score", 9);
-        popupWindow.AddItem("Object Inspector", 15);
-        popupWindow.AddItem("Tools", 16);
+        popupWindow.AddItem("Stage\tCtrl+1", 6);
+        //popupWindow.AddItem("Control Panel\tCtrl+2", 7);
+        popupWindow.AddItem("Cast\tCtrl+3", 8);
+        popupWindow.AddItem("Score\tCtrl+4", 9);
+        popupWindow.AddItem("Property Inspector\tCtrl+Alt+S", 15);
+        popupWindow.AddItem("Tools\tCtrl+7", 16);
         popupWindow.AddItem("Binary Viewer", 17);
         popupWindow.IdPressed += id =>
         {
             switch (id)
             {
-                case 5: mediator.RaiseMenuSelected(DirectorMenuCodes.ScriptWindow); break;
-                case 6: mediator.RaiseMenuSelected(DirectorMenuCodes.StageWindow); break;
-                case 7: mediator.RaiseMenuSelected(DirectorMenuCodes.ControlPanel); break;
-                case 8: mediator.RaiseMenuSelected(DirectorMenuCodes.CastWindow); break;
-                case 9: mediator.RaiseMenuSelected(DirectorMenuCodes.ScoreWindow); break;
-                case 15: mediator.RaiseMenuSelected(DirectorMenuCodes.ObjectInspector); break;
-                case 16: mediator.RaiseMenuSelected(DirectorMenuCodes.ToolsWindow); break;
-                case 17: mediator.RaiseMenuSelected(DirectorMenuCodes.BinaryViewerWindow); break;
+                case 5: _windowManager.OpenWindow(DirectorMenuCodes.ScriptWindow); break;
+                case 6: _windowManager.OpenWindow(DirectorMenuCodes.StageWindow); break;
+                case 7: _windowManager.OpenWindow(DirectorMenuCodes.ControlPanel); break;
+                case 8: _windowManager.OpenWindow(DirectorMenuCodes.CastWindow); break;
+                case 9: _windowManager.OpenWindow(DirectorMenuCodes.ScoreWindow); break;
+                case 15: _windowManager.OpenWindow(DirectorMenuCodes.PropertyInspector); break;
+                case 16: _windowManager.OpenWindow(DirectorMenuCodes.ToolsWindow); break;
+                case 17: _windowManager.OpenWindow(DirectorMenuCodes.BinaryViewerWindow); break;
                 default:
                     break;
             }

@@ -6,19 +6,19 @@ using System.Reflection;
 using LingoEngine.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Members;
+using LingoEngine.Director.Core.Windows;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
-public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelectedEvent, IHasMemberSelectedEvent 
+public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSelectedEvent, IHasMemberSelectedEvent, IDirFrameworkPropertyInspectorWindow
 {
     private readonly IDirectorEventMediator _mediator;
     private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly TabContainer _tabs = new TabContainer();
 
-    public DirGodotObjectInspector(IDirectorEventMediator mediator) : base("Inspector")
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator) : base("Inspector")
     {
         _mediator = mediator;
-        _mediator.SubscribeToMenu(DirectorMenuCodes.ObjectInspector, () => Visible = !Visible);
         
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
@@ -165,6 +165,12 @@ public partial class DirGodotObjectInspector : BaseGodotWindow, IHasSpriteSelect
         if (t.IsEnum) return Enum.Parse(t, text);
         return Convert.ChangeType(text, t);
     }
+
+    public bool IsOpen => Visible;
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+
 
    
 }
