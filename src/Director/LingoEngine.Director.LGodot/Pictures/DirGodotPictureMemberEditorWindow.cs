@@ -32,6 +32,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _showRegPoint = true;
 
     private float _scale = 1f;
+    private bool _spaceHeld;
+    private bool _panning;
 
     public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
@@ -152,6 +154,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _centerContainer.CustomMinimumSize = size;
             _centerContainer.PivotOffset = size / 2f;
             FitImageToView();
+            CenterImage();
         }
         _member = picture;
         _regPointCanvas.QueueRedraw();
@@ -214,6 +217,18 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         OnZoomChanged(factor);
     }
 
+    private void CenterImage()
+    {
+        Vector2 view = _scrollContainer.Size;
+        if (view == Vector2.Zero)
+            view = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
+        Vector2 img = _centerContainer.CustomMinimumSize * _scale;
+        int h = (int)Mathf.Max(0, (img.X - view.X) / 2f);
+        int v = (int)Mathf.Max(0, (img.Y - view.Y) / 2f);
+        _scrollContainer.ScrollHorizontal = h;
+        _scrollContainer.ScrollVertical = v;
+    }
+
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
@@ -227,6 +242,53 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.OffsetRight = 0;
         _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
         _regPointCanvas.QueueRedraw();
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        base._UnhandledInput(@event);
+        if (!Visible) return;
+
+        if (@event is InputEventKey key && key.Keycode == Key.Space)
+        {
+            _spaceHeld = key.Pressed;
+            if (!key.Pressed)
+                _panning = false;
+        }
+        else if (@event is InputEventMouseButton mb)
+        {
+            Vector2 mousePos = GetGlobalMousePosition();
+            Rect2 bounds = new Rect2(_scrollContainer.GlobalPosition, _scrollContainer.Size);
+            if (mb.ButtonIndex == MouseButton.Left)
+            {
+                if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
+                {
+                    _panning = true;
+                }
+                else if (!mb.Pressed)
+                {
+                    _panning = false;
+                }
+            }
+            else if (!mb.Pressed && (mb.ButtonIndex == MouseButton.WheelUp || mb.ButtonIndex == MouseButton.WheelDown))
+            {
+                if (bounds.HasPoint(mousePos))
+                {
+                    float delta = mb.ButtonIndex == MouseButton.WheelUp ? 0.1f : -0.1f;
+                    float newScale = Mathf.Clamp(_scale + delta, _zoomSlider.MinValue, _zoomSlider.MaxValue);
+                    _zoomSlider.Value = newScale;
+                    OnZoomChanged(newScale);
+                }
+            }
+        }
+        else if (@event is InputEventMouseMotion motion)
+        {
+            if (_panning)
+            {
+                _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
+                _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+            }
+        }
     }
 
     protected override void Dispose(bool disposing)
