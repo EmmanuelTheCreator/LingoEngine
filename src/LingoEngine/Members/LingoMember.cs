@@ -1,11 +1,12 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.Casts;
+using LingoEngine.FrameworkCommunication;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Members
 {
     public enum LingoMemberType
     {
@@ -30,7 +31,7 @@ namespace LingoEngine.Core
     /// Cast members can contain media (e.g., images, sounds, video) or scripts (behaviors, movie scripts).
     /// Corresponds to Lingo: member "Name" or member x
     /// </summary>
-  
+
     public interface ILingoMember
     {
         /// <summary>

@@ -1,4 +1,4 @@
-using LingoEngine.Core;
+using LingoEngine.Members;
 using LingoEngine.Movies;
 
 namespace LingoEngine.Director.Core.Events
@@ -9,6 +9,7 @@ namespace LingoEngine.Director.Core.Events
         void Unsubscribe(object listener);
         void RaiseSpriteSelected(ILingoSprite sprite);
         void RaiseMemberSelected(ILingoMember member);
+        void RaiseFindMember(ILingoMember member);
         void RaiseMenuSelected(string menuCode);
         IDirecorEventSubscription SubscribeToMenu(string menuCode, Func<bool> value);
     }
@@ -20,6 +21,7 @@ namespace LingoEngine.Director.Core.Events
     {
         private readonly List<IHasSpriteSelectedEvent> _spriteSelected = new();
         private readonly List<IHasMemberSelectedEvent> _membersSelected = new();
+        private readonly List<IHasFindMemberEvent> _findMemberEvents = new();
         private readonly List<IHasMenuItemSelectedEvent> _menuItemsSelected = new();
         private readonly Dictionary<string,List<EventSubscription>> _menuItemsSelectedSubscriptions = new();
 
@@ -27,6 +29,7 @@ namespace LingoEngine.Director.Core.Events
         {
             if (listener is IHasSpriteSelectedEvent spriteSelected) _spriteSelected.Add(spriteSelected);
             if (listener is IHasMemberSelectedEvent memberSelected) _membersSelected.Add(memberSelected);
+            if (listener is IHasFindMemberEvent findMember) _findMemberEvents.Add(findMember);
             if (listener is IHasMenuItemSelectedEvent menuItemSelected) _menuItemsSelected.Add(menuItemSelected);
         }
 
@@ -34,6 +37,12 @@ namespace LingoEngine.Director.Core.Events
         {
             if (listener is IHasSpriteSelectedEvent spriteSelected)
                 _spriteSelected.Remove(spriteSelected);
+            if (listener is IHasMemberSelectedEvent memberSelected)
+                _membersSelected.Remove(memberSelected);
+            if (listener is IHasFindMemberEvent findMember)
+                _findMemberEvents.Remove(findMember);
+            if (listener is IHasMenuItemSelectedEvent menuItemSelected)
+                _menuItemsSelected.Remove(menuItemSelected);
         }
 
         public void RaiseSpriteSelected(ILingoSprite sprite)
@@ -41,6 +50,9 @@ namespace LingoEngine.Director.Core.Events
 
         public void RaiseMemberSelected(ILingoMember member)
             => _membersSelected.ForEach(x => x.MemberSelected(member));
+
+        public void RaiseFindMember(ILingoMember member)
+            => _findMemberEvents.ForEach(x => x.FindMember(member));
 
         public void RaiseMenuSelected(string menuCode)
         {

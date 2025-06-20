@@ -6,6 +6,8 @@ using LingoEngine.Primitives;
 using LingoEngine.Animations;
 using LingoEngine.Pictures;
 using System.Linq;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine.Movies
 {
@@ -22,6 +24,7 @@ namespace LingoEngine.Movies
         private bool isMouseInside = false;
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
+        private bool _lock = false;
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
         private bool _isFocus = false;
@@ -68,7 +71,7 @@ namespace LingoEngine.Movies
         public LingoPoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
         public float Rotation { get => _frameworkSprite.Rotation; set => _frameworkSprite.Rotation = value; }
-        public float Skew { get => _frameworkSprite.SkewX; set => _frameworkSprite.SkewX = value; }
+        public float Skew { get => _frameworkSprite.Skew; set => _frameworkSprite.Skew = value; }
 
         public LingoPoint RegPoint { get; set; }
         public LingoColor ForeColor { get; set; }
@@ -83,6 +86,11 @@ namespace LingoEngine.Movies
         public int EndFrame { get; set; }
 
         public bool Editable { get; set; }
+        public bool Lock
+        {
+            get => _lock;
+            set => _lock = value;
+        }
         public bool IsDraggable
         {
             get => isDraggable;

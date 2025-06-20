@@ -1,6 +1,8 @@
-﻿using LingoEngine.Primitives;
+﻿using LingoEngine.Core;
+using LingoEngine.Members;
+using LingoEngine.Primitives;
 
-namespace LingoEngine.Core
+namespace LingoEngine.Casts
 {
     /// <summary>
     /// Represents a single cast library within a movie.
@@ -8,7 +10,7 @@ namespace LingoEngine.Core
     /// A cast library can contain cast members such as sounds, text, graphics, and media.
     /// Lingo equivalent: castLib("LibraryName")
     /// </summary>
-    public interface ILingoCast 
+    public interface ILingoCast
     {
         /// <summary>
         /// The name of the cast library.
@@ -44,7 +46,7 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         public T? GetMember<T>(string name) where T : class, ILingoMember;
         ILingoMembersContainer Member { get; }
-        
+
         /// <summary>
         /// displays the next empty cast member position or the position after a specified cast member. This method is available only on the current cast library.
         /// </summary>

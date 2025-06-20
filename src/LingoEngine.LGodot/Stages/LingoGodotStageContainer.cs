@@ -9,6 +9,8 @@ namespace LingoEngine.LGodot.Stages
         private bool _stageSet;
         private Node? _Root;
         private Node2D _stageContainer = new Node2D();
+        private LingoGodotStage? _stage1;
+
         //private LingoGodotStage? _stage;
         public Node2D Container => _stageContainer;
 
@@ -22,9 +24,14 @@ namespace LingoEngine.LGodot.Stages
         
         public void SetStage(ILingoFrameworkStage stage)
         {
-            var stage1 = stage as LingoGodotStage;
-            _stageContainer.AddChild(stage1);
+            _stage1 = stage as LingoGodotStage;
+            _stageContainer.AddChild(_stage1);
         }
-        
+
+        public void SetScale(float scale)
+        {
+            if (_stage1 == null) return;
+            _stage1.SetScale(scale);
+        }
     }
 }

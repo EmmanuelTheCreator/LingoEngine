@@ -17,7 +17,6 @@ namespace LingoEngine.Director.LGodot
             engineRegistration.Services(s =>
             {
                 s.AddSingleton<DirectorStyle>();
-                s.AddSingleton<Theme>(p => p.GetRequiredService<DirectorStyle>().Theme);
                 s.AddSingleton<DirGodotProjectSettingsWindow>();
                 s.AddSingleton<DirGodotToolsWindow>();
             

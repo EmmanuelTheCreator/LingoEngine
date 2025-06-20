@@ -1,6 +1,5 @@
-using System;
-using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 using LingoEngine.Movies;
 using LingoEngine.Pictures;
 using LingoEngine.Primitives;
@@ -46,8 +45,7 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
     public float SetDesiredWidth { get; set; }
     public int ZIndex { get; set; }
     public float Rotation { get; set; }
-    public float SkewX { get; set; }
-    public float SkewY { get; set; }
+    public float Skew { get; set; }
 
     public void RemoveMe() { _remove(this); Dispose(); }
     public void Dispose()
@@ -78,6 +76,8 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
 
     internal void Render(nint renderer)
     {
+        // todo : rotation
+        // todo : skew
         if (_texture == nint.Zero) return;
         var offset = new LingoPoint();
         if (_lingoSprite.Member is { } member)
@@ -95,49 +95,14 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
             }
         }
 
-        var baseX = X + offset.X;
-        var baseY = Y + offset.Y;
-        if (Math.Abs(SkewX) < 0.0001f && Math.Abs(SkewY) < 0.0001f)
+        SDL.SDL_Rect dst = new SDL.SDL_Rect
         {
-            SDL.SDL_FRect dst = new SDL.SDL_FRect
-            {
-                x = baseX,
-                y = baseY,
-                w = Width,
-                h = Height
-            };
-            SDL.SDL_FPoint center = new SDL.SDL_FPoint { x = Width / 2, y = Height / 2 };
-            SDL.SDL_RenderCopyExF(renderer, _texture, nint.Zero, ref dst, Rotation, ref center, SDL.SDL_RendererFlip.SDL_FLIP_NONE);
-        }
-        else
-        {
-            float radRot = Rotation * (float)Math.PI / 180f;
-            float cos = (float)Math.Cos(radRot);
-            float sin = (float)Math.Sin(radRot);
-            float tanX = (float)Math.Tan(SkewX * Math.PI / 180f);
-            float tanY = (float)Math.Tan(SkewY * Math.PI / 180f);
-
-            SDL.SDL_Vertex[] verts = new SDL.SDL_Vertex[4];
-            float[] xs = new float[] { 0, Width, Width, 0 };
-            float[] ys = new float[] { 0, 0, Height, Height };
-            float cx = Width / 2f;
-            float cy = Height / 2f;
-            for (int i = 0; i < 4; i++)
-            {
-                float vx = xs[i] - cx;
-                float vy = ys[i] - cy;
-                float sx = vx + vy * tanX;
-                float sy = vy + vx * tanY;
-                float rx = sx * cos - sy * sin;
-                float ry = sx * sin + sy * cos;
-
-                verts[i].position = new SDL.SDL_FPoint { x = baseX + cx + rx, y = baseY + cy + ry };
-                verts[i].tex_coord = new SDL.SDL_FPoint { x = xs[i] / Width, y = ys[i] / Height };
-                verts[i].color = new SDL.SDL_Color { r = 255, g = 255, b = 255, a = 255 };
-            }
-            int[] indices = new int[] { 0, 1, 2, 0, 2, 3 };
-            SDL.SDL_RenderGeometry(renderer, _texture, verts, verts.Length, indices, indices.Length);
-        }
+            x = (int)(X + offset.X),
+            y = (int)(Y + offset.Y),
+            w = (int)Width,
+            h = (int)Height
+        };
+        SDL.SDL_RenderCopy(renderer, _texture, nint.Zero, ref dst);
     }
 
     private void UpdateMember()

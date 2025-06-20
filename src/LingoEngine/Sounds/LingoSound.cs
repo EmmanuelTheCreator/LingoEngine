@@ -1,4 +1,4 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Casts;
 using LingoEngine.FrameworkCommunication;
 
 namespace LingoEngine.Sounds

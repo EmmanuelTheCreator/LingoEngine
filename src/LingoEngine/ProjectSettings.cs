@@ -11,6 +11,13 @@ public class ProjectSettings
         !string.IsNullOrWhiteSpace(ProjectName) &&
         !string.IsNullOrWhiteSpace(ProjectFolder);
 
+    public int MaxSpriteChannelCount { get; set; } = 1000;
+
+    public ProjectSettings()
+    {
+        
+    }
+
     public string GetMoviePath(string movieName)
     {
         var file = movieName + ".json";

@@ -1,13 +1,14 @@
 ﻿using Godot;
-using LingoEngine.Core;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Movies;
+using LingoEngine.Members;
+using LingoEngine.Casts;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable
+    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable, IHasFindMemberEvent
     {
         private readonly TabContainer _tabs;
         
@@ -15,6 +16,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly ILingoMovie _lingoMovie;
         private readonly IDirectorEventMediator _mediator;
         private readonly DirectorStyle _style;
+        private readonly Dictionary<int, DirGodotCastView> _castViews = new();
         private DirGodotCastItem? _selectedItem;
 
         public ILingoCast? ActiveCastLib { get; private set; }
@@ -26,6 +28,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _mediator = mediator;
             _style = style;
             _mediator.SubscribeToMenu(DirectorMenuCodes.CastWindow, () => Visible = !Visible);
+            _mediator.Subscribe(this);
 
             Size = new Vector2(360, 620);
             CustomMinimumSize = Size;
@@ -41,6 +44,7 @@ namespace LingoEngine.Director.LGodot.Casts
             {
                 var castLibViewer = new DirGodotCastView(OnSelectElement, _style);
                 castLibViewer.Show(cast);
+                _castViews.Add(cast.Number, castLibViewer);
                 var tabContent = new VBoxContainer
                 {
                     Name = cast.Name,
@@ -83,6 +87,17 @@ namespace LingoEngine.Director.LGodot.Casts
             _mediator.RaiseMemberSelected(castItem.LingoMember);
 
         }
+
+        public void FindMember(ILingoMember member)
+        {
+            if (_castViews.TryGetValue(member.CastLibNum, out var view))
+            {
+                _tabs.CurrentTab = member.CastLibNum - 1;
+                var item = view.FindItem(member);
+                if (item != null)
+                    view.SelectItem(item);
+            }
+        }
         public void Activate(int castlibNum)
         {
             //ActiveCastLib = _lingoMovie.CastLib.GetCast(castlibNum);
@@ -92,6 +107,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public void Dispose()
         {
+            _mediator.Unsubscribe(this);
         }
     }
 }

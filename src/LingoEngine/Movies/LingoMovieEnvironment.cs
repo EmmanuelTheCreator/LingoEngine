@@ -1,7 +1,9 @@
-﻿using LingoEngine.Core;
+﻿using LingoEngine.Casts;
+using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
+using LingoEngine.Members;
 using LingoEngine.Sounds;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,6 +40,7 @@ namespace LingoEngine.Movies
         private LingoEventMediator _eventMediator;
         private IServiceScope _scopedServiceProvider;
         private readonly ILingoFrameworkFactory _factory;
+        private readonly ProjectSettings _projectSettings;
         private readonly Lazy<ILingoMemberFactory> _memberFactory;
         private readonly IServiceProvider _rootServiceProvider;
         public ILingoEventMediator Events => _eventMediator;
@@ -59,12 +62,13 @@ namespace LingoEngine.Movies
         public ILingoFrameworkFactory Factory => _factory;
 
 #pragma warning disable CS8618 
-        public LingoMovieEnvironment(IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory)
 #pragma warning restore CS8618 
+        public LingoMovieEnvironment(IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory, ProjectSettings projectSettings)
         {
             _memberFactory = rootServiceProvider.GetRequiredService<Lazy<ILingoMemberFactory>>();
             _rootServiceProvider = rootServiceProvider;
             _factory = factory;
+            _projectSettings = projectSettings;
         }
 
         internal void Init(string name, int number, LingoPlayer player, LingoKey lingoKey, LingoSound sound, LingoMouse mouse, LingoStage stage, LingoSystem system, ILingoClock clock, LingoCastLibsContainer lingoCastLibsContainer, IServiceScope scopedServiceProvider,Action<LingoMovie> onRemoveMe)
@@ -84,7 +88,7 @@ namespace LingoEngine.Movies
             {
                 onRemoveMe(m);
                 Dispose();
-            });
+            }, _projectSettings);
         }
         internal IServiceProvider GetServiceProvider() => _scopedServiceProvider.ServiceProvider;
         public void Dispose()
