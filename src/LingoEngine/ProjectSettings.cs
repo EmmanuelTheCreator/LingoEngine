@@ -2,6 +2,12 @@ namespace LingoEngine;
 
 using System.IO;
 
+public enum IdeType
+{
+    VisualStudio,
+    VisualStudioCode
+}
+
 public class ProjectSettings
 {
     public string ProjectName { get; set; } = string.Empty;
@@ -12,6 +18,8 @@ public class ProjectSettings
         !string.IsNullOrWhiteSpace(ProjectFolder);
 
     public int MaxSpriteChannelCount { get; set; } = 1000;
+
+    public IdeType PreferredIde { get; set; } = IdeType.VisualStudio;
 
     public ProjectSettings()
     {
