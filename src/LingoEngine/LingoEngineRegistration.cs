@@ -15,6 +15,7 @@ namespace LingoEngine
         ILingoEngineRegistration WithProjectSettings(Action<ProjectSettings> setup);
         LingoPlayer Build();
         LingoPlayer Build(IServiceProvider serviceProvider);
+        ILingoEngineRegistration AddBuildAction(Action<IServiceProvider> buildAction);
     }
     public interface IMovieRegistration
     {
@@ -38,6 +39,7 @@ namespace LingoEngine
         private readonly IServiceCollection _container;
         private readonly Dictionary<string, MovieRegistration> _Movies = new();
         private readonly List<(string Name, string FileName)> _Fonts = new();
+        private readonly List<Action<IServiceProvider>> _BuildActions = new();
         private Action<ILingoFrameworkFactory>? _FrameworkFactorySetup;
         private IServiceProvider? _serviceProvider;
         private Action<ProjectSettings> _projectSettingsSetup = p => { };
@@ -74,6 +76,7 @@ namespace LingoEngine
             _serviceProvider = serviceProvider;
             _projectSettingsSetup(serviceProvider.GetRequiredService<ProjectSettings>());
             LoadFonts(serviceProvider);
+            _BuildActions.ForEach(b => b(serviceProvider));
             var player = serviceProvider.GetRequiredService<LingoPlayer>();
             player.SetActionOnNewMovie(ActionOnNewMovie);
             if (_FrameworkFactorySetup != null)
@@ -115,6 +118,12 @@ namespace LingoEngine
         public ILingoEngineRegistration AddFont(string name, string pathAndName)
         {
             _Fonts.Add((name, pathAndName));
+            return this;
+        }
+
+        public ILingoEngineRegistration AddBuildAction(Action<IServiceProvider> buildAction)
+        {
+            _BuildActions.Add(buildAction);
             return this;
         }
 

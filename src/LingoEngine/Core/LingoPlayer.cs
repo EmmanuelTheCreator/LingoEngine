@@ -1,5 +1,6 @@
 ﻿using System;
 using LingoEngine.Casts;
+using LingoEngine.Commands;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
@@ -11,7 +12,10 @@ namespace LingoEngine.Core
 {
 
 
-    public class LingoPlayer : ILingoPlayer
+    public class LingoPlayer : ILingoPlayer, 
+        ICommandHandler<RewindMovieCommand>,
+         ICommandHandler<PlayMovieCommand>,
+        ICommandHandler<StepFrameCommand>
     {
         private Lazy<CsvImporter> _csvImporter = new Lazy<CsvImporter>(() => new CsvImporter());
         private readonly LingoCastLibsContainer _castLibsContainer;
@@ -201,6 +205,56 @@ namespace LingoEngine.Core
         {
             _actionOnNewMovie = actionOnNewMovie;
         }
+
+
+        #region Commands
+        public bool CanExecute(RewindMovieCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(RewindMovieCommand command)
+        {
+            if (ActiveMovie is LingoMovie movie)
+                movie.GoTo(1);
+            return true;
+        }
+
+
+        public bool CanExecute(StepFrameCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(StepFrameCommand command)
+        {
+            if (ActiveMovie is not LingoMovie movie) return true;
+            int offset = command.Offset;
+            if (movie.IsPlaying)
+            {
+                var steps = Math.Abs(offset);
+                for (int i = 0; i < steps; i++)
+                {
+                    if (offset > 0) movie.NextFrame();
+                    else movie.PrevFrame();
+                }
+            }
+            else
+            {
+                var target = Math.Clamp(movie.Frame + offset, 1, movie.FrameCount);
+                movie.GoToAndStop(target);
+            }
+            return true;
+        }
+
+        public bool CanExecute(PlayMovieCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(PlayMovieCommand command)
+        {
+            if (ActiveMovie is not LingoMovie movie) return true;
+            if (command.Frame.HasValue)
+                movie.GoTo(command.Frame.Value);
+            if (movie.IsPlaying)
+                movie.Halt();
+            else
+                movie.Play();
+            return true;
+        }
+        #endregion
     }
 }
 

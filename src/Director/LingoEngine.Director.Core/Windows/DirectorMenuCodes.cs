@@ -13,5 +13,6 @@ namespace LingoEngine.Director.LGodot.Gfx
         public const string FileSave = "FileSave";
         public const string FileLoad = "FileLoad";
         public const string BinaryViewerWindow = "BinaryViewerWindow";
+        public const string TextEditWindow = "TextEditWindow";
     }
 }

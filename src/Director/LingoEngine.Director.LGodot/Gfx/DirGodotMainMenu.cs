@@ -101,7 +101,7 @@ internal partial class DirGodotMainMenu : Control
                 case 9: mediator.RaiseMenuSelected(DirectorMenuCodes.ScoreWindow); break;
                 case 15: mediator.RaiseMenuSelected(DirectorMenuCodes.ObjectInspector); break;
                 case 16: mediator.RaiseMenuSelected(DirectorMenuCodes.ToolsWindow); break;
-                case 16: mediator.RaiseMenuSelected(DirectorMenuCodes.BinaryViewerWindow); break;
+                case 17: mediator.RaiseMenuSelected(DirectorMenuCodes.BinaryViewerWindow); break;
                 default:
                     break;
             }

@@ -63,8 +63,8 @@ namespace LingoEngine.Director.LGodot.Gfx
             _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
             _scoreWindow = new DirGodotScoreWindow(_mediator);
             _inspector = new DirGodotObjectInspector(_mediator);
-            _toolsWindow = new DirGodotToolsWindow(_mediator);
-            _binaryViewer = new DirGodotBinaryViewerWindow(_mediator);
+            _toolsWindow = new DirGodotToolsWindow(_mediator) { Visible = true};
+            _binaryViewer = new DirGodotBinaryViewerWindow(_mediator) { Visible = false };
 
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
             _directorParent.AddChild(_dirGodotMainMenu);
