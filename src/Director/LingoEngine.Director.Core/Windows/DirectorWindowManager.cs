@@ -1,6 +1,7 @@
 ﻿using LingoEngine.Commands;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Projects;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Director.Core.Menus
 {
@@ -9,7 +10,7 @@ namespace LingoEngine.Director.Core.Menus
         IDirectorWindowManager Register<TWindow>(string windowCode, Func<IServiceProvider, IDirectorWindow> constructor, DirectorShortCutMap? shortCutMap = null)
              where TWindow : IDirectorWindow;
         IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null)
-             where TWindow : IDirectorWindow, new();
+             where TWindow : IDirectorWindow;
         bool OpenWindow(string windowCode);
         bool CloseWindow(string windowCode);
     }
@@ -41,14 +42,14 @@ namespace LingoEngine.Director.Core.Menus
             return this;
         }
         public IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null) 
-            where TWindow : IDirectorWindow, new()
+            where TWindow : IDirectorWindow
         {
             if (_windowRegistrations.ContainsKey(windowCode))
                 throw new InvalidOperationException($"Window with code '{windowCode}' is already registered.");
 
             _windowRegistrations[windowCode] = new WindowRegistration(windowCode, () =>
             {
-                var instance = new TWindow();
+                var instance = _serviceProvider.GetRequiredService<TWindow>();
                 return instance;
             }, shortCutMap);
 

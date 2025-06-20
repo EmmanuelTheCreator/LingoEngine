@@ -5,6 +5,7 @@ using LingoEngine.Movies;
 using LingoEngine.Members;
 using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
+using LingoEngine.Core;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -17,25 +18,27 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly DirectorStyle _style;
         private readonly Dictionary<int, DirGodotCastView> _castViews = new();
         private DirGodotCastItem? _selectedItem;
+        private ILingoPlayer _player;
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player)
             : base("Cast")
         {
             _mediator = mediator;
             _style = style;
             directorCastWindow.Init(this);
+            _player = player;
+            _player.ActiveMovieChanged += OnActiveMovieChanged;
             _mediator.Subscribe(this);
 
             Size = new Vector2(360, 620);
             CustomMinimumSize = Size;
-
-
+            
             _tabs = new TabContainer();
-            InitTabs();
-            _tabs.Position = new Vector2(0, TitleBarHeight + 20);
+            _tabs.Position = new Vector2(0, TitleBarHeight );
 
+            InitTabs();
             AddChild(_tabs);
         }
 
@@ -46,7 +49,12 @@ namespace LingoEngine.Director.LGodot.Casts
             _tabs.Size = new Vector2(Size.X - 10, Size.Y- TitleBarHeight -30);
         }
 
-        public void LoadMovie(ILingoMovie lingoMovie)
+        private void OnActiveMovieChanged(ILingoMovie? movie)
+        {
+            SetActiveMovie(movie as LingoMovie);
+        }
+
+        public void SetActiveMovie(ILingoMovie? lingoMovie)
         {
             for (int i = _tabs.GetChildCount() - 1; i >= 0; i--)
             {
@@ -54,6 +62,7 @@ namespace LingoEngine.Director.LGodot.Casts
                 _tabs.RemoveChild(child);
                 child.QueueFree();
             }
+            if (lingoMovie == null) return;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
                 var castLibViewer = new DirGodotCastView(OnSelectElement, _style);
@@ -109,14 +118,13 @@ namespace LingoEngine.Director.LGodot.Casts
             //    CastLibViewer.Show(ActiveCastLib);
         }
 
-        public void Dispose()
+        public new void Dispose()
         {
+            _player.ActiveMovieChanged -= OnActiveMovieChanged;
             _mediator.Unsubscribe(this);
+            base.Dispose();
         }
 
-        public bool IsOpen => Visible;
-        public void OpenWindow() => Visible = true;
-        public void CloseWindow() => Visible = false;
-        public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+       
     }
 }

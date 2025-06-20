@@ -41,10 +41,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stageContainer = (LingoGodotStageContainer)stageContainer;
         _mediator = directorEventMediator;
         _player = player;
+        _player.ActiveMovieChanged += OnActiveMovieChanged;
         _commandManager = commandManager;
         directorStageWindow.Init(this);
 
-        _player.ActiveMovieChanged += OnActiveMovieChanged;
         _mediator.Subscribe(this);
         
         Size = new Vector2(640 +10, 480+ TitleBarHeight);
@@ -260,8 +260,5 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             DrawRect(_rect, Colors.Yellow, false, 1);
         }
     }
-    public bool IsOpen => Visible;
-    public void OpenWindow() => Visible = true;
-    public void CloseWindow() => Visible = false;
-    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+    
 }

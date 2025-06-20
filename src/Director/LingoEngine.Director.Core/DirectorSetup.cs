@@ -21,6 +21,8 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<DirectorProjectManager>()
 
                     // Windows
+                    .AddSingleton<DirectorMainMenu>()
+
                     .AddSingleton<DirectorProjectSettingsWindow>()
                     .AddSingleton<DirectorToolsWindow>()
                     .AddSingleton<DirectorCastWindow>()

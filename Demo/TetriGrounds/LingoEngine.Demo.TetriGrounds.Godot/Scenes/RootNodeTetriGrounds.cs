@@ -54,7 +54,7 @@ public partial class RootNodeTetriGrounds : Node2D
 #if DEBUG
             var movie = TetriGroundsSetup.SetupGame(serviceProvider);
             var game = TetriGroundsSetup.StartGame(serviceProvider);
-            _director = new LingoGodotDirectorRoot(movie, game.LingoPlayer, serviceProvider);
+           // _director = new LingoGodotDirectorRoot(movie, game.LingoPlayer, serviceProvider);
 #else
             TetriGroundsSetup.SetupGame(serviceProvider);
             TetriGroundsSetup.StartGame(serviceProvider);

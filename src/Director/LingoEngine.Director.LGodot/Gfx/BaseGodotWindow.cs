@@ -135,6 +135,9 @@ namespace LingoEngine.Director.LGodot
 
         }
 
-
+        public bool IsOpen => Visible;
+        public virtual void OpenWindow() => Visible = true;
+        public virtual void CloseWindow() => Visible = false;
+        public virtual void MoveWindow(int x, int y) => Position = new Vector2(x, y);
     }
 }

@@ -16,9 +16,9 @@ namespace LingoEngine.Director.Core.Windows
         }
 
         public bool IsOpen => _Framework.IsOpen;
-        public void OpenWindow() => _Framework.OpenWindow();
-        public void CloseWindow() => _Framework.CloseWindow();
-        public void MoveWindow(int x, int y) => _Framework.MoveWindow(x, y);
+        public virtual void OpenWindow() => _Framework.OpenWindow();
+        public virtual void CloseWindow() => _Framework.CloseWindow();
+        public virtual void MoveWindow(int x, int y) => _Framework.MoveWindow(x, y);
 
         public IDirFrameworkWindow FrameworkObj => _Framework;
        

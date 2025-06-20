@@ -1,10 +1,8 @@
 using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Windows;
-using static System.Net.Mime.MediaTypeNames;
 using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores;
@@ -26,7 +24,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly Control _topStripContent = new Control();
     private readonly Control _scrollContent = new Control();
     private ColorRect _hClipper;
-
+    private ILingoPlayer _player;
     private readonly DirGodotScoreGfxValues _gfxValues = new();
     private readonly DirGodotScoreGrid _grid;
     private readonly DirGodotFrameHeader _header;
@@ -37,14 +35,16 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
 
-    public bool IsOpen => Visible;
 
-    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, DirectorScoreWindow directorScoreWindow)
+    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, DirectorScoreWindow directorScoreWindow, ILingoPlayer player)
         : base("Score")
     {
         _mediator = directorMediator;
         _commandManager = commandManager;
         directorScoreWindow.Init(this);
+        _player = player;
+        _player.ActiveMovieChanged += OnActiveMovieChanged;
+
 
         var height = 400;
         var width = 800;
@@ -149,7 +149,11 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         UpdateScrollSize();
     }
 
-    public void SetMovie(LingoMovie? movie)
+    private void OnActiveMovieChanged(ILingoMovie? movie)
+    {
+        SetActiveMovie(movie as LingoMovie);
+    }
+    public void SetActiveMovie(LingoMovie? movie)
     {
         _movie = movie;
         _grid.SetMovie(movie);
@@ -165,6 +169,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     protected override void Dispose(bool disposing)
     {
+        _player.ActiveMovieChanged -= OnActiveMovieChanged;
         _grid.Dispose();
         _labelBar.Dispose();
         _frameScripts.Dispose();
@@ -186,9 +191,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         }
     }
 
-    public void OpenWindow() => Visible = true;
-    public void CloseWindow() => Visible = false;
-    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+ 
 
     internal partial class DirGodotCastLeftTopLabels : Control
     {
