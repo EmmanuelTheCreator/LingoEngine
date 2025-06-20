@@ -6,6 +6,7 @@ using LingoEngine.Pictures;
 using LingoEngine.Members;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Inspector;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -15,7 +16,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly TabContainer _tabs = new TabContainer();
 
-    public DirGodotPropertyInspector(IDirectorEventMediator mediator, DirectorPropertyInspectorWindow inspectorWindow) : base("Inspector")
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator, DirectorPropertyInspectorWindow inspectorWindow, GodotWindowManager windowManager) : base("Inspector", windowManager)
     {
         _mediator = mediator;
         inspectorWindow.Init(this);

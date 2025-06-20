@@ -4,6 +4,7 @@ using LingoEngine.Director.Core.Windows;
 using LingoEngine.Texts;
 using LingoEngine.Members;
 using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Casts;
 
@@ -17,7 +18,7 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
 
     private ILingoMemberTextBase? _member;
 
-    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, DirectorTextEditWindow directorTextEditWindow) : base("Edit Text")
+    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, DirectorTextEditWindow directorTextEditWindow, GodotWindowManager windowManager) : base("Edit Text", windowManager)
     {
         mediator.Subscribe(this);
         directorTextEditWindow.Init(this);
