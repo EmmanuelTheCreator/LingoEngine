@@ -118,6 +118,7 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         popupWindow.AddItem("Property Inspector  \tCTRL+ALT+S", 15);
         popupWindow.AddItem("Tools  \tCTRL+7", 16);
         popupWindow.AddItem("Binary Viewer", 17);
+        popupWindow.AddItem("Paint  \tCTRL+5", 18);
         popupWindow.IdPressed += id =>
         {
             switch (id)
@@ -131,6 +132,7 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
                 case 15: _windowManager.OpenWindow(DirectorMenuCodes.PropertyInspector); break;
                 case 16: _windowManager.OpenWindow(DirectorMenuCodes.ToolsWindow); break;
                 case 17: _windowManager.OpenWindow(DirectorMenuCodes.BinaryViewerWindow); break;
+                case 18: _windowManager.OpenWindow(DirectorMenuCodes.PictureEditWindow); break;
                 default:
                     break;
             }
