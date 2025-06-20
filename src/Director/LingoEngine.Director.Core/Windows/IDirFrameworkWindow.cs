@@ -12,8 +12,10 @@ namespace LingoEngine.Director.Core.Windows
 
     public interface IDirFrameworkCastWindow : IDirFrameworkWindow
     {
-        void LoadMovie(ILingoMovie lingoMovie);
+        void SetActiveMovie(ILingoMovie lingoMovie);
     }
+    public interface IDirFrameworkMainMenuWindow : IDirFrameworkWindow { }
+
     public interface IDirFrameworkScoreWindow : IDirFrameworkWindow { }
     public interface IDirFrameworkStageWindow : IDirFrameworkWindow { }
     public interface IDirFrameworkToolsWindow : IDirFrameworkWindow { }

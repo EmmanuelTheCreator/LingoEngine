@@ -8,6 +8,9 @@ using LingoEngine.Director.LGodot.Scores;
 using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.LGodot.Movies;
+using System.IO;
+using System;
+using LingoEngine.Core;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -29,7 +32,8 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotStageWindow>();
                 s.AddSingleton<DirGodotBinaryViewerWindow>();
                 s.AddSingleton<DirGodotPropertyInspector>();
-                s.AddSingleton<TextableMemberWindow>();
+                s.AddSingleton<DirGodotTextableMemberWindow>();
+                s.AddSingleton<DirGodotMainMenu>();
 
                 s.AddSingleton<IDirFrameworkProjectSettingsWindow>(p => p.GetRequiredService<DirGodotProjectSettingsWindow>());
                 s.AddSingleton<IDirFrameworkToolsWindow>(p => p.GetRequiredService<DirGodotToolsWindow>());
@@ -38,31 +42,13 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<IDirFrameworkStageWindow>(p => p.GetRequiredService<DirGodotStageWindow>());
                 s.AddSingleton<IDirFrameworkBinaryViewerWindow>(p => p.GetRequiredService<DirGodotBinaryViewerWindow>());
                 s.AddSingleton<IDirFrameworkPropertyInspectorWindow>(p => p.GetRequiredService<DirGodotPropertyInspector>());
-                s.AddSingleton<IDirFrameworkTextEditWindow>(p => p.GetRequiredService<TextableMemberWindow>());
-            
-                //IServiceCollection serviceCollection = s
-                  //  .AddSingleton<ILingoFrameworkStageWindow>(p => new DirGodotStageWindow(rootNode))
-                  //  .AddSingleton(p =>
-                  //  {
-                  //      var overlay = new DirGodotScoreWindow(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
-                  //      rootNode.AddChild(overlay);
-                  //      return overlay;
-                  //  })
-                  //  .AddSingleton(p =>
-                  //  {
+                s.AddSingleton<IDirFrameworkTextEditWindow>(p => p.GetRequiredService<DirGodotTextableMemberWindow>());
 
-                //      var inspector = new Inspector.DirGodotPropertyInspector(p.GetRequiredService<IDirectorEventMediator>()) { Visible = false };
-                //      rootNode.AddChild(inspector);
-                //      return inspector;
-                //  })
-                //.AddSingleton(p =>
-                //  {
-                //      var menu = new DirGodotMainMenu();
-                //      rootNode.AddChild(menu);
-                //      return menu;
 
-                //  });
-
+            });
+            engineRegistration.AddBuildAction(p =>
+            {
+               new LingoGodotDirectorRoot(p.GetRequiredService<LingoPlayer>(), p);
             });
             return engineRegistration;
         }

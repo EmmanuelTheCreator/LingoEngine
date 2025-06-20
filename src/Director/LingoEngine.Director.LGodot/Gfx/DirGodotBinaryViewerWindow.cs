@@ -273,9 +273,6 @@ namespace LingoEngine.Director.LGodot.Gfx
             }
         }
 
-        public bool IsOpen => Visible;
-        public void OpenWindow() => Visible = true;
-        public void CloseWindow() => Visible = false;
-        public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+       
     }
 }
