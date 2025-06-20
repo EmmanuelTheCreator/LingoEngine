@@ -5,7 +5,18 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <RootNamespace>ProjectorRays</RootNamespace>
-    <OutputType>Exe</OutputType>
-    <Platforms>AnyCPU;x64;x86</Platforms>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+    <Compile Remove="director/Sound.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fontmaps\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
+  </ItemGroup>
 </Project>

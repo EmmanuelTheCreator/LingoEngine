@@ -1,4 +1,6 @@
-﻿using LingoEngine.Movies;
+﻿using System;
+using LingoEngine.Casts;
+using LingoEngine.Movies;
 using LingoEngine.Sounds;
 
 namespace LingoEngine.Core
@@ -16,6 +18,15 @@ namespace LingoEngine.Core
         /// </summary>
         ILingoCast ActiveCastLib { get; }
         ILingoMovie? ActiveMovie { get; }
+        /// <summary>
+        /// Raised when <see cref="ActiveMovie"/> changes.
+        /// </summary>
+        event Action<ILingoMovie?> ActiveMovieChanged;
+        /// <summary>
+        /// Sets the active movie.
+        /// </summary>
+        /// <param name="movie">Movie to make active.</param>
+        void SetActiveMovie(ILingoMovie? movie);
         /// <summary>
         /// Provides access to the sound system (including channels and control).
         /// Lingo: the sound

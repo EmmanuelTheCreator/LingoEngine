@@ -1,4 +1,7 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using System;
+using LingoEngine.Casts;
+using LingoEngine.Commands;
+using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
 using LingoEngine.Sounds;
@@ -9,14 +12,20 @@ namespace LingoEngine.Core
 {
 
 
-    public class LingoPlayer : ILingoPlayer
+    public class LingoPlayer : ILingoPlayer,
+        ICommandHandler<RewindMovieCommand>,
+         ICommandHandler<PlayMovieCommand>,
+        ICommandHandler<StepFrameCommand>,
+        ICommandHandler<SetScoreLabelCommand>,
+        ICommandHandler<AddFrameLabelCommand>,
+        ICommandHandler<UpdateFrameLabelCommand>
     {
         private Lazy<CsvImporter> _csvImporter = new Lazy<CsvImporter>(() => new CsvImporter());
         private readonly LingoCastLibsContainer _castLibsContainer;
         private readonly LingoSound _sound;
         private readonly ILingoWindow _window;
         private readonly IServiceProvider _serviceProvider;
-        private readonly Action<LingoMovie> _actionOnNewMovie;
+        private Action<LingoMovie> _actionOnNewMovie;
         private Dictionary<string, LingoMovieEnvironment> _moviesByName = new();
         private List<LingoMovieEnvironment> _movies = new();
 
@@ -66,20 +75,21 @@ namespace LingoEngine.Core
         /// <inheritdoc/>
         bool ILingoPlayer.SafePlayer { get; set; }
         public ILingoMovie? ActiveMovie { get; private set; }
+        public event Action<ILingoMovie?>? ActiveMovieChanged;
 
-        internal LingoPlayer(IServiceProvider serviceProvider, Action<LingoMovie> actionOnNewMovie)
+        public LingoPlayer(IServiceProvider serviceProvider, ILingoFrameworkFactory factory, ILingoCastLibsContainer castLibsContainer, ILingoWindow window, ILingoClock lingoClock, ILingoSystem lingoSystem)
         {
+            _actionOnNewMovie= m => { };
             _serviceProvider = serviceProvider;
-            _actionOnNewMovie = actionOnNewMovie;
-            Factory = serviceProvider.GetRequiredService<ILingoFrameworkFactory>();
-            _castLibsContainer = new LingoCastLibsContainer(Factory);
+            Factory = factory;
+            _castLibsContainer = (LingoCastLibsContainer)castLibsContainer;
             _sound = Factory.CreateSound(_castLibsContainer);
-            _window = new LingoWindow();
-            _clock = new LingoClock();
+            _window = window;
+            _clock = (LingoClock)lingoClock;
+            _System = (LingoSystem)lingoSystem;
             _LingoKey = Factory.CreateKey();
             _Stage = Factory.CreateStage(this);
             _Mouse = Factory.CreateMouse(_Stage);
-            _System = new LingoSystem();
         }
 
 
@@ -150,8 +160,7 @@ namespace LingoEngine.Core
             // Activate him;
             if (andActivate)
             {
-                ActiveMovie = movieEnv.Movie;
-                _Stage.SetActiveMovie(movieTyped);
+                SetActiveMovie(movieTyped);
             }
             return movieEnv.Movie;
         }
@@ -181,10 +190,104 @@ namespace LingoEngine.Core
             return this;
         }
 
+        public void SetActiveMovie(LingoMovie? movie)
+        {
+            ActiveMovie = movie;
+            _Stage.SetActiveMovie(movie);
+            ActiveMovieChanged?.Invoke(movie);
+        }
+
+        void ILingoPlayer.SetActiveMovie(ILingoMovie? movie) => SetActiveMovie(movie as LingoMovie);
+
         internal void LoadMovieScripts(IEnumerable<LingoMovieScript> enumerable)
         {
             throw new NotImplementedException();
         }
+
+        internal void SetActionOnNewMovie(Action<LingoMovie> actionOnNewMovie)
+        {
+            _actionOnNewMovie = actionOnNewMovie;
+        }
+
+
+        #region Commands
+        public bool CanExecute(RewindMovieCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(RewindMovieCommand command)
+        {
+            if (ActiveMovie is LingoMovie movie)
+                movie.GoTo(1);
+            return true;
+        }
+
+
+        public bool CanExecute(StepFrameCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(StepFrameCommand command)
+        {
+            if (ActiveMovie is not LingoMovie movie) return true;
+            int offset = command.Offset;
+            if (movie.IsPlaying)
+            {
+                var steps = Math.Abs(offset);
+                for (int i = 0; i < steps; i++)
+                {
+                    if (offset > 0) movie.NextFrame();
+                    else movie.PrevFrame();
+                }
+            }
+            else
+            {
+                var target = Math.Clamp(movie.Frame + offset, 1, movie.FrameCount);
+                movie.GoToAndStop(target);
+            }
+            return true;
+        }
+
+        public bool CanExecute(PlayMovieCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(PlayMovieCommand command)
+        {
+            if (ActiveMovie is not LingoMovie movie) return true;
+            if (command.Frame.HasValue)
+                movie.GoTo(command.Frame.Value);
+            if (movie.IsPlaying)
+                movie.Halt();
+            else
+                movie.Play();
+            return true;
+        }
+
+        public bool CanExecute(SetScoreLabelCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(SetScoreLabelCommand command)
+        {
+            if (ActiveMovie is LingoMovie movie)
+                movie.SetScoreLabel(command.FrameNumber, command.Name);
+            return true;
+        }
+
+        public bool CanExecute(AddFrameLabelCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(AddFrameLabelCommand command)
+        {
+            if (ActiveMovie is LingoMovie movie)
+                movie.SetScoreLabel(command.FrameNumber, command.Name);
+            return true;
+        }
+
+        public bool CanExecute(UpdateFrameLabelCommand command) => ActiveMovie is LingoMovie;
+
+        public bool Handle(UpdateFrameLabelCommand command)
+        {
+            if (ActiveMovie is LingoMovie movie)
+            {
+                movie.SetScoreLabel(command.PreviousFrame, null);
+                movie.SetScoreLabel(command.NewFrame, command.Name);
+            }
+            return true;
+        }
+        #endregion
     }
 }
 

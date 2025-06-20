@@ -1,5 +1,5 @@
-﻿using LingoEngine.Core;
-using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 
 namespace LingoEngine.Movies
 {
@@ -23,6 +23,7 @@ namespace LingoEngine.Movies
         }
              
 
+        public ILingoFrameworkStage FrameworkObj() => _lingoFrameworkMovieStage;
         public T Framework<T>() where T : class, ILingoFrameworkStage => (T)_lingoFrameworkMovieStage;
         public LingoStage(ILingoFrameworkStage godotInstance)
         {
@@ -34,7 +35,24 @@ namespace LingoEngine.Movies
             if (!RecordKeyframes || ActiveMovie == null)
                 return;
             int frame = ActiveMovie.CurrentFrame;
-            sprite.Animator.AddKeyFrame(frame, sprite.LocH, sprite.LocV, sprite.Rotation, sprite.Skew);
+            sprite.AddKeyframes((frame, sprite.LocH, sprite.LocV, sprite.Rotation, sprite.Skew));
+        }
+
+        internal void UpdateKeyFrame(LingoSprite sprite)
+        {
+            if (!RecordKeyframes || ActiveMovie == null)
+                return;
+            int frame = ActiveMovie.CurrentFrame;
+            sprite.UpdateKeyframe(frame, sprite.LocH, sprite.LocV, sprite.Rotation, sprite.Skew);
+        }
+
+        internal void SetSpriteTweenOptions(LingoSprite sprite, bool positionEnabled, bool rotationEnabled,
+            bool skewEnabled, bool foregroundColorEnabled, bool backgroundColorEnabled, bool blendEnabled,
+            float curvature, bool continuousAtEnds, bool speedSmooth, float easeIn, float easeOut)
+        {
+            sprite.SetSpriteTweenOptions(positionEnabled, rotationEnabled, skewEnabled,
+                foregroundColorEnabled, backgroundColorEnabled, blendEnabled,
+                curvature, continuousAtEnds, speedSmooth, easeIn, easeOut);
         }
 
         public void SetActiveMovie(LingoMovie? lingoMovie)
@@ -52,6 +70,13 @@ namespace LingoEngine.Movies
         {
             if (ActiveMovie == null) return null;
             return ActiveMovie.GetSpriteUnderMouse();
+        }
+
+        public Animations.LingoSpriteMotionPath? GetSpriteMotionPath(LingoSprite sprite)
+        {
+            if (sprite == null) return null;
+            return sprite.CallActor<Animations.LingoSpriteAnimator, Animations.LingoSpriteMotionPath>(
+                a => a.GetMotionPath(sprite.BeginFrame, sprite.EndFrame));
         }
     }
 }

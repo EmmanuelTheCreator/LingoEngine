@@ -1,4 +1,7 @@
-﻿using LingoEngine.Core;
+﻿using System;
+using LingoEngine.Casts;
+using LingoEngine.Core;
+using LingoEngine.Members;
 
 namespace LingoEngine.Movies
 {
@@ -38,6 +41,11 @@ namespace LingoEngine.Movies
         /// Indicates whether the movie is currently playing.
         /// </summary>
         bool IsPlaying { get; }
+
+        /// <summary>
+        /// Occurs when the play state changes. Parameter indicates whether the movie is now playing.
+        /// </summary>
+        event Action<bool> PlayStateChanged;
 
         /// <summary>
         /// Jumps to the specified frame and continues playing.
@@ -158,6 +166,11 @@ namespace LingoEngine.Movies
         /// Sets the member of a sprite using the member's number.
         /// </summary>
         void SetSpriteMember(int number, int memberNumber);
+
+        /// <summary>
+        /// Raised whenever sprites are added or removed from the movie.
+        /// </summary>
+        event Action? SpriteListChanged;
 
         /// <summary>
         /// Gets the total number of sprite channels in the Score.

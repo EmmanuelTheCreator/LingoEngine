@@ -12,8 +12,10 @@ namespace LingoEngine
         ILingoEngineRegistration AddFont(string name,string pathAndName);
         ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action);
         ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class, ILingoFrameworkFactory;
+        ILingoEngineRegistration WithProjectSettings(Action<ProjectSettings> setup);
         LingoPlayer Build();
         LingoPlayer Build(IServiceProvider serviceProvider);
+        ILingoEngineRegistration AddBuildAction(Action<IServiceProvider> buildAction);
     }
     public interface IMovieRegistration
     {
@@ -37,8 +39,10 @@ namespace LingoEngine
         private readonly IServiceCollection _container;
         private readonly Dictionary<string, MovieRegistration> _Movies = new();
         private readonly List<(string Name, string FileName)> _Fonts = new();
+        private readonly List<Action<IServiceProvider>> _BuildActions = new();
         private Action<ILingoFrameworkFactory>? _FrameworkFactorySetup;
         private IServiceProvider? _serviceProvider;
+        private Action<ProjectSettings> _projectSettingsSetup = p => { };
 
         public LingoEngineRegistration(IServiceCollection container)
         {
@@ -46,15 +50,7 @@ namespace LingoEngine
         }
         public void RegisterCommonServices()
         {
-            _container
-               .AddTransient<LingoSprite>()
-               .AddTransient<ILingoMemberFactory, LingoMemberFactory>()
-               .AddTransient(p => new Lazy<ILingoMemberFactory>(() => p.GetRequiredService<ILingoMemberFactory>()))
-               .AddScoped<ILingoMovieEnvironment, LingoMovieEnvironment>()
-               // Xtras
-               .AddScoped<IBuddyAPI, BuddyAPI>()
-               .AddScoped<ILingoEventMediator, LingoEventMediator>()
-               ;
+            _container.WithGodotEngine();
         }
 
         public ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class,ILingoFrameworkFactory
@@ -62,6 +58,12 @@ namespace LingoEngine
             _container.AddSingleton<ILingoFrameworkFactory, T>();
             if (setup != null)
                 _FrameworkFactorySetup = f => setup((T)f);
+            return this;
+        }
+
+        public ILingoEngineRegistration WithProjectSettings(Action<ProjectSettings> setup)
+        {
+            _projectSettingsSetup = setup;
             return this;
         }
      
@@ -72,10 +74,15 @@ namespace LingoEngine
         public LingoPlayer Build(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _projectSettingsSetup(serviceProvider.GetRequiredService<ProjectSettings>());
             LoadFonts(serviceProvider);
-            var player = new LingoPlayer(serviceProvider, ActionOnNewMovie);
+            _BuildActions.ForEach(b => b(serviceProvider));
+            var player = serviceProvider.GetRequiredService<LingoPlayer>();
+            player.SetActionOnNewMovie(ActionOnNewMovie);
             if (_FrameworkFactorySetup != null)
                 _FrameworkFactorySetup(serviceProvider.GetRequiredService<ILingoFrameworkFactory>());
+            serviceProvider.GetRequiredService<ILingoCommandManager>()
+                .DiscoverAndSubscribe(serviceProvider);
             return player;
         }
 
@@ -111,6 +118,12 @@ namespace LingoEngine
         public ILingoEngineRegistration AddFont(string name, string pathAndName)
         {
             _Fonts.Add((name, pathAndName));
+            return this;
+        }
+
+        public ILingoEngineRegistration AddBuildAction(Action<IServiceProvider> buildAction)
+        {
+            _BuildActions.Add(buildAction);
             return this;
         }
 

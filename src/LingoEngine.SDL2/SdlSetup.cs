@@ -51,7 +51,8 @@ public static class SdlSetup
 
     private static void RegisterServices(ILingoEngineRegistration reg, Action<SdlFactory>? setup, SdlRootContext rootContext)
     {
-        reg.Services(s => s
+        reg
+            .Services(s => s
                     .AddSingleton<ILingoFrameworkFactory, SdlFactory>()
                     .AddSingleton<ILingoFontManager, SdlFontManager>()
                     .AddSingleton(rootContext)

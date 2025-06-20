@@ -1,7 +1,10 @@
-﻿using LingoEngine.Core;
+﻿using System;
+using LingoEngine.Casts;
+using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
+using LingoEngine.Members;
 
 namespace LingoEngine.Movies
 {
@@ -35,6 +38,10 @@ namespace LingoEngine.Movies
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
         private bool _IsManualUpdateStage;
+        public event Action? SpriteListChanged;
+
+        private void RaiseSpriteListChanged()
+            => SpriteListChanged?.Invoke();
         private LingoSprite? _currentFrameSprite;
 
         // Movie Script subscriptions
@@ -87,6 +94,8 @@ namespace LingoEngine.Movies
         }
         public bool IsPlaying => _isPlaying;
 
+        public event Action<bool>? PlayStateChanged;
+
         public ActorList ActorList => _actorList;
         public LingoTimeOutList TimeOutList { get; private set; } = new LingoTimeOutList();
 
@@ -94,7 +103,7 @@ namespace LingoEngine.Movies
 
 
 #pragma warning disable CS8618
-        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe)
+        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe, ProjectSettings projectSettings)
 #pragma warning restore CS8618 
         {
             _castLibContainer = castLibContainer;
@@ -110,7 +119,7 @@ namespace LingoEngine.Movies
             _MovieScripts = new(environment, mediator);
             _lingoMouse = (LingoMouse)environment.Mouse;
             _lingoClock = (LingoClock)environment.Clock;
-            MaxSpriteChannelCount = 1000;
+            MaxSpriteChannelCount = projectSettings.MaxSpriteChannelCount;
         }
         public void Init(ILingoFrameworkMovie frameworkMovie)
         {
@@ -158,7 +167,8 @@ namespace LingoEngine.Movies
             var sprite = _environment.Factory.CreateSprite<LingoSprite>(this, s =>
             {
                 // On remove method
-                var index = _frameSpriteBehaviors.Remove(frameNumber);
+                _frameSpriteBehaviors.Remove(frameNumber);
+                RaiseSpriteListChanged();
             });
             sprite.Init(0, "FrameSprite_"+frameNumber);
             if (_frameSpriteBehaviors.ContainsKey(frameNumber))
@@ -171,6 +181,7 @@ namespace LingoEngine.Movies
             var behaviour = sprite.SetBehavior<TBehaviour>();
             if (configureBehaviour != null) configureBehaviour(behaviour);
             if (configure != null) configure(sprite);
+            RaiseSpriteListChanged();
             return sprite;
         }
           
@@ -193,6 +204,7 @@ namespace LingoEngine.Movies
                 var index = _allTimeSprites.IndexOf(s);
                 _allTimeSprites.RemoveAt(index);
                 _spritesByName.Remove(name);
+                RaiseSpriteListChanged();
             });
             sprite.Init(num, name);
             //var sprite = new LingoSprite(_environment, this, name, num);
@@ -203,6 +215,7 @@ namespace LingoEngine.Movies
                 _maxSpriteNum = num;
             if (configure != null)
                 configure(sprite);
+            RaiseSpriteListChanged();
             return sprite;
         }
         public bool RemoveSprite(string name)
@@ -458,6 +471,7 @@ namespace LingoEngine.Movies
             // BeginSprite
             // StartMovie
             _isPlaying = true;
+            PlayStateChanged?.Invoke(true);
             OnTick();
             _needToRaiseStartMovie = false;
            
@@ -466,6 +480,7 @@ namespace LingoEngine.Movies
         private void OnStop()
         {
             _isPlaying = false;
+            PlayStateChanged?.Invoke(false);
             DoEndSprite();
             _EventMediator.RaiseStopMovie();
             // EndSprite
@@ -498,8 +513,15 @@ namespace LingoEngine.Movies
         {
             if (frame >= 1 && frame <= FrameCount)
             {
-                _currentFrame = frame;
+                // Jump directly to the requested frame while ensuring sprite
+                // lifecycle events are fired. The existing AdvanceFrame logic
+                // already handles begin/end sprite events when the playhead
+                // moves to a new frame, so reuse it by setting the next frame
+                // and manually advancing once.
+                _NextFrame = frame;
+                AdvanceFrame();
                 _isPlaying = false;
+                PlayStateChanged?.Invoke(false);
             }
         }
 

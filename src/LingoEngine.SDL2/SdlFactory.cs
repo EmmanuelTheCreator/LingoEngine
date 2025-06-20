@@ -1,7 +1,9 @@
+using LingoEngine.Casts;
 using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
+using LingoEngine.Members;
 using LingoEngine.Movies;
 using LingoEngine.Pictures;
 using LingoEngine.Primitives;
@@ -60,6 +62,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
             Type t when t == typeof(LingoMemberText) => (CreateMemberText(cast, numberInCast, name) as T)!,
             Type t when t == typeof(LingoMemberField) => (CreateMemberField(cast, numberInCast, name) as T)!,
             Type t when t == typeof(LingoMemberSound) => (CreateMemberSound(cast, numberInCast, name) as T)!,
+            Type t when t == typeof(LingoMemberFilmLoop) => (CreateMemberFilmLoop(cast, numberInCast, name) as T)!,
             _ => throw new NotSupportedException()
         };
     }
@@ -67,6 +70,14 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     {
         var impl = new SdlMemberSound();
         var member = new LingoMemberSound(impl, (LingoCast)cast, numberInCast, name, fileName ?? "");
+        impl.Init(member);
+        _disposables.Add(impl);
+        return member;
+    }
+    public LingoMemberFilmLoop CreateMemberFilmLoop(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+    {
+        var impl = new SdlMemberFilmLoop();
+        var member = new LingoMemberFilmLoop(impl, (LingoCast)cast, numberInCast, name, fileName ?? "", regPoint);
         impl.Init(member);
         _disposables.Add(impl);
         return member;
