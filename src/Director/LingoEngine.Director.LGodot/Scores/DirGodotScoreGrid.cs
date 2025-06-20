@@ -8,7 +8,7 @@ namespace LingoEngine.Director.LGodot.Scores;
 internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 {
     private LingoMovie? _movie;
-   
+
     private ILingoSprite? _dragSprite;
     private bool _dragBegin;
     private bool _dragEnd;
@@ -18,25 +18,64 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private readonly PopupMenu _contextMenu = new();
     private DirGodotScoreSprite? _contextSprite;
     private readonly DirGodotScoreGfxValues _gfxValues;
+
+    private readonly SubViewport _gridViewport = new();
+    private readonly SubViewport _spriteViewport = new();
+    private readonly TextureRect _gridTexture = new();
+    private readonly TextureRect _spriteTexture = new();
+    private readonly GridCanvas _gridCanvas;
+    private readonly SpriteCanvas _spriteCanvas;
+    private bool _spriteDirty = true;
+    private int _lastFrame = -1;
     public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
         _mediator = mediator;
         AddChild(_contextMenu);
         _contextMenu.IdPressed += OnContextMenuItem;
+
+        _gridViewport.SetDisable3D(true);
+        _gridViewport.TransparentBg = true;
+        _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+        _gridCanvas = new GridCanvas(this);
+        _gridViewport.AddChild(_gridCanvas);
+
+        _spriteViewport.SetDisable3D(true);
+        _spriteViewport.TransparentBg = true;
+        _spriteViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+        _spriteCanvas = new SpriteCanvas(this);
+        _spriteViewport.AddChild(_spriteCanvas);
+
+        _gridTexture.Texture = _gridViewport.GetTexture();
+        _gridTexture.Position = Vector2.Zero;
+        _gridTexture.ZIndex = -20;
+        _gridTexture.MouseFilter = MouseFilterEnum.Ignore;
+        _spriteTexture.Texture = _spriteViewport.GetTexture();
+        _spriteTexture.Position = Vector2.Zero;
+        _spriteTexture.ZIndex = -10;
+        _spriteTexture.MouseFilter = MouseFilterEnum.Ignore;
+
+        AddChild(_gridViewport);
+        AddChild(_spriteViewport);
+        AddChild(_gridTexture);
+        AddChild(_spriteTexture);
     }
 
     public void SetMovie(LingoMovie? movie)
     {
         _movie = movie;
         _sprites.Clear();
-        if (_movie == null) return;
-        int idx = 1;
-        while (_movie.TryGetAllTimeSprite(idx, out var sp))
+        if (_movie != null)
         {
-            _sprites.Add(new DirGodotScoreSprite((LingoSprite)sp));
-            idx++;
+            int idx = 1;
+            while (_movie.TryGetAllTimeSprite(idx, out var sp))
+            {
+                _sprites.Add(new DirGodotScoreSprite((LingoSprite)sp));
+                idx++;
+            }
         }
+        UpdateViewportSize();
+        _spriteDirty = true;
     }
 
     private void SelectSprite(DirGodotScoreSprite? sprite, bool raiseEvent = true)
@@ -50,7 +89,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             if (raiseEvent)
                 _mediator.RaiseSpriteSelected(_selected.Sprite);
         }
-        QueueRedraw();
+        _spriteDirty = true;
     }
 
     public override void _Input(InputEvent @event)
@@ -76,13 +115,16 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                                 float ex = _gfxValues.LeftMargin + sp.Sprite.EndFrame * _gfxValues.FrameWidth;
                                 if (pos.X >= sx && pos.X <= ex)
                                 {
-                                    if (Math.Abs(pos.X - sx) < 3)
+                                    float firstFrameRight = sx + _gfxValues.FrameWidth;
+                                    float lastFrameLeft = ex - _gfxValues.FrameWidth;
+
+                                    if (pos.X <= firstFrameRight)
                                     {
                                         _dragSprite = sp.Sprite;
                                         _dragBegin = true;
                                         _dragEnd = false;
                                     }
-                                    else if (Math.Abs(pos.X - ex) < 3)
+                                    else if (pos.X >= lastFrameLeft)
                                     {
                                         _dragSprite = sp.Sprite;
                                         _dragBegin = false;
@@ -102,6 +144,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                 {
                     _dragSprite = null;
                     _dragBegin = _dragEnd = false;
+                    _spriteDirty = true;
                 }
             }
             else if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
@@ -128,14 +171,20 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                 _dragSprite.BeginFrame = Math.Min(newFrame, _dragSprite.EndFrame);
             else if (_dragEnd)
                 _dragSprite.EndFrame = Math.Max(newFrame, _dragSprite.BeginFrame);
-            QueueRedraw();
+            _spriteDirty = true;
         }
     }
 
     public override void _Process(double delta)
     {
-        if (Visible)
-            QueueRedraw();
+        if (!Visible) return;
+        int cur = _movie?.CurrentFrame ?? -1;
+        if (_spriteDirty || cur != _lastFrame)
+        {
+            _spriteDirty = false;
+            _lastFrame = cur;
+            _spriteCanvas.QueueRedraw();
+        }
     }
 
     public void SpriteSelected(ILingoSprite sprite)
@@ -168,50 +217,83 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         }
         _contextSprite = null;
     }
-    
 
-    public override void _Draw()
+    private void UpdateViewportSize()
     {
-        if (!Visible || _movie == null) return;
-        int channelCount = _movie.MaxSpriteChannelCount;
-        int frameCount = _movie.FrameCount;
-        var font = ThemeDB.FallbackFont;
+        if (_movie == null) return;
 
-        const int ExtraMargin = 20;
+        float width = _gfxValues.LeftMargin + _movie.FrameCount * _gfxValues.FrameWidth + _gfxValues.ExtraMargin;
+        float height = _movie.MaxSpriteChannelCount * _gfxValues.ChannelHeight + _gfxValues.ExtraMargin;
 
-        Size = new Vector2(_gfxValues.LeftMargin + frameCount * _gfxValues.FrameWidth + ExtraMargin,
-            channelCount * _gfxValues.ChannelHeight + ExtraMargin);
+        Size = new Vector2(width, height);
         CustomMinimumSize = Size;
 
-        DrawRect(new Rect2(0, 0, Size.X, Size.Y), Colors.White);
+        _gridViewport.SetSize(new Vector2I((int)width, (int)height));
+        _spriteViewport.SetSize(new Vector2I((int)width, (int)height));
+        _gridTexture.CustomMinimumSize = new Vector2(width, height);
+        _spriteTexture.CustomMinimumSize = new Vector2(width, height);
 
-        for (int f = 0; f < frameCount; f++)
-        {
-            float x = _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
-            if (f % 5 == 0)
-                DrawRect(new Rect2(x, 0, _gfxValues.FrameWidth, channelCount * _gfxValues.ChannelHeight), Colors.DarkGray);
-        }
-
-        for (int f = 0; f <= frameCount; f++)
-        {
-            float x = _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
-            DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * _gfxValues.ChannelHeight), Colors.DarkGray);
-        }
-
-        // Draw sprites
-        foreach (var sp in _sprites)
-        {
-            int ch = sp.Sprite.SpriteNum - 1;
-            if (ch < 0 || ch >= channelCount) continue;
-            float x = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
-            float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * _gfxValues.FrameWidth;
-            float y = ch * _gfxValues.ChannelHeight;
-            sp.Draw(this, new Vector2(x, y), width, _gfxValues.ChannelHeight, font);
-        }
-
-        int cur = _movie.CurrentFrame - 1;
-        if (cur < 0) cur = 0;
-        float barX = _gfxValues.LeftMargin + cur * _gfxValues.FrameWidth + _gfxValues.FrameWidth / 2f;
-        DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _gfxValues.ChannelHeight), Colors.Red, 2);
+        _gridCanvas.QueueRedraw();
+        _spriteCanvas.QueueRedraw();
     }
+
+    private partial class GridCanvas : Control
+    {
+        private readonly DirGodotScoreGrid _owner;
+        public GridCanvas(DirGodotScoreGrid owner) => _owner = owner;
+        public override void _Draw()
+        {
+            var movie = _owner._movie;
+            if (movie == null) return;
+            int channelCount = movie.MaxSpriteChannelCount;
+            int frameCount = movie.FrameCount;
+
+            DrawRect(new Rect2(0, 0, _owner.Size.X, _owner.Size.Y), Colors.White);
+
+            for (int f = 0; f < frameCount; f++)
+            {
+                float x = _owner._gfxValues.LeftMargin + f * _owner._gfxValues.FrameWidth;
+                if (f % 5 == 0)
+                    DrawRect(new Rect2(x, 0, _owner._gfxValues.FrameWidth, channelCount * _owner._gfxValues.ChannelHeight), Colors.DarkGray);
+            }
+
+            for (int f = 0; f <= frameCount; f++)
+            {
+                float x = _owner._gfxValues.LeftMargin + f * _owner._gfxValues.FrameWidth;
+                DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * _owner._gfxValues.ChannelHeight), Colors.DarkGray);
+            }
+        }
+    }
+
+    private partial class SpriteCanvas : Control
+    {
+        private readonly DirGodotScoreGrid _owner;
+        public SpriteCanvas(DirGodotScoreGrid owner) => _owner = owner;
+        public override void _Draw()
+        {
+            var movie = _owner._movie;
+            if (movie == null) return;
+
+            int channelCount = movie.MaxSpriteChannelCount;
+            var font = ThemeDB.FallbackFont;
+
+            foreach (var sp in _owner._sprites)
+            {
+                int ch = sp.Sprite.SpriteNum - 1;
+                if (ch < 0 || ch >= channelCount) continue;
+                float x = _owner._gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _owner._gfxValues.FrameWidth;
+                float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * _owner._gfxValues.FrameWidth;
+                float y = ch * _owner._gfxValues.ChannelHeight;
+                sp.Draw(this, new Vector2(x, y), width, _owner._gfxValues.ChannelHeight, font);
+            }
+
+            int cur = movie.CurrentFrame - 1;
+            if (cur < 0) cur = 0;
+            float barX = _owner._gfxValues.LeftMargin + cur * _owner._gfxValues.FrameWidth + _owner._gfxValues.FrameWidth / 2f;
+            DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _owner._gfxValues.ChannelHeight), Colors.Red, 2);
+        }
+    }
+
+
+    // drawing handled by SubViewports
 }

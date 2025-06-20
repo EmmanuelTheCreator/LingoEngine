@@ -14,6 +14,7 @@ using LingoEngine.Director.LGodot.Movies;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core;
 using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.Core.Menus;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -75,7 +76,6 @@ namespace LingoEngine.Director.LGodot.Gfx
             _directorParent.AddChild(_scoreWindow);
             _directorParent.AddChild(_toolsWindow);
             _directorParent.AddChild(_binaryViewer);
-
 
 
 
