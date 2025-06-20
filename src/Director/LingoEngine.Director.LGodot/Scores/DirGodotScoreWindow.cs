@@ -34,6 +34,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     
     private readonly IDirectorEventMediator _mediator;
 
+    public bool IsOpen => Visible;
 
     public DirGodotScoreWindow(IDirectorEventMediator directorMediator)
         : base("Score")
@@ -177,6 +178,11 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
                 _masterScroller.ScrollVertical += 20;
         }
     }
+
+    public void OpenWindow() => Visible = true;
+    public void CloseWindow() => Visible = false;
+    public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+
     internal partial class DirGodotCastLeftTopLabels : Control
     {
         private DirGodotScoreGfxValues _gfxValues;
@@ -214,9 +220,6 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
             DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight);
         }
 
-        public bool IsOpen => Visible;
-        public void OpenWindow() => Visible = true;
-        public void CloseWindow() => Visible = false;
-        public void MoveWindow(int x, int y) => Position = new Vector2(x, y);
+      
     }
 }

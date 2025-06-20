@@ -17,6 +17,6 @@ namespace LingoEngine.Director.Core.Windows
         public void MoveWindow(int x, int y) => _frameworkWindow.MoveWindow(x, y);
 
         public IDirFrameworkWindow FrameworkObj => _frameworkWindow;
-        public T Framework<T>() where T : class, IDirFrameworkWindow => (T)_frameworkWindow;
+        
     }
 }

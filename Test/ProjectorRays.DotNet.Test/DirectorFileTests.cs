@@ -25,7 +25,6 @@ public class DirectorFileTests
         _logger = factory.CreateLogger<DirectorFileTests>();
     }
 
-
     [Theory]
     [InlineData("Dir_With_One_Img_Sprite_Hallo.dir")]
     [InlineData("Dir_With_One_Tex_Sprite_Hallo.dir")]
