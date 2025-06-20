@@ -125,14 +125,14 @@ namespace LingoEngine.Director.LGodot.Casts
                     Resize(Width - 1, Height - LabelHeight);
                     break;
                 case ILingoMemberTextBase textMember:
-                    var godotText = textMember.Framework<LingoGodotMemberText>();
+                    var godotText = textMember.FrameworkObj;
                     godotText.Preload();
 
                     string prev = GetPreviewText(textMember);
                     var label = new Label
                     {
                         Text = prev,
-                        LabelSettings = new LabelSettings { FontSize = 8 },
+                        LabelSettings = new LabelSettings { FontSize = 10,LineSpacing = 11, FontColor = Colors.Black },
                         AutowrapMode = TextServer.AutowrapMode.Word,
                         HorizontalAlignment = HorizontalAlignment.Left,
                         VerticalAlignment = VerticalAlignment.Top
