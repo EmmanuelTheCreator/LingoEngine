@@ -4,6 +4,6 @@ namespace LingoEngine.Director.Core.Scores
 {
     public class DirectorScoreWindow : DirectorWindow<IDirFrameworkScoreWindow>
     {
-        public DirectorScoreWindow(IDirFrameworkScoreWindow framework) : base(framework) { }
+        public DirectorScoreWindow() : base() { }
     }
 }

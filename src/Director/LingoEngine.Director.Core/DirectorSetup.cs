@@ -1,8 +1,12 @@
 using LingoEngine.Director.Core.Events;
-using LingoEngine;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Director.Core.Menus;
 using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Inspector;
+using LingoEngine.Director.Core.Scores;
+using LingoEngine.Director.Core.Stages;
 
 namespace LingoEngine.Director.Core
 {
@@ -15,11 +19,21 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<IDirectorShortCutManager, DirectorShortCutManager>()
                     .AddSingleton<IDirectorWindowManager, DirectorWindowManager>()
                     .AddSingleton<DirectorProjectManager>()
+
+                    // Windows
+                    .AddSingleton<DirectorProjectSettingsWindow>()
+                    .AddSingleton<DirectorToolsWindow>()
+                    .AddSingleton<DirectorCastWindow>()
+                    .AddSingleton<DirectorScoreWindow>()
+                    .AddSingleton<DirectorPropertyInspectorWindow>()
+                    .AddSingleton<DirectorBinaryViewerWindow>()
+                    .AddSingleton<DirectorStageWindow>()
+                    .AddSingleton<DirectorTextEditWindow>()
                     );
             engineRegistration.AddBuildAction(
                 (serviceProvider) =>
                 {
-                    DirectorWindowRegistrator.RegisterDirectorWindows(serviceProvider);
+                    serviceProvider.RegisterDirectorWindows();
                    
                 });
             return engineRegistration;

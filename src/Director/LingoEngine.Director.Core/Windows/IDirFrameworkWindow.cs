@@ -1,3 +1,5 @@
+using LingoEngine.Movies;
+
 namespace LingoEngine.Director.Core.Windows
 {
     public interface IDirFrameworkWindow
@@ -8,7 +10,10 @@ namespace LingoEngine.Director.Core.Windows
         void MoveWindow(int x, int y);
     }
 
-    public interface IDirFrameworkCastWindow : IDirFrameworkWindow { }
+    public interface IDirFrameworkCastWindow : IDirFrameworkWindow
+    {
+        void LoadMovie(ILingoMovie lingoMovie);
+    }
     public interface IDirFrameworkScoreWindow : IDirFrameworkWindow { }
     public interface IDirFrameworkStageWindow : IDirFrameworkWindow { }
     public interface IDirFrameworkToolsWindow : IDirFrameworkWindow { }

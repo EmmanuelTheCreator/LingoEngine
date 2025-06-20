@@ -1,12 +1,8 @@
 ﻿using Godot;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.TestData;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.Core.Windows;
-using System.Diagnostics;
+using LingoEngine.Director.Core.Gfx;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -27,9 +23,10 @@ namespace LingoEngine.Director.LGodot.Gfx
         private SubViewport _viewport;
         private TextureRect _textureRect;
 
-        public DirGodotBinaryViewerWindow(IDirectorEventMediator mediator) : base("Binary Viewer")
+        public DirGodotBinaryViewerWindow(IDirectorEventMediator mediator, DirectorBinaryViewerWindow directorBinaryViewerWindow) : base("Binary Viewer")
         {
             _mediator = mediator;
+            directorBinaryViewerWindow.Init(this);
             Size = new Vector2(1400, 600);
             CustomMinimumSize = Size;
 

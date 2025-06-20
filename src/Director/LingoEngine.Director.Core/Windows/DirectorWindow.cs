@@ -5,18 +5,24 @@ namespace LingoEngine.Director.Core.Windows
     public class DirectorWindow<TFrameworkWindow> : IDirectorWindow
         where TFrameworkWindow : IDirFrameworkWindow
     {
-        protected readonly TFrameworkWindow _frameworkWindow;
-        public DirectorWindow(TFrameworkWindow frameworkWindow)
+#pragma warning disable CS8618 
+        private TFrameworkWindow _Framework;
+        public TFrameworkWindow Framework => _Framework;
+#pragma warning restore CS8618 
+
+        public void Init(IDirFrameworkWindow frameworkWindow)
         {
-            _frameworkWindow = frameworkWindow;
+            _Framework = (TFrameworkWindow)frameworkWindow;
         }
 
-        public bool IsOpen => _frameworkWindow.IsOpen;
-        public void OpenWindow() => _frameworkWindow.OpenWindow();
-        public void CloseWindow() => _frameworkWindow.CloseWindow();
-        public void MoveWindow(int x, int y) => _frameworkWindow.MoveWindow(x, y);
+        public bool IsOpen => _Framework.IsOpen;
+        public void OpenWindow() => _Framework.OpenWindow();
+        public void CloseWindow() => _Framework.CloseWindow();
+        public void MoveWindow(int x, int y) => _Framework.MoveWindow(x, y);
 
-        public IDirFrameworkWindow FrameworkObj => _frameworkWindow;
+        public IDirFrameworkWindow FrameworkObj => _Framework;
+       
         
+
     }
 }

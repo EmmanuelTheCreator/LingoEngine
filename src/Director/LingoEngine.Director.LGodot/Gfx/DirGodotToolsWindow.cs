@@ -1,5 +1,5 @@
 using Godot;
-using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Windows;
 
 namespace LingoEngine.Director.LGodot.Gfx;
@@ -11,8 +11,10 @@ internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkTools
 
     public event Action<int>? IconPressed;
 
-    public DirGodotToolsWindow() : base("Tools")
+    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow) : base("Tools")
     {
+        directorToolsWindow.Init(this);
+
         Size = new Vector2(80, 200);
         CustomMinimumSize = Size;
 

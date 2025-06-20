@@ -23,7 +23,7 @@ internal partial class DirGodotScoreLabelsBar : Control
         _commandManager = commandManager;
         AddChild(_editField);
         _editField.Visible = false;
-        _editField.Size = new Vector2(60, 16);
+        _editField.Size = new Vector2(120, 16);
         _editField.TextSubmitted += _ => CommitEdit();
     }
 
@@ -70,11 +70,11 @@ internal partial class DirGodotScoreLabelsBar : Control
                         _activeLabel = kv.Key;
                         _activeFrame = kv.Value;
                         _startFrame = kv.Value;
+                        _editField.Text = kv.Key;
                         if (mb.DoubleClick)
                         {
                             // Open the edit field on double click
                             _dragging = false;
-                            _editField.Text = kv.Key;
                             UpdateEditFieldPosition();
                             _editField.Visible = true;
                             _editField.GrabFocus();
