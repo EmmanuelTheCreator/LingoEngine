@@ -275,7 +275,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 if (bounds.HasPoint(mousePos))
                 {
                     float delta = mb.ButtonIndex == MouseButton.WheelUp ? 0.1f : -0.1f;
-                    float newScale = Mathf.Clamp(_scale + delta, _zoomSlider.MinValue, _zoomSlider.MaxValue);
+                    float newScale = (float)Mathf.Clamp(_scale + delta, _zoomSlider.MinValue, _zoomSlider.MaxValue);
                     _zoomSlider.Value = newScale;
                     OnZoomChanged(newScale);
                 }
