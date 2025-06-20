@@ -294,6 +294,5 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         }
     }
 
-
-    // drawing handled by SubViewports
 }
+

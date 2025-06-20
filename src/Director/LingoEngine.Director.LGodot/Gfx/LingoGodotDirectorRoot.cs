@@ -64,9 +64,10 @@ namespace LingoEngine.Director.LGodot.Gfx
             var windowManager = serviceProvider.GetRequiredService<IDirectorWindowManager>();
             _dirGodotMainMenu = new DirGodotMainMenu(windowManager, _projectManager, lingoMovie);
             _castViewer = new DirGodotCastWindow(_mediator, lingoMovie, style);
-            _scoreWindow = new DirGodotScoreWindow(_mediator);
+
+            _scoreWindow = new DirGodotScoreWindow(_mediator, commandManager);
             _propertyInspector = new DirGodotPropertyInspector(_mediator);
-            _toolsWindow = new DirGodotToolsWindow() { Visible = true};
+            _toolsWindow = new DirGodotToolsWindow(_mediator) { Visible = true};
             _binaryViewer = new DirGodotBinaryViewerWindow(_mediator) { Visible = false };
 
             _scoreWindow.SetMovie((LingoMovie)lingoMovie);
