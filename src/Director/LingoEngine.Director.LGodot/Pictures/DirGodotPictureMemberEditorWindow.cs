@@ -109,14 +109,12 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _regPointCanvas = new RegPointCanvas(this);
         _regPointCanvas.AnchorLeft = 0;
         _regPointCanvas.AnchorTop = 0;
-        _regPointCanvas.AnchorRight = 1;
-        _regPointCanvas.AnchorBottom = 1;
+        _regPointCanvas.AnchorRight = 0;
+        _regPointCanvas.AnchorBottom = 0;
         _regPointCanvas.OffsetLeft = 0;
         _regPointCanvas.OffsetTop = 0;
-        _regPointCanvas.OffsetRight = 0;
-        _regPointCanvas.OffsetBottom = 0;
         _regPointCanvas.Visible = true;
-        _centerContainer.AddChild(_regPointCanvas);
+        _scrollContainer.AddChild(_regPointCanvas);
 
         // Bottom zoom bar
         AddChild(_bottomBar);
@@ -151,10 +149,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _imageRect.Texture = godotPicture.Texture;
             Vector2 size = new(godotPicture.Width, godotPicture.Height);
             _imageRect.CustomMinimumSize = size;
-            _centerContainer.CustomMinimumSize = size;
-            _centerContainer.PivotOffset = size / 2f;
-            FitImageToView();
-            CenterImage();
+        _centerContainer.CustomMinimumSize = size;
+        _centerContainer.PivotOffset = size / 2f;
+        FitImageToView();
+        CenterImage();
+        UpdateRegPointCanvasSize();
         }
         _member = picture;
         _regPointCanvas.QueueRedraw();
@@ -180,8 +179,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     {
         _scale = value;
         _centerContainer.Scale = new Vector2(_scale, _scale);
+        UpdateRegPointCanvasSize();
         _regPointCanvas.QueueRedraw();
-
+        
         int percent = Mathf.RoundToInt(_scale * 100);
         for (int i = 0; i < _scaleDropdown.ItemCount; i++)
         {
@@ -229,6 +229,17 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.ScrollVertical = v;
     }
 
+    private void UpdateRegPointCanvasSize()
+    {
+        Vector2 view = _scrollContainer.Size;
+        if (view == Vector2.Zero)
+            view = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
+        Vector2 unscaled = view / _scale;
+        float w = Mathf.Max(_centerContainer.CustomMinimumSize.X, unscaled.X);
+        float h = Mathf.Max(_centerContainer.CustomMinimumSize.Y, unscaled.Y);
+        _regPointCanvas.CustomMinimumSize = new Vector2(w, h);
+    }
+
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
@@ -241,6 +252,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.OffsetLeft = 0;
         _scrollContainer.OffsetRight = 0;
         _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
+        UpdateRegPointCanvasSize();
+        CenterImage();
         _regPointCanvas.QueueRedraw();
     }
 
