@@ -17,6 +17,8 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly ColorRect _bg;
         private readonly ColorRect _selectionBg;
         private readonly Color _selectedColor;
+        private readonly StyleBoxFlat _selectedLabelStyle = new();
+        private readonly StyleBoxFlat _normalLabelStyle = new();
         //private readonly CenterContainer _spriteContainer;
         private readonly Sprite2D _Sprite2D;
         private readonly SubViewport _textViewport = new();
@@ -32,6 +34,7 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             _selectionBg.Visible = selected;
             _bg.Color = selected ? _selectedColor : Colors.DimGray;
+            _caption.AddThemeStyleboxOverride("panel", selected ? _selectedLabelStyle : _normalLabelStyle);
         }
         public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager)
         {
@@ -40,6 +43,9 @@ namespace LingoEngine.Director.LGodot.Casts
             _commandManager = commandManager;
             _selectedColor = selectedColor;
             CustomMinimumSize = new Vector2(50, 50);
+
+            _selectedLabelStyle.BgColor = selectedColor;
+            _normalLabelStyle.BgColor = Colors.DimGray;
 
             // Selection background - slightly larger than the item itself
             _selectionBg = new ColorRect { Color = selectedColor, Visible = false };
@@ -59,6 +65,14 @@ namespace LingoEngine.Director.LGodot.Casts
             _bg = new ColorRect { Color = Colors.DimGray };
             _bg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _bg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+            _bg.AnchorLeft = 0;
+            _bg.AnchorTop = 0;
+            _bg.AnchorRight = 1;
+            _bg.AnchorBottom = 1;
+            _bg.OffsetLeft = 0;
+            _bg.OffsetTop = 0;
+            _bg.OffsetRight = 0;
+            _bg.OffsetBottom = 0;
             AddChild(_bg);
 
             // Text viewport for text previews
@@ -87,6 +101,7 @@ namespace LingoEngine.Director.LGodot.Casts
             AddChild(_caption);
             _caption.Text = !string.IsNullOrWhiteSpace(element.Name)? element.NumberInCast+"."+ element.Name: number.ToString();
             _caption.AddThemeColorOverride("font_color", Colors.Black);
+            _caption.AddThemeStyleboxOverride("panel", _normalLabelStyle);
             
         }
         public void SetPosition(int x, int y)
@@ -168,6 +183,7 @@ namespace LingoEngine.Director.LGodot.Casts
                         return;
                     _Sprite2D.Texture = godotPicture.Texture;
                     Resize(Width - 1, Height - LabelHeight);
+                    ApplyRegPoint(pic);
                     break;
                 case ILingoMemberTextBase textMember:
                     var godotText = textMember.FrameworkObj;
@@ -187,6 +203,7 @@ namespace LingoEngine.Director.LGodot.Casts
                     _textViewport.AddChild(label);
                     _Sprite2D.Texture = _textViewport.GetTexture();
                     Resize(Width - 1, Height - LabelHeight);
+                    ApplyRegPoint(textMember);
                     break;
                 default:
                     break;
@@ -201,6 +218,18 @@ namespace LingoEngine.Director.LGodot.Casts
             float scaleFactorW = targetWidth / width;
             float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
+        }
+
+        private void ApplyRegPoint(ILingoMember member)
+        {
+            var offset = member.CenterOffsetFromRegPoint();
+            if (member.Width != 0 && member.Height != 0)
+            {
+                float scaleX = (Width - 1) / (float)member.Width;
+                float scaleY = (Height - LabelHeight) / (float)member.Height;
+                offset = new LingoPoint(offset.X * scaleX, offset.Y * scaleY);
+            }
+            _Sprite2D.Position = new Vector2(Width / 2f + offset.X, LabelHeight - 1 + offset.Y);
         }
 
         private static string GetPreviewText(ILingoMemberTextBase text)
