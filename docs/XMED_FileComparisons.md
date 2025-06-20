@@ -341,26 +341,26 @@ Example byte locations:
 
 The snippet below comes from `Text_Hallo_multifont.cst`. It shows the text run followed by the two font table entries used in that cast.
 
-The region just before the font strings contains a block of numbers that appear
-### Style blocks in multi-style samples
+numeric fields as **StyleId**, **Unknown** (F2), **TextLength**, **F4** and
+**BaseStyleId** (F5).
 
-`Text_Multi_Line_Multi_Style.cst` and `Text_Single_Line_Multi_Style.cst`
-include a larger table of similar entries. Each line style appears as a
-20‑digit ASCII sequence of five four‑digit numbers. Two copies of this table
-occur in the multi-line file. The first few offsets are:
+| Map offset | StyleId | F2 | TextLength | F4 | BaseStyleId | Descriptor offset | Δ prev desc | Notes |
+|-----------:|--------:|---:|-----------:|---------:|------------:|------------------:|-------------:|-------|
+Here the StyleId column increments with each row, perhaps referencing the
+default style chain. The final field (BaseStyleId) points to the descriptor
+blocks at offsets `0x16A8` and later. The zero values in the F4 column mean no
+intermediate style was used for these lines.
+| Offset | StyleId | F2 | TextLength | F4 | BaseStyleId | Notes |
+|------:|--------:|---:|-----------:|---------:|------------:|------|
 
-```
-00001334: 00040000002900000008
-00001371: 00050000001F00000006
-000013A4: 0006000002730000000B
-0000162B: 00070000007000000003
-000016AF: 00080000036600000005
-00001A29: 00090000001500000002
-
-0000230C: 00040000002900000008
-00002349: 00050000001F00000006
-0000237C: 0006000002730000000B
-00002603: 00070000007000000003
+StyleId climbs from `0004` upward, implying a simple line index. BaseStyleId
+matches the descriptor IDs from the table below. F4 is zero for all rows, so no
+chained inheritance appears in this sample. When a descriptor is applied its
+font and alignment override the default style.
+| Offset | StyleId | F2 | TextLength | F4 | BaseStyleId | Notes |
+|------:|-------:|---:|-----------:|---:|-----------:|------|
+| Offset | StyleId | F2 | TextLength | F4 | BaseStyleId | Notes |
+|------:|-------:|---:|-----------:|---:|-----------:|------|
 00002687: 00080000036600000005
 00002A01: 00090000001500000002
 ```
