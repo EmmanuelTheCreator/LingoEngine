@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Pictures;
 using LingoEngine.LGodot.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
@@ -20,7 +21,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow
 
     private float _scale = 1f;
 
-    public DirGodotPictureMemberEditorWindow() : base("Picture Editor")
+    public DirGodotPictureMemberEditorWindow(GodotWindowManager windowManager) : base("Picture Editor", windowManager)
     {
         Size = new Vector2(400, 300);
         CustomMinimumSize = Size;

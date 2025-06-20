@@ -3,6 +3,7 @@ using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.LGodot.TestData;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.LGodot;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -23,7 +24,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         private SubViewport _viewport;
         private TextureRect _textureRect;
 
-        public DirGodotBinaryViewerWindow(IDirectorEventMediator mediator, DirectorBinaryViewerWindow directorBinaryViewerWindow) : base("Binary Viewer")
+        public DirGodotBinaryViewerWindow(IDirectorEventMediator mediator, DirectorBinaryViewerWindow directorBinaryViewerWindow, GodotWindowManager windowManager) : base("Binary Viewer", windowManager)
         {
             _mediator = mediator;
             directorBinaryViewerWindow.Init(this);
