@@ -7,6 +7,7 @@ using LingoEngine.Movies;
 using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
+using LingoEngine.Members;
 
 namespace LingoEngine.LGodot
 {
@@ -166,7 +167,7 @@ namespace LingoEngine.LGodot
                 IsDirty = false;
             }
             var offset = GetRegPointOffset();
-            _Sprite2D.Position = new Vector2(_x + offset.X, _y + offset.Y);
+            _Sprite2D.Position = new Vector2(_x - offset.X, _y - offset.Y);
         }
 
 
