@@ -106,6 +106,22 @@ namespace LingoEngine.Director.LGodot.Gfx
         }
     }
 
+    internal sealed class FontEntryBlock : XmedBlock
+    {
+        public byte ColorIndex { get; }
+        public string FontName { get; }
+
+        public override string Description => $"font {FontName}";
+        public override string Detail => $"index {ColorIndex}";
+
+        public FontEntryBlock(int start, int length, string fontName, byte index)
+            : base(start, length)
+        {
+            FontName = fontName;
+            ColorIndex = index;
+        }
+    }
+
     internal sealed class XmedRelation
     {
         public int ByteOffset { get; }
@@ -376,7 +392,29 @@ namespace LingoEngine.Director.LGodot.Gfx
                 i++;
             }
 
-            // Legacy font entry detection removed in favour of style descriptors
+            // Detect standalone font entries of the form "40," <index> <font name>
+            for (int i = 0; i + 4 < data.Length; i++)
+            {
+                if (data[i] == 0x34 && data[i + 1] == 0x30 && data[i + 2] == 0x2C)
+                {
+                    byte idx = data[i + 3];
+                    int j = i + 4;
+                    while (j < data.Length && IsPrintable(data[j]))
+                        j++;
+                    if (j > i + 4)
+                    {
+                        string font = Encoding.ASCII.GetString(data, i + 4, j - (i + 4));
+                        var fb = new FontEntryBlock(i, j - i, font, idx);
+                        if (TryAdd(fb))
+                        {
+                            i = j;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            // Detect printable ASCII sequences (text content)
 
             // Detect printable ASCII sequences (text content)
             for (int i = 0; i < data.Length;)
