@@ -66,6 +66,55 @@ public static class LingoToCSharpConverter
         return result;
     }
 
+    /// <summary>
+    /// Generates a minimal C# class wrapper for a single Lingo script.
+    /// Only the class declaration and constructor are emitted.
+    /// The class name is derived from the file name plus the script type suffix.
+    /// </summary>
+    public static string ConvertClass(LingoScriptFile script)
+    {
+        var suffix = script.Type switch
+        {
+            LingoScriptType.Movie => "MovieScript",
+            LingoScriptType.Parent => "ParentScript",
+            LingoScriptType.Behavior => "Behavior",
+            _ => "Script"
+        };
+
+        var baseType = script.Type switch
+        {
+            LingoScriptType.Movie => "LingoMovieScript",
+            LingoScriptType.Parent => "LingoParentScript",
+            LingoScriptType.Behavior => "LingoSpriteBehavior",
+            _ => "LingoScriptBase"
+        };
+
+        var className = script.Name + suffix;
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"public class {className} : {baseType}");
+        sb.AppendLine("{");
+
+        bool needsGlobal = script.Type == LingoScriptType.Movie || script.Type == LingoScriptType.Parent;
+        if (needsGlobal)
+        {
+            sb.AppendLine("    private readonly GlobalVars _global;");
+            sb.AppendLine();
+        }
+
+        sb.Append($"    public {className}(ILingoMovieEnvironment env");
+        if (needsGlobal)
+            sb.Append(", GlobalVars global");
+        sb.Append(") : base(env)");
+        sb.AppendLine();
+        sb.AppendLine("    {");
+        if (needsGlobal)
+            sb.AppendLine("        _global = global;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
     private static HashSet<string> ExtractHandlerNames(string source)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
