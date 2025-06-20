@@ -24,6 +24,7 @@ namespace LingoEngine.Director.LGodot
             WindowCode = windowCode;
             _windowManager = windowManager;
             MouseFilter = MouseFilterEnum.Stop;
+            FocusMode = FocusModeEnum.All;
             AddChild(_label);
             _label.Position = new Vector2(5, 1);
             _label.LabelSettings = new LabelSettings();

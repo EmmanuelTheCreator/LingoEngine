@@ -28,9 +28,16 @@ internal class DirGodotWindowManager : IDirGodotWindowManager
     {
         _directorWindowManager.SetActiveWindow(window.WindowCode);
         if (ActiveWindow == window)
+        {
+            window.GrabFocus();
             return;
+        }
 
-       
+        ActiveWindow = window;
+        var parent = window.GetParent();
+        if (parent != null)
+            parent.MoveChild(window, parent.GetChildCount() - 1);
+        window.GrabFocus();
     }
 
     public void SetActiveWindow(IDirectorWindowRegistration windowRegistration)
