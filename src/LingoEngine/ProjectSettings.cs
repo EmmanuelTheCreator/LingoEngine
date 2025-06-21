@@ -13,6 +13,10 @@ public class ProjectSettings
     public string ProjectName { get; set; } = string.Empty;
     public string ProjectFolder { get; set; } = string.Empty;
 
+    public string? VisualStudioPath { get; set; } = @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe";
+    public string? VisualStudioCodePath { get; set; } = @"C:\Program Files\Microsoft VS Code\Code.exe";
+
+
     public bool HasValidSettings =>
         !string.IsNullOrWhiteSpace(ProjectName) &&
         !string.IsNullOrWhiteSpace(ProjectFolder);

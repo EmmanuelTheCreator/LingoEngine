@@ -12,6 +12,8 @@ using System.IO;
 using System;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot.Pictures;
+using LingoEngine.Director.Core.FileSystems;
+using LingoEngine.Director.LGodot.FileSystems;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -38,6 +40,7 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotMainMenu>();
                 s.AddSingleton<DirGodotWindowManager>();
                 s.AddSingleton<DirGodotWindowManager>();
+                s.AddSingleton<IExecutableFilePicker, GodotFilePicker>();
 
                 s.AddTransient<IDirFrameworkProjectSettingsWindow>(p => p.GetRequiredService<DirGodotProjectSettingsWindow>());
                 s.AddTransient<IDirFrameworkToolsWindow>(p => p.GetRequiredService<DirGodotToolsWindow>());

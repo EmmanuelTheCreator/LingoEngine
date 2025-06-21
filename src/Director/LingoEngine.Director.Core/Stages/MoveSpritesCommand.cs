@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Commands;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Director.Core.Stages
 {
     public sealed record MoveSpritesCommand(
-        IReadOnlyDictionary<LingoSprite, Vector2> StartPositions,
-        IReadOnlyDictionary<LingoSprite, Vector2> EndPositions) : ILingoCommand
+        IReadOnlyDictionary<LingoSprite, LingoPoint> StartPositions,
+        IReadOnlyDictionary<LingoSprite, LingoPoint> EndPositions) : ILingoCommand
     {
         public Action ToUndo(Action updateSelectionBox)
         {
