@@ -329,9 +329,10 @@ internal partial class DirGodotPictureMemberEditorWindow
             if (member == null || _owner._imageRect.Texture == null) return;
 
             Vector2 areaSize = Size;
+            var scale = _owner._centerContainer.Scale;
 
             // RegPoint origin is the texture's top-left corner
-            Vector2 pos = new Vector2(member.RegPoint.X, member.RegPoint.Y);
+            Vector2 pos = new Vector2(member.RegPoint.X * scale.X, member.RegPoint.Y * scale.Y);
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
