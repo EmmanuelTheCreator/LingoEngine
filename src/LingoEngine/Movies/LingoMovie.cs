@@ -283,28 +283,27 @@ namespace LingoEngine.Movies
             return sprite.IsMouseInsideBoundingBox(_lingoMouse);
         }
 
-        public LingoSprite? GetSpriteUnderMouse()
+        public LingoSprite? GetSpriteUnderMouse(bool skipLockedSprites = false)
+            => GetSpritesAtPoint(_lingoMouse.MouseH, _lingoMouse.MouseV, skipLockedSprites).FirstOrDefault();
+
+        public IEnumerable<LingoSprite> GetSpritesAtPoint(float x, float y, bool skipLockedSprites = false)
         {
-            // Loop through all sprites and check if the mouse is inside the bounding box of the sprite
+            var matches = new List<LingoSprite>();
             foreach (var sprite in _activeSprites.Values)
             {
-                if (sprite.IsMouseInsideBoundingBox(_lingoMouse))
-                {
-                    return sprite; // Return the sprite the mouse is over
-                }
+                if (skipLockedSprites && sprite.Lock) continue;
+                if (sprite.SpriteChannel != null && !sprite.SpriteChannel.Visibility) continue;
+                if (sprite.IsPointInsideBoundingBox(x, y))
+                    matches.Add(sprite);
             }
-            return null; // Return null if no sprite is under the mouse
+
+            return matches
+                .OrderByDescending(s => s.LocH)
+                .ThenByDescending(s => s.SpriteNum);
         }
 
-        public LingoSprite? GetSpriteAtPoint(float x, float y)
-        {
-            foreach (var sprite in _activeSprites.Values)
-            {
-                if (sprite.IsPointInsideBoundingBox(x, y))
-                    return sprite;
-            }
-            return null;
-        }
+        public LingoSprite? GetSpriteAtPoint(float x, float y, bool skipLockedSprites = false)
+            => GetSpritesAtPoint(x, y, skipLockedSprites).FirstOrDefault();
         private void CallActiveSprites(Action<LingoSprite> actionOnAllActiveSprites)
         {
             foreach (var sprite in _activeSprites.Values)
