@@ -148,7 +148,12 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         {
             var behLabel = new Label { Text = "Behaviors" };
             container.AddChild(behLabel);
-            var list = new ItemList();
+            var list = new ItemList
+            {
+                SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                CustomMinimumSize = new Vector2(0, 80)
+            };
             foreach (var b in sprite.Behaviors)
                 list.AddItem(b.GetType().Name);
             list.ItemActivated += idx => ShowBehavior(sprite.Behaviors[(int)idx]);
