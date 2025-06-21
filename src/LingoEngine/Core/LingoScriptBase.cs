@@ -150,6 +150,9 @@ namespace LingoEngine.Core
         protected void SendSprite<T>(int spriteNumber, Action<T> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
         protected TResult? SendSprite<T, TResult>(int spriteNumber, Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior => _Movie.SendSprite(spriteNumber, actionOnSprite);
 
+        protected LingoList<ILingoSpriteChannel> SpritesUnderPoint(LingoPoint point)
+            => new LingoList<ILingoSpriteChannel>(_Movie.GetSpritesAtPoint(point.X, point.Y).Select(s => (ILingoSpriteChannel)s));
+
         protected void UpdateStage() => _Movie.UpdateStage();
         protected void StartTimer() => _env.Movie.StartTimer();
         protected int Timer => _env.Movie.Timer; 
