@@ -97,8 +97,8 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
 
         SDL.SDL_Rect dst = new SDL.SDL_Rect
         {
-            x = (int)(X + offset.X),
-            y = (int)(Y + offset.Y),
+            x = (int)(X - offset.X),
+            y = (int)(Y - offset.Y),
             w = (int)Width,
             h = (int)Height
         };
