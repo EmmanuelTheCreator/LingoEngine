@@ -12,9 +12,9 @@ namespace LingoEngine.Demo.TetriGrounds.SDL2
             services.AddTetriGrounds(c => c
                         .WithLingoSdlEngine("TetriGrounds", 640, 480));
             var serviceProvider = services.BuildServiceProvider();
-
-            var movie = serviceProvider.SetupGame();
-            var game = serviceProvider.StartGame();
+            var game = serviceProvider.GetRequiredService<TetriGroundsGame>();
+            var movie = game.LoadMovie();
+            game.Play();
             serviceProvider.GetRequiredService<SdlRootContext>().Run();
             SdlSetup.Dispose();
         }
