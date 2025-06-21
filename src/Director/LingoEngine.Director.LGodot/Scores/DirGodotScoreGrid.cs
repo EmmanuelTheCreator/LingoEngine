@@ -89,6 +89,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     {
         _spriteListDirty = true;
         _spriteDirty = true;
+        RefreshSprites();
     }
 
     private void BuildSpriteList()
@@ -102,6 +103,17 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                 _sprites.Add(new DirGodotScoreSprite((LingoSprite)sp));
                 idx++;
             }
+        }
+    }
+
+    private void RefreshSprites()
+    {
+        if (_spriteListDirty)
+        {
+            BuildSpriteList();
+            UpdateViewportSize();
+            _spriteListDirty = false;
+            _spriteDirty = true;
         }
     }
 
@@ -260,14 +272,9 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
     public override void _Process(double delta)
     {
+        if (Visible)
+            RefreshSprites();
         if (!Visible) return;
-        if (_spriteListDirty)
-        {
-            BuildSpriteList();
-            UpdateViewportSize();
-            _spriteListDirty = false;
-            _spriteDirty = true;
-        }
         int cur = _movie?.CurrentFrame ?? -1;
         if (_spriteDirty || cur != _lastFrame)
         {
