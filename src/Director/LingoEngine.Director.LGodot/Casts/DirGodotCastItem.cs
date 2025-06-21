@@ -120,7 +120,7 @@ namespace LingoEngine.Director.LGodot.Casts
             {
                 Vector2 mousePos = GetGlobalMousePosition();
 
-                Rect2 bounds = new Rect2(GlobalPosition - CustomMinimumSize * 0.5f, CustomMinimumSize);
+                Rect2 bounds = new Rect2(GlobalPosition, CustomMinimumSize);
 
                 if (mouseEvent.Pressed && mouseEvent.DoubleClick && !_openingEditor && bounds.HasPoint(mousePos))
                 {
