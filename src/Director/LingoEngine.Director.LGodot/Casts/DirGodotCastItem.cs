@@ -219,6 +219,17 @@ namespace LingoEngine.Director.LGodot.Casts
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
         }
 
+        public override Variant? _GetDragData(Vector2 atPosition)
+        {
+            var preview = new ColorRect
+            {
+                Color = new Color(1f, 1f, 1f, 0.5f),
+                Size = CustomMinimumSize
+            };
+            SetDragPreview(preview);
+            return Variant.From(_lingoMember);
+        }
+
 
 
         private static string GetPreviewText(ILingoMemberTextBase text)
