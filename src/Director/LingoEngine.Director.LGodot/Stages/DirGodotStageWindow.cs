@@ -33,6 +33,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private readonly Button _playButton = new Button();
     private readonly Button _prevFrameButton = new Button();
     private readonly Button _nextFrameButton = new Button();
+    private readonly Button _recordButton = new Button();
     private readonly ColorRect _stageBgRect = new ColorRect();
     private readonly ColorRect _colorDisplay = new ColorRect();
     private readonly ColorPickerButton _colorPicker = new ColorPickerButton();
@@ -155,6 +156,17 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _colorPicker.Color = Colors.Black;
         _colorPicker.ColorChanged += c => OnColorChanged(c);
         _iconBar.AddChild(_colorPicker);
+
+        _recordButton.Text = "●";
+        _recordButton.ToggleMode = true;
+        _recordButton.CustomMinimumSize = new Vector2(IconBarHeight, IconBarHeight);
+        _recordButton.AddThemeColorOverride("font_color", Colors.Red);
+        _recordButton.Toggled += pressed =>
+        {
+            if (_player is LingoPlayer lp)
+                lp.Stage.RecordKeyframes = pressed;
+        };
+        _iconBar.AddChild(_recordButton);
 
         UpdatePlayButton();
     }
@@ -338,6 +350,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 {
                     _dragStart = mb.Position;
                     _initialPositions = _selectedSprites.ToDictionary(s => s, s => new Primitives.LingoPoint(s.LocH, s.LocV));
+                    if (_player is LingoPlayer lp && lp.Stage.RecordKeyframes)
+                        foreach (var s in _selectedSprites)
+                            lp.Stage.AddKeyFrame(s);
                 }
             }
             else if (_dragStart.HasValue && _initialPositions != null)
@@ -346,6 +361,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 _commandManager.Handle(new MoveSpritesCommand(_initialPositions, end));
                 _dragStart = null;
                 _initialPositions = null;
+                if (_player is LingoPlayer lp && lp.Stage.RecordKeyframes)
+                    foreach (var s in _selectedSprites)
+                        lp.Stage.UpdateKeyFrame(s);
             }
         }
         else if (@event is InputEventMouseMotion motion && _dragStart.HasValue && _initialPositions != null)
@@ -356,6 +374,8 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 var start = _initialPositions[s];
                 s.LocH = start.X + delta.X;
                 s.LocV = start.Y + delta.Y;
+                if (_player is LingoPlayer lp && lp.Stage.RecordKeyframes)
+                    lp.Stage.UpdateKeyFrame(s);
             }
             UpdateSelectionBox();
         }
@@ -372,6 +392,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                     _dragStart = mb.Position;
                     _initialRotations = _selectedSprites.ToDictionary(s => s, s => s.Rotation);
                     _rotating = true;
+                    if (_player is LingoPlayer lp && lp.Stage.RecordKeyframes)
+                        foreach (var s in _selectedSprites)
+                            lp.Stage.AddKeyFrame(s);
                 }
             }
             else if (_rotating && _initialRotations != null)
@@ -381,6 +404,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 _rotating = false;
                 _dragStart = null;
                 _initialRotations = null;
+                if (_player is LingoPlayer lp && lp.Stage.RecordKeyframes)
+                    foreach (var s in _selectedSprites)
+                        lp.Stage.UpdateKeyFrame(s);
             }
         }
         else if (@event is InputEventMouseMotion motion && _rotating && _initialRotations != null && _dragStart.HasValue)
@@ -390,7 +416,11 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             float currentAngle = (motion.Position - center).Angle();
             float delta = Mathf.RadToDeg(currentAngle - startAngle);
             foreach (var s in _selectedSprites)
+            {
                 s.Rotation = _initialRotations[s] + delta;
+                if (_player is LingoPlayer lp && lp.Stage.RecordKeyframes)
+                    lp.Stage.UpdateKeyFrame(s);
+            }
             UpdateSelectionBox();
         }
     }
