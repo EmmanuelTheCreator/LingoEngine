@@ -294,6 +294,16 @@ namespace LingoEngine.Movies
             }
             return null; // Return null if no sprite is under the mouse
         }
+
+        public LingoSprite? GetSpriteAtPoint(float x, float y)
+        {
+            foreach (var sprite in _activeSprites.Values)
+            {
+                if (sprite.IsPointInsideBoundingBox(x, y))
+                    return sprite;
+            }
+            return null;
+        }
         private void CallActiveSprites(Action<LingoSprite> actionOnAllActiveSprites)
         {
             foreach (var sprite in _activeSprites.Values)
