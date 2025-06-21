@@ -28,10 +28,13 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                             s.MaxSpriteChannelCount = 300;
                         })
                         .ForMovie(TetriGroundsGame.MovieName, s => s
-                            //.AddMovieScript<StartMoviesScript>()
-                            //.AddMovieScript<StarMovieScript>()
                             .AddScriptsFromAssembly()
-                            // Other
+
+                            // As an example, you can add them manually too:
+
+                            // .AddMovieScript<StartMoviesScript>() => MovieScript
+                            // .AddBehavior<MouseDownNavigateBehavior>()  -> Behavior
+                            // .AddParentScript<BlockParentScript>() -> Parent script
                         );
                     registration(config);
                 }
@@ -42,17 +45,6 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                 ;
             return services;
         }
-        public static ILingoMovie SetupGame(this IServiceProvider serviceProvider)
-        {
-            var game = serviceProvider.GetRequiredService<TetriGroundsGame>();
-            return game.LoadMovie();
-        }
-
-        public static TetriGroundsGame StartGame(this IServiceProvider serviceProvider)
-        {
-            var game = serviceProvider.GetRequiredService<TetriGroundsGame>();
-            game.Play();
-            return game;
-        }
+        
     }
 }
