@@ -31,6 +31,19 @@
         }
 
         /// <summary>
+        /// Creates a lighter version of the color by blending towards white.
+        /// Factor should be between 0 (no change) and 1 (white).
+        /// </summary>
+        public LingoColor Lighten(float factor)
+        {
+            factor = Math.Clamp(factor, 0f, 1f);
+            byte r = (byte)(R + (255 - R) * factor);
+            byte g = (byte)(G + (255 - G) * factor);
+            byte b = (byte)(B + (255 - B) * factor);
+            return new LingoColor(Code, r, g, b, Name);
+        }
+
+        /// <summary>
         /// Converts the RGB color to a hex string, e.g., "#FF0000".
         /// </summary>
         public string ToHex() => $"#{R:X2}{G:X2}{B:X2}";
