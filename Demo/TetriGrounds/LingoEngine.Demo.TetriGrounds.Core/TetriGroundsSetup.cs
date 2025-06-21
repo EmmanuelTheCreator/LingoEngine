@@ -30,39 +30,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
                         .ForMovie(TetriGroundsGame.MovieName, s => s
                             //.AddMovieScript<StartMoviesScript>()
                             //.AddMovieScript<StarMovieScript>()
-                            // Globals
-                            .AddBehavior<MouseDownNavigateBehavior>()
-                            .AddBehavior<MouseDownNavigateWithStayBehavior>()
-                            .AddBehavior<PauseBehaviour>()
-                            .AddBehavior<StartGameBehavior>()
-                            .AddBehavior<StayOnFrameFrameScript>()
-                            .AddBehavior<WaiterFrameScript>()
-                            // Beh
-                            .AddBehavior<AnimationScriptBehavior>()
-                            .AddBehavior<AppliBgBehavior>()
-                            .AddBehavior<BgScriptBehavior>()
-                            .AddBehavior<ExecuteBehavior>()
-                            .AddBehavior<FontRollOverBehavior>()
-                            .AddBehavior<GameStopBehavior>()
-                            .AddBehavior<NewGameBehavior>()
-                            .AddBehavior<StartBehavior>()
-                            .AddBehavior<StopMenuBehavior>()
-                            .AddBehavior<TextCounterBehavior>()
-
-                            //.AddParentScript<BlockParentScript>()
-                            //.AddParentScript<BlocksParentScript>()
-                            //.AddParentScript<GfxParentScript>()
-                            //.AddParentScript<InterestingEncryptoParentScript>()
-                            //.AddParentScript<MousePointer>()
-                            //.AddParentScript<OverScreenTextParentScript>()
-                            //.AddParentScript<PlayerBlockParentScript>()
-                            //.AddParentScript<ScoreManagerParentScript>()
-                            //.AddParentScript<SpriteManagerParentScript>()
-                            //.AddParentScript<ScoreGetParentScript>()
-                            //.AddParentScript<ScoreSaveParentScript>()
-                            //.AddParentScript<ClassSubscribeParentScript>()
-                            //.AddParentScript<StartDataGetParentScript>()
-                            //.AddParentScript<StartDataSaveParentScript>()
+                            .AddScriptsFromAssembly()
                             // Other
                         );
                     registration(config);
