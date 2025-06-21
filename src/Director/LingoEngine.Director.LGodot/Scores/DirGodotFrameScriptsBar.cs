@@ -17,6 +17,8 @@ internal partial class DirGodotFrameScriptsBar : Control
     private readonly SpriteCanvas _spriteCanvas;
     private bool _spriteDirty = true;
     private int _lastFrame = -1;
+    private LingoSprite? _dragSprite;
+    private int _dragFrame;
 
     public DirGodotFrameScriptsBar(DirGodotScoreGfxValues gfxValues)
     {
@@ -63,6 +65,45 @@ internal partial class DirGodotFrameScriptsBar : Control
         }
         UpdateViewportSize();
         _spriteDirty = true;
+    }
+
+    public override void _GuiInput(InputEvent @event)
+    {
+        if (_movie == null) return;
+
+        if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+        {
+            if (mb.Pressed)
+            {
+                Vector2 pos = GetLocalMousePosition();
+                foreach (var sp in _sprites)
+                {
+                    float sx = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
+                    float ex = sx + _gfxValues.FrameWidth;
+                    if (pos.X >= sx && pos.X <= ex)
+                    {
+                        _dragSprite = sp.Sprite;
+                        _dragFrame = sp.Sprite.BeginFrame;
+                        break;
+                    }
+                }
+            }
+            else if (_dragSprite != null)
+            {
+                _dragSprite = null;
+            }
+        }
+        else if (@event is InputEventMouseMotion && _dragSprite != null)
+        {
+            float frameF = (GetLocalMousePosition().X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth;
+            int newFrame = Math.Clamp(Mathf.RoundToInt(frameF) + 1, 1, _movie.FrameCount);
+            if (newFrame != _dragFrame)
+            {
+                _movie.MoveFrameBehavior(_dragFrame, newFrame);
+                _dragFrame = newFrame;
+                _spriteDirty = true;
+            }
+        }
     }
 
     public override void _Process(double delta)
