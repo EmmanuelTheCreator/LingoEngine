@@ -34,7 +34,8 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             _selectionBg.Visible = selected;
             _bg.Color = selected ? _selectedColor : Colors.DimGray;
-            _caption.AddThemeStyleboxOverride("panel", selected ? _selectedLabelStyle : _normalLabelStyle);
+            // Labels use the "normal" stylebox for their background, not "panel"
+            _caption.AddThemeStyleboxOverride("normal", selected ? _selectedLabelStyle : _normalLabelStyle);
         }
         public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager)
         {
@@ -100,7 +101,8 @@ namespace LingoEngine.Director.LGodot.Casts
             AddChild(_caption);
             _caption.Text = !string.IsNullOrWhiteSpace(element.Name)? element.NumberInCast+"."+ element.Name: number.ToString();
             _caption.AddThemeColorOverride("font_color", Colors.Black);
-            _caption.AddThemeStyleboxOverride("panel", _normalLabelStyle);
+            // Apply background style to the label using the "normal" stylebox
+            _caption.AddThemeStyleboxOverride("normal", _normalLabelStyle);
             
         }
         public void SetPosition(int x, int y)
