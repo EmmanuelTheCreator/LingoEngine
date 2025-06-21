@@ -35,9 +35,11 @@ internal partial class DirGodotFrameScriptsBar : Control
         _spriteViewport.AddChild(_spriteCanvas);
 
         _gridTexture.Texture = _gridViewport.GetTexture();
+        _gridTexture.Position = Vector2.Zero;
         _gridTexture.MouseFilter = MouseFilterEnum.Ignore;
 
         _spriteTexture.Texture = _spriteViewport.GetTexture();
+        _spriteTexture.Position = Vector2.Zero;
         _spriteTexture.MouseFilter = MouseFilterEnum.Ignore;
 
         AddChild(_gridViewport);
