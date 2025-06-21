@@ -16,6 +16,7 @@ internal partial class DirGodotFrameScriptsBar : Control
     private readonly GridCanvas _gridCanvas;
     private readonly SpriteCanvas _spriteCanvas;
     private bool _spriteDirty = true;
+    private bool _spriteListDirty;
     private int _lastFrame = -1;
 
     public DirGodotFrameScriptsBar(DirGodotScoreGfxValues gfxValues)
@@ -50,18 +51,46 @@ internal partial class DirGodotFrameScriptsBar : Control
 
     public void SetMovie(LingoMovie? movie)
     {
+        if (_movie != null)
+            _movie.SpriteListChanged -= OnSpritesChanged;
+
         _movie = movie;
+        BuildSpriteList();
+        _spriteListDirty = false;
+
+        if (_movie != null)
+            _movie.SpriteListChanged += OnSpritesChanged;
+
+        UpdateViewportSize();
+        _spriteDirty = true;
+    }
+
+    private void OnSpritesChanged()
+    {
+        _spriteListDirty = true;
+        _spriteDirty = true;
+    }
+
+    private void BuildSpriteList()
+    {
         _sprites.Clear();
         if (_movie == null) return;
         foreach (var kv in _movie.GetFrameSpriteBehaviors())
             _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
-        UpdateViewportSize();
-        _spriteDirty = true;
     }
 
     public override void _Process(double delta)
     {
         if (!Visible) return;
+
+        if (_spriteListDirty)
+        {
+            BuildSpriteList();
+            UpdateViewportSize();
+            _spriteListDirty = false;
+            _spriteDirty = true;
+        }
+
         int cur = _movie?.CurrentFrame ?? -1;
         if (_spriteDirty || cur != _lastFrame)
         {
