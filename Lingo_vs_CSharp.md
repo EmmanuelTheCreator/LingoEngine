@@ -42,3 +42,51 @@ Additional notes:
 - To access text members, use the generic `Member<T>` helper, e.g.
   `member("Name").text` becomes `Member<LingoMemberText>("Name").Text`.
 
+## Constructors and IoC
+
+Lingo scripts are instantiated at runtime using the `script("Class").new(args)`
+syntax. When converted to C#, each script becomes a class whose constructor can
+accept dependencies. The engine resolves these dependencies through the
+dependency injection container when the script is created.
+
+```csharp
+// Example parent script
+public class BlockParentScript : LingoParentScript
+{
+    private readonly GlobalVars _global;
+
+    // ILingoMovieEnvironment is provided by the runtime; GlobalVars comes
+    // from the service container
+    public BlockParentScript(ILingoMovieEnvironment env, GlobalVars global)
+        : base(env)
+    {
+        _global = global;
+    }
+}
+```
+
+Scripts are registered with the container using helpers such as
+`AddScriptsFromAssembly()` or `AddMovieScript<T>()`. When Lingo code executes
+`new(script "BlockParentScript")`, LingoEngine retrieves the constructor from the
+container and supplies any required services automatically.
+
+
+## Creating Cast Members
+
+In Lingo you create new members using the `newMember` command. The type symbol indicates what kind of member to create.
+
+```lingo
+-- create a new bitmap cast member
+newBitmap = _movie.newMember(#bitmap)
+newBitmap.name = "Background"
+```
+
+In C#, use the `New` factory on `ILingoMovie` to create typed members:
+
+```csharp
+// equivalent to the Lingo example above
+var newBitmap = _movie.New.Picture(name: "Background");
+```
+
+The factory exposes helper methods for each member type, such as `Picture()`, `Sound()`, `FilmLoop()` and `Text()`. Optional arguments let you specify the cast slot or member name.
+
