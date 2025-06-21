@@ -82,7 +82,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _textViewport.SetDisable3D(true);
             _textViewport.TransparentBg = true;
             _textViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
-            _textViewport.MouseFilter = MouseFilterEnum.Ignore;
+            //_textViewport.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_textViewport);
 
             // Sprite centered
@@ -90,7 +90,7 @@ namespace LingoEngine.Director.LGodot.Casts
             //_spriteContainer = new CenterContainer();
             //_spriteContainer.AddChild(_Sprite2D);
             _Sprite2D.Position = new Vector2(+Width/2, LabelHeight-1);
-            _Sprite2D.MouseFilter = MouseFilterEnum.Ignore;
+            //_Sprite2D.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_Sprite2D);
 
             // Bottom label
