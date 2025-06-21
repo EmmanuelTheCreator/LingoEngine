@@ -60,6 +60,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _selectionBg.OffsetTop = -1;
             _selectionBg.OffsetRight = 1;
             _selectionBg.OffsetBottom = 1;
+            _selectionBg.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_selectionBg);
 
             // Solid background
@@ -74,12 +75,14 @@ namespace LingoEngine.Director.LGodot.Casts
             _bg.OffsetTop = 0;
             _bg.OffsetRight = 0;
             _bg.OffsetBottom = 0;
+            _bg.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_bg);
 
             // Text viewport for text previews
             _textViewport.SetDisable3D(true);
             _textViewport.TransparentBg = true;
             _textViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+            _textViewport.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_textViewport);
 
             // Sprite centered
@@ -87,6 +90,7 @@ namespace LingoEngine.Director.LGodot.Casts
             //_spriteContainer = new CenterContainer();
             //_spriteContainer.AddChild(_Sprite2D);
             _Sprite2D.Position = new Vector2(+Width/2, LabelHeight-1);
+            _Sprite2D.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_Sprite2D);
 
             // Bottom label
@@ -103,6 +107,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _caption.AddThemeColorOverride("font_color", Colors.Black);
             // Apply background style to the label using the "normal" stylebox
             _caption.AddThemeStyleboxOverride("normal", _normalLabelStyle);
+            _caption.MouseFilter = MouseFilterEnum.Ignore;
             
         }
         public void SetPosition(int x, int y)
@@ -112,6 +117,8 @@ namespace LingoEngine.Director.LGodot.Casts
         private bool _wasClicked;
         private static bool _openingEditor;
         private static object _lock = new object();
+        private bool _dragging;
+        private Vector2 _dragStart;
         public override void _Input(InputEvent @event)
         {
             if (!IsVisibleInTree()) return;
@@ -148,7 +155,41 @@ namespace LingoEngine.Director.LGodot.Casts
                 {
                     //_onSelect(this);
                     _wasClicked = false;
-                    
+
+                }
+            }
+        }
+
+        public override void _GuiInput(InputEvent @event)
+        {
+            if (!IsVisibleInTree()) return;
+
+            if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+            {
+                if (mb.Pressed)
+                {
+                    _dragStart = mb.Position;
+                    _dragging = false;
+                }
+                else
+                {
+                    _dragging = false;
+                }
+            }
+            else if (@event is InputEventMouseMotion motion)
+            {
+                if (Input.IsMouseButtonPressed(MouseButton.Left) && !_dragging)
+                {
+                    if (motion.Position.DistanceSquaredTo(_dragStart) > 16)
+                    {
+                        _dragging = true;
+                        var preview = new ColorRect
+                        {
+                            Color = new Color(1f, 1f, 1f, 0.5f),
+                            Size = CustomMinimumSize
+                        };
+                        SetDragPreview(preview);
+                    }
                 }
             }
         }
