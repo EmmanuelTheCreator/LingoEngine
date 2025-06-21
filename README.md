@@ -103,6 +103,10 @@ Need to install the SDK?
 - [XMED Offsets](docs/XMED_Offsets.md)
 - [Text Styling Example](docs/Text_Multi_Line_Multi_Style.md)
 
+### API Reference
+
+Documentation generated from the source code is available using [DocFX](https://github.com/dotnet/docfx). Run `scripts/build-docs.sh` to produce the site in `docs/docfx/_site`. The pages include "View Source" links back to the repository.
+
 ### Component READMEs
 
 - [Core Runtime Readme](src/LingoEngine/README.md)
