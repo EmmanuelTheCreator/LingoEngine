@@ -68,8 +68,11 @@ namespace LingoEngine.Movies
      
         internal LingoSprite? GetSpriteUnderMouse()
         {
-            if (ActiveMovie == null) return null;
-            return ActiveMovie.GetSpriteUnderMouse();
+            if (ActiveMovie == null)
+                return null;
+
+            bool skipLockedSprites = !ActiveMovie.IsPlaying;
+            return ActiveMovie.GetSpriteUnderMouse(skipLockedSprites);
         }
 
         public Animations.LingoSpriteMotionPath? GetSpriteMotionPath(LingoSprite sprite)
