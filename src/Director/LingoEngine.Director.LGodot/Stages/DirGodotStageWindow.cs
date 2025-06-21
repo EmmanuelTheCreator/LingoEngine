@@ -233,7 +233,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed)
         {
             Vector2 localPos = _stageContainer.Container.ToLocal(mb.Position);
-            var sprite = _movie.GetSpriteAtPoint(localPos.X, localPos.Y);
+            var sprite = _movie.GetSpriteAtPoint(localPos.X, localPos.Y, true);
             if (sprite != null)
                 _mediator.RaiseSpriteSelected(sprite);
         }
