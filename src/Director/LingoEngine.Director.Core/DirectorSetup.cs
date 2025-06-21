@@ -17,6 +17,8 @@ namespace LingoEngine.Director.Core
             engineRegistration.Services(s => s
                     .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
                     .AddSingleton<IDirectorShortCutManager, DirectorShortCutManager>()
+                    .AddSingleton<Stages.IStageToolManager, Stages.StageToolManager>()
+                    .AddSingleton<Stages.IHistoryManager, Stages.HistoryManager>()
                     .AddSingleton<DirectorWindowManager>()
                     .AddSingleton<DirectorProjectManager>()
                     .AddTransient<IDirectorWindowManager>(p => p.GetRequiredService<DirectorWindowManager>())
