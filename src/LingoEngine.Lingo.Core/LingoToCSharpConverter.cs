@@ -7,14 +7,19 @@ public static class LingoToCSharpConverter
 {
     public static string Convert(string lingoSource)
     {
+        var trimmed = lingoSource.Trim();
+
         var match = System.Text.RegularExpressions.Regex.Match(
-            lingoSource.Trim(),
+            trimmed,
             @"^member\s*\(\s*""(?<name>[^""]+)""\s*\)\.text$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         if (match.Success)
         {
             return $"Member<LingoMemberText>(\"{match.Groups["name"].Value}\").Text";
         }
+
+        if (TryConvertNewMember(trimmed, out var converted))
+            return converted;
 
         var parser = new LingoAstParser();
         var ast = parser.Parse(lingoSource);
@@ -106,11 +111,19 @@ public static class LingoToCSharpConverter
         if (needsGlobal)
             sb.Append(", GlobalVars global");
         sb.Append(") : base(env)");
-        sb.AppendLine();
-        sb.AppendLine("    {");
+
         if (needsGlobal)
+        {
+            sb.AppendLine();
+            sb.AppendLine("    {");
             sb.AppendLine("        _global = global;");
-        sb.AppendLine("    }");
+            sb.AppendLine("    }");
+        }
+        else
+        {
+            sb.AppendLine(" { }");
+        }
+
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -122,6 +135,74 @@ public static class LingoToCSharpConverter
         foreach (System.Text.RegularExpressions.Match m in regex.Matches(source))
             set.Add(m.Groups[1].Value);
         return set;
+    }
+
+    private static bool TryConvertNewMember(string source, out string converted)
+    {
+        converted = string.Empty;
+        var tokenizer = new LingoTokenizer(source);
+        var tokens = new List<LingoToken>();
+        LingoToken tok;
+        do
+        {
+            tok = tokenizer.NextToken();
+            tokens.Add(tok);
+        } while (tok.Type != LingoTokenType.Eof && tokens.Count < 32);
+
+        int idx = 0;
+
+        // optional assignment prefix
+        string? lhs = null;
+        if (tokens.Count > 2 && tokens[0].Type == LingoTokenType.Identifier && tokens[1].Type == LingoTokenType.Equals)
+        {
+            lhs = tokens[0].Lexeme;
+            idx = 2;
+        }
+
+        if (idx + 4 >= tokens.Count) return false;
+        if (tokens[idx].Type != LingoTokenType.Identifier) return false;
+        string obj = tokens[idx].Lexeme;
+        if (tokens[idx + 1].Type != LingoTokenType.Dot) return false;
+        if (tokens[idx + 2].Type != LingoTokenType.Identifier || !tokens[idx + 2].Lexeme.Equals("newMember", System.StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (tokens[idx + 3].Type != LingoTokenType.LeftParen) return false;
+
+        int pos = idx + 4;
+        if (pos >= tokens.Count) return false;
+        if (tokens[pos].Type != LingoTokenType.Identifier) return false;
+        string type = tokens[pos].Lexeme.ToLowerInvariant();
+        string method = type switch
+        {
+            "bitmap" => "Picture",
+            "sound" => "Sound",
+            "filmloop" => "FilmLoop",
+            "text" => "Text",
+            _ => "Member"
+        };
+        pos++;
+
+        string rest = string.Empty;
+        if (pos < tokens.Count && tokens[pos].Type == LingoTokenType.Comma)
+        {
+            pos++;
+            var parts = new List<string>();
+            while (pos < tokens.Count && tokens[pos].Type != LingoTokenType.RightParen)
+            {
+                parts.Add(tokens[pos].Lexeme);
+                pos++;
+            }
+            rest = string.Join(" ", parts);
+        }
+
+        if (pos >= tokens.Count || tokens[pos].Type != LingoTokenType.RightParen)
+            return false;
+        pos++;
+        if (pos < tokens.Count && tokens[pos].Type != LingoTokenType.Eof)
+            return false;
+
+        var call = $"{obj}.New.{method}({rest})".TrimEnd();
+        converted = lhs != null ? $"{lhs} = {call};" : call;
+        return true;
     }
 
     private static readonly HashSet<string> DefaultMethods = new(
