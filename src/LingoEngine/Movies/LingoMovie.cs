@@ -5,6 +5,7 @@ using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Members;
+using System.Linq;
 
 namespace LingoEngine.Movies
 {
@@ -614,6 +615,39 @@ namespace LingoEngine.Movies
 
         public IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
         public IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
+
+        internal int GetNextLabelFrame(int frame)
+        {
+            var next = _scoreLabels.Values
+                .Where(v => v > frame)
+                .DefaultIfEmpty(int.MaxValue)
+                .Min();
+            if (next == int.MaxValue)
+                return frame + 10;
+            return next;
+        }
+
+        internal int GetNextSpriteStart(int channel, int frame)
+        {
+            int next = int.MaxValue;
+            foreach (var sp in _allTimeSprites)
+            {
+                if (sp.SpriteNum - 1 == channel && sp.BeginFrame > frame)
+                    next = Math.Min(next, sp.BeginFrame);
+            }
+            return next == int.MaxValue ? -1 : next;
+        }
+
+        internal int GetPrevSpriteEnd(int channel, int frame)
+        {
+            int prev = -1;
+            foreach (var sp in _allTimeSprites)
+            {
+                if (sp.SpriteNum - 1 == channel && sp.EndFrame < frame)
+                    prev = Math.Max(prev, sp.EndFrame);
+            }
+            return prev;
+        }
 
         public int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);
 
