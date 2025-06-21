@@ -1,71 +1,99 @@
 # LingoEngine
 
-**LingoEngine** is a C# runtime for games originally written in Macromedia Director's Lingo language. It provides a modern, modular architecture so existing Lingo projects can run on top of different rendering frameworks.
+**LingoEngine** is a modern, cross-platform C# runtime designed to emulate Macromedia Director's **Lingo** scripting language. It enables playback of original Lingo code and behaviors on top of modern rendering backends like **Godot** and **SDL2**, allowing legacy projects to be revived or reimagined with full flexibility.
 
-## Key Features
+---
 
-- Executes original Macromedia Director scripts using a modern C# runtime.
-- Pluggable rendering backends with adapters for **Godot** and **SDL2**.
-- Optional Director API layer offering higher level compatibility.
-- Cross-platform execution anywhere the .NET SDK is available.
+## ✨ Key Features
 
-## Projects
+- ✅ **Lingo Script Execution** – Runs legacy Macromedia Director scripts directly in C#.
+- 🔌 **Pluggable Rendering Backends** – Clean architecture supporting:
+  - [Godot Engine](https://godotengine.org/)
+  - SDL2
+- 🧠 **Experimental Director API Layer** – Provides high-level compatibility with Director's original movie and cast behavior.
+- 🧩 **Modular Runtime Architecture** – Clear separation of concerns: input, rendering, audio, system services, and script execution.
+- ⚙️ **Service-Oriented Initialization** – Uses dependency injection and service collections for clean setup.
+- 🌍 **Cross-Platform Compatibility** – Works anywhere the .NET SDK is available.
+
+---
+
+## 📁 Project Structure
 
 | Folder | Description |
-|-------|------------|
-| `src/LingoEngine` | Core Lingo runtime and abstractions |
-| `src/LingoEngine.LGodot` | Adapter for the [Godot](https://godotengine.org/) engine |
-| `src/LingoEngine.SDL2` | Adapter for SDL2 based applications |
+|--------|-------------|
+| `src/LingoEngine` | Core Lingo runtime and engine abstractions |
+| `src/LingoEngine.LGodot` | Adapter for [Godot](https://godotengine.org/) |
+| `src/LingoEngine.SDL2` | Adapter for SDL2 |
 | `src/Director` | Experimental Director API re‑implementations |
-| `Demo/TetriGrounds` | Sample game showing how to integrate with Godot and SDL2 |
+| `Demo/TetriGrounds` | Sample game showing usage with both backends |
 
-See the [Architecture overview](docs/Architecture.md) for details on how these pieces fit together.
+🔎 For a detailed technical overview, see the [Architecture guide](docs/Architecture.md).
 
-## Getting Started
+---
 
-Clone the repository and open `LingoEngine.sln` in your preferred C# IDE. To build a demo project, choose the corresponding solution inside `Demo/TetriGrounds`.
+## 🚀 Getting Started
 
-Detailed setup instructions are available for:
+1. **Clone the repository**:
 
-- [Godot](docs/GodotSetup.md)
-- [SDL2](docs/SDLSetup.md)
+   ```bash
+   git clone https://github.com/EmmanuelTheCreator/LingoEngine.git
+   cd LingoEngine
+   ```
 
-## Running the Demo
+2. **Open the solution**  
+   Open `LingoEngine.sln` in your preferred C# IDE (Visual Studio / Rider).
 
-Both front‑ends share the same core setup. Register the engine with a
-`ServiceCollection` and then build the provider:
+3. **Build a demo**  
+   Navigate to `Demo/TetriGrounds` and run one of the included platform integrations.
+
+👉 Use the dedicated guides for full setup instructions:
+
+- [Godot Setup](docs/GodotSetup.md)
+- [SDL2 Setup](docs/SDLSetup.md)
+
+---
+
+## 🎮 Running the Demo
+
+Both the SDL2 and Godot frontends share the same backend logic. Here's an example of how to bootstrap the SDL2 engine:
 
 ```csharp
 var services = new ServiceCollection();
 services.AddTetriGrounds(cfg => cfg.WithLingoSdlEngine("TetriGrounds", 640, 480));
 var provider = services.BuildServiceProvider();
+
 provider.GetRequiredService<TetriGroundsGame>().Play();
 provider.GetRequiredService<SdlRootContext>().Run();
 ```
 
-The Godot version follows the same pattern but uses `WithLingoGodotEngine`. See
-the dedicated guides for full instructions.
+Swap to the Godot backend by using `.WithLingoGodotEngine(...)`.
 
-## Running Tests
+📄 See [Godot Setup](docs/GodotSetup.md) and [SDL2 Setup](docs/SDLSetup.md) for exact details.
 
-This repository uses the **.NET SDK**. Make sure `dotnet` is available in your
-`PATH` before running the test suite:
+---
+
+## 🧪 Running Tests
+
+This project uses the .NET SDK. You can run all unit tests with:
 
 ```bash
 dotnet test
 ```
 
-Refer to the [official installation guide](https://learn.microsoft.com/dotnet/core/install/) if the `dotnet` command is missing.
+Need to install the SDK?
 
-You can automatically install the SDK by executing the helper script:
+- Follow the [official install guide](https://learn.microsoft.com/dotnet/core/install/)
+- Or run the helper script:
 
 ```bash
 ./scripts/install-dotnet.sh
 ```
 
-## Additional Documentation
+---
 
-The repository contains further guides and reference material:
+## 📚 Documentation
+
+### Guides
 
 - [Lingo vs C# Differences](Lingo_vs_CSharp.md)
 - [Architecture Overview](docs/Architecture.md)
@@ -74,14 +102,64 @@ The repository contains further guides and reference material:
 - [XMED File Comparisons](docs/XMED_FileComparisons.md)
 - [XMED Offsets](docs/XMED_Offsets.md)
 - [Text Styling Example](docs/Text_Multi_Line_Multi_Style.md)
+
+### Component READMEs
+
 - [Core Runtime Readme](src/LingoEngine/README.md)
 - [Godot Adapter Readme](src/LingoEngine.LGodot/ReadMe.md)
+- [SDL2 Adapter Readme](src/LingoEngine.SDL2/ReadMe.md)
 - [IO Library Readme](src/LingoEngine.IO/ReadMe.md)
 - [Director Core Readme](src/Director/LingoEngine.Director.Core/ReadMe.md)
 - [Director Godot Adapter Readme](src/Director/LingoEngine.Director.LGodot/ReadMe.md)
-- [SDL2 Adapter Readme](src/LingoEngine.SDL2/ReadMe.md)
-- [Conversion Text For AI](Demo/TetriGrounds/ConversionTextForAI.md)
+- [AI Conversion Notes](Demo/TetriGrounds/ConversionTextForAI.md)
 
-## License
+---
 
-This project is licensed under the terms of the [MIT License](LICENSE).
+## 🧭 Roadmap
+
+| Feature                                | Status       |
+|----------------------------------------|--------------|
+| Full Lingo language support            | In Progress  |
+| Director-compatible APIs               | Partial      |
+| Backends: Godot, SDL2                  | ✅ Implemented |
+| Documentation & learning materials     | In Progress  |
+| Unity integration                      | Planned      |
+| Lingo bytecode (dcode) interpreter     | Experimental |
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community!
+
+To get started:
+
+1. Fork this repository
+2. Create a feature branch
+3. Write your code and tests
+4. Submit a pull request
+
+Please include examples or documentation when appropriate.
+
+---
+
+## ⭐ Why Use LingoEngine?
+
+- 🚀 Port legacy Director projects to modern engines
+- 🔁 Reuse existing assets, scripts, and logic
+- 🛠️ Build hybrid projects that combine old logic with new rendering
+- 🕹️ Explore the inner workings of Director games using readable C# code
+- 💾 Preserve interactive media history with a modern toolset
+
+---
+
+## 📄 License
+
+Licensed under the [MIT License](LICENSE).
+
+---
+
+## 🙋‍♂️ Questions or Feedback?
+
+Feel free to [open an issue](https://github.com/EmmanuelTheCreator/LingoEngine/issues) or start a discussion. We're happy to help, and open to ideas!
+
