@@ -106,8 +106,8 @@ namespace LingoEngine.Movies
             get
             {
                 var offset = GetRegPointOffset();
-                float left = LocH - offset.X;
-                float top = LocV - offset.Y;
+                float left = LocH - offset.X - Width / 2f;
+                float top = LocV - offset.Y - Height / 2f;
                 return new LingoRect(left, top, left + Width, top + Height);
             }
         }
