@@ -27,6 +27,9 @@ namespace LingoEngine.Movies
         private bool isDragging = false;
         private bool isDraggable = false;  // A flag to control dragging behavior
         private bool _lock = false;
+        private LingoColor? _origColor;
+        private LingoColor? _origBackColor;
+        private LingoColor? _origForeColor;
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
         private bool _isFocus = false;
@@ -91,7 +94,26 @@ namespace LingoEngine.Movies
         public bool Lock
         {
             get => _lock;
-            set => _lock = value;
+            set
+            {
+                if (_lock == value) return;
+                _lock = value;
+                if (value)
+                {
+                    _origColor = Color;
+                    _origForeColor = ForeColor;
+                    _origBackColor = BackColor;
+                    Color = Color.Lighten(0.3f);
+                    ForeColor = ForeColor.Lighten(0.3f);
+                    BackColor = BackColor.Lighten(0.3f);
+                }
+                else
+                {
+                    if (_origColor.HasValue) Color = _origColor.Value;
+                    if (_origForeColor.HasValue) ForeColor = _origForeColor.Value;
+                    if (_origBackColor.HasValue) BackColor = _origBackColor.Value;
+                }
+            }
         }
         public bool IsDraggable
         {
