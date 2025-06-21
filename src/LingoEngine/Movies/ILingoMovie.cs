@@ -182,6 +182,9 @@ namespace LingoEngine.Movies
         /// </summary>
         bool RollOver(int spriteNumber);
 
+        IEnumerable<LingoSprite> GetSpritesAtPoint(float x, float y, bool skipLockedSprites = false);
+        LingoSprite? GetSpriteAtPoint(float x, float y, bool skipLockedSprites = false);
+
 
         void SendSprite(string name, Action<ILingoSpriteChannel> actionOnSprite);
         void SendSprite(int number, Action<ILingoSpriteChannel> actionOnSprite);
