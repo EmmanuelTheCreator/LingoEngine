@@ -1,6 +1,8 @@
 ﻿using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
+using LingoEngine.Members;
+using System;
 using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Scores;
@@ -28,6 +30,11 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private bool _spriteDirty = true;
     private bool _spriteListDirty;
     private int _lastFrame = -1;
+    private bool _showPreview;
+    private int _previewChannel;
+    private int _previewBegin;
+    private int _previewEnd;
+    private ILingoMember? _previewMember;
     public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
@@ -98,6 +105,8 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         }
     }
 
+
+
     private void SelectSprite(DirGodotScoreSprite? sprite, bool raiseEvent = true)
     {
         if (_selected == sprite) return;
@@ -143,12 +152,14 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                                         _dragSprite = sp.Sprite;
                                         _dragBegin = true;
                                         _dragEnd = false;
+                                        Input.SetDefaultCursorShape(CursorShape.Hsize);
                                     }
                                     else if (pos.X >= lastFrameLeft)
                                     {
                                         _dragSprite = sp.Sprite;
                                         _dragBegin = false;
                                         _dragEnd = true;
+                                        Input.SetDefaultCursorShape(CursorShape.Hsize);
                                     }
                                     else
                                     {
@@ -165,6 +176,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                     _dragSprite = null;
                     _dragBegin = _dragEnd = false;
                     _spriteDirty = true;
+                    Input.SetDefaultCursorShape(CursorShape.Arrow);
                 }
             }
             else if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
@@ -186,13 +198,64 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         else if (@event is InputEventMouseMotion motion && _dragSprite != null)
         {
             float frame = (GetLocalMousePosition().X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth;
-            int newFrame = Math.Max(1, Mathf.RoundToInt(frame) + 1);
+            int newFrame = Math.Clamp(Mathf.RoundToInt(frame) + 1, 1, _movie.FrameCount);
+            int ch = _dragSprite.SpriteNum - 1;
             if (_dragBegin)
-                _dragSprite.BeginFrame = Math.Min(newFrame, _dragSprite.EndFrame);
+            {
+                int minBegin = _movie.GetPrevSpriteEnd(ch, _dragSprite.BeginFrame) + 1;
+                _dragSprite.BeginFrame = Math.Min(Math.Max(newFrame, minBegin), _dragSprite.EndFrame);
+            }
             else if (_dragEnd)
-                _dragSprite.EndFrame = Math.Max(newFrame, _dragSprite.BeginFrame);
+            {
+                int next = _movie.GetNextSpriteStart(ch, _dragSprite.BeginFrame);
+                int maxEnd = next == -1 ? _movie.FrameCount : next - 1;
+                _dragSprite.EndFrame = Math.Max(Math.Min(newFrame, maxEnd), _dragSprite.BeginFrame);
+            }
             _spriteDirty = true;
         }
+    }
+
+    public override bool CanDropData(Vector2 atPosition, Variant data)
+    {
+        _showPreview = false;
+        if (_movie == null) return false;
+        if (data.As<ILingoMember>() is not ILingoMember member) return false;
+        if (member.Type == LingoMemberType.Sound) return false;
+
+        int channel = (int)(atPosition.Y / _gfxValues.ChannelHeight);
+        if (channel < 0 || channel >= _movie.MaxSpriteChannelCount) return false;
+
+        int start = Math.Clamp(Mathf.RoundToInt((atPosition.X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth) + 1, 1, _movie.FrameCount);
+        int end = _movie.GetNextLabelFrame(start) - 1;
+        int nextSprite = _movie.GetNextSpriteStart(channel, start);
+        if (nextSprite != -1)
+            end = Math.Min(end, nextSprite - 1);
+        if (_movie.GetPrevSpriteEnd(channel, start) >= start)
+            return false;
+
+        end = Math.Clamp(end, start, _movie.FrameCount);
+
+        _previewChannel = channel;
+        _previewBegin = start;
+        _previewEnd = end;
+        _previewMember = member;
+        _showPreview = true;
+        _spriteDirty = true;
+        return true;
+    }
+
+    public override void DropData(Vector2 atPosition, Variant data)
+    {
+        _showPreview = false;
+        _spriteDirty = true;
+        if (_movie == null) return;
+        if (_previewMember == null) return;
+
+        var sp = _movie.AddSprite(_previewChannel + 1, _previewBegin, _previewEnd, 0, 0, s =>
+        {
+            s.SetMember(_previewMember);
+        });
+        _spriteListDirty = true;
     }
 
     public override void _Process(double delta)
@@ -318,6 +381,14 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             if (cur < 0) cur = 0;
             float barX = _owner._gfxValues.LeftMargin + cur * _owner._gfxValues.FrameWidth + _owner._gfxValues.FrameWidth / 2f;
             DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _owner._gfxValues.ChannelHeight), Colors.Red, 2);
+
+            if (_owner._showPreview)
+            {
+                float px = _owner._gfxValues.LeftMargin + (_owner._previewBegin - 1) * _owner._gfxValues.FrameWidth;
+                float pw = (_owner._previewEnd - _owner._previewBegin + 1) * _owner._gfxValues.FrameWidth;
+                float py = _owner._previewChannel * _owner._gfxValues.ChannelHeight;
+                DrawRect(new Rect2(px, py, pw, _owner._gfxValues.ChannelHeight), new Color(0, 0, 1, 0.3f));
+            }
         }
     }
 
