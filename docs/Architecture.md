@@ -7,14 +7,12 @@ LingoEngine is built as a **layered, modular system** that emulates the core beh
 ## 📐 Architecture Layers
 
 LingoEngine is organized into four main architectural layers:
-
-| Layer              | Description                                                                 |
-|-------------------|-----------------------------------------------------------------------------|
-| **Core**           | The Lingo language runtime and virtual machine (VM) — fully rendering-agnostic. |
+| Layer               | Description |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| **Core**            | The Lingo language runtime and virtual machine (VM) — fully rendering-agnostic. |
 | **Framework Adapters** | Abstractions that allow the engine to run on multiple rendering platforms (Godot, SDL2, etc.). |
-| **Director Layer** | Optional high-level APIs that mimic Macromedia Director's original movie/cast/score model. |
-| **Demo Projects**  | Sample integrations demonstrating how to use LingoEngine with real frameworks and games. |
-
+| **Director Layer**  | Optional high-level APIs that mimic Macromedia Director's original movie/cast/score model. |
+| **Demo Projects**   | Sample integrations demonstrating how to use LingoEngine with real frameworks and games. |
 Each adapter implements a well-defined set of interfaces to ensure the **core engine remains untouched** regardless of the target platform.
 
 ---
@@ -62,11 +60,10 @@ LingoEngine uses the **Factory pattern** to inject framework-specific implementa
 
 Each adapter project (e.g., `LingoEngine.LGodot` or `LingoEngine.SDL2`) provides concrete implementations for the core interfaces:
 
-| Adapter              | Provided Classes                                         |
-|----------------------|----------------------------------------------------------|
-| `LingoEngine.LGodot` | `GodotStage`, `GodotSprite`, `GodotMovie`, `GodotFactory` |
-| `LingoEngine.SDL2`   | `SdlStage`, `SdlSprite`, `SdlMovie`, `SdlFactory`         |
-
+| Adapter              | Provided Classes |
+|----------------------|--------------------------------------------------------------|
+| `LingoEngine.LGodot` | `GodotStage`, `GodotSprite`, `GodotMovie`, `GodotFactory`    |
+| `LingoEngine.SDL2`   | `SdlStage`, `SdlSprite`, `SdlMovie`, `SdlFactory`            |
 These map to native objects in the respective frameworks while still adhering to the engine contracts.
 
 ---
