@@ -615,6 +615,24 @@ namespace LingoEngine.Movies
         public IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
         public IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
 
+        public void MoveFrameBehavior(int previousFrame, int newFrame)
+        {
+            if (previousFrame == newFrame) return;
+            if (!_frameSpriteBehaviors.TryGetValue(previousFrame, out var sprite))
+                return;
+
+            _frameSpriteBehaviors.Remove(previousFrame);
+
+            if (_frameSpriteBehaviors.TryGetValue(newFrame, out var existing))
+                existing.RemoveMe();
+
+            _frameSpriteBehaviors[newFrame] = sprite;
+            sprite.BeginFrame = newFrame;
+            sprite.EndFrame = newFrame;
+
+            RaiseSpriteListChanged();
+        }
+
         public int GetNextLabelFrame(int frame)
         {
             var next = _scoreLabels.Values
