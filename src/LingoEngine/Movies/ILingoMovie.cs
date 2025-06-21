@@ -212,5 +212,9 @@ namespace LingoEngine.Movies
         int Timer { get; }
         void SetScoreLabel(int frameNumber, string name);
         void PuppetSprite(int myNum, bool state);
+
+        int GetNextLabelFrame(int frame);
+        int GetNextSpriteStart(int channel, int frame);
+        int GetPrevSpriteEnd(int channel, int frame);
     }
 }
