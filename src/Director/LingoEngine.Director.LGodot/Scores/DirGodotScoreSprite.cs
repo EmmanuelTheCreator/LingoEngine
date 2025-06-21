@@ -20,6 +20,8 @@ internal class DirGodotScoreSprite
     internal void Draw(CanvasItem canvas, Vector2 position, float width, float height, Font font)
     {
         var baseColor = new Color("#ccccff");
+        if (Sprite.Lock)
+            baseColor = baseColor.Lightened(0.3f);
         if (Selected)
             baseColor = baseColor.Darkened(0.25f);
         canvas.DrawRect(new Rect2(position.X, position.Y, width, height), baseColor);
