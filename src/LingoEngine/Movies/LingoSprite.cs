@@ -512,6 +512,12 @@ When a movie stops, events occur in the following order:
         public bool IsMouseInsideBoundingBox(LingoMouse mouse)
             => Rect.Contains((mouse.MouseH, mouse.MouseV));
 
+        /// <summary>
+        /// Check if the given point is inside the bounding box of the sprite
+        /// </summary>
+        public bool IsPointInsideBoundingBox(float x, float y)
+            => Rect.Contains((x, y));
+
         internal void CallBehavior<T>(Action<T> actionOnSpriteBehaviour) where T : LingoSpriteBehavior
         {
             var behavior = _behaviors.FirstOrDefault(x => x is T) as T;
