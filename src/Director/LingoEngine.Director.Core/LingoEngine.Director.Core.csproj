@@ -7,6 +7,32 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- NuGet Packaging Metadata -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>LingoEngine.IdeLauncher</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Emmanuel The Creatory</Authors>
+    <Company>The Community</Company>
+    <Description>
+      Editor tooling for LingoEngine that emulates the classic Macromedia Director authoring environment. Includes file navigation, script launching, and extensible integration points for modern IDEs like Visual Studio and VS Code.
+    </Description>
+    <RepositoryUrl>https://github.com/EmmanuelTheCreator/LingoEngine</RepositoryUrl>
+    <PackageTags>Lingo LingoEngine Macromedia Director Godot SDL2 Editor IDE VisualStudio Tools</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+
+    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+      <DefineConstants>$(DefineConstants);USE_WINDOWS_FEATURES</DefineConstants>
+    </PropertyGroup>
+
+
+  <!-- Optional: if you're building for multiple platforms -->
+  <PropertyGroup>
+    <IsWindows Condition="'$(RuntimeIdentifier)' == '' or '$(RuntimeIdentifier)' == 'win' or '$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86'">true</IsWindows>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\LingoEngine.IO\LingoEngine.IO.csproj" />
     <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
@@ -21,6 +47,11 @@
     <None Update="Media\Icons\AssetInfoMapIcon12_Color.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <!-- Conditionally include System.Management -->
+  <ItemGroup Condition="'$(IsWindows)' == 'true' and '$(DefineConstants)' != '$(DefineConstants.Replace(`USE_WINDOWS_FEATURES`, ``))'">
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

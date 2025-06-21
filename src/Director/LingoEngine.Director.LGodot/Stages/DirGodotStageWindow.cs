@@ -11,6 +11,8 @@ using LingoEngine.Director.Core.Stages;
 using LingoEngine.Director.LGodot;
 using System.Linq;
 using System.Collections.Generic;
+using LingoEngine.LGodot.Primitives;
+
 
 namespace LingoEngine.Director.LGodot.Movies;
 
@@ -42,7 +44,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private readonly List<LingoSprite> _selectedSprites = new();
     private LingoSprite? _primarySelectedSprite;
     private Vector2? _dragStart;
-    private Dictionary<LingoSprite, Vector2>? _initialPositions;
+    private Dictionary<LingoSprite, Primitives.LingoPoint>? _initialPositions;
     private Dictionary<LingoSprite, float>? _initialRotations;
     private bool _rotating;
 
@@ -246,8 +248,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     public void SpriteSelected(ILingoSprite sprite)
     {
         _selectedSprites.Clear();
-        if (sprite is LingoSprite ls)
-            _selectedSprites.Add(ls);
+        if (!(sprite is LingoSprite ls))
+            return;
+        _selectedSprites.Add(ls);
         _primarySelectedSprite = ls;
         if (_movie != null && !_movie.IsPlaying && ls != null)
             UpdateSelectionBox();
@@ -305,7 +308,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             {
                 if (sprite != null)
                 {
-                    if (Input.IsKeyPressed((int)Key.Ctrl))
+                    if (Input.IsKeyPressed(Key.Ctrl))
                     {
                         if (_selectedSprites.Contains(sprite))
                             _selectedSprites.Remove(sprite);
@@ -334,12 +337,12 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 if (_selectedSprites.Count > 0)
                 {
                     _dragStart = mb.Position;
-                    _initialPositions = _selectedSprites.ToDictionary(s => s, s => new Vector2(s.LocH, s.LocV));
+                    _initialPositions = _selectedSprites.ToDictionary(s => s, s => new Primitives.LingoPoint(s.LocH, s.LocV));
                 }
             }
             else if (_dragStart.HasValue && _initialPositions != null)
             {
-                var end = _selectedSprites.ToDictionary(s => s, s => new Vector2(s.LocH, s.LocV));
+                var end = _selectedSprites.ToDictionary(s => s, s => new Primitives.LingoPoint(s.LocH, s.LocV));
                 _commandManager.Handle(new MoveSpritesCommand(_initialPositions, end));
                 _dragStart = null;
                 _initialPositions = null;

@@ -1,7 +1,7 @@
 using Godot;
 using LingoEngine.Director.Core.Windows;
-using LingoEngine.Director.LGodot;
 using LingoEngine.Director.Core.Stages;
+using LingoEngine.Director.Core.Gfx;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 

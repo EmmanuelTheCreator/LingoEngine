@@ -18,7 +18,13 @@
 	  <None Include="ReadMe.md" />
 	</ItemGroup>
 
-	<ItemGroup>
+
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <DefineConstants>$(DefineConstants);USE_WINDOWS_FEATURES</DefineConstants>
+  </PropertyGroup>
+
+
+  <ItemGroup>
 		<PackageReference Include="Godot.NET.Sdk" Version="4.5.0-dev.5" />
 	</ItemGroup>
 

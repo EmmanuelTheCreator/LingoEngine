@@ -7,6 +7,8 @@ using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.Core.Stages;
+using LingoEngine.Director.Core.FileSystems;
+using LingoEngine.Director.Core.Projects;
 
 namespace LingoEngine.Director.Core
 {
@@ -17,11 +19,16 @@ namespace LingoEngine.Director.Core
             engineRegistration.Services(s => s
                     .AddSingleton<IDirectorEventMediator, DirectorEventMediator>()
                     .AddSingleton<IDirectorShortCutManager, DirectorShortCutManager>()
-                    .AddSingleton<Stages.IStageToolManager, Stages.StageToolManager>()
-                    .AddSingleton<Stages.IHistoryManager, Stages.HistoryManager>()
+                    .AddSingleton<IStageToolManager, StageToolManager>()
+                    .AddSingleton<IHistoryManager, HistoryManager>()
                     .AddSingleton<DirectorWindowManager>()
                     .AddSingleton<DirectorProjectManager>()
                     .AddTransient<IDirectorWindowManager>(p => p.GetRequiredService<DirectorWindowManager>())
+
+                    // File system
+                    .AddSingleton<IIdePathResolver, IdePathResolver>()
+                    .AddSingleton<IIdeLauncher, IdeLauncher>()
+                    .AddSingleton<ProjectSettingsEditorState, ProjectSettingsEditorState>()
 
                     // Windows
                     .AddSingleton<DirectorMainMenu>()
