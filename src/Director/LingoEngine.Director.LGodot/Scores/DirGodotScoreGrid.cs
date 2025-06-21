@@ -152,14 +152,14 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                                         _dragSprite = sp.Sprite;
                                         _dragBegin = true;
                                         _dragEnd = false;
-                                        Input.SetDefaultCursorShape(CursorShape.Hsize);
+                                        Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
                                     }
                                     else if (pos.X >= lastFrameLeft)
                                     {
                                         _dragSprite = sp.Sprite;
                                         _dragBegin = false;
                                         _dragEnd = true;
-                                        Input.SetDefaultCursorShape(CursorShape.Hsize);
+                                        Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
                                     }
                                     else
                                     {
@@ -176,7 +176,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
                     _dragSprite = null;
                     _dragBegin = _dragEnd = false;
                     _spriteDirty = true;
-                    Input.SetDefaultCursorShape(CursorShape.Arrow);
+                    Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
                 }
             }
             else if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
@@ -215,11 +215,14 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         }
     }
 
-    public override bool CanDropData(Vector2 atPosition, Variant data)
+    public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
         _showPreview = false;
         if (_movie == null) return false;
-        if (data.As<ILingoMember>() is not ILingoMember member) return false;
+
+        if (data.Obj is not GodotObject obj) return false;
+        if (obj is not ILingoMember member) return false;
+
         if (member.Type == LingoMemberType.Sound) return false;
 
         int channel = (int)(atPosition.Y / _gfxValues.ChannelHeight);
@@ -244,7 +247,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         return true;
     }
 
-    public override void DropData(Vector2 atPosition, Variant data)
+    public override void _DropData(Vector2 atPosition, Variant data)
     {
         _showPreview = false;
         _spriteDirty = true;

@@ -616,7 +616,7 @@ namespace LingoEngine.Movies
         public IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
         public IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
 
-        internal int GetNextLabelFrame(int frame)
+        public int GetNextLabelFrame(int frame)
         {
             var next = _scoreLabels.Values
                 .Where(v => v > frame)
@@ -627,7 +627,7 @@ namespace LingoEngine.Movies
             return next;
         }
 
-        internal int GetNextSpriteStart(int channel, int frame)
+        public int GetNextSpriteStart(int channel, int frame)
         {
             int next = int.MaxValue;
             foreach (var sp in _allTimeSprites)
@@ -638,7 +638,7 @@ namespace LingoEngine.Movies
             return next == int.MaxValue ? -1 : next;
         }
 
-        internal int GetPrevSpriteEnd(int channel, int frame)
+        public int GetPrevSpriteEnd(int channel, int frame)
         {
             int prev = -1;
             foreach (var sp in _allTimeSprites)

@@ -218,8 +218,7 @@ namespace LingoEngine.Director.LGodot.Casts
             float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
             _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
         }
-
-        public override Variant? _GetDragData(Vector2 atPosition)
+        public override Variant _GetDragData(Vector2 atPosition)
         {
             var preview = new ColorRect
             {
