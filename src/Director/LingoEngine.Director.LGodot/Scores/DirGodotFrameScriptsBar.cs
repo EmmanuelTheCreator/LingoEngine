@@ -50,11 +50,17 @@ internal partial class DirGodotFrameScriptsBar : Control
 
     public void SetMovie(LingoMovie? movie)
     {
+        if (_movie != null)
+            _movie.SpriteListChanged -= OnSpritesChanged;
+
         _movie = movie;
         _sprites.Clear();
-        if (_movie == null) return;
-        foreach (var kv in _movie.GetFrameSpriteBehaviors())
-            _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
+        if (_movie != null)
+        {
+            foreach (var kv in _movie.GetFrameSpriteBehaviors())
+                _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
+            _movie.SpriteListChanged += OnSpritesChanged;
+        }
         UpdateViewportSize();
         _spriteDirty = true;
     }
@@ -83,6 +89,18 @@ internal partial class DirGodotFrameScriptsBar : Control
         _spriteTexture.CustomMinimumSize = new Vector2(width, 20);
         _gridCanvas.QueueRedraw();
         _spriteCanvas.QueueRedraw();
+    }
+
+    private void OnSpritesChanged()
+    {
+        _sprites.Clear();
+        if (_movie != null)
+        {
+            foreach (var kv in _movie.GetFrameSpriteBehaviors())
+                _sprites.Add(new DirGodotScoreSprite(kv.Value, false, true));
+            UpdateViewportSize();
+        }
+        _spriteDirty = true;
     }
 
     private partial class GridCanvas : Control
@@ -132,5 +150,12 @@ internal partial class DirGodotFrameScriptsBar : Control
             float barX = _owner._gfxValues.LeftMargin + cur * _owner._gfxValues.FrameWidth + _owner._gfxValues.FrameWidth / 2f;
             DrawLine(new Vector2(barX, 0), new Vector2(barX, _owner._gfxValues.ChannelHeight), Colors.Red, 2);
         }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (_movie != null)
+            _movie.SpriteListChanged -= OnSpritesChanged;
+        base.Dispose(disposing);
     }
 }
