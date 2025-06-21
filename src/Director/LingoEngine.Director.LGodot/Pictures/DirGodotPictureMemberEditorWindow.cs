@@ -14,6 +14,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 {
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
+    private static readonly Vector2 WorkAreaSize = new Vector2(2000, 2000);
 
     private readonly ScrollContainer _scrollContainer = new ScrollContainer();
     private readonly Control _centerContainer = new Control();
@@ -83,36 +84,41 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.OffsetRight = 0;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
 
-        _background.Color = Colors.White;
-        _background.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        _background.SizeFlagsVertical = SizeFlags.ExpandFill;
-        _scrollContainer.AddChild(_background);
-
         _scrollContainer.AddChild(_centerContainer);
-        _centerContainer.AnchorLeft = 0;
-        _centerContainer.AnchorTop = 0;
-        _centerContainer.AnchorRight = 0;
-        _centerContainer.AnchorBottom = 0;
-        _centerContainer.OffsetLeft = 0;
-        _centerContainer.OffsetTop = 0;
-        _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
+        _centerContainer.CustomMinimumSize = WorkAreaSize;
+        _centerContainer.AnchorLeft = 0.5f;
+        _centerContainer.AnchorTop = 0.5f;
+        _centerContainer.AnchorRight = 0.5f;
+        _centerContainer.AnchorBottom = 0.5f;
+        _centerContainer.OffsetLeft = -WorkAreaSize.X / 2f;
+        _centerContainer.OffsetTop = -WorkAreaSize.Y / 2f;
+        _centerContainer.OffsetRight = WorkAreaSize.X / 2f;
+        _centerContainer.OffsetBottom = WorkAreaSize.Y / 2f;
+        _centerContainer.PivotOffset = WorkAreaSize / 2f;
+
+        _background.Color = Colors.White;
+        _background.AnchorLeft = 0;
+        _background.AnchorTop = 0;
+        _background.AnchorRight = 1;
+        _background.AnchorBottom = 1;
+        _background.OffsetLeft = 0;
+        _background.OffsetTop = 0;
+        _background.OffsetRight = 0;
+        _background.OffsetBottom = 0;
+        _centerContainer.AddChild(_background);
 
         _imageRect.StretchMode = TextureRect.StretchModeEnum.Keep;
-        _imageRect.AnchorLeft = 0;
-        _imageRect.AnchorTop = 0;
-        _imageRect.AnchorRight = 0;
-        _imageRect.AnchorBottom = 0;
-        _imageRect.OffsetLeft = 0;
-        _imageRect.OffsetTop = 0;
+        _imageRect.AnchorLeft = 0.5f;
+        _imageRect.AnchorTop = 0.5f;
+        _imageRect.AnchorRight = 0.5f;
+        _imageRect.AnchorBottom = 0.5f;
         _centerContainer.AddChild(_imageRect);
 
         _regPointCanvas = new RegPointCanvas(this);
-        _regPointCanvas.AnchorLeft = 0;
-        _regPointCanvas.AnchorTop = 0;
-        _regPointCanvas.AnchorRight = 0;
-        _regPointCanvas.AnchorBottom = 0;
-        _regPointCanvas.OffsetLeft = 0;
-        _regPointCanvas.OffsetTop = 0;
+        _regPointCanvas.AnchorLeft = 0.5f;
+        _regPointCanvas.AnchorTop = 0.5f;
+        _regPointCanvas.AnchorRight = 0.5f;
+        _regPointCanvas.AnchorBottom = 0.5f;
         _regPointCanvas.Visible = true;
         _scrollContainer.AddChild(_regPointCanvas);
 
@@ -149,11 +155,13 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _imageRect.Texture = godotPicture.Texture;
             Vector2 size = new(godotPicture.Width, godotPicture.Height);
             _imageRect.CustomMinimumSize = size;
-        _centerContainer.CustomMinimumSize = size;
-        _centerContainer.PivotOffset = size / 2f;
-        FitImageToView();
-        CenterImage();
-        UpdateRegPointCanvasSize();
+            _imageRect.OffsetLeft = -size.X / 2f;
+            _imageRect.OffsetTop = -size.Y / 2f;
+            _imageRect.OffsetRight = size.X / 2f;
+            _imageRect.OffsetBottom = size.Y / 2f;
+            FitImageToView();
+            CenterImage();
+            UpdateRegPointCanvasSize();
         }
         _member = picture;
         _regPointCanvas.QueueRedraw();
@@ -238,6 +246,10 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         float w = Mathf.Max(_centerContainer.CustomMinimumSize.X, unscaled.X);
         float h = Mathf.Max(_centerContainer.CustomMinimumSize.Y, unscaled.Y);
         _regPointCanvas.CustomMinimumSize = new Vector2(w, h);
+        _regPointCanvas.OffsetLeft = -w / 2f;
+        _regPointCanvas.OffsetTop = -h / 2f;
+        _regPointCanvas.OffsetRight = w / 2f;
+        _regPointCanvas.OffsetBottom = h / 2f;
     }
 
     protected override void OnResizing(Vector2 size)
@@ -330,9 +342,11 @@ internal partial class DirGodotPictureMemberEditorWindow
 
             Vector2 areaSize = Size;
             var scale = _owner._centerContainer.Scale;
-
+            Vector2 canvasHalf = _owner._centerContainer.CustomMinimumSize / 2f;
+            Vector2 imageHalf = _owner._imageRect.CustomMinimumSize / 2f;
+            Vector2 offset = canvasHalf - imageHalf;
             // RegPoint origin is the texture's top-left corner
-            Vector2 pos = new Vector2(member.RegPoint.X * scale.X, member.RegPoint.Y * scale.Y);
+            Vector2 pos = (offset + new Vector2(member.RegPoint.X, member.RegPoint.Y)) * scale;
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
