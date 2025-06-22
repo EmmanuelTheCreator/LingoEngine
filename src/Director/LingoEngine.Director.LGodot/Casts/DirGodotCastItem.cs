@@ -12,6 +12,7 @@ using LingoEngine.Commands;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.Core.Commands;
 using LingoEngine.Director.LGodot.Helpers;
+using LingoEngine.Director.Core.Inputs;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -199,16 +200,16 @@ namespace LingoEngine.Director.LGodot.Casts
                     if (motion.Position.DistanceSquaredTo(_dragStart) > 16)
                     {
                         _dragging = true;
-                     
-                        AcceptEvent(); // Prevent default handling
+                        DirDragDropHolder.StartDrag(_lingoMember, "CastItem");
+                        //AcceptEvent(); // Prevent default handling
 
-                        var preview = new ColorRect
-                        {
-                            Color = new Color(1f, 1f, 1f, 0.5f),
-                            Size = CustomMinimumSize
-                        };
-                        // Call start_drag with your data and preview
-                        this.StartDragWorkaround(Variant.From(_lingoMember), preview);
+                        //var preview = new ColorRect
+                        //{
+                        //    Color = new Color(1f, 1f, 1f, 0.5f),
+                        //    Size = CustomMinimumSize
+                        //};
+                        //// Call start_drag with your data and preview
+                        //this.StartDragWorkaround(Variant.From(_lingoMember), preview);
                     }
                 }
             }
@@ -239,20 +240,29 @@ namespace LingoEngine.Director.LGodot.Casts
             _thumb.SetMember(_lingoMember);
         }
 
-       
+
+        //public override Variant _GetDragData(Vector2 atPosition)
+        //{
+        //    GD.Print($"CastMemberItem: _GetDragData called at {atPosition} with {_lingoMember.Name}");
+        //    var preview = new ColorRect
+        //    {
+        //        Color = new Color(1f, 1f, 1f, 0.5f),
+        //        Size = CustomMinimumSize
+        //    };
+        //    SetDragPreview(preview);
+        //    return Variant.From(_lingoMember);
+        //}
+
         public override Variant _GetDragData(Vector2 atPosition)
         {
-            GD.Print($"CastMemberItem: _GetDragData called at {atPosition} with {_lingoMember.Name}");
-            var preview = new ColorRect
-            {
-                Color = new Color(1f, 1f, 1f, 0.5f),
-                Size = CustomMinimumSize
-            };
-            SetDragPreview(preview);
+            GD.Print("CastItem: drag triggered at " + atPosition);
+            var label = new Label { Text = "Dragging " + _lingoMember.Name };
+            label.CustomMinimumSize = new Vector2(100, 30);
+            label.Modulate = new Color(1, 1, 0, 0.6f);
+            SetDragPreview(label);
             return Variant.From(_lingoMember);
         }
 
-     
 
     }
 }

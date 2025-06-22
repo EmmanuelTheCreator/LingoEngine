@@ -2,8 +2,8 @@
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Members;
-using System;
-using System.Linq;
+using LingoEngine.Director.Core.Inputs;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -14,6 +14,10 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private ILingoSprite? _dragSprite;
     private bool _dragBegin;
     private bool _dragEnd;
+    private bool _isSpriteDragMove = false;
+    private float _dragOffset = 0;
+    private float _dragStartY = 0;
+
     private readonly List<DirGodotScoreSprite> _sprites = new();
     private DirGodotScoreSprite? _selected;
     private readonly IDirectorEventMediator _mediator;
@@ -34,6 +38,10 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private int _previewChannel;
     private int _previewBegin;
     private int _previewEnd;
+    private bool _isDraggingSprite;
+    private Rect2? _spritePreviewRect;
+    private int _previewBeginFrame = -1;
+
     private ILingoMember? _previewMember;
     public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues)
     {
@@ -140,99 +148,292 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _spriteDirty = true;
     }
 
+
     public override void _Input(InputEvent @event)
     {
         if (!Visible || _movie == null) return;
+
         if (@event is InputEventMouseButton mb)
         {
-            Vector2 pos = GetLocalMousePosition();
-            int totalChannels = _movie.MaxSpriteChannelCount;
-            int channel = (int)(pos.Y / _gfxValues.ChannelHeight);
-            if (mb.ButtonIndex == MouseButton.Left)
-            {
-                if (mb.Pressed)
-                {
-                    if (channel >= 0 && channel < totalChannels)
-                    {
-                        foreach (var sp in _sprites)
-                        {
-                            int sc = sp.Sprite.SpriteNum - 1;
-                            if (sc == channel)
-                            {
-                                float sx = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
-                                float ex = _gfxValues.LeftMargin + sp.Sprite.EndFrame * _gfxValues.FrameWidth;
-                                if (pos.X >= sx && pos.X <= ex)
-                                {
-                                    float firstFrameRight = sx + _gfxValues.FrameWidth;
-                                    float lastFrameLeft = ex - _gfxValues.FrameWidth;
-
-                                    if (pos.X <= firstFrameRight)
-                                    {
-                                        _dragSprite = sp.Sprite;
-                                        _dragBegin = true;
-                                        _dragEnd = false;
-                                        Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
-                                    }
-                                    else if (pos.X >= lastFrameLeft)
-                                    {
-                                        _dragSprite = sp.Sprite;
-                                        _dragBegin = false;
-                                        _dragEnd = true;
-                                        Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
-                                    }
-                                    else
-                                    {
-                                        SelectSprite(sp);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    _dragSprite = null;
-                    _dragBegin = _dragEnd = false;
-                    _spriteDirty = true;
-                    Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
-                }
-            }
-            else if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
-            {
-                if (channel >= 0 && channel < totalChannels)
-                {
-                    var sp = GetSpriteAt(pos, channel);
-                    if (sp != null && sp.Sprite.Member != null)
-                    {
-                        _contextSprite = sp;
-                        _contextMenu.Clear();
-                        _contextMenu.AddItem("Find Cast Member", 1);
-                        var gp = GetGlobalMousePosition();
-                        _contextMenu.Popup(new Rect2I((int)gp.X, (int)gp.Y, 0, 0));
-                    }
-                }
-            }
+            HandleMouseButton(mb);
         }
-        else if (@event is InputEventMouseMotion motion && _dragSprite != null)
+        else if (@event is InputEventMouseMotion)
         {
-            float frame = (GetLocalMousePosition().X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth;
-            int newFrame = Math.Clamp(Mathf.RoundToInt(frame) + 1, 1, _movie.FrameCount);
-            int ch = _dragSprite.SpriteNum - 1;
-            if (_dragBegin)
-            {
-                int minBegin = _movie.GetPrevSpriteEnd(ch, _dragSprite.BeginFrame) + 1;
-                _dragSprite.BeginFrame = Math.Min(Math.Max(newFrame, minBegin), _dragSprite.EndFrame);
-            }
-            else if (_dragEnd)
-            {
-                int next = _movie.GetNextSpriteStart(ch, _dragSprite.BeginFrame);
-                int maxEnd = next == -1 ? _movie.FrameCount : next - 1;
-                _dragSprite.EndFrame = Math.Max(Math.Min(newFrame, maxEnd), _dragSprite.BeginFrame);
-            }
-            _spriteDirty = true;
+            HandleMouseMotion();
         }
     }
+    private void HandleMouseButton(InputEventMouseButton mb)
+    {
+        Vector2 pos = GetLocalMousePosition();
+        int totalChannels = _movie!.MaxSpriteChannelCount;
+        int channel = (int)(pos.Y / _gfxValues.ChannelHeight);
+
+        if (mb.ButtonIndex == MouseButton.Left)
+        {
+            if (mb.Pressed)
+            {
+                TryBeginInternalDrag(pos, channel);
+            }
+            else
+            {
+                FinishInternalDrag();
+                TryDropExternalCastMember(pos);
+                _showPreview = false;
+            }
+        }
+        else if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
+        {
+            TryOpenContextMenu(pos, channel);
+        }
+    }
+    private void TryBeginInternalDrag(Vector2 pos, int channel)
+    {
+        if (channel < 0 || channel >= _movie!.MaxSpriteChannelCount)
+            return;
+
+        foreach (var sp in _sprites)
+        {
+            int sc = sp.Sprite.SpriteNum - 1;
+            if (sc != channel) continue;
+
+            float sx = _gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _gfxValues.FrameWidth;
+            float ex = _gfxValues.LeftMargin + sp.Sprite.EndFrame * _gfxValues.FrameWidth;
+
+            if (pos.X < sx || pos.X > ex) continue;
+
+            float firstFrameRight = sx + _gfxValues.FrameWidth;
+            float lastFrameLeft = ex - _gfxValues.FrameWidth;
+
+            if (pos.X <= firstFrameRight)
+            {
+                _dragSprite = sp.Sprite;
+                _dragBegin = true;
+                _dragEnd = false;
+                Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
+            }
+            else if (pos.X >= lastFrameLeft)
+            {
+                _dragSprite = sp.Sprite;
+                _dragBegin = false;
+                _dragEnd = true;
+                Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
+            }
+            else
+            {
+                // Center drag = move to another channel
+                SelectSprite(sp);
+                _dragSprite = sp.Sprite;
+                _dragBegin = false;
+                _dragEnd = false;
+                _isSpriteDragMove = true;
+                _isDraggingSprite = true;
+                _dragStartY = pos.Y;
+                Input.SetDefaultCursorShape(Input.CursorShape.Drag);
+                _spriteDirty = true;
+            }
+            break;
+        }
+    }
+
+    private void FinishInternalDrag()
+    {
+        if (_isSpriteDragMove && _dragSprite != null && _movie != null && _spritePreviewRect != null)
+        {
+            int originalChannel = _dragSprite.SpriteNum - 1;
+            int newChannel = _previewChannel;
+            int newBegin = _previewBeginFrame;
+            int length = _dragSprite.EndFrame - _dragSprite.BeginFrame + 1;
+            int newEnd = newBegin + length - 1;
+
+            if (originalChannel != newChannel)
+                _movie.ChangeSpriteChannel(_dragSprite, newChannel);
+            if (newBegin != _dragSprite.BeginFrame)
+            {
+                _dragSprite.BeginFrame = newBegin;
+                _dragSprite.EndFrame = newEnd;
+            }
+        }
+
+        _dragSprite = null;
+        _dragBegin = _dragEnd = false;
+        _isSpriteDragMove = false;
+        _isDraggingSprite = false;
+        _spritePreviewRect = null;
+        _spriteDirty = true;
+        Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
+    }
+
+    private void TryDropExternalCastMember(Vector2 pos)
+    {
+        if (!DirDragDropHolder.IsDragging || DirDragDropHolder.Member == null) return;
+
+        if (DirDragDropUtils.TryHandleMemberDrop(
+            _movie!,
+            new LingoPoint(pos.X, pos.Y),
+            _gfxValues.ChannelHeight,
+            _gfxValues.FrameWidth,
+            _gfxValues.LeftMargin,
+            0,
+            out int channel, out int begin, out int end, out var member))
+        {
+            _movie.AddSprite(channel + 1, begin, end, 0, 0, s => s.SetMember(member!));
+            _spriteListDirty = true;
+            _spriteDirty = true;
+        }
+
+        DirDragDropHolder.EndDrag();
+    }
+    private void TryOpenContextMenu(Vector2 pos, int channel)
+    {
+        var sp = GetSpriteAt(pos, channel);
+        if (sp == null || sp.Sprite.Member == null) return;
+
+        _contextSprite = sp;
+        _contextMenu.Clear();
+        _contextMenu.AddItem("Find Cast Member", 1);
+        var gp = GetGlobalMousePosition();
+        _contextMenu.Popup(new Rect2I((int)gp.X, (int)gp.Y, 0, 0));
+    }
+    private void HandleMouseMotion()
+    {
+        if (_dragSprite != null)
+        {
+            if (_isSpriteDragMove)
+            {
+                if (_isDraggingSprite)
+                {
+                    UpdateSpriteDragPreview();
+                }
+            }
+            else
+            {
+                TryResizeSprite();
+            }
+            return;
+        }
+
+        if (DirDragDropHolder.IsDragging && DirDragDropHolder.Member != null)
+        {
+            var pos = GetLocalMousePosition();
+            if (DirDragDropUtils.TryHandleMemberDrop(
+                _movie!,
+                new LingoPoint(pos.X, pos.Y),
+                _gfxValues.ChannelHeight,
+                _gfxValues.FrameWidth,
+                _gfxValues.LeftMargin,
+                0,
+                out int channel, out int begin, out int end, out var member))
+            {
+                _previewChannel = channel;
+                _previewBegin = begin;
+                _previewEnd = end;
+                _previewMember = member;
+                _showPreview = true;
+                _spriteDirty = true;
+            }
+            else
+            {
+                _showPreview = false;
+                _spriteDirty = true;
+            }
+        }
+    }
+    private void TryResizeSprite()
+    {
+        float frame = (GetLocalMousePosition().X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth;
+        int newFrame = Math.Clamp((int)(frame + 1), 1, _movie!.FrameCount);
+        int ch = _dragSprite!.SpriteNum - 1;
+
+        if (_dragBegin)
+        {
+            int minBegin = _movie.GetPrevSpriteEnd(ch, _dragSprite.BeginFrame) + 1;
+            _dragSprite.BeginFrame = Math.Min(Math.Max(newFrame, minBegin), _dragSprite.EndFrame);
+        }
+        else if (_dragEnd)
+        {
+            int next = _movie.GetNextSpriteStart(ch, _dragSprite.BeginFrame);
+            int maxEnd = next == -1 ? _movie.FrameCount : next - 1;
+            _dragSprite.EndFrame = Math.Max(Math.Min(newFrame, maxEnd), _dragSprite.BeginFrame);
+        }
+
+        _spriteDirty = true;
+    }
+
+    private void UpdateSpriteDragPreview()
+    {
+        var pos = GetLocalMousePosition();
+        int newChannel = (int)(pos.Y / _gfxValues.ChannelHeight);
+        int snapX = (int)((pos.X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth) + 1;
+
+        if (_dragSprite == null || _movie == null)
+        {
+            _spritePreviewRect = null;
+            _spriteCanvas.QueueRedraw();
+            return;
+        }
+
+        int originalChannel = _dragSprite.SpriteNum - 1;
+        int originalBegin = _dragSprite.BeginFrame;
+        int length = _dragSprite.EndFrame - originalBegin + 1;
+
+        int newBegin = snapX;
+        int newEnd = newBegin + length - 1;
+
+        if (newChannel < 0 || newChannel >= _movie.MaxSpriteChannelCount ||
+            newBegin < 1 || newEnd > _movie.FrameCount)
+        {
+            _spritePreviewRect = null;
+            _spriteCanvas.QueueRedraw();
+            return;
+        }
+
+        // Check for conflicts
+        bool conflict = false;
+        int idx = 1;
+        while (_movie.TryGetAllTimeSprite(idx, out var other))
+        {
+            if (other != _dragSprite && other.SpriteNum - 1 == newChannel &&
+                RangesOverlap(newBegin, newEnd, other.BeginFrame, other.EndFrame))
+            {
+                conflict = true;
+                break;
+            }
+            idx++;
+        }
+
+        if (conflict)
+        {
+            _spritePreviewRect = null;
+            _spriteCanvas.QueueRedraw();
+            return;
+        }
+
+        _previewChannel = newChannel;
+        _previewBeginFrame = newBegin;
+
+        _spritePreviewRect = new Rect2(
+            _gfxValues.LeftMargin + (newBegin - 1) * _gfxValues.FrameWidth,
+            newChannel * _gfxValues.ChannelHeight,
+            length * _gfxValues.FrameWidth,
+            _gfxValues.ChannelHeight
+        );
+
+        _spriteCanvas.QueueRedraw();
+    }
+
+
+
+
+
+
+    private static bool RangesOverlap(int aStart, int aEnd, int bStart, int bEnd)
+    {
+        return aStart <= bEnd && bStart <= aEnd;
+    }
+
+
+
+    #region Old
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
@@ -280,7 +481,8 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         });
         _previewMember = null;
         _spriteListDirty = true;
-    }
+    } 
+    #endregion
 
     public override void _Process(double delta)
     {
@@ -345,44 +547,6 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _gridCanvas.ChannelCount = _movie.MaxSpriteChannelCount;
         _gridCanvas.QueueRedraw();
         _spriteCanvas.QueueRedraw();
-    }
-
-
-    private partial class SpriteCanvas : Control
-    {
-        private readonly DirGodotScoreGrid _owner;
-        public SpriteCanvas(DirGodotScoreGrid owner) => _owner = owner;
-        public override void _Draw()
-        {
-            var movie = _owner._movie;
-            if (movie == null) return;
-
-            int channelCount = movie.MaxSpriteChannelCount;
-            var font = ThemeDB.FallbackFont;
-
-            foreach (var sp in _owner._sprites)
-            {
-                int ch = sp.Sprite.SpriteNum - 1;
-                if (ch < 0 || ch >= channelCount) continue;
-                float x = _owner._gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _owner._gfxValues.FrameWidth;
-                float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * _owner._gfxValues.FrameWidth;
-                float y = ch * _owner._gfxValues.ChannelHeight;
-                sp.Draw(this, new Vector2(x, y), width, _owner._gfxValues.ChannelHeight, font);
-            }
-
-            int cur = movie.CurrentFrame - 1;
-            if (cur < 0) cur = 0;
-            float barX = _owner._gfxValues.LeftMargin + cur * _owner._gfxValues.FrameWidth + _owner._gfxValues.FrameWidth / 2f;
-            DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _owner._gfxValues.ChannelHeight), Colors.Red, 2);
-
-            if (_owner._showPreview)
-            {
-                float px = _owner._gfxValues.LeftMargin + (_owner._previewBegin - 1) * _owner._gfxValues.FrameWidth;
-                float pw = (_owner._previewEnd - _owner._previewBegin + 1) * _owner._gfxValues.FrameWidth;
-                float py = _owner._previewChannel * _owner._gfxValues.ChannelHeight;
-                DrawRect(new Rect2(px, py, pw, _owner._gfxValues.ChannelHeight), new Color(0, 0, 1, 0.3f));
-            }
-        }
     }
 
 }
