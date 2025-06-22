@@ -7,6 +7,7 @@ using LingoEngine.LGodot.Movies;
 using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Sounds;
 using LingoEngine.LGodot.Texts;
+using LingoEngine.LGodot.Shapes;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
@@ -17,6 +18,7 @@ using LingoEngine.Pictures;
 using LingoEngine.LGodot.Stages;
 using LingoEngine.Members;
 using LingoEngine.Casts;
+using LingoEngine.Shapes;
 
 namespace LingoEngine.LGodot
 {
@@ -66,6 +68,7 @@ namespace LingoEngine.LGodot
                 Type t when t == typeof(LingoMemberField) => (CreateMemberField(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberSound) => (CreateMemberSound(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberFilmLoop) => (CreateMemberFilmLoop(cast, numberInCast, name) as T)!,
+                Type t when t == typeof(LingoMemberShape) => (CreateMemberShape(cast, numberInCast, name) as T)!,
             };
         }
         public LingoMemberSound CreateMemberSound(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
@@ -81,6 +84,13 @@ namespace LingoEngine.LGodot
             var impl = new LingoGodotMemberFilmLoop();
             var member = new LingoMemberFilmLoop(impl, (LingoCast)cast, numberInCast, name, fileName ?? "", regPoint);
             impl.Init(member);
+            _disposables.Add(impl);
+            return member;
+        }
+        public LingoMemberShape CreateMemberShape(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+        {
+            var impl = new LingoGodotMemberShape();
+            var member = new LingoMemberShape((LingoCast)cast, impl, numberInCast, name, fileName ?? "", regPoint);
             _disposables.Add(impl);
             return member;
         }

@@ -30,7 +30,7 @@ namespace LingoEngine.Movies
             _lingoFrameworkMovieStage = godotInstance;
         }
 
-        internal void AddKeyFrame(LingoSprite sprite)
+        public void AddKeyFrame(LingoSprite sprite)
         {
             if (!RecordKeyframes || ActiveMovie == null)
                 return;
@@ -38,7 +38,7 @@ namespace LingoEngine.Movies
             sprite.AddKeyframes((frame, sprite.LocH, sprite.LocV, sprite.Rotation, sprite.Skew));
         }
 
-        internal void UpdateKeyFrame(LingoSprite sprite)
+        public void UpdateKeyFrame(LingoSprite sprite)
         {
             if (!RecordKeyframes || ActiveMovie == null)
                 return;
@@ -46,7 +46,7 @@ namespace LingoEngine.Movies
             sprite.UpdateKeyframe(frame, sprite.LocH, sprite.LocV, sprite.Rotation, sprite.Skew);
         }
 
-        internal void SetSpriteTweenOptions(LingoSprite sprite, bool positionEnabled, bool rotationEnabled,
+        public void SetSpriteTweenOptions(LingoSprite sprite, bool positionEnabled, bool rotationEnabled,
             bool skewEnabled, bool foregroundColorEnabled, bool backgroundColorEnabled, bool blendEnabled,
             float curvature, bool continuousAtEnds, bool speedSmooth, float easeIn, float easeOut)
         {
@@ -66,7 +66,7 @@ namespace LingoEngine.Movies
         }
 
      
-        internal LingoSprite? GetSpriteUnderMouse()
+        public LingoSprite? GetSpriteUnderMouse()
         {
             if (ActiveMovie == null)
                 return null;
