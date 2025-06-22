@@ -16,6 +16,9 @@ internal partial class DirGodotScoreLabelsBar : Control
     private int _activeFrame;
     private int _startFrame;
     private bool _dragging;
+    private bool _headerCollapsed;
+
+    public event Action<bool>? HeaderCollapseChanged;
 
     public DirGodotScoreLabelsBar(DirGodotScoreGfxValues gfxValues, ILingoCommandManager commandManager)
     {
@@ -25,6 +28,16 @@ internal partial class DirGodotScoreLabelsBar : Control
         _editField.Visible = false;
         _editField.Size = new Vector2(120, 16);
         _editField.TextSubmitted += _ => CommitEdit();
+    }
+
+    public bool HeaderCollapsed
+    {
+        get => _headerCollapsed;
+        set
+        {
+            _headerCollapsed = value;
+            QueueRedraw();
+        }
     }
 
     public void SetMovie(LingoMovie? movie)
@@ -41,6 +54,9 @@ internal partial class DirGodotScoreLabelsBar : Control
         var font = ThemeDB.FallbackFont;
         Size = new Vector2(_gfxValues.LeftMargin + (frameCount) * _gfxValues.FrameWidth, 20);
         DrawRect(new Rect2(0, 0, Size.X, 20), Colors.White);
+        Vector2 iconPos = new Vector2(Size.X - 16, 4);
+        DrawRect(new Rect2(iconPos.X - 2, iconPos.Y - 2, 12, 12), Colors.Black, false, 1);
+        DrawString(font, iconPos + new Vector2(2, font.GetAscent() - 5), (_headerCollapsed ? "▶" : "▼"));
         foreach (var kv in _movie.GetScoreLabels())
         {
             float x = _gfxValues.LeftMargin + (kv.Value - 1) * _gfxValues.FrameWidth;
@@ -59,6 +75,12 @@ internal partial class DirGodotScoreLabelsBar : Control
         {
             if (mb.Pressed)
             {
+                if (mb.Position.X > Size.X - 20)
+                {
+                    HeaderCollapsed = !HeaderCollapsed;
+                    HeaderCollapseChanged?.Invoke(HeaderCollapsed);
+                    return;
+                }
                 Vector2 pos = GetLocalMousePosition();
                 foreach (var kv in _movie.GetScoreLabels())
                 {

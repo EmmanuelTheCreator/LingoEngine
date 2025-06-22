@@ -64,6 +64,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _frameScripts = new DirGodotFrameScriptsBar(_gfxValues);
         _soundBar = new DirGodotSoundBar(_gfxValues);
         _labelBar = new DirGodotScoreLabelsBar(_gfxValues, commandManager);
+        _labelBar.HeaderCollapseChanged += OnHeaderCollapseChanged;
+        _labelBar.HeaderCollapsed = _soundBar.Collapsed;
         
 
         // The grid inside master scoller
@@ -118,12 +120,24 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
        
         _labelBar.Position = new Vector2(0, 0);
         _soundBar.Position = new Vector2(0, 20);
-        _frameScripts.Position = new Vector2(0, 20 + _gfxValues.ChannelHeight * 4 + 10);
-        _header.Position = new Vector2(0, _frameScripts.Position.Y + 20);
+        RepositionBars();
         
 
 
         UpdateScrollSize();
+    }
+
+    private void OnHeaderCollapseChanged(bool collapsed)
+    {
+        _soundBar.Collapsed = collapsed;
+        RepositionBars();
+    }
+
+    private void RepositionBars()
+    {
+        float soundHeight = (_soundBar.Collapsed ? 0 : _gfxValues.ChannelHeight * 4) + 10;
+        _frameScripts.Position = new Vector2(0, 20 + soundHeight);
+        _header.Position = new Vector2(0, _frameScripts.Position.Y + 20);
     }
     public override void _Process(double delta)
     {
@@ -168,6 +182,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _soundBar.SetMovie(movie);
         _channelBar.SetMovie(movie);
         _labelBar.SetMovie(movie);
+        _labelBar.HeaderCollapsed = _soundBar.Collapsed;
 
         UpdateScrollSize();
     }
@@ -224,8 +239,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
             
             DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color("#f0f0f0"));
             DrawTextWithLine(0,20, "Labels");
-            DrawTextWithLine(20,20, "Scripts");
-            DrawTextWithLine(37,64, "Audio");
+            DrawTextWithLine(74,20, "Scripts");
             DrawTextWithLine(102,23, "Member", false);
         }
         private void DrawTextWithLine(int top, int height, string text, bool withTopLines = false)
