@@ -37,6 +37,7 @@ internal partial class DirGodotSoundGrid : Control
         {
             _collapsed = value;
             _clipDirty = true;
+            UpdateSize();
             QueueRedraw();
         }
     }
