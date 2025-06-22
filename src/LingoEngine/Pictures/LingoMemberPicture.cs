@@ -96,7 +96,7 @@ namespace LingoEngine.Pictures
         /// </summary>
         public override void PasteClipBoardInto() => _lingoFrameworkMemberPicture.PasteClipboardInto();
 
-
+        public void SetImageData(byte[] bytes) => _lingoFrameworkMemberPicture.SetImageData(bytes);
     }
 
 }

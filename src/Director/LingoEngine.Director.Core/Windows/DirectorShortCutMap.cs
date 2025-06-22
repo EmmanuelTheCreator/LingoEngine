@@ -10,7 +10,7 @@ namespace LingoEngine.Director.Core.Menus
         public string? Description { get; set; }
         public string KeyCombination { get; }
 
-        public DirectorShortCutMap(string shortCut, Func<DirectorShortCutMap,Commands.ILingoCommand> commandCtor, string? description = null, string keyCombination = null)
+        public DirectorShortCutMap(string shortCut, Func<DirectorShortCutMap,ILingoCommand> commandCtor, string? description = null, string keyCombination = null)
         {
             ShortCut = shortCut;
             this.commandCtor = commandCtor;
