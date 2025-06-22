@@ -158,8 +158,21 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _bottomBar.AddChild(_scaleDropdown);
     }
 
+    private void ResetView()
+    {
+        _panning = false;
+        _spaceHeld = false;
+        _imageRect.FlipH = false;
+        _imageRect.FlipV = false;
+        _scrollContainer.ScrollHorizontal = 0;
+        _scrollContainer.ScrollVertical = 0;
+        _zoomSlider.Value = 1f;
+        OnZoomChanged(1f);
+    }
+
     public void SetPicture(LingoMemberPicture picture)
     {
+        ResetView();
         var godotPicture = picture.Framework<LingoGodotMemberPicture>();
         godotPicture.Preload();
         if (godotPicture.Texture != null)
@@ -172,8 +185,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _imageRect.OffsetRight = size.X / 2f;
             _imageRect.OffsetBottom = size.Y / 2f;
             FitImageToView();
-            CenterImage();
             UpdateRegPointCanvasSize();
+            CallDeferred(nameof(CenterImage));
         }
         _member = picture;
         _navBar.SetMember(picture);
