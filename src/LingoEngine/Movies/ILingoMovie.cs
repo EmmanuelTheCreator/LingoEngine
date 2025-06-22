@@ -219,5 +219,11 @@ namespace LingoEngine.Movies
         int GetNextLabelFrame(int frame);
         int GetNextSpriteStart(int channel, int frame);
         int GetPrevSpriteEnd(int channel, int frame);
+
+        // Audio clips support
+        event Action? AudioClipListChanged;
+        IReadOnlyList<LingoAudioClip> GetAudioClips();
+        LingoAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound);
+        void MoveAudioClip(LingoAudioClip clip, int newFrame);
     }
 }

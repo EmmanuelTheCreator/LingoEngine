@@ -40,9 +40,14 @@ namespace LingoEngine.Movies
         private readonly List<LingoSprite> _exitedSprites = new();
         private bool _IsManualUpdateStage;
         public event Action? SpriteListChanged;
+        public event Action? AudioClipListChanged;
+
+        private readonly List<LingoAudioClip> _audioClips = new();
 
         private void RaiseSpriteListChanged()
             => SpriteListChanged?.Invoke();
+        private void RaiseAudioClipListChanged()
+            => AudioClipListChanged?.Invoke();
         private LingoSprite? _currentFrameSprite;
 
         // Movie Script subscriptions
@@ -664,6 +669,27 @@ namespace LingoEngine.Movies
                     prev = Math.Max(prev, sp.EndFrame);
             }
             return prev;
+        }
+
+        public IReadOnlyList<LingoAudioClip> GetAudioClips() => _audioClips;
+
+        public LingoAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound)
+        {
+            int lengthFrames = (int)Math.Ceiling(sound.Length * Tempo);
+            int end = Math.Clamp(frame + lengthFrames - 1, frame, FrameCount);
+            var clip = new LingoAudioClip(channel, frame, end, sound);
+            _audioClips.Add(clip);
+            RaiseAudioClipListChanged();
+            return clip;
+        }
+
+        public void MoveAudioClip(LingoAudioClip clip, int newFrame)
+        {
+            if (!_audioClips.Contains(clip)) return;
+            int lengthFrames = clip.EndFrame - clip.BeginFrame;
+            clip.BeginFrame = newFrame;
+            clip.EndFrame = Math.Clamp(newFrame + lengthFrames, newFrame, FrameCount);
+            RaiseAudioClipListChanged();
         }
 
         public int GetMaxLocZ() => _activeSprites.Values.Max(x => x.LocZ);
