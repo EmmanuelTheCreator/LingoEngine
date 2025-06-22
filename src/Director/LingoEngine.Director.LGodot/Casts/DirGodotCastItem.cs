@@ -21,10 +21,8 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly StyleBoxFlat _selectedLabelStyle = new();
         private readonly StyleBoxFlat _normalLabelStyle = new();
         //private readonly CenterContainer _spriteContainer;
-        private readonly Sprite2D _Sprite2D;
-        private readonly SubViewport _textViewport = new();
+        private readonly DirGodotMemberThumbnail _thumb;
         private readonly ILingoMember _lingoMember;
-        private readonly Label _typeLabel;
         private readonly ColorRect _separator;
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly ILingoCommandManager _commandManager;
@@ -81,52 +79,9 @@ namespace LingoEngine.Director.LGodot.Casts
             _bg.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_bg);
 
-            // Text viewport for text previews
-            _textViewport.SetDisable3D(true);
-            _textViewport.TransparentBg = true;
-            _textViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
-            //_textViewport.MouseFilter = MouseFilterEnum.Ignore;
-            AddChild(_textViewport);
 
-            // Sprite centered
-            _Sprite2D = new Sprite2D();
-            //_spriteContainer = new CenterContainer();
-            //_spriteContainer.AddChild(_Sprite2D);
-            _Sprite2D.Position = new Vector2(+Width/2, LabelHeight-1);
-            //_Sprite2D.MouseFilter = MouseFilterEnum.Ignore;
-            AddChild(_Sprite2D);
-
-            // Type icon label positioned at bottom right of the thumbnail
-            _typeLabel = new Label
-            {
-                Text = LingoMemberTypeIcons.GetIcon(element),
-                LabelSettings = new LabelSettings { FontSize = 8 },
-                MouseFilter = MouseFilterEnum.Ignore,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                CustomMinimumSize = new Vector2(10, 10)
-            };
-            var typeStyle = new StyleBoxFlat
-            {
-                BgColor = Colors.White,
-                BorderColor = Colors.Black
-            };
-            typeStyle.BorderWidthBottom = 1;
-            typeStyle.BorderWidthTop = 1;
-            typeStyle.BorderWidthLeft = 1;
-            typeStyle.BorderWidthRight = 1;
-            _typeLabel.AddThemeStyleboxOverride("normal", typeStyle);
-            _typeLabel.LabelSettings.FontColor = Colors.Black;
-            _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
-            AddChild(_typeLabel);
-            _typeLabel.AnchorLeft = 1;
-            _typeLabel.AnchorRight = 1;
-            _typeLabel.AnchorTop = 1;
-            _typeLabel.AnchorBottom = 1;
-            _typeLabel.OffsetRight = -2;
-            _typeLabel.OffsetBottom = -LabelHeight - 2;
-            _typeLabel.OffsetLeft = -_typeLabel.CustomMinimumSize.X - 2;
-            _typeLabel.OffsetTop = -LabelHeight - _typeLabel.CustomMinimumSize.Y - 2;
+            _thumb = new DirGodotMemberThumbnail(Width - 1, Height - LabelHeight);
+            AddChild(_thumb);
 
             // separator line above the caption
             _separator = new ColorRect
@@ -270,50 +225,12 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public void Init()
         {
-            switch (_lingoMember)
-            {
-                case LingoMemberPicture pic:
-                    var godotPicture = pic.Framework<LingoGodotMemberPicture>();
-                    godotPicture.Preload();
-
-                    // Set the texture using the ImageTexture from the picture member
-                    if (godotPicture.Texture == null)
-                        return;
-                    _Sprite2D.Texture = godotPicture.Texture;
-                    Resize(Width - 1, Height - LabelHeight);
-                    break;
-                case ILingoMemberTextBase textMember:
-                    var godotText = textMember.FrameworkObj;
-                    godotText.Preload();
-
-                    string prev = GetPreviewText(textMember);
-                    var label = new Label
-                    {
-                        Text = prev,
-                        LabelSettings = new LabelSettings { FontSize = 10,LineSpacing = 11, FontColor = Colors.Black },
-                        AutowrapMode = TextServer.AutowrapMode.Word,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Top
-                    };
-                    _textViewport.SetSize(new Vector2I((int)(Width - 1), (int)(Height - LabelHeight)));
-                    label.Size = new Vector2(Width - 1, Height - LabelHeight);
-                    _textViewport.AddChild(label);
-                    _Sprite2D.Texture = _textViewport.GetTexture();
-                    Resize(Width - 1, Height - LabelHeight);
-                    break;
-                default:
-                    break;
-            }
+            _thumb.SetMember(_lingoMember);
         }
 
         public void Resize(float targetWidth, float targetHeight)
         {
-            if (_Sprite2D.Texture == null) return;
-            var width = _Sprite2D.Texture.GetWidth();
-            var height = _Sprite2D.Texture.GetHeight();
-            float scaleFactorW = targetWidth / width;
-            float scaleFactorH = targetHeight / _Sprite2D.Texture.GetHeight();
-            _Sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
+            _thumb.ResizeSprite(targetWidth, targetHeight);
         }
         public override Variant _GetDragData(Vector2 atPosition)
         {
@@ -329,25 +246,6 @@ namespace LingoEngine.Director.LGodot.Casts
         private static string GetTypeIcon(ILingoMember member)
         {
             return LingoMemberTypeIcons.GetIcon(member);
-        }
-
-
-
-        private static string GetPreviewText(ILingoMemberTextBase text)
-        {
-            var lines = text.Text.Replace("\r", "").Split('\n');
-            var sb = new StringBuilder();
-            int count = Math.Min(4, lines.Length);
-            for (int i = 0; i < count; i++)
-            {
-                var line = lines[i];
-                if (line.Length > 14)
-                    line = line.Substring(0, 14);
-                sb.Append(line);
-                if (i < count - 1)
-                    sb.Append('\n');
-            }
-            return sb.ToString();
         }
 
     }

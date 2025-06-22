@@ -24,23 +24,56 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly PanelContainer _behaviorPanel = new PanelContainer();
     private readonly VBoxContainer _behaviorBox = new VBoxContainer();
     private readonly Button _behaviorClose = new Button();
+    private readonly ILingoPlayer _player;
+    private readonly HBoxContainer _header = new HBoxContainer();
+    private readonly DirGodotMemberThumbnail _thumb = new DirGodotMemberThumbnail(36,36);
+    private readonly VBoxContainer _headerText = new VBoxContainer();
+    private readonly Label _spriteInfo = new Label();
+    private readonly Label _memberInfo = new Label();
+    private readonly Label _castInfo = new Label();
+    private const int HeaderHeight = 44;
 
-    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, IDirGodotWindowManager windowManager)
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
     {
         _mediator = mediator;
         _commandManager = commandManager;
+        _player = player;
         inspectorWindow.Init(this);
 
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
         CustomMinimumSize = Size;
-        _tabs.Position = new Vector2(0, 20);
-        _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30);
-        
+        _header.Position = new Vector2(0, TitleBarHeight);
+        _header.CustomMinimumSize = new Vector2(Size.X - 10, HeaderHeight);
+        _header.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+        var margin = new MarginContainer();
+        margin.AddThemeConstantOverride("margin_left", 4);
+        margin.AddThemeConstantOverride("margin_right", 4);
+        margin.AddThemeConstantOverride("margin_top", 4);
+        margin.AddThemeConstantOverride("margin_bottom", 4);
+        margin.AddChild(_thumb);
+        _header.AddChild(margin);
+
+        _spriteInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
+        _memberInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
+        _castInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
+        _headerText.AddChild(_spriteInfo);
+        _headerText.AddChild(_memberInfo);
+        _headerText.AddChild(_castInfo);
+        _header.AddChild(_headerText);
+
+        AddChild(_header);
+
+        _tabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
+        _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
+
         AddChild(_tabs);
 
         _behaviorPanel.Visible = false;
+        _behaviorPanel.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
+        _behaviorPanel.Size = new Vector2(Size.X - 10, 0);
         AddChild(_behaviorPanel);
         _behaviorPanel.AddChild(_behaviorBox);
         var closeRow = new HBoxContainer();
@@ -62,16 +95,18 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
+        _header.CustomMinimumSize = new Vector2(size.X - 10, HeaderHeight);
+        _tabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
         if (_behaviorPanel.Visible)
         {
-            var half = (Size.Y - 30) / 2f;
+            var half = (Size.Y - 30 - HeaderHeight) / 2f;
             _tabs.Size = new Vector2(Size.X - 10, half);
-            _behaviorPanel.Position = new Vector2(0, 20 + half);
+            _behaviorPanel.Position = new Vector2(0, TitleBarHeight + HeaderHeight + half);
             _behaviorPanel.Size = new Vector2(Size.X - 10, half);
         }
         else
         {
-            _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30);
+            _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
         }
         //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
     }
@@ -82,6 +117,27 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     {
         foreach (Node child in _tabs.GetChildren())
             _tabs.RemoveChild(child);
+        ILingoMember? member = null;
+        if (obj is LingoSprite sp)
+        {
+            member = sp.Member;
+            if (member != null)
+            {
+                _thumb.SetMember(member);
+                _spriteInfo.Text = $"Sprite : {sp.SpriteNum}: {member.Type}";
+            }
+        }
+        else if (obj is ILingoMember m)
+        {
+            member = m;
+            _thumb.SetMember(member);
+            _spriteInfo.Text = member.Type.ToString();
+        }
+        if (member != null)
+        {
+            _memberInfo.Text = member.Name;
+            _castInfo.Text = GetCastName(member);
+        }
         switch (obj)
         {
             case LingoSprite sp:
@@ -251,6 +307,15 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             h.AddChild(editor);
             root.AddChild(h);
         }
+    }
+
+    private string GetCastName(ILingoMember m)
+    {
+        if (_player.ActiveMovie is ILingoMovie movie)
+        {
+            return movie.CastLib.GetCast(m.CastLibNum).Name;
+        }
+        return string.Empty;
     }
 
     private void ShowBehavior(LingoSpriteBehavior behavior)
