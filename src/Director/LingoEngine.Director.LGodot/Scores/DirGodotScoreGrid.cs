@@ -59,6 +59,9 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         // Ensure textures draw above the window background
         //_gridTexture.ZIndex = 0;
         _gridTexture.MouseFilter = MouseFilterEnum.Ignore;
+        
+        MouseFilter = MouseFilterEnum.Stop;
+
         _spriteTexture.Texture = _spriteViewport.GetTexture();
         _spriteTexture.Position = Vector2.Zero;
         //_spriteTexture.ZIndex = 1;
@@ -233,6 +236,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
+        GD.Print($"Score: _CanDropData called at {atPosition} with {data.Obj}");
         _showPreview = false;
         if (_movie == null) return false;
 
@@ -264,6 +268,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
     public override void _DropData(Vector2 atPosition, Variant data)
     {
+        GD.Print($"Score: _DropData called at {atPosition} with {_previewMember}");
         _showPreview = false;
         _spriteDirty = true;
         if (_movie == null) return;
