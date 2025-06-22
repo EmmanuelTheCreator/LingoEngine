@@ -16,6 +16,8 @@ internal partial class DirGodotSoundHeader : Control
     public DirGodotSoundHeader(DirGodotScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
+        Size = new Vector2(_gfxValues.ChannelInfoWidth, 0);
+        CustomMinimumSize = new Vector2(_gfxValues.ChannelInfoWidth, 0);
     }
 
     public bool Collapsed
