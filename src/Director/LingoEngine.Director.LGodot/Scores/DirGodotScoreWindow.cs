@@ -100,8 +100,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _hClipper.AddChild(_topStripContent);
         _hClipper.AddChild(_collapseButton);
         AddChild(_hClipper);
+        AddChild(_soundBar);
         _topStripContent.AddChild(_labelBar);
-        _topStripContent.AddChild(_soundBar);
         _topStripContent.AddChild(_frameScripts);
         _topStripContent.AddChild(_header);
 
@@ -139,6 +139,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private void RepositionBars()
     {
         float soundHeight = (_soundBar.Collapsed ? 0 : _gfxValues.ChannelHeight * 4);
+
         _frameScripts.Position = new Vector2(0, 20 + soundHeight);
         _header.Position = new Vector2(0, _frameScripts.Position.Y + 20);
 
