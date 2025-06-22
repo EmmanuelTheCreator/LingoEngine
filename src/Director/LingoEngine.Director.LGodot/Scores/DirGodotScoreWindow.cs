@@ -35,6 +35,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly DirGodotScoreLabelsBar _labelBar;
     private readonly DirGodotScoreChannelBar _channelBar;
     private readonly CollapseButton _collapseButton;
+    private readonly DirGodotCastLeftLabel _leftLabelHeader;
+    private readonly DirGodotCastLeftTopLabels _leftTopLabels;
 
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
@@ -53,17 +55,21 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         var height = 400;
         var width = 800;
 
-        AddChild(new DirGodotCastLeftTopLabels(_gfxValues));
+        _leftLabelHeader = new DirGodotCastLeftLabel(_gfxValues);
+        _leftTopLabels = new DirGodotCastLeftTopLabels(_gfxValues);
+        AddChild(_leftLabelHeader);
+        AddChild(_leftTopLabels);
 
 
         Size = new Vector2(width, height);
         CustomMinimumSize = Size;
+        _soundBar = new DirGodotSoundBar(_gfxValues);
+        _soundBar.Collapsed = true;
         _channelBar = new DirGodotScoreChannelBar(_gfxValues, _soundBar);
         _grid = new DirGodotScoreGrid(directorMediator, _gfxValues);
         _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader(_gfxValues);
         _frameScripts = new DirGodotFrameScriptsBar(_gfxValues);
-        _soundBar = new DirGodotSoundBar(_gfxValues);
         _labelBar = new DirGodotScoreLabelsBar(_gfxValues, commandManager);
         _labelBar.HeaderCollapseChanged += OnHeaderCollapseChanged;
         _labelBar.HeaderCollapsed = _soundBar.Collapsed;
@@ -148,6 +154,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _masterScroller.Position = new Vector2(_gfxValues.ChannelInfoWidth, topHeight + 20);
         _vClipper.Position = new Vector2(0, topHeight + 20);
         _collapseButton.Position = new Vector2(_hClipper.Size.X - 16, 4);
+        _leftTopLabels.Position = new Vector2(0, _frameScripts.Position.Y);
         UpdateScrollSize();
     }
     public override void _Process(double delta)
@@ -239,27 +246,19 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     internal partial class DirGodotCastLeftTopLabels : Control
     {
-        private DirGodotScoreGfxValues _gfxValues;
+        private readonly DirGodotScoreGfxValues _gfxValues;
 
         public DirGodotCastLeftTopLabels(DirGodotScoreGfxValues gfxValues)
         {
             _gfxValues = gfxValues;
-            int soundHeight = _gfxValues.ChannelHeight * 4;
-            int totalHeight = soundHeight + 40; // labels + scripts + header
-            Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, totalHeight);
-            Position = new Vector2(0, 20);
+            Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, 40);
         }
         public override void _Draw()
         {
-
             DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color("#f0f0f0"));
             int labelHeight = 20;
-            int soundHeight = _gfxValues.ChannelHeight * 4;
-            int scriptTop = labelHeight + soundHeight;
-            int memberTop = scriptTop + labelHeight;
-            DrawTextWithLine(0, labelHeight, "Labels");
-            DrawTextWithLine(scriptTop, labelHeight, "Scripts");
-            DrawTextWithLine(memberTop, labelHeight, "Member", false);
+            DrawTextWithLine(0, labelHeight, "Scripts");
+            DrawTextWithLine(labelHeight, labelHeight, "Member", false);
         }
         private void DrawTextWithLine(int top, int height, string text, bool withTopLines = false)
         {
@@ -274,6 +273,40 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
             DrawLine(new Vector2(0, top + height), new Vector2(Size.X, top + height), _gfxValues.ColLineDark);
             DrawLine(new Vector2(0, top + height + 1), new Vector2(Size.X, top + height + 1), _gfxValues.ColLineLight);
         }
+        private void DrawLines(int top)
+        {
+            DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark);
+            DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight);
+        }
+    }
+
+    internal partial class DirGodotCastLeftLabel : Control
+    {
+        private readonly DirGodotScoreGfxValues _gfxValues;
+
+        public DirGodotCastLeftLabel(DirGodotScoreGfxValues gfxValues)
+        {
+            _gfxValues = gfxValues;
+            Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, 20);
+            Position = new Vector2(0, 20);
+        }
+
+        public override void _Draw()
+        {
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color("#f0f0f0"));
+            DrawTextWithLine(0, 20, "Labels", false);
+        }
+
+        private void DrawTextWithLine(int top, int height, string text, bool withTopLines = true)
+        {
+            var font = ThemeDB.FallbackFont;
+            if (withTopLines)
+                DrawLines(top);
+            DrawString(font, new Vector2(5, top + font.GetAscent() - 3), text, HorizontalAlignment.Left, -1, 10, new Color("#666666"));
+            DrawLine(new Vector2(0, top + height), new Vector2(Size.X, top + height), _gfxValues.ColLineDark);
+            DrawLine(new Vector2(0, top + height + 1), new Vector2(Size.X, top + height + 1), _gfxValues.ColLineLight);
+        }
+
         private void DrawLines(int top)
         {
             DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark);
