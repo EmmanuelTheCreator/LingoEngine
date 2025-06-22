@@ -1,46 +1,52 @@
-using Godot;
+﻿using Godot;
 using LingoEngine.Members;
 using LingoEngine.Pictures;
 using LingoEngine.Texts;
 using LingoEngine.LGodot.Pictures;
 using System.Text;
+using LingoEngine.Sounds;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
 internal partial class DirGodotMemberThumbnail : Control
 {
-    private readonly Sprite2D _sprite = new();
-    private readonly SubViewport _textViewport = new();
+    private readonly TextureRect _sprite;
     private readonly Label _typeLabel;
+    private readonly Label _textLabel = new();
+    private SubViewport _textViewport;
 
     public float ThumbWidth { get; }
     public float ThumbHeight { get; }
+
+    private const float LabelHeight = 15;
 
     public DirGodotMemberThumbnail(float width, float height)
     {
         ThumbWidth = width;
         ThumbHeight = height;
         CustomMinimumSize = new Vector2(width, height);
+        MouseFilter = MouseFilterEnum.Ignore;
 
-        var style = new StyleBoxFlat
+        // Thumbnail image area
+        var spriteContainer = new Control
         {
-            BgColor = Colors.White,
-            BorderColor = Colors.DarkGray
+            SizeFlagsHorizontal = SizeFlags.Expand,
+            SizeFlagsVertical = SizeFlags.Expand,
+            MouseFilter = MouseFilterEnum.Ignore,
+            CustomMinimumSize = new Vector2(ThumbWidth, ThumbHeight - LabelHeight)
         };
-        style.BorderWidthBottom = 1;
-        style.BorderWidthTop = 1;
-        style.BorderWidthLeft = 1;
-        style.BorderWidthRight = 1;
-        AddThemeStyleboxOverride("panel", style);
 
-        _textViewport.SetDisable3D(true);
-        _textViewport.TransparentBg = true;
-        _textViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
-        AddChild(_textViewport);
+        _sprite = new TextureRect
+        {
+            StretchMode = TextureRect.StretchModeEnum.Scale,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.Expand,
+            SizeFlagsVertical = SizeFlags.Expand
+        };
+        spriteContainer.AddChild(_sprite);
+        AddChild(spriteContainer);
 
-        AddChild(_sprite);
-        _sprite.Position = new Vector2(width / 2f, height / 2f);
-
+        // Type label overlay
         _typeLabel = new Label
         {
             LabelSettings = new LabelSettings { FontSize = 8 },
@@ -52,12 +58,12 @@ internal partial class DirGodotMemberThumbnail : Control
         var typeStyle = new StyleBoxFlat
         {
             BgColor = Colors.White,
-            BorderColor = Colors.Black
+            BorderColor = Colors.Black,
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1
         };
-        typeStyle.BorderWidthBottom = 1;
-        typeStyle.BorderWidthTop = 1;
-        typeStyle.BorderWidthLeft = 1;
-        typeStyle.BorderWidthRight = 1;
         _typeLabel.AddThemeStyleboxOverride("normal", typeStyle);
         _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
         AddChild(_typeLabel);
@@ -70,56 +76,86 @@ internal partial class DirGodotMemberThumbnail : Control
         _typeLabel.OffsetBottom = -2;
         _typeLabel.OffsetLeft = -_typeLabel.CustomMinimumSize.X - 2;
         _typeLabel.OffsetTop = -_typeLabel.CustomMinimumSize.Y - 2;
+
+        //_textViewport = new SubViewport
+        //{
+        //    TransparentBg = true,
+        //    Disable3D = true,
+        //    Size = new Vector2I((int)(ThumbWidth - 2), (int)(ThumbHeight - LabelHeight - 2)),
+        //    RenderTargetUpdateMode = SubViewport.UpdateMode.Always
+        //};
+        //AddChild(_textViewport); // ← this was missing
+
     }
 
     public void SetMember(ILingoMember member)
     {
         _typeLabel.Text = LingoMemberTypeIcons.GetIcon(member);
-        foreach (var child in _textViewport.GetChildren())
-            _textViewport.RemoveChild(child);
+
+        
 
         switch (member)
         {
             case LingoMemberPicture pic:
-                var godotPicture = pic.Framework<LingoGodotMemberPicture>();
-                godotPicture.Preload();
-                if (godotPicture.Texture != null)
                 {
-                    _sprite.Texture = godotPicture.Texture;
-                    ResizeSprite(ThumbWidth - 2, ThumbHeight - 2);
+                    var godotPicture = pic.Framework<LingoGodotMemberPicture>();
+                    godotPicture.Preload();
+
+                    var original = godotPicture.Texture;
+                    if (original != null)
+                    {
+                        var originalImage = original.GetImage();
+                        originalImage.Convert(Image.Format.Rgba8);
+
+                        var targetSize = new Vector2I((int)(ThumbWidth - 2), (int)(ThumbHeight - 2));
+                        originalImage.Resize(targetSize.X, targetSize.Y, Image.Interpolation.Lanczos);
+
+                        _sprite.Texture = ImageTexture.CreateFromImage(originalImage);
+                    }
+                    break;
                 }
-                break;
+
             case ILingoMemberTextBase textMember:
-                var godotText = textMember.FrameworkObj;
-                godotText.Preload();
-                var label = new Label
                 {
-                    Text = GetPreviewText(textMember),
-                    LabelSettings = new LabelSettings { FontSize = 10, LineSpacing = 11, FontColor = Colors.Black },
-                    AutowrapMode = TextServer.AutowrapMode.Word,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Top
-                };
-                _textViewport.SetSize(new Vector2I((int)(ThumbWidth - 2), (int)(ThumbHeight - 2)));
-                label.Size = new Vector2(ThumbWidth - 2, ThumbHeight - 2);
-                _textViewport.AddChild(label);
-                _sprite.Texture = _textViewport.GetTexture();
-                ResizeSprite(ThumbWidth - 2, ThumbHeight - 2);
-                break;
+                    SetupTextPreview(GetPreviewText(textMember));
+                    break;
+                }
+            case LingoMemberSound soundMember:
+                {
+                    SetupTextPreview(soundMember.Name);
+                    break;
+                }
+
             default:
                 _sprite.Texture = null;
                 break;
         }
     }
-
-    public void ResizeSprite(float targetWidth, float targetHeight)
+    private void SetupTextPreview(string previewText)
     {
-        if (_sprite.Texture == null) return;
-        float scaleFactorW = targetWidth / _sprite.Texture.GetWidth();
-        float scaleFactorH = targetHeight / _sprite.Texture.GetHeight();
-        _sprite.Scale = new Vector2(scaleFactorW, scaleFactorH);
-    }
+        _textViewport = new SubViewport
+        {
+            TransparentBg = true,
+            Disable3D = true,
+            Size = new Vector2I((int)(ThumbWidth - 2), (int)(ThumbHeight - LabelHeight - 2)),
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always
+        };
 
+        _textLabel.Text = previewText;
+        _textLabel.Size = new Vector2(ThumbWidth - 2, ThumbHeight - LabelHeight - 2);
+        _textLabel.LabelSettings = new LabelSettings
+        {
+            FontSize = 10,
+            LineSpacing = 11,
+            FontColor = Colors.Black
+        };
+        _textLabel.AutowrapMode = TextServer.AutowrapMode.Word;
+
+        _textViewport.AddChild(_textLabel);
+        AddChild(_textViewport);
+        _sprite.Texture = _textViewport.GetTexture();
+        
+    }
     private static string GetPreviewText(ILingoMemberTextBase text)
     {
         var lines = text.Text.Replace("\r", "").Split('\n');
@@ -136,4 +172,6 @@ internal partial class DirGodotMemberThumbnail : Control
         }
         return sb.ToString();
     }
+   
+
 }

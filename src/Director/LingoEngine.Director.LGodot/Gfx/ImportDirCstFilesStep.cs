@@ -25,7 +25,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
 
         _fileDialog.Access = FileDialog.AccessEnum.Filesystem;
         _fileDialog.FileMode = FileDialog.FileModeEnum.OpenFiles; 
-        _fileDialog.Filters = new string[] {"*.dir; *.cst"};
+        _fileDialog.Filters = new string[] { "*.dir; *.cst; *.cct; *.cxt" };
         _fileDialog.FilesSelected += paths => AddFiles(paths);
         AddChild(_fileDialog);
 
@@ -68,7 +68,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
                     continue;
                 hasDir = true;
             }
-            else if (ext != ".cst")
+            else if (ext != ".cst" && ext != ".cxt" && ext != ".cct")
             {
                 continue;
             }

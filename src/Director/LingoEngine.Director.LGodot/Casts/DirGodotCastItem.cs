@@ -11,6 +11,7 @@ using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.Core.Commands;
+using LingoEngine.Director.LGodot.Helpers;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -28,6 +29,8 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly ILingoCommandManager _commandManager;
         private readonly Label _caption;
+        private Control? _dragHelper;
+
         public int LabelHeight { get; set; } = 15;
         public int Width { get; set; } = 50;
         public int Height { get; set; } = 50;
@@ -46,9 +49,10 @@ namespace LingoEngine.Director.LGodot.Casts
             _commandManager = commandManager;
             _selectedColor = selectedColor;
             CustomMinimumSize = new Vector2(50, 50);
-
+            MouseFilter = MouseFilterEnum.Stop;
             _selectedLabelStyle.BgColor = selectedColor;
             _normalLabelStyle.BgColor = Colors.DimGray;
+            
 
             // Selection background - slightly larger than the item itself
             _selectionBg = new ColorRect { Color = selectedColor, Visible = false };
@@ -195,16 +199,22 @@ namespace LingoEngine.Director.LGodot.Casts
                     if (motion.Position.DistanceSquaredTo(_dragStart) > 16)
                     {
                         _dragging = true;
+                     
+                        AcceptEvent(); // Prevent default handling
+
                         var preview = new ColorRect
                         {
                             Color = new Color(1f, 1f, 1f, 0.5f),
                             Size = CustomMinimumSize
                         };
-                        SetDragPreview(preview);
+                        // Call start_drag with your data and preview
+                        this.StartDragWorkaround(Variant.From(_lingoMember), preview);
                     }
                 }
             }
         }
+
+
 
         private void OpenEditor()
         {
@@ -229,12 +239,10 @@ namespace LingoEngine.Director.LGodot.Casts
             _thumb.SetMember(_lingoMember);
         }
 
-        public void Resize(float targetWidth, float targetHeight)
-        {
-            _thumb.ResizeSprite(targetWidth, targetHeight);
-        }
+       
         public override Variant _GetDragData(Vector2 atPosition)
         {
+            GD.Print($"CastMemberItem: _GetDragData called at {atPosition} with {_lingoMember.Name}");
             var preview = new ColorRect
             {
                 Color = new Color(1f, 1f, 1f, 0.5f),
@@ -244,10 +252,7 @@ namespace LingoEngine.Director.LGodot.Casts
             return Variant.From(_lingoMember);
         }
 
-        private static string GetTypeIcon(ILingoMember member)
-        {
-            return LingoMemberTypeIcons.GetIcon(member);
-        }
+     
 
     }
 }
