@@ -34,7 +34,7 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
         mediator.Subscribe(this);
         directorTextEditWindow.Init(this);
 
-        Size = new Vector2(300, 200);
+        Size = new Vector2(450, 200);
         CustomMinimumSize = Size;
 
         _navBar = new MemberNavigationBar<ILingoMemberTextBase>(mediator, player, NavigationBarHeight);
