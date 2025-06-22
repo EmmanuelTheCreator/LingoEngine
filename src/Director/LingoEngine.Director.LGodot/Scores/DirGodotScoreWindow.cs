@@ -154,6 +154,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         if (!Visible) return;
         _channelBar.Position = new Vector2(0, -_masterScroller.ScrollVertical);
         _topStripContent.Position = new Vector2(-_masterScroller.ScrollHorizontal, _topStripContent.Position.Y);
+        _soundBar.ScrollX = _masterScroller.ScrollHorizontal;
     }
 
     private void UpdateScrollSize()
