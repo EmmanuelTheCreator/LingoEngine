@@ -84,6 +84,7 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         var popupFile = _fileMenu.GetPopup();
         popupFile.AddItem("Load", 1);
         popupFile.AddItem("Save", 2);
+        popupFile.AddItem("Import/Export", 4);
         popupFile.AddItem("Quit", 3);
         popupFile.IdPressed += id =>
         {
@@ -91,6 +92,7 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
             {
                 case 1: _projectManager.LoadMovie(); break;
                 case 2: _projectManager.SaveMovie(); break;
+                case 4: _windowManager.OpenWindow(DirectorMenuCodes.ImportExportWindow); break;
                 case 3:
                     // TODO: check project for unsaved changes before quitting
                     GetTree().Quit();

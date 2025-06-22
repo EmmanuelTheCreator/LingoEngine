@@ -24,4 +24,5 @@ namespace LingoEngine.Director.Core.Windows
     public interface IDirFrameworkPropertyInspectorWindow : IDirFrameworkWindow { }
     public interface IDirFrameworkTextEditWindow : IDirFrameworkWindow { }
     public interface IDirFrameworkPictureEditWindow : IDirFrameworkWindow { }
+    public interface IDirFrameworkImportExportWindow : IDirFrameworkWindow { }
 }
