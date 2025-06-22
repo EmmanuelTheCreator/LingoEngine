@@ -3,6 +3,7 @@ using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Texts;
 using LingoEngine.Members;
 using LingoEngine.Pictures;
+using LingoEngine.Sounds;
 using LingoEngine.Texts;
 using System.Text;
 using System;
@@ -23,6 +24,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Sprite2D _Sprite2D;
         private readonly SubViewport _textViewport = new();
         private readonly ILingoMember _lingoMember;
+        private readonly Label _typeLabel;
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly ILingoCommandManager _commandManager;
         private readonly Label _caption;
@@ -92,6 +94,16 @@ namespace LingoEngine.Director.LGodot.Casts
             _Sprite2D.Position = new Vector2(+Width/2, LabelHeight-1);
             //_Sprite2D.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(_Sprite2D);
+
+            // Type icon label positioned at bottom right of the thumbnail
+            _typeLabel = new Label
+            {
+                Text = GetTypeIcon(element),
+                LabelSettings = new LabelSettings { FontSize = 8 },
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            AddChild(_typeLabel);
+            _typeLabel.Position = new Vector2(Width - 10, Height - LabelHeight - 10);
 
             // Bottom label
             _caption = new Label
@@ -268,6 +280,19 @@ namespace LingoEngine.Director.LGodot.Casts
             };
             SetDragPreview(preview);
             return Variant.From(_lingoMember);
+        }
+
+        private static string GetTypeIcon(ILingoMember member)
+        {
+            return member switch
+            {
+                LingoMemberPicture => "✏",
+                LingoMemberSound => "🔊",
+                LingoMemberField => "F",
+                ILingoMemberTextBase => "T",
+                _ when member.Type == LingoMemberType.Shape || member.Type == LingoMemberType.VectorShape => "📐",
+                _ => string.Empty
+            };
         }
 
 
