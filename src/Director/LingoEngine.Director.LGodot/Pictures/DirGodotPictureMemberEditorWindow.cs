@@ -123,6 +123,13 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         // slider. Using "Keep" caused the texture to remain at its original
         // size when the parent container was scaled.
         _imageRect.StretchMode = TextureRect.StretchModeEnum.Scale;
+        // Allow the texture to resize with its container. Godot 4+ renamed the
+        // property from `Expand` to `ExpandMode`. Use reflection to set either
+        // if available so the code works across engine versions.
+        if (_imageRect.HasMethod("set_expand_mode"))
+            _imageRect.Set("expand_mode", 1); // ExpandModeEnum.Expand
+        else if (_imageRect.HasMethod("set_expand"))
+            _imageRect.Set("expand", true);
         _imageRect.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _imageRect.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         _imageRect.AnchorLeft = 0.5f;
@@ -187,6 +194,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _imageRect.Texture = godotPicture.Texture;
             Vector2 size = new(godotPicture.Width, godotPicture.Height);
             _imageRect.CustomMinimumSize = size;
+            _imageRect.PivotOffset = size / 2f;
             _imageRect.OffsetLeft = -size.X / 2f;
             _imageRect.OffsetTop = -size.Y / 2f;
             _imageRect.OffsetRight = size.X / 2f;
@@ -238,6 +246,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         _scale = value;
         _centerContainer.Scale = new Vector2(_scale, _scale);
+        _imageRect.Scale = new Vector2(_scale, _scale);
         UpdateRegPointCanvasSize();
         _regPointCanvas.QueueRedraw();
 
