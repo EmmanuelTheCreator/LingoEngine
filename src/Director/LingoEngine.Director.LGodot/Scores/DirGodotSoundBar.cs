@@ -41,9 +41,15 @@ internal partial class DirGodotSoundBar : Control
         _grid.SetMovie(movie);
     }
 
-    protected override void OnResized()
+    public override void _Ready()
     {
-        base.OnResized();
+        base._Ready();
+        UpdateGridPosition();
+        Resized += UpdateGridPosition;
+    }
+
+    private void UpdateGridPosition()
+    {
         _grid.Position = new Vector2(_header.Size.X, 0);
     }
 }
