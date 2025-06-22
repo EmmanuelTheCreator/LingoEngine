@@ -154,7 +154,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _masterScroller.Position = new Vector2(_gfxValues.ChannelInfoWidth, topHeight + 20);
         _vClipper.Position = new Vector2(0, topHeight + 20);
         _collapseButton.Position = new Vector2(_hClipper.Size.X - 16, 4);
-        _leftTopLabels.Position = new Vector2(0, _frameScripts.Position.Y);
+        _leftTopLabels.Position = new Vector2(0, _frameScripts.Position.Y+20);
         UpdateScrollSize();
     }
     public override void _Process(double delta)
