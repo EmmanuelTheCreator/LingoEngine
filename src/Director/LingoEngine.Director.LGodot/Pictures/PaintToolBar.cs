@@ -12,7 +12,7 @@ namespace LingoEngine.Director.LGodot.Pictures
     {
         private readonly IDirGodotIconManager _iconManager;
         private readonly ILingoCommandManager _commandManager;
-        private PaintToolButton? _selectedButton = null;
+        private DirectorToolButton? _selectedButton = null;
         private HFlowContainer _container;
         public PainterToolType SelectedTool { get; private set; } = PainterToolType.Pencil;
         public Color SelectedColor { get; private set; } = Colors.Black;
@@ -51,7 +51,7 @@ namespace LingoEngine.Director.LGodot.Pictures
 
         private void AddToolButton(DirGodotEditorIcon icon)
         {
-            var btn = new PaintToolButton();
+            var btn = new DirectorToolButton();
             btn.Icon = _iconManager.Get(icon);
 
             btn.Pressed = () =>
@@ -73,7 +73,7 @@ namespace LingoEngine.Director.LGodot.Pictures
 
             _container.AddChild(btn);
         }
-        private void SelectButton(PaintToolButton btn)
+        private void SelectButton(DirectorToolButton btn)
         {
             if (_selectedButton != null)
                 _selectedButton.IsSelected = false;
