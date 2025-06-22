@@ -362,7 +362,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         {
             Vector2 localPos = _stageContainer.Container.ToLocal(mb.Position);
 
-            var sprite = _movie.GetSpriteAtPoint(localPos.X, localPos.Y) as LingoSprite;
+            var sprite = _movie.GetSpriteAtPoint(localPos.X, localPos.Y, skipLockedSprites: true) as LingoSprite;
             if (mb.Pressed)
             {
                 if (sprite != null)
