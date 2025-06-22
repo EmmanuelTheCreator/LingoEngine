@@ -31,6 +31,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly DirGodotScoreGrid _grid;
     private readonly DirGodotFrameHeader _header;
     private readonly DirGodotFrameScriptsBar _frameScripts;
+    private readonly DirGodotSoundBar _soundBar;
     private readonly DirGodotScoreLabelsBar _labelBar;
     private readonly DirGodotScoreChannelBar _channelBar;
 
@@ -61,6 +62,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader(_gfxValues);
         _frameScripts = new DirGodotFrameScriptsBar(_gfxValues);
+        _soundBar = new DirGodotSoundBar(_gfxValues);
         _labelBar = new DirGodotScoreLabelsBar(_gfxValues, commandManager);
         
 
@@ -94,6 +96,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _hClipper.AddChild(_topStripContent);
         AddChild(_hClipper);
         _topStripContent.AddChild(_labelBar);
+        _topStripContent.AddChild(_soundBar);
         _topStripContent.AddChild(_frameScripts);
         _topStripContent.AddChild(_header);
 
@@ -114,8 +117,9 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
        
         _labelBar.Position = new Vector2(0, 0);
-        _frameScripts.Position = new Vector2(0, 20);
-        _header.Position = new Vector2(0, 40);
+        _soundBar.Position = new Vector2(0, 20);
+        _frameScripts.Position = new Vector2(0, 20 + _gfxValues.ChannelHeight * 4 + 10);
+        _header.Position = new Vector2(0, _frameScripts.Position.Y + 20);
         
 
 
@@ -161,6 +165,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _grid.SetMovie(movie);
         _header.SetMovie(movie);
         _frameScripts.SetMovie(movie);
+        _soundBar.SetMovie(movie);
         _channelBar.SetMovie(movie);
         _labelBar.SetMovie(movie);
 
@@ -175,6 +180,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _grid.Dispose();
         _labelBar.Dispose();
         _frameScripts.Dispose();
+        _soundBar.Dispose();
         _masterScroller.Dispose();
         //_hScroller.Dispose();
         _channelBar.Dispose();
@@ -219,7 +225,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
             DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color("#f0f0f0"));
             DrawTextWithLine(0,20, "Labels");
             DrawTextWithLine(20,20, "Scripts");
-            DrawTextWithLine(37,23, "Member", false);
+            DrawTextWithLine(37,64, "Audio");
+            DrawTextWithLine(102,23, "Member", false);
         }
         private void DrawTextWithLine(int top, int height, string text, bool withTopLines = false)
         {
