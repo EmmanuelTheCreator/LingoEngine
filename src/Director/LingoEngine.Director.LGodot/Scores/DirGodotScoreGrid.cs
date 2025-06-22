@@ -25,7 +25,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private readonly SubViewport _spriteViewport = new();
     private readonly TextureRect _gridTexture = new();
     private readonly TextureRect _spriteTexture = new();
-    private readonly GridCanvas _gridCanvas;
+    private readonly DirGodotGridPainter _gridCanvas;
     private readonly SpriteCanvas _spriteCanvas;
     private bool _spriteDirty = true;
     private bool _spriteListDirty;
@@ -45,7 +45,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _gridViewport.SetDisable3D(true);
         _gridViewport.TransparentBg = true;
         _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
-        _gridCanvas = new GridCanvas(this);
+        _gridCanvas = new DirGodotGridPainter(_gfxValues);
         _gridViewport.AddChild(_gridCanvas);
 
         _spriteViewport.SetDisable3D(true);
@@ -79,7 +79,11 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         BuildSpriteList();
         _spriteListDirty = false;
         if (_movie != null)
+        {
             _movie.SpriteListChanged += OnSpritesChanged;
+            _gridCanvas.FrameCount = _movie.FrameCount;
+            _gridCanvas.ChannelCount = _movie.MaxSpriteChannelCount;
+        }
 
         UpdateViewportSize();
         _spriteDirty = true;
@@ -332,38 +336,12 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _spriteViewport.SetSize(new Vector2I((int)width, (int)height));
         _gridTexture.CustomMinimumSize = new Vector2(width, height);
         _spriteTexture.CustomMinimumSize = new Vector2(width, height);
-
+        _gridCanvas.FrameCount = _movie.FrameCount;
+        _gridCanvas.ChannelCount = _movie.MaxSpriteChannelCount;
         _gridCanvas.QueueRedraw();
         _spriteCanvas.QueueRedraw();
     }
 
-    private partial class GridCanvas : Control
-    {
-        private readonly DirGodotScoreGrid _owner;
-        public GridCanvas(DirGodotScoreGrid owner) => _owner = owner;
-        public override void _Draw()
-        {
-            var movie = _owner._movie;
-            if (movie == null) return;
-            int channelCount = movie.MaxSpriteChannelCount;
-            int frameCount = movie.FrameCount;
-
-            DrawRect(new Rect2(0, 0, _owner.Size.X, _owner.Size.Y), Colors.White);
-
-            for (int f = 0; f < frameCount; f++)
-            {
-                float x = _owner._gfxValues.LeftMargin + f * _owner._gfxValues.FrameWidth;
-                if (f % 5 == 0)
-                    DrawRect(new Rect2(x, 0, _owner._gfxValues.FrameWidth, channelCount * _owner._gfxValues.ChannelHeight), Colors.DarkGray);
-            }
-
-            for (int f = 0; f <= frameCount; f++)
-            {
-                float x = _owner._gfxValues.LeftMargin + f * _owner._gfxValues.FrameWidth;
-                DrawLine(new Vector2(x, 0), new Vector2(x, channelCount * _owner._gfxValues.ChannelHeight), Colors.DarkGray);
-            }
-        }
-    }
 
     private partial class SpriteCanvas : Control
     {
