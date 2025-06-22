@@ -2,6 +2,7 @@
 using LingoEngine.Commands;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Commands;
+using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.LGodot.Primitives;
 using System;
@@ -16,7 +17,7 @@ namespace LingoEngine.Director.LGodot.Pictures
         private HFlowContainer _container;
         public PainterToolType SelectedTool { get; private set; } = PainterToolType.Pencil;
         public Color SelectedColor { get; private set; } = Colors.Black;
-        public Color BGColor { get; set; } = new Color(200, 200, 200);
+        public Color BGColor { get; set; } = DirectorColors.BG_WhiteMenus.ToGodotColor();
 
         public PaintToolbar(IDirGodotIconManager iconManager, ILingoCommandManager commandManager)
         {
@@ -24,7 +25,7 @@ namespace LingoEngine.Director.LGodot.Pictures
             _commandManager = commandManager;
 
             SizeFlagsVertical = SizeFlags.ExpandFill;
-            CustomMinimumSize = new Vector2(50, 200);
+            CustomMinimumSize = new Vector2(52, 200);
 
             _container = new HFlowContainer();
             _container.CustomMinimumSize = new Vector2(48, 100);
@@ -34,7 +35,7 @@ namespace LingoEngine.Director.LGodot.Pictures
             _container.SizeFlagsVertical = SizeFlags.ShrinkBegin;
             _container.AddThemeConstantOverride("margin_left", 2);
             _container.AddThemeConstantOverride("margin_top", 2);
-            _container.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = BGColor }); 
+            AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = BGColor }); 
             AddChild(_container);
             //Separation = 2;
         }

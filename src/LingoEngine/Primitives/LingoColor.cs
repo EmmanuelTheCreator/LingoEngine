@@ -12,6 +12,13 @@
         public byte G { get; set; }
         public byte B { get; set; }
 
+        public LingoColor(byte r, byte g, byte b)
+        {
+            R = r;
+            G = g;
+            B = b;
+            Name = "";
+        }
         public LingoColor(int code, byte r, byte g, byte b, string name = "")
         {
             Code = code;

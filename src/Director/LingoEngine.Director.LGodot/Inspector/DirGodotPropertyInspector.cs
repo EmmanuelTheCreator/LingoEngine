@@ -13,6 +13,11 @@ using LingoEngine.Commands;
 using LingoEngine.Texts;
 using System.Linq;
 using LingoEngine.Director.Core.Commands;
+using System.Reflection.PortableExecutable;
+using System.Drawing;
+using LingoEngine.Primitives;
+using LingoEngine.LGodot.Primitives;
+using LingoEngine.Director.Core.Gfx;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -45,27 +50,8 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
         CustomMinimumSize = Size;
-        _header.Position = new Vector2(0, TitleBarHeight);
-        _header.CustomMinimumSize = new Vector2(Size.X - 10, HeaderHeight);
-        _header.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 4);
-        margin.AddThemeConstantOverride("margin_right", 4);
-        margin.AddThemeConstantOverride("margin_top", 4);
-        margin.AddThemeConstantOverride("margin_bottom", 4);
-        margin.AddChild(_thumb);
-        _header.AddChild(margin);
-
-        _spriteInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
-        _memberInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
-        _castInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
-        _headerText.AddChild(_spriteInfo);
-        _headerText.AddChild(_memberInfo);
-        _headerText.AddChild(_castInfo);
-        _header.AddChild(_headerText);
-
-        AddChild(_header);
+        CreateHeader();
 
         _tabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
         _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
@@ -93,6 +79,49 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
 
         _mediator.Subscribe(this);
     }
+
+    private void CreateHeader()
+    {
+        _header.CustomMinimumSize = new Vector2(Size.X - 10, HeaderHeight);
+        _header.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+        var margin = new MarginContainer();
+        margin.AddThemeConstantOverride("margin_left", 4);
+        margin.AddThemeConstantOverride("margin_right", 4);
+        margin.AddThemeConstantOverride("margin_top", 2);
+        margin.AddThemeConstantOverride("margin_bottom", 2);
+        var thumbContainer = new PanelContainer();
+        var style = new StyleBoxFlat
+        {
+            BgColor = Colors.White,
+            BorderColor = Colors.DarkGray
+        };
+        thumbContainer.AddThemeStyleboxOverride("panel", style);
+        style.BorderWidthTop = 1;
+        style.BorderWidthBottom = 1;
+        style.BorderWidthLeft = 1;
+        style.BorderWidthRight = 1;
+        thumbContainer.AddChild(_thumb);
+        margin.AddChild(thumbContainer);
+        _header.AddChild(margin);
+
+        _spriteInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
+        _memberInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
+        _castInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
+        _headerText.AddChild(_spriteInfo);
+        _headerText.AddChild(_memberInfo);
+        _headerText.AddChild(_castInfo);
+        _headerText.AddThemeConstantOverride("separation", 1);
+        _header.AddChild(_headerText);
+
+        var headerPanel = new PanelContainer();
+        headerPanel.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor() });
+        headerPanel.AddChild(_header);
+        headerPanel.Position = new Vector2(0, TitleBarHeight);
+
+        AddChild(headerPanel);
+    }
+
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
@@ -141,13 +170,13 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         }
         switch (obj)
         {
-            case LingoSprite sp:
-                AddTab("Sprite", sp);
-                if (sp.Member != null)
-                    AddMemberTabs(sp.Member);
+            case LingoSprite sp2:
+                AddTab("Sprite", sp2);
+                if (sp2.Member != null)
+                    AddMemberTabs(sp2.Member);
                 break;
-            case ILingoMember member:
-                AddMemberTabs(member);
+            case ILingoMember member2:
+                AddMemberTabs(member2);
                 break;
             default:
                 AddTab(obj.GetType().Name, obj);
