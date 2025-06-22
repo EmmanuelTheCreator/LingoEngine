@@ -1,8 +1,8 @@
 ﻿using Godot;
 
-namespace LingoEngine.Director.LGodot.Pictures
+namespace LingoEngine.Director.LGodot.Gfx
 {
-    public partial class PaintToolButton : PanelContainer
+    public partial class DirectorToolButton : PanelContainer
     {
         private TextureButton _button;
         private bool _isSelected;
@@ -30,15 +30,17 @@ namespace LingoEngine.Director.LGodot.Pictures
             get => _pressed;
             set => _pressed = value ?? throw new ArgumentNullException(nameof(value), "Pressed action cannot be null.");
         }
-        public PaintToolButton()
+        public DirectorToolButton()
         {
             CustomMinimumSize = new Vector2(22, 22); // padding space
             AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = BGColor });
 
             _button = new TextureButton
             {
-                CustomMinimumSize = new Vector2(20, 20),
+                CustomMinimumSize = new Vector2(16, 16),
                 StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered,
+                SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+                SizeFlagsVertical = SizeFlags.ShrinkCenter
             };
             _button.Pressed += () => _pressed();
             AddChild(_button);
