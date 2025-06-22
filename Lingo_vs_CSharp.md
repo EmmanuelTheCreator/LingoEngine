@@ -7,7 +7,6 @@ translated C# versions.
 | Lingo example | C# equivalent |
 |---------------|---------------|
 | `-- comment` | `// comment` |
-| `put 1 into x` | `x = 1;` |
 | `on handler a, b` … `end` | `void Handler(type a, type b) { … }` |
 | `global gVar` | `static` field or property |
 | `property myValue` | class field/property |
@@ -90,3 +89,90 @@ var newBitmap = _movie.New.Picture(name: "Background");
 
 The factory exposes helper methods for each member type, such as `Picture()`, `Sound()`, `FilmLoop()` and `Text()`. Optional arguments let you specify the cast slot or member name.
 
+
+## 🔁 `put ... into ...` Handling in C#
+
+Lingo's `put` syntax is used for assignment across a wide range of targets:
+
+```lingo
+put "Hello" into field "Status"
+put 100 into sprite(3).locH
+put 42 into myList[2]
+```
+
+In Lingo, **if the target does not exist (e.g., a missing field), it fails silently**.  
+To match that behavior in C#, LingoEngine introduces *safe assignment helpers*.
+
+### ✅ C# Equivalents
+
+| Lingo | C# |
+|-------|----|
+| `put 100 into x` | `x = 100;` |
+| `put "Hi" into field "Greeting"` | `PutTextIntoField("Greeting", "Hi");` |
+| `put 100 into sprite(3).locH` | `Sprite(3).LocH = 100;` |
+| `put 42 into myList[2]` | `myList.SetAt(2, 42);` |
+
+---
+
+## ✳️ Safe Field Assignment: `PutTextIntoField()`
+
+```csharp
+PutTextIntoField("Greeting", "Hello");
+```
+
+This method attempts to locate a field member and assign the text, but **does nothing if the field is missing**, just like Lingo.
+
+### Method:
+```csharp
+protected void PutTextIntoField(string name, string text)
+{
+    TryMember<ILingoMemberField>(name, field => field.Text = text);
+}
+```
+
+---
+
+## ⚠️ Avoiding Exceptions with `TryMember<T>()`
+
+To safely access any member (e.g., bitmap, field, text), use the `Action<T>` overload:
+
+```csharp
+TryMember<ILingoMemberText>("Title", m => m.Text = "Welcome");
+```
+
+This form avoids explicit null checks and keeps the call concise.
+
+### `TryMember` overloads available:
+```csharp
+TryMember<T>(string name, int? castLib = null, Action<T>? action = null)
+```
+
+This method:
+- Returns `null` if the member is not found
+- Executes the action if the member exists
+
+---
+
+## 🧱 Building Custom Safe `put` Functions
+
+You can create safe helpers for other member types, e.g.:
+
+```csharp
+protected void PutSoundInto(string name, ILingoSoundData sound)
+{
+    TryMember<ILingoMemberSound>(name, m => m.Sound = sound);
+}
+```
+
+---
+
+## 🔍 Summary
+
+| Pattern | Use |
+|--------|-----|
+| Direct assignment | For local variables or known safe references |
+| `PutTextIntoField(name, value)` | For field text, silent on failure |
+| `TryMember<T>(..., action)` | For concise safe access to members |
+| `SafePut<T>()` (optional) | For generalized logic via delegates |
+
+This ensures **Lingo compatibility** without throwing exceptions and keeps behavior **fail-safe**, just like in Director.

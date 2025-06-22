@@ -13,6 +13,8 @@ namespace LingoEngine.Casts
         /// Seacch in all members
         /// </summary>
         ILingoMembersContainer Member { get; }
+        ILingoMember? GetMember(int number, int? castLibNum = null);
+        ILingoMember? GetMember(string name, int? castLibNum = null);
         T? GetMember<T>(int number, int? castLibNum = null) where T : class, ILingoMember;
         T? GetMember<T>(string name, int? castLibNum = null) where T : class, ILingoMember;
         ILingoCast AddCast(string name);
@@ -79,6 +81,14 @@ namespace LingoEngine.Casts
             => !castLibNum.HasValue
              ? _allMembersContainer.Member<T>(number)
              : _casts[castLibNum.Value - 1].GetMember<T>(number);
+        public ILingoMember? GetMember(int number, int? castLibNum = null)  
+            => !castLibNum.HasValue
+             ? _allMembersContainer[number]
+             : _casts[castLibNum.Value - 1].Member[number]; 
+        public ILingoMember? GetMember(string name, int? castLibNum = null)  
+            => !castLibNum.HasValue
+             ? _allMembersContainer[name]
+             : _casts[castLibNum.Value - 1].Member[name];
 
         public T? GetMember<T>(string name, int? castLibNum = null) where T : class, ILingoMember
             => !castLibNum.HasValue
