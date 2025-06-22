@@ -10,13 +10,18 @@ internal partial class DirGodotSoundBar : Control
 {
     private readonly DirGodotSoundHeader _header;
     private readonly DirGodotSoundGrid _grid;
+    private readonly Control _gridClipper = new();
 
     public DirGodotSoundBar(DirGodotScoreGfxValues gfxValues)
     {
         _header = new DirGodotSoundHeader(gfxValues);
-        _grid = new DirGodotSoundGrid(gfxValues) { Position = new Vector2(gfxValues.ChannelInfoWidth, 0) };
+        _grid = new DirGodotSoundGrid(gfxValues);
+        _gridClipper.ClipContents = true;
+        _gridClipper.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(_header);
-        AddChild(_grid);
+        AddChild(_gridClipper);
+        _gridClipper.AddChild(_grid);
+        SizeFlagsHorizontal = SizeFlags.ExpandFill;
     }
 
     public bool Collapsed
@@ -26,6 +31,7 @@ internal partial class DirGodotSoundBar : Control
         {
             _header.Collapsed = value;
             _grid.Collapsed = value;
+            UpdateGridPosition();
         }
     }
 
@@ -39,6 +45,7 @@ internal partial class DirGodotSoundBar : Control
     {
         _header.SetMovie(movie);
         _grid.SetMovie(movie);
+        UpdateGridPosition();
     }
 
     public override void _Ready()
@@ -50,6 +57,8 @@ internal partial class DirGodotSoundBar : Control
 
     private void UpdateGridPosition()
     {
-        _grid.Position = new Vector2(_header.Size.X, 0);
+        _gridClipper.Position = new Vector2(_header.Size.X, 0);
+        _gridClipper.Size = new Vector2(Size.X - _header.Size.X, _grid.CustomMinimumSize.Y);
+        _grid.Position = Vector2.Zero;
     }
 }
