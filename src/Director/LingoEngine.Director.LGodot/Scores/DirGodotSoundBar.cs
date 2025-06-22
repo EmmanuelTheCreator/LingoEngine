@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using LingoEngine.Movies;
 using LingoEngine.Members;
+using LingoEngine.Sounds;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -45,20 +46,23 @@ internal partial class DirGodotSoundBar : Control
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
         if (_movie == null || _collapsed) return false;
-        if (data.Obj is not GodotObject obj) return false;
-        if (obj is not LingoMemberSound) return false;
-        return true;
+
+        var obj = data.Obj as LingoMemberSound;
+        return obj != null;
     }
 
     public override void _DropData(Vector2 atPosition, Variant data)
     {
         if (_movie == null || _collapsed) return;
-        if (data.Obj is not GodotObject obj) return;
-        if (obj is not LingoMemberSound sound) return;
+
+        var sound = data.Obj as LingoMemberSound;
+        if (sound == null) return;
+
         int channel = (int)(atPosition.Y / _gfxValues.ChannelHeight);
         int frame = Mathf.Clamp(Mathf.RoundToInt((atPosition.X - _gfxValues.LeftMargin) / _gfxValues.FrameWidth) + 1, 1, _movie.FrameCount);
         _movie.AddAudioClip(channel, frame, sound);
     }
+
 
     public override void _GuiInput(InputEvent @event)
     {

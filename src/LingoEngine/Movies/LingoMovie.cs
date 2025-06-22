@@ -6,6 +6,7 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Members;
 using System.Linq;
+using LingoEngine.Sounds;
 
 namespace LingoEngine.Movies
 {

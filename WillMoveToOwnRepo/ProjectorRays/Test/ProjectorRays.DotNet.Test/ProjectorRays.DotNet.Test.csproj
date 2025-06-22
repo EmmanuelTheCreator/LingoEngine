@@ -10,11 +10,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Z_Analysis\ProjectorRays.DotNet\ProjectorRays.DotNet.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="ProjectorRays.DotNet">
-      <HintPath>..\..\Z_Analysis\ProjectorRays.DotNet\bin\$(Configuration)\net8.0\ProjectorRays.DotNet.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\src\ProjectorRays.DotNet\ProjectorRays.DotNet.csproj" />
   </ItemGroup>
 </Project>

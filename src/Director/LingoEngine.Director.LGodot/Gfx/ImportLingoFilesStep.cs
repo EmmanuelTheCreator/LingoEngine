@@ -1,10 +1,10 @@
 using Godot;
 using LingoEngine.Director.Core.Windows;
-using LingoEngine.Lingo.Core;
 using LingoEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using LingoEngine.Lingo.Core;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -38,7 +38,7 @@ internal partial class ImportLingoFilesStep : VBoxContainer
         AddChild(_backButton);
 
         _folderDialog.Access = FileDialog.AccessEnum.Filesystem;
-        _folderDialog.Mode = FileDialog.FileModeEnum.OpenDir;
+        // _folderDialog.Mode =  FileDialog.FileModeEnum.OpenDir; <- Todo : this is not for godot 4,5, convert it
         _folderDialog.DirSelected += dir => LoadFolder(dir);
         AddChild(_folderDialog);
 
@@ -143,7 +143,8 @@ internal partial class ImportLingoFilesStep : VBoxContainer
     {
         foreach (var row in _selectedRows)
         {
-            if (row.GetMeta("opt") is OptionButton opt)
+            Variant meta = row.GetMeta("opt");
+            if (meta.VariantType == Variant.Type.Object && meta.Obj is OptionButton opt)
                 opt.Selected = id;
         }
     }
