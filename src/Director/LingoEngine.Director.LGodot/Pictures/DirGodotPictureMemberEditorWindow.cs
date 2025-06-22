@@ -269,9 +269,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _regPointCanvas.QueueRedraw();
     }
 
-    public override void _UnhandledInput(InputEvent @event)
+    public override void _Input(InputEvent @event)
     {
-        base._UnhandledInput(@event);
+        base._Input(@event);
         if (!Visible) return;
 
         if (@event is InputEventKey key && key.Keycode == Key.Space)
@@ -289,10 +289,12 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
                 {
                     _panning = true;
+                    return;
                 }
                 else if (!mb.Pressed)
                 {
                     _panning = false;
+                    return;
                 }
             }
             else if (!mb.Pressed && (mb.ButtonIndex == MouseButton.WheelUp || mb.ButtonIndex == MouseButton.WheelDown))
@@ -303,6 +305,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                     float newScale = (float)Mathf.Clamp(_scale + delta, _zoomSlider.MinValue, _zoomSlider.MaxValue);
                     _zoomSlider.Value = newScale;
                     OnZoomChanged(newScale);
+                    return;
                 }
             }
         }
@@ -312,6 +315,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             {
                 _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
                 _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+                return;
             }
         }
     }
