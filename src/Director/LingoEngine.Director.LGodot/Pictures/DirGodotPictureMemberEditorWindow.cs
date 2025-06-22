@@ -222,11 +222,29 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
     private void OnZoomChanged(float value)
     {
+        Vector2 view = _scrollContainer.Size;
+        if (view == Vector2.Zero)
+            view = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
+
+        // keep the same canvas point at the center of the view after scaling
+        float oldScale = _scale;
+        float centerX = (_scrollContainer.ScrollHorizontal + view.X / 2f) / oldScale;
+        float centerY = (_scrollContainer.ScrollVertical + view.Y / 2f) / oldScale;
+
         _scale = value;
         _centerContainer.Scale = new Vector2(_scale, _scale);
         UpdateRegPointCanvasSize();
         _regPointCanvas.QueueRedraw();
-        CenterImage();
+
+        Vector2 canvasSize = _centerContainer.CustomMinimumSize * _scale;
+        float newH = centerX * _scale - view.X / 2f;
+        float newV = centerY * _scale - view.Y / 2f;
+
+        int maxH = (int)Mathf.Max(0, canvasSize.X - view.X);
+        int maxV = (int)Mathf.Max(0, canvasSize.Y - view.Y);
+
+        _scrollContainer.ScrollHorizontal = (int)Mathf.Clamp(newH, 0, maxH);
+        _scrollContainer.ScrollVertical = (int)Mathf.Clamp(newV, 0, maxV);
 
         int percent = Mathf.RoundToInt(_scale * 100);
         for (int i = 0; i < _scaleDropdown.ItemCount; i++)
@@ -262,6 +280,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         factor = (float)Mathf.Clamp(factor, _zoomSlider.MinValue, _zoomSlider.MaxValue);
         _zoomSlider.Value = factor;
         OnZoomChanged(factor);
+        CenterImage();
     }
 
     private void CenterImage()
