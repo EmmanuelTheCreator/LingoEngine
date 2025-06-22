@@ -11,9 +11,9 @@ internal partial class DirGodotScoreGrid
         public SpriteCanvas(DirGodotScoreGrid owner) => _owner = owner;
         public override void _Draw()
         {
-            if (_owner._spritePreviewRect.HasValue)
+            if (_owner.SpritePreviewRect.HasValue)
             {
-                var rect = _owner._spritePreviewRect.Value;
+                var rect = _owner.SpritePreviewRect.Value;
                 DrawRect(rect, new Color(1, 1, 1, 0.25f), filled: true);
                 DrawRect(rect, new Color(1, 1, 1, 1), filled: false, width: 1);
             }
@@ -39,11 +39,11 @@ internal partial class DirGodotScoreGrid
             float barX = _owner._gfxValues.LeftMargin + cur * _owner._gfxValues.FrameWidth + _owner._gfxValues.FrameWidth / 2f;
             DrawLine(new Vector2(barX, 0), new Vector2(barX, channelCount * _owner._gfxValues.ChannelHeight), Colors.Red, 2);
 
-            if (_owner._showPreview)
+            if (_owner.ShowPreview)
             {
-                float px = _owner._gfxValues.LeftMargin + (_owner._previewBegin - 1) * _owner._gfxValues.FrameWidth;
-                float pw = (_owner._previewEnd - _owner._previewBegin + 1) * _owner._gfxValues.FrameWidth;
-                float py = _owner._previewChannel * _owner._gfxValues.ChannelHeight;
+                float px = _owner._gfxValues.LeftMargin + (_owner.PreviewBegin - 1) * _owner._gfxValues.FrameWidth;
+                float pw = (_owner.PreviewEnd - _owner.PreviewBegin + 1) * _owner._gfxValues.FrameWidth;
+                float py = _owner.PreviewChannel * _owner._gfxValues.ChannelHeight;
                 DrawRect(new Rect2(px, py, pw, _owner._gfxValues.ChannelHeight), new Color(0, 0, 1, 0.3f));
             }
 
