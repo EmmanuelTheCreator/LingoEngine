@@ -6,6 +6,7 @@ using LingoEngine.Movies;
 using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
+using LingoEngine.Shapes;
 using LingoEngine.Texts;
 
 namespace LingoEngine.FrameworkCommunication
@@ -38,6 +39,8 @@ namespace LingoEngine.FrameworkCommunication
         LingoMemberSound CreateMemberSound(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default);
         /// <summary>Creates a film loop member.</summary>
         LingoMemberFilmLoop CreateMemberFilmLoop(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default);
+        /// <summary>Creates a vector shape member.</summary>
+        LingoMemberShape CreateMemberShape(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default);
         /// <summary>Creates a field member.</summary>
         LingoMemberField CreateMemberField(ILingoCast cast, int numberInCast, string name = "", string? fileName = null,
             LingoPoint regPoint = default);
