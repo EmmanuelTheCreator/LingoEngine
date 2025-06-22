@@ -18,12 +18,15 @@ internal partial class DirGodotSoundGrid : Control
     private bool _clipDirty = true;
     private float _scrollX;
 
+    private readonly DirGodotGridPainter _gridCanvas;
     private readonly ClipCanvas _canvas;
 
     public DirGodotSoundGrid(DirGodotScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
+        _gridCanvas = new DirGodotGridPainter(gfxValues);
         _canvas = new ClipCanvas(this);
+        AddChild(_gridCanvas);
         AddChild(_canvas);
     }
 
@@ -45,6 +48,8 @@ internal partial class DirGodotSoundGrid : Control
         {
             _scrollX = value;
             _canvas.QueueRedraw();
+            _gridCanvas.ScrollX = _scrollX;
+            _gridCanvas.QueueRedraw();
             QueueRedraw();
         }
     }
@@ -60,6 +65,8 @@ internal partial class DirGodotSoundGrid : Control
             foreach (var clip in _movie.GetAudioClips())
                 _clips.Add(new DirGodotScoreAudioClip(clip));
             _movie.AudioClipListChanged += OnClipsChanged;
+            _gridCanvas.FrameCount = _movie.FrameCount;
+            _gridCanvas.ChannelCount = 4;
         }
         UpdateSize();
         _clipDirty = true;
@@ -117,21 +124,7 @@ internal partial class DirGodotSoundGrid : Control
     public override void _Draw()
     {
         if (_movie == null || _collapsed) return;
-        int channels = 4;
-        float height = channels * _gfxValues.ChannelHeight;
-        float width = _movie.FrameCount * _gfxValues.FrameWidth + _gfxValues.ExtraMargin;
-        Size = new Vector2(width, height);
-        DrawRect(new Rect2(0,0,width,height), new Color("#f0f0f0"));
-        for (int c = 0; c <= channels; c++)
-        {
-            float y = c * _gfxValues.ChannelHeight;
-            DrawLine(new Vector2(0, y), new Vector2(width, y), Colors.DarkGray);
-        }
-        for (int f = 0; f <= _movie.FrameCount; f++)
-        {
-            float x = -_scrollX + f * _gfxValues.FrameWidth;
-            DrawLine(new Vector2(x, 0), new Vector2(x, height), Colors.DarkGray);
-        }
+        Size = CustomMinimumSize;
     }
 
     private void UpdateSize()
@@ -141,6 +134,9 @@ internal partial class DirGodotSoundGrid : Control
         float height = (_collapsed ? 0 : 4 * _gfxValues.ChannelHeight);
         CustomMinimumSize = new Vector2(width, height);
         _canvas.CustomMinimumSize = CustomMinimumSize;
+        _gridCanvas.CustomMinimumSize = CustomMinimumSize;
+        _gridCanvas.FrameCount = _movie.FrameCount;
+        _gridCanvas.ChannelCount = 4;
     }
 
     private partial class ClipCanvas : Control

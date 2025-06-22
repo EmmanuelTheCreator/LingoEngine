@@ -8,6 +8,7 @@ internal partial class DirGodotGridPainter : Control
     public int FrameCount { get; set; }
     public int ChannelCount { get; set; }
     public bool DrawBackground { get; set; } = true;
+    public float ScrollX { get; set; }
 
     public DirGodotGridPainter(DirGodotScoreGfxValues gfxValues)
     {
@@ -20,19 +21,19 @@ internal partial class DirGodotGridPainter : Control
         float height = ChannelCount * _gfxValues.ChannelHeight;
         Size = new Vector2(width, height);
         if (DrawBackground)
-            DrawRect(new Rect2(0, 0, width, height), Colors.White);
+            DrawRect(new Rect2(-ScrollX, 0, width, height), Colors.White);
         for (int f = 0; f < FrameCount; f++)
         {
-            float x = _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
+            float x = -ScrollX + _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
             if (f % 5 == 0)
                 DrawRect(new Rect2(x, 0, _gfxValues.FrameWidth, height), Colors.DarkGray);
         }
         for (int f = 0; f <= FrameCount; f++)
         {
-            float x = _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
+            float x = -ScrollX + _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
             DrawLine(new Vector2(x, 0), new Vector2(x, height), Colors.DarkGray);
         }
-        DrawLine(new Vector2(0, 0), new Vector2(width, 0), Colors.DarkGray);
-        DrawLine(new Vector2(0, height), new Vector2(width, height), Colors.DarkGray);
+        DrawLine(new Vector2(-ScrollX, 0), new Vector2(width - ScrollX, 0), Colors.DarkGray);
+        DrawLine(new Vector2(-ScrollX, height), new Vector2(width - ScrollX, height), Colors.DarkGray);
     }
 }

@@ -123,7 +123,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
        
         _labelBar.Position = new Vector2(0, 0);
-        _soundBar.Position = new Vector2(0, 20);
+        _soundBar.Position = new Vector2(0, 40);
         RepositionBars();
         
 
@@ -145,8 +145,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _header.Position = new Vector2(0, _frameScripts.Position.Y + 20);
 
         float topHeight = _header.Position.Y + 20;
-        _masterScroller.Position = new Vector2(_gfxValues.ChannelInfoWidth, topHeight);
-        _vClipper.Position = new Vector2(0, topHeight);
+        _masterScroller.Position = new Vector2(_gfxValues.ChannelInfoWidth, topHeight + 20);
+        _vClipper.Position = new Vector2(0, topHeight + 20);
         _collapseButton.Position = new Vector2(_hClipper.Size.X - 16, 4);
         UpdateScrollSize();
     }
@@ -169,11 +169,11 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
         _channelBar.CustomMinimumSize = new Vector2(_gfxValues.ChannelInfoWidth, gridHeight - _footerMargin);
         _scrollContent.CustomMinimumSize = new Vector2(gridWidth, gridHeight - _footerMargin);
-        _topStripContent.CustomMinimumSize = new Vector2(gridWidth, topHeight);
+        _topStripContent.CustomMinimumSize = new Vector2(gridWidth, topHeight + 20);
 
-        _vClipper.Size = new Vector2(_gfxValues.ChannelInfoWidth, Size.Y - topHeight - _footerMargin);
-        _hClipper.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, topHeight);
-        _masterScroller.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, Size.Y - topHeight - _footerMargin);
+        _vClipper.Size = new Vector2(_gfxValues.ChannelInfoWidth, Size.Y - topHeight - 20 - _footerMargin);
+        _hClipper.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, topHeight + 20);
+        _masterScroller.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, Size.Y - topHeight - 20 - _footerMargin);
     }
 
 
