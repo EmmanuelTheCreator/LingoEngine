@@ -29,7 +29,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly ILingoCommandManager _commandManager;
         private readonly Label _caption;
-        public int LabelHeight { get; set; } = 18;
+        public int LabelHeight { get; set; } = 15;
         public int Width { get; set; } = 50;
         public int Height { get; set; } = 50;
         public ILingoMember LingoMember => _lingoMember;
