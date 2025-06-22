@@ -1,5 +1,6 @@
 This directory is only used to try to understand the Lingo and director language
 
+This will be deleted in the future once understood completly
 theses are copy of repose from the net to be ble to share these knowdlege with AI
 
 https://github.com/eriksoe/Schockabsorber/tree/master
