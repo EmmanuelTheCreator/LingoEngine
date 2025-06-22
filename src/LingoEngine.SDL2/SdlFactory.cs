@@ -12,7 +12,9 @@ using LingoEngine.SDL2.Movies;
 using LingoEngine.SDL2.Pictures;
 using LingoEngine.SDL2.Sounds;
 using LingoEngine.SDL2.Texts;
+using LingoEngine.SDL2.Shapes;
 using LingoEngine.Sounds;
+using LingoEngine.Shapes;
 using LingoEngine.Texts;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -79,6 +81,13 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         var impl = new SdlMemberFilmLoop();
         var member = new LingoMemberFilmLoop(impl, (LingoCast)cast, numberInCast, name, fileName ?? "", regPoint);
         impl.Init(member);
+        _disposables.Add(impl);
+        return member;
+    }
+    public LingoMemberShape CreateMemberShape(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+    {
+        var impl = new SdlMemberShape();
+        var member = new LingoMemberShape((LingoCast)cast, impl, numberInCast, name, fileName ?? "", regPoint);
         _disposables.Add(impl);
         return member;
     }

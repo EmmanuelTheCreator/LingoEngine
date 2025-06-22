@@ -27,7 +27,11 @@ namespace LingoEngine.Director.Core.FileSystems
             switch (settings.PreferredIde)
             {
                 case IdeType.VisualStudio:
+#if USE_WINDOWS_FEATURES
                     OpenInVisualStudio(settings, filePath, line);
+#else
+                    OpenInVisualStudio(settings.VisualStudioPath, filePath, line);
+#endif
                     break;
 
                 case IdeType.VisualStudioCode:
