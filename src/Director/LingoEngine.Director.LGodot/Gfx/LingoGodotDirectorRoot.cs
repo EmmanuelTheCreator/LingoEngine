@@ -50,26 +50,17 @@ namespace LingoEngine.Director.LGodot.Gfx
             _textWindow = serviceProvider.GetRequiredService<DirGodotTextableMemberWindow>();
             _picture = serviceProvider.GetRequiredService<DirGodotPictureMemberEditorWindow>();
 
-            // Add drop test box
-            var testDropZone = new TestDropZone();
-            testDropZone.Position = new Vector2(600, 300);
-            testDropZone.Size = new Vector2(100, 100);
-            testDropZone.Name = "TestDropZone";
-            _directorParent.AddChild(testDropZone);
-
-
-
-            //_directorParent.AddChild(_picture);
-            //_directorParent.AddChild(_stageWindow);
-            //_directorParent.AddChild(_dirGodotMainMenu);
-            //_directorParent.AddChild(_projectSettingsWindow);
+            _directorParent.AddChild(_picture);
+            _directorParent.AddChild(_stageWindow);
+            _directorParent.AddChild(_dirGodotMainMenu);
+            _directorParent.AddChild(_projectSettingsWindow);
             _directorParent.AddChild(_castViewer);
-            //_directorParent.AddChild(_scoreWindow);
-            //_directorParent.AddChild(_toolsWindow);
-            //_directorParent.AddChild(_importExportWindow);
-            //_directorParent.AddChild(_textWindow);
-            //_directorParent.AddChild(_propertyInspector);
-            //_directorParent.AddChild(_binaryViewer);
+            _directorParent.AddChild(_scoreWindow);
+            _directorParent.AddChild(_toolsWindow);
+            _directorParent.AddChild(_importExportWindow);
+            _directorParent.AddChild(_textWindow);
+            _directorParent.AddChild(_propertyInspector);
+            _directorParent.AddChild(_binaryViewer);
 
             // Set all positions
             SetDefaultPositions();
@@ -108,42 +99,6 @@ namespace LingoEngine.Director.LGodot.Gfx
             _toolsWindow.Dispose();
             _binaryViewer.Dispose();
             _importExportWindow.Dispose();
-        }
-    }
-
-    internal partial class TestDropZone : Control
-    {
-        public TestDropZone()
-        {
-            MouseFilter = MouseFilterEnum.Stop;
-            CustomMinimumSize = new Vector2(400, 400);
-            Modulate = new Color(0, 0.8f, 0, 1f); // translucent green
-            SizeFlagsHorizontal = SizeFlags.Fill;
-            SizeFlagsVertical = SizeFlags.Fill;
-        }
-        public override void _Draw()
-        {
-            DrawRect(new Rect2(Vector2.Zero, Size), Modulate);
-        }
-
-        public override bool _CanDropData(Vector2 atPosition, Variant data)
-        {
-            GD.Print($"[TestDropZone] _CanDropData at {atPosition}, data = {data}");
-            return true;
-        }
-
-        public override void _DropData(Vector2 atPosition, Variant data)
-        {
-            GD.Print($"[TestDropZone] _DropData at {atPosition}, data = {data}");
-            Modulate = new Color(0, 0.3f, 0.8f, 0.5f); // turn blue when dropped
-        }
-
-        public override void _GuiInput(InputEvent @event)
-        {
-            if (@event is InputEventMouseMotion mm)
-            {
-                GD.Print($"[TestDropZone] Mouse moved at {mm.Position}");
-            }
         }
     }
 }

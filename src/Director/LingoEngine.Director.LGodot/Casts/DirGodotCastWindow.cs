@@ -84,7 +84,7 @@ namespace LingoEngine.Director.LGodot.Casts
                 {
                     Name = cast.Name,
                 };
-
+                tabContent.MouseFilter = Control.MouseFilterEnum.Stop;
                 tabContent.AddChild(castLibViewer.Node);
                 _tabs.AddChild(tabContent);
                 index++;
