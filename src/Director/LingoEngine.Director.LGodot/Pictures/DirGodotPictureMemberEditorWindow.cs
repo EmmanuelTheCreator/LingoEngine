@@ -244,11 +244,28 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         Vector2 view = _scrollContainer.Size;
         if (view == Vector2.Zero)
             view = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
-        Vector2 img = _centerContainer.CustomMinimumSize * _scale;
-        int h = (int)Mathf.Max(0, (img.X - view.X) / 2f);
-        int v = (int)Mathf.Max(0, (img.Y - view.Y) / 2f);
-        _scrollContainer.ScrollHorizontal = h;
-        _scrollContainer.ScrollVertical = v;
+
+        if (_member == null)
+            return;
+
+        // Calculate the scaled work area size
+        Vector2 canvasSize = _centerContainer.CustomMinimumSize * _scale;
+
+        // Determine the position of the registration point within the canvas
+        Vector2 canvasHalf = _centerContainer.CustomMinimumSize / 2f;
+        Vector2 imageHalf = _imageRect.CustomMinimumSize / 2f;
+        Vector2 regOffset = canvasHalf - imageHalf + new Vector2(_member.RegPoint.X, _member.RegPoint.Y);
+        Vector2 regPos = regOffset * _scale;
+
+        // Desired scroll positions so the reg point is centered in view
+        float desiredH = regPos.X - view.X / 2f;
+        float desiredV = regPos.Y - view.Y / 2f;
+
+        int maxH = (int)Mathf.Max(0, canvasSize.X - view.X);
+        int maxV = (int)Mathf.Max(0, canvasSize.Y - view.Y);
+
+        _scrollContainer.ScrollHorizontal = (int)Mathf.Clamp(desiredH, 0, maxH);
+        _scrollContainer.ScrollVertical = (int)Mathf.Clamp(desiredV, 0, maxV);
     }
 
     private void UpdateRegPointCanvasSize()
