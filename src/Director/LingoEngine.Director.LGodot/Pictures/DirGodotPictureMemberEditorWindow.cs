@@ -7,11 +7,15 @@ using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Members;
+using LingoEngine.Core;
+using LingoEngine.Movies;
+using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
 internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkPictureEditWindow
 {
+    private const int NavigationBarHeight = 20;
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
     private static readonly Vector2 WorkAreaSize = new Vector2(2000, 2000);
@@ -20,6 +24,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private readonly Control _centerContainer = new Control();
     private readonly ColorRect _background = new ColorRect();
     private readonly TextureRect _imageRect = new TextureRect();
+    private readonly MemberNavigationBar<LingoMemberPicture> _navBar;
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private readonly HBoxContainer _bottomBar = new HBoxContainer();
     private readonly Button _flipHButton = new Button();
@@ -29,6 +34,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private readonly OptionButton _scaleDropdown = new OptionButton();
     private readonly RegPointCanvas _regPointCanvas;
     private readonly IDirectorEventMediator _mediator;
+    private readonly ILingoPlayer _player;
     private LingoMemberPicture? _member;
     private bool _showRegPoint = true;
 
@@ -36,17 +42,23 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _spaceHeld;
     private bool _panning;
 
-    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
+    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
         _mediator = mediator;
+        _player = player;
         _mediator.Subscribe(this);
         Size = new Vector2(400, 300);
         directorPictureEditWindow.Init(this);
         CustomMinimumSize = Size;
 
-        // Icon bar at the top
+        _navBar = new MemberNavigationBar<LingoMemberPicture>(_mediator, _player, NavigationBarHeight);
+        AddChild(_navBar);
+        _navBar.Position = new Vector2(0, TitleBarHeight);
+        _navBar.CustomMinimumSize = new Vector2(Size.X, NavigationBarHeight);
+
+        // Icon bar below navigation
         AddChild(_iconBar);
-        _iconBar.Position = new Vector2(0, TitleBarHeight);
+        _iconBar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight);
         _iconBar.CustomMinimumSize = new Vector2(Size.X, IconBarHeight);
 
         _flipHButton.Text = "Flip H";
@@ -80,7 +92,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.AnchorRight = 1;
         _scrollContainer.AnchorBottom = 1;
         _scrollContainer.OffsetLeft = 0;
-        _scrollContainer.OffsetTop = TitleBarHeight + IconBarHeight;
+        _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
         _scrollContainer.OffsetRight = 0;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
 
@@ -164,6 +176,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             UpdateRegPointCanvasSize();
         }
         _member = picture;
+        _navBar.SetMember(picture);
         _regPointCanvas.QueueRedraw();
     }
 
@@ -182,6 +195,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     {
         _imageRect.FlipV = !_imageRect.FlipV;
     }
+
 
     private void OnZoomChanged(float value)
     {
@@ -272,11 +286,13 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
+        _navBar.CustomMinimumSize = new Vector2(size.X, NavigationBarHeight);
+        _iconBar.Position = new Vector2(0, NavigationBarHeight + TitleBarHeight);
         _iconBar.CustomMinimumSize = new Vector2(size.X, IconBarHeight);
         _bottomBar.Position = new Vector2(0, size.Y - BottomBarHeight);
         _bottomBar.CustomMinimumSize = new Vector2(size.X, BottomBarHeight);
 
-        _scrollContainer.OffsetTop = TitleBarHeight + IconBarHeight;
+        _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
         _scrollContainer.OffsetLeft = 0;
         _scrollContainer.OffsetRight = 0;
