@@ -280,10 +280,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             _selectionBox.Visible = false;
             return;
         }
-        float left = _selectedSprites.Min(s => s.LocH);
-        float top = _selectedSprites.Min(s => s.LocV);
-        float right = _selectedSprites.Max(s => s.LocH + s.Width);
-        float bottom = _selectedSprites.Max(s => s.LocV + s.Height);
+        float left = _selectedSprites.Min(s => s.Rect.Left);
+        float top = _selectedSprites.Min(s => s.Rect.Top);
+        float right = _selectedSprites.Max(s => s.Rect.Right);
+        float bottom = _selectedSprites.Max(s => s.Rect.Bottom);
         var rect = new Rect2(left, top, right - left, bottom - top);
         _selectionBox.UpdateRect(rect);
         _selectionBox.Visible = true;
@@ -475,10 +475,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private Vector2 ComputeSelectionCenter()
     {
         if (_selectedSprites.Count == 0) return Vector2.Zero;
-        float left = _selectedSprites.Min(s => s.LocH);
-        float top = _selectedSprites.Min(s => s.LocV);
-        float right = _selectedSprites.Max(s => s.LocH + s.Width);
-        float bottom = _selectedSprites.Max(s => s.LocV + s.Height);
+        float left = _selectedSprites.Min(s => s.Rect.Left);
+        float top = _selectedSprites.Min(s => s.Rect.Top);
+        float right = _selectedSprites.Max(s => s.Rect.Right);
+        float bottom = _selectedSprites.Max(s => s.Rect.Bottom);
         return new Vector2((left + right) / 2f, (top + bottom) / 2f);
     }
 
