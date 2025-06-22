@@ -100,7 +100,10 @@ namespace LingoEngine.Director.LGodot.Casts
             {
                 Text = GetTypeIcon(element),
                 LabelSettings = new LabelSettings { FontSize = 8 },
-                MouseFilter = MouseFilterEnum.Ignore
+                MouseFilter = MouseFilterEnum.Ignore,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                CustomMinimumSize = new Vector2(10, 10)
             };
             var typeStyle = new StyleBoxFlat
             {
@@ -114,7 +117,8 @@ namespace LingoEngine.Director.LGodot.Casts
             _typeLabel.AddThemeStyleboxOverride("normal", typeStyle);
             _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
             AddChild(_typeLabel);
-            _typeLabel.Position = new Vector2(Width - 10, Height - LabelHeight - 10);
+            _typeLabel.Position = new Vector2(Width - _typeLabel.CustomMinimumSize.X - 2,
+                Height - LabelHeight - _typeLabel.CustomMinimumSize.Y - 2);
 
             // Bottom label
             _caption = new Label
