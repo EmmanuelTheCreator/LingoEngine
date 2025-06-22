@@ -102,6 +102,17 @@ namespace LingoEngine.Director.LGodot.Casts
                 LabelSettings = new LabelSettings { FontSize = 8 },
                 MouseFilter = MouseFilterEnum.Ignore
             };
+            var typeStyle = new StyleBoxFlat
+            {
+                BgColor = Colors.White,
+                BorderColor = Colors.Black
+            };
+            typeStyle.BorderWidthBottom = 1;
+            typeStyle.BorderWidthTop = 1;
+            typeStyle.BorderWidthLeft = 1;
+            typeStyle.BorderWidthRight = 1;
+            _typeLabel.AddThemeStyleboxOverride("normal", typeStyle);
+            _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
             AddChild(_typeLabel);
             _typeLabel.Position = new Vector2(Width - 10, Height - LabelHeight - 10);
 
@@ -286,7 +297,7 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             return member switch
             {
-                LingoMemberPicture => "✏",
+                LingoMemberPicture => "🖌",
                 LingoMemberSound => "🔊",
                 LingoMemberField => "F",
                 ILingoMemberTextBase => "T",
