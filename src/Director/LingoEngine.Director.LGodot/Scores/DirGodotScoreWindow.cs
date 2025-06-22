@@ -100,8 +100,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _hClipper.AddChild(_topStripContent);
         _hClipper.AddChild(_collapseButton);
         AddChild(_hClipper);
-        AddChild(_soundBar);
         _topStripContent.AddChild(_labelBar);
+        _topStripContent.AddChild(_soundBar);
         _topStripContent.AddChild(_frameScripts);
         _topStripContent.AddChild(_header);
 

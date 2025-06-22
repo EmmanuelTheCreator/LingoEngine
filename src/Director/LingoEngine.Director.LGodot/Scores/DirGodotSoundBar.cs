@@ -106,9 +106,11 @@ internal partial class DirGodotSoundBar : Control
         for (int c = 0; c < channels; c++)
         {
             float y = c * _gfxValues.ChannelHeight + 10;
-            DrawLine(new Vector2(0,y), new Vector2(Size.X,y), Colors.DarkGray);
+            DrawLine(new Vector2(0, y), new Vector2(Size.X, y), Colors.DarkGray);
+            DrawRect(new Rect2(0, y, _gfxValues.ChannelInfoWidth, _gfxValues.ChannelHeight), new Color("#f0f0f0"));
             string icon = _muted[c] ? "🔇" : "🔊";
-            DrawString(font, new Vector2(12, y + font.GetAscent()-4), $"{icon}{c+1}");
+            DrawString(font, new Vector2(4, y + font.GetAscent() - 6), icon, HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
+            DrawString(font, new Vector2(_gfxValues.ChannelHeight + 2, y + font.GetAscent() - 6), $"{c + 1}", HorizontalAlignment.Left, -1, 11, new Color("#a0a0a0"));
         }
 
         foreach (var clip in _clips)
