@@ -41,6 +41,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         AddChild(_nextButton);
 
         _typeLabel.CustomMinimumSize = new Vector2(20, barHeight);
+        _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
         AddChild(_typeLabel);
 
         _nameEdit.CustomMinimumSize = new Vector2(100, barHeight);
@@ -69,7 +70,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _nameEdit.Text = member.Name;
         _numberLabel.Text = member.NumberInCast.ToString();
         _castLibLabel.Text = GetCastName(member);
-        _typeLabel.Text = member.Type.ToString();
+        _typeLabel.Text = LingoMemberTypeIcons.GetIcon(member);
     }
 
     private string GetCastName(ILingoMember m)

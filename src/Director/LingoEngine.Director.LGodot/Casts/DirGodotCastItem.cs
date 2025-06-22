@@ -25,6 +25,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly SubViewport _textViewport = new();
         private readonly ILingoMember _lingoMember;
         private readonly Label _typeLabel;
+        private readonly ColorRect _separator;
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly ILingoCommandManager _commandManager;
         private readonly Label _caption;
@@ -98,7 +99,7 @@ namespace LingoEngine.Director.LGodot.Casts
             // Type icon label positioned at bottom right of the thumbnail
             _typeLabel = new Label
             {
-                Text = GetTypeIcon(element),
+                Text = LingoMemberTypeIcons.GetIcon(element),
                 LabelSettings = new LabelSettings { FontSize = 8 },
                 MouseFilter = MouseFilterEnum.Ignore,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -115,10 +116,21 @@ namespace LingoEngine.Director.LGodot.Casts
             typeStyle.BorderWidthLeft = 1;
             typeStyle.BorderWidthRight = 1;
             _typeLabel.AddThemeStyleboxOverride("normal", typeStyle);
+            _typeLabel.LabelSettings.FontColor = Colors.Black;
             _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
             AddChild(_typeLabel);
             _typeLabel.Position = new Vector2(Width - _typeLabel.CustomMinimumSize.X - 2,
                 Height - LabelHeight - _typeLabel.CustomMinimumSize.Y - 2);
+
+            // separator line above the caption
+            _separator = new ColorRect
+            {
+                Color = Colors.DarkGray,
+                CustomMinimumSize = new Vector2(Width, 1),
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            AddChild(_separator);
+            _separator.Position = new Vector2(0, Height - LabelHeight - 1);
 
             // Bottom label
             _caption = new Label
@@ -128,6 +140,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _caption.LabelSettings = new LabelSettings
             {
                 FontSize = 8,
+                FontColor = Colors.Black,
             };
             AddChild(_caption);
             _caption.Text = !string.IsNullOrWhiteSpace(element.Name)? element.NumberInCast+"."+ element.Name: number.ToString();
@@ -135,6 +148,7 @@ namespace LingoEngine.Director.LGodot.Casts
             // Apply background style to the label using the "normal" stylebox
             _caption.AddThemeStyleboxOverride("normal", _normalLabelStyle);
             _caption.MouseFilter = MouseFilterEnum.Ignore;
+            _caption.Position = new Vector2(0, Height - LabelHeight + 1);
             
         }
         public void SetPosition(int x, int y)
@@ -299,15 +313,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
         private static string GetTypeIcon(ILingoMember member)
         {
-            return member switch
-            {
-                LingoMemberPicture => "🖌",
-                LingoMemberSound => "🔊",
-                LingoMemberField => "F",
-                ILingoMemberTextBase => "T",
-                _ when member.Type == LingoMemberType.Shape || member.Type == LingoMemberType.VectorShape => "📐",
-                _ => string.Empty
-            };
+            return LingoMemberTypeIcons.GetIcon(member);
         }
 
 
