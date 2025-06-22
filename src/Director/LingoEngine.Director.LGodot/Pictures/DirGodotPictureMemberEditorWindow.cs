@@ -172,7 +172,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
     public void SetPicture(LingoMemberPicture picture)
     {
-        ResetView();
+        bool firstLoad = _member == null;
+        if (firstLoad)
+            ResetView();
         var godotPicture = picture.Framework<LingoGodotMemberPicture>();
         godotPicture.Preload();
         if (godotPicture.Texture != null)
@@ -184,7 +186,15 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _imageRect.OffsetTop = -size.Y / 2f;
             _imageRect.OffsetRight = size.X / 2f;
             _imageRect.OffsetBottom = size.Y / 2f;
-            FitImageToView();
+            if (firstLoad)
+            {
+                FitImageToView();
+            }
+            else
+            {
+                _zoomSlider.Value = _scale;
+                OnZoomChanged(_scale);
+            }
             UpdateRegPointCanvasSize();
             CallDeferred(nameof(CenterImage));
         }
@@ -216,7 +226,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _centerContainer.Scale = new Vector2(_scale, _scale);
         UpdateRegPointCanvasSize();
         _regPointCanvas.QueueRedraw();
-        
+        CenterImage();
+
         int percent = Mathf.RoundToInt(_scale * 100);
         for (int i = 0; i < _scaleDropdown.ItemCount; i++)
         {
@@ -247,6 +258,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         if (areaSize == Vector2.Zero)
             areaSize = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
         float factor = Math.Min(areaSize.X / texture.GetWidth(), areaSize.Y / texture.GetHeight());
+        factor = Math.Min(1f, factor); // don't upscale on initial fit
         factor = (float)Mathf.Clamp(factor, _zoomSlider.MinValue, _zoomSlider.MaxValue);
         _zoomSlider.Value = factor;
         OnZoomChanged(factor);
@@ -391,12 +403,12 @@ internal partial class DirGodotPictureMemberEditorWindow
             if (member == null || _owner._imageRect.Texture == null) return;
 
             Vector2 areaSize = Size;
-            var scale = _owner._centerContainer.Scale;
+            float factor = _owner._scale;
             Vector2 canvasHalf = _owner._centerContainer.CustomMinimumSize / 2f;
             Vector2 imageHalf = _owner._imageRect.CustomMinimumSize / 2f;
             Vector2 offset = canvasHalf - imageHalf;
             // RegPoint origin is the texture's top-left corner
-            Vector2 pos = (offset + new Vector2(member.RegPoint.X, member.RegPoint.Y)) * scale;
+            Vector2 pos = (offset + new Vector2(member.RegPoint.X, member.RegPoint.Y)) * factor + canvasHalf * (1 - factor);
 
             DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
             DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
