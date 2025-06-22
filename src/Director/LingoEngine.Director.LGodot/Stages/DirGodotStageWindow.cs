@@ -48,6 +48,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private Dictionary<LingoSprite, Primitives.LingoPoint>? _initialPositions;
     private Dictionary<LingoSprite, float>? _initialRotations;
     private bool _rotating;
+    private bool _spaceHeld;
+    private bool _panning;
+    private float _scale = 1f;
 
     public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, IStageToolManager toolManager, IHistoryManager historyManager, ILingoPlayer player, DirectorStageWindow directorStageWindow, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.StageWindow, "Stage", windowManager)
@@ -131,6 +134,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _zoomSlider.ValueChanged += value =>
         {
             float scale = (float)value;
+            _scale = scale;
             UpdateScaleDropdown(scale);
             _stageContainer.SetScale(scale);
         };
@@ -144,6 +148,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         {
             float scale = (50 + id * 10) / 100f;
             _zoomSlider.Value = scale;
+            _scale = scale;
             _stageContainer.SetScale(scale);
         };
         _iconBar.AddChild(_zoomDropdown);
@@ -288,6 +293,48 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     {
         base._Input(@event);
         if (!Visible || _movie == null || _movie.IsPlaying) return;
+
+        if (@event is InputEventKey spaceKey && spaceKey.Keycode == Key.Space)
+        {
+            _spaceHeld = spaceKey.Pressed;
+            if (!spaceKey.Pressed)
+                _panning = false;
+            return;
+        }
+        else if (@event is InputEventMouseButton mb)
+        {
+            Vector2 mousePos = GetGlobalMousePosition();
+            Rect2 bounds = new Rect2(_scrollContainer.GlobalPosition, _scrollContainer.Size);
+            if (mb.ButtonIndex == MouseButton.Left)
+            {
+                if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
+                {
+                    _panning = true;
+                    return;
+                }
+                else if (!mb.Pressed && _panning)
+                {
+                    _panning = false;
+                    return;
+                }
+            }
+            else if (!mb.Pressed && (mb.ButtonIndex == MouseButton.WheelUp || mb.ButtonIndex == MouseButton.WheelDown) && bounds.HasPoint(mousePos))
+            {
+                float delta = mb.ButtonIndex == MouseButton.WheelUp ? 0.1f : -0.1f;
+                float newScale = Mathf.Clamp(_scale + delta, (float)_zoomSlider.MinValue, (float)_zoomSlider.MaxValue);
+                _zoomSlider.Value = newScale;
+                _scale = newScale;
+                UpdateScaleDropdown(newScale);
+                _stageContainer.SetScale(newScale);
+                return;
+            }
+        }
+        else if (@event is InputEventMouseMotion motion && _panning)
+        {
+            _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
+            _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+            return;
+        }
 
         if (@event is InputEventKey key && key.Pressed && key.Keycode == Key.Z && key.CtrlPressed)
         {
