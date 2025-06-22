@@ -1,5 +1,6 @@
 ﻿using Godot;
-
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.LGodot.Primitives;
 namespace LingoEngine.Director.LGodot.Gfx
 {
     public partial class DirectorToolButton : PanelContainer
@@ -7,7 +8,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         private TextureButton _button;
         private bool _isSelected;
         private Action _pressed = () => { };
-        public Color BGColor { get; set;  } = new Color(100, 100, 100);
+        public Color BGColor { get; set; } = DirectorColors.BG_WhiteMenus.ToGodotColor();
         public Texture2D Icon
         {
             get => _button.TextureNormal;

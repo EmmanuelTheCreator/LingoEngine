@@ -24,7 +24,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
         AddChild(selectBtn);
 
         _fileDialog.Access = FileDialog.AccessEnum.Filesystem;
-        _fileDialog.Mode = FileDialog.FileModeEnum.OpenFiles;
+        _fileDialog.FileMode = FileDialog.FileModeEnum.OpenFiles; 
         _fileDialog.Filters = new string[] {"*.dir; *.cst"};
         _fileDialog.FilesSelected += paths => AddFiles(paths);
         AddChild(_fileDialog);
