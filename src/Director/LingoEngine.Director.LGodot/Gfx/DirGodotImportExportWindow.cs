@@ -8,6 +8,7 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
 {
     private readonly VBoxContainer _home = new();
     private readonly ImportLingoFilesStep _importLingoStep;
+    private readonly ImportDirCstFilesStep _importDirStep;
     private readonly Button _scriptsButton = new();
     private readonly Button _dirButton = new();
     private readonly Button _exportButton = new();
@@ -29,6 +30,7 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
         _home.AddChild(_scriptsButton);
 
         _dirButton.Text = "Import dir/cst file";
+        _dirButton.Pressed += () => ShowStep(_importDirStep);
         _home.AddChild(_dirButton);
 
         _exportButton.Text = "Export/Optimize code through AI";
@@ -38,6 +40,10 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
         _importLingoStep.Back += ShowHome;
         AddChild(_importLingoStep);
 
+        _importDirStep = new ImportDirCstFilesStep();
+        _importDirStep.Back += ShowHome;
+        AddChild(_importDirStep);
+
         ShowHome();
     }
 
@@ -45,6 +51,7 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
     {
         _home.Visible = true;
         _importLingoStep.Visible = false;
+        _importDirStep.Visible = false;
     }
 
     private void ShowStep(Control step)
