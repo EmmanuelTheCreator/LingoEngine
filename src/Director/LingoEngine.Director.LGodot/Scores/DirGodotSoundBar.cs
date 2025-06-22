@@ -13,10 +13,21 @@ internal partial class DirGodotSoundBar : Control
     private readonly DirGodotScoreGfxValues _gfxValues;
     private bool _dirty = true;
     private bool _collapsed;
+    private readonly bool[] _muted = new bool[4];
 
     public DirGodotSoundBar(DirGodotScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
+    }
+
+    public bool Collapsed
+    {
+        get => _collapsed;
+        set
+        {
+            _collapsed = value;
+            QueueRedraw();
+        }
     }
 
     public void SetMovie(LingoMovie? movie)
@@ -68,10 +79,13 @@ internal partial class DirGodotSoundBar : Control
     {
         if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {
-            if (mb.Position.Y < 10 && mb.Position.X < 10)
+            if (!_collapsed && mb.Position.Y >= 10)
             {
-                _collapsed = !_collapsed;
-                QueueRedraw();
+                int ch = (int)((mb.Position.Y - 10) / _gfxValues.ChannelHeight);
+                if (ch >= 0 && ch < 4 && mb.Position.X >= 12 && mb.Position.X <= 28)
+                {
+                    ToggleMute(ch);
+                }
             }
         }
     }
@@ -85,14 +99,14 @@ internal partial class DirGodotSoundBar : Control
         DrawRect(new Rect2(0,0,Size.X,Size.Y), new Color("#f0f0f0"));
 
         var font = ThemeDB.FallbackFont;
-        DrawString(font, new Vector2(2, font.GetAscent()-2), (_collapsed ? "▶" : "▼"));
         if (_collapsed) return;
 
         for (int c = 0; c < channels; c++)
         {
             float y = c * _gfxValues.ChannelHeight + 10;
             DrawLine(new Vector2(0,y), new Vector2(Size.X,y), Colors.DarkGray);
-            DrawString(font, new Vector2(12, y + font.GetAscent()-4), $"🔊{c+1}");
+            string icon = _muted[c] ? "🔇" : "🔊";
+            DrawString(font, new Vector2(12, y + font.GetAscent()-4), $"{icon}{c+1}");
         }
 
         foreach (var clip in _clips)
@@ -104,5 +118,14 @@ internal partial class DirGodotSoundBar : Control
             float y = ch * _gfxValues.ChannelHeight + 10;
             clip.Draw(this, new Vector2(x,y), width, _gfxValues.ChannelHeight, font);
         }
+    }
+
+    private void ToggleMute(int channel)
+    {
+        if (_movie == null) return;
+        _muted[channel] = !_muted[channel];
+        var chObj = _movie.GetEnvironment().Sound.Channel(channel + 1);
+        chObj.Volume = _muted[channel] ? 0 : 255;
+        QueueRedraw();
     }
 }
