@@ -56,12 +56,12 @@ internal partial class DirGodotSoundBar : Control
         QueueRedraw();
     }
 
-    public override bool _CanDropData(Vector2 atPosition, Variant data)
-    {
-        if (_movie == null || _collapsed) return false;
+        public override bool _CanDropData(Vector2 atPosition, Variant data)
+        {
+            if (_movie == null || _collapsed) return false;
 
-        var obj = data.Obj as LingoMemberSound;
-        return obj != null;
+            var obj = data.Obj as LingoMemberSound;
+            return obj != null;
     }
 
     public override void _DropData(Vector2 atPosition, Variant data)
