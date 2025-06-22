@@ -15,5 +15,6 @@ namespace LingoEngine.Director.LGodot.Gfx
         public const string BinaryViewerWindow = "BinaryViewerWindow";
         public const string TextEditWindow = "TextEditWindow";
         public const string PictureEditWindow = "PictureEditWindow";
+        public const string ImportExportWindow = "ImportExportWindow";
     }
 }
