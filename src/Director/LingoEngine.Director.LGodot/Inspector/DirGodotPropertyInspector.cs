@@ -12,6 +12,7 @@ using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Texts;
 using System.Linq;
+using LingoEngine.Director.Core.Commands;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -139,7 +140,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
                     _ => string.Empty
                 };
                 if (!string.IsNullOrEmpty(code))
-                    _commandManager.Handle(new Commands.OpenWindowCommand(code));
+                    _commandManager.Handle(new OpenWindowCommand(code));
             };
             container.AddChild(editBtn);
         }

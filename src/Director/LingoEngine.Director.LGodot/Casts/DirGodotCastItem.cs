@@ -10,6 +10,7 @@ using System;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.Core.Commands;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
