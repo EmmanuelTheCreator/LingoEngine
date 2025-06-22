@@ -34,6 +34,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\WillMoveToOwnRepo\ProjectorRays\src\ProjectorRays.DotNet\ProjectorRays.DotNet.csproj" />
     <ProjectReference Include="..\..\LingoEngine.IO\LingoEngine.IO.csproj" />
     <ProjectReference Include="..\..\LingoEngine\LingoEngine.csproj" />
   </ItemGroup>
