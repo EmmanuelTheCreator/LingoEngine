@@ -5,6 +5,7 @@ using LingoEngine.Movies;
 using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
+using LingoEngine.Texts;
 using System;
 using System.Numerics;
 
@@ -141,6 +142,31 @@ namespace LingoEngine.Core
             => action(_env.CastLibsContainer.GetMember<T>(name)!);
         protected TResult Member<T, TResult>(string name, Func<T, TResult> action) where T : LingoMember
             => action(_env.CastLibsContainer.GetMember<T>(name)!);
+
+
+        protected T? TryMember<T>(int number, int? castLib = null, Action<T>? action = null) where T : class, ILingoMember
+        {
+            var member = _Movie.CastLib.GetMember(number, castLib ?? 1) as T;
+            if (member != null && action != null)
+                action(member);
+            
+            return member as T;
+        }
+        protected T? TryMember<T>(string name, int? castLib = null, Action<T>? action = null) where T : class, ILingoMember
+        {
+            var member = _Movie.CastLib.GetMember(name, castLib ?? 1) as T;
+            if (member != null && action != null)
+                action(member);
+            
+            return member as T;
+        }
+
+        protected void PutTextIntoField(string name, string text)
+        {
+            var field = TryMember<ILingoMemberField>(name);
+            if (field != null)
+                field.Text = text;
+        }
         #endregion
 
 
