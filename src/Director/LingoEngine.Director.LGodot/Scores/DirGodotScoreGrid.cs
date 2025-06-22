@@ -236,8 +236,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _showPreview = false;
         if (_movie == null) return false;
 
-        if (data.Obj is not GodotObject obj) return false;
-        if (obj is not ILingoMember member) return false;
+        if (data.Obj is not ILingoMember member) return false;
 
         if (member.Type == LingoMemberType.Sound) return false;
 
@@ -274,6 +273,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         {
             s.SetMember(_previewMember);
         });
+        _previewMember = null;
         _spriteListDirty = true;
     }
 
