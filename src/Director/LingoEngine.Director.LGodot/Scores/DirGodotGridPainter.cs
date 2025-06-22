@@ -2,7 +2,7 @@ using Godot;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
-internal class DirGodotGridPainter : Control
+internal partial class DirGodotGridPainter : Control
 {
     private readonly DirGodotScoreGfxValues _gfxValues;
     public int FrameCount { get; set; }
