@@ -123,6 +123,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         // slider. Using "Keep" caused the texture to remain at its original
         // size when the parent container was scaled.
         _imageRect.StretchMode = TextureRect.StretchModeEnum.Scale;
+        // Ensure the texture itself expands when its container grows so the
+        // zoom slider actually resizes the picture.
+        _imageRect.Expand = true;
         _imageRect.AnchorLeft = 0.5f;
         _imageRect.AnchorTop = 0.5f;
         _imageRect.AnchorRight = 0.5f;
