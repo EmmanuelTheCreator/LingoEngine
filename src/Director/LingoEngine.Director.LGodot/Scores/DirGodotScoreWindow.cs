@@ -81,6 +81,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
         _scrollContent.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _scrollContent.SizeFlagsVertical = SizeFlags.ExpandFill;
+        _scrollContent.MouseFilter = MouseFilterEnum.Ignore;
         _scrollContent.AddChild(_grid);
 
         _grid.SizeFlagsHorizontal = SizeFlags.ExpandFill;
