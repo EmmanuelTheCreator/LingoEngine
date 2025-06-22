@@ -40,6 +40,12 @@ internal partial class DirGodotScoreLabelsBar : Control
         }
     }
 
+    public void ToggleCollapsed()
+    {
+        HeaderCollapsed = !HeaderCollapsed;
+        HeaderCollapseChanged?.Invoke(HeaderCollapsed);
+    }
+
     public void SetMovie(LingoMovie? movie)
     {
         _movie = movie;
@@ -54,9 +60,6 @@ internal partial class DirGodotScoreLabelsBar : Control
         var font = ThemeDB.FallbackFont;
         Size = new Vector2(_gfxValues.LeftMargin + (frameCount) * _gfxValues.FrameWidth, 20);
         DrawRect(new Rect2(0, 0, Size.X, 20), Colors.White);
-        Vector2 iconPos = new Vector2(Size.X - 16, 4);
-        DrawRect(new Rect2(iconPos.X - 2, iconPos.Y - 2, 12, 12), Colors.Black, false, 1);
-        DrawString(font, iconPos + new Vector2(2, font.GetAscent() - 5), (_headerCollapsed ? "▶" : "▼"));
         foreach (var kv in _movie.GetScoreLabels())
         {
             float x = _gfxValues.LeftMargin + (kv.Value - 1) * _gfxValues.FrameWidth;
@@ -77,8 +80,7 @@ internal partial class DirGodotScoreLabelsBar : Control
             {
                 if (mb.Position.X > Size.X - 20)
                 {
-                    HeaderCollapsed = !HeaderCollapsed;
-                    HeaderCollapseChanged?.Invoke(HeaderCollapsed);
+                    ToggleCollapsed();
                     return;
                 }
                 Vector2 pos = GetLocalMousePosition();

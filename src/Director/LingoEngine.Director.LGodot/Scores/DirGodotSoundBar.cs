@@ -20,6 +20,8 @@ internal partial class DirGodotSoundBar : Control
         _gfxValues = gfxValues;
     }
 
+    public bool IsMuted(int channel) => _muted[channel];
+
     public bool Collapsed
     {
         get => _collapsed;
