@@ -81,9 +81,9 @@ internal partial class DirGodotSoundBar : Control
     {
         if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {
-            if (!_collapsed && mb.Position.Y >= 10)
+            if (!_collapsed)
             {
-                int ch = (int)((mb.Position.Y - 10) / _gfxValues.ChannelHeight);
+                int ch = (int)(mb.Position.Y / _gfxValues.ChannelHeight);
                 if (ch >= 0 && ch < 4 && mb.Position.X >= 12 && mb.Position.X <= 28)
                 {
                     ToggleMute(ch);
@@ -96,8 +96,8 @@ internal partial class DirGodotSoundBar : Control
     {
         if (_movie == null) return;
         int channels = _collapsed ? 0 : 4;
-        float height = channels * _gfxValues.ChannelHeight + (_collapsed ? 0 : 0);
-        Size = new Vector2(_gfxValues.LeftMargin + _movie.FrameCount * _gfxValues.FrameWidth, height + 10);
+        float height = channels * _gfxValues.ChannelHeight;
+        Size = new Vector2(_gfxValues.LeftMargin + _movie.FrameCount * _gfxValues.FrameWidth, height);
         DrawRect(new Rect2(0,0,Size.X,Size.Y), new Color("#f0f0f0"));
 
         var font = ThemeDB.FallbackFont;
@@ -105,7 +105,7 @@ internal partial class DirGodotSoundBar : Control
 
         for (int c = 0; c < channels; c++)
         {
-            float y = c * _gfxValues.ChannelHeight + 10;
+            float y = c * _gfxValues.ChannelHeight;
             DrawLine(new Vector2(0, y), new Vector2(Size.X, y), Colors.DarkGray);
             DrawRect(new Rect2(0, y, _gfxValues.ChannelInfoWidth, _gfxValues.ChannelHeight), new Color("#f0f0f0"));
             string icon = _muted[c] ? "🔇" : "🔊";
@@ -119,7 +119,7 @@ internal partial class DirGodotSoundBar : Control
             if (ch < 0 || ch >= channels) continue;
             float x = _gfxValues.LeftMargin + (clip.Clip.BeginFrame -1) * _gfxValues.FrameWidth;
             float width = (clip.Clip.EndFrame - clip.Clip.BeginFrame +1) * _gfxValues.FrameWidth;
-            float y = ch * _gfxValues.ChannelHeight + 10;
+            float y = ch * _gfxValues.ChannelHeight;
             clip.Draw(this, new Vector2(x,y), width, _gfxValues.ChannelHeight, font);
         }
     }
