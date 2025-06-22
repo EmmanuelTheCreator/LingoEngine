@@ -22,6 +22,11 @@ internal partial class DirGodotGridPainter : Control
         Size = new Vector2(width, height);
         if (DrawBackground)
             DrawRect(new Rect2(-ScrollX, 0, width, height), Colors.White);
+        for (int c = 0; c <= ChannelCount; c++)
+        {
+            float y = c * _gfxValues.ChannelHeight;
+            DrawLine(new Vector2(-ScrollX, y), new Vector2(width - ScrollX, y), _gfxValues.ColLineLight);
+        }
         for (int f = 0; f < FrameCount; f++)
         {
             float x = -ScrollX + _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
