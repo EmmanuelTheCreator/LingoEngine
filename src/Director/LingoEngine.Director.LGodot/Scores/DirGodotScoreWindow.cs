@@ -138,7 +138,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     private void RepositionBars()
     {
-        float soundHeight = (_soundBar.Collapsed ? 0 : _gfxValues.ChannelHeight * 4) + 10;
+        float soundHeight = (_soundBar.Collapsed ? 0 : _gfxValues.ChannelHeight * 4);
         _frameScripts.Position = new Vector2(0, 20 + soundHeight);
         _header.Position = new Vector2(0, _frameScripts.Position.Y + 20);
 
@@ -241,16 +241,22 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         public DirGodotCastLeftTopLabels(DirGodotScoreGfxValues gfxValues)
         {
             _gfxValues = gfxValues;
-            Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, gfxValues.TopStripHeight - 20);
+            int soundHeight = _gfxValues.ChannelHeight * 4;
+            int totalHeight = soundHeight + 40; // labels + scripts + header
+            Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, totalHeight);
             Position = new Vector2(0, 20);
         }
         public override void _Draw()
         {
-            
+
             DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color("#f0f0f0"));
-            DrawTextWithLine(0,20, "Labels");
-            DrawTextWithLine(74,20, "Scripts");
-            DrawTextWithLine(102,23, "Member", false);
+            int labelHeight = 20;
+            int soundHeight = _gfxValues.ChannelHeight * 4;
+            int scriptTop = labelHeight + soundHeight;
+            int memberTop = scriptTop + labelHeight;
+            DrawTextWithLine(0, labelHeight, "Labels");
+            DrawTextWithLine(scriptTop, labelHeight, "Scripts");
+            DrawTextWithLine(memberTop, labelHeight, "Member", false);
         }
         private void DrawTextWithLine(int top, int height, string text, bool withTopLines = false)
         {
