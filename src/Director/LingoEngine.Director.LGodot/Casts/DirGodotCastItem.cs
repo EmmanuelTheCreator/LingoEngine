@@ -13,7 +13,7 @@ using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal partial class DirGodotCastItem : VBoxContainer
+    internal partial class DirGodotCastItem : Control
     {
         private readonly ColorRect _bg;
         private readonly ColorRect _selectionBg;
@@ -119,8 +119,14 @@ namespace LingoEngine.Director.LGodot.Casts
             _typeLabel.LabelSettings.FontColor = Colors.Black;
             _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
             AddChild(_typeLabel);
-            _typeLabel.Position = new Vector2(Width - _typeLabel.CustomMinimumSize.X - 2,
-                Height - LabelHeight - _typeLabel.CustomMinimumSize.Y - 2);
+            _typeLabel.AnchorLeft = 1;
+            _typeLabel.AnchorRight = 1;
+            _typeLabel.AnchorTop = 1;
+            _typeLabel.AnchorBottom = 1;
+            _typeLabel.OffsetRight = -2;
+            _typeLabel.OffsetBottom = -LabelHeight - 2;
+            _typeLabel.OffsetLeft = -_typeLabel.CustomMinimumSize.X - 2;
+            _typeLabel.OffsetTop = -LabelHeight - _typeLabel.CustomMinimumSize.Y - 2;
 
             // separator line above the caption
             _separator = new ColorRect
@@ -143,12 +149,21 @@ namespace LingoEngine.Director.LGodot.Casts
                 FontColor = Colors.Black,
             };
             AddChild(_caption);
-            _caption.Text = !string.IsNullOrWhiteSpace(element.Name)? element.NumberInCast+"."+ element.Name: number.ToString();
+            _caption.Text = !string.IsNullOrWhiteSpace(element.Name) ? element.NumberInCast + "." + element.Name : number.ToString();
             _caption.AddThemeColorOverride("font_color", Colors.Black);
             // Apply background style to the label using the "normal" stylebox
             _caption.AddThemeStyleboxOverride("normal", _normalLabelStyle);
             _caption.MouseFilter = MouseFilterEnum.Ignore;
-            _caption.Position = new Vector2(0, Height - LabelHeight + 1);
+
+            _caption.AnchorLeft = 0;
+            _caption.AnchorRight = 1;
+            _caption.AnchorTop = 1;
+            _caption.AnchorBottom = 1;
+            _caption.OffsetLeft = 0;
+            _caption.OffsetRight = 0;
+            _caption.OffsetBottom = 0;
+            _caption.OffsetTop = -LabelHeight;
+
             
         }
         public void SetPosition(int x, int y)
