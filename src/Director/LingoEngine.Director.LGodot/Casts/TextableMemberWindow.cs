@@ -22,6 +22,7 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
     private readonly Button _alignCenter = new Button();
     private readonly Button _alignRight = new Button();
     private readonly SpinBox _fontSize = new SpinBox();
+    private readonly HBoxContainer _topBar = new HBoxContainer();
 
     private readonly ILingoPlayer _player;
     private ILingoMemberTextBase? _member;
@@ -48,23 +49,23 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
         _alignLeft.Text = "L";
         _alignLeft.CustomMinimumSize = new Vector2(20, 16);
         _alignLeft.Pressed += () => SetAlignment(LingoTextAlignment.Left);
-        bar.AddChild(_alignLeft);
+        _topBar.AddChild(_alignLeft);
 
         _alignCenter.Text = "C";
         _alignCenter.CustomMinimumSize = new Vector2(20, 16);
         _alignCenter.Pressed += () => SetAlignment(LingoTextAlignment.Center);
-        bar.AddChild(_alignCenter);
+        _topBar.AddChild(_alignCenter);
 
         _alignRight.Text = "R";
         _alignRight.CustomMinimumSize = new Vector2(20, 16);
         _alignRight.Pressed += () => SetAlignment(LingoTextAlignment.Right);
-        bar.AddChild(_alignRight);
+        _topBar.AddChild(_alignRight);
 
         _fontSize.MinValue = 1;
         _fontSize.MaxValue = 200;
         _fontSize.CustomMinimumSize = new Vector2(50, 16);
         _fontSize.ValueChanged += v => { if (_member != null) _member.FontSize = (int)v; };
-        bar.AddChild(_fontSize);
+        _topBar.AddChild(_fontSize);
 
         _textEdit.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + ActionBarHeight);
         _textEdit.Size = new Vector2(Size.X - 10, Size.Y - (TitleBarHeight + NavigationBarHeight + ActionBarHeight + 5));
