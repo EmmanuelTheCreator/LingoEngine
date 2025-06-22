@@ -6,30 +6,43 @@ using LingoEngine.Members;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.LGodot;
 using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Core;
+using LingoEngine.Movies;
+using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Casts;
 
 internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkTextEditWindow
 {
+    private const int NavigationBarHeight = 20;
+    private const int ActionBarHeight = 20;
     private readonly TextEdit _textEdit = new TextEdit();
+    private readonly MemberNavigationBar<ILingoMemberTextBase> _navBar;
     private readonly Button _alignLeft = new Button();
     private readonly Button _alignCenter = new Button();
     private readonly Button _alignRight = new Button();
     private readonly SpinBox _fontSize = new SpinBox();
 
+    private readonly ILingoPlayer _player;
     private ILingoMemberTextBase? _member;
 
-    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, DirectorTextEditWindow directorTextEditWindow, IDirGodotWindowManager windowManager) 
+    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, ILingoPlayer player, DirectorTextEditWindow directorTextEditWindow, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.TextEditWindow, "Edit Text", windowManager)
     {
+        _player = player;
         mediator.Subscribe(this);
         directorTextEditWindow.Init(this);
 
         Size = new Vector2(300, 200);
         CustomMinimumSize = Size;
 
+        _navBar = new MemberNavigationBar<ILingoMemberTextBase>(mediator, player, NavigationBarHeight);
+        AddChild(_navBar);
+        _navBar.Position = new Vector2(0, TitleBarHeight);
+        _navBar.CustomMinimumSize = new Vector2(Size.X, NavigationBarHeight);
+
         var bar = new HBoxContainer();
-        bar.Position = new Vector2(0, TitleBarHeight);
+        bar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight);
         AddChild(bar);
 
         _alignLeft.Text = "L";
@@ -53,8 +66,8 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
         _fontSize.ValueChanged += v => { if (_member != null) _member.FontSize = (int)v; };
         bar.AddChild(_fontSize);
 
-        _textEdit.Position = new Vector2(0, TitleBarHeight + 20);
-        _textEdit.Size = new Vector2(Size.X - 10, Size.Y - (TitleBarHeight + 25));
+        _textEdit.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + ActionBarHeight);
+        _textEdit.Size = new Vector2(Size.X - 10, Size.Y - (TitleBarHeight + NavigationBarHeight + ActionBarHeight + 5));
         _textEdit.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _textEdit.SizeFlagsVertical = SizeFlags.ExpandFill;
         _textEdit.TextChanged += () =>
@@ -72,13 +85,15 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
             _member = text;
             _textEdit.Text = text.Text;
             _fontSize.Value = text.FontSize;
+            _navBar.SetMember(text);
         }
     }
 
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
-        _textEdit.Size = new Vector2(size.X - 10, size.Y - (TitleBarHeight + 25));
+        _navBar.CustomMinimumSize = new Vector2(size.X, NavigationBarHeight);
+        _textEdit.Size = new Vector2(size.X - 10, size.Y - (TitleBarHeight + NavigationBarHeight + ActionBarHeight + 5));
     }
 
     private void SetAlignment(LingoTextAlignment alignment)
@@ -86,6 +101,7 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
         if (_member != null)
             _member.Alignment = alignment;
     }
+
 
    
 }
