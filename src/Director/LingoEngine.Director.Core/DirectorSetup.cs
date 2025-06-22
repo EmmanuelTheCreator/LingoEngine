@@ -42,6 +42,7 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<DirectorStageWindow>()
                     .AddSingleton<DirectorTextEditWindow>()
                     .AddSingleton<DirectorPictureEditWindow>()
+                    .AddSingleton<DirectorImportExportWindow>()
                     );
             engineRegistration.AddBuildAction(
                 (serviceProvider) =>
