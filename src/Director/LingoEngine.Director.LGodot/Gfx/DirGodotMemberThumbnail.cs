@@ -11,19 +11,22 @@ namespace LingoEngine.Director.LGodot.Gfx;
 internal partial class DirGodotMemberThumbnail : Control
 {
     private readonly TextureRect _sprite;
-    private readonly Label _typeLabel;
+    private readonly PanelContainer _iconPanel;
+    private readonly TextureRect _iconTexture;
     private readonly Label _textLabel = new();
     private SubViewport _textViewport;
+    private readonly IDirGodotIconManager _iconManager;
 
     public float ThumbWidth { get; }
     public float ThumbHeight { get; }
 
     private const float LabelHeight = 15;
 
-    public DirGodotMemberThumbnail(float width, float height)
+    public DirGodotMemberThumbnail(float width, float height, IDirGodotIconManager iconManager)
     {
         ThumbWidth = width;
         ThumbHeight = height;
+        _iconManager = iconManager;
         CustomMinimumSize = new Vector2(width, height);
         MouseFilter = MouseFilterEnum.Ignore;
 
@@ -46,14 +49,11 @@ internal partial class DirGodotMemberThumbnail : Control
         spriteContainer.AddChild(_sprite);
         AddChild(spriteContainer);
 
-        // Type label overlay
-        _typeLabel = new Label
+        // Type icon overlay
+        _iconPanel = new PanelContainer
         {
-            LabelSettings = new LabelSettings { FontSize = 8 },
             MouseFilter = MouseFilterEnum.Ignore,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            CustomMinimumSize = new Vector2(10, 10)
+            CustomMinimumSize = new Vector2(16, 16)
         };
         var typeStyle = new StyleBoxFlat
         {
@@ -64,18 +64,25 @@ internal partial class DirGodotMemberThumbnail : Control
             BorderWidthLeft = 1,
             BorderWidthRight = 1
         };
-        _typeLabel.AddThemeStyleboxOverride("normal", typeStyle);
-        _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
-        AddChild(_typeLabel);
+        _iconPanel.AddThemeStyleboxOverride("panel", typeStyle);
+        _iconTexture = new TextureRect
+        {
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
+        _iconPanel.AddChild(_iconTexture);
+        AddChild(_iconPanel);
 
-        _typeLabel.AnchorLeft = 1;
-        _typeLabel.AnchorRight = 1;
-        _typeLabel.AnchorTop = 1;
-        _typeLabel.AnchorBottom = 1;
-        _typeLabel.OffsetRight = -2;
-        _typeLabel.OffsetBottom = -2;
-        _typeLabel.OffsetLeft = -_typeLabel.CustomMinimumSize.X - 2;
-        _typeLabel.OffsetTop = -_typeLabel.CustomMinimumSize.Y - 2;
+        _iconPanel.AnchorLeft = 1;
+        _iconPanel.AnchorRight = 1;
+        _iconPanel.AnchorTop = 1;
+        _iconPanel.AnchorBottom = 1;
+        _iconPanel.OffsetRight = -2;
+        _iconPanel.OffsetBottom = -2;
+        _iconPanel.OffsetLeft = -_iconPanel.CustomMinimumSize.X - 2;
+        _iconPanel.OffsetTop = -_iconPanel.CustomMinimumSize.Y - 2;
 
         //_textViewport = new SubViewport
         //{
@@ -90,7 +97,8 @@ internal partial class DirGodotMemberThumbnail : Control
 
     public void SetMember(ILingoMember member)
     {
-        _typeLabel.Text = LingoMemberTypeIcons.GetIcon(member);
+        var icon = LingoMemberTypeIcons.GetIcon(member);
+        _iconTexture.Texture = icon.HasValue ? _iconManager.Get(icon.Value) : null;
 
         
 

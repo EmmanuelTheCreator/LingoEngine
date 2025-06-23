@@ -25,6 +25,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly StyleBoxFlat _normalLabelStyle = new();
         //private readonly CenterContainer _spriteContainer;
         private readonly DirGodotMemberThumbnail _thumb;
+        private readonly IDirGodotIconManager _iconManager;
         private readonly ILingoMember _lingoMember;
         private readonly ColorRect _separator;
         private readonly Action<DirGodotCastItem> _onSelect;
@@ -43,11 +44,12 @@ namespace LingoEngine.Director.LGodot.Casts
             // Labels use the "normal" stylebox for their background, not "panel"
             _caption.AddThemeStyleboxOverride("normal", selected ? _selectedLabelStyle : _normalLabelStyle);
         }
-        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager)
+        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager, IDirGodotIconManager iconManager)
         {
             _lingoMember = element;
             _onSelect = onSelect;
             _commandManager = commandManager;
+            _iconManager = iconManager;
             _selectedColor = selectedColor;
             CustomMinimumSize = new Vector2(50, 50);
             MouseFilter = MouseFilterEnum.Stop;
@@ -86,7 +88,7 @@ namespace LingoEngine.Director.LGodot.Casts
             AddChild(_bg);
 
 
-            _thumb = new DirGodotMemberThumbnail(Width - 1, Height - LabelHeight);
+            _thumb = new DirGodotMemberThumbnail(Width - 1, Height - LabelHeight, _iconManager);
             AddChild(_thumb);
 
             // separator line above the caption

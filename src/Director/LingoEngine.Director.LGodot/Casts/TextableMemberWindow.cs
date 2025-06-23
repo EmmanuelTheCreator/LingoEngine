@@ -25,19 +25,21 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
     private readonly HBoxContainer _topBar = new HBoxContainer();
 
     private readonly ILingoPlayer _player;
+    private readonly IDirGodotIconManager _iconManager;
     private ILingoMemberTextBase? _member;
 
-    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, ILingoPlayer player, DirectorTextEditWindow directorTextEditWindow, IDirGodotWindowManager windowManager)
+    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, ILingoPlayer player, DirectorTextEditWindow directorTextEditWindow, IDirGodotWindowManager windowManager, IDirGodotIconManager iconManager)
         : base(DirectorMenuCodes.TextEditWindow, "Edit Text", windowManager)
     {
         _player = player;
+        _iconManager = iconManager;
         mediator.Subscribe(this);
         directorTextEditWindow.Init(this);
 
         Size = new Vector2(450, 200);
         CustomMinimumSize = Size;
 
-        _navBar = new MemberNavigationBar<ILingoMemberTextBase>(mediator, player, NavigationBarHeight);
+        _navBar = new MemberNavigationBar<ILingoMemberTextBase>(mediator, player, _iconManager, NavigationBarHeight);
         AddChild(_navBar);
         _navBar.Position = new Vector2(0, TitleBarHeight);
         _navBar.CustomMinimumSize = new Vector2(Size.X, NavigationBarHeight);

@@ -24,10 +24,11 @@ namespace LingoEngine.Director.LGodot.Casts
         private DirGodotCastItem? _selectedItem;
         private ILingoPlayer _player;
         private readonly ILingoCommandManager _commandManager;
+        private readonly IDirGodotIconManager _iconManager;
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager, IDirGodotIconManager iconManager)
             : base(DirectorMenuCodes.CastWindow, "Cast", windowManager)
         {
             _mediator = mediator;
@@ -35,6 +36,7 @@ namespace LingoEngine.Director.LGodot.Casts
             directorCastWindow.Init(this);
             _player = player;
             _commandManager = commandManager;
+            _iconManager = iconManager;
             _player.ActiveMovieChanged += OnActiveMovieChanged;
             _mediator.Subscribe(this);
 
@@ -76,7 +78,7 @@ namespace LingoEngine.Director.LGodot.Casts
             int index = 0;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
-                var castLibViewer = new DirGodotCastView(OnSelectElement, _style, _commandManager);
+                var castLibViewer = new DirGodotCastView(OnSelectElement, _style, _commandManager, _iconManager);
                 castLibViewer.Show(cast);
                 _castViews.Add(cast.Number, castLibViewer);
                 _castTabIndices.Add(cast.Number, index);

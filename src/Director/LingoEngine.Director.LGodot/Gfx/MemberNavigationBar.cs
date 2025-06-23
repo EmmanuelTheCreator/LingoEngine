@@ -12,10 +12,12 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
 {
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
+    private readonly IDirGodotIconManager _iconManager;
 
     private readonly Button _prevButton = new Button();
     private readonly Button _nextButton = new Button();
-    private readonly Label _typeLabel = new Label();
+    private readonly PanelContainer _typePanel = new();
+    private readonly TextureRect _typeIcon = new();
     private readonly LineEdit _nameEdit = new LineEdit();
     private readonly Label _numberLabel = new Label();
     private readonly Button _infoButton = new Button();
@@ -23,10 +25,11 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
 
     private T? _member;
 
-    public MemberNavigationBar(IDirectorEventMediator mediator, ILingoPlayer player, int barHeight = 20)
+    public MemberNavigationBar(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotIconManager iconManager, int barHeight = 20)
     {
         _mediator = mediator;
         _player = player;
+        _iconManager = iconManager;
 
         CustomMinimumSize = new Vector2(0, barHeight);
 
@@ -40,9 +43,22 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _nextButton.Pressed += () => Navigate(1);
         AddChild(_nextButton);
 
-        _typeLabel.CustomMinimumSize = new Vector2(20, barHeight);
-        _typeLabel.AddThemeColorOverride("font_color", Colors.Black);
-        AddChild(_typeLabel);
+        _typePanel.CustomMinimumSize = new Vector2(20, barHeight);
+        var typeStyle = new StyleBoxFlat
+        {
+            BgColor = Colors.White,
+            BorderColor = Colors.Black,
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1
+        };
+        _typePanel.AddThemeStyleboxOverride("panel", typeStyle);
+        _typeIcon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+        _typeIcon.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _typeIcon.SizeFlagsVertical = SizeFlags.ExpandFill;
+        _typePanel.AddChild(_typeIcon);
+        AddChild(_typePanel);
 
         _nameEdit.CustomMinimumSize = new Vector2(100, barHeight);
         _nameEdit.SizeFlagsHorizontal = SizeFlags.ExpandFill;
@@ -70,7 +86,8 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _nameEdit.Text = member.Name;
         _numberLabel.Text = member.NumberInCast.ToString();
         _castLibLabel.Text = GetCastName(member);
-        _typeLabel.Text = LingoMemberTypeIcons.GetIcon(member);
+        var icon = LingoMemberTypeIcons.GetIcon(member);
+        _typeIcon.Texture = icon.HasValue ? _iconManager.Get(icon.Value) : null;
     }
 
     private string GetCastName(ILingoMember m)
