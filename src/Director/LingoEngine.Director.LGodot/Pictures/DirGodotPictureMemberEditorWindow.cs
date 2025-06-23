@@ -436,6 +436,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
                 {
                     _panning = true;
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
                 else if (mb.Pressed && !@_spaceHeld && bounds.HasPoint(mousePos))
@@ -460,6 +461,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 else if (!mb.Pressed)
                 {
                     _panning = false;
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
             }
@@ -481,6 +483,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                     // Update controls and image
                     _zoomSlider.Value = newScale;
                     OnZoomChanged(newScale);
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
             }
@@ -492,6 +495,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             {
                 _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
                 _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+
+                GetViewport().SetInputAsHandled();
+                return;
             }
         }
     }
