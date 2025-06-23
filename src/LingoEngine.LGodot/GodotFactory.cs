@@ -19,6 +19,8 @@ using LingoEngine.LGodot.Stages;
 using LingoEngine.Members;
 using LingoEngine.Casts;
 using LingoEngine.Shapes;
+using LingoEngine.Gfx;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.LGodot
 {
@@ -181,6 +183,14 @@ namespace LingoEngine.LGodot
             key = new LingoKey(impl);
             impl.SetLingoKey(key);
             return key;
+        }
+
+        public LingoGfxCanvas CreateGfxCanvas()
+        {
+            var canvas = new LingoGfxCanvas();
+            var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            _rootNode.AddChild(impl);
+            return canvas;
         }
     }
 }

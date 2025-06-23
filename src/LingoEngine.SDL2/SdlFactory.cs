@@ -13,6 +13,8 @@ using LingoEngine.SDL2.Pictures;
 using LingoEngine.SDL2.Sounds;
 using LingoEngine.SDL2.Texts;
 using LingoEngine.SDL2.Shapes;
+using LingoEngine.Gfx;
+using LingoEngine.SDL2.Gfx;
 using LingoEngine.Sounds;
 using LingoEngine.Shapes;
 using LingoEngine.Texts;
@@ -170,5 +172,13 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         var key = new LingoKey(impl);
         impl.SetLingoKey(key);
         return key;
+    }
+
+    public LingoGfxCanvas CreateGfxCanvas()
+    {
+        var canvas = new LingoGfxCanvas();
+        var impl = new SdlGfxCanvas(_rootContext.Renderer, _serviceProvider.GetRequiredService<ILingoFontManager>());
+        canvas.Init(impl);
+        return canvas;
     }
 }
