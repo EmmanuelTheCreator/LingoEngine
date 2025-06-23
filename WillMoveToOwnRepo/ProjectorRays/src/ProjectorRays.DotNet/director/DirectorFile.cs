@@ -412,32 +412,43 @@ public class DirectorFile : ChunkResolver
 
     private Chunk MakeChunk(uint fourCC, BufferView view)
     {
+        //Logger.LogInformation($"Reading chunk FourCC={ProjectorRays.Common.Util.FourCCToString(fourCC)}, Offset={view.Offset}, Length={view.Size}");
+        //Logger.LogInformation($"Chunk bytes:\n{view.LogHex(256,view.Size)}");
+
         Chunk chunk = fourCC switch
         {
-            var v when v == FOURCC('i','m','a','p') => new InitialMapChunk(this),
-            var v when v == FOURCC('m','m','a','p') => new MemoryMapChunk(this),
-            var v when v == FOURCC('C','A','S','*') => new CastChunk(this),
-            var v when v == FOURCC('C','A','S','t') => new CastMemberChunk(this),
-            var v when v == FOURCC('K','E','Y','*') => new KeyTableChunk(this),
-            var v when v == FOURCC('L','c','t','x') || v == FOURCC('L','c','t','X') => new ScriptContextChunk(this),
-            var v when v == FOURCC('L','n','a','m') => new ScriptNamesChunk(this),
-            var v when v == FOURCC('L','s','c','r') => new ScriptChunk(this),
-            var v when v == FOURCC('V','W','C','F') || v == FOURCC('D','R','C','F') => new ConfigChunk(this),
-            var v when v == FOURCC('M','C','s','L') => new CastListChunk(this),
-            var v when v == FOURCC('V','W','S','C') => new ScoreChunk(this),
+            var v when v == FOURCC('i', 'm', 'a', 'p') => new InitialMapChunk(this),
+            var v when v == FOURCC('m', 'm', 'a', 'p') => new MemoryMapChunk(this),
+            var v when v == FOURCC('C', 'A', 'S', '*') => new CastChunk(this),
+            var v when v == FOURCC('C', 'A', 'S', 't') => new CastMemberChunk(this),
+            var v when v == FOURCC('K', 'E', 'Y', '*') => new KeyTableChunk(this),
+            var v when v == FOURCC('L', 'c', 't', 'x') || v == FOURCC('L', 'c', 't', 'X') => new ScriptContextChunk(this),
+            var v when v == FOURCC('L', 'n', 'a', 'm') => new ScriptNamesChunk(this),
+            var v when v == FOURCC('L', 's', 'c', 'r') => new ScriptChunk(this),
+            var v when v == FOURCC('V', 'W', 'C', 'F') || v == FOURCC('D', 'R', 'C', 'F') => new ConfigChunk(this),
+            var v when v == FOURCC('M', 'C', 's', 'L') => new CastListChunk(this),
+            var v when v == FOURCC('V', 'W', 'S', 'C') => new ScoreChunk(this),
             var v when v == FOURCC('X', 'M', 'E', 'D') => new XmedChunk(this, ChunkType.StyledText),
             _ => throw new IOException($"Could not deserialize '{Common.Util.FourCCToString(fourCC)}' chunk")
         };
-        var isCasStart = fourCC == FOURCC('C', 'A', 'S', '*') || fourCC == FOURCC('C', 'A', 'S', 't');
-        if (isCasStart)
+
+
+        var isBig = IsAlwaysBigEndian(fourCC) ;
+        if (isBig)
         {
 
         }
-        var chunkStream = new ReadStream(view, isCasStart ? Endianness.BigEndian : Endianness);
+        var chunkStream = new ReadStream(view, isBig ? Endianness.BigEndian : Endianness);
         chunk.Read(chunkStream);
         return chunk;
     }
-
+    private static bool IsAlwaysBigEndian(uint fourCC) => fourCC switch
+    {
+        var v when v == FOURCC('C', 'A', 'S', '*') => true,
+        var v when v == FOURCC('C', 'A', 'S', 't') => true,
+        var v when v == FOURCC('M', 'C', 's', 'L') => true,
+        _ => false
+    };
     public Script? GetScript(int id)
     {
         var chunk = (ScriptChunk)GetChunk(FOURCC('L','s','c','r'), id);

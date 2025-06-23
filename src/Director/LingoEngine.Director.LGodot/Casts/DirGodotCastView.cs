@@ -5,6 +5,7 @@ using LingoEngine.Director.LGodot;
 using LingoEngine.Members;
 using LingoEngine.Core;
 using System.Linq;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Casts
 {

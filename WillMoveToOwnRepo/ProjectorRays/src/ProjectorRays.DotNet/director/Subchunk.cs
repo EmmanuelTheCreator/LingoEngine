@@ -80,7 +80,10 @@ public class KeyTableEntry
         SectionID = stream.ReadUint16();
         CastID = stream.ReadInt32();
     }
-
+    public string LogString()
+    {
+        return $"KeyTableEntry: FourCC={Common.Util.FourCCToString(FourCC)}, ResourceID={ResourceID}, SectionID={SectionID}, CastID={CastID}";
+    }
     public void WriteJSON(JSONWriter json)
     {
         json.StartObject();

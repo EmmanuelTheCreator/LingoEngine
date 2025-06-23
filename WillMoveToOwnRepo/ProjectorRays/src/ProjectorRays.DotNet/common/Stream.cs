@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.IO.Compression;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace ProjectorRays.Common;
@@ -39,6 +40,23 @@ public class BufferView
     public byte[] Data => _data;
     public int Offset => _offset;
     public static readonly BufferView Empty = new BufferView(Array.Empty<byte>(), 0, 0);
+
+    public string LogHex(int length = 256, int bytesPerLine = 16)
+    {
+        var sb = new StringBuilder();
+        int limit = Math.Min(_data.Length, length);
+        for (int i = 0; i < limit; i += bytesPerLine)
+        {
+            sb.Append($"{i:X4}: ");
+            for (int j = 0; j < bytesPerLine && i + j < limit; j++)
+            {
+                sb.Append($"{_data[i + j]:X2} ");
+            }
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
 }
 
 public class Stream : BufferView
@@ -97,7 +115,16 @@ public class ReadStream : Stream
 
     public ReadStream(BufferView view, Endianness e = Endianness.BigEndian, int p = 0)
         : base(view, e, p) { }
-
+    public int Position
+    {
+        get => _pos;
+        set
+        {
+            if (value < 0 || value > _size)
+                throw new ArgumentOutOfRangeException(nameof(value), "Position out of bounds.");
+            _pos = value;
+        }
+    }
     public BufferView ReadByteView(int len)
     {
         var view = new BufferView(_data, _offset + _pos, len);
@@ -273,6 +300,37 @@ public class ReadStream : Stream
         Array.Copy(_data, _offset + _pos, buffer, 0, count);
         return buffer;
     }
+    public byte[] PeekBytesAt(int pos, int count)
+    {
+        if (pos < 0 || pos >= _size)
+            return Array.Empty<byte>();
+
+        if (pos + count > _size)
+            count = _size - pos;
+
+        var buffer = new byte[count];
+        Array.Copy(_data, _offset + pos, buffer, 0, count);
+        return buffer;
+    }
+
+    public string LogHex(int length = 256, int bytesPerLine = 16)
+    {
+        var sb = new StringBuilder();
+        int limit = Math.Min(_data.Length, length);
+        for (int i = 0; i < limit; i += bytesPerLine)
+        {
+            sb.Append($"{i:X4}: ");
+            for (int j = 0; j < bytesPerLine && i + j < limit; j++)
+            {
+                sb.Append($"{_data[i + j]:X2} ");
+            }
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+
+    
 }
 
 public class WriteStream : Stream

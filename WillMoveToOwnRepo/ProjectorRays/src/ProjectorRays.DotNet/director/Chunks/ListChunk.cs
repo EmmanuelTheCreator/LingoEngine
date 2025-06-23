@@ -1,4 +1,5 @@
-﻿using ProjectorRays.Common;
+﻿using Microsoft.Extensions.Logging;
+using ProjectorRays.Common;
 using ProjectorRays.Director;
 
 namespace ProjectorRays.director.Chunks;
@@ -31,8 +32,11 @@ public class ListChunk : Chunk
 
     public void ReadOffsetTable(ReadStream stream)
     {
+        
         for (int i = 0; i < OffsetTableLen; i++)
             OffsetTable.Add(stream.ReadUint32());
+
+        Dir?.Logger.LogInformation($"ReadOffsetTable: {string.Join(',', OffsetTable)}");
     }
 
     public void ReadItems(ReadStream stream)
@@ -41,9 +45,25 @@ public class ListChunk : Chunk
         {
             uint start = OffsetTable[i];
             uint end = i + 1 < OffsetTableLen ? OffsetTable[i + 1] : ItemsLen;
-            Items.Add(stream.ReadByteView((int)(end - start)));
+            int len = (int)(end - start);
+            if (len <= 0)
+            {
+                Dir?.Logger.LogWarning($"Skipping item {i} due to invalid or zero-length span: start={start}, end={end}");
+                Items.Add(BufferView.Empty);
+                continue;
+            }
+            Items.Add(stream.ReadByteView(len));
         }
     }
+
+
+
+
+
+
+
+
+
 
     public string ReadString(int index)
     {

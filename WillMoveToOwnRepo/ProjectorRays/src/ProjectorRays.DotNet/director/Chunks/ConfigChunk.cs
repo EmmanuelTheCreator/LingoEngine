@@ -1,4 +1,5 @@
-﻿using ProjectorRays.Common;
+﻿using Microsoft.Extensions.Logging;
+using ProjectorRays.Common;
 using ProjectorRays.Director;
 
 namespace ProjectorRays.director.Chunks;
@@ -28,6 +29,8 @@ public class ConfigChunk : Chunk
         stream.Seek(36);
         DirectorVersion = stream.ReadInt16();
         stream.Seek(len); // skip the remainder
+        Dir?.Logger.LogInformation($"ConfigChunk: FileVersion={FileVersion}, MinMember={MinMember}, DirectorVersion={DirectorVersion}");
+
     }
 
     public override void WriteJSON(JSONWriter json)
