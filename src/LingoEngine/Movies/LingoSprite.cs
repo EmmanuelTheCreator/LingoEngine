@@ -576,5 +576,10 @@ When a movie stops, events occur in the following order:
         public void SetOnRemoveMe(Action<LingoSprite> onRemoveMe) => _onRemoveMe = onRemoveMe;
 
         public string GetFullName() => $"{SpriteNum}.{Name}.{Member?.Name}";
+
+        internal void ChangeSpriteNumIKnowWhatImDoingOnlyInternal(int spriteNum)
+        {
+            SpriteNum = spriteNum;
+        }
     }
 }

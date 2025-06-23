@@ -98,11 +98,16 @@ namespace LingoEngine.LGodot
             _removeMethod(this);
             Dispose();
         }
+        private bool _isDisposed;
         public void Dispose()
         {
-            _Container2D.GetParent().RemoveChild(_Container2D);
+            if (_isDisposed) return;
+            var parent = _Container2D.GetParent();
+            if (parent != null)
+                parent.RemoveChild(_Container2D);
             _Sprite2D.Dispose();
             _Container2D.Dispose();
+            _isDisposed = true;
         }
 
         public void Show()

@@ -108,4 +108,6 @@ public class SdlMemberPicture : ILingoFrameworkMemberPicture, IDisposable
         }
 
     }
+
+    public void SetImageData(byte[] bytes) => ImageData = bytes;
 }

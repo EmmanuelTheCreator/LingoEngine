@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using LingoEngine.Pictures;
 using LingoEngine.LGodot.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
@@ -18,7 +18,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private const int NavigationBarHeight = 20;
     private const int IconBarHeight = 20;
     private const int BottomBarHeight = 20;
-    private static readonly Vector2 WorkAreaSize = new Vector2(2000, 2000);
+    private Vector2 _workAreaSize = new Vector2(2000, 2000); // fallback
+
 
     private readonly ScrollContainer _scrollContainer = new ScrollContainer();
     private readonly Control _centerContainer = new Control();
@@ -35,23 +36,33 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private readonly RegPointCanvas _regPointCanvas;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
+    private readonly IDirGodotIconManager _iconManager;
     private LingoMemberPicture? _member;
     private bool _showRegPoint = true;
+    private PicturePainter? _painter;
+    private readonly PaintToolbar _paintToolbar;
 
+
+    private readonly float[] _zoomLevels = new float[]
+        {
+            0.25f, 0.33f, 0.5f, 0.66f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f
+        };
     private float _scale = 1f;
     private bool _spaceHeld;
     private bool _panning;
 
-    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow) : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
+    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow, IDirGodotIconManager iconManager, ILingoCommandManager commandManager) 
+        : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
         _mediator = mediator;
         _player = player;
+        _iconManager = iconManager;
         _mediator.Subscribe(this);
-        Size = new Vector2(400, 300);
+        Size = new Vector2(800, 500);
         directorPictureEditWindow.Init(this);
         CustomMinimumSize = Size;
 
-        _navBar = new MemberNavigationBar<LingoMemberPicture>(_mediator, _player, NavigationBarHeight);
+        _navBar = new MemberNavigationBar<LingoMemberPicture>(_mediator, _player, _iconManager, NavigationBarHeight);
         AddChild(_navBar);
         _navBar.Position = new Vector2(0, TitleBarHeight);
         _navBar.CustomMinimumSize = new Vector2(Size.X, NavigationBarHeight);
@@ -60,6 +71,10 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         AddChild(_iconBar);
         _iconBar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight);
         _iconBar.CustomMinimumSize = new Vector2(Size.X, IconBarHeight);
+        _paintToolbar = new PaintToolbar(_iconManager, commandManager);
+        AddChild(_paintToolbar);
+        _paintToolbar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
+
 
         _flipHButton.Text = "Flip H";
         _flipHButton.CustomMinimumSize = new Vector2(60, IconBarHeight);
@@ -82,6 +97,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _regPointCanvas.QueueRedraw();
         };
         _iconBar.AddChild(_toggleRegPointButton);
+        var applyButton = new Button { Text = "Apply", CustomMinimumSize = new Vector2(60, IconBarHeight) };
+        applyButton.Pressed += ApplyPaintingToMember;
+        _iconBar.AddChild(applyButton);
+
+
 
         // Image display container with scrollbars
         AddChild(_scrollContainer);
@@ -91,22 +111,33 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.AnchorTop = 0;
         _scrollContainer.AnchorRight = 1;
         _scrollContainer.AnchorBottom = 1;
-        _scrollContainer.OffsetLeft = 0;
+        _scrollContainer.OffsetLeft = _paintToolbar.Size.X; // Width of the toolbar
         _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
         _scrollContainer.OffsetRight = 0;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
+        _scrollContainer.GuiInput += (InputEvent @event) =>
+        {
+            if (@event is InputEventMouseButton mb &&
+                (mb.ButtonIndex == MouseButton.WheelUp || mb.ButtonIndex == MouseButton.WheelDown))
+            {
+                GetViewport().SetInputAsHandled(); 
+            }
+        };
+
 
         _scrollContainer.AddChild(_centerContainer);
-        _centerContainer.CustomMinimumSize = WorkAreaSize;
+        _centerContainer.CustomMinimumSize = Vector2.Zero;
         _centerContainer.AnchorLeft = 0.5f;
         _centerContainer.AnchorTop = 0.5f;
         _centerContainer.AnchorRight = 0.5f;
         _centerContainer.AnchorBottom = 0.5f;
-        _centerContainer.OffsetLeft = -WorkAreaSize.X / 2f;
-        _centerContainer.OffsetTop = -WorkAreaSize.Y / 2f;
-        _centerContainer.OffsetRight = WorkAreaSize.X / 2f;
-        _centerContainer.OffsetBottom = WorkAreaSize.Y / 2f;
-        _centerContainer.PivotOffset = WorkAreaSize / 2f;
+        _centerContainer.OffsetLeft = 0;
+        _centerContainer.OffsetTop = 0;
+        _centerContainer.OffsetRight = 0;
+        _centerContainer.OffsetBottom = 0;
+        _centerContainer.PivotOffset = Vector2.Zero;
+
+
 
         _background.Color = Colors.White;
         _background.AnchorLeft = 0;
@@ -151,21 +182,28 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _bottomBar.Position = new Vector2(0, Size.Y - BottomBarHeight);
         _bottomBar.CustomMinimumSize = new Vector2(Size.X, BottomBarHeight);
 
-        _zoomSlider.MinValue = 0.2f;
-        _zoomSlider.MaxValue = 2f;
-        _zoomSlider.Step = 0.1f;
-        _zoomSlider.Value = 1f;
-        _zoomSlider.CustomMinimumSize = new Vector2(150, BottomBarHeight);
-        _zoomSlider.ValueChanged += value => OnZoomChanged((float)value);
+        _zoomSlider.MinValue = 0;
+        _zoomSlider.MaxValue = _zoomLevels.Length - 1;
+        _zoomSlider.Step = 1;
+        _zoomSlider.Value = Array.IndexOf(_zoomLevels, 1.0f); // 100%
+        _zoomSlider.ValueChanged += index =>
+        {
+            var value = _zoomLevels[(int)index];
+            OnZoomChanged(value);
+        };
+
         _bottomBar.AddChild(_zoomSlider);
 
         _scaleDropdown.CustomMinimumSize = new Vector2(60, BottomBarHeight);
-        for (int percent = 20; percent <= 200; percent += 10)
+        for (int i = 0; i < _zoomLevels.Length; i++)
         {
+            int percent = Mathf.RoundToInt(_zoomLevels[i] * 100);
             _scaleDropdown.AddItem($"{percent}%");
-            if (percent == 100)
-                _scaleDropdown.Select(_scaleDropdown.ItemCount - 1);
+            if (_zoomLevels[i] == 1.0f)
+                _scaleDropdown.Select(i);
         }
+
+
         _scaleDropdown.ItemSelected += id => OnScaleSelected(id);
         _bottomBar.AddChild(_scaleDropdown);
     }
@@ -185,20 +223,37 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     public void SetPicture(LingoMemberPicture picture)
     {
         bool firstLoad = _member == null;
-        if (firstLoad)
-            ResetView();
         var godotPicture = picture.Framework<LingoGodotMemberPicture>();
         godotPicture.Preload();
-        if (godotPicture.Texture != null)
+
+        if (godotPicture.Texture is ImageTexture tex)
         {
-            _imageRect.Texture = godotPicture.Texture;
-            Vector2 size = new(godotPicture.Width, godotPicture.Height);
-            _imageRect.CustomMinimumSize = size;
-            _imageRect.PivotOffset = size / 2f;
-            _imageRect.OffsetLeft = -size.X / 2f;
-            _imageRect.OffsetTop = -size.Y / 2f;
-            _imageRect.OffsetRight = size.X / 2f;
-            _imageRect.OffsetBottom = size.Y / 2f;
+            _painter?.Dispose();
+
+            var image = godotPicture.GetImageCopy();
+            _painter = new PicturePainter(image);
+            _imageRect.Texture = _painter.Texture;
+
+            Vector2 imageSize = new(godotPicture.Width, godotPicture.Height);
+            _imageRect.Texture = _painter.Texture;
+            _imageRect.StretchMode = TextureRect.StretchModeEnum.Keep;
+            _imageRect.CustomMinimumSize = imageSize;
+            _imageRect.Size = imageSize;
+            _imageRect.Position = -imageSize / 2f;
+            _imageRect.PivotOffset = imageSize / 2f;
+            _imageRect.OffsetLeft = -imageSize.X / 2f;
+            _imageRect.OffsetTop = -imageSize.Y / 2f;
+            _imageRect.OffsetRight = imageSize.X / 2f;
+            _imageRect.OffsetBottom = imageSize.Y / 2f;
+
+            PixelPerfectMaterial.ApplyTo(_imageRect);
+
+            _workAreaSize = imageSize + new Vector2(2000, 2000);
+            _centerContainer.CustomMinimumSize = _workAreaSize * _scale;
+            _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
+
+            UpdateRegPointCanvasSize();
+
             if (firstLoad)
             {
                 FitImageToView();
@@ -208,78 +263,13 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 _zoomSlider.Value = _scale;
                 OnZoomChanged(_scale);
             }
-            UpdateRegPointCanvasSize();
+
             CallDeferred(nameof(CenterImage));
         }
+
         _member = picture;
         _navBar.SetMember(picture);
         _regPointCanvas.QueueRedraw();
-    }
-
-    public void MemberSelected(ILingoMember member)
-    {
-        if (member is LingoMemberPicture pic)
-            SetPicture(pic);
-    }
-
-    private void OnFlipH()
-    {
-        _imageRect.FlipH = !_imageRect.FlipH;
-    }
-
-    private void OnFlipV()
-    {
-        _imageRect.FlipV = !_imageRect.FlipV;
-    }
-
-
-    private void OnZoomChanged(float value)
-    {
-        Vector2 view = _scrollContainer.Size;
-        if (view == Vector2.Zero)
-            view = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
-
-        // keep the same canvas point at the center of the view after scaling
-        float oldScale = _scale;
-        float centerX = (_scrollContainer.ScrollHorizontal + view.X / 2f) / oldScale;
-        float centerY = (_scrollContainer.ScrollVertical + view.Y / 2f) / oldScale;
-
-        _scale = value;
-        _centerContainer.Scale = new Vector2(_scale, _scale);
-        _imageRect.Scale = new Vector2(_scale, _scale);
-        UpdateRegPointCanvasSize();
-        _regPointCanvas.QueueRedraw();
-
-        Vector2 canvasSize = _centerContainer.CustomMinimumSize * _scale;
-        float newH = centerX * _scale - view.X / 2f;
-        float newV = centerY * _scale - view.Y / 2f;
-
-        int maxH = (int)Mathf.Max(0, canvasSize.X - view.X);
-        int maxV = (int)Mathf.Max(0, canvasSize.Y - view.Y);
-
-        _scrollContainer.ScrollHorizontal = (int)Mathf.Clamp(newH, 0, maxH);
-        _scrollContainer.ScrollVertical = (int)Mathf.Clamp(newV, 0, maxV);
-
-        int percent = Mathf.RoundToInt(_scale * 100);
-        for (int i = 0; i < _scaleDropdown.ItemCount; i++)
-        {
-            if (_scaleDropdown.GetItemText(i).TrimEnd('%') == percent.ToString())
-            {
-                _scaleDropdown.Select(i);
-                break;
-            }
-        }
-    }
-
-    private void OnScaleSelected(long id)
-    {
-        var text = _scaleDropdown.GetItemText((int)id);
-        if (text.EndsWith("%") && float.TryParse(text.TrimEnd('%'), out var percent))
-        {
-            var newScale = percent / 100f;
-            _zoomSlider.Value = newScale;
-            OnZoomChanged(newScale);
-        }
     }
 
     private void FitImageToView()
@@ -359,7 +349,72 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         CenterImage();
         _regPointCanvas.QueueRedraw();
     }
+    private void OnZoomChanged(float value)
+    {
+        Vector2 viewSize = _scrollContainer.Size;
+        if (viewSize == Vector2.Zero)
+            viewSize = new Vector2(Size.X, Size.Y - (TitleBarHeight + IconBarHeight + BottomBarHeight));
 
+
+        float oldScale = _scale;
+
+        Vector2 globalMouse = GetGlobalMousePosition();
+        Vector2 localMouse = _scrollContainer.GetGlobalTransform().AffineInverse() * globalMouse;
+        Vector2 canvasMouse = localMouse + new Vector2(_scrollContainer.ScrollHorizontal, _scrollContainer.ScrollVertical);
+
+        Vector2 canvasOrigin = _workAreaSize * oldScale / 2f;
+        Vector2 logicalPoint = (canvasMouse - canvasOrigin) / oldScale;
+
+        _scale = value;
+        _imageRect.Scale = new Vector2(_scale, _scale);
+        _imageRect.Size = _imageRect.CustomMinimumSize * _scale;
+        _imageRect.OffsetTop = -_imageRect.CustomMinimumSize.Y / 2f;
+        _imageRect.OffsetBottom = _imageRect.CustomMinimumSize.Y / 2f;
+
+        _centerContainer.CustomMinimumSize = _workAreaSize * _scale;
+        _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
+
+        UpdateRegPointCanvasSize();
+        _regPointCanvas.QueueRedraw();
+
+        Vector2 newCanvasSize = _centerContainer.CustomMinimumSize;
+        Vector2 newOrigin = newCanvasSize / 2f;
+        Vector2 newScroll = logicalPoint * _scale + newOrigin - localMouse;
+
+        int maxH = (int)Mathf.Max(0, newCanvasSize.X - viewSize.X);
+        int maxV = (int)Mathf.Max(0, newCanvasSize.Y - viewSize.Y);
+
+        _scrollContainer.ScrollHorizontal = (int)Mathf.Clamp(newScroll.X, 0, maxH);
+        _scrollContainer.ScrollVertical = (int)Mathf.Clamp(newScroll.Y, 0, maxV);
+
+        // Find the closest matching zoom level index
+        int closestIndex = 0;
+        float smallestDiff = float.MaxValue;
+        for (int i = 0; i < _zoomLevels.Length; i++)
+        {
+            float diff = Mathf.Abs(_zoomLevels[i] - _scale);
+            if (diff < smallestDiff)
+            {
+                smallestDiff = diff;
+                closestIndex = i;
+            }
+        }
+        _scaleDropdown.Select(closestIndex);
+    }
+
+
+    private void OnScaleSelected(long id)
+    {
+        var text = _scaleDropdown.GetItemText((int)id);
+        if (text.EndsWith("%") && float.TryParse(text.TrimEnd('%'), out var percent))
+        {
+            var newScale = percent / 100f;
+            _zoomSlider.Value = newScale;
+            OnZoomChanged(newScale);
+            // Clear focus from dropdown so Spacebar works for panning
+            _scaleDropdown.ReleaseFocus();
+        }
+    }
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
@@ -375,12 +430,32 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         {
             Vector2 mousePos = GetGlobalMousePosition();
             Rect2 bounds = new Rect2(_scrollContainer.GlobalPosition, _scrollContainer.Size);
+
             if (mb.ButtonIndex == MouseButton.Left)
             {
                 if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
                 {
                     _panning = true;
                     GetViewport().SetInputAsHandled();
+                    return;
+                }
+                else if (mb.Pressed && !@_spaceHeld && bounds.HasPoint(mousePos))
+                {
+                    // Paint pixel
+                    if (_painter != null && _imageRect.Texture != null)
+                    {
+                        var local = _imageRect.GetLocalMousePosition() / _scale;
+                        var px = (int)local.X;
+                        var py = (int)local.Y;
+                        var pixel = new Vector2I(px, py);
+
+                        if (pixel.X >= 0 && pixel.Y >= 0 && pixel.X < _painter.Size.X && pixel.Y < _painter.Size.Y)
+                        {
+                            _painter.PaintPixel(pixel, Colors.Red); // example color
+                            _painter.Commit();
+                            _regPointCanvas.QueueRedraw();
+                        }
+                    }
                     return;
                 }
                 else if (!mb.Pressed)
@@ -394,14 +469,25 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             {
                 if (bounds.HasPoint(mousePos))
                 {
-                    float delta = mb.ButtonIndex == MouseButton.WheelUp ? 0.1f : -0.1f;
-                    float newScale = (float)Mathf.Clamp(_scale + delta, _zoomSlider.MinValue, _zoomSlider.MaxValue);
+                    // Apply zoom factor per scroll step (e.g. 25% per notch)
+                    const float zoomStep = 1.25f;
+                    float factor = mb.ButtonIndex == MouseButton.WheelUp ? zoomStep : 1f / zoomStep;
+
+                    float rawScale = _scale * factor;
+
+                    // Clamp scale within limits
+                    float minScale = _zoomLevels.First();
+                    float maxScale = _zoomLevels.Last();
+                    float newScale = Mathf.Clamp(rawScale, minScale, maxScale);
+
+                    // Update controls and image
                     _zoomSlider.Value = newScale;
                     OnZoomChanged(newScale);
                     GetViewport().SetInputAsHandled();
                     return;
                 }
             }
+
         }
         else if (@event is InputEventMouseMotion motion)
         {
@@ -409,46 +495,49 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             {
                 _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
                 _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+
                 GetViewport().SetInputAsHandled();
                 return;
             }
         }
     }
 
+
+    public void MemberSelected(ILingoMember member)
+    {
+        if (member is LingoMemberPicture pic)
+            SetPicture(pic);
+    }
+
+    private void OnFlipH()
+    {
+        _imageRect.FlipH = !_imageRect.FlipH;
+    }
+
+    private void OnFlipV()
+    {
+        _imageRect.FlipV = !_imageRect.FlipV;
+    }
     protected override void Dispose(bool disposing)
     {
+        _painter?.Dispose();
+        _painter = null;
         _mediator.Unsubscribe(this);
         base.Dispose(disposing);
     }
-}
 
-internal partial class DirGodotPictureMemberEditorWindow
-{
-    private partial class RegPointCanvas : Control
+    private void ApplyPaintingToMember()
     {
-        private readonly DirGodotPictureMemberEditorWindow _owner;
-        public RegPointCanvas(DirGodotPictureMemberEditorWindow owner)
-        {
-            _owner = owner;
-            MouseFilter = MouseFilterEnum.Ignore;
-        }
+        if (_painter == null || _member == null)
+            return;
 
-        public override void _Draw()
-        {
-            if (!_owner._showRegPoint) return;
-            var member = _owner._member;
-            if (member == null || _owner._imageRect.Texture == null) return;
+        _painter.Commit(); // Make sure texture is synced
+        var image = _painter.GetImage(); // You’ll need to expose this
 
-            Vector2 areaSize = Size;
-            float factor = _owner._scale;
-            Vector2 canvasHalf = _owner._centerContainer.CustomMinimumSize / 2f;
-            Vector2 imageHalf = _owner._imageRect.CustomMinimumSize / 2f;
-            Vector2 offset = canvasHalf - imageHalf;
-            // RegPoint origin is the texture's top-left corner
-            Vector2 pos = (offset + new Vector2(member.RegPoint.X, member.RegPoint.Y)) * factor + canvasHalf * (1 - factor);
+        var godotPicture = _member.Framework<LingoGodotMemberPicture>();
+        godotPicture.ApplyImage(image);
 
-            DrawLine(new Vector2(pos.X, 0), new Vector2(pos.X, areaSize.Y), Colors.Red);
-            DrawLine(new Vector2(0, pos.Y), new Vector2(areaSize.X, pos.Y), Colors.Red);
-        }
+        GD.Print("Changes applied to member.");
     }
 }
+
