@@ -95,7 +95,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stageContainer.Container.AddChild(_boundingBoxes);
         _stageContainer.Container.AddChild(_selectionBox);
         _boundingBoxes.ZIndex = 500;
-        _boundingBoxes.InputPickable = false; // ensure mouse clicks pass through
+        //_boundingBoxes.MouseFilter = MouseFilterEnum.Ignore; // ensure mouse clicks pass through
         _selectionBox.Visible = false;
         _selectionBox.ZIndex = 1000;
         AddChild(_scrollContainer);
@@ -585,7 +585,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         }
     }
 
-    private class BoundingBoxesOverlay : Node2D
+    private partial class BoundingBoxesOverlay : Node2D
     {
         private readonly List<Rect2> _rects = new();
         public void SetRects(IEnumerable<Rect2> rects)

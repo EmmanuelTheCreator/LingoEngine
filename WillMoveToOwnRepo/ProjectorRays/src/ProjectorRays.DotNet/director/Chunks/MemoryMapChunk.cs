@@ -1,4 +1,5 @@
-﻿using ProjectorRays.Common;
+﻿using Microsoft.Extensions.Logging;
+using ProjectorRays.Common;
 using ProjectorRays.Director;
 
 namespace ProjectorRays.director.Chunks;
@@ -29,6 +30,8 @@ public class MemoryMapChunk : Chunk
             entry.Read(stream);
             MapArray.Add(entry);
         }
+        Dir!.Logger.LogInformation($"MemoryMapChunk: Entries={countUsed}, HeaderLen={headerLen}, EntryLen={entryLen}, CountMax={countMax}, MapArray.Count={MapArray.Count}");
+
     }
 
     public override void WriteJSON(JSONWriter json)

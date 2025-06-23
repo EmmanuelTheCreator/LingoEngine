@@ -1,4 +1,5 @@
-﻿using ProjectorRays.Common;
+﻿using Microsoft.Extensions.Logging;
+using ProjectorRays.Common;
 using ProjectorRays.Director;
 
 namespace ProjectorRays.director.Chunks;
@@ -23,6 +24,8 @@ public class KeyTableChunk : Chunk
             entry.Read(stream);
             Entries.Add(entry);
         }
+        Dir?.Logger.LogInformation($"KeyTableChunk: EntrySize={entrySize}, Count={count}, Used={used}, ParsedEntries={Entries.Count}");
+        //Dir?.Logger.LogInformation("KeyTableChunk: Entries:"+string.Join('|', Entries.Select(e => $"{e.LogString()}")));
     }
 
     public override void WriteJSON(JSONWriter json)

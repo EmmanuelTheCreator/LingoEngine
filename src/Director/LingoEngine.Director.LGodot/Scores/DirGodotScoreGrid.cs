@@ -39,6 +39,10 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     internal int PreviewBegin => _dragHandler.PreviewBegin;
     internal int PreviewEnd => _dragHandler.PreviewEnd;
 
+    private readonly HashSet<Vector2I> _selectedCells = new();
+    private Vector2I? _lastSelectedCell = null;
+
+
     public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
@@ -169,6 +173,62 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _contextMenu.AddItem("Find Cast Member", 1);
         var gp = GetGlobalMousePosition();
         _contextMenu.Popup(new Rect2I((int)gp.X, (int)gp.Y, 0, 0));
+    }
+    public void HandleSelection(Vector2I cell, bool ctrl, bool shift)
+    {
+        if (shift && _lastSelectedCell.HasValue)
+        {
+            SelectRange(_lastSelectedCell.Value, cell);
+        }
+        else if (ctrl)
+        {
+            if (!_selectedCells.Add(cell))
+                _selectedCells.Remove(cell);
+            _lastSelectedCell = cell;
+        }
+        else
+        {
+            _selectedCells.Clear();
+            _selectedCells.Add(cell);
+            _lastSelectedCell = cell;
+        }
+
+        _spriteCanvas.QueueRedraw();
+    }
+    private void SelectRange(Vector2I from, Vector2I to)
+    {
+        _selectedCells.Clear();
+        int minX = Mathf.Min(from.X, to.X);
+        int maxX = Mathf.Max(from.X, to.X);
+        int minY = Mathf.Min(from.Y, to.Y);
+        int maxY = Mathf.Max(from.Y, to.Y);
+
+        for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
+                _selectedCells.Add(new Vector2I(x, y));
+    }
+    public bool IsCellSelected(Vector2I cell) => _selectedCells.Contains(cell);
+
+    public void ClearSelection()
+    {
+        _selectedCells.Clear();
+        _lastSelectedCell = null;
+        _spriteCanvas.QueueRedraw();
+    }
+    public Vector2I? GetCellFromPosition(Vector2 position)
+    {
+        if (_movie == null) return null;
+        // Replace with your actual cell size logic
+        const int CellWidth = 32;
+        const int CellHeight = 32;
+
+        int column = (int)(position.X / CellWidth);
+        int row = (int)(position.Y / CellHeight);
+
+        if (column < 0 || column >= _movie.MaxSpriteChannelCount || row < 0 || row >= _movie.FrameCount)
+            return null;
+
+        return new Vector2I(column, row);
     }
 
 

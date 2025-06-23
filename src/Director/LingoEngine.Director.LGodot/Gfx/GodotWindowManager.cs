@@ -7,6 +7,7 @@ public interface IDirGodotWindowManager : IDirFrameworkWindowManager
 {
     void Register(BaseGodotWindow godotWindow);
     void SetActiveWindow(BaseGodotWindow window);
+    BaseGodotWindow? ActiveWindow { get; }
 }
 internal class DirGodotWindowManager : IDirGodotWindowManager
 {

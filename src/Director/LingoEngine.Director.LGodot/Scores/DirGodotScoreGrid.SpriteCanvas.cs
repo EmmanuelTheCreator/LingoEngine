@@ -48,6 +48,24 @@ internal partial class DirGodotScoreGrid
             }
 
         }
+
+        public override void _GuiInput(InputEvent @event)
+        {
+            if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed && mouseEvent.ButtonIndex == MouseButton.Left)
+            {
+                var clickPos = mouseEvent.Position;
+                var cell = _owner.GetCellFromPosition(clickPos);
+
+                if (cell != null)
+                {
+                    var ctrl = Input.IsKeyPressed(Key.Ctrl);
+                    var shift = Input.IsKeyPressed(Key.Shift);
+
+                    _owner.HandleSelection(cell.Value, ctrl, shift);
+                }
+            }
+        }
+
     }
 
 }
