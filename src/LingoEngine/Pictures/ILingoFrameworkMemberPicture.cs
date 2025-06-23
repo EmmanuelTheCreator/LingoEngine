@@ -10,11 +10,7 @@ namespace LingoEngine.Pictures
         /// This field is implementation-independent; renderers may interpret this as needed.
         /// </summary>
         byte[]? ImageData { get;  }
-        /// <summary>
-        /// Indicates whether this image is loaded into memory.
-        /// Corresponds to: member.picture.loaded
-        /// </summary>
-        bool IsLoaded { get; }
+       
         /// <summary>
         /// Optional MIME type or encoding format (e.g., "image/png", "image/jpeg")
         /// </summary>
@@ -22,5 +18,6 @@ namespace LingoEngine.Pictures
         int Width { get;  }
         int Height { get;  }
 
+        void SetImageData(byte[] bytes);
     }
 }

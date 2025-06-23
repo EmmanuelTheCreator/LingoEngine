@@ -1,6 +1,7 @@
-﻿using LingoEngine.Director.Core.Menus;
+﻿using LingoEngine.Commands;
+using LingoEngine.Director.Core.Menus;
 
-namespace LingoEngine.Commands
+namespace LingoEngine.Director.Core.Commands
 {
     public sealed record OpenWindowCommand(string WindowCode) : ILingoCommand;
     public sealed record CloseWindowCommand(string WindowCode) : ILingoCommand;

@@ -36,6 +36,19 @@ public class JsonStateRepository
         var json = File.ReadAllText(filePath);
         var dto = JsonSerializer.Deserialize<LingoMovieDTO>(json) ?? throw new Exception("Invalid movie file");
 
+        return Load(dto, player, dir);
+    }
+
+    public LingoMovie Load(LingoMovieDTO dto, LingoPlayer player, string resourceDir)
+    {
+        if (string.IsNullOrEmpty(resourceDir))
+            resourceDir = Directory.GetCurrentDirectory();
+
+        return BuildMovieFromDto(dto, player, resourceDir);
+    }
+
+    private static LingoMovie BuildMovieFromDto(LingoMovieDTO dto, LingoPlayer player, string dir)
+    {
         var movie = (LingoMovie)player.NewMovie(dto.Name);
         movie.Tempo = dto.Tempo;
 

@@ -38,6 +38,7 @@ internal partial class ImportLingoFilesStep : VBoxContainer
         AddChild(_backButton);
 
         _folderDialog.Access = FileDialog.AccessEnum.Filesystem;
+        _folderDialog.FileMode = FileDialog.FileModeEnum.OpenDir;
         // _folderDialog.Mode =  FileDialog.FileModeEnum.OpenDir; <- Todo : this is not for godot 4,5, convert it
         _folderDialog.DirSelected += dir => LoadFolder(dir);
         AddChild(_folderDialog);
@@ -57,10 +58,12 @@ internal partial class ImportLingoFilesStep : VBoxContainer
         _bulkType.ItemSelected += idx => ApplyBulkType((int)idx);
         bulkRow.AddChild(_bulkType);
         AddChild(bulkRow);
+        
 
         _importButton.Text = "Import";
         _importButton.Pressed += OnImportPressed;
         AddChild(_importButton);
+
     }
 
     private void LoadFolder(string path)
@@ -82,8 +85,8 @@ internal partial class ImportLingoFilesStep : VBoxContainer
         {
             var row = new HBoxContainer();
             row.SetMeta("path", file);
-
-            var label = new Label { Text = Path.GetFileName(file), CustomMinimumSize = new Vector2(200, 16) };
+            var name = Path.GetFileName(file);
+            var label = new Label { Text = name, CustomMinimumSize = new Vector2(200, 16) };
             row.AddChild(label);
 
             var opt = new OptionButton();
