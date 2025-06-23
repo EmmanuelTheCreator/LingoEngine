@@ -1,6 +1,7 @@
 using Godot;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Windows;
+using LingoEngine.Core;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -13,7 +14,7 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
     private readonly Button _dirButton = new();
     private readonly Button _exportButton = new();
 
-    public DirGodotImportExportWindow(ProjectSettings settings, DirectorImportExportWindow directorWindow, IDirGodotWindowManager windowManager)
+    public DirGodotImportExportWindow(ProjectSettings settings, LingoPlayer player, DirectorImportExportWindow directorWindow, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.ImportExportWindow, "Import / Export", windowManager)
     {
         directorWindow.Init(this);
@@ -36,11 +37,21 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
         _exportButton.Text = "Export/Optimize code through AI";
         _home.AddChild(_exportButton);
 
-        _importLingoStep = new ImportLingoFilesStep(settings);
+        _importLingoStep = new ImportLingoFilesStep(settings)
+        {
+            Position = new Vector2(5, TitleBarHeight + 5),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
         _importLingoStep.Back += ShowHome;
         AddChild(_importLingoStep);
 
-        _importDirStep = new ImportDirCstFilesStep();
+        _importDirStep = new ImportDirCstFilesStep(player)
+        {
+            Position = new Vector2(5, TitleBarHeight + 5),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
         _importDirStep.Back += ShowHome;
         AddChild(_importDirStep);
 
