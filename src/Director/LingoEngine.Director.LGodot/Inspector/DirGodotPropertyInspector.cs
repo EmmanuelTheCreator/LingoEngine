@@ -31,26 +31,29 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly VBoxContainer _behaviorBox = new VBoxContainer();
     private readonly Button _behaviorClose = new Button();
     private readonly ILingoPlayer _player;
+    private readonly IDirGodotIconManager _iconManager;
     private readonly HBoxContainer _header = new HBoxContainer();
-    private readonly DirGodotMemberThumbnail _thumb = new DirGodotMemberThumbnail(36,36);
+    private readonly DirGodotMemberThumbnail _thumb;
     private readonly VBoxContainer _headerText = new VBoxContainer();
     private readonly Label _spriteInfo = new Label();
     private readonly Label _memberInfo = new Label();
     private readonly Label _castInfo = new Label();
     private const int HeaderHeight = 44;
 
-    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, IDirGodotIconManager iconManager)
         : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
     {
         _mediator = mediator;
         _commandManager = commandManager;
         _player = player;
+        _iconManager = iconManager;
         inspectorWindow.Init(this);
 
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
         CustomMinimumSize = Size;
 
+        _thumb = new DirGodotMemberThumbnail(36, 36, _iconManager);
         CreateHeader();
 
         _tabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
