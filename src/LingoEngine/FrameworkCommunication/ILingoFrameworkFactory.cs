@@ -8,6 +8,7 @@ using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Shapes;
 using LingoEngine.Texts;
+using LingoEngine.Gfx;
 
 namespace LingoEngine.FrameworkCommunication
 {
@@ -60,6 +61,11 @@ namespace LingoEngine.FrameworkCommunication
         LingoMouse CreateMouse(LingoStage stage);
         /// <summary>Creates a keyboard handler.</summary>
         LingoKey CreateKey();
+
+        /// <summary>
+        /// Creates a generic drawing canvas instance.
+        /// </summary>
+        LingoGfxCanvas CreateGfxCanvas();
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
