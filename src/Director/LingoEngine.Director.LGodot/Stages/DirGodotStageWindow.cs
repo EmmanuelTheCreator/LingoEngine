@@ -292,7 +292,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
-        if (!Visible || _movie == null || _movie.IsPlaying) return;
+        if (!Visible || _movie == null || _movie.IsPlaying || !IsActiveWindow) return;
 
         if (@event is InputEventKey spaceKey && spaceKey.Keycode == Key.Space)
         {
@@ -310,11 +310,13 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
                 {
                     _panning = true;
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
                 else if (!mb.Pressed && _panning)
                 {
                     _panning = false;
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
             }
@@ -326,6 +328,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 _scale = newScale;
                 UpdateScaleDropdown(newScale);
                 _stageContainer.SetScale(newScale);
+                GetViewport().SetInputAsHandled();
                 return;
             }
         }
@@ -333,6 +336,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         {
             _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
             _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+            GetViewport().SetInputAsHandled();
             return;
         }
 
