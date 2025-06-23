@@ -1,5 +1,5 @@
-﻿using LingoEngine.Commands;
-using LingoEngine.Core;
+﻿using LingoEngine.Core;
+using LingoEngine.Director.Core.Commands;
 using LingoEngine.Director.Core.Projects;
 using Microsoft.Extensions.DependencyInjection;
 

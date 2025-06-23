@@ -42,6 +42,13 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotWindowManager>();
                 s.AddSingleton<DirGodotWindowManager>();
                 s.AddSingleton<IExecutableFilePicker, GodotFilePicker>();
+                s.AddSingleton<IDirGodotIconManager>(p =>
+                {
+                    var iconManager = new DirGodotIconManager();
+                    iconManager.LoadSheet("res://Media/Icons/General_Icons.png", 20,16, 16,8);
+                    iconManager.LoadSheet("res://Media/Icons/Painter_Icons.png", 20,16, 16,8);
+                    return iconManager;
+                });
 
                 s.AddTransient<IDirFrameworkProjectSettingsWindow>(p => p.GetRequiredService<DirGodotProjectSettingsWindow>());
                 s.AddTransient<IDirFrameworkToolsWindow>(p => p.GetRequiredService<DirGodotToolsWindow>());

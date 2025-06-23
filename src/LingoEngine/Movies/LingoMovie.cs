@@ -327,7 +327,25 @@ namespace LingoEngine.Movies
             if (sprite == null) return default;
             return spriteAction(sprite);
         }
-     
+        public void ChangeSpriteChannel(ILingoSprite sprite, int newChannel)
+        {
+            if (sprite.SpriteNum - 1 == newChannel)
+                return;
+
+            // Remove from old active sprite map and channel
+            int oldChannel = sprite.SpriteNum - 1;
+            _activeSprites.Remove(sprite.SpriteNum);
+            _spriteChannels[oldChannel].RemoveSprite();
+
+            // Update sprite number and reassign to new channel
+            var spriteTyped = (LingoSprite)sprite;
+            spriteTyped.ChangeSpriteNumIKnowWhatImDoingOnlyInternal(newChannel + 1);
+            _spriteChannels[newChannel].SetSprite(spriteTyped);
+            _activeSprites[sprite.SpriteNum] = spriteTyped;
+
+            RaiseSpriteListChanged();
+        }
+
         #endregion
 
 
@@ -590,6 +608,7 @@ namespace LingoEngine.Movies
             => _MovieScripts.CallAll(actionOnAll);
 
         #endregion
+
 
 
         public LingoMovieEnvironment GetEnvironment() => _environment;
