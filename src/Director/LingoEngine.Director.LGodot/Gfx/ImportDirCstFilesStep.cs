@@ -2,6 +2,9 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using LingoEngine.Director.Core.Import;
+using LingoEngine.IO;
+using LingoEngine.Core;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -12,11 +15,14 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
     private readonly Button _importButton = new();
     private readonly Button _backButton = new();
     private readonly List<string> _files = new();
+    private readonly LingoPlayer _player;
+    private readonly JsonStateRepository _repo = new();
 
     public event Action? Back;
 
-    public ImportDirCstFilesStep()
+    public ImportDirCstFilesStep(LingoPlayer player)
     {
+        _player = player;
         Visible = false;
 
         var selectBtn = new Button { Text = "Select Files" };
@@ -47,6 +53,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
         AddChild(opts);
 
         _importButton.Text = "Import";
+        _importButton.Pressed += OnImportPressed;
         AddChild(_importButton);
 
         _backButton.Text = "Back";
@@ -95,6 +102,34 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
         _fileList.RemoveChild(row);
         row.QueueFree();
         _files.Remove(path);
+    }
+
+    private void OnImportPressed()
+    {
+        foreach (var file in _files)
+        {
+            if (!file.EndsWith(".dir", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                var (movie, resources) = DirectorRaysImporter.ImportMovie(file);
+                var tempDir = Path.Combine(Path.GetTempPath(), "lingo_import_" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(tempDir);
+                foreach (var res in resources.Files)
+                {
+                    var resPath = Path.Combine(tempDir, res.FileName);
+                    File.WriteAllBytes(resPath, res.Bytes);
+                }
+                var loaded = _repo.Load(movie, _player, tempDir);
+                _player.SetActiveMovie(loaded);
+                GD.Print($"Imported movie '{movie.Name}' into '{tempDir}' and loaded");
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr($"Import failed for {file}: {ex.Message}");
+            }
+        }
     }
 }
 
