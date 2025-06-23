@@ -225,6 +225,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (!IsActiveWindow) return;
         if (@event is InputEventMouseButton mb && !mb.IsPressed())
         {
             if (mb.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
@@ -237,6 +238,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
                         _masterScroller.ScrollVertical -= 20;
                     else
                         _masterScroller.ScrollVertical += 20;
+                    GetViewport().SetInputAsHandled();
                 }
             }
         }
