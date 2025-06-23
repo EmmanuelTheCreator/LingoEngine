@@ -112,5 +112,30 @@ namespace LingoEngine.LGodot.Pictures
         public void ImportFileInto()
         {
         }
+
+        public Image GetImageCopy()
+        {
+            if (_image == null)
+                throw new InvalidOperationException("Image not loaded.");
+
+            return _image.Duplicate() as Image
+                ?? throw new InvalidOperationException("Failed to duplicate image.");
+        }
+        public void ApplyImage(Image editedImage)
+        {
+            _image?.Dispose(); // Dispose old image
+            _image = editedImage.Duplicate() as Image ?? throw new InvalidOperationException("Failed to copy edited image.");
+            _imageTexture?.Dispose();
+
+            _imageTexture = ImageTexture.CreateFromImage(_image);
+            UpdateImageData(_image); // Also updates width, height, and member size
+
+            // Update the member's image data directly
+            _lingoMemberPicture.SetImageData(_image.GetData());
+        }
+
+        public void SetImageData(byte[] bytes) => this.ImageData = bytes;
+
+       
     }
 }
