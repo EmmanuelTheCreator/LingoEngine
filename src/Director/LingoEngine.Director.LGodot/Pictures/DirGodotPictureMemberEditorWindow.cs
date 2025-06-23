@@ -437,6 +437,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 {
                     _panning = true;
                     GetViewport().SetInputAsHandled();
+
                     return;
                 }
                 else if (mb.Pressed && !@_spaceHeld && bounds.HasPoint(mousePos))
@@ -456,6 +457,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                             _regPointCanvas.QueueRedraw();
                         }
                     }
+
                     return;
                 }
                 else if (!mb.Pressed)
