@@ -27,7 +27,7 @@ public class DirectorFileTests
 
     [Theory]
     //[InlineData("Dir_With_One_Img_Sprite_Hallo.dir")]
-    [InlineData("TestDir.dir")]
+    [InlineData("5spritesTest.dir")]
     //[InlineData("Dir_With_One_Tex_Sprite_Hallo.dir")]
     public void CanReadDirectorFile(string fileName)
     {

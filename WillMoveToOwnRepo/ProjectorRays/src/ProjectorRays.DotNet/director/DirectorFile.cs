@@ -5,6 +5,7 @@ using ProjectorRays.LingoDec;
 using ProjectorRays.IO;
 using Microsoft.Extensions.Logging;
 using ProjectorRays.director.Chunks;
+using ProjectorRays.director;
 
 namespace ProjectorRays.Director;
 
@@ -257,7 +258,7 @@ public class DirectorFile : ChunkResolver
         var info = GetFirstChunkInfo(FOURCC('D','R','C','F')) ?? GetFirstChunkInfo(FOURCC('V','W','C','F'));
         if (info == null) return false;
         Config = (ConfigChunk)GetChunk(info.FourCC, info.Id);
-        Version = Util.HumanVersion((uint)Config.DirectorVersion);
+        Version = Utilities.HumanVersion((uint)Config.DirectorVersion);
         DotSyntax = Version >= 700;
         return true;
     }
