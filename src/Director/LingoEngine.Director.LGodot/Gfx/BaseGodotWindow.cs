@@ -150,6 +150,7 @@ namespace LingoEngine.Director.LGodot
         }
 
         public bool IsOpen => Visible;
+        public bool IsActiveWindow => _windowManager.ActiveWindow == this;
 
         
 
