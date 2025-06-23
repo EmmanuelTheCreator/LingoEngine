@@ -137,7 +137,7 @@ namespace LingoEngine.LGodot.Texts
 
 #pragma warning disable CS8618
         public LingoGodotMemberTextBase(ILingoFontManager lingoFontManager)
-#pragma warning restore CS8618 
+#pragma warning restore CS8618
         {
             _fontManager = lingoFontManager;
             _parentNode = new CenterContainer();
