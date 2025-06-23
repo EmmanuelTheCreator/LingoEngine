@@ -62,7 +62,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         directorPictureEditWindow.Init(this);
         CustomMinimumSize = Size;
 
-        _navBar = new MemberNavigationBar<LingoMemberPicture>(_mediator, _player, NavigationBarHeight);
+        _navBar = new MemberNavigationBar<LingoMemberPicture>(_mediator, _player, _iconManager, NavigationBarHeight);
         AddChild(_navBar);
         _navBar.Position = new Vector2(0, TitleBarHeight);
         _navBar.CustomMinimumSize = new Vector2(Size.X, NavigationBarHeight);
