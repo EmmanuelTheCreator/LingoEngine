@@ -189,4 +189,12 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         panel.Init(impl);
         return panel;
     }
+
+    public LingoPanel CreatePanel()
+    {
+        var panel = new LingoPanel();
+        var impl = new SdlPanel();
+        panel.Init(impl);
+        return panel;
+    }
 }

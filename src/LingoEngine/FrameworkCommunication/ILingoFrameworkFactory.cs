@@ -72,6 +72,11 @@ namespace LingoEngine.FrameworkCommunication
         /// </summary>
         LingoWrapPanel CreateWrapPanel(LingoOrientation orientation);
 
+        /// <summary>
+        /// Creates a simple panel container for absolute positioning.
+        /// </summary>
+        LingoPanel CreatePanel();
+
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
         /// <summary>Creates a sprite behaviour.</summary>

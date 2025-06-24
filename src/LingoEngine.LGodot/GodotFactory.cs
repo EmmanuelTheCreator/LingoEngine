@@ -200,5 +200,13 @@ namespace LingoEngine.LGodot
             _rootNode.AddChild(impl);
             return panel;
         }
+
+        public LingoPanel CreatePanel()
+        {
+            var panel = new LingoPanel();
+            var impl = new LingoGodotPanel(panel);
+            _rootNode.AddChild(impl);
+            return panel;
+        }
     }
 }
