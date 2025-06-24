@@ -14,6 +14,7 @@ namespace LingoEngine.Director.Core.Commands
         Circle,
         ColorPicker,
         SelectLasso,
+        SelectRectangle,
         Hand,
         Zoom,
         Text,
