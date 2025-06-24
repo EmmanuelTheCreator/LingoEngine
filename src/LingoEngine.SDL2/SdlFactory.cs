@@ -197,4 +197,28 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         panel.Init(impl);
         return panel;
     }
+
+    public LingoInputText CreateInputText(int maxLength = 0)
+    {
+        var input = new LingoInputText { MaxLength = maxLength };
+        var impl = new SdlInputText();
+        input.Init(impl);
+        return input;
+    }
+
+    public LingoInputNumber CreateInputNumber(float min = 0, float max = 100)
+    {
+        var input = new LingoInputNumber { Min = min, Max = max };
+        var impl = new SdlInputNumber();
+        input.Init(impl);
+        return input;
+    }
+
+    public LingoInputCheckbox CreateInputCheckbox()
+    {
+        var input = new LingoInputCheckbox();
+        var impl = new SdlInputCheckbox();
+        input.Init(impl);
+        return input;
+    }
 }

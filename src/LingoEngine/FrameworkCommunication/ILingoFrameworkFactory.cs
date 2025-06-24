@@ -77,6 +77,15 @@ namespace LingoEngine.FrameworkCommunication
         /// </summary>
         LingoPanel CreatePanel();
 
+        /// <summary>Creates a single line text input.</summary>
+        LingoInputText CreateInputText(int maxLength = 0);
+
+        /// <summary>Creates a numeric input field.</summary>
+        LingoInputNumber CreateInputNumber(float min = 0, float max = 100);
+
+        /// <summary>Creates a checkbox input.</summary>
+        LingoInputCheckbox CreateInputCheckbox();
+
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
         /// <summary>Creates a sprite behaviour.</summary>

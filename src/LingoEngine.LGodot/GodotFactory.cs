@@ -208,5 +208,29 @@ namespace LingoEngine.LGodot
             _rootNode.AddChild(impl);
             return panel;
         }
+
+        public LingoInputText CreateInputText(int maxLength = 0)
+        {
+            var input = new LingoInputText { MaxLength = maxLength };
+            var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            _rootNode.AddChild(impl);
+            return input;
+        }
+
+        public LingoInputNumber CreateInputNumber(float min = 0, float max = 100)
+        {
+            var input = new LingoInputNumber { Min = min, Max = max };
+            var impl = new LingoGodotInputNumber(input);
+            _rootNode.AddChild(impl);
+            return input;
+        }
+
+        public LingoInputCheckbox CreateInputCheckbox()
+        {
+            var input = new LingoInputCheckbox();
+            var impl = new LingoGodotInputCheckbox(input);
+            _rootNode.AddChild(impl);
+            return input;
+        }
     }
 }
