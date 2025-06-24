@@ -67,6 +67,11 @@ namespace LingoEngine.FrameworkCommunication
         /// </summary>
         LingoGfxCanvas CreateGfxCanvas();
 
+        /// <summary>
+        /// Creates a wrapping panel container.
+        /// </summary>
+        LingoWrapPanel CreateWrapPanel(LingoOrientation orientation);
+
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
         /// <summary>Creates a sprite behaviour.</summary>

@@ -181,4 +181,12 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         canvas.Init(impl);
         return canvas;
     }
+
+    public LingoWrapPanel CreateWrapPanel(LingoOrientation orientation)
+    {
+        var panel = new LingoWrapPanel();
+        var impl = new SdlWrapPanel(orientation);
+        panel.Init(impl);
+        return panel;
+    }
 }

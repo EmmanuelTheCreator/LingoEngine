@@ -192,5 +192,13 @@ namespace LingoEngine.LGodot
             _rootNode.AddChild(impl);
             return canvas;
         }
+
+        public LingoWrapPanel CreateWrapPanel(LingoOrientation orientation)
+        {
+            var panel = new LingoWrapPanel();
+            var impl = new LingoGodotWrapPanel(panel, orientation);
+            _rootNode.AddChild(impl);
+            return panel;
+        }
     }
 }
