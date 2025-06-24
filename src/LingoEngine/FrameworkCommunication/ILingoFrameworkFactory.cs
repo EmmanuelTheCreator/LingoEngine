@@ -8,6 +8,7 @@ using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Shapes;
 using LingoEngine.Texts;
+using LingoEngine.Gfx;
 
 namespace LingoEngine.FrameworkCommunication
 {
@@ -60,6 +61,33 @@ namespace LingoEngine.FrameworkCommunication
         LingoMouse CreateMouse(LingoStage stage);
         /// <summary>Creates a keyboard handler.</summary>
         LingoKey CreateKey();
+
+        /// <summary>
+        /// Creates a generic drawing canvas instance.
+        /// </summary>
+        LingoGfxCanvas CreateGfxCanvas(int width, int height);
+
+        /// <summary>
+        /// Creates a wrapping panel container.
+        /// </summary>
+        LingoWrapPanel CreateWrapPanel(LingoOrientation orientation);
+
+        /// <summary>
+        /// Creates a simple panel container for absolute positioning.
+        /// </summary>
+        LingoPanel CreatePanel();
+
+        /// <summary>Creates a single line text input.</summary>
+        LingoInputText CreateInputText(int maxLength = 0);
+
+        /// <summary>Creates a numeric input field.</summary>
+        LingoInputNumber CreateInputNumber(float min = 0, float max = 100);
+
+        /// <summary>Creates a checkbox input.</summary>
+        LingoInputCheckbox CreateInputCheckbox();
+
+        /// <summary>Creates a combo box input.</summary>
+        LingoInputCombobox CreateInputCombobox();
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
