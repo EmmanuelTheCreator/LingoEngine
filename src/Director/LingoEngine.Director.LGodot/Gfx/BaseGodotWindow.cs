@@ -121,7 +121,15 @@ namespace LingoEngine.Director.LGodot
 
         public override void _UnhandledInput(InputEvent @event)
         {
-            if (@event is InputEventMouseMotion)
+            if (@event is InputEventMouseButton mb)
+            {
+                if (mb.ButtonIndex == MouseButton.Left && !mb.Pressed)
+                {
+                    _dragging = false;
+                    _resizing = false;
+                }
+            }
+            else if (@event is InputEventMouseMotion)
             {
                 if (_dragging)
                 {
