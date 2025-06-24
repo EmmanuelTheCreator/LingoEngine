@@ -26,6 +26,12 @@ namespace LingoEngine.LGodot.Gfx
             panel.Init(this);
         }
 
+        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
+        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
+        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
+        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public bool Visibility { get => Visible; set => Visible = value; }
+
         public LingoOrientation Orientation
         {
             get => _orientation;
@@ -72,11 +78,14 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public void AddChild(ILingoFrameworkWrapPanel child)
+        public void AddChild(ILingoFrameworkGfxNode child)
         {
-            var node = (LingoGodotWrapPanel)child;
-            ApplyItemMargin(node);
-            _container.AddChild(node);
+            if (child is Node node)
+            {
+                if (node is Control ctrl)
+                    ApplyItemMargin(ctrl);
+                _container.AddChild(node);
+            }
         }
 
         public void Dispose() => QueueFree();

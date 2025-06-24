@@ -9,6 +9,11 @@ namespace LingoEngine.SDL2.Gfx
 {
     internal class SdlGfxCanvas : ILingoFrameworkGfxCanvas, IDisposable
     {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public bool Visibility { get; set; } = true;
         private readonly nint _renderer;
         private readonly ILingoFontManager _fontManager;
         private readonly int _width;

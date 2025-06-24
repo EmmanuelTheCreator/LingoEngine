@@ -1,5 +1,4 @@
 using LingoEngine.Primitives;
-using System;
 using System.Collections.Generic;
 
 namespace LingoEngine.Gfx
@@ -9,7 +8,7 @@ namespace LingoEngine.Gfx
     /// Rendering back-ends provide the <see cref="ILingoFrameworkGfxCanvas"/>
     /// implementation which performs the actual drawing operations.
     /// </summary>
-    public class LingoGfxCanvas : IDisposable
+    public class LingoGfxCanvas : ILingoGfxNode, IDisposable
     {
 #pragma warning disable CS8618
         private ILingoFrameworkGfxCanvas _framework;
@@ -18,7 +17,13 @@ namespace LingoEngine.Gfx
         /// <summary>Initialize with the framework specific canvas.</summary>
         public void Init(ILingoFrameworkGfxCanvas framework) => _framework = framework;
 
-        public T Framework<T>() where T : ILingoFrameworkGfxCanvas => (T)_framework;
+        public T Framework<T>() where T : ILingoFrameworkGfxNode => (T)_framework;
+
+        public float X { get => _framework.X; set => _framework.X = value; }
+        public float Y { get => _framework.Y; set => _framework.Y = value; }
+        public float Width { get => _framework.Width; set => _framework.Width = value; }
+        public float Height { get => _framework.Height; set => _framework.Height = value; }
+        public bool Visibility { get => _framework.Visibility; set => _framework.Visibility = value; }
 
         public void Clear(LingoColor color) => _framework.Clear(color);
         public void SetPixel(LingoPoint point, LingoColor color) => _framework.SetPixel(point, color);
