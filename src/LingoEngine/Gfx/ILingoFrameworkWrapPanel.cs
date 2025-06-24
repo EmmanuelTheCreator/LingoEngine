@@ -1,4 +1,3 @@
-using System;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.Gfx
@@ -6,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific layout container with wrapping behaviour.
     /// </summary>
-    public interface ILingoFrameworkWrapPanel : IDisposable
+    public interface ILingoFrameworkWrapPanel : ILingoFrameworkGfxNode
     {
         /// <summary>Orientation of child layout.</summary>
         LingoOrientation Orientation { get; set; }
@@ -17,7 +16,7 @@ namespace LingoEngine.Gfx
         /// <summary>Margin around the container itself.</summary>
         LingoMargin Margin { get; set; }
 
-        /// <summary>Adds a child panel to the container.</summary>
-        void AddChild(ILingoFrameworkWrapPanel child);
+        /// <summary>Adds a child node to the container.</summary>
+        void AddChild(ILingoFrameworkGfxNode child);
     }
 }

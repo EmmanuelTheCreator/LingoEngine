@@ -1,5 +1,4 @@
 using LingoEngine.Primitives;
-using System;
 using System.Collections.Generic;
 
 namespace LingoEngine.Gfx
@@ -7,7 +6,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific drawing surface implementation.
     /// </summary>
-    public interface ILingoFrameworkGfxCanvas : IDisposable
+    public interface ILingoFrameworkGfxCanvas : ILingoFrameworkGfxNode
     {
         void Clear(LingoColor color);
         void SetPixel(LingoPoint point, LingoColor color);
