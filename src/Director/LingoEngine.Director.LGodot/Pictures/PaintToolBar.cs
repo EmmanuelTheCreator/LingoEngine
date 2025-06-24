@@ -15,6 +15,8 @@ namespace LingoEngine.Director.LGodot.Pictures
         private readonly ILingoCommandManager _commandManager;
         private DirectorToolButton? _selectedButton = null;
         private HFlowContainer _container;
+
+        public event Action<PainterToolType>? ToolSelected;
         public PainterToolType SelectedTool { get; private set; } = PainterToolType.Pencil;
         public Color SelectedColor { get; private set; } = Colors.Black;
         public Color BGColor { get; set; } = DirectorColors.BG_WhiteMenus.ToGodotColor();
@@ -45,9 +47,12 @@ namespace LingoEngine.Director.LGodot.Pictures
             AddToolButton(DirGodotEditorIcon.Pencil);
             AddToolButton(DirGodotEditorIcon.PaintBrush);
             AddToolButton(DirGodotEditorIcon.Eraser);
+            AddToolButton(DirGodotEditorIcon.RectangleSelect);
             AddToolButton(DirGodotEditorIcon.PaintBucket);
             AddColorPickerForegound();
             AddColorPickerBackgound();
+
+            ToolSelected?.Invoke(SelectedTool);
         }
 
         private void AddToolButton(DirGodotEditorIcon icon)
@@ -63,6 +68,7 @@ namespace LingoEngine.Director.LGodot.Pictures
                     DirGodotEditorIcon.Pencil => PainterToolType.Pencil,
                     DirGodotEditorIcon.PaintBrush => PainterToolType.PaintBrush,
                     DirGodotEditorIcon.Eraser => PainterToolType.Eraser,
+                    DirGodotEditorIcon.RectangleSelect => PainterToolType.SelectRectangle,
                     DirGodotEditorIcon.ColorPicker => PainterToolType.ColorPicker,
                     DirGodotEditorIcon.PaintBucket => PainterToolType.Fill,
                     _ => throw new ArgumentOutOfRangeException(nameof(icon), icon.ToString())
@@ -70,6 +76,7 @@ namespace LingoEngine.Director.LGodot.Pictures
 
                 SelectedTool = tool;
                 _commandManager.Handle(new PainterToolSelectCommand(tool));
+                ToolSelected?.Invoke(tool);
             };
 
             _container.AddChild(btn);

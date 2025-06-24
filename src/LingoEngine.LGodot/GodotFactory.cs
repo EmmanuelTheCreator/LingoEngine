@@ -19,6 +19,8 @@ using LingoEngine.LGodot.Stages;
 using LingoEngine.Members;
 using LingoEngine.Casts;
 using LingoEngine.Shapes;
+using LingoEngine.Gfx;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.LGodot
 {
@@ -181,6 +183,64 @@ namespace LingoEngine.LGodot
             key = new LingoKey(impl);
             impl.SetLingoKey(key);
             return key;
+        }
+
+        public LingoGfxCanvas CreateGfxCanvas(int width, int height)
+        {
+            var canvas = new LingoGfxCanvas();
+            var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
+            _rootNode.AddChild(impl);
+            canvas.Width = width;
+            canvas.Height = height;
+            return canvas;
+        }
+
+        public LingoWrapPanel CreateWrapPanel(LingoOrientation orientation)
+        {
+            var panel = new LingoWrapPanel();
+            var impl = new LingoGodotWrapPanel(panel, orientation);
+            _rootNode.AddChild(impl);
+            return panel;
+        }
+
+        public LingoPanel CreatePanel()
+        {
+            var panel = new LingoPanel();
+            var impl = new LingoGodotPanel(panel);
+            _rootNode.AddChild(impl);
+            return panel;
+        }
+
+        public LingoInputText CreateInputText(int maxLength = 0)
+        {
+            var input = new LingoInputText { MaxLength = maxLength };
+            var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            _rootNode.AddChild(impl);
+            return input;
+        }
+
+        public LingoInputNumber CreateInputNumber(float min = 0, float max = 100)
+        {
+            var input = new LingoInputNumber { Min = min, Max = max };
+            var impl = new LingoGodotInputNumber(input);
+            _rootNode.AddChild(impl);
+            return input;
+        }
+
+        public LingoInputCheckbox CreateInputCheckbox()
+        {
+            var input = new LingoInputCheckbox();
+            var impl = new LingoGodotInputCheckbox(input);
+            _rootNode.AddChild(impl);
+            return input;
+        }
+
+        public LingoInputCombobox CreateInputCombobox()
+        {
+            var input = new LingoInputCombobox();
+            var impl = new LingoGodotInputCombobox(input);
+            _rootNode.AddChild(impl);
+            return input;
         }
     }
 }
