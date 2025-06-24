@@ -11,8 +11,22 @@ namespace LingoEngine.SDL2.Gfx
         public float Width { get; set; }
         public float Height { get; set; }
         public bool Visibility { get; set; } = true;
-        public bool Checked { get; set; }
+        public bool Enabled { get; set; } = true;
+        private bool _checked;
+        public bool Checked
+        {
+            get => _checked;
+            set
+            {
+                if (_checked != value)
+                {
+                    _checked = value;
+                    ValueChanged?.Invoke();
+                }
+            }
+        }
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
+        public event Action? ValueChanged;
 
         public void Dispose() { }
     }

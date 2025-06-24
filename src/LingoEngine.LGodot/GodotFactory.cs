@@ -185,11 +185,13 @@ namespace LingoEngine.LGodot
             return key;
         }
 
-        public LingoGfxCanvas CreateGfxCanvas()
+        public LingoGfxCanvas CreateGfxCanvas(int width, int height)
         {
             var canvas = new LingoGfxCanvas();
-            var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
             _rootNode.AddChild(impl);
+            canvas.Width = width;
+            canvas.Height = height;
             return canvas;
         }
 
@@ -229,6 +231,14 @@ namespace LingoEngine.LGodot
         {
             var input = new LingoInputCheckbox();
             var impl = new LingoGodotInputCheckbox(input);
+            _rootNode.AddChild(impl);
+            return input;
+        }
+
+        public LingoInputCombobox CreateInputCombobox()
+        {
+            var input = new LingoInputCombobox();
+            var impl = new LingoGodotInputCombobox(input);
             _rootNode.AddChild(impl);
             return input;
         }

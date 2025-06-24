@@ -1,6 +1,7 @@
 using Godot;
 using LingoEngine.Gfx;
 using System;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -10,9 +11,11 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotInputCheckbox : CheckBox, ILingoFrameworkInputCheckbox, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
+        private event Action? _onValueChanged;
         public LingoGodotInputCheckbox(LingoInputCheckbox input)
         {
             input.Init(this);
+            Toggled += _ => _onValueChanged?.Invoke();
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -20,6 +23,7 @@ namespace LingoEngine.LGodot.Gfx
         public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
+        public bool Enabled { get => !Disabled; set => Disabled = !value; }
 
         public bool Checked { get => ButtonPressed; set => ButtonPressed = value; }
 
@@ -34,6 +38,12 @@ namespace LingoEngine.LGodot.Gfx
                 AddThemeConstantOverride("margin_top", (int)_margin.Top);
                 AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
+        }
+
+        event Action? ILingoFrameworkInput.ValueChanged
+        {
+            add => _onValueChanged += value;
+            remove => _onValueChanged -= value;
         }
 
         public void Dispose() => QueueFree();

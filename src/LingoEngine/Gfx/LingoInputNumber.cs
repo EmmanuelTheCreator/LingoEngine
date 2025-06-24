@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper for a numeric input field.
     /// </summary>
-    public class LingoInputNumber : LingoGfxNodeBase<ILingoFrameworkInputNumber>
+    public class LingoInputNumber : LingoInputBase<ILingoFrameworkInputNumber>
     {
         public float Value { get => _framework.Value; set => _framework.Value = value; }
         public float Min { get => _framework.Min; set => _framework.Min = value; }

@@ -11,11 +11,25 @@ namespace LingoEngine.SDL2.Gfx
         public float Width { get; set; }
         public float Height { get; set; }
         public bool Visibility { get; set; } = true;
-        public float Value { get; set; }
+        public bool Enabled { get; set; } = true;
+        private float _value;
+        public float Value
+        {
+            get => _value;
+            set
+            {
+                if (_value != value)
+                {
+                    _value = value;
+                    ValueChanged?.Invoke();
+                }
+            }
+        }
         public float Min { get; set; }
         public float Max { get; set; }
         public LingoNumberType NumberType { get; set; } = LingoNumberType.Float;
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
+        public event Action? ValueChanged;
 
         public void Dispose() { }
     }
