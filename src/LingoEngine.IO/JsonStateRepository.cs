@@ -105,10 +105,17 @@ public class JsonStateRepository
                 s.Rotation = sDto.Rotation;
                 s.Skew = sDto.Skew;
                 s.RegPoint = new LingoPoint(sDto.RegPoint.X, sDto.RegPoint.Y);
+                s.Ink = sDto.Ink;
+                s.ForeColor = FromDto(sDto.ForeColor);
+                s.BackColor = FromDto(sDto.BackColor);
+                s.Blend = sDto.Blend;
+                s.Editable = sDto.Editable;
                 s.Width = sDto.Width;
                 s.Height = sDto.Height;
                 s.BeginFrame = sDto.BeginFrame;
                 s.EndFrame = sDto.EndFrame;
+                s.DisplayMember = sDto.DisplayMember;
+                s.SpritePropertiesOffset = sDto.SpritePropertiesOffset;
             });
 
             if (memberMap.TryGetValue(sDto.MemberNum, out var mem))
@@ -274,6 +281,8 @@ public class JsonStateRepository
             Name = sprite.Name,
             SpriteNum = sprite.SpriteNum,
             MemberNum = sprite.MemberNum,
+            DisplayMember = sprite.DisplayMember,
+            SpritePropertiesOffset = sprite.SpritePropertiesOffset,
             Puppet = sprite.Puppet,
             Lock = sprite.Lock,
             Visibility = sprite.Visibility,
@@ -283,6 +292,11 @@ public class JsonStateRepository
             Rotation = sprite.Rotation,
             Skew = sprite.Skew,
             RegPoint = new LingoPointDTO { X = sprite.RegPoint.X, Y = sprite.RegPoint.Y },
+            Ink = sprite.Ink,
+            ForeColor = ToDto(sprite.ForeColor),
+            BackColor = ToDto(sprite.BackColor),
+            Blend = sprite.Blend,
+            Editable = sprite.Editable,
             Width = sprite.Width,
             Height = sprite.Height,
             BeginFrame = sprite.BeginFrame,
