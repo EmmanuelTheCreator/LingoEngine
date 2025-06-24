@@ -13,6 +13,8 @@ using LingoEngine.SDL2.Pictures;
 using LingoEngine.SDL2.Sounds;
 using LingoEngine.SDL2.Texts;
 using LingoEngine.SDL2.Shapes;
+using LingoEngine.Gfx;
+using LingoEngine.SDL2.Gfx;
 using LingoEngine.Sounds;
 using LingoEngine.Shapes;
 using LingoEngine.Texts;
@@ -170,5 +172,63 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         var key = new LingoKey(impl);
         impl.SetLingoKey(key);
         return key;
+    }
+
+    public LingoGfxCanvas CreateGfxCanvas(int width, int height)
+    {
+        var canvas = new LingoGfxCanvas();
+        var impl = new SdlGfxCanvas(_rootContext.Renderer, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
+        canvas.Init(impl);
+        canvas.Width = width;
+        canvas.Height = height;
+        return canvas;
+    }
+
+    public LingoWrapPanel CreateWrapPanel(LingoOrientation orientation)
+    {
+        var panel = new LingoWrapPanel();
+        var impl = new SdlWrapPanel(orientation);
+        panel.Init(impl);
+        return panel;
+    }
+
+    public LingoPanel CreatePanel()
+    {
+        var panel = new LingoPanel();
+        var impl = new SdlPanel();
+        panel.Init(impl);
+        return panel;
+    }
+
+    public LingoInputText CreateInputText(int maxLength = 0)
+    {
+        var input = new LingoInputText { MaxLength = maxLength };
+        var impl = new SdlInputText();
+        input.Init(impl);
+        return input;
+    }
+
+    public LingoInputNumber CreateInputNumber(float min = 0, float max = 100)
+    {
+        var input = new LingoInputNumber { Min = min, Max = max };
+        var impl = new SdlInputNumber();
+        input.Init(impl);
+        return input;
+    }
+
+    public LingoInputCheckbox CreateInputCheckbox()
+    {
+        var input = new LingoInputCheckbox();
+        var impl = new SdlInputCheckbox();
+        input.Init(impl);
+        return input;
+    }
+
+    public LingoInputCombobox CreateInputCombobox()
+    {
+        var input = new LingoInputCombobox();
+        var impl = new SdlInputCombobox();
+        input.Init(impl);
+        return input;
     }
 }
