@@ -1,5 +1,6 @@
 using System;
 using LingoEngine.Gfx;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.SDL2.Gfx
 {
@@ -13,6 +14,8 @@ namespace LingoEngine.SDL2.Gfx
         public float Value { get; set; }
         public float Min { get; set; }
         public float Max { get; set; }
+        public LingoNumberType NumberType { get; set; } = LingoNumberType.Float;
+        public LingoMargin Margin { get; set; } = LingoMargin.Zero;
 
         public void Dispose() { }
     }

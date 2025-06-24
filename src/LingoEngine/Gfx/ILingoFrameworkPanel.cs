@@ -7,9 +7,6 @@ namespace LingoEngine.Gfx
     /// </summary>
     public interface ILingoFrameworkPanel : ILingoFrameworkGfxNode
     {
-        /// <summary>Margin around the panel.</summary>
-        LingoMargin Margin { get; set; }
-
         /// <summary>Adds a child node to the panel.</summary>
         void AddChild(ILingoFrameworkGfxNode child);
     }

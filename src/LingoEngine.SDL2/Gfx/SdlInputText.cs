@@ -1,5 +1,6 @@
 using System;
 using LingoEngine.Gfx;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.SDL2.Gfx
 {
@@ -13,6 +14,7 @@ namespace LingoEngine.SDL2.Gfx
         public string Text { get; set; } = string.Empty;
         public int MaxLength { get; set; }
         public string? Font { get; set; }
+        public LingoMargin Margin { get; set; } = LingoMargin.Zero;
 
         public void Dispose() { }
     }

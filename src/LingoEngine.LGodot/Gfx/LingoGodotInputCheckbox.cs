@@ -9,6 +9,7 @@ namespace LingoEngine.LGodot.Gfx
     /// </summary>
     public partial class LingoGodotInputCheckbox : CheckBox, ILingoFrameworkInputCheckbox, IDisposable
     {
+        private LingoMargin _margin = LingoMargin.Zero;
         public LingoGodotInputCheckbox(LingoInputCheckbox input)
         {
             input.Init(this);
@@ -21,6 +22,19 @@ namespace LingoEngine.LGodot.Gfx
         public bool Visibility { get => Visible; set => Visible = value; }
 
         public bool Checked { get => ButtonPressed; set => ButtonPressed = value; }
+
+        public LingoMargin Margin
+        {
+            get => _margin;
+            set
+            {
+                _margin = value;
+                AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+            }
+        }
 
         public void Dispose() => QueueFree();
     }

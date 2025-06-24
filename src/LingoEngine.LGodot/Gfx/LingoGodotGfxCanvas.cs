@@ -14,6 +14,7 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotGfxCanvas : Control, ILingoFrameworkGfxCanvas, IDisposable
     {
         private readonly ILingoFontManager _fontManager;
+        private LingoMargin _margin = LingoMargin.Zero;
 
         private Color? _clearColor;
         private readonly List<(Vector2 start, Vector2 end, Color color, float width)> _lines = new();
@@ -36,6 +37,18 @@ namespace LingoEngine.LGodot.Gfx
         public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
+        public LingoMargin Margin
+        {
+            get => _margin;
+            set
+            {
+                _margin = value;
+                AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+            }
+        }
 
         private void MarkDirty()
         {

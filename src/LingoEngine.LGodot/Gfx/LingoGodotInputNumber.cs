@@ -9,6 +9,9 @@ namespace LingoEngine.LGodot.Gfx
     /// </summary>
     public partial class LingoGodotInputNumber : SpinBox, ILingoFrameworkInputNumber, IDisposable
     {
+        private LingoMargin _margin = LingoMargin.Zero;
+        private LingoNumberType _numberType = LingoNumberType.Float;
+
         public LingoGodotInputNumber(LingoInputNumber input)
         {
             input.Init(this);
@@ -23,6 +26,28 @@ namespace LingoEngine.LGodot.Gfx
         public float Value { get => (float)base.Value; set => base.Value = value; }
         public float Min { get => (float)MinValue; set => MinValue = value; }
         public float Max { get => (float)MaxValue; set => MaxValue = value; }
+        public LingoNumberType NumberType
+        {
+            get => _numberType;
+            set
+            {
+                _numberType = value;
+                Step = value == LingoNumberType.Integer ? 1 : 0.01f;
+            }
+        }
+
+        public LingoMargin Margin
+        {
+            get => _margin;
+            set
+            {
+                _margin = value;
+                AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+            }
+        }
 
         public void Dispose() => QueueFree();
     }
