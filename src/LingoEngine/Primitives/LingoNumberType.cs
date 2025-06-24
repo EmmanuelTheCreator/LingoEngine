@@ -1,4 +1,4 @@
-namespace LingoEngine.Gfx
+namespace LingoEngine.Primitives
 {
     /// <summary>
     /// Specifies the numeric input mode.

@@ -16,7 +16,7 @@ namespace LingoEngine.LGodot.Gfx
         private LingoMargin _margin = LingoMargin.Zero;
         private event Action? _onValueChanged;
 
-        public LingoGodotInputText(LingoInputText input, ILingoFontManager fontManager)
+        public LingoGodotInputText(LingoGfxInputText input, ILingoFontManager fontManager)
         {
             _fontManager = fontManager;
             input.Init(this);

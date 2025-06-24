@@ -1,3 +1,5 @@
+using LingoEngine.Primitives;
+
 namespace LingoEngine.Gfx
 {
     /// <summary>

@@ -70,24 +70,24 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>
         /// Creates a wrapping panel container.
         /// </summary>
-        LingoWrapPanel CreateWrapPanel(LingoOrientation orientation);
+        LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation);
 
         /// <summary>
         /// Creates a simple panel container for absolute positioning.
         /// </summary>
-        LingoPanel CreatePanel();
+        LingoGfxPanel CreatePanel();
 
         /// <summary>Creates a single line text input.</summary>
-        LingoInputText CreateInputText(int maxLength = 0);
+        LingoGfxInputText CreateInputText(int maxLength = 0);
 
         /// <summary>Creates a numeric input field.</summary>
-        LingoInputNumber CreateInputNumber(float min = 0, float max = 100);
+        LingoGfxInputNumber CreateInputNumber(float min = 0, float max = 100);
 
         /// <summary>Creates a checkbox input.</summary>
-        LingoInputCheckbox CreateInputCheckbox();
+        LingoGfxInputCheckbox CreateInputCheckbox();
 
         /// <summary>Creates a combo box input.</summary>
-        LingoInputCombobox CreateInputCombobox();
+        LingoGfxInputCombobox CreateInputCombobox();
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;

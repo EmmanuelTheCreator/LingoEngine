@@ -12,7 +12,7 @@ namespace LingoEngine.LGodot.Gfx
     {
         private LingoMargin _margin = LingoMargin.Zero;
         private event Action? _onValueChanged;
-        public LingoGodotInputCheckbox(LingoInputCheckbox input)
+        public LingoGodotInputCheckbox(LingoGfxInputCheckbox input)
         {
             input.Init(this);
             Toggled += _ => _onValueChanged?.Invoke();

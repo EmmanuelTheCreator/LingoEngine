@@ -14,7 +14,7 @@ namespace LingoEngine.LGodot.Gfx
         private LingoNumberType _numberType = LingoNumberType.Float;
         private event Action? _onValueChanged;
 
-        public LingoGodotInputNumber(LingoInputNumber input)
+        public LingoGodotInputNumber(LingoGfxInputNumber input)
         {
             input.Init(this);
             this.ValueChanged += _ => _onValueChanged?.Invoke();
