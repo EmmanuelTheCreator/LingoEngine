@@ -65,7 +65,7 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>
         /// Creates a generic drawing canvas instance.
         /// </summary>
-        LingoGfxCanvas CreateGfxCanvas();
+        LingoGfxCanvas CreateGfxCanvas(int width, int height);
 
         /// <summary>
         /// Creates a wrapping panel container.
@@ -85,6 +85,9 @@ namespace LingoEngine.FrameworkCommunication
 
         /// <summary>Creates a checkbox input.</summary>
         LingoInputCheckbox CreateInputCheckbox();
+
+        /// <summary>Creates a combo box input.</summary>
+        LingoInputCombobox CreateInputCombobox();
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;

@@ -26,10 +26,11 @@ namespace LingoEngine.LGodot.Gfx
         private readonly List<(Vector2 pos, Color color)> _pixels = new();
         private bool _dirty;
 
-        public LingoGodotGfxCanvas(LingoGfxCanvas canvas, ILingoFontManager fontManager)
+        public LingoGodotGfxCanvas(LingoGfxCanvas canvas, ILingoFontManager fontManager, int width, int height)
         {
             _fontManager = fontManager;
             canvas.Init(this);
+            Size = new Vector2(width, height);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }

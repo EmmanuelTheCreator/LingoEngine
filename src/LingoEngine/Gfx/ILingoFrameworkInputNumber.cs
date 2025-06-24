@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific numeric input field.
     /// </summary>
-    public interface ILingoFrameworkInputNumber : ILingoFrameworkGfxNode
+    public interface ILingoFrameworkInputNumber : ILingoFrameworkInput
     {
         float Value { get; set; }
         float Min { get; set; }

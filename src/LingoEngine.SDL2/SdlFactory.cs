@@ -174,11 +174,13 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return key;
     }
 
-    public LingoGfxCanvas CreateGfxCanvas()
+    public LingoGfxCanvas CreateGfxCanvas(int width, int height)
     {
         var canvas = new LingoGfxCanvas();
-        var impl = new SdlGfxCanvas(_rootContext.Renderer, _serviceProvider.GetRequiredService<ILingoFontManager>());
+        var impl = new SdlGfxCanvas(_rootContext.Renderer, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
         canvas.Init(impl);
+        canvas.Width = width;
+        canvas.Height = height;
         return canvas;
     }
 
@@ -218,6 +220,14 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     {
         var input = new LingoInputCheckbox();
         var impl = new SdlInputCheckbox();
+        input.Init(impl);
+        return input;
+    }
+
+    public LingoInputCombobox CreateInputCombobox()
+    {
+        var input = new LingoInputCombobox();
+        var impl = new SdlInputCombobox();
         input.Init(impl);
         return input;
     }

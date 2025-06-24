@@ -23,7 +23,7 @@ namespace LingoEngine.SDL2.Gfx
 
         public nint Texture => _texture;
 
-        public SdlGfxCanvas(nint renderer, ILingoFontManager fontManager, int width = 640, int height = 480)
+        public SdlGfxCanvas(nint renderer, ILingoFontManager fontManager, int width, int height)
         {
             _renderer = renderer;
             _fontManager = fontManager;
