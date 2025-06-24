@@ -51,6 +51,10 @@ namespace LingoEngine.Movies
                     Member = Member.GetMemberInCastByOffset(value);
             }
         }
+        /// <summary>Channel default cast member.</summary>
+        public int DisplayMember { get; set; }
+        /// <summary>Offset to the property list for behaviors.</summary>
+        public int SpritePropertiesOffset { get; set; }
         public int SpriteNum { get; private set; }
         public int Ink { get; set; }
         public bool Visibility
