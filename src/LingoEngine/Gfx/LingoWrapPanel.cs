@@ -1,4 +1,5 @@
 using System;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Gfx
 {
@@ -20,6 +21,18 @@ namespace LingoEngine.Gfx
         {
             get => _framework.Orientation;
             set => _framework.Orientation = value;
+        }
+
+        public LingoMargin ItemMargin
+        {
+            get => _framework.ItemMargin;
+            set => _framework.ItemMargin = value;
+        }
+
+        public LingoMargin Margin
+        {
+            get => _framework.Margin;
+            set => _framework.Margin = value;
         }
 
         public void AddChild(LingoWrapPanel panel) => _framework.AddChild(panel.Framework<ILingoFrameworkWrapPanel>());
