@@ -170,20 +170,10 @@ namespace LingoEngine.LGodot.Gfx
             MarkDirty();
         }
 
-        private static Image.Format ToGodotFormat(LingoPixelFormat format) => format switch
-        {
-            LingoPixelFormat.Rgba8888 => Image.Format.Rgba8,
-            LingoPixelFormat.Rgb888 => Image.Format.Rgb8,
-            LingoPixelFormat.Rgb5650 => Image.Format.Rgb565,
-            LingoPixelFormat.Rgb5550 => Image.Format.Rgb565,
-            LingoPixelFormat.Rgba5551 => Image.Format.Rgba4444,
-            LingoPixelFormat.Rgba4444 => Image.Format.Rgba4444,
-            _ => Image.Format.Rgb8,
-        };
 
         public void DrawPicture(byte[] data, int width, int height, LingoPoint position, LingoPixelFormat format)
         {
-            var img = Image.CreateFromData(width, height, false, ToGodotFormat(format), data);
+            var img = Image.CreateFromData(width, height, false, format.ToGodotFormat(), data);
             var tex = ImageTexture.CreateFromImage(img);
             _pictures.Add((tex, position.ToVector2()));
             MarkDirty();
@@ -191,6 +181,9 @@ namespace LingoEngine.LGodot.Gfx
 
         public void Dispose()
         {
+            foreach (var pic in _pictures)
+                pic.tex.Dispose();
+            _pictures.Clear();
             QueueFree();
         }
     }
