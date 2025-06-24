@@ -31,6 +31,7 @@ internal partial class DirGodotScoreGrid
                 float x = _owner._gfxValues.LeftMargin + (sp.Sprite.BeginFrame - 1) * _owner._gfxValues.FrameWidth;
                 float width = (sp.Sprite.EndFrame - sp.Sprite.BeginFrame + 1) * _owner._gfxValues.FrameWidth;
                 float y = ch * _owner._gfxValues.ChannelHeight;
+                sp.Selected = _owner.IsSpriteSelected(sp);
                 sp.Draw(this, new Vector2(x, y), width, _owner._gfxValues.ChannelHeight, font);
             }
 
