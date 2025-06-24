@@ -1,4 +1,3 @@
-using System;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.Gfx
@@ -6,29 +5,8 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Simple container that allows placing child nodes at arbitrary coordinates.
     /// </summary>
-    public class LingoPanel : ILingoGfxNode, IDisposable
+    public class LingoPanel : LingoGfxNodeBase<ILingoFrameworkPanel>
     {
-#pragma warning disable CS8618
-        private ILingoFrameworkPanel _framework;
-#pragma warning restore CS8618
-
-        /// <summary>Initialize with the framework specific panel.</summary>
-        public void Init(ILingoFrameworkPanel framework) => _framework = framework;
-
-        public T Framework<T>() where T : ILingoFrameworkGfxNode => (T)_framework;
-
-        public float X { get => _framework.X; set => _framework.X = value; }
-        public float Y { get => _framework.Y; set => _framework.Y = value; }
-        public float Width { get => _framework.Width; set => _framework.Width = value; }
-        public float Height { get => _framework.Height; set => _framework.Height = value; }
-        public bool Visibility { get => _framework.Visibility; set => _framework.Visibility = value; }
-
-        public LingoMargin Margin
-        {
-            get => _framework.Margin;
-            set => _framework.Margin = value;
-        }
-
         /// <summary>Adds a child to the panel and sets its position.</summary>
         public void AddChild(ILingoGfxNode node, float x, float y)
         {
@@ -39,7 +17,5 @@ namespace LingoEngine.Gfx
 
         /// <summary>Adds a child without modifying its position.</summary>
         public void AddChild(ILingoGfxNode node) => _framework.AddChild(node.Framework<ILingoFrameworkGfxNode>());
-
-        public void Dispose() => (_framework as IDisposable)?.Dispose();
     }
 }

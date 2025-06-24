@@ -1,3 +1,5 @@
+using LingoEngine.Primitives;
+
 namespace LingoEngine.Gfx
 {
     /// <summary>
@@ -10,6 +12,7 @@ namespace LingoEngine.Gfx
         float Width { get; set; }
         float Height { get; set; }
         bool Visibility { get; set; }
+        LingoMargin Margin { get; set; }
         T Framework<T>() where T : ILingoFrameworkGfxNode;
     }
 }

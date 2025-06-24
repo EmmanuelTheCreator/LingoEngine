@@ -1,3 +1,5 @@
+using LingoEngine.Primitives;
+
 namespace LingoEngine.Gfx
 {
     /// <summary>
@@ -10,5 +12,7 @@ namespace LingoEngine.Gfx
         float Width { get; set; }
         float Height { get; set; }
         bool Visibility { get; set; }
+        /// <summary>Margin around the node.</summary>
+        LingoMargin Margin { get; set; }
     }
 }

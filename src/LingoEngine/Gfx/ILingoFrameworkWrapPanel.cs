@@ -13,9 +13,6 @@ namespace LingoEngine.Gfx
         /// <summary>Margin around each child item.</summary>
         LingoMargin ItemMargin { get; set; }
 
-        /// <summary>Margin around the container itself.</summary>
-        LingoMargin Margin { get; set; }
-
         /// <summary>Adds a child node to the container.</summary>
         void AddChild(ILingoFrameworkGfxNode child);
     }

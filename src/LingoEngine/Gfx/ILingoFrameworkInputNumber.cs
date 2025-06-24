@@ -8,5 +8,6 @@ namespace LingoEngine.Gfx
         float Value { get; set; }
         float Min { get; set; }
         float Max { get; set; }
+        LingoNumberType NumberType { get; set; }
     }
 }
