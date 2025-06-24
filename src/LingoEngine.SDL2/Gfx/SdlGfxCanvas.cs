@@ -29,7 +29,7 @@ namespace LingoEngine.SDL2.Gfx
             _width = width;
             _height = height;
             _texture = SDL.SDL_CreateTexture(renderer, SDL.SDL_PIXELFORMAT_RGBA8888,
-                SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, width, height);
+                (int)SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, width, height);
         }
 
         private void UseTexture(Action draw)

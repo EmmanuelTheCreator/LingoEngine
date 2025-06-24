@@ -1,4 +1,5 @@
 using System;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Gfx
 {
@@ -21,6 +22,12 @@ namespace LingoEngine.Gfx
         public float Width { get => _framework.Width; set => _framework.Width = value; }
         public float Height { get => _framework.Height; set => _framework.Height = value; }
         public bool Visibility { get => _framework.Visibility; set => _framework.Visibility = value; }
+
+        public LingoMargin Margin
+        {
+            get => _framework.Margin;
+            set => _framework.Margin = value;
+        }
 
         /// <summary>Adds a child to the panel and sets its position.</summary>
         public void AddChild(ILingoGfxNode node, float x, float y)

@@ -1,5 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
+using LingoEngine.Primitives;
 using System;
 
 namespace LingoEngine.LGodot.Gfx
@@ -9,6 +10,8 @@ namespace LingoEngine.LGodot.Gfx
     /// </summary>
     public partial class LingoGodotPanel : Control, ILingoFrameworkPanel, IDisposable
     {
+        private LingoMargin _margin = LingoMargin.Zero;
+
         public LingoGodotPanel(LingoPanel panel)
         {
             panel.Init(this);
@@ -20,6 +23,16 @@ namespace LingoEngine.LGodot.Gfx
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
 
+        public LingoMargin Margin
+        {
+            get => _margin;
+            set
+            {
+                _margin = value;
+                ApplyMargin();
+            }
+        }
+
         public void AddChild(ILingoFrameworkGfxNode child)
         {
             if (child is Node node)
@@ -27,5 +40,13 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         public void Dispose() => QueueFree();
+
+        private void ApplyMargin()
+        {
+            AddThemeConstantOverride("margin_left", (int)_margin.Left);
+            AddThemeConstantOverride("margin_right", (int)_margin.Right);
+            AddThemeConstantOverride("margin_top", (int)_margin.Top);
+            AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+        }
     }
 }
