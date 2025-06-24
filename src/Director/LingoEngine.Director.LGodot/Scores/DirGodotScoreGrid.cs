@@ -179,6 +179,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         if (shift && _lastSelectedCell.HasValue)
         {
             SelectRange(_lastSelectedCell.Value, cell);
+            _lastSelectedCell = cell;
         }
         else if (ctrl)
         {
@@ -207,7 +208,22 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             for (int x = minX; x <= maxX; x++)
                 _selectedCells.Add(new Vector2I(x, y));
     }
+
     public bool IsCellSelected(Vector2I cell) => _selectedCells.Contains(cell);
+
+    public bool IsSpriteSelected(DirGodotScoreSprite sprite)
+    {
+        if (_selectedCells.Count == 0)
+            return _selected == sprite;
+
+        int row = sprite.Sprite.SpriteNum - 1;
+        for (int frame = sprite.Sprite.BeginFrame; frame <= sprite.Sprite.EndFrame; frame++)
+        {
+            if (_selectedCells.Contains(new Vector2I(frame - 1, row)))
+                return true;
+        }
+        return false;
+    }
 
     public void ClearSelection()
     {
