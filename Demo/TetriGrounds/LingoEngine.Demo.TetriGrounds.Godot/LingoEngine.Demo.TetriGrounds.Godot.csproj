@@ -405,8 +405,10 @@
 	  <None Include="project.godot" />
 	  <None Include="Scenes\root_node_tetri_grounds.tscn" />
 	</ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <ProjectReference Include="..\..\..\src\Director\LingoEngine.Director.LGodot\LingoEngine.Director.LGodot.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\src\LingoEngine.LGodot\LingoEngine.LGodot.csproj" />
     <ProjectReference Include="..\LingoEngine.Demo.TetriGrounds.Core\LingoEngine.Demo.TetriGrounds.Core.csproj" />
   </ItemGroup>
