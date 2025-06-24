@@ -12,7 +12,7 @@ namespace LingoEngine.LGodot.Gfx
     {
         private LingoMargin _margin = LingoMargin.Zero;
 
-        public LingoGodotPanel(LingoPanel panel)
+        public LingoGodotPanel(LingoGfxPanel panel)
         {
             panel.Init(this);
         }

@@ -16,7 +16,7 @@ namespace LingoEngine.LGodot.Gfx
         private LingoMargin _itemMargin;
         private LingoMargin _margin;
 
-        public LingoGodotWrapPanel(LingoWrapPanel panel, LingoOrientation orientation)
+        public LingoGodotWrapPanel(LingoGfxWrapPanel panel, LingoOrientation orientation)
         {
             _orientation = orientation;
             _itemMargin = LingoMargin.Zero;

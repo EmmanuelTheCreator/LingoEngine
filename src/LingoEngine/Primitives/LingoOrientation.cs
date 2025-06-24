@@ -1,4 +1,4 @@
-namespace LingoEngine.Gfx
+namespace LingoEngine.Primitives
 {
     /// <summary>
     /// Orientation for layout containers.

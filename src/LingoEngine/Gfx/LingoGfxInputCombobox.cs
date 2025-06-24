@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper for a combobox input.
     /// </summary>
-    public class LingoInputCombobox : LingoInputBase<ILingoFrameworkGfxInputCombobox>
+    public class LingoGfxInputCombobox : LingoGfxInputBase<ILingoFrameworkGfxInputCombobox>
     {
         public IReadOnlyList<KeyValuePair<string,string>> Items => _framework.Items;
         public void AddItem(string key, string value) => _framework.AddItem(key, value);

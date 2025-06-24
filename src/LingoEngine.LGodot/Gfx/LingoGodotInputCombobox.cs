@@ -15,7 +15,7 @@ namespace LingoEngine.LGodot.Gfx
         private LingoMargin _margin = LingoMargin.Zero;
         private event Action? _onValueChanged;
 
-        public LingoGodotInputCombobox(LingoInputCombobox input)
+        public LingoGodotInputCombobox(LingoGfxInputCombobox input)
         {
             input.Init(this);
             ItemSelected += idx => _onValueChanged?.Invoke();
