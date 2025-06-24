@@ -16,5 +16,6 @@ namespace LingoEngine.Gfx
         void DrawArc(LingoPoint center, float radius, float startDeg, float endDeg, int segments, LingoColor color, float width = 1);
         void DrawPolygon(IReadOnlyList<LingoPoint> points, LingoColor color, bool filled = true, float width = 1);
         void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12);
+        void DrawPicture(byte[] data, int width, int height, LingoPoint position, LingoPixelFormat format);
     }
 }

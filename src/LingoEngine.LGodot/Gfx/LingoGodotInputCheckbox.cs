@@ -6,9 +6,9 @@ using LingoEngine.Primitives;
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
-    /// Godot implementation of <see cref="ILingoFrameworkInputCheckbox"/>.
+    /// Godot implementation of <see cref="ILingoFrameworkGfxInputCheckbox"/>.
     /// </summary>
-    public partial class LingoGodotInputCheckbox : CheckBox, ILingoFrameworkInputCheckbox, IDisposable
+    public partial class LingoGodotInputCheckbox : CheckBox, ILingoFrameworkGfxInputCheckbox, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
         private event Action? _onValueChanged;
@@ -40,7 +40,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        event Action? ILingoFrameworkInput.ValueChanged
+        event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;

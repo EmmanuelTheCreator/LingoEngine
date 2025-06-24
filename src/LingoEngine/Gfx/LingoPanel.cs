@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Simple container that allows placing child nodes at arbitrary coordinates.
     /// </summary>
-    public class LingoPanel : LingoGfxNodeBase<ILingoFrameworkPanel>
+    public class LingoPanel : LingoGfxNodeBase<ILingoFrameworkGfxPanel>
     {
         /// <summary>Adds a child to the panel and sets its position.</summary>
         public void AddChild(ILingoGfxNode node, float x, float y)

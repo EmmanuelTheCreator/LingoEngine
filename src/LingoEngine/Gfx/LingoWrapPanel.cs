@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper for a panel that arranges children with wrapping.
     /// </summary>
-    public class LingoWrapPanel : LingoGfxNodeBase<ILingoFrameworkWrapPanel>
+    public class LingoWrapPanel : LingoGfxNodeBase<ILingoFrameworkGfxWrapPanel>
     {
 
         public LingoOrientation Orientation

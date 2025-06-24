@@ -6,9 +6,9 @@ using LingoEngine.Primitives;
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
-    /// Godot implementation of <see cref="ILingoFrameworkInputNumber"/>.
+    /// Godot implementation of <see cref="ILingoFrameworkGfxInputNumber"/>.
     /// </summary>
-    public partial class LingoGodotInputNumber : SpinBox, ILingoFrameworkInputNumber, IDisposable
+    public partial class LingoGodotInputNumber : SpinBox, ILingoFrameworkGfxInputNumber, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
         private LingoNumberType _numberType = LingoNumberType.Float;
@@ -53,7 +53,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        event Action? ILingoFrameworkInput.ValueChanged
+        event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;

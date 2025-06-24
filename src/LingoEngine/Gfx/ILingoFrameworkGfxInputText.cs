@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific single line text input.
     /// </summary>
-    public interface ILingoFrameworkInputText : ILingoFrameworkInput
+    public interface ILingoFrameworkGfxInputText : ILingoFrameworkGfxNodeInput
     {
         string Text { get; set; }
         int MaxLength { get; set; }

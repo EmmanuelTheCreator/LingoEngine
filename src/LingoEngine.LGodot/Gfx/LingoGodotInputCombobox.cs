@@ -7,9 +7,9 @@ using LingoEngine.Primitives;
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
-    /// Godot implementation of <see cref="ILingoFrameworkInputCombobox"/>.
+    /// Godot implementation of <see cref="ILingoFrameworkGfxInputCombobox"/>.
     /// </summary>
-    public partial class LingoGodotInputCombobox : OptionButton, ILingoFrameworkInputCombobox, IDisposable
+    public partial class LingoGodotInputCombobox : OptionButton, ILingoFrameworkGfxInputCombobox, IDisposable
     {
         private readonly List<KeyValuePair<string,string>> _items = new();
         private LingoMargin _margin = LingoMargin.Zero;
@@ -87,7 +87,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        event Action? ILingoFrameworkInput.ValueChanged
+        event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;

@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Common interface for all framework input controls.
     /// </summary>
-    public interface ILingoFrameworkInput : ILingoFrameworkGfxNode
+    public interface ILingoFrameworkGfxNodeInput : ILingoFrameworkGfxNode
     {
         /// <summary>Whether the control is enabled.</summary>
         bool Enabled { get; set; }

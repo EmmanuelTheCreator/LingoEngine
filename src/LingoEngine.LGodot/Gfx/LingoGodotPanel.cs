@@ -6,9 +6,9 @@ using System;
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
-    /// Godot implementation of <see cref="ILingoFrameworkPanel"/>.
+    /// Godot implementation of <see cref="ILingoFrameworkGfxPanel"/>.
     /// </summary>
-    public partial class LingoGodotPanel : Control, ILingoFrameworkPanel, IDisposable
+    public partial class LingoGodotPanel : Control, ILingoFrameworkGfxPanel, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
 

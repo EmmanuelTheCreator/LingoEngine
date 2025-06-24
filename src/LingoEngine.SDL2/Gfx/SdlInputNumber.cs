@@ -4,7 +4,7 @@ using LingoEngine.Primitives;
 
 namespace LingoEngine.SDL2.Gfx
 {
-    internal class SdlInputNumber : ILingoFrameworkInputNumber, IDisposable
+    internal class SdlInputNumber : ILingoFrameworkGfxInputNumber, IDisposable
     {
         public float X { get; set; }
         public float Y { get; set; }

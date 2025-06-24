@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific layout container with wrapping behaviour.
     /// </summary>
-    public interface ILingoFrameworkWrapPanel : ILingoFrameworkGfxNode
+    public interface ILingoFrameworkGfxWrapPanel : ILingoFrameworkGfxNode
     {
         /// <summary>Orientation of child layout.</summary>
         LingoOrientation Orientation { get; set; }
