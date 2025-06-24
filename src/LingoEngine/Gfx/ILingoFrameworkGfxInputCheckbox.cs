@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific checkbox input.
     /// </summary>
-    public interface ILingoFrameworkInputCheckbox : ILingoFrameworkInput
+    public interface ILingoFrameworkGfxInputCheckbox : ILingoFrameworkGfxNodeInput
     {
         bool Checked { get; set; }
     }

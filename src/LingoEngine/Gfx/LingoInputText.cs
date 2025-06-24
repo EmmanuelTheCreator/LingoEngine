@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper for a single line text input.
     /// </summary>
-    public class LingoInputText : LingoInputBase<ILingoFrameworkInputText>
+    public class LingoInputText : LingoInputBase<ILingoFrameworkGfxInputText>
     {
 
         public string Text { get => _framework.Text; set => _framework.Text = value; }

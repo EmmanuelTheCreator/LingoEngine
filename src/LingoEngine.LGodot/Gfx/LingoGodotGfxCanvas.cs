@@ -5,6 +5,7 @@ using LingoEngine.Events;
 using LingoEngine.LGodot.Primitives;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -24,6 +25,7 @@ namespace LingoEngine.LGodot.Gfx
         private readonly List<(Vector2[] points, Color color, bool filled, float width)> _polys = new();
         private readonly List<(Vector2 pos, string text, string? font, Color color, int size)> _texts = new();
         private readonly List<(Vector2 pos, Color color)> _pixels = new();
+        private readonly List<(ImageTexture tex, Vector2 pos)> _pictures = new();
         private bool _dirty;
 
         public LingoGodotGfxCanvas(LingoGfxCanvas canvas, ILingoFontManager fontManager, int width, int height)
@@ -99,6 +101,9 @@ namespace LingoEngine.LGodot.Gfx
                 DrawString(font, t.pos, t.text, HorizontalAlignment.Left, -1, t.size, t.color);
             }
 
+            foreach (var pic in _pictures)
+                DrawTexture(pic.tex, pic.pos);
+
             _lines.Clear();
             _rects.Clear();
             _circles.Clear();
@@ -106,6 +111,8 @@ namespace LingoEngine.LGodot.Gfx
             _polys.Clear();
             _texts.Clear();
             _pixels.Clear();
+            _pictures.ForEach(p => p.tex.Dispose());
+            _pictures.Clear();
             _clearColor = null;
             _dirty = false;
         }
@@ -160,6 +167,25 @@ namespace LingoEngine.LGodot.Gfx
         public void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12)
         {
             _texts.Add((position.ToVector2(), text, font, color.HasValue ? color.Value.ToGodotColor() : Colors.Black, fontSize));
+            MarkDirty();
+        }
+
+        private static Image.Format ToGodotFormat(LingoPixelFormat format) => format switch
+        {
+            LingoPixelFormat.Rgba8888 => Image.Format.Rgba8,
+            LingoPixelFormat.Rgb888 => Image.Format.Rgb8,
+            LingoPixelFormat.Rgb5650 => Image.Format.Rgb565,
+            LingoPixelFormat.Rgb5550 => Image.Format.Rgb565,
+            LingoPixelFormat.Rgba5551 => Image.Format.Rgba4444,
+            LingoPixelFormat.Rgba4444 => Image.Format.Rgba4444,
+            _ => Image.Format.Rgb8,
+        };
+
+        public void DrawPicture(byte[] data, int width, int height, LingoPoint position, LingoPixelFormat format)
+        {
+            var img = Image.CreateFromData(width, height, false, ToGodotFormat(format), data);
+            var tex = ImageTexture.CreateFromImage(img);
+            _pictures.Add((tex, position.ToVector2()));
             MarkDirty();
         }
 

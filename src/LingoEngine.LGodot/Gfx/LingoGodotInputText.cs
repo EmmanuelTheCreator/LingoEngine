@@ -7,9 +7,9 @@ using System;
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
-    /// Godot implementation of <see cref="ILingoFrameworkInputText"/>.
+    /// Godot implementation of <see cref="ILingoFrameworkGfxInputText"/>.
     /// </summary>
-    public partial class LingoGodotInputText : LineEdit, ILingoFrameworkInputText, IDisposable
+    public partial class LingoGodotInputText : LineEdit, ILingoFrameworkGfxInputText, IDisposable
     {
         private readonly ILingoFontManager _fontManager;
         private string? _font;
@@ -64,7 +64,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        event Action? ILingoFrameworkInput.ValueChanged
+        event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;

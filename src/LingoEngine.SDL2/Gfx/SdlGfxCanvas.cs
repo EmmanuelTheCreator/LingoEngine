@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using LingoEngine.Events;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
@@ -178,6 +179,40 @@ namespace LingoEngine.SDL2.Gfx
                 }
                 SDL.SDL_FreeSurface(surf);
                 SDL_ttf.TTF_CloseFont(fnt);
+            });
+        }
+
+        public void DrawPicture(byte[] data, int width, int height, LingoPoint position, LingoPixelFormat format)
+        {
+            UseTexture(() =>
+            {
+                uint rmask, gmask, bmask, amask;
+                switch (format)
+                {
+                    case LingoPixelFormat.Rgba8888:
+                        rmask = 0x000000FF; gmask = 0x0000FF00; bmask = 0x00FF0000; amask = 0xFF000000; break;
+                    case LingoPixelFormat.Rgb5650:
+                    case LingoPixelFormat.Rgb5550:
+                        rmask = 0xF800; gmask = 0x07E0; bmask = 0x001F; amask = 0; break;
+                    case LingoPixelFormat.Rgba5551:
+                        rmask = 0x7C00; gmask = 0x03E0; bmask = 0x001F; amask = 0x8000; break;
+                    case LingoPixelFormat.Rgba4444:
+                        rmask = 0x0F00; gmask = 0x00F0; bmask = 0x000F; amask = 0xF000; break;
+                    default:
+                        rmask = 0x000000FF; gmask = 0x0000FF00; bmask = 0x00FF0000; amask = 0; break;
+                }
+                var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+                nint surf = SDL.SDL_CreateRGBSurfaceFrom(handle.AddrOfPinnedObject(), width, height, format == LingoPixelFormat.Rgba8888 ? 32 : (format == LingoPixelFormat.Rgb888 ? 24 : 16), width * (format == LingoPixelFormat.Rgb888 ? 3 : 2), rmask, gmask, bmask, amask);
+                if (surf == nint.Zero) { handle.Free(); return; }
+                nint tex = SDL.SDL_CreateTextureFromSurface(_renderer, surf);
+                if (tex != nint.Zero)
+                {
+                    SDL.SDL_Rect dst = new SDL.SDL_Rect { x = (int)position.X, y = (int)position.Y, w = width, h = height };
+                    SDL.SDL_RenderCopy(_renderer, tex, nint.Zero, ref dst);
+                    SDL.SDL_DestroyTexture(tex);
+                }
+                SDL.SDL_FreeSurface(surf);
+                handle.Free();
             });
         }
 

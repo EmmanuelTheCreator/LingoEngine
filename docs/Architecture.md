@@ -24,7 +24,7 @@ At the heart of the engine is the `src/LingoEngine` project. It defines the key 
 - `ILingoFrameworkStage` – represents the rendering surface
 - `ILingoFrameworkSprite` – represents visual sprite elements
 - `ILingoFrameworkMovie` – encapsulates timeline logic and score interaction
-- `ILingoFrameworkInput`, `ILingoFrameworkMouse`, etc. – abstract input handling
+- `ILingoFrameworkGfxNodeInput`, `ILingoFrameworkMouse`, etc. – abstract input handling
 - `ILingoFrameworkFactory` – used to construct platform-native instances of all of the above
 
 ### Example: Framework Agnostic Usage

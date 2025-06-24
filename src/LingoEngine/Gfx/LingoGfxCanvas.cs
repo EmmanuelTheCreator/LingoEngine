@@ -25,5 +25,7 @@ namespace LingoEngine.Gfx
             => _framework.DrawPolygon(points, color, filled, width);
         public void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12)
             => _framework.DrawText(position, text, font, color, fontSize);
+        public void DrawPicture(byte[] data, int width, int height, LingoPoint position, LingoPixelFormat format)
+            => _framework.DrawPicture(data, width, height, position, format);
     }
 }

@@ -7,9 +7,9 @@ using System.Linq;
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
-    /// Godot implementation of <see cref="ILingoFrameworkWrapPanel"/>.
+    /// Godot implementation of <see cref="ILingoFrameworkGfxWrapPanel"/>.
     /// </summary>
-    public partial class LingoGodotWrapPanel : Control, ILingoFrameworkWrapPanel, IDisposable
+    public partial class LingoGodotWrapPanel : Control, ILingoFrameworkGfxWrapPanel, IDisposable
     {
         private FlowContainer _container;
         private LingoOrientation _orientation;

@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific combo box input.
     /// </summary>
-    public interface ILingoFrameworkInputCombobox : ILingoFrameworkInput
+    public interface ILingoFrameworkGfxInputCombobox : ILingoFrameworkGfxNodeInput
     {
         IReadOnlyList<KeyValuePair<string,string>> Items { get; }
         void AddItem(string key, string value);
