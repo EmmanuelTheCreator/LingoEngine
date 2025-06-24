@@ -173,6 +173,11 @@ public class ReadStream : Stream
 
     public int ReadInt32() => (int)ReadUint32();
 
+    public float ReadFloat32()
+    {
+        return BitConverter.Int32BitsToSingle((int)ReadUint32());
+    }
+
     public double ReadDouble()
     {
         int p = _pos;
