@@ -8,8 +8,12 @@ using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Members;
 using LingoEngine.Core;
+using LingoEngine.Primitives;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core.Commands;
 using System.Linq;
+using System;
+using System.Collections.Generic;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
@@ -33,7 +37,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private readonly Button _toggleRegPointButton = new Button();
     private readonly HSlider _zoomSlider = new HSlider();
     private readonly OptionButton _scaleDropdown = new OptionButton();
+    private readonly HSlider _brushSizeSlider = new HSlider();
     private readonly RegPointCanvas _regPointCanvas;
+    private readonly SelectionCanvas _selectionCanvas;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
     private readonly IDirGodotIconManager _iconManager;
@@ -41,6 +47,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _showRegPoint = true;
     private PicturePainter? _painter;
     private readonly PaintToolbar _paintToolbar;
+    private int _brushSize = 1;
+    private readonly HashSet<Vector2I> _selectedPixels = new();
+    private bool _dragSelecting;
+    private Vector2I _selectStart;
+    private Rect2I? _dragRect;
 
 
     private readonly float[] _zoomLevels = new float[]
@@ -74,6 +85,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _paintToolbar = new PaintToolbar(_iconManager, commandManager);
         AddChild(_paintToolbar);
         _paintToolbar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
+        _paintToolbar.ToolSelected += OnToolSelected;
 
 
         _flipHButton.Text = "Flip H";
@@ -100,6 +112,15 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         var applyButton = new Button { Text = "Apply", CustomMinimumSize = new Vector2(60, IconBarHeight) };
         applyButton.Pressed += ApplyPaintingToMember;
         _iconBar.AddChild(applyButton);
+
+        _brushSizeSlider.MinValue = 1;
+        _brushSizeSlider.MaxValue = 20;
+        _brushSizeSlider.Step = 1;
+        _brushSizeSlider.Value = _brushSize;
+        _brushSizeSlider.CustomMinimumSize = new Vector2(100, IconBarHeight);
+        _brushSizeSlider.Visible = false;
+        _brushSizeSlider.ValueChanged += v => _brushSize = (int)v;
+        _iconBar.AddChild(_brushSizeSlider);
 
 
 
@@ -176,6 +197,14 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _regPointCanvas.AnchorBottom = 0.5f;
         _regPointCanvas.Visible = true;
         _scrollContainer.AddChild(_regPointCanvas);
+
+        _selectionCanvas = new SelectionCanvas(this);
+        _selectionCanvas.AnchorLeft = 0.5f;
+        _selectionCanvas.AnchorTop = 0.5f;
+        _selectionCanvas.AnchorRight = 0.5f;
+        _selectionCanvas.AnchorBottom = 0.5f;
+        _selectionCanvas.Visible = true;
+        _scrollContainer.AddChild(_selectionCanvas);
 
         // Bottom zoom bar
         AddChild(_bottomBar);
@@ -329,6 +358,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _regPointCanvas.OffsetTop = -h / 2f;
         _regPointCanvas.OffsetRight = w / 2f;
         _regPointCanvas.OffsetBottom = h / 2f;
+        _selectionCanvas.CustomMinimumSize = new Vector2(w, h);
+        _selectionCanvas.OffsetLeft = -w / 2f;
+        _selectionCanvas.OffsetTop = -h / 2f;
+        _selectionCanvas.OffsetRight = w / 2f;
+        _selectionCanvas.OffsetBottom = h / 2f;
     }
 
     protected override void OnResizing(Vector2 size)
@@ -348,6 +382,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         UpdateRegPointCanvasSize();
         CenterImage();
         _regPointCanvas.QueueRedraw();
+        _selectionCanvas.QueueRedraw();
     }
     private void OnZoomChanged(float value)
     {
@@ -376,6 +411,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         UpdateRegPointCanvasSize();
         _regPointCanvas.QueueRedraw();
+        _selectionCanvas.QueueRedraw();
 
         Vector2 newCanvasSize = _centerContainer.CustomMinimumSize;
         Vector2 newOrigin = newCanvasSize / 2f;
@@ -442,27 +478,62 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 }
                 else if (mb.Pressed && !@_spaceHeld && bounds.HasPoint(mousePos))
                 {
-                    // Paint pixel
-                    if (_painter != null && _imageRect.Texture != null)
+                    if (_paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
+                    {
+                        if (_painter != null)
+                        {
+                            var local = _imageRect.GetLocalMousePosition() / _scale;
+                            _selectStart = new Vector2I((int)local.X, (int)local.Y);
+                            _dragRect = null;
+                            _dragSelecting = true;
+                            _selectionCanvas.QueueRedraw();
+                        }
+                    }
+                    else if (_painter != null && _imageRect.Texture != null)
                     {
                         var local = _imageRect.GetLocalMousePosition() / _scale;
-                        var px = (int)local.X;
-                        var py = (int)local.Y;
-                        var pixel = new Vector2I(px, py);
+                        var pixel = new Vector2I((int)local.X, (int)local.Y);
 
-                        if (pixel.X >= 0 && pixel.Y >= 0 && pixel.X < _painter.Size.X && pixel.Y < _painter.Size.Y)
-                        {
-                            _painter.PaintPixel(pixel, Colors.Red); // example color
-                            _painter.Commit();
-                            _regPointCanvas.QueueRedraw();
-                        }
+                        var beforeOffset = _painter.Offset;
+
+                        if (_paintToolbar.SelectedTool == PainterToolType.Eraser)
+                            _painter.ErasePixel(pixel);
+                        else if (_paintToolbar.SelectedTool == PainterToolType.PaintBrush)
+                            _painter.PaintBrush(pixel, _paintToolbar.SelectedColor, _brushSize);
+                        else
+                            _painter.PaintPixel(pixel, _paintToolbar.SelectedColor);
+                        var delta = _painter.Offset - beforeOffset;
+
+                        if (delta != Vector2I.Zero && _member != null)
+                            _member.RegPoint = new LingoPoint(_member.RegPoint.X + delta.X, _member.RegPoint.Y + delta.Y);
+
+                        _painter.Commit();
+                        _imageRect.Texture = _painter.Texture;
+
+                        if (delta != Vector2I.Zero)
+                            RefreshImageSize();
+
+                        _regPointCanvas.QueueRedraw();
                     }
 
                     return;
                 }
                 else if (!mb.Pressed)
                 {
-                    _panning = false;
+                    if (_dragSelecting && _paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
+                    {
+                        var local = _imageRect.GetLocalMousePosition() / _scale;
+                        var end = new Vector2I((int)local.X, (int)local.Y);
+                        Rect2I rect = RectFromPoints(_selectStart, end);
+                        ApplySelection(rect, mb.Ctrl, mb.Shift);
+                        _dragSelecting = false;
+                        _dragRect = null;
+                        _selectionCanvas.QueueRedraw();
+                    }
+                    else
+                    {
+                        _panning = false;
+                    }
                     GetViewport().SetInputAsHandled();
                     return;
                 }
@@ -493,6 +564,15 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         }
         else if (@event is InputEventMouseMotion motion)
         {
+            if (_dragSelecting && _paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
+            {
+                var local = _imageRect.GetLocalMousePosition() / _scale;
+                var end = new Vector2I((int)local.X, (int)local.Y);
+                _dragRect = RectFromPoints(_selectStart, end);
+                _selectionCanvas.QueueRedraw();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
             if (_panning)
             {
                 _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
@@ -519,6 +599,64 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private void OnFlipV()
     {
         _imageRect.FlipV = !_imageRect.FlipV;
+    }
+
+    private void OnToolSelected(PainterToolType tool)
+    {
+        _brushSizeSlider.Visible = tool == PainterToolType.PaintBrush;
+    }
+
+    private static Rect2I RectFromPoints(Vector2I a, Vector2I b)
+    {
+        int minX = Math.Min(a.X, b.X);
+        int minY = Math.Min(a.Y, b.Y);
+        int maxX = Math.Max(a.X, b.X);
+        int maxY = Math.Max(a.Y, b.Y);
+        return new Rect2I(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    private void ApplySelection(Rect2I rect, bool ctrl, bool shift)
+    {
+        var pixels = new List<Vector2I>();
+        for (int y = 0; y < rect.Size.Y; y++)
+            for (int x = 0; x < rect.Size.X; x++)
+                pixels.Add(rect.Position + new Vector2I(x, y));
+
+        if (shift)
+        {
+            foreach (var p in pixels)
+                _selectedPixels.Remove(p);
+        }
+        else if (ctrl)
+        {
+            foreach (var p in pixels)
+                _selectedPixels.Add(p);
+        }
+        else
+        {
+            _selectedPixels.Clear();
+            foreach (var p in pixels)
+                _selectedPixels.Add(p);
+        }
+    }
+
+    private void RefreshImageSize()
+    {
+        if (_painter == null)
+            return;
+
+        Vector2 imageSize = new(_painter.Size.X, _painter.Size.Y);
+        _imageRect.CustomMinimumSize = imageSize;
+        _imageRect.Size = imageSize * _scale;
+        _imageRect.OffsetLeft = -imageSize.X / 2f;
+        _imageRect.OffsetTop = -imageSize.Y / 2f;
+        _imageRect.OffsetRight = imageSize.X / 2f;
+        _imageRect.OffsetBottom = imageSize.Y / 2f;
+
+        _workAreaSize = imageSize + new Vector2(2000, 2000);
+        _centerContainer.CustomMinimumSize = _workAreaSize * _scale;
+        _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
+        UpdateRegPointCanvasSize();
     }
     protected override void Dispose(bool disposing)
     {
