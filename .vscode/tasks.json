@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/LingoEngine.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run SDL2",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.SDL2/LingoEngine.Demo.TetriGrounds.SDL2.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "dependsOn": "build"
+        },
+        {
+            "label": "run Godot",
+            "type": "shell",
+            "command": "godot",
+            "args": [
+                "--path",
+                "${workspaceFolder}/Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.Godot"
+            ],
+            "problemMatcher": [],
+            "dependsOn": "build"
+        }
+    ]
+}
