@@ -51,6 +51,14 @@
 - [Godot Setup](docs/GodotSetup.md)
 - [SDL2 Setup](docs/SDLSetup.md)
 
+### VS Code Setup
+
+1. Install the [.NET SDK](https://learn.microsoft.com/dotnet/core/install/) and [Godot 4](https://godotengine.org/) with C# support.
+2. Open the repository folder in VS Code and accept the recommended extensions.
+3. Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> to build the solution.
+4. From the Run and Debug panel choose **Launch Demo SDL2** or **Launch Demo Godot**.
+
+
 ---
 
 ## 🎮 Running the Demo
