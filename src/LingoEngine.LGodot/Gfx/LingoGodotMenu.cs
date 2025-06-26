@@ -25,10 +25,10 @@ namespace LingoEngine.LGodot.Gfx
 
         public string Name { get => _name; set => _name = value; }
 
-        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
-        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public float X { get => Position.X; set => Position = new Vector2I((int)value, Position.Y); }
+        public float Y { get => Position.Y; set => Position = new Vector2I(Position.X, (int)value); }
+        public float Width { get => Size.X; set => Size = new Vector2I((int)value, Size.Y); }
+        public float Height { get => Size.Y; set => Size = new Vector2I(Size.X, (int)value); }
         public bool Visibility { get => Visible; set => Visible = value; }
 
         public LingoMargin Margin
