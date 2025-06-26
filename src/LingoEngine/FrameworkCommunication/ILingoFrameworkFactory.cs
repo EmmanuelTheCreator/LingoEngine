@@ -97,6 +97,12 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a simple text label.</summary>
         LingoLabel CreateLabel(string text = "");
 
+        /// <summary>Creates a menu container.</summary>
+        LingoMenu CreateMenu(string name);
+
+        /// <summary>Creates a menu item.</summary>
+        LingoMenuItem CreateMenuItem(string name, string? shortcut = null);
+
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
         /// <summary>Creates a sprite behaviour.</summary>
