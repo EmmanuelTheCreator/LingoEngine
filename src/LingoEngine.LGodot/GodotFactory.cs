@@ -258,5 +258,21 @@ namespace LingoEngine.LGodot
             _rootNode.AddChild(impl);
             return label;
         }
+
+        public LingoMenu CreateMenu(string name)
+        {
+            var menu = new LingoMenu();
+            var impl = new LingoGodotMenu(menu, name);
+            _rootNode.AddChild(impl);
+            return menu;
+        }
+
+        public LingoMenuItem CreateMenuItem(string name, string? shortcut = null)
+        {
+            var item = new LingoMenuItem();
+            var impl = new LingoGodotMenuItem(name, shortcut);
+            item.Init(impl);
+            return item;
+        }
     }
 }
