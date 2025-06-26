@@ -1,5 +1,6 @@
 using System.Collections;
 using LingoEngine.Primitives;
+using static LingoEngine.Movies.BehaviorPropertiesContainer;
 
 namespace LingoEngine.Movies;
 

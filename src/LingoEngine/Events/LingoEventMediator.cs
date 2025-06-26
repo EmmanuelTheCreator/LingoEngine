@@ -4,7 +4,7 @@ using LingoEngine.Movies;
 namespace LingoEngine.Events
 {
 
-    internal class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler, ILingoKeyEventHandler, ILingoSpriteEventHandler
+    public class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler, ILingoKeyEventHandler, ILingoSpriteEventHandler
     {
         private readonly List<IHasPrepareMovieEvent> _prepareMovies = new();
         private readonly List<IHasStartMovieEvent> _startMovies = new();

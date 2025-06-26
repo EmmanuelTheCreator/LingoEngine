@@ -16,7 +16,7 @@ public class ChunkInfo
     public uint Len;
     public uint UncompressedLen;
     public int Offset;
-    public LingoGuid CompressionID;
+    public RayGuid CompressionID;
 }
 
 public class DirectorFile : ChunkResolver
@@ -183,10 +183,10 @@ public class DirectorFile : ChunkResolver
         if (fcdrUncomp <= 0) return false;
         var fcdrStream = new ReadStream(fcdrBuf, fcdrUncomp, Endianness);
         ushort compCount = fcdrStream.ReadUint16();
-        var compIDs = new List<LingoGuid>();
+        var compIDs = new List<RayGuid>();
         for (int i = 0; i < compCount; i++)
         {
-            var id = new LingoGuid();
+            var id = new RayGuid();
             id.Read(fcdrStream);
             compIDs.Add(id);
         }
@@ -501,6 +501,6 @@ public class DirectorFile : ChunkResolver
         }
     }
 
-    private static bool CompressionImplemented(LingoGuid id) =>
+    private static bool CompressionImplemented(RayGuid id) =>
         id.Equals(LingoGuidConstants.ZLIB_COMPRESSION_GUID) || id.Equals(LingoGuidConstants.SND_COMPRESSION_GUID);
 }

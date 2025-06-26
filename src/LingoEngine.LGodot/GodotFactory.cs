@@ -219,7 +219,7 @@ namespace LingoEngine.LGodot
             return tab;
         }
 
-        public LingoInputText CreateInputText(int maxLength = 0)
+        public LingoGfxInputText CreateInputText(int maxLength = 0)
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());

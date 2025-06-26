@@ -1,0 +1,17 @@
+{
+  "dataOffset": 12,
+  "unk0": 0,
+  "itemsPerCast": 4,
+  "itemsPerCast": 4,
+  "unk1": 0,
+  "entries": [
+    {
+      "name": "Internal",
+      "filePath": "",
+      "preloadSettings": 0,
+      "minMember": 2,
+      "maxMember": 2,
+      "id": 66560
+    }
+  ]
+}

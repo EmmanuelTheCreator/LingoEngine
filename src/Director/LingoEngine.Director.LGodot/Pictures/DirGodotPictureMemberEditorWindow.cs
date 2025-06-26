@@ -515,7 +515,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                         var local = _imageRect.GetLocalMousePosition() / _scale;
                         var end = new Vector2I((int)local.X, (int)local.Y);
                         Rect2I rect = RectFromPoints(_selectStart, end);
-                        ApplySelection(rect, mb.Ctrl, mb.Shift);
+                        ApplySelection(rect, mb.CtrlPressed, mb.ShiftPressed);
                         _dragSelecting = false;
                         _dragRect = null;
                         _selectionCanvas.QueueRedraw();
@@ -674,7 +674,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
     public bool Handle(PainterToolSelectCommand command)
     {
-        _paintToolbar.SelectedTool = command.Tool;
+        _paintToolbar.SelectTool(command.Tool);
         OnToolSelected(command.Tool);
         return true;
     }
