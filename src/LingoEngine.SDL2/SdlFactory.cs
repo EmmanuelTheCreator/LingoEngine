@@ -200,7 +200,15 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return panel;
     }
 
-    public LingoGfxInputText CreateInputText(int maxLength = 0)
+    public LingoGfxTabContainer CreateTabContainer()
+    {
+        var tab = new LingoGfxTabContainer();
+        var impl = new SdlTabContainer();
+        tab.Init(impl);
+        return tab;
+    }
+
+    public LingoInputText CreateInputText(int maxLength = 0)
     {
         var input = new LingoGfxInputText { MaxLength = maxLength };
         var impl = new SdlInputText();
@@ -230,5 +238,13 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         var impl = new SdlInputCombobox();
         input.Init(impl);
         return input;
+    }
+
+    public LingoLabel CreateLabel(string text = "")
+    {
+        var label = new LingoLabel { Text = text };
+        var impl = new SdlLabel();
+        label.Init(impl);
+        return label;
     }
 }

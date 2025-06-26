@@ -1,4 +1,5 @@
 ﻿using LingoEngine.Core;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Movies
 {
@@ -6,9 +7,15 @@ namespace LingoEngine.Movies
     {
         protected LingoSprite Me;
         public LingoSprite GetSprite() => Me;
-#pragma warning disable CS8618 
+
+        /// <summary>
+        /// Properties configured by the user via the property dialog.
+        /// </summary>
+        public BehaviorPropertiesContainer UserProperties { get; } = new();
+
+#pragma warning disable CS8618
         public LingoSpriteBehavior(ILingoMovieEnvironment env) : base(env)
-#pragma warning restore CS8618 
+#pragma warning restore CS8618
         {
         }
 

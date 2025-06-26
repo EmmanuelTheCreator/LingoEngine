@@ -1,4 +1,4 @@
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine._3D.Members;
 
 /// <summary>
 /// Element of 3D geometry used to draw models.

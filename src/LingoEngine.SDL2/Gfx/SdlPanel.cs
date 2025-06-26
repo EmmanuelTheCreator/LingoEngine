@@ -12,6 +12,9 @@ namespace LingoEngine.SDL2.Gfx
         public float Height { get; set; }
         public bool Visibility { get; set; } = true;
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
+        public LingoColor BackgroundColor { get; set; }
+        public LingoColor BorderColor { get; set; }
+        public float BorderWidth { get; set; }
 
         public void AddChild(ILingoFrameworkGfxNode child) { }
 

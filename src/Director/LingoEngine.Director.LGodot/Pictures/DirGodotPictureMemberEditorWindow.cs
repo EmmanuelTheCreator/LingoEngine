@@ -11,13 +11,15 @@ using LingoEngine.Core;
 using LingoEngine.Primitives;
 using LingoEngine.Movies;
 using LingoEngine.Director.Core.Commands;
+using LingoEngine.Director.Core.Stages;
 using System.Linq;
 using System;
 using System.Collections.Generic;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
-internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkPictureEditWindow
+internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkPictureEditWindow,
+    ICommandHandler<PainterToolSelectCommand>, ICommandHandler<PainterDrawPixelCommand>, ICommandHandler<PainterFillCommand>
 {
     private const int NavigationBarHeight = 20;
     private const int IconBarHeight = 20;
@@ -43,6 +45,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
     private readonly IDirGodotIconManager _iconManager;
+    private readonly ILingoCommandManager _commandManager;
+    private readonly IHistoryManager _historyManager;
     private LingoMemberPicture? _member;
     private bool _showRegPoint = true;
     private PicturePainter? _painter;
@@ -62,12 +66,14 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _spaceHeld;
     private bool _panning;
 
-    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow, IDirGodotIconManager iconManager, ILingoCommandManager commandManager) 
+    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorPictureEditWindow directorPictureEditWindow, IDirGodotIconManager iconManager, ILingoCommandManager commandManager, IHistoryManager historyManager)
         : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
         _mediator = mediator;
         _player = player;
         _iconManager = iconManager;
+        _commandManager = commandManager;
+        _historyManager = historyManager;
         _mediator.Subscribe(this);
         Size = new Vector2(800, 500);
         directorPictureEditWindow.Init(this);
@@ -82,7 +88,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         AddChild(_iconBar);
         _iconBar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight);
         _iconBar.CustomMinimumSize = new Vector2(Size.X, IconBarHeight);
-        _paintToolbar = new PaintToolbar(_iconManager, commandManager);
+        _paintToolbar = new PaintToolbar(_iconManager, _commandManager);
         AddChild(_paintToolbar);
         _paintToolbar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
         _paintToolbar.ToolSelected += OnToolSelected;
@@ -456,11 +462,15 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         base._Input(@event);
         if (!Visible) return;
 
-        if (@event is InputEventKey key && key.Keycode == Key.Space)
+        if (@event is InputEventKey keyEvent)
         {
-            _spaceHeld = key.Pressed;
-            if (!key.Pressed)
-                _panning = false;
+
+            if (keyEvent.Keycode == Key.Space)
+            {
+                _spaceHeld = keyEvent.Pressed;
+                if (!keyEvent.Pressed)
+                    _panning = false;
+            }
         }
         else if (@event is InputEventMouseButton mb)
         {
@@ -493,27 +503,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                     {
                         var local = _imageRect.GetLocalMousePosition() / _scale;
                         var pixel = new Vector2I((int)local.X, (int)local.Y);
-
-                        var beforeOffset = _painter.Offset;
-
-                        if (_paintToolbar.SelectedTool == PainterToolType.Eraser)
-                            _painter.ErasePixel(pixel);
-                        else if (_paintToolbar.SelectedTool == PainterToolType.PaintBrush)
-                            _painter.PaintBrush(pixel, _paintToolbar.SelectedColor, _brushSize);
-                        else
-                            _painter.PaintPixel(pixel, _paintToolbar.SelectedColor);
-                        var delta = _painter.Offset - beforeOffset;
-
-                        if (delta != Vector2I.Zero && _member != null)
-                            _member.RegPoint = new LingoPoint(_member.RegPoint.X + delta.X, _member.RegPoint.Y + delta.Y);
-
-                        _painter.Commit();
-                        _imageRect.Texture = _painter.Texture;
-
-                        if (delta != Vector2I.Zero)
-                            RefreshImageSize();
-
-                        _regPointCanvas.QueueRedraw();
+                        _commandManager.Handle(new PainterDrawPixelCommand(pixel.X, pixel.Y));
                     }
 
                     return;
@@ -679,5 +669,73 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         GD.Print("Changes applied to member.");
     }
+
+    public bool CanExecute(PainterToolSelectCommand command) => true;
+
+    public bool Handle(PainterToolSelectCommand command)
+    {
+        _paintToolbar.SelectedTool = command.Tool;
+        OnToolSelected(command.Tool);
+        return true;
+    }
+
+    public bool CanExecute(PainterDrawPixelCommand command) => _painter != null;
+
+    public bool Handle(PainterDrawPixelCommand command)
+    {
+        if (_painter == null) return false;
+
+        var beforeImage = _painter.GetImage();
+        var beforeOffset = _painter.Offset;
+        var oldReg = _member?.RegPoint ?? new LingoPoint(0, 0);
+
+        var pixel = new Vector2I(command.X, command.Y);
+        if (_paintToolbar.SelectedTool == PainterToolType.Eraser)
+            _painter.ErasePixel(pixel);
+        else if (_paintToolbar.SelectedTool == PainterToolType.PaintBrush)
+            _painter.PaintBrush(pixel, _paintToolbar.SelectedColor, _brushSize);
+        else
+            _painter.PaintPixel(pixel, _paintToolbar.SelectedColor);
+
+        var delta = _painter.Offset - beforeOffset;
+        if (delta != Vector2I.Zero && _member != null)
+            _member.RegPoint = new LingoPoint(_member.RegPoint.X + delta.X, _member.RegPoint.Y + delta.Y);
+
+        _painter.Commit();
+        var afterImage = _painter.GetImage();
+        var afterOffset = _painter.Offset;
+        var newReg = _member?.RegPoint ?? oldReg;
+        _imageRect.Texture = _painter.Texture;
+        if (delta != Vector2I.Zero)
+            RefreshImageSize();
+        _regPointCanvas.QueueRedraw();
+
+        _historyManager.Push(() =>
+        {
+            if (_painter == null) return;
+            _painter.SetState(beforeImage, beforeOffset);
+            _imageRect.Texture = _painter.Texture;
+            if (_member != null)
+                _member.RegPoint = oldReg;
+            RefreshImageSize();
+            _regPointCanvas.QueueRedraw();
+        },
+        () =>
+        {
+            if (_painter == null) return;
+            _painter.SetState(afterImage, afterOffset);
+            _imageRect.Texture = _painter.Texture;
+            if (_member != null)
+                _member.RegPoint = newReg;
+            RefreshImageSize();
+            _regPointCanvas.QueueRedraw();
+        });
+
+        return true;
+    }
+
+    public bool CanExecute(PainterFillCommand command) => false;
+
+    public bool Handle(PainterFillCommand command) => true;
 }
 

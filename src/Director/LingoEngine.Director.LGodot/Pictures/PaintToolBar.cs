@@ -44,18 +44,18 @@ namespace LingoEngine.Director.LGodot.Pictures
 
         public override void _Ready()
         {
-            AddToolButton(DirGodotEditorIcon.Pencil);
-            AddToolButton(DirGodotEditorIcon.PaintBrush);
-            AddToolButton(DirGodotEditorIcon.Eraser);
-            AddToolButton(DirGodotEditorIcon.RectangleSelect);
-            AddToolButton(DirGodotEditorIcon.PaintBucket);
+            AddToolButton(DirEditorIcon.Pencil);
+            AddToolButton(DirEditorIcon.PaintBrush);
+            AddToolButton(DirEditorIcon.Eraser);
+            AddToolButton(DirEditorIcon.RectangleSelect);
+            AddToolButton(DirEditorIcon.PaintBucket);
             AddColorPickerForegound();
             AddColorPickerBackgound();
 
             ToolSelected?.Invoke(SelectedTool);
         }
 
-        private void AddToolButton(DirGodotEditorIcon icon)
+        private void AddToolButton(DirEditorIcon icon)
         {
             var btn = new DirectorToolButton();
             btn.Icon = _iconManager.Get(icon);
@@ -65,12 +65,12 @@ namespace LingoEngine.Director.LGodot.Pictures
                 SelectButton(btn);
                 var tool = icon switch
                 {
-                    DirGodotEditorIcon.Pencil => PainterToolType.Pencil,
-                    DirGodotEditorIcon.PaintBrush => PainterToolType.PaintBrush,
-                    DirGodotEditorIcon.Eraser => PainterToolType.Eraser,
-                    DirGodotEditorIcon.RectangleSelect => PainterToolType.SelectRectangle,
-                    DirGodotEditorIcon.ColorPicker => PainterToolType.ColorPicker,
-                    DirGodotEditorIcon.PaintBucket => PainterToolType.Fill,
+                    DirEditorIcon.Pencil => PainterToolType.Pencil,
+                    DirEditorIcon.PaintBrush => PainterToolType.PaintBrush,
+                    DirEditorIcon.Eraser => PainterToolType.Eraser,
+                    DirEditorIcon.RectangleSelect => PainterToolType.SelectRectangle,
+                    DirEditorIcon.ColorPicker => PainterToolType.ColorPicker,
+                    DirEditorIcon.PaintBucket => PainterToolType.Fill,
                     _ => throw new ArgumentOutOfRangeException(nameof(icon), icon.ToString())
                 };
 
