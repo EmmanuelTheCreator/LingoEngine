@@ -1,57 +1,12 @@
 using Godot;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.LGodot.Primitives;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
-    public enum DirGodotEditorIcon
+    public interface IDirGodotIconManager : IDirIconManager
     {
-        // General_Icons.png (left to right)
-        MemberTypeBitmap,
-        SelectionNotUsed,
-        MemberTypeShape,
-        MemberTypeText,
-        MemberTypSound,
-        MemberTypeMovieClip,
-        MemberTypeVideo,
-        Transition,
-        DirectorIcon,
-        ColorPalette,
-
-        Script,
-        MovieScript,
-        MemberTypeField,
-        MemberTypeButton,
-        MemberTypeRadioButton,
-        MemberTypeCheckbox,
-        Xtra,
-        PaintCache,
-        ParentScript,
-        BehaviorScript,
-
-
-        // Painter_Icons.png (continuing index)
-        PaintLasso,
-        RectangleSelect,
-        Crosshair,
-        Eraser,
-        Hand,
-        Magnifier,
-        ColorPicker,
-        PaintBucket,
-        Text,
-        Pencil,
-        PaintBrush,
-        PaintLineCurve,
-        PaintStraightLine,
-        PaintSquareFilled,
-        PaintSquare,
-        PaintCircleFilled,
-        PaintCircle,
-        PaintFreeLineFilled,
-        PaintFreeLine
-    }
-    public interface IDirGodotIconManager
-    {
-        Texture2D Get(DirGodotEditorIcon icon);
+        Texture2D Get(DirEditorIcon icon);
     }
     public partial class DirGodotIconManager : IDirGodotIconManager
     {
@@ -65,7 +20,8 @@ namespace LingoEngine.Director.LGodot.Gfx
         }
 
         private readonly List<IconSheet> _sheets = new();
-        private readonly Dictionary<DirGodotEditorIcon, Texture2D> _iconCache = new();
+        private readonly Dictionary<DirEditorIcon, Texture2D> _iconCache = new();
+        private readonly Dictionary<DirEditorIcon, LingoIconData> _dataCache = new();
 
 
 
@@ -90,7 +46,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         }
 
 
-        public Texture2D Get(DirGodotEditorIcon icon)
+        public Texture2D Get(DirEditorIcon icon)
         {
             if (_iconCache.TryGetValue(icon, out var cached))
                 return cached;
@@ -116,6 +72,20 @@ namespace LingoEngine.Director.LGodot.Gfx
             }
 
             throw new ArgumentOutOfRangeException(nameof(icon), "Icon index out of range.");
+        }
+
+        public LingoIconData GetData(DirEditorIcon icon)
+        {
+            if (_dataCache.TryGetValue(icon, out var data))
+                return data;
+
+            var tex = Get(icon);
+            var img = tex.GetImage();
+            img.Convert(Image.Format.Rgba8);
+            var bytes = img.GetData();
+            data = new LingoIconData(bytes, img.GetWidth(), img.GetHeight(), img.GetFormat().ToLingoFormat());
+            _dataCache[icon] = data;
+            return data;
         }
 
 
