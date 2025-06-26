@@ -8,6 +8,7 @@ namespace LingoEngine.Director.Core.Stages;
 public sealed record AddSpriteCommand(
     LingoMovie Movie,
     ILingoMember Member,
+    // Channel number is 1-based to match LingoMovie
     int Channel,
     int BeginFrame,
     int EndFrame) : ILingoCommand
