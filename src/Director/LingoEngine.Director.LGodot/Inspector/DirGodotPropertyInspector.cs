@@ -7,17 +7,17 @@ using LingoEngine.Members;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Director.LGodot;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Texts;
 using System.Linq;
 using LingoEngine.Director.Core.Commands;
 using System.Reflection.PortableExecutable;
-using System.Drawing;
 using LingoEngine.Primitives;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Director.Core.Gfx;
+using LingoEngine.LGodot.Gfx;
+using LingoEngine.Gfx;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -26,18 +26,18 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
     private readonly ScrollContainer _vScroller = new ScrollContainer();
-    private readonly TabContainer _tabs = new TabContainer();
+    private readonly LingoGfxTabContainer _tabs;
     private readonly PanelContainer _behaviorPanel = new PanelContainer();
     private readonly VBoxContainer _behaviorBox = new VBoxContainer();
     private readonly Button _behaviorClose = new Button();
     private readonly ILingoPlayer _player;
+    private readonly LingoPanel _headerPanel;
+    private readonly LingoWrapPanel _header;
+    private readonly DirMemberThumbnail _thumb;
+    private readonly LingoPanel _thumbPanel;
     private readonly IDirGodotIconManager _iconManager;
-    private readonly HBoxContainer _header = new HBoxContainer();
-    private readonly DirGodotMemberThumbnail _thumb;
-    private readonly VBoxContainer _headerText = new VBoxContainer();
-    private readonly Label _spriteInfo = new Label();
-    private readonly Label _memberInfo = new Label();
-    private readonly Label _castInfo = new Label();
+    private readonly LingoWrapPanel _headerText;
+    private readonly DirectorPropertyInspectorWindow _inspectorWindow;
     private const int HeaderHeight = 44;
 
     public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, IDirGodotIconManager iconManager)
@@ -47,19 +47,27 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         _commandManager = commandManager;
         _player = player;
         _iconManager = iconManager;
-        inspectorWindow.Init(this);
+        _inspectorWindow = inspectorWindow;
+        _inspectorWindow.Init(this);
 
         //Position = new Vector2(500, 20);
         Size = new Vector2(260, 400);
         CustomMinimumSize = Size;
 
-        _thumb = new DirGodotMemberThumbnail(36, 36, _iconManager);
+        var headerElems = _inspectorWindow.CreateHeaderElements(_player.Factory, iconManager);
+        _thumb = headerElems.Thumbnail;
+        _headerText = headerElems.TextContainer;
+        _thumbPanel = headerElems.ThumbPanel;
+        _header = headerElems.Header;
+        _headerPanel = headerElems.Panel;
+        _tabs = _player.Factory.CreateTabContainer();
         CreateHeader();
 
-        _tabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
-        _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
+        var godotTabs = _tabs.Framework<LingoGodotTabContainer>();
+        godotTabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
+        godotTabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
 
-        AddChild(_tabs);
+        AddChild(godotTabs);
 
         _behaviorPanel.Visible = false;
         _behaviorPanel.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
@@ -85,61 +93,31 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
 
     private void CreateHeader()
     {
-        _header.CustomMinimumSize = new Vector2(Size.X - 10, HeaderHeight);
-        _header.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _header.Width = Size.X - 10;
+        _header.Height = HeaderHeight;
 
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 4);
-        margin.AddThemeConstantOverride("margin_right", 4);
-        margin.AddThemeConstantOverride("margin_top", 2);
-        margin.AddThemeConstantOverride("margin_bottom", 2);
-        var thumbContainer = new PanelContainer();
-        var style = new StyleBoxFlat
-        {
-            BgColor = Colors.White,
-            BorderColor = Colors.DarkGray
-        };
-        thumbContainer.AddThemeStyleboxOverride("panel", style);
-        style.BorderWidthTop = 1;
-        style.BorderWidthBottom = 1;
-        style.BorderWidthLeft = 1;
-        style.BorderWidthRight = 1;
-        thumbContainer.AddChild(_thumb);
-        margin.AddChild(thumbContainer);
-        _header.AddChild(margin);
-
-        _spriteInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
-        _memberInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
-        _castInfo.LabelSettings = new LabelSettings { FontSize = 10, FontColor = Colors.Black };
-        _headerText.AddChild(_spriteInfo);
-        _headerText.AddChild(_memberInfo);
-        _headerText.AddChild(_castInfo);
-        _headerText.AddThemeConstantOverride("separation", 1);
-        _header.AddChild(_headerText);
-
-        var headerPanel = new PanelContainer();
-        headerPanel.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor() });
-        headerPanel.AddChild(_header);
-        headerPanel.Position = new Vector2(0, TitleBarHeight);
-
-        AddChild(headerPanel);
+        AddChild(_headerPanel.Framework<LingoGodotPanel>());
+        _headerPanel.X = 0;
+        _headerPanel.Y = TitleBarHeight;
     }
 
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
-        _header.CustomMinimumSize = new Vector2(size.X - 10, HeaderHeight);
-        _tabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
+        _header.Width = size.X - 10;
+        _header.Height = HeaderHeight;
+        var godotTabs = _tabs.Framework<LingoGodotTabContainer>();
+        godotTabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
         if (_behaviorPanel.Visible)
         {
             var half = (Size.Y - 30 - HeaderHeight) / 2f;
-            _tabs.Size = new Vector2(Size.X - 10, half);
+            godotTabs.Size = new Vector2(Size.X - 10, half);
             _behaviorPanel.Position = new Vector2(0, TitleBarHeight + HeaderHeight + half);
             _behaviorPanel.Size = new Vector2(Size.X - 10, half);
         }
         else
         {
-            _tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
+            godotTabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
         }
         //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
     }
@@ -148,8 +126,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
 
     public void ShowObject(object obj)
     {
-        foreach (Node child in _tabs.GetChildren())
-            _tabs.RemoveChild(child);
+        _tabs.ClearTabs();
         ILingoMember? member = null;
         if (obj is LingoSprite sp)
         {
@@ -157,19 +134,19 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             if (member != null)
             {
                 _thumb.SetMember(member);
-                _spriteInfo.Text = $"Sprite : {sp.SpriteNum}: {member.Type}";
+                _inspectorWindow.SpriteText = $"Sprite : {sp.SpriteNum}: {member.Type}";
             }
         }
         else if (obj is ILingoMember m)
         {
             member = m;
             _thumb.SetMember(member);
-            _spriteInfo.Text = member.Type.ToString();
+            _inspectorWindow.SpriteText = member.Type.ToString();
         }
         if (member != null)
         {
-            _memberInfo.Text = member.Name;
-            _castInfo.Text = GetCastName(member);
+            _inspectorWindow.MemberText = member.Name;
+            _inspectorWindow.CastText = GetCastName(member);
         }
         switch (obj)
         {
@@ -213,7 +190,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         //_vScroller.Position = new Vector2(0, 60);
         var vScroller = new ScrollContainer();
         vScroller.Name = name;
-        _tabs.AddChild(vScroller);
+        _tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
         var container = new VBoxContainer();
 
         if (obj is LingoMemberPicture || obj is ILingoMemberTextBase)
@@ -360,6 +337,33 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         }
         var container = new VBoxContainer();
         BuildProperties(container, behavior);
+        if (behavior is ILingoPropertyDescriptionList descProvider)
+        {
+            string? desc = descProvider.GetBehaviorDescription();
+            if (!string.IsNullOrEmpty(desc))
+                container.AddChild(new Label { Text = desc });
+
+            var props = behavior.UserProperties;
+            if (props.Count > 0)
+            {
+                container.AddChild(new Label { Text = "Properties" });
+                foreach (var item in props)
+                {
+                    string labelText = item.Key.ToString();
+                    if (props.DescriptionList != null &&
+                        props.DescriptionList.TryGetValue(item.Key, out var desc) &&
+                        !string.IsNullOrEmpty(desc.Comment))
+                    {
+                        labelText = desc.Comment!;
+                    }
+
+                    var h = new HBoxContainer();
+                    h.AddChild(new Label { Text = labelText, CustomMinimumSize = new Vector2(80, 16) });
+                    h.AddChild(new Label { Text = item.Value?.ToString() ?? string.Empty });
+                    container.AddChild(h);
+                }
+            }
+        }
         _behaviorBox.AddChild(container);
         _behaviorPanel.Visible = true;
         OnResizing(Size);

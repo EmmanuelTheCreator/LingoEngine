@@ -77,6 +77,11 @@ namespace LingoEngine.FrameworkCommunication
         /// </summary>
         LingoGfxPanel CreatePanel();
 
+        /// <summary>
+        /// Creates a tab container for organizing child panels.
+        /// </summary>
+        LingoGfxTabContainer CreateTabContainer();
+
         /// <summary>Creates a single line text input.</summary>
         LingoGfxInputText CreateInputText(int maxLength = 0);
 
@@ -88,6 +93,9 @@ namespace LingoEngine.FrameworkCommunication
 
         /// <summary>Creates a combo box input.</summary>
         LingoGfxInputCombobox CreateInputCombobox();
+
+        /// <summary>Creates a simple text label.</summary>
+        LingoLabel CreateLabel(string text = "");
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;

@@ -211,7 +211,15 @@ namespace LingoEngine.LGodot
             return panel;
         }
 
-        public LingoGfxInputText CreateInputText(int maxLength = 0)
+        public LingoGfxTabContainer CreateTabContainer()
+        {
+            var tab = new LingoGfxTabContainer();
+            var impl = new LingoGodotTabContainer(tab);
+            _rootNode.AddChild(impl);
+            return tab;
+        }
+
+        public LingoInputText CreateInputText(int maxLength = 0)
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
@@ -241,6 +249,14 @@ namespace LingoEngine.LGodot
             var impl = new LingoGodotInputCombobox(input);
             _rootNode.AddChild(impl);
             return input;
+        }
+
+        public LingoLabel CreateLabel(string text = "")
+        {
+            var label = new LingoLabel { Text = text };
+            var impl = new LingoGodotLabel(label, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            _rootNode.AddChild(impl);
+            return label;
         }
     }
 }

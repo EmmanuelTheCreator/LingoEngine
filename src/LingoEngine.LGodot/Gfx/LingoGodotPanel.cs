@@ -11,10 +11,15 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotPanel : Control, ILingoFrameworkGfxPanel, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
+        private LingoColor _background = new LingoColor(0,0,0);
+        private LingoColor _border = new LingoColor(0,0,0);
+        private float _borderWidth;
+        private readonly StyleBoxFlat _style = new StyleBoxFlat();
 
         public LingoGodotPanel(LingoGfxPanel panel)
         {
             panel.Init(this);
+            AddThemeStyleboxOverride("panel", _style);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -39,6 +44,36 @@ namespace LingoEngine.LGodot.Gfx
                 base.AddChild(node);
         }
 
+        public LingoColor BackgroundColor
+        {
+            get => _background;
+            set
+            {
+                _background = value;
+                ApplyStyle();
+            }
+        }
+
+        public LingoColor BorderColor
+        {
+            get => _border;
+            set
+            {
+                _border = value;
+                ApplyStyle();
+            }
+        }
+
+        public float BorderWidth
+        {
+            get => _borderWidth;
+            set
+            {
+                _borderWidth = value;
+                ApplyStyle();
+            }
+        }
+
         public void Dispose() => QueueFree();
 
         private void ApplyMargin()
@@ -47,6 +82,13 @@ namespace LingoEngine.LGodot.Gfx
             AddThemeConstantOverride("margin_right", (int)_margin.Right);
             AddThemeConstantOverride("margin_top", (int)_margin.Top);
             AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+        }
+
+        private void ApplyStyle()
+        {
+            _style.BgColor = new Color(_background.R, _background.G, _background.B);
+            _style.BorderColor = new Color(_border.R, _border.G, _border.B);
+            _style.BorderWidthTop = _style.BorderWidthBottom = _style.BorderWidthLeft = _style.BorderWidthRight = (int)_borderWidth;
         }
     }
 }

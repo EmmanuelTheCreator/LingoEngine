@@ -9,5 +9,12 @@ namespace LingoEngine.Gfx
     {
         /// <summary>Adds a child node to the panel.</summary>
         void AddChild(ILingoFrameworkGfxNode child);
+
+        /// <summary>Background color of the panel.</summary>
+        LingoColor BackgroundColor { get; set; }
+        /// <summary>Border color of the panel.</summary>
+        LingoColor BorderColor { get; set; }
+        /// <summary>Border width around the panel.</summary>
+        float BorderWidth { get; set; }
     }
 }

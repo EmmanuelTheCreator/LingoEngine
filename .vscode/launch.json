@@ -1,0 +1,23 @@
+{
+    // Requires Godot 4 with the C# tools. Ensure `godot` is in PATH
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Demo SDL2",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.SDL2/bin/Debug/net8.0/LingoEngine.Demo.TetriGrounds.SDL2.dll",
+            "cwd": "${workspaceFolder}/Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.SDL2",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Launch Demo Godot",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}/Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.Godot",
+            "preLaunchTask": "build"
+        }
+    ]
+}

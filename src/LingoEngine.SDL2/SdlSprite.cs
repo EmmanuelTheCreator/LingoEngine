@@ -30,11 +30,24 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
         _hide = hide;
         _remove = remove;
         sprite.Init(this);
-        ZIndex = sprite.SpriteNum;
+        _zIndex = sprite.SpriteNum;
+        _directToStage = sprite.DirectToStage;
+        _ink = sprite.Ink;
+        ApplyBlend();
+        ApplyInk();
     }
 
     public bool Visibility { get; set; }
-    public float Blend { get; set; }
+    private float _blend = 1f;
+    public float Blend
+    {
+        get => _blend;
+        set
+        {
+            _blend = value;
+            ApplyBlend();
+        }
+    }
     public float X { get; set; }
     public float Y { get; set; }
     public float Width { get; private set; }
@@ -43,9 +56,38 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
     public LingoPoint RegPoint { get; set; }
     public float SetDesiredHeight { get; set; }
     public float SetDesiredWidth { get; set; }
-    public int ZIndex { get; set; }
+    private int _zIndex;
+    public int ZIndex
+    {
+        get => _zIndex;
+        set { _zIndex = value; }
+    }
     public float Rotation { get; set; }
     public float Skew { get; set; }
+    public bool FlipH { get; set; }
+    public bool FlipV { get; set; }
+    private bool _directToStage;
+    public bool DirectToStage
+    {
+        get => _directToStage;
+        set
+        {
+            _directToStage = value;
+            ApplyBlend();
+        }
+    }
+
+    private int _ink;
+    private SDL.SDL_BlendMode _blendMode = SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND;
+    public int Ink
+    {
+        get => _ink;
+        set
+        {
+            _ink = value;
+            ApplyInk();
+        }
+    }
 
     public void RemoveMe() { _remove(this); Dispose(); }
     public void Dispose()
@@ -102,7 +144,12 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
             w = (int)Width,
             h = (int)Height
         };
-        SDL.SDL_RenderCopy(renderer, _texture, nint.Zero, ref dst);
+        SDL.SDL_RendererFlip flip = SDL.SDL_RendererFlip.SDL_FLIP_NONE;
+        if (FlipH)
+            flip |= SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL;
+        if (FlipV)
+            flip |= SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL;
+        SDL.SDL_RenderCopyEx(renderer, _texture, nint.Zero, ref dst, 0, nint.Zero, flip);
     }
 
     private void UpdateMember()
@@ -136,6 +183,50 @@ public class SdlSprite : ILingoFrameworkSprite, IDisposable
                 field.Framework<SdlMemberField>().Preload();
                 break;
         }
+        ApplyBlend();
+        ApplyInk();
+    }
+
+    private void ApplyBlend()
+    {
+        byte alpha = (byte)((_directToStage ? 1f : _blend) * 255);
+        if (_texture != nint.Zero)
+        {
+            SDL.SDL_SetTextureAlphaMod(_texture, alpha);
+            SDL.SDL_SetTextureBlendMode(_texture, _blendMode);
+        }
+    }
+
+    private static readonly SDL.SDL_BlendMode _subtractBlend = SDL.SDL_ComposeCustomBlendMode(
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendOperation.SDL_BLENDOPERATION_SUBTRACT,
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendOperation.SDL_BLENDOPERATION_SUBTRACT);
+
+    private static readonly SDL.SDL_BlendMode _lightBlend = SDL.SDL_ComposeCustomBlendMode(
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendOperation.SDL_BLENDOPERATION_MAXIMUM,
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendFactor.SDL_BLENDFACTOR_ONE,
+        SDL.SDL_BlendOperation.SDL_BLENDOPERATION_MAXIMUM);
+
+    private void ApplyInk()
+    {
+        _blendMode = _ink switch
+        {
+            (int)LingoInkType.AddPin => SDL.SDL_BlendMode.SDL_BLENDMODE_ADD,
+            (int)LingoInkType.Add => SDL.SDL_BlendMode.SDL_BLENDMODE_ADD,
+            (int)LingoInkType.SubPin => _subtractBlend,
+            (int)LingoInkType.Sub => _subtractBlend,
+            (int)LingoInkType.Dark => SDL.SDL_BlendMode.SDL_BLENDMODE_MOD,
+            (int)LingoInkType.Light => _lightBlend,
+            _ => SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND,
+        };
+        if (_texture != nint.Zero)
+            SDL.SDL_SetTextureBlendMode(_texture, _blendMode);
     }
 
     public void Resize(float w, float h) { Width = w; Height = h; }
