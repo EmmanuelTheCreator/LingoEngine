@@ -5,6 +5,7 @@ using LingoEngine.Members;
 using LingoEngine.Movies;
 using System;
 using System.Linq;
+using LingoEngine.Director.Core.Gfx;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -86,7 +87,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _nameEdit.Text = member.Name;
         _numberLabel.Text = member.NumberInCast.ToString();
         _castLibLabel.Text = GetCastName(member);
-        var icon = LingoMemberTypeIcons.GetIcon(member);
+        var icon = LingoMemberTypeIcons.GetIconType(member);
         _typeIcon.Texture = icon.HasValue ? _iconManager.Get(icon.Value) : null;
     }
 

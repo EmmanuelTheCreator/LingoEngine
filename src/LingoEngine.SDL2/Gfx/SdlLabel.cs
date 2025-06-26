@@ -4,7 +4,7 @@ using LingoEngine.Primitives;
 
 namespace LingoEngine.SDL2.Gfx
 {
-    internal class SdlPanel : ILingoFrameworkGfxPanel, IDisposable
+    internal class SdlLabel : ILingoFrameworkGfxLabel, IDisposable
     {
         public float X { get; set; }
         public float Y { get; set; }
@@ -12,12 +12,13 @@ namespace LingoEngine.SDL2.Gfx
         public float Height { get; set; }
         public bool Visibility { get; set; } = true;
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
-        public LingoColor BackgroundColor { get; set; }
-        public LingoColor BorderColor { get; set; }
-        public float BorderWidth { get; set; }
 
-        public void AddChild(ILingoFrameworkGfxNode child) { }
+        public string Text { get; set; } = string.Empty;
+        public int FontSize { get; set; }
+        public string? Font { get; set; }
+        public LingoColor FontColor { get; set; }
 
+        public event Action? ValueChanged;
         public void Dispose() { }
     }
 }
