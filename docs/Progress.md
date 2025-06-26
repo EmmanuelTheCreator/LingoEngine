@@ -6,57 +6,54 @@ This document tracks the current implementation status of Lingo language element
 
 | Lingo element | Progress | Notes |
 |--------------|---------|-------|
-| Sprite object | 57% properties implemented; no 3D camera methods | Many 3D related properties and methods are not yet present. |
+| Sprite object | 93% properties implemented; no 3D camera methods | 3D camera features still missing |
 | Movie object | 10% properties, 12% methods implemented | Only a small subset of movie control features exist. |
+| Sprite3D object | 0% implemented | 3D sprite features not yet supported |
+| Movie3D object | 0% implemented | 3D movie features not yet supported |
+| Player object | 42% properties, 58% methods implemented | Basic environment control only |
 
 ## Sprite Object Details
-
-The following table lists Sprite properties and whether they are currently implemented in `ILingoSprite`.
+Sprite properties implemented: 93% (28 of 30)
 
 | Property | Implemented | Notes |
 |----------|-------------|-------|
-| backColor | Yes |
-| blend | Yes |
 | bottom | No |
 | constraint | No |
 | cursor | No |
-| editable | Yes |
-| endFrame | Yes |
 | flipH | No |
 | flipV | No |
-| foreColor | Yes |
-| height | Yes |
-| ink | Yes |
 | left | No |
-| locH | Yes |
-| locV | Yes |
-| locZ | Yes |
-| member | Yes |
-| name | Yes |
 | quad | No |
-| rect | Yes |
 | right | No |
-| rotation | Yes |
-| skew | Yes |
-| spriteNum | Yes |
-| startFrame | Yes |
 | top | No |
-| width | Yes |
 | antiAliasingEnabled | No |
-| camera | No |
 | directToStage | No |
 
-The manual also lists camera-related methods (`addCamera`, `cameraCount`, `deleteCamera`) which are not yet present in the interface.
+## Sprite3D Object Details
+Sprite3D support is not yet implemented. The following features are missing:
+
+### Properties
+| Property | Implemented | Notes |
+|----------|-------------|-------|
+| camera | No |
+
+### Methods
+| Method | Implemented | Notes |
+|-------|------------|------|
+| addCamera | No |
+| cameraCount | No |
+| deleteCamera | No |
+
 
 ## Movie Object Details
 
 ### Properties
+Movie properties implemented: 10% (6 of 63)
+
 
 | Property | Implemented | Notes |
 |----------|-------------|-------|
 | aboutInfo | No |
-| active3dRenderer | No |
-| actorList | Yes |
 | allowCustomCaching | No |
 | allowGraphicMenu | No |
 | allowSaveLocal | No |
@@ -65,7 +62,6 @@ The manual also lists camera-related methods (`addCamera`, `cameraCount`, `delet
 | allowZooming | No |
 | beepOn | No |
 | buttonStyle | No |
-| castLib | Yes |
 | centerStage | No |
 | copyrightInfo | No |
 | displayTemplate | No |
@@ -77,7 +73,6 @@ The manual also lists camera-related methods (`addCamera`, `cameraCount`, `delet
 | fileSize | No |
 | fileVersion | No |
 | fixStageSize | No |
-| frame | Yes |
 | frameLabel | No |
 | framePalette | No |
 | frameScript | No |
@@ -96,18 +91,14 @@ The manual also lists camera-related methods (`addCamera`, `cameraCount`, `delet
 | lastChannel | No |
 | lastFrame | No |
 | markerList | No |
-| member | Yes |
-| name | Yes |
 | paletteMapping | No |
 | path | No |
-| preferred3dRenderer | No |
 | preLoadEventAbort | No |
 | score | No |
 | scoreSelection | No |
 | script | No |
 | sprite | No |
 | stage | No |
-| timeoutList | Yes |
 | traceLoad | No |
 | traceLogFile | No |
 | traceScript | No |
@@ -116,6 +107,8 @@ The manual also lists camera-related methods (`addCamera`, `cameraCount`, `delet
 | xtraList | No |
 
 ### Methods
+Movie methods implemented: 12% (5 of 41)
+
 
 | Method | Implemented | Notes |
 |-------|------------|------|
@@ -132,21 +125,17 @@ The manual also lists camera-related methods (`addCamera`, `cameraCount`, `delet
 | delay | No |
 | puppetPalette | No |
 | deleteFrame | No |
-| puppetSprite | Yes |
 | duplicateFrame | No |
 | puppetTempo | No |
 | endRecording | No |
-| puppetTransition | Yes |
 | finishIdleLoad | No |
 | ramNeeded | No |
 | frameReady | No |
 | rollOver | No |
-| go | Yes |
 | saveMovie | No |
 | goLoop | No |
 | sendAllSprites | No |
 | goNext | No |
-| sendSprite | Yes |
 | goPrevious | No |
 | stopEvent | No |
 | idleLoadDone | No |
@@ -158,6 +147,53 @@ The manual also lists camera-related methods (`addCamera`, `cameraCount`, `delet
 | marker | No |
 | updateFrame | No |
 | mergeDisplayTemplate | No |
-| updateStage | Yes |
+
+## Movie3D Object Details
+Movie3D functionality is not yet implemented.
+
+### Properties
+| Property | Implemented | Notes |
+|----------|-------------|-------|
+| active3dRenderer | No |
+| preferred3dRenderer | No |
+
+## Player Object Details
+Player properties implemented: 42% (15 of 36)
+
+### Properties
+| Property | Implemented | Notes |
+|----------|-------------|-------|
+| debugPlaybackEnabled | No |
+| digitalVideoTimeScale | No |
+| disableImagingTransformation | No |
+| emulateMultibuttonMouse | No |
+| externalParamCount | No |
+| frontWindow | No |
+| inlineImeEnabled | No |
+| lastRoll | No |
+| mediaXtraList | No |
+| netThrottleTicks | No |
+| scriptingXtraList | No |
+| searchCurrentFolder | No |
+| searchPathList | No |
+| serialNumber | No |
+| switchColorDepth | No |
+| toolXtraList | No |
+| transitionXtraList | No |
+| userName | No |
+| window | No |
+| xtra | No |
+| xtraList | No |
+
+### Methods
+Player methods implemented: 58% (7 of 12)
+
+| Method | Implemented | Notes |
+|-------|------------|------|
+| externalParamName | No |
+| externalParamValue | No |
+| flushInputEvents | No |
+| getPref | No |
+| setPref | No |
 
 Percentages are approximate and based on manual comparison of the scripting manual with the repository interfaces.
