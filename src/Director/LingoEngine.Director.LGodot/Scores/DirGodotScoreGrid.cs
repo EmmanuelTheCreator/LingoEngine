@@ -165,8 +165,6 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             _dragHandler.HandleMouseButton(mb);
         else if (@event is InputEventMouseMotion)
             _dragHandler.HandleMouseMotion();
-        else if (@event is InputEventKey key && key.Pressed && key.Keycode == Key.Z && key.CtrlPressed)
-            _historyManager.Undo();
     }
     internal void SpriteCanvasQueueRedraw() => _spriteCanvas.QueueRedraw();
     internal void MarkSpriteDirty()
