@@ -49,6 +49,8 @@ public class Lingo3dFactory : ILingoFrameworkFactory
     public LingoInputCheckbox CreateInputCheckbox() => _baseFactory.CreateInputCheckbox();
     public LingoInputCombobox CreateInputCombobox() => _baseFactory.CreateInputCombobox();
     public LingoLabel CreateLabel(string text = "") => _baseFactory.CreateLabel(text);
+    public LingoMenu CreateMenu(string name) => _baseFactory.CreateMenu(name);
+    public LingoMenuItem CreateMenuItem(string name, string? shortcut = null) => _baseFactory.CreateMenuItem(name, shortcut);
     public T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite => _baseFactory.CreateSprite<T>(movie, onRemoveMe);
     public T CreateBehavior<T>(LingoMovie lingoMovie) where T : LingoSpriteBehavior => _baseFactory.CreateBehavior<T>(lingoMovie);
     public T CreateMovieScript<T>(LingoMovie lingoMovie) where T : LingoMovieScript => _baseFactory.CreateMovieScript<T>(lingoMovie);

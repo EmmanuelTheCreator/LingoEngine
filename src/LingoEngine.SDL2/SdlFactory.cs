@@ -247,4 +247,20 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         label.Init(impl);
         return label;
     }
+
+    public LingoMenu CreateMenu(string name)
+    {
+        var menu = new LingoMenu();
+        var impl = new SdlMenu(name);
+        menu.Init(impl);
+        return menu;
+    }
+
+    public LingoMenuItem CreateMenuItem(string name, string? shortcut = null)
+    {
+        var item = new LingoMenuItem();
+        var impl = new SdlMenuItem(name, shortcut);
+        item.Init(impl);
+        return item;
+    }
 }
