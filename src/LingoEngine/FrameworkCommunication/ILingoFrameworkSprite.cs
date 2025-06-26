@@ -41,5 +41,25 @@ namespace LingoEngine.FrameworkCommunication
         void Hide();
         /// <summary>Set the sprite position.</summary>
         void SetPosition(LingoPoint point);
+
+        /// <summary>
+        /// Indicates whether the sprite is flipped horizontally.
+        /// </summary>
+        bool FlipH { get; set; }
+
+        /// <summary>
+        /// Indicates whether the sprite is flipped vertically.
+        /// </summary>
+        bool FlipV { get; set; }
+
+        /// <summary>
+        /// Draw this sprite directly to the stage, bypassing the score composition.
+        /// </summary>
+        bool DirectToStage { get; set; }
+
+        /// <summary>
+        /// Ink effect to apply when rendering the sprite.
+        /// </summary>
+        int Ink { get; set; }
     }
 }

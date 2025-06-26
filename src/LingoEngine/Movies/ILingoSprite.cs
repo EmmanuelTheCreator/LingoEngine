@@ -132,6 +132,53 @@ namespace LingoEngine.Movies
         float Skew { get; set; }
 
         /// <summary>
+        /// Flips the sprite horizontally.
+        /// </summary>
+        bool FlipH { get; set; }
+
+        /// <summary>
+        /// Flips the sprite vertically.
+        /// </summary>
+        bool FlipV { get; set; }
+
+        /// <summary>
+        /// Top edge position of the sprite.
+        /// </summary>
+        float Top { get; set; }
+
+        /// <summary>
+        /// Bottom edge position of the sprite.
+        /// </summary>
+        float Bottom { get; set; }
+
+        /// <summary>
+        /// Left edge position of the sprite.
+        /// </summary>
+        float Left { get; set; }
+
+        /// <summary>
+        /// Right edge position of the sprite.
+        /// </summary>
+        float Right { get; set; }
+
+        /// <summary>
+        /// Cursor ID used when the mouse is over the sprite.
+        /// </summary>
+        int Cursor { get; set; }
+
+        /// <summary>
+        /// Constraint channel ID for this sprite.
+        /// </summary>
+        int Constraint { get; set; }
+
+        /// <summary>
+        /// When TRUE the sprite is rendered directly on the stage, bypassing the
+        /// normal score composition. Such sprites are always drawn above regular
+        /// sprites and ignore visual effects.
+        /// </summary>
+        bool DirectToStage { get; set; }
+
+        /// <summary>
         /// List of script instance names or types attached to the sprite.
         /// </summary>
         List<string> ScriptInstanceList { get; }

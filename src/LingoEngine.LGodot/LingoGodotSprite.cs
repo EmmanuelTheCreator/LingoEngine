@@ -23,6 +23,9 @@ namespace LingoEngine.LGodot
         private readonly LingoSprite _lingoSprite;
         private bool _wasShown;
 
+        private readonly CanvasItemMaterial _material = new();
+        private int _ink;
+
         internal LingoSprite LingoSprite => _lingoSprite;
         internal bool IsDirty { get; set; } = true;
         internal bool IsDirtyMember { get; set; } = true;
@@ -30,19 +33,29 @@ namespace LingoEngine.LGodot
         private float _y;
         public float X { get => _x; set { _x = value; IsDirty = true; } }
         public float Y { get => _y; set { _y = value; IsDirty = true; } }
-        public int ZIndex { get => _Sprite2D.ZIndex; set { _Sprite2D.ZIndex = value; } }
+        private int _zIndex;
+        public int ZIndex
+        {
+            get => _zIndex;
+            set
+            {
+                _zIndex = value;
+                ApplyZIndex();
+            }
+        }
         public LingoPoint RegPoint { get => (_Container2D.Position.X, _Container2D.Position.Y); set { _Container2D.Position = new Vector2(value.X, value.Y); IsDirty = true; } }
 
         public bool Visibility { get => _Container2D.Visible; set => _Container2D.Visible = value; }
         public ILingoCast? Cast { get; private set; }
 
+        private float _blend = 1f;
         public float Blend
         {
-            get => _Sprite2D.SelfModulate.A;
+            get => _blend;
             set
             {
-                _Sprite2D.SelfModulate = new Color(_Sprite2D.SelfModulate, value);
-                IsDirty = true;
+                _blend = value;
+                ApplyBlend();
             }
         }
         private string _name;
@@ -75,6 +88,57 @@ namespace LingoEngine.LGodot
             set => _Sprite2D.Rotation = Mathf.DegToRad(value);
         }
         public float Skew { get; set; }
+        public bool FlipH { get => _Sprite2D.FlipH; set => _Sprite2D.FlipH = value; }
+        public bool FlipV { get => _Sprite2D.FlipV; set => _Sprite2D.FlipV = value; }
+        private bool _directToStage;
+        public bool DirectToStage
+        {
+            get => _directToStage;
+            set
+            {
+                _directToStage = value;
+                ApplyZIndex();
+                ApplyBlend();
+            }
+        }
+
+        public int Ink
+        {
+            get => _ink;
+            set
+            {
+                _ink = value;
+                ApplyInk();
+            }
+        }
+
+        private void ApplyZIndex()
+        {
+            _Sprite2D.ZIndex = _directToStage ? 100000 + _zIndex : _zIndex;
+        }
+
+        private void ApplyBlend()
+        {
+            var col = _Sprite2D.SelfModulate;
+            _Sprite2D.SelfModulate = new Color(col.R, col.G, col.B, _directToStage ? 1f : _blend);
+            IsDirty = true;
+        }
+
+        private void ApplyInk()
+        {
+            CanvasItemMaterial.BlendModeEnum mode = _ink switch
+            {
+                (int)LingoInkType.AddPin => CanvasItemMaterial.BlendModeEnum.Add,
+                (int)LingoInkType.Add => CanvasItemMaterial.BlendModeEnum.Add,
+                (int)LingoInkType.SubPin => CanvasItemMaterial.BlendModeEnum.Sub,
+                (int)LingoInkType.Sub => CanvasItemMaterial.BlendModeEnum.Sub,
+                (int)LingoInkType.Dark => CanvasItemMaterial.BlendModeEnum.Mul,
+                (int)LingoInkType.Light => CanvasItemMaterial.BlendModeEnum.Add,
+                _ => CanvasItemMaterial.BlendModeEnum.Mix,
+            };
+            _material.BlendMode = mode;
+            _Sprite2D.Material = _material;
+        }
 
 
 #pragma warning disable CS8618
@@ -90,7 +154,12 @@ namespace LingoEngine.LGodot
             _Container2D = new CenterContainer();
             _Container2D.AddChild(_Sprite2D);
             lingoSprite.Init(this);
-            ZIndex = lingoSprite.SpriteNum;
+            _zIndex = lingoSprite.SpriteNum;
+            _directToStage = lingoSprite.DirectToStage;
+            ApplyZIndex();
+            ApplyBlend();
+            _ink = lingoSprite.Ink;
+            ApplyInk();
         }
 
         public void RemoveMe()
