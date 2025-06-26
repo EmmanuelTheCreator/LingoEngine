@@ -1,6 +1,6 @@
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine._3D.Members;
 
 /// <summary>
 /// Defines how a model surface is shaded.

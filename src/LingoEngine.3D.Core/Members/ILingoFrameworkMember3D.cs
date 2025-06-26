@@ -1,4 +1,4 @@
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine._3D.Members;
 
 using LingoEngine.FrameworkCommunication;
 

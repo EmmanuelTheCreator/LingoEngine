@@ -1,4 +1,4 @@
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine._3D.Primitives;
 
 /// <summary>
 /// Describes how particles are emitted in a particle system.
