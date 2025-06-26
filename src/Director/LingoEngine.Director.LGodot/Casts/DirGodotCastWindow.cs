@@ -78,7 +78,7 @@ namespace LingoEngine.Director.LGodot.Casts
             int index = 0;
             foreach (var cast in lingoMovie.CastLib.GetAll())
             {
-                var castLibViewer = new DirGodotCastView(OnSelectElement, _style, _commandManager, _iconManager);
+                var castLibViewer = new DirGodotCastView(OnSelectElement, _style, _commandManager, _iconManager, _player.Factory);
                 castLibViewer.Show(cast);
                 _castViews.Add(cast.Number, castLibViewer);
                 _castTabIndices.Add(cast.Number, index);
