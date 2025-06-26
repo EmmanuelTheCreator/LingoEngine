@@ -4,6 +4,8 @@ using LingoEngine.Director.Core.Events;
 using LingoEngine.Members;
 using LingoEngine.Director.Core.Inputs;
 using LingoEngine.Primitives;
+using LingoEngine.Core;
+using LingoEngine.Director.Core.Stages;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -16,6 +18,8 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private readonly List<DirGodotScoreSprite> _sprites = new();
     private DirGodotScoreSprite? _selected;
     private readonly IDirectorEventMediator _mediator;
+    private readonly ILingoCommandManager _commandManager;
+    private readonly IHistoryManager _historyManager;
     private readonly PopupMenu _contextMenu = new();
     private DirGodotScoreSprite? _contextSprite;
     private readonly DirGodotScoreGfxValues _gfxValues;
@@ -43,10 +47,12 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private Vector2I? _lastSelectedCell = null;
 
 
-    public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues)
+    public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues, ILingoCommandManager commandManager, IHistoryManager historyManager)
     {
         _gfxValues = gfxValues;
         _mediator = mediator;
+        _commandManager = commandManager;
+        _historyManager = historyManager;
         AddChild(_contextMenu);
         _contextMenu.IdPressed += OnContextMenuItem;
 
@@ -79,7 +85,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         AddChild(_spriteViewport);
         AddChild(_gridTexture);
         AddChild(_spriteTexture);
-        _dragHandler = new DirGodotScoreDragHandler(this,_movie, _gfxValues,_sprites);
+        _dragHandler = new DirGodotScoreDragHandler(this,_movie, _gfxValues,_sprites, _commandManager);
     }
 
     public void SetMovie(LingoMovie? movie)
@@ -159,8 +165,15 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             _dragHandler.HandleMouseButton(mb);
         else if (@event is InputEventMouseMotion)
             _dragHandler.HandleMouseMotion();
+        else if (@event is InputEventKey key && key.Pressed && key.Keycode == Key.Z && key.CtrlPressed)
+            _historyManager.Undo();
     }
     internal void SpriteCanvasQueueRedraw() => _spriteCanvas.QueueRedraw();
+    internal void MarkSpriteDirty()
+    {
+        _spriteDirty = true;
+        _spriteCanvas.QueueRedraw();
+    }
 
 
     internal void TryOpenContextMenu(Vector2 pos, int channel)
