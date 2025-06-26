@@ -6,8 +6,9 @@ namespace LingoEngine.Gfx
     public class LingoMenuItem
     {
         private ILingoFrameworkGfxMenuItem _framework = null!;
-        internal void Init(ILingoFrameworkGfxMenuItem framework) => _framework = framework;
         internal ILingoFrameworkGfxMenuItem Framework => _framework;
+
+        public void Init(ILingoFrameworkGfxMenuItem framework) => _framework = framework;
 
         public string Name { get => _framework.Name; set => _framework.Name = value; }
         public bool Enabled { get => _framework.Enabled; set => _framework.Enabled = value; }
