@@ -269,7 +269,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     public bool CanExecute(AddSpriteCommand command) => true;
     public bool Handle(AddSpriteCommand command)
     {
-        var sprite = command.Movie.AddSprite(command.Channel + 1, command.BeginFrame, command.EndFrame, 0, 0,
+        var sprite = command.Movie.AddSprite(command.Channel, command.BeginFrame, command.EndFrame, 0, 0,
             s => s.SetMember(command.Member));
         _historyManager.Push(command.ToUndo(sprite, RefreshGrid));
         RefreshGrid();

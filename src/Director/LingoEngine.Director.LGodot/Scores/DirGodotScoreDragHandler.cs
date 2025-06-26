@@ -191,7 +191,8 @@ namespace LingoEngine.Director.LGodot.Scores
                 0,
                 out int channel, out int begin, out int end, out var member))
             {
-                _commandManager.Handle(new AddSpriteCommand(_movie!, member!, channel, begin, end));
+                // Convert channel from zero-based to one-based when creating the command
+                _commandManager.Handle(new AddSpriteCommand(_movie!, member!, channel + 1, begin, end));
             }
 
             DirDragDropHolder.EndDrag();
