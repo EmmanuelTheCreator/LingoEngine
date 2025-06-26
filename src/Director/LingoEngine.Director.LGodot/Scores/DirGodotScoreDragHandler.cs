@@ -3,6 +3,8 @@ using LingoEngine.Director.Core.Inputs;
 using LingoEngine.Members;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
+using LingoEngine.Core;
+using LingoEngine.Director.Core.Stages;
 using System;
 
 namespace LingoEngine.Director.LGodot.Scores
@@ -11,6 +13,7 @@ namespace LingoEngine.Director.LGodot.Scores
     {
         private LingoMovie _movie;
         private readonly DirGodotScoreGrid _grid;
+        private readonly ILingoCommandManager _commandManager;
         private bool _showPreview;
         private int _previewChannel;
         
@@ -26,6 +29,10 @@ namespace LingoEngine.Director.LGodot.Scores
         private int _previewBegin;
         private int _previewEnd;
 
+        private int _origChannel;
+        private int _origBegin;
+        private int _origEnd;
+
         private ILingoMember? _previewMember;
         private readonly DirGodotScoreGfxValues _gfxValues;
         private readonly List<DirGodotScoreSprite> _sprites;
@@ -37,12 +44,13 @@ namespace LingoEngine.Director.LGodot.Scores
         internal int PreviewEnd => _previewEnd;
 
 
-        public DirGodotScoreDragHandler(DirGodotScoreGrid grid, LingoMovie movie, DirGodotScoreGfxValues gfxValues, List<DirGodotScoreSprite> sprites)
+        public DirGodotScoreDragHandler(DirGodotScoreGrid grid, LingoMovie movie, DirGodotScoreGfxValues gfxValues, List<DirGodotScoreSprite> sprites, ILingoCommandManager commandManager)
         {
             _movie = movie;
             _grid = grid;
             _gfxValues = gfxValues;
             _sprites = sprites;
+            _commandManager = commandManager;
         }
 
         public void SetMovie(LingoMovie movie)
@@ -95,6 +103,9 @@ namespace LingoEngine.Director.LGodot.Scores
                 if (pos.X <= firstFrameRight)
                 {
                     _dragSprite = sp.Sprite;
+                    _origChannel = sc;
+                    _origBegin = _dragSprite.BeginFrame;
+                    _origEnd = _dragSprite.EndFrame;
                     _dragBegin = true;
                     _dragEnd = false;
                     Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
@@ -102,6 +113,9 @@ namespace LingoEngine.Director.LGodot.Scores
                 else if (pos.X >= lastFrameLeft)
                 {
                     _dragSprite = sp.Sprite;
+                    _origChannel = sc;
+                    _origBegin = _dragSprite.BeginFrame;
+                    _origEnd = _dragSprite.EndFrame;
                     _dragBegin = false;
                     _dragEnd = true;
                     Input.SetDefaultCursorShape(Input.CursorShape.Hsize);
@@ -111,6 +125,9 @@ namespace LingoEngine.Director.LGodot.Scores
                     // Center drag = move to another channel
                     _grid.SelectSprite(sp);
                     _dragSprite = sp.Sprite;
+                    _origChannel = sc;
+                    _origBegin = _dragSprite.BeginFrame;
+                    _origEnd = _dragSprite.EndFrame;
                     _dragBegin = false;
                     _dragEnd = false;
                     _isSpriteDragMove = true;
@@ -140,6 +157,16 @@ namespace LingoEngine.Director.LGodot.Scores
                     _dragSprite.BeginFrame = newBegin;
                     _dragSprite.EndFrame = newEnd;
                 }
+                if (originalChannel != newChannel || _origBegin != newBegin || _origEnd != newEnd)
+                    _commandManager.Handle(new ChangeSpriteRangeCommand(_movie, (LingoSprite)_dragSprite, _origChannel, _origBegin, _origEnd, newChannel, newBegin, newEnd));
+            }
+            else if ((_dragBegin || _dragEnd) && _dragSprite != null && _movie != null)
+            {
+                int newChannel = _dragSprite.SpriteNum - 1;
+                int newBegin = _dragSprite.BeginFrame;
+                int newEnd = _dragSprite.EndFrame;
+                if (_origChannel != newChannel || _origBegin != newBegin || _origEnd != newEnd)
+                    _commandManager.Handle(new ChangeSpriteRangeCommand(_movie, (LingoSprite)_dragSprite, _origChannel, _origBegin, _origEnd, newChannel, newBegin, newEnd));
             }
 
             _dragSprite = null;
@@ -164,9 +191,7 @@ namespace LingoEngine.Director.LGodot.Scores
                 0,
                 out int channel, out int begin, out int end, out var member))
             {
-                _movie.AddSprite(channel + 1, begin, end, 0, 0, s => s.SetMember(member!));
-                _grid.SpriteListDirty = true;
-                _grid.SpriteDirty = true;
+                _commandManager.Handle(new AddSpriteCommand(_movie!, member!, channel, begin, end));
             }
 
             DirDragDropHolder.EndDrag();
