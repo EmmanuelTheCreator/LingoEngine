@@ -21,5 +21,19 @@ namespace LingoEngine.Director.Core.Stages
                 updateSelectionBox();
             };
         }
+
+        public Action ToRedo(Action updateSelectionBox)
+        {
+            var redo = EndPositions.ToDictionary(kv => kv.Key, kv => kv.Value);
+            return () =>
+            {
+                foreach (var kv in redo)
+                {
+                    kv.Key.LocH = kv.Value.X;
+                    kv.Key.LocV = kv.Value.Y;
+                }
+                updateSelectionBox();
+            };
+        }
     }
 }

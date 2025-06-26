@@ -464,11 +464,6 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         if (@event is InputEventKey keyEvent)
         {
-            if (keyEvent.Pressed && keyEvent.Keycode == Key.Z && keyEvent.CtrlPressed)
-            {
-                _historyManager.Undo();
-                return;
-            }
 
             if (keyEvent.Keycode == Key.Space)
             {
@@ -707,6 +702,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _member.RegPoint = new LingoPoint(_member.RegPoint.X + delta.X, _member.RegPoint.Y + delta.Y);
 
         _painter.Commit();
+        var afterImage = _painter.GetImage();
+        var afterOffset = _painter.Offset;
+        var newReg = _member?.RegPoint ?? oldReg;
         _imageRect.Texture = _painter.Texture;
         if (delta != Vector2I.Zero)
             RefreshImageSize();
@@ -719,6 +717,16 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _imageRect.Texture = _painter.Texture;
             if (_member != null)
                 _member.RegPoint = oldReg;
+            RefreshImageSize();
+            _regPointCanvas.QueueRedraw();
+        },
+        () =>
+        {
+            if (_painter == null) return;
+            _painter.SetState(afterImage, afterOffset);
+            _imageRect.Texture = _painter.Texture;
+            if (_member != null)
+                _member.RegPoint = newReg;
             RefreshImageSize();
             _regPointCanvas.QueueRedraw();
         });

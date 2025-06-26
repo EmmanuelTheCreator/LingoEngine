@@ -387,6 +387,11 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             _historyManager.Undo();
             return;
         }
+        if (@event is InputEventKey key2 && key2.Pressed && key2.Keycode == Key.Y && key2.CtrlPressed)
+        {
+            _historyManager.Redo();
+            return;
+        }
 
         switch (_toolManager.CurrentTool)
         {
@@ -540,7 +545,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             kv.Key.LocH = kv.Value.X;
             kv.Key.LocV = kv.Value.Y;
         }
-        _historyManager.Push(command.ToUndo(UpdateSelectionBox));
+        _historyManager.Push(command.ToUndo(UpdateSelectionBox), command.ToRedo(UpdateSelectionBox));
         UpdateSelectionBox();
         UpdateBoundingBoxes();
         return true;
@@ -551,7 +556,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     {
         foreach (var kv in command.EndRotations)
             kv.Key.Rotation = kv.Value;
-        _historyManager.Push(command.ToUndo(UpdateSelectionBox));
+        _historyManager.Push(command.ToUndo(UpdateSelectionBox), command.ToRedo(UpdateSelectionBox));
         UpdateSelectionBox();
         UpdateBoundingBoxes();
         return true;

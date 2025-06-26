@@ -7,6 +7,7 @@ using LingoEngine.Director.Core;
 using LingoEngine.Director.Core.Menus;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Stages;
 using System.Collections.Generic;
 
 namespace LingoEngine.Director.LGodot;
@@ -25,9 +26,12 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
     private readonly DirectorProjectManager _projectManager;
     private readonly LingoPlayer _player;
     private readonly IDirectorShortCutManager _shortCutManager;
+    private readonly IHistoryManager _historyManager;
     private readonly List<ShortCutInfo> _shortCuts = new();
     private readonly Button _rewindButton;
     private readonly Button _playButton;
+    private int _undoIndex;
+    private int _redoIndex;
     private ILingoMovie? _lingoMovie;
 
     private class ShortCutInfo
@@ -40,12 +44,13 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         public bool Meta { get; init; }
     }
 
-    public DirGodotMainMenu(IDirectorWindowManager windowManager, DirectorProjectManager projectManager, LingoPlayer player, IDirectorShortCutManager shortCutManager, DirectorMainMenu directorMainMenu)
+    public DirGodotMainMenu(IDirectorWindowManager windowManager, DirectorProjectManager projectManager, LingoPlayer player, IDirectorShortCutManager shortCutManager, IHistoryManager historyManager, DirectorMainMenu directorMainMenu)
     {
         _windowManager = windowManager;
         _projectManager = projectManager;
         _player = player;
         _shortCutManager = shortCutManager;
+        _historyManager = historyManager;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
         _shortCutManager.ShortCutAdded += OnShortCutAdded;
         _shortCutManager.ShortCutRemoved += OnShortCutRemoved;
@@ -102,10 +107,27 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
 
         _menuBar.AddChild(_editMenu);
         var popupEdit = _editMenu.GetPopup();
+        _undoIndex = popupEdit.ItemCount;
+        popupEdit.AddItem("Undo\tCTRL+Z", 1);
+        _redoIndex = popupEdit.ItemCount;
+        popupEdit.AddItem("Redo\tCTRL+Y", 2);
+        popupEdit.SetItemDisabled(_undoIndex, !_historyManager.CanUndo);
+        popupEdit.SetItemDisabled(_redoIndex, !_historyManager.CanRedo);
+        popupEdit.AddSeparator();
         popupEdit.AddItem("Project Settings", 20);
+        popupEdit.AboutToPopup += () =>
+        {
+            popupEdit.SetItemDisabled(_undoIndex, !_historyManager.CanUndo);
+            popupEdit.SetItemDisabled(_redoIndex, !_historyManager.CanRedo);
+        };
         popupEdit.IdPressed += id =>
         {
-            if (id == 20) _windowManager.OpenWindow(DirectorMenuCodes.ProjectSettingsWindow);
+            switch (id)
+            {
+                case 1: _historyManager.Undo(); break;
+                case 2: _historyManager.Redo(); break;
+                case 20: _windowManager.OpenWindow(DirectorMenuCodes.ProjectSettingsWindow); break;
+            }
         };
 
         // Window Menu

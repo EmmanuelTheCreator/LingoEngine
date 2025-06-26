@@ -30,4 +30,22 @@ public sealed record ChangeSpriteRangeCommand(
             refresh();
         };
     }
+
+    public Action ToRedo(Action refresh)
+    {
+        var sprite = Sprite;
+        var movie = Movie;
+        int channel = EndChannel;
+        int begin = EndBegin;
+        int end = EndEnd;
+        return () =>
+        {
+            if (sprite.SpriteNum - 1 != channel)
+                movie.ChangeSpriteChannel(sprite, channel);
+            sprite.BeginFrame = begin;
+            sprite.EndFrame = end;
+            refresh();
+        };
+    }
+
 }

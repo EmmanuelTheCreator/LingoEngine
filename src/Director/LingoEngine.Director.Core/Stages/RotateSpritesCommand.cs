@@ -20,5 +20,16 @@ namespace LingoEngine.Director.Core.Stages
                 updateSelectionBox();
             };
         }
+
+        public Action ToRedo(Action updateSelectionBox)
+        {
+            var redo = EndRotations.ToDictionary(kv => kv.Key, kv => kv.Value);
+            return () =>
+            {
+                foreach (var kv in redo)
+                    kv.Key.Rotation = kv.Value;
+                updateSelectionBox();
+            };
+        }
     }
 }
