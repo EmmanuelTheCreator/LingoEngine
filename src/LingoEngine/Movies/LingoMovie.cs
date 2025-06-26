@@ -110,8 +110,8 @@ namespace LingoEngine.Movies
 
 
 #pragma warning disable CS8618
-        internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe, ProjectSettings projectSettings)
-#pragma warning restore CS8618 
+        protected internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe, ProjectSettings projectSettings)
+#pragma warning restore CS8618
         {
             _castLibContainer = castLibContainer;
             _environment = environment;
