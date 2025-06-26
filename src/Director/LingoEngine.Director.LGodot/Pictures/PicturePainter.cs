@@ -12,10 +12,7 @@ namespace LingoEngine.Director.LGodot.Pictures
     /// Helper for pixel-based painting on an editable ImageTexture.
     /// Used only in the Director editor for editing LingoMemberPicture images.
     /// </summary>
-    public class PicturePainter :
-        ICommandHandler<PainterToolSelectCommand>,
-        ICommandHandler<PainterDrawPixelCommand>,
-        ICommandHandler<PainterFillCommand>
+    public class PicturePainter
     {
         private Image _image;
         private ImageTexture _texture;
@@ -113,27 +110,20 @@ namespace LingoEngine.Director.LGodot.Pictures
             _texture = ImageTexture.CreateFromImage(_image);
         }
 
+        public void SetState(Image image, Vector2I offset)
+        {
+            _image = image.Duplicate() as Image
+                ?? throw new InvalidOperationException("Failed to duplicate image.");
+            _offset = offset;
+            _texture = ImageTexture.CreateFromImage(_image);
+        }
+
         public void Dispose()
         {
             // No explicit unlock needed anymore
         }
 
         public Image GetImage() => _image.Duplicate() as Image ?? throw new InvalidOperationException("Failed to get image.");
-
-        public bool Handle(PainterToolSelectCommand command)
-        {
-            return true;
-        }
-
-        public bool Handle(PainterDrawPixelCommand command)
-        {
-            return true;
-        }
-
-        public bool Handle(PainterFillCommand command)
-        {
-            return true;
-        }
 
         public Vector2I Size => _image.GetSize();
         public Vector2I Offset => _offset;

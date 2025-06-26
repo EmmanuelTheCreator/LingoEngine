@@ -1,24 +1,15 @@
 # Lingo vs C# Differences
 
-The table below shows how common Lingo constructs map to their C# equivalents.
-Examples were derived from the original TetriGrounds scripts and their
-translated C# versions.
+The tables below summarize how LingoEngine converts Lingo syntax into C#.
+
+## Lingo‑specific constructs
 
 | Lingo example | C# equivalent |
 |---------------|---------------|
 | `-- comment` | `// comment` |
 | `on handler a, b` … `end` | `void Handler(type a, type b) { … }` |
-| `global gVar` | `static` field or property |
+| `global gVar` | `GlobalVars` singleton injected via DI |
 | `property myValue` | class field/property |
-| `repeat with i = 1 to n` | `for (int i = 1; i <= n; i++)` |
-| `repeat while cond` | `while (cond)` |
-| `repeat until cond` | `do { … } while (!cond)` |
-| `repeat forever` | `while (true)` |
-| `exit repeat` | `break;` |
-| `next repeat` | `continue;` |
-| `if a > b then … end if` | `if (a > b) { … }` |
-| `case v of … end case` | `switch (v) { … }` |
-| `exit` | `return;` |
 | `me` | `this` |
 | `sprite(n).locH` | `Sprite(n).LocH` |
 | `sprite(n).member = member("Name")` | `Sprite(n).SetMember("Name");` |
@@ -26,12 +17,29 @@ translated C# versions.
 | `the mouseH` | `_Mouse.MouseH` |
 | `the actorList.append(me)` | `_Movie.ActorList.Add(this)` |
 | `script("Class").new(args)` | `new Class(args)` |
+| `sendSprite 2, #doIt` | `SendSprite<B2>(2, b2 => b2.doIt());` |
+| `myMovieHandler` | `CallMovieScript<M1>(m1 => m1.myMovieHandler());` |
+
+## Classic control flow
+
+| Lingo example | C# equivalent |
+|---------------|---------------|
+| `repeat with i = 1 to n` | `for (int i = 1; i <= n; i++)` |
+| `repeat with item in list` | `foreach (var item in list)` |
+| `repeat while cond` | `while (cond)` |
+| `repeat until cond` | `do { … } while (!cond)` |
+| `repeat forever` | `while (true)` |
+| `exit repeat` | `break;` |
+| `exit repeat if cond` | `if (cond) break;` |
+| `next repeat` | `continue;` |
+| `next repeat if cond` | `if (cond) continue;` |
+| `if a > b then … end if` | `if (a > b) { … }` |
+| `case v of … end case` | `switch (v) { … }` |
+| `exit` | `return;` |
 | `[1,2,3]` | `new[] { 1, 2, 3 }` |
 | `"A" & "B"` | `"A" + "B"` |
 | `<>` (not equal) | `!=` |
 | `voidp(x)` | `x == null` |
-| `sendSprite 2, #doIt` | `SendSprite<B2>(2, b2 => b2.doIt());` |
-| `myMovieHandler` | `CallMovieScript<M1>(m1 => m1.myMovieHandler());` |
 
 Additional notes:
 
