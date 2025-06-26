@@ -464,19 +464,6 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         if (@event is InputEventKey keyEvent)
         {
-            if (keyEvent.Pressed && keyEvent.CtrlPressed)
-            {
-                if (keyEvent.Keycode == Key.Z)
-                {
-                    _historyManager.Undo();
-                    return;
-                }
-                if (keyEvent.Keycode == Key.Y)
-                {
-                    _historyManager.Redo();
-                    return;
-                }
-            }
 
             if (keyEvent.Keycode == Key.Space)
             {
@@ -723,8 +710,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             RefreshImageSize();
         _regPointCanvas.QueueRedraw();
 
-        _historyManager.Push(
-        () =>
+        _historyManager.Push(() =>
         {
             if (_painter == null) return;
             _painter.SetState(beforeImage, beforeOffset);

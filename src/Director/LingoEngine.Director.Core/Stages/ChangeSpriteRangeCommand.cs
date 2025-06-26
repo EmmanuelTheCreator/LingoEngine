@@ -47,4 +47,5 @@ public sealed record ChangeSpriteRangeCommand(
             refresh();
         };
     }
+
 }
