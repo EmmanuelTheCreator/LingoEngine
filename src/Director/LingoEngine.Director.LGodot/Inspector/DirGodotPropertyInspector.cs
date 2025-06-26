@@ -337,6 +337,33 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         }
         var container = new VBoxContainer();
         BuildProperties(container, behavior);
+        if (behavior is ILingoPropertyDescriptionList descProvider)
+        {
+            string? desc = descProvider.GetBehaviorDescription();
+            if (!string.IsNullOrEmpty(desc))
+                container.AddChild(new Label { Text = desc });
+
+            var props = behavior.UserProperties;
+            if (props.Count > 0)
+            {
+                container.AddChild(new Label { Text = "Properties" });
+                foreach (var item in props)
+                {
+                    string labelText = item.Key.ToString();
+                    if (props.DescriptionList != null &&
+                        props.DescriptionList.TryGetValue(item.Key, out var desc) &&
+                        !string.IsNullOrEmpty(desc.Comment))
+                    {
+                        labelText = desc.Comment!;
+                    }
+
+                    var h = new HBoxContainer();
+                    h.AddChild(new Label { Text = labelText, CustomMinimumSize = new Vector2(80, 16) });
+                    h.AddChild(new Label { Text = item.Value?.ToString() ?? string.Empty });
+                    container.AddChild(h);
+                }
+            }
+        }
         _behaviorBox.AddChild(container);
         _behaviorPanel.Visible = true;
         OnResizing(Size);
