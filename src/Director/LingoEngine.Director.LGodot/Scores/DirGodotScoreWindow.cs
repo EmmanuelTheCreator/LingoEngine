@@ -261,7 +261,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
             command.Movie.ChangeSpriteChannel(command.Sprite, command.EndChannel);
         command.Sprite.BeginFrame = command.EndBegin;
         command.Sprite.EndFrame = command.EndEnd;
-        _historyManager.Push(command.ToUndo(RefreshGrid));
+        _historyManager.Push(command.ToUndo(RefreshGrid), command.ToRedo(RefreshGrid));
         RefreshGrid();
         return true;
     }
@@ -271,7 +271,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     {
         var sprite = command.Movie.AddSprite(command.Channel, command.BeginFrame, command.EndFrame, 0, 0,
             s => s.SetMember(command.Member));
-        _historyManager.Push(command.ToUndo(sprite, RefreshGrid));
+        _historyManager.Push(command.ToUndo(sprite, RefreshGrid), command.ToRedo(RefreshGrid));
         RefreshGrid();
         return true;
     }

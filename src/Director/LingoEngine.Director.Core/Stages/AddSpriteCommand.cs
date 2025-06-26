@@ -21,4 +21,19 @@ public sealed record AddSpriteCommand(
             refresh();
         };
     }
+
+
+    public Action ToRedo(Action refresh)
+    {
+        var movie = Movie;
+        var member = Member;
+        int channel = Channel;
+        int begin = BeginFrame;
+        int end = EndFrame;
+        return () =>
+        {
+            movie.AddSprite(channel, begin, end, 0, 0, s => s.SetMember(member));
+            refresh();
+        };
+    }
 }
