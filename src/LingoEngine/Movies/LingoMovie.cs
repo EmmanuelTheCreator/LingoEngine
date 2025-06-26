@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using LingoEngine.Casts;
 using LingoEngine.Core;
 using LingoEngine.Events;
@@ -32,10 +33,10 @@ namespace LingoEngine.Movies
         private LingoCastLibsContainer _castLibContainer;
         private int _maxSpriteChannelCount;
         private Dictionary<int, LingoSpriteChannel> _spriteChannels= new();
-        private Dictionary<string, int> _scoreLabels = new();
-        private Dictionary<string, LingoSprite> _spritesByName = new();
-        private List<LingoSprite> _allTimeSprites = new ();
-        private Dictionary<int,LingoSprite> _frameSpriteBehaviors = new ();
+        private readonly Dictionary<string, LingoSprite> _spritesByName = new();
+        private readonly List<LingoSprite> _allTimeSprites = new();
+        private readonly Dictionary<int, LingoSprite> _frameSpriteBehaviors = new();
+        private readonly LingoFrameManager _frameManager;
         private readonly Dictionary<int,LingoSprite> _activeSprites = new();
         private readonly List<LingoSprite> _enteredSprites = new();
         private readonly List<LingoSprite> _exitedSprites = new();
@@ -73,6 +74,10 @@ namespace LingoEngine.Movies
         public int Timer { get; private set; }
         public int SpriteTotalCount => _activeSprites.Count;
         public int SpriteMaxNumber => _activeSprites.Keys.Max();
+        public int LastChannel => _maxSpriteChannelCount;
+        public int LastFrame => FrameCount;
+        public IReadOnlyDictionary<int, string> MarkerList =>
+            _frameManager.MarkerList;
         // Tempo (Frame Rate)
         public int Tempo
         {
@@ -127,6 +132,7 @@ namespace LingoEngine.Movies
             _lingoMouse = (LingoMouse)environment.Mouse;
             _lingoClock = (LingoClock)environment.Clock;
             MaxSpriteChannelCount = projectSettings.MaxSpriteChannelCount;
+            _frameManager = new LingoFrameManager(this, environment, _allTimeSprites, RaiseSpriteListChanged);
         }
         public void Init(ILingoFrameworkMovie frameworkMovie)
         {
@@ -173,21 +179,20 @@ namespace LingoEngine.Movies
         {
             var sprite = _environment.Factory.CreateSprite<LingoSprite>(this, s =>
             {
-                // On remove method
                 _frameSpriteBehaviors.Remove(frameNumber);
                 RaiseSpriteListChanged();
             });
-            sprite.Init(0, "FrameSprite_"+frameNumber);
+            sprite.Init(0, $"FrameSprite_{frameNumber}");
             if (_frameSpriteBehaviors.ContainsKey(frameNumber))
                 _frameSpriteBehaviors[frameNumber] = sprite;
             else
                 _frameSpriteBehaviors.Add(frameNumber, sprite);
             sprite.BeginFrame = frameNumber;
             sprite.EndFrame = frameNumber;
-            
+
             var behaviour = sprite.SetBehavior<TBehaviour>();
-            if (configureBehaviour != null) configureBehaviour(behaviour);
-            if (configure != null) configure(sprite);
+            configureBehaviour?.Invoke(behaviour);
+            configure?.Invoke(sprite);
             RaiseSpriteListChanged();
             return sprite;
         }
@@ -279,6 +284,27 @@ namespace LingoEngine.Movies
             if (sprite == null) return;
             actionOnSprite(sprite);
         }
+
+        public void SendAllSprites(Action<ILingoSpriteChannel> actionOnSprite)
+        {
+            foreach (var channel in _spriteChannels.Values)
+            {
+                if (channel.Sprite != null)
+                    actionOnSprite(channel);
+            }
+        }
+
+        public void SendAllSprites<T>(Action<T> actionOnSprite) where T : LingoSpriteBehavior
+        {
+            foreach (var sprite in _activeSprites.Values)
+                sprite.CallBehavior(actionOnSprite);
+        }
+
+        public IEnumerable<TResult?> SendAllSprites<T, TResult>(Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior
+        {
+            foreach (var sprite in _activeSprites.Values)
+                yield return sprite.CallBehavior(actionOnSprite);
+        }
        
         /// <summary>
         /// The rollover() method indicates whether the pointer is over the specified sprite.
@@ -287,6 +313,26 @@ namespace LingoEngine.Movies
         {
             var sprite = _activeSprites[spriteNumber];
             return sprite.IsMouseInsideBoundingBox(_lingoMouse);
+        }
+
+        public int RollOver()
+        {
+            var sprite = GetSpriteUnderMouse();
+            return sprite?.SpriteNum ?? 0;
+        }
+
+        public int ConstrainH(int spriteNumber, int pos)
+        {
+            if (!_activeSprites.TryGetValue(spriteNumber, out var sprite))
+                return pos;
+            return (int)Math.Clamp(pos, sprite.Left, sprite.Right);
+        }
+
+        public int ConstrainV(int spriteNumber, int pos)
+        {
+            if (!_activeSprites.TryGetValue(spriteNumber, out var sprite))
+                return pos;
+            return (int)Math.Clamp(pos, sprite.Top, sprite.Bottom);
         }
 
         public LingoSprite? GetSpriteUnderMouse(bool skipLockedSprites = false)
@@ -355,8 +401,8 @@ namespace LingoEngine.Movies
         public void GoTo(string label) => Go(label);
         public void Go(string label)
         {
-            if (_scoreLabels.TryGetValue(label, out var scoreLabel))
-                _NextFrame = scoreLabel; 
+            if (_frameManager.ScoreLabels.TryGetValue(label, out var scoreLabel))
+                _NextFrame = scoreLabel;
         }
 
         public void GoTo(int frame) => Go(frame);
@@ -371,6 +417,11 @@ namespace LingoEngine.Movies
         {
             if (_isPlaying)
             {
+                if (_delayTicks > 0)
+                {
+                    _delayTicks--;
+                    return;
+                }
                 if(_IsManualUpdateStage)
                     OnUpdateStage();
                 else
@@ -542,6 +593,37 @@ namespace LingoEngine.Movies
                     Go(Frame - 1);
             }
         }
+
+        private int _delayTicks;
+        public void Delay(int ticks)
+        {
+            if (ticks <= 0) return;
+            _delayTicks += ticks;
+        }
+
+        public void GoNext()
+            => Go(_frameManager.GetNextMarker(Frame));
+
+        public void GoPrevious()
+            => Go(_frameManager.GetPreviousMarker(Frame));
+
+        public void GoLoop()
+            => Go(_frameManager.GetLoopMarker(Frame));
+
+        public void InsertFrame()
+        {
+            // TODO: Implement score recording frame duplication
+        }
+
+        public void DeleteFrame()
+        {
+            // TODO: Implement frame deletion during score recording
+        }
+
+        public void UpdateFrame()
+        {
+            // TODO: Finalize changes for current frame during recording
+        }
         // Go to a specific frame and stop
         public void GoToAndStop(int frame)
         {
@@ -617,27 +699,9 @@ namespace LingoEngine.Movies
         public void StartTimer() => Timer = 0;
 
         public void SetScoreLabel(int frameNumber, string? name)
-        {
-            string? existingLabel = null;
+            => _frameManager.SetScoreLabel(frameNumber, name);
 
-            // search for any label already associated with this frame
-            foreach (var item in _scoreLabels)
-            {
-                if (item.Value == frameNumber)
-                {
-                    existingLabel = item.Key;
-                    break;
-                }
-            }
-
-            if (existingLabel != null)
-                _scoreLabels.Remove(existingLabel);
-
-            if (!string.IsNullOrEmpty(name))
-                _scoreLabels[name] = frameNumber;
-        }
-
-        public IReadOnlyDictionary<string, int> GetScoreLabels() => _scoreLabels;
+        public IReadOnlyDictionary<string, int> GetScoreLabels() => _frameManager.ScoreLabels;
         public IReadOnlyDictionary<int, LingoSprite> GetFrameSpriteBehaviors() => _frameSpriteBehaviors;
 
         public void MoveFrameBehavior(int previousFrame, int newFrame)
@@ -659,37 +723,13 @@ namespace LingoEngine.Movies
         }
 
         public int GetNextLabelFrame(int frame)
-        {
-            var next = _scoreLabels.Values
-                .Where(v => v > frame)
-                .DefaultIfEmpty(int.MaxValue)
-                .Min();
-            if (next == int.MaxValue)
-                return frame + 10;
-            return next;
-        }
+            => _frameManager.GetNextLabelFrame(frame);
 
         public int GetNextSpriteStart(int channel, int frame)
-        {
-            int next = int.MaxValue;
-            foreach (var sp in _allTimeSprites)
-            {
-                if (sp.SpriteNum - 1 == channel && sp.BeginFrame > frame)
-                    next = Math.Min(next, sp.BeginFrame);
-            }
-            return next == int.MaxValue ? -1 : next;
-        }
+            => _frameManager.GetNextSpriteStart(channel, frame);
 
         public int GetPrevSpriteEnd(int channel, int frame)
-        {
-            int prev = -1;
-            foreach (var sp in _allTimeSprites)
-            {
-                if (sp.SpriteNum - 1 == channel && sp.EndFrame < frame)
-                    prev = Math.Max(prev, sp.EndFrame);
-            }
-            return prev;
-        }
+            => _frameManager.GetPrevSpriteEnd(channel, frame);
 
         public IReadOnlyList<LingoAudioClip> GetAudioClips() => _audioClips;
 
