@@ -1,8 +1,10 @@
 # Lingo vs C# Differences
 
-The table below shows how common Lingo constructs map to their C# equivalents.
+The tables below show how common Lingo constructs map to their C# equivalents.
 Examples were derived from the original TetriGrounds scripts and their
 translated C# versions.
+
+## Lingo‑specific constructs
 
 | Lingo example | C# equivalent |
 |---------------|---------------|
@@ -10,15 +12,6 @@ translated C# versions.
 | `on handler a, b` … `end` | `void Handler(type a, type b) { … }` |
 | `global gVar` | `static` field or property |
 | `property myValue` | class field/property |
-| `repeat with i = 1 to n` | `for (int i = 1; i <= n; i++)` |
-| `repeat while cond` | `while (cond)` |
-| `repeat until cond` | `do { … } while (!cond)` |
-| `repeat forever` | `while (true)` |
-| `exit repeat` | `break;` |
-| `next repeat` | `continue;` |
-| `if a > b then … end if` | `if (a > b) { … }` |
-| `case v of … end case` | `switch (v) { … }` |
-| `exit` | `return;` |
 | `me` | `this` |
 | `sprite(n).locH` | `Sprite(n).LocH` |
 | `sprite(n).member = member("Name")` | `Sprite(n).SetMember("Name");` |
@@ -32,6 +25,20 @@ translated C# versions.
 | `voidp(x)` | `x == null` |
 | `sendSprite 2, #doIt` | `SendSprite<B2>(2, b2 => b2.doIt());` |
 | `myMovieHandler` | `CallMovieScript<M1>(m1 => m1.myMovieHandler());` |
+
+## Classic control flow
+
+| Lingo example | C# equivalent |
+|---------------|---------------|
+| `repeat with i = 1 to n` | `for (int i = 1; i <= n; i++)` |
+| `repeat while cond` | `while (cond)` |
+| `repeat until cond` | `do { … } while (!cond)` |
+| `repeat forever` | `while (true)` |
+| `exit repeat` | `break;` |
+| `next repeat` | `continue;` |
+| `if a > b then … end if` | `if (a > b) { … }` |
+| `case v of … end case` | `switch (v) { … }` |
+| `exit` | `return;` |
 
 Additional notes:
 
