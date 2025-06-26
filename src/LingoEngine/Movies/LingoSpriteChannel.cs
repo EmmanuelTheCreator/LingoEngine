@@ -145,6 +145,15 @@ namespace LingoEngine.Movies
         public int LocZ { get => _sprite.LocZ; set => _sprite.LocZ = value; }
         public float Skew { get => _sprite.Skew; set => _sprite.Skew = value; }
         public float Rotation { get => _sprite.Rotation; set => _sprite.Rotation = value; }
+        public bool FlipH { get => _sprite.FlipH; set => _sprite.FlipH = value; }
+        public bool FlipV { get => _sprite.FlipV; set => _sprite.FlipV = value; }
+        public float Top { get => _sprite.Top; set => _sprite.Top = value; }
+        public float Bottom { get => _sprite.Bottom; set => _sprite.Bottom = value; }
+        public float Left { get => _sprite.Left; set => _sprite.Left = value; }
+        public float Right { get => _sprite.Right; set => _sprite.Right = value; }
+        public int Cursor { get => _sprite.Cursor; set => _sprite.Cursor = value; }
+        public int Constraint { get => _sprite.Constraint; set => _sprite.Constraint = value; }
+        public bool DirectToStage { get => _sprite.DirectToStage; set => _sprite.DirectToStage = value; }
         public List<string> ScriptInstanceList => _sprite.ScriptInstanceList;
         public int Size => _sprite.Size;
         public int SpriteNum => _sprite.SpriteNum;

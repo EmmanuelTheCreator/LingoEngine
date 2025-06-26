@@ -30,6 +30,13 @@ namespace LingoEngine.Movies
         private LingoMember? _Member;
         private Action<LingoSprite>? _onRemoveMe;
         private bool _isFocus = false;
+        private bool _flipH;
+        private bool _flipV;
+        private int _cursor;
+        private int? _previousCursor;
+        private int _constraint;
+        private bool _directToStage;
+        private float _blend = 1f;
 
 
         #region Properties
@@ -56,7 +63,17 @@ namespace LingoEngine.Movies
         /// <summary>Offset to the property list for behaviors.</summary>
         public int SpritePropertiesOffset { get; set; }
         public int SpriteNum { get; private set; }
-        public int Ink { get; set; }
+        private int _ink;
+        public int Ink
+        {
+            get => _ink;
+            set
+            {
+                _ink = value;
+                if (_frameworkSprite != null)
+                    _frameworkSprite.Ink = value;
+            }
+        }
         public bool Visibility
         {
             get => _frameworkSprite.Visibility; set
@@ -70,7 +87,15 @@ namespace LingoEngine.Movies
         public bool Linked { get; private set; }
         public bool Loaded { get; private set; }
         public bool MediaReady { get; private set; }
-        public float Blend { get => _frameworkSprite.Blend; set => _frameworkSprite.Blend = value; }
+        public float Blend
+        {
+            get => _blend;
+            set
+            {
+                _blend = value;
+                ApplyBlend();
+            }
+        }
         public float LocH { get => _frameworkSprite.X; set => _frameworkSprite.X = value; }
         public float LocV { get => _frameworkSprite.Y; set => _frameworkSprite.Y = value; }
         public int LocZ { get => _frameworkSprite.ZIndex; set => _frameworkSprite.ZIndex = value; }
@@ -78,6 +103,27 @@ namespace LingoEngine.Movies
 
         public float Rotation { get => _frameworkSprite.Rotation; set => _frameworkSprite.Rotation = value; }
         public float Skew { get => _frameworkSprite.Skew; set => _frameworkSprite.Skew = value; }
+        public bool FlipH { get => _flipH; set { _flipH = value; _frameworkSprite.FlipH = value; } }
+        public bool FlipV { get => _flipV; set { _flipV = value; _frameworkSprite.FlipV = value; } }
+        public float Top { get => Rect.Top; set { var o = GetRegPointOffset(); LocV = value + o.Y + Height / 2f; } }
+        public float Bottom { get => Rect.Bottom; set => Top = value - Height; }
+        public float Left { get => Rect.Left; set { var o = GetRegPointOffset(); LocH = value + o.X + Width / 2f; } }
+        public float Right { get => Rect.Right; set => Left = value - Width; }
+        public int Cursor { get => _cursor; set => _cursor = value; }
+        public int Constraint { get => _constraint; set => _constraint = value; }
+        public bool DirectToStage
+        {
+            get => _directToStage;
+            set
+            {
+                if (_directToStage == value) return;
+                _directToStage = value;
+                // Rendering order is handled by the framework implementation,
+                // so keep the engine Z index untouched.
+                _frameworkSprite.DirectToStage = value;
+                ApplyBlend();
+            }
+        }
 
         public LingoPoint RegPoint { get; set; }
         public LingoColor ForeColor { get; set; }
@@ -131,6 +177,11 @@ namespace LingoEngine.Movies
 
         #endregion
 
+        private void ApplyBlend()
+        {
+            _frameworkSprite.Blend = _directToStage ? 1f : _blend;
+        }
+
         private LingoPoint GetRegPointOffset()
         {
             if (_Member is { } member)
@@ -163,6 +214,8 @@ namespace LingoEngine.Movies
         public void Init(ILingoFrameworkSprite frameworkSprite)
         {
             _frameworkSprite = frameworkSprite;
+            _frameworkSprite.Ink = _ink;
+            ApplyBlend();
         }
         internal void Init(int number, string name)
         {
@@ -455,12 +508,22 @@ When a movie stops, events occur in the following order:
         /// </summary>
         public virtual void MouseEnter(LingoMouse mouse)
         {
+            if (_cursor != 0)
+            {
+                _previousCursor = mouse.Cursor.Cursor;
+                mouse.Cursor.Cursor = _cursor;
+            }
         }
         /// <summary>
         /// Triggered when the mouse exits the sprite's bounds
         /// </summary>
         public virtual void MouseExit(LingoMouse mouse)
         {
+            if (_previousCursor.HasValue)
+            {
+                mouse.Cursor.Cursor = _previousCursor.Value;
+                _previousCursor = null;
+            }
         }
         void ILingoMouseEventHandler.RaiseMouseDown(LingoMouse mouse)
         {
