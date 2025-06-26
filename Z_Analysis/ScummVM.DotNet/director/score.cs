@@ -42,6 +42,11 @@ namespace Director
                 }
 
                 _numFrames = numOfFrames;
+                for (int ch = 0; ch < _numChannels; ch++)
+                {
+                    ReadChannelKeyframes(stream, ch);
+                }
+
             }
             else
             {
@@ -60,5 +65,16 @@ namespace Director
             while (!stream.EOF)
                 stream.ReadByte();
         }
+        private void ReadChannelKeyframes(SeekableReadStreamEndian stream, int channelIndex)
+        {
+            ushort numKeyframes = stream.ReadUInt16();
+            for (int i = 0; i < numKeyframes; i++)
+            {
+                uint offset = stream.ReadUInt32();
+                ushort frameIndex = stream.ReadUInt16();
+                // Store (frameIndex, offset) in your channel’s keyframe list.
+            }
+        }
+
     }
 }
