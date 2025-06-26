@@ -22,6 +22,7 @@ public sealed record AddSpriteCommand(
         };
     }
 
+
     public Action ToRedo(Action refresh)
     {
         var movie = Movie;
