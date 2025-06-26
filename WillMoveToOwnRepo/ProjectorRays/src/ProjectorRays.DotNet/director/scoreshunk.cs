@@ -179,6 +179,7 @@ public class ScoreShunk : Chunk
             FrameScripts.Add(behaviours);
             // tertiary entry usually empty, skip
         }
+    }
 
     private void ReadFrameData(BufferView view)
     {

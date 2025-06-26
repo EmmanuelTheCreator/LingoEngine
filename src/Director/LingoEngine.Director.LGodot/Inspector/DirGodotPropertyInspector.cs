@@ -6,18 +6,13 @@ using LingoEngine.Pictures;
 using LingoEngine.Members;
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Inspector;
-using LingoEngine.Director.LGodot;
 using LingoEngine.Core;
-using LingoEngine.Commands;
 using LingoEngine.Texts;
-using System.Linq;
 using LingoEngine.Director.Core.Commands;
-using System.Reflection.PortableExecutable;
-using LingoEngine.Primitives;
-using LingoEngine.LGodot.Primitives;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.LGodot.Gfx;
 using LingoEngine.Gfx;
+using LingoEngine.Director.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -30,13 +25,10 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly PanelContainer _behaviorPanel = new PanelContainer();
     private readonly VBoxContainer _behaviorBox = new VBoxContainer();
     private readonly Button _behaviorClose = new Button();
-    private readonly ILingoPlayer _player;
-    private readonly LingoPanel _headerPanel;
-    private readonly LingoWrapPanel _header;
+    private readonly LingoPlayer _player;
+    private readonly LingoGfxPanel _headerPanel;
+    private readonly LingoGfxWrapPanel _header;
     private readonly DirMemberThumbnail _thumb;
-    private readonly LingoPanel _thumbPanel;
-    private readonly IDirGodotIconManager _iconManager;
-    private readonly LingoWrapPanel _headerText;
     private readonly DirectorPropertyInspectorWindow _inspectorWindow;
     private const int HeaderHeight = 44;
 
@@ -45,8 +37,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     {
         _mediator = mediator;
         _commandManager = commandManager;
-        _player = player;
-        _iconManager = iconManager;
+        _player = (LingoPlayer)player;
         _inspectorWindow = inspectorWindow;
         _inspectorWindow.Init(this);
 
@@ -56,8 +47,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
 
         var headerElems = _inspectorWindow.CreateHeaderElements(_player.Factory, iconManager);
         _thumb = headerElems.Thumbnail;
-        _headerText = headerElems.TextContainer;
-        _thumbPanel = headerElems.ThumbPanel;
         _header = headerElems.Header;
         _headerPanel = headerElems.Panel;
         _tabs = _player.Factory.CreateTabContainer();
@@ -86,7 +75,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         //_vScroller.AddChild(_tabs);
         //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
         //_vScroller.Position = new Vector2(0, 60);
-        _tabs.AddChild(_vScroller);
+        //_tabs.AddChild(new LingoGfxTabItem(_vScroller));
 
         _mediator.Subscribe(this);
     }
@@ -351,10 +340,10 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
                 {
                     string labelText = item.Key.ToString();
                     if (props.DescriptionList != null &&
-                        props.DescriptionList.TryGetValue(item.Key, out var desc) &&
-                        !string.IsNullOrEmpty(desc.Comment))
+                        props.DescriptionList.TryGetValue(item.Key, out var desc2) &&
+                        !string.IsNullOrEmpty(desc2.Comment))
                     {
-                        labelText = desc.Comment!;
+                        labelText = desc2.Comment!;
                     }
 
                     var h = new HBoxContainer();

@@ -81,6 +81,11 @@ namespace LingoEngine.Director.LGodot.Pictures
 
             _container.AddChild(btn);
         }
+        public void SelectTool(PainterToolType tool)
+        {
+            SelectedTool = tool;
+            ToolSelected?.Invoke(tool);
+        }
         private void SelectButton(DirectorToolButton btn)
         {
             if (_selectedButton != null)
@@ -114,5 +119,7 @@ namespace LingoEngine.Director.LGodot.Pictures
 
             _container.AddChild(colorPicker);
         }
+
+
     }
 }

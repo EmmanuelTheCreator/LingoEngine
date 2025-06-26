@@ -1,0 +1,158 @@
+{
+  "entrySize": 12,
+  "entrySize2": 12,
+  "entryCount": 30,
+  "usedCount": 21,
+  "entries": [
+    {
+      "sectionID": 33,
+      "castID": 8,
+      "fourCC": "ALFA"
+    },
+    {
+      "sectionID": 32,
+      "castID": 8,
+      "fourCC": "BITD"
+    },
+    {
+      "sectionID": 34,
+      "castID": 8,
+      "fourCC": "Thum"
+    },
+    {
+      "sectionID": 31,
+      "castID": 8,
+      "fourCC": "ediM"
+    },
+    {
+      "sectionID": 21,
+      "castID": 1024,
+      "fourCC": "Chan"
+    },
+    {
+      "sectionID": 12,
+      "castID": 1024,
+      "fourCC": "DRCF"
+    },
+    {
+      "sectionID": 26,
+      "castID": 1024,
+      "fourCC": "FCOL"
+    },
+    {
+      "sectionID": 13,
+      "castID": 1024,
+      "fourCC": "FXmp"
+    },
+    {
+      "sectionID": 28,
+      "castID": 1024,
+      "fourCC": "GRID"
+    },
+    {
+      "sectionID": 14,
+      "castID": 1024,
+      "fourCC": "MCsL"
+    },
+    {
+      "sectionID": 27,
+      "castID": 1024,
+      "fourCC": "PUBL"
+    },
+    {
+      "sectionID": 29,
+      "castID": 1024,
+      "fourCC": "SCRF"
+    },
+    {
+      "sectionID": 15,
+      "castID": 1024,
+      "fourCC": "Sord"
+    },
+    {
+      "sectionID": 25,
+      "castID": 1024,
+      "fourCC": "VERS"
+    },
+    {
+      "sectionID": 16,
+      "castID": 1024,
+      "fourCC": "VWFI"
+    },
+    {
+      "sectionID": 19,
+      "castID": 1024,
+      "fourCC": "VWLB"
+    },
+    {
+      "sectionID": 17,
+      "castID": 1024,
+      "fourCC": "VWSC"
+    },
+    {
+      "sectionID": 22,
+      "castID": 1024,
+      "fourCC": "XTRl"
+    },
+    {
+      "sectionID": 30,
+      "castID": 1025,
+      "fourCC": "SCRF"
+    },
+    {
+      "sectionID": 52,
+      "castID": 66560,
+      "fourCC": "CAS*"
+    },
+    {
+      "sectionID": 9,
+      "castID": 66560,
+      "fourCC": "Cinf"
+    },
+    {
+      "sectionID": 9,
+      "castID": 66560,
+      "fourCC": "Cinf"
+    },
+    {
+      "sectionID": 9,
+      "castID": 66560,
+      "fourCC": "Cinf"
+    },
+    {
+      "sectionID": 9,
+      "castID": 66560,
+      "fourCC": "Cinf"
+    },
+    {
+      "sectionID": 9,
+      "castID": 66560,
+      "fourCC": "Cinf"
+    },
+    {
+      "sectionID": 20,
+      "castID": 66560,
+      "fourCC": "Fmap"
+    },
+    {
+      "sectionID": 23,
+      "castID": 66560,
+      "fourCC": "LctX"
+    },
+    {
+      "sectionID": 6,
+      "castID": 66560,
+      "fourCC": "ccl "
+    },
+    {
+      "sectionID": 0,
+      "castID": 0,
+      "fourCC": "\x00\x00\x00\x00"
+    },
+    {
+      "sectionID": 0,
+      "castID": 0,
+      "fourCC": "\x00\x00\x00\x00"
+    }
+  ]
+}

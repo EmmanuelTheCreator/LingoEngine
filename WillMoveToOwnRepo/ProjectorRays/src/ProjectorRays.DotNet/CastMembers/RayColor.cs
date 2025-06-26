@@ -1,6 +1,6 @@
 ﻿namespace ProjectorRays.CastMembers
 {
-    public struct LingoColor
+    public struct RayColor
     {
         /// <summary>Red component (0–255)</summary>
         public byte R { get; }
@@ -11,7 +11,7 @@
         /// <summary>Blue component (0–255)</summary>
         public byte B { get; }
 
-        public LingoColor(byte r, byte g, byte b)
+        public RayColor(byte r, byte g, byte b)
         {
             R = r;
             G = g;
@@ -21,7 +21,7 @@
         /// Constructs a LingoColor from a 24-bit packed RGB value (0xRRGGBB).
         /// </summary>
         /// <param name="rgb24">Packed 24-bit value.</param>
-        public LingoColor(uint rgb24)
+        public RayColor(uint rgb24)
         {
             R = (byte)((rgb24 >> 16) & 0xFF);
             G = (byte)((rgb24 >> 8) & 0xFF);
@@ -40,7 +40,7 @@
         /// Constructs a LingoColor from a 16-bit RGB 555 value (0RRRRRGGGGGBBBBB).
         /// </summary>
         /// <param name="rgb555">The 16-bit color value.</param>
-        public LingoColor(ushort rgb555)
+        public RayColor(ushort rgb555)
         {
             R = (byte)(((rgb555 >> 10) & 0x1F) * 255 / 31);
             G = (byte)(((rgb555 >> 5) & 0x1F) * 255 / 31);
@@ -77,7 +77,7 @@
         /// <summary>
         /// Creates a LingoColor from an RGB tuple.
         /// </summary>
-        public static LingoColor FromRGB(byte r, byte g, byte b)
-            => new LingoColor(r, g, b);
+        public static RayColor FromRGB(byte r, byte g, byte b)
+            => new RayColor(r, g, b);
     }
 }

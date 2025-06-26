@@ -2,6 +2,7 @@ using LingoEngine.Director.Core.Windows;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -15,7 +16,7 @@ namespace LingoEngine.Director.Core.Inspector
         public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
         public string CastText { get => _cast?.Text ?? string.Empty; set { if (_cast != null) _cast.Text = value; } }
 
-        public record HeaderElements(LingoPanel Panel, LingoWrapPanel Header, LingoPanel ThumbPanel, DirMemberThumbnail Thumbnail, LingoWrapPanel TextContainer);
+        public record HeaderElements(LingoGfxPanel Panel, LingoGfxWrapPanel Header,DirMemberThumbnail Thumbnail);
 
         public HeaderElements CreateHeaderElements(ILingoFrameworkFactory factory, IDirIconManager? iconManager)
         {
@@ -55,7 +56,7 @@ namespace LingoEngine.Director.Core.Inspector
             panel.BackgroundColor = DirectorColors.BG_WhiteMenus;
             panel.AddChild(header);
 
-            return new HeaderElements(panel, header, thumbPanel, thumb, container);
+            return new HeaderElements(panel, header, thumb);
         }
 
         public override void OpenWindow()

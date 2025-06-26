@@ -7,14 +7,14 @@ namespace ProjectorRays.Director;
 /// resources. This mirrors the C++ <c>MoaID</c> structure but is renamed to
 /// <c>LingoGuid</c> to avoid conflicts with <see cref="System.Guid"/>.
 /// </summary>
-public unsafe struct LingoGuid
+public unsafe struct RayGuid
 {
     public uint Data1;
     public ushort Data2;
     public ushort Data3;
     public fixed byte Data4[8];
 
-    public LingoGuid(uint d1, ushort d2, ushort d3,
+    public RayGuid(uint d1, ushort d2, ushort d3,
         byte d40, byte d41, byte d42, byte d43,
         byte d44, byte d45, byte d46, byte d47)
     {
@@ -49,7 +49,7 @@ public unsafe struct LingoGuid
         }
     }
 
-    public readonly bool Equals(LingoGuid other)
+    public readonly bool Equals(RayGuid other)
     {
         if (Data1 != other.Data1 || Data2 != other.Data2 || Data3 != other.Data3)
             return false;
@@ -59,10 +59,10 @@ public unsafe struct LingoGuid
         return true;
     }
 
-    public static bool operator ==(LingoGuid left, LingoGuid right) => left.Equals(right);
-    public static bool operator !=(LingoGuid left, LingoGuid right) => !left.Equals(right);
+    public static bool operator ==(RayGuid left, RayGuid right) => left.Equals(right);
+    public static bool operator !=(RayGuid left, RayGuid right) => !left.Equals(right);
 
-    public override bool Equals(object? obj) => obj is LingoGuid other && Equals(other);
+    public override bool Equals(object? obj) => obj is RayGuid other && Equals(other);
     public override int GetHashCode()
     {
         var hc = new HashCode();
@@ -77,8 +77,8 @@ public unsafe struct LingoGuid
 
 public static class LingoGuidConstants
 {
-    public static readonly LingoGuid FONTMAP_COMPRESSION_GUID = new(0x8A4679A1, 0x3720, 0x11D0, 0x92, 0x23, 0x00, 0xA0, 0xC9, 0x08, 0x68, 0xB1);
-    public static readonly LingoGuid NULL_COMPRESSION_GUID = new(0xAC99982E, 0x005D, 0x0D50, 0x00, 0x00, 0x08, 0x00, 0x07, 0x37, 0x7A, 0x34);
-    public static readonly LingoGuid SND_COMPRESSION_GUID = new(0x7204A889, 0xAFD0, 0x11CF, 0xA2, 0x22, 0x00, 0xA0, 0x24, 0x53, 0x44, 0x4C);
-    public static readonly LingoGuid ZLIB_COMPRESSION_GUID = new(0xAC99E904, 0x0070, 0x0B36, 0x00, 0x00, 0x08, 0x00, 0x07, 0x37, 0x7A, 0x34);
+    public static readonly RayGuid FONTMAP_COMPRESSION_GUID = new(0x8A4679A1, 0x3720, 0x11D0, 0x92, 0x23, 0x00, 0xA0, 0xC9, 0x08, 0x68, 0xB1);
+    public static readonly RayGuid NULL_COMPRESSION_GUID = new(0xAC99982E, 0x005D, 0x0D50, 0x00, 0x00, 0x08, 0x00, 0x07, 0x37, 0x7A, 0x34);
+    public static readonly RayGuid SND_COMPRESSION_GUID = new(0x7204A889, 0xAFD0, 0x11CF, 0xA2, 0x22, 0x00, 0xA0, 0x24, 0x53, 0x44, 0x4C);
+    public static readonly RayGuid ZLIB_COMPRESSION_GUID = new(0xAC99E904, 0x0070, 0x0B36, 0x00, 0x00, 0x08, 0x00, 0x07, 0x37, 0x7A, 0x34);
 }

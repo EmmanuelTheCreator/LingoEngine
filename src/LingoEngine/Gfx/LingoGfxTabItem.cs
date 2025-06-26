@@ -6,9 +6,9 @@ namespace LingoEngine.Gfx
     public class LingoGfxTabItem
     {
         public string Title { get; set; }
-        public LingoGfxNode Content { get; }
+        public ILingoGfxNode Content { get; }
 
-        public LingoGfxTabItem(string title, LingoGfxNode content)
+        public LingoGfxTabItem(string title, ILingoGfxNode content)
         {
             Title = title;
             Content = content;

@@ -23,8 +23,8 @@ namespace ProjectorRays.CastMembers
             public bool Underline { get; set; }
             public string Text { get; set; } = "";
             public ushort FontId { get; set; }
-            public LingoColor ForeColor { get; set; }
-            public LingoColor BackColor { get; set; }
+            public RayColor ForeColor { get; set; }
+            public RayColor BackColor { get; set; }
         }
 
         public static List<TextStyleRun> Parse(BufferView view)
@@ -57,8 +57,8 @@ namespace ProjectorRays.CastMembers
                         Bold = false,
                         Italic = false,
                         Underline = false,
-                        ForeColor = new LingoColor(0, 8, 255),
-                        BackColor = new LingoColor(0, 0, 0)
+                        ForeColor = new RayColor(0, 8, 255),
+                        BackColor = new RayColor(0, 0, 0)
                     };
                     result.Add(run);
                     break;
@@ -90,8 +90,8 @@ namespace ProjectorRays.CastMembers
         public bool Bold { get; set; }
         public bool Italic { get; set; }
         public bool Underline { get; set; }
-        public LingoColor ForeColor { get; set; }
-        public LingoColor BackColor { get; set; }
+        public RayColor ForeColor { get; set; }
+        public RayColor BackColor { get; set; }
         public string HexBefore { get; set; } = string.Empty;
         public string HexAfter { get; set; } = string.Empty;
         public uint LetterSpacing { get; set; }

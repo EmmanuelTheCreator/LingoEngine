@@ -22,7 +22,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Dictionary<int, DirGodotCastView> _castViews = new();
         private readonly Dictionary<int, int> _castTabIndices = new();
         private DirGodotCastItem? _selectedItem;
-        private ILingoPlayer _player;
+        private LingoPlayer _player;
         private readonly ILingoCommandManager _commandManager;
         private readonly IDirGodotIconManager _iconManager;
 
@@ -34,7 +34,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _mediator = mediator;
             _style = style;
             directorCastWindow.Init(this);
-            _player = player;
+            _player = (LingoPlayer)player;
             _commandManager = commandManager;
             _iconManager = iconManager;
             _player.ActiveMovieChanged += OnActiveMovieChanged;

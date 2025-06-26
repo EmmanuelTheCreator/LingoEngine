@@ -32,7 +32,7 @@ internal partial class DirGodotPictureMemberEditorWindow
             {
                 var rect = _owner._dragRect.Value;
                 Vector2 pos = (offset + rect.Position) * factor + canvasHalf * (1 - factor);
-                Vector2 size = rect.Size * factor;
+                Vector2 size = ((Vector2)rect.Size) * factor;
                 DrawRect(new Rect2(pos, size), Colors.Cyan, false);
             }
         }
