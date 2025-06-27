@@ -1,6 +1,10 @@
 ﻿using Godot;
+using LingoEngine.Bitmaps;
+using LingoEngine.LGodot.Bitmaps;
+using LingoEngine.LGodot.Helpers;
 using LingoEngine.Pictures;
 using LingoEngine.Tools;
+using Microsoft.Extensions.Logging;
 
 namespace LingoEngine.LGodot.Pictures
 {
@@ -8,9 +12,20 @@ namespace LingoEngine.LGodot.Pictures
     {
         private LingoMemberBitmap _lingoMemberPicture;
         private ImageTexture? _imageTexture;
+        private ILingoImageTexture? _imageTextureLingo;
         private Image? _image;
+        private readonly ILogger _logger;
 
-        public ImageTexture? Texture => _imageTexture;
+        public ILingoImageTexture? Texture => _imageTextureLingo;
+        public ImageTexture? TextureGodot
+        {
+            get
+            {
+                if (!IsLoaded) Preload();
+                return _imageTexture;
+            }
+        }
+
         public byte[]? ImageData { get; private set; }
 
         public bool IsLoaded { get; private set; }
@@ -24,10 +39,10 @@ namespace LingoEngine.LGodot.Pictures
         public int Height { get; private set; }
 
 #pragma warning disable CS8618 
-        public LingoGodotMemberBitmap()
+        public LingoGodotMemberBitmap(ILogger<LingoGodotMemberBitmap> logger)
 #pragma warning restore CS8618 
         {
-
+            _logger = logger;
         }
 
         internal void Init(LingoMemberBitmap lingoInstance)
@@ -42,19 +57,42 @@ namespace LingoEngine.LGodot.Pictures
         {
             // Create a new Image object
             _image = new Image();
-
+            string filePath = GodotHelper.EnsureGodotUrl(_lingoMemberPicture.FileName);
 
             // Load the image from the byte array (assuming PNG/JPEG format)
-            var error = _image.Load($"res://{_lingoMemberPicture.FileName}");
-            if (error != Error.Ok)
+            var texture = ResourceLoader.Load<Texture2D>(filePath);
+
+            if (texture == null)
             {
-                GD.PrintErr("Failed to load image data.:" + _lingoMemberPicture.FileName + ":" + error);
+                _logger.LogWarning($"Failed to load Texture2D at {filePath}");
                 return;
             }
+
+            Image image;
+            try
+            {
+                image = texture.GetImage();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Texture.GetImage() failed at {filePath}. Is 'Keep -> Image' enabled in import settings?");
+                return;
+            }
+
+            if (image.IsEmpty())
+            {
+                _logger.LogError($"Image is empty: {filePath}");
+                return;
+            }
+            _image = image;
+            _imageTexture = ImageTexture.CreateFromImage(_image);
+            if (_imageTexture == null) return;
+            _imageTextureLingo = new LingoGodotImageTexture(_imageTexture);
+
             UpdateImageData(_image);
         }
 
-
+        
 
         private void UpdateImageData(Image image)
         {
@@ -80,14 +118,16 @@ namespace LingoEngine.LGodot.Pictures
         {
             if (IsLoaded) return;
             if (_image == null) CreateTexture();
-            _imageTexture = ImageTexture.CreateFromImage(_image);
             IsLoaded = true;
+            if (_image == null || _image.IsEmpty())
+                return;
         }
 
         public void Unload()
         {
             _imageTexture?.Dispose();
             _imageTexture = null;
+            _imageTextureLingo = null;
             IsLoaded = false;
         }
 

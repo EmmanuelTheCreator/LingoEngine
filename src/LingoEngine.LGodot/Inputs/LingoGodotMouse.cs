@@ -119,9 +119,9 @@ namespace LingoEngine.LGodot
         public void SetCursor(LingoMemberBitmap image)
         {
             var frameworkObj = image.Framework<LingoGodotMemberBitmap>();
-            if (frameworkObj.Texture == null)
+            if (frameworkObj.TextureGodot == null)
                 return;
-            DisplayServer.Singleton.CursorSetCustomImage(frameworkObj.Texture, DisplayServer.CursorShape.Arrow, hotspot: Vector2.Zero);
+            DisplayServer.Singleton.CursorSetCustomImage(frameworkObj.TextureGodot, DisplayServer.CursorShape.Arrow, hotspot: Vector2.Zero);
         }
 
         public void SetCursor(LingoMouseCursor cursor)

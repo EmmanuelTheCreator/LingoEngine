@@ -65,7 +65,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     {
         return typeof(T) switch
         {
-            Type t when t == typeof(LingoMemberBitmap) => (CreateMemberPicture(cast, numberInCast, name) as T)!,
+            Type t when t == typeof(LingoMemberBitmap) => (CreateMemberBitmap(cast, numberInCast, name) as T)!,
             Type t when t == typeof(LingoMemberText) => (CreateMemberText(cast, numberInCast, name) as T)!,
             Type t when t == typeof(LingoMemberField) => (CreateMemberField(cast, numberInCast, name) as T)!,
             Type t when t == typeof(LingoMemberSound) => (CreateMemberSound(cast, numberInCast, name) as T)!,
@@ -96,7 +96,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         _disposables.Add(impl);
         return member;
     }
-    public LingoMemberBitmap CreateMemberPicture(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+    public LingoMemberBitmap CreateMemberBitmap(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
     {
         var impl = new SdlMemberBitmap();
         var member = new LingoMemberBitmap((LingoCast)cast, impl, numberInCast, name, fileName ?? "", regPoint);

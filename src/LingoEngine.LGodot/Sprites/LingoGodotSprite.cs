@@ -276,9 +276,9 @@ namespace LingoEngine.LGodot.Sprites
             godotPicture.Preload();
 
             // Set the texture using the ImageTexture from the picture member
-            if (godotPicture.Texture == null)
+            if (godotPicture.TextureGodot == null)
                 return;
-            _Sprite2D.Texture = godotPicture.Texture;
+            _Sprite2D.Texture = godotPicture.TextureGodot;
         }
         private Node? _previousElement;
         private void UpdateMemberText(LingoGodotMemberText godotElement)

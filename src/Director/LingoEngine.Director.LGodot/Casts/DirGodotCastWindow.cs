@@ -6,7 +6,6 @@ using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot.Windowing;
-using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;

@@ -88,7 +88,13 @@ namespace LingoEngine.LGodot.Gfx
 
         public void DrawRect(LingoRect rect, LingoColor color, bool filled = true, float width = 1)
         {
-            _drawActions.Add(() => DrawRect(rect.ToRect2(), color.ToGodotColor(), filled, width));
+            var godotRect = rect.ToRect2();
+            var godotColor = color.ToGodotColor();
+
+            if (filled)
+                _drawActions.Add(() => DrawRect(godotRect, godotColor, true));
+            else
+                _drawActions.Add(() => DrawRect(godotRect, godotColor, false, width));
             MarkDirty();
         }
 
@@ -138,8 +144,6 @@ namespace LingoEngine.LGodot.Gfx
                 DrawTexture(tex, position.ToVector2());
                 tex.Dispose();
             });
-
-
             MarkDirty();
         } 
         
@@ -148,7 +152,7 @@ namespace LingoEngine.LGodot.Gfx
             var tex = ((LingoGodotImageTexture)texture).Texture;    
             _drawActions.Add(() =>
             {
-                DrawTexture(tex, position.ToVector2());
+                DrawTextureRect(tex, new Rect2(position.X, position.Y, width, height), false); // don't tile
             });
             MarkDirty();
         }
