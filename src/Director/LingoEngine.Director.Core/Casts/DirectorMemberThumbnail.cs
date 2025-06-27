@@ -84,7 +84,8 @@ public class DirectorMemberThumbnail : IDisposable
         int textHeight = lineCount * lineHeight;
         int startY = (int)Math.Max((ThumbHeight - textHeight) / 2f, 0);
 
-        Canvas.DrawText(new LingoPoint(2, startY), text, null, new LingoColor(0, 0, 0), fontSize);
+        int maxWidth = ThumbWidth - 4;
+        Canvas.DrawText(new LingoPoint(2, startY), text, null, new LingoColor(0, 0, 0), fontSize, maxWidth);
     }
 
     private static string GetPreviewText(ILingoMemberTextBase text)
