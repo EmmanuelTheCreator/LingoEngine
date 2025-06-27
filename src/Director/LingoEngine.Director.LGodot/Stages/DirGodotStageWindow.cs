@@ -75,6 +75,21 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         
         Size = new Vector2(640 +10, 480+ TitleBarHeight);
         CustomMinimumSize = Size;
+        // Give all nodes clear names for easier debugging
+        Name = "DirGodotStageWindow";
+        _scrollContainer.Name = "StageScrollContainer";
+        _stageBgRect.Name = "StageBackgroundRect";
+        _stageContainer.Container.Name = "StageContainer";
+        _iconBar.Name = "IconBar";
+        _zoomSlider.Name = "ZoomSlider";
+        _zoomDropdown.Name = "ZoomDropdown";
+        _rewindButton.Name = "RewindButton";
+        _playButton.Name = "PlayButton";
+        _prevFrameButton.Name = "PrevFrameButton";
+        _nextFrameButton.Name = "NextFrameButton";
+        _recordButton.Name = "RecordButton";
+        _colorDisplay.Name = "ColorDisplay";
+        _colorPicker.Name = "ColorPicker";
         // Set anchors to stretch fully
         _scrollContainer.AnchorLeft = 0;
         _scrollContainer.AnchorTop = 0;
@@ -193,6 +208,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stage = stage;
         if (stage is Node node)
         {
+            node.Name = "Stage";
             if (node.GetParent() != this)
             {
                 node.GetParent()?.RemoveChild(node);
@@ -580,6 +596,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
 
     private partial class SelectionBox : Node2D
     {
+        public SelectionBox()
+        {
+            Name = "SelectionBox";
+        }
         private Rect2 _rect;
         public void UpdateRect(Rect2 rect)
         {
@@ -595,6 +615,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
 
     private partial class BoundingBoxesOverlay : Node2D
     {
+        public BoundingBoxesOverlay()
+        {
+            Name = "BoundingBoxesOverlay";
+        }
         private readonly List<Rect2> _rects = new();
         public void SetRects(IEnumerable<Rect2> rects)
         {
