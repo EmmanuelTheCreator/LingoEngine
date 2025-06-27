@@ -265,7 +265,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         var godotPicture = picture.Framework<LingoGodotMemberBitmap>();
         godotPicture.Preload();
 
-        if (godotPicture.Texture is ImageTexture tex)
+        if (godotPicture.TextureGodot is ImageTexture tex)
         {
             _painter?.Dispose();
 

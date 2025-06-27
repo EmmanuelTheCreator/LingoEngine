@@ -1,4 +1,5 @@
-﻿using LingoEngine.Members;
+﻿using LingoEngine.Bitmaps;
+using LingoEngine.Members;
 
 namespace LingoEngine.Pictures
 {
@@ -10,7 +11,8 @@ namespace LingoEngine.Pictures
         /// This field is implementation-independent; renderers may interpret this as needed.
         /// </summary>
         byte[]? ImageData { get;  }
-       
+        public ILingoImageTexture? Texture { get; }
+
         /// <summary>
         /// Optional MIME type or encoding format (e.g., "image/png", "image/jpeg")
         /// </summary>

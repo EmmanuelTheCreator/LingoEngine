@@ -54,11 +54,12 @@ public class DirectorMemberThumbnail : IDisposable
             var icon = LingoMemberTypeIcons.GetIconType(member);
             if (icon.HasValue)
             {
+                var miniIconSize = 16;
                 var data = _iconManager.Get(icon.Value);
-                var x = ThumbWidth - data.Width - 2;
-                var y = ThumbHeight - data.Height - 2;
-                Canvas.DrawPicture(data, data.Width, data.Height, new LingoPoint(x, y));
-                Canvas.DrawRect(LingoRect.New(x,y,data.Width, data.Height), LingoColorList.Gray,false);
+                var x = ThumbWidth - miniIconSize;
+                var y = ThumbHeight - miniIconSize;
+                Canvas.DrawRect(LingoRect.New(x,y, miniIconSize, miniIconSize), LingoColorList.White,true);
+                Canvas.DrawPicture(data, miniIconSize, miniIconSize, new LingoPoint(x, y));
             }
         }
     }
@@ -67,11 +68,11 @@ public class DirectorMemberThumbnail : IDisposable
     {
         picture.Preload();
         var impl = picture.Framework<ILingoFrameworkMemberBitmap>();
-        if (impl.ImageData == null)
+        if (impl.Texture == null)
             return;
         var w = impl.Width;
         var h = impl.Height;
-        Canvas.DrawPicture(impl.ImageData, w, h, new LingoPoint(0, 0), LingoPixelFormat.Rgba8888);
+        Canvas.DrawPicture(impl.Texture, ThumbWidth-2, ThumbHeight-2, new LingoPoint(1, 1));
     }
 
     private void DrawText(string text)

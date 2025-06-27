@@ -22,6 +22,7 @@ using LingoEngine.LGodot.Gfx;
 using LingoEngine.Sprites;
 using LingoEngine.Stages;
 using LingoEngine.Styles;
+using Microsoft.Extensions.Logging;
 
 namespace LingoEngine.LGodot.Core
 {
@@ -66,7 +67,7 @@ namespace LingoEngine.LGodot.Core
 
             return typeof(T) switch
             {
-                Type t when t == typeof(LingoMemberBitmap) => (CreateMemberPicture(cast, numberInCast, name) as T)!,
+                Type t when t == typeof(LingoMemberBitmap) => (CreateMemberBitmap(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberText) => (CreateMemberText(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberField) => (CreateMemberField(cast, numberInCast, name) as T)!,
                 Type t when t == typeof(LingoMemberSound) => (CreateMemberSound(cast, numberInCast, name) as T)!,
@@ -97,9 +98,9 @@ namespace LingoEngine.LGodot.Core
             _disposables.Add(impl);
             return member;
         }
-        public LingoMemberBitmap CreateMemberPicture(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
+        public LingoMemberBitmap CreateMemberBitmap(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
-            var godotInstance = new LingoGodotMemberBitmap();
+            var godotInstance = new LingoGodotMemberBitmap(_serviceProvider.GetRequiredService<ILogger<LingoGodotMemberBitmap>>());
             var lingoInstance = new LingoMemberBitmap((LingoCast)cast, godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
@@ -107,7 +108,7 @@ namespace LingoEngine.LGodot.Core
         }
         public LingoMemberField CreateMemberField(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
-            var godotInstance = new LingoGodotMemberField(_serviceProvider.GetRequiredService<ILingoFontManager>());
+            var godotInstance = new LingoGodotMemberField(_serviceProvider.GetRequiredService<ILingoFontManager>(), _serviceProvider.GetRequiredService<ILogger<LingoGodotMemberField>>());
             var lingoInstance = new LingoMemberField((LingoCast)cast, godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);
@@ -115,7 +116,7 @@ namespace LingoEngine.LGodot.Core
         }
         public LingoMemberText CreateMemberText(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default)
         {
-            var godotInstance = new LingoGodotMemberText(_serviceProvider.GetRequiredService<ILingoFontManager>());
+            var godotInstance = new LingoGodotMemberText(_serviceProvider.GetRequiredService<ILingoFontManager>(),_serviceProvider.GetRequiredService<ILogger<LingoGodotMemberText>>());
             var lingoInstance = new LingoMemberText((LingoCast)cast, godotInstance, numberInCast, name, fileName ?? "", regPoint);
             godotInstance.Init(lingoInstance);
             _disposables.Add(godotInstance);

@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Bitmaps;
 using LingoEngine.Director.Core.Icons;
 using LingoEngine.LGodot.Bitmaps;
+using LingoEngine.LGodot.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace LingoEngine.Director.LGodot.Icons
@@ -25,8 +26,10 @@ namespace LingoEngine.Director.LGodot.Icons
         }
         protected override LingoIconSheetGodot? OnLoadSheet(string path, int itemCount, int iconWidth, int iconHeight, int horizontalSpacing = 0)
         {
-            var texture = GD.Load<Texture2D>(path);
-            if (texture == null)
+            string pathResource = GodotHelper.EnsureGodotUrl(path);
+            var texture = GD.Load<Texture2D>(pathResource);
+
+            if (texture == null )
             {
                 _logger.LogWarning($"Failed to load texture: {path}");
                 return null;
@@ -39,7 +42,7 @@ namespace LingoEngine.Director.LGodot.Icons
             var texture = sheet.Image.Texture;
             var image = texture.GetImage();
             var sub = Image.CreateEmpty(sheet.IconHeight, sheet.IconHeight, false, image.GetFormat());
-            sub.BlitRect(image, new Rect2I(sheet.HorizontalSpacing, 0, sheet.IconWidth, sheet.IconHeight), Vector2I.Zero);
+            sub.BlitRect(image, new Rect2I(sheet.HorizontalSpacing, x, sheet.IconWidth, sheet.IconHeight), Vector2I.Zero);
             ImageTexture tex = ImageTexture.CreateFromImage(sub);
             var lingoTexture = new LingoGodotImageTexture(tex);
             return lingoTexture;

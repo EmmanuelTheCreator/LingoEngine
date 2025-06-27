@@ -31,7 +31,7 @@ namespace LingoEngine.LGodot.Core
             _target = target == GodotLoggerTarget.Auto
                 ? (IsRunningInGodot() ? GodotLoggerTarget.Godot : GodotLoggerTarget.VisualStudio)
                 : target;
-#if GODOT_WINDOWS
+#if GODOT_WINDOWS && DEBUG
             if (_target == GodotLoggerTarget.VisualStudio)
                 ConsoleHelper.ShowConsole(); // only attach console in Windows Godot context
 #endif
@@ -61,7 +61,7 @@ namespace LingoEngine.LGodot.Core
                     LogToGodot(logLevel, logLine);
                     break;
                 case GodotLoggerTarget.VisualStudio:
-#if GODOT_WINDOWS
+#if GODOT_WINDOWS 
                     WriteColoredConsoleLine(logLevel, logLine);
 #else
                     Debug.WriteLine(logLine);

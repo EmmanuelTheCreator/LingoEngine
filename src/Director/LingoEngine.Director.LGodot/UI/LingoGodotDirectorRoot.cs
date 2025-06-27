@@ -30,7 +30,7 @@ namespace LingoEngine.Director.LGodot.UI
         public LingoGodotDirectorRoot(LingoPlayer player, IServiceProvider serviceProvider)
         {
             _projectSettingsWindow = serviceProvider.GetRequiredService<DirGodotProjectSettingsWindow>();
-
+            _directorParent.Name = "DirectorRoot";
             // set up root
             var parent = (Node2D)serviceProvider.GetRequiredService<LingoGodotRootNode>().RootNode;
             parent.AddChild(_directorParent);
@@ -43,35 +43,35 @@ namespace LingoEngine.Director.LGodot.UI
             _dirGodotMainMenu = serviceProvider.GetRequiredService<DirGodotMainMenu>();
             _stageWindow = serviceProvider.GetRequiredService<DirGodotStageWindow>();
             _castViewer = serviceProvider.GetRequiredService<DirGodotCastWindow>();
-            //_scoreWindow = serviceProvider.GetRequiredService<DirGodotScoreWindow>();
-            //_propertyInspector = serviceProvider.GetRequiredService<DirGodotPropertyInspector>();
-            //_toolsWindow = serviceProvider.GetRequiredService<DirGodotToolsWindow>();
-            //_binaryViewer = serviceProvider.GetRequiredService<DirGodotBinaryViewerWindow>();
-            //_importExportWindow = serviceProvider.GetRequiredService<DirGodotImportExportWindow>();
-            //_textWindow = serviceProvider.GetRequiredService<DirGodotTextableMemberWindow>();
-            //_picture = serviceProvider.GetRequiredService<DirGodotPictureMemberEditorWindow>();
+            _scoreWindow = serviceProvider.GetRequiredService<DirGodotScoreWindow>();
+            _propertyInspector = serviceProvider.GetRequiredService<DirGodotPropertyInspector>();
+            _toolsWindow = serviceProvider.GetRequiredService<DirGodotToolsWindow>();
+            _binaryViewer = serviceProvider.GetRequiredService<DirGodotBinaryViewerWindow>();
+            _importExportWindow = serviceProvider.GetRequiredService<DirGodotImportExportWindow>();
+            _textWindow = serviceProvider.GetRequiredService<DirGodotTextableMemberWindow>();
+            _picture = serviceProvider.GetRequiredService<DirGodotPictureMemberEditorWindow>();
 
             _directorParent.AddChild(_dirGodotMainMenu);
             _directorParent.AddChild(_stageWindow);
             _directorParent.AddChild(_castViewer);
-            //_directorParent.AddChild(_projectSettingsWindow);
-            //_directorParent.AddChild(_scoreWindow);
-            //_directorParent.AddChild(_picture);
-            //_directorParent.AddChild(_toolsWindow);
-            //_directorParent.AddChild(_importExportWindow);
-            //_directorParent.AddChild(_textWindow);
-            //_directorParent.AddChild(_propertyInspector);
-            //_directorParent.AddChild(_binaryViewer);
+            _directorParent.AddChild(_projectSettingsWindow);
+            _directorParent.AddChild(_scoreWindow);
+            _directorParent.AddChild(_picture);
+            _directorParent.AddChild(_toolsWindow);
+            _directorParent.AddChild(_importExportWindow);
+            _directorParent.AddChild(_textWindow);
+            _directorParent.AddChild(_propertyInspector);
+            _directorParent.AddChild(_binaryViewer);
 
             // Set all positions
             SetDefaultPositions();
 
             // close some windows
             _projectSettingsWindow.CloseWindow();
-            //_binaryViewer.CloseWindow();
-            //_importExportWindow.CloseWindow();
-            //_textWindow.CloseWindow();
-            //_picture.CloseWindow();
+            _binaryViewer.CloseWindow();
+            _importExportWindow.CloseWindow();
+            _textWindow.CloseWindow();
+            _picture.CloseWindow();
 
         }
 
@@ -79,14 +79,14 @@ namespace LingoEngine.Director.LGodot.UI
         {
             _stageWindow.Position = new Vector2(100, 25);
             _castViewer.Position = new Vector2(830, 25);
-            //_scoreWindow.Position = new Vector2(20, 560);
-            //_propertyInspector.Position = new Vector2(1330, 25);
-            //_toolsWindow.Position = new Vector2(10, 25);
-            //_binaryViewer.Position = new Vector2(20, 120);
-            //_importExportWindow.Position = new Vector2(120, 120);
-            //_projectSettingsWindow.Position = new Vector2(100, 100);
-            //_textWindow.Position = new Vector2(20, 120);
-            //_picture.Position = new Vector2(20, 120);
+            _scoreWindow.Position = new Vector2(20, 560);
+            _propertyInspector.Position = new Vector2(1330, 25);
+            _toolsWindow.Position = new Vector2(10, 25);
+            _binaryViewer.Position = new Vector2(20, 120);
+            _importExportWindow.Position = new Vector2(120, 120);
+            _projectSettingsWindow.Position = new Vector2(100, 100);
+            _textWindow.Position = new Vector2(20, 120);
+            _picture.Position = new Vector2(20, 120);
         }
 
         public void Dispose()
