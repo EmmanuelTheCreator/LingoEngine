@@ -59,11 +59,15 @@ namespace LingoEngine.LGodot.Gfx
 
         public override void _Draw()
         {
+            if (_clearColor.HasValue)
+                DrawRect(new Rect2(0, 0, Size.X, Size.Y), _clearColor.Value, true);
+
             foreach (var drawAction in _drawActions)
                 drawAction();
-          
-            _drawActions.Clear();
-            _clearColor = null;
+
+            // Keep the draw actions so that the canvas can redraw itself when
+            // becoming visible again (e.g. when switching tabs).  They will be
+            // cleared when a new Clear() call is issued via <see cref="Clear"/>.
             _dirty = false;
         }
 
