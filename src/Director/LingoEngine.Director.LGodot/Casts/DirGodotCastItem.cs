@@ -103,7 +103,9 @@ namespace LingoEngine.Director.LGodot.Casts
 
 
             _thumb = new DirectorMemberThumbnail(Width - 1, Height - LabelHeight, _factory, iconManager);
-            AddChild(_thumb.Canvas.Framework<LingoGodotGfxCanvas>());
+            var thumbCanvas = _thumb.Canvas.Framework<LingoGodotGfxCanvas>();
+            thumbCanvas.MouseFilter = MouseFilterEnum.Ignore;
+            AddChild(thumbCanvas);
 
             // separator line above the caption
             _separator = new ColorRect

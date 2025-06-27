@@ -320,6 +320,11 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             _lastFrame = cur;
             _spriteCanvas.QueueRedraw();
         }
+        // When dragging from external controls (like the Cast window), mouse
+        // motion events may be captured and never reach the score grid. Invoke
+        // the drag handler each frame so previews update correctly.
+        if (_movie != null)
+            _dragHandler.HandleMouseMotion();
     }
 
     public void SpriteSelected(ILingoSprite sprite)
