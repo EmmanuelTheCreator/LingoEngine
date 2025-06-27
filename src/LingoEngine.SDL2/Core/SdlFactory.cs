@@ -218,6 +218,15 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return tab;
     }
 
+    public LingoGfxScrollContainer CreateScrollContainer(string name)
+    {
+        var scroll = new LingoGfxScrollContainer();
+        var impl = new SdlGfxScrollContainer();
+        scroll.Init(impl);
+        scroll.Name = name;
+        return scroll;
+    }
+
     public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
     {
         var input = new LingoGfxInputText { MaxLength = maxLength };
@@ -234,6 +243,15 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         input.Init(impl);
         input.Name = name;
         return input;
+    }
+
+    public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100)
+    {
+        var spin = new LingoGfxSpinBox { Min = min, Max = max };
+        var impl = new SdlGfxSpinBox();
+        spin.Init(impl);
+        spin.Name = name;
+        return spin;
     }
 
     public LingoGfxInputCheckbox CreateInputCheckbox(string name)
@@ -261,6 +279,15 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         label.Init(impl);
         label.Name = name;
         return label;
+    }
+
+    public LingoGfxButton CreateButton(string name, string text = "")
+    {
+        var button = new LingoGfxButton { Text = text };
+        var impl = new SdlGfxButton();
+        button.Init(impl);
+        button.Name = name;
+        return button;
     }
 
     public LingoGfxMenu CreateMenu(string name)
