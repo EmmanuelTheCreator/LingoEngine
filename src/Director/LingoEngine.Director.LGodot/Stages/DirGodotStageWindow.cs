@@ -208,7 +208,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stage = stage;
         if (stage is Node node)
         {
-            node.Name = "Stage";
+           
             if (node.GetParent() != this)
             {
                 node.GetParent()?.RemoveChild(node);

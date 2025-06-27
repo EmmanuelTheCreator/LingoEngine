@@ -16,6 +16,7 @@ namespace LingoEngine.LGodot.Stages
 
         public LingoGodotStageContainer(LingoGodotRootNode lingoGodotRootNode)
         {
+            _stageContainer.Name = "StageContainer";
             _Root = lingoGodotRootNode.RootNode;
             if (!lingoGodotRootNode.WithStageInWindow)
                 _Root.AddChild(_stageContainer);
