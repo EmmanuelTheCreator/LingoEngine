@@ -59,7 +59,7 @@ public class DirectorMemberThumbnail : IDisposable
                 var x = ThumbWidth - miniIconSize;
                 var y = ThumbHeight - miniIconSize;
                 Canvas.DrawRect(LingoRect.New(x,y, miniIconSize, miniIconSize), LingoColorList.White,true);
-                Canvas.DrawPicture(data, miniIconSize, miniIconSize, new LingoPoint(x, y));
+                Canvas.DrawPicture(data, miniIconSize-2, miniIconSize-2, new LingoPoint(x+1, y+1));
             }
         }
     }

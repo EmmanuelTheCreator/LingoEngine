@@ -49,21 +49,5 @@ namespace LingoEngine.Director.LGodot.Icons
             var lingoTexture = new LingoGodotImageTexture(tex);
             return lingoTexture;
         }
-        //public LingoIconData GetData(DirectorIcon icon)
-        //{
-        //    if (_dataCache.TryGetValue(icon, out var data))
-        //        return data;
-
-        //    var tex = Get(icon);
-        //    var img = tex.GetImage();
-        //    //img.Convert(Image.Format.Rgba8);
-        //    //var bytes = img.GetData();
-        //    //data = new LingoIconData(bytes, img.GetWidth(), img.GetHeight(), img.GetFormat().ToLingoFormat());
-        //    _dataCache[icon] = data;
-
-        //    return data;
-        //}
-
-       
     }
 }
