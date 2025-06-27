@@ -5,6 +5,17 @@ using LingoEngine.Primitives;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Core;
+using LingoEngine.Commands;
+using LingoEngine.Members;
+using LingoEngine.Sprites;
+using LingoEngine.Texts;
+using LingoEngine.Pictures;
+using LingoEngine.Sounds;
+using LingoEngine.Movies;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Windowing.Commands;
+using System;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -13,6 +24,262 @@ namespace LingoEngine.Director.Core.Inspector
         private LingoGfxLabel? _sprite;
         private LingoGfxLabel? _member;
         private LingoGfxLabel? _cast;
+        private LingoPlayer? _player;
+        private ILingoCommandManager? _commandManager;
+        private LingoGfxTabContainer? _tabs;
+        private DirectorMemberThumbnail? _thumb;
+        private LingoGfxWrapPanel? _header;
+        private const int HeaderHeight = 44;
+
+        public void Setup(LingoPlayer player, ILingoCommandManager commandManager, LingoGfxTabContainer tabs, DirectorMemberThumbnail thumb, LingoGfxWrapPanel header)
+        {
+            _player = player;
+            _commandManager = commandManager;
+            _tabs = tabs;
+            _thumb = thumb;
+            _header = header;
+        }
+
+        public (float X, float Y, float Width, float Height)? OnResizing(float width, float height, float titleBarHeight, bool behaviorVisible)
+        {
+            if (_tabs == null || _header == null)
+                return null;
+
+            _header.Width = width - 10;
+            _header.Height = HeaderHeight;
+
+            _tabs.X = 0;
+            _tabs.Y = titleBarHeight + HeaderHeight;
+
+            if (behaviorVisible)
+            {
+                var half = (height - 30 - HeaderHeight) / 2f;
+                _tabs.Width = width - 10;
+                _tabs.Height = half;
+                return (0, titleBarHeight + HeaderHeight + half, width - 10, half);
+            }
+            else
+            {
+                _tabs.Width = width - 10;
+                _tabs.Height = height - 30 - HeaderHeight;
+                return null;
+            }
+        }
+
+        public LingoGfxWrapPanel BuildProperties(ILingoFrameworkFactory factory, object obj)
+        {
+            var root = factory.CreateWrapPanel(LingoOrientation.Vertical, $"{obj.GetType().Name}Props");
+            foreach (var prop in obj.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                if (!prop.CanRead)
+                    continue;
+                if (!IsSimpleType(prop.PropertyType) && prop.PropertyType != typeof(LingoPoint))
+                    continue;
+
+                var row = factory.CreateWrapPanel(LingoOrientation.Horizontal, prop.Name + "Row");
+                var label = factory.CreateLabel(prop.Name + "Label", prop.Name);
+                label.Width = 80;
+                row.AddChild(label);
+
+                object? val = prop.GetValue(obj);
+
+                if (prop.PropertyType == typeof(bool))
+                {
+                    var cb = factory.CreateInputCheckbox(prop.Name + "Check");
+                    cb.Checked = val is bool b && b;
+                    if (prop.CanWrite)
+                        cb.ValueChanged += () => prop.SetValue(obj, cb.Checked);
+                    else
+                        cb.Enabled = false;
+                    row.AddChild(cb);
+                }
+                else if (prop.PropertyType == typeof(LingoPoint))
+                {
+                    var point = val is LingoPoint p ? p : new LingoPoint();
+                    var xSpin = factory.CreateSpinBox(prop.Name + "X");
+                    var ySpin = factory.CreateSpinBox(prop.Name + "Y");
+                    xSpin.Value = point.X;
+                    ySpin.Value = point.Y;
+                    if (prop.CanWrite)
+                    {
+                        xSpin.ValueChanged += () =>
+                        {
+                            var pVal = (LingoPoint)prop.GetValue(obj)!;
+                            pVal.X = xSpin.Value;
+                            prop.SetValue(obj, pVal);
+                        };
+                        ySpin.ValueChanged += () =>
+                        {
+                            var pVal = (LingoPoint)prop.GetValue(obj)!;
+                            pVal.Y = ySpin.Value;
+                            prop.SetValue(obj, pVal);
+                        };
+                    }
+                    else
+                    {
+                        xSpin.Enabled = false;
+                        ySpin.Enabled = false;
+                    }
+                    row.AddChild(xSpin);
+                    row.AddChild(ySpin);
+                    root.AddChild(row);
+                    continue;
+                }
+                else
+                {
+                    var text = factory.CreateInputText(prop.Name + "Text");
+                    text.Text = val?.ToString() ?? string.Empty;
+                    if (prop.CanWrite)
+                        text.ValueChanged += () =>
+                        {
+                            try
+                            {
+                                prop.SetValue(obj, ConvertTo(text.Text, prop.PropertyType));
+                            }
+                            catch { }
+                        };
+                    else
+                        text.Enabled = false;
+                    row.AddChild(text);
+                }
+
+                root.AddChild(row);
+            }
+            return root;
+        }
+
+        public void ShowObject(object obj)
+        {
+            if (_player == null || _tabs == null || _thumb == null)
+                return;
+            _tabs.ClearTabs();
+            ILingoMember? member = null;
+            if (obj is LingoSprite sp)
+            {
+                member = sp.Member;
+                if (member != null)
+                {
+                    _thumb.SetMember(member);
+                    SpriteText = $"Sprite : {sp.SpriteNum}: {member.Type}";
+                }
+            }
+            else if (obj is ILingoMember m)
+            {
+                member = m;
+                _thumb.SetMember(member);
+                SpriteText = member.Type.ToString();
+            }
+            if (member != null)
+            {
+                MemberText = member.Name;
+                CastText = GetCastName(member);
+            }
+            switch (obj)
+            {
+                case LingoSprite sp2:
+                    AddTab("Sprite", sp2);
+                    if (sp2.Member != null)
+                        AddMemberTabs(sp2.Member);
+                    break;
+                case ILingoMember member2:
+                    AddMemberTabs(member2);
+                    break;
+                default:
+                    AddTab(obj.GetType().Name, obj);
+                    break;
+            }
+        }
+
+        private void AddMemberTabs(ILingoMember member)
+        {
+            AddTab("Member", member);
+            switch (member)
+            {
+                case LingoMemberText text:
+                    AddTab("Text", text);
+                    break;
+                case LingoMemberBitmap pic:
+                    AddTab("Picture", pic);
+                    break;
+                case LingoMemberSound sound:
+                    AddTab("Sound", sound);
+                    break;
+                case LingoMemberFilmLoop film:
+                    AddTab("FilmLoop", film);
+                    break;
+            }
+        }
+
+        private void AddTab(string name, object obj)
+        {
+            if (_player == null || _tabs == null)
+                return;
+
+            var scroller = _player.Factory.CreateScrollContainer(name + "Scroll");
+            var container = _player.Factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
+
+            if (_commandManager != null && (obj is LingoMemberBitmap || obj is ILingoMemberTextBase))
+            {
+                var editBtn = _player!.Factory.CreateButton("EditButton", "Edit");
+                editBtn.Pressed += () =>
+                {
+                    string code = obj switch
+                    {
+                        LingoMemberBitmap => DirectorMenuCodes.PictureEditWindow,
+                        ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
+                        _ => string.Empty
+                    };
+                    if (!string.IsNullOrEmpty(code))
+                        _commandManager.Handle(new OpenWindowCommand(code));
+                };
+                container.AddChild(editBtn);
+            }
+
+            // TODO: behavior list
+
+            var props = BuildProperties(_player.Factory, obj);
+            container.AddChild(props);
+
+            scroller.AddChild(container);
+            _tabs.AddTab(new LingoGfxTabItem(name, scroller));
+        }
+
+        public LingoGfxWrapPanel BuildBehaviorPanel(ILingoFrameworkFactory factory, LingoSpriteBehavior behavior)
+        {
+            var container = factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPanel");
+            var propsPanel = BuildProperties(factory, behavior);
+            container.AddChild(propsPanel);
+            if (behavior is ILingoPropertyDescriptionList descProvider)
+            {
+                string? desc = descProvider.GetBehaviorDescription();
+                if (!string.IsNullOrEmpty(desc))
+                    container.AddChild(factory.CreateLabel("DescLabel", desc));
+
+                var props = behavior.UserProperties;
+                if (props.Count > 0)
+                {
+                    container.AddChild(factory.CreateLabel("PropsLabel", "Properties"));
+                    foreach (var item in props)
+                    {
+                        string labelText = item.Key.ToString();
+                        if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
+                            labelText = desc2.Comment!;
+                        var row = factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
+                        row.AddChild(factory.CreateLabel("PropName", labelText));
+                        row.AddChild(factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
+                        container.AddChild(row);
+                    }
+                }
+            }
+            return container;
+        }
+
+        private string GetCastName(ILingoMember m)
+        {
+            if (_player?.ActiveMovie is ILingoMovie movie)
+                return movie.CastLib.GetCast(m.CastLibNum).Name;
+            return string.Empty;
+        }
 
         public string SpriteText { get => _sprite?.Text ?? string.Empty; set { if (_sprite != null) _sprite.Text = value; } }
         public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
@@ -66,6 +333,18 @@ namespace LingoEngine.Director.Core.Inspector
         public override void OpenWindow()
         {
             base.OpenWindow();
+        }
+
+        private static bool IsSimpleType(Type t)
+        {
+            return t.IsPrimitive || t == typeof(string) || t.IsEnum || t == typeof(float) || t == typeof(double) || t == typeof(decimal);
+        }
+
+        private static object ConvertTo(string text, Type t)
+        {
+            if (t == typeof(string)) return text;
+            if (t.IsEnum) return Enum.Parse(t, text);
+            return Convert.ChangeType(text, t);
         }
     }
 }
