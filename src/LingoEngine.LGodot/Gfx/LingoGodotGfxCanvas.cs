@@ -1,11 +1,11 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using LingoEngine.Events;
 using LingoEngine.LGodot.Primitives;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using LingoEngine.Styles;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -111,7 +111,7 @@ namespace LingoEngine.LGodot.Gfx
             _polys.Clear();
             _texts.Clear();
             _pixels.Clear();
-            _pictures.ForEach(p => p.tex.Dispose());
+            _pictures.ForEach(p => p.tex?.Dispose());
             _pictures.Clear();
             _clearColor = null;
             _dirty = false;

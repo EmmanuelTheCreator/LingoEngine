@@ -1,11 +1,13 @@
 ﻿using Godot;
-using LingoEngine.Director.Core.Inputs;
 using LingoEngine.Members;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
-using LingoEngine.Core;
 using LingoEngine.Director.Core.Stages;
 using System;
+using LingoEngine.Director.Core.Stages.Commands;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Sprites;
+using LingoEngine.Commands;
 
 namespace LingoEngine.Director.LGodot.Scores
 {
@@ -180,9 +182,9 @@ namespace LingoEngine.Director.LGodot.Scores
 
         private void TryDropExternalCastMember(Vector2 pos)
         {
-            if (!DirDragDropHolder.IsDragging || DirDragDropHolder.Member == null) return;
+            if (!DirectorDragDropHolder.IsDragging || DirectorDragDropHolder.Member == null) return;
 
-            if (DirDragDropUtils.TryHandleMemberDrop(
+            if (DirectorDragDropUtils.TryHandleMemberDrop(
                 _movie!,
                 new LingoPoint(pos.X, pos.Y),
                 _gfxValues.ChannelHeight,
@@ -195,7 +197,7 @@ namespace LingoEngine.Director.LGodot.Scores
                 _commandManager.Handle(new AddSpriteCommand(_movie!, member!, channel + 1, begin, end));
             }
 
-            DirDragDropHolder.EndDrag();
+            DirectorDragDropHolder.EndDrag();
         }
        
         internal void HandleMouseMotion()
@@ -216,10 +218,10 @@ namespace LingoEngine.Director.LGodot.Scores
                 return;
             }
 
-            if (DirDragDropHolder.IsDragging && DirDragDropHolder.Member != null)
+            if (DirectorDragDropHolder.IsDragging && DirectorDragDropHolder.Member != null)
             {
                 var pos = _grid.GetLocalMousePosition();
-                if (DirDragDropUtils.TryHandleMemberDrop(
+                if (DirectorDragDropUtils.TryHandleMemberDrop(
                     _movie!,
                     new LingoPoint(pos.X, pos.Y),
                     _gfxValues.ChannelHeight,

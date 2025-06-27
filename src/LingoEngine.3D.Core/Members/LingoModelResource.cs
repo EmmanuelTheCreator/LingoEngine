@@ -1,4 +1,4 @@
-namespace LingoEngine._3D.Members;
+namespace LingoEngine.L3D.Core.Members;
 
 /// <summary>
 /// Element of 3D geometry used to draw models.

@@ -1,29 +1,27 @@
 ﻿using Godot;
 using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
-using LingoEngine.Director.LGodot;
 using LingoEngine.Members;
-using LingoEngine.Core;
-using System.Linq;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Director.LGodot.Icons;
+using LingoEngine.Commands;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal class DirGodotCastView : IDirFrameworkCast
+    internal class DirGodotCastView : IDirectorFrameworkCast
     {
         private readonly HFlowContainer _elementsContainer;
         private readonly ScrollContainer _ScrollContainer;
         private readonly List<DirGodotCastItem> _elements = new List<DirGodotCastItem>();
         private readonly Action<DirGodotCastItem> _onSelectItem;
-        private readonly DirectorStyle _style;
+        private readonly DirectorGodotStyle _style;
         private readonly ILingoCommandManager _commandManager;
         private readonly IDirGodotIconManager _iconManager;
         private readonly ILingoFrameworkFactory _factory;
 
         public Node Node => _ScrollContainer;
 
-        public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorStyle style, ILingoCommandManager commandManager, IDirGodotIconManager iconManager, ILingoFrameworkFactory factory)
+        public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorGodotStyle style, ILingoCommandManager commandManager, IDirGodotIconManager iconManager, ILingoFrameworkFactory factory)
         {
             _ScrollContainer = new ScrollContainer();
             _ScrollContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;

@@ -1,8 +1,10 @@
 using LingoEngine.Director.Core.Windows;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Primitives;
+using LingoEngine.Director.Core.Styles;
+using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -16,11 +18,11 @@ namespace LingoEngine.Director.Core.Inspector
         public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
         public string CastText { get => _cast?.Text ?? string.Empty; set { if (_cast != null) _cast.Text = value; } }
 
-        public record HeaderElements(LingoGfxPanel Panel, LingoGfxWrapPanel Header,DirMemberThumbnail Thumbnail);
+        public record HeaderElements(LingoGfxPanel Panel, LingoGfxWrapPanel Header,DirectorMemberThumbnail Thumbnail);
 
-        public HeaderElements CreateHeaderElements(ILingoFrameworkFactory factory, IDirIconManager? iconManager)
+        public HeaderElements CreateHeaderElements(ILingoFrameworkFactory factory, IDirectorIconManager? iconManager)
         {
-            var thumb = new DirMemberThumbnail(36, 36, factory, iconManager);
+            var thumb = new DirectorMemberThumbnail(36, 36, factory, iconManager);
 
             var thumbPanel = factory.CreatePanel();
             thumbPanel.Margin = new LingoMargin(4, 2, 4, 2);

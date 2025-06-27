@@ -1,6 +1,6 @@
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.Movies;
 
-namespace LingoEngine._3D.Movies;
+namespace LingoEngine.L3D.Core.Movies;
 
 /// <summary>
 /// Framework interface for 3D movies.

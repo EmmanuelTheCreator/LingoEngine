@@ -1,6 +1,6 @@
 ﻿using Godot;
-using LingoEngine.Events;
 using LingoEngine.Primitives;
+using LingoEngine.Styles;
 using LingoEngine.Texts;
 using LingoEngine.Texts.FrameworkCommunication;
 

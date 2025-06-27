@@ -11,7 +11,7 @@ namespace ProjectorRays.Director;
 /// It is intentionally simplified and only exposes the start/end frame,
 /// channel and sprite number for each interval.
 /// </summary>
-public class ScoreShunk : Chunk
+public class ScoreShunk : RaysChunk
 {
     /// <summary>Simple representation of a frame interval descriptor.</summary>
     public class IntervalDescriptor
@@ -72,7 +72,7 @@ public class ScoreShunk : Chunk
     /// interval table.</summary>
     public List<List<BehaviourRef>> FrameScripts { get; } = new();
 
-    public ScoreShunk(DirectorFile? dir) : base(dir, ChunkType.ScoreChunk) { }
+    public ScoreShunk(RaysDirectorFile? dir) : base(dir, ChunkType.ScoreChunk) { }
 
     public override void Read(ReadStream stream)
     {
@@ -211,7 +211,7 @@ public class ScoreShunk : Chunk
             FrameData.Add(copy);
         }
     }
-    public override void WriteJSON(JSONWriter json)
+    public override void WriteJSON(RaysJSONWriter json)
     {
         json.StartObject();
         json.WriteField("frameCount", FrameCount);

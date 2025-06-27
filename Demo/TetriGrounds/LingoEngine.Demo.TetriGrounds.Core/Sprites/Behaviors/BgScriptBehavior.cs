@@ -1,11 +1,14 @@
 using LingoEngine.Events;
 using LingoEngine.Movies;
 using LingoEngine.Demo.TetriGrounds.Core.ParentScripts;
+using LingoEngine.Sprites;
+using LingoEngine.Movies.Events;
+using LingoEngine.Sprites.Events;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 2_Bg Script.ls
-    public class BgScriptBehavior : LingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent, IHasLingoMessage
+    public class BgScriptBehavior : LingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent
     {
         private PlayerBlockParentScript? myPlayerBlock;
         private GfxParentScript? myGfx;
@@ -34,7 +37,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             Put(val);
         }
 
-        public void KeyAction(int val)
+        public void KeyAction(int val, int val2)
         {
             myPlayerBlock?.Keyyed(val);
         }
@@ -88,23 +91,6 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         private int myWidth;
         private int myHeight;
 
-        public void HandleMessage(string message, params object[] args)
-        {
-            switch (message)
-            {
-                case "KeyAction":
-                    if (args.Length > 0 && args[0] is int v) KeyAction(v);
-                    break;
-                case "PauseGame":
-                    PauseGame();
-                    break;
-                case "SpaceBar":
-                    SpaceBar();
-                    break;
-                case "NewGame":
-                    NewGame();
-                    break;
-            }
-        }
+       
     }
 }

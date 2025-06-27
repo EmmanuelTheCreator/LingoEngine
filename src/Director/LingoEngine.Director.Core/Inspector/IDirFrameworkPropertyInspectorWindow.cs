@@ -1,0 +1,6 @@
+﻿using LingoEngine.Director.Core.Windows;
+
+namespace LingoEngine.Director.Core.Inspector
+{
+    public interface IDirFrameworkPropertyInspectorWindow : IDirFrameworkWindow { }
+}

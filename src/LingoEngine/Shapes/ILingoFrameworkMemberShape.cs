@@ -1,4 +1,4 @@
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.Shapes

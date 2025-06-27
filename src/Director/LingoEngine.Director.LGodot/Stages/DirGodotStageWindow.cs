@@ -1,18 +1,21 @@
 using Godot;
 using LingoEngine.Movies;
-using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Stages;
-using LingoEngine.Director.Core.Events;
-using LingoEngine.Director.Core.Windows;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Stages;
-using LingoEngine.Director.LGodot;
 using System.Linq;
 using System.Collections.Generic;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Texts;
+using LingoEngine.Director.LGodot.Windowing;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Stages.Commands;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Sprites;
+using LingoEngine.Movies.Commands;
+using LingoEngine.Stages;
+using LingoEngine.Director.Core.Sprites;
 
 
 namespace LingoEngine.Director.LGodot.Movies;

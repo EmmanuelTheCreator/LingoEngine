@@ -1,19 +1,15 @@
 ﻿using Godot;
 using LingoEngine.Members;
 using LingoEngine.Pictures;
-using LingoEngine.Sounds;
 using LingoEngine.Texts;
-using System.Text;
-using System;
-using LingoEngine.Core;
-using LingoEngine.Commands;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.LGodot.Gfx;
-using LingoEngine.Director.Core.Commands;
-using LingoEngine.Director.LGodot.Helpers;
-using LingoEngine.Director.Core.Inputs;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.LGodot.Icons;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Windowing.Commands;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Commands;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -25,7 +21,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly StyleBoxFlat _selectedLabelStyle = new();
         private readonly StyleBoxFlat _normalLabelStyle = new();
         //private readonly CenterContainer _spriteContainer;
-        private readonly DirMemberThumbnail _thumb;
+        private readonly DirectorMemberThumbnail _thumb;
         private readonly ILingoMember _lingoMember;
         private readonly ColorRect _separator;
         private readonly Action<DirGodotCastItem> _onSelect;
@@ -92,7 +88,7 @@ namespace LingoEngine.Director.LGodot.Casts
             AddChild(_bg);
 
 
-            _thumb = new DirMemberThumbnail(Width - 1, Height - LabelHeight, _factory, iconManager);
+            _thumb = new DirectorMemberThumbnail(Width - 1, Height - LabelHeight, _factory, iconManager);
             AddChild(_thumb.Canvas.Framework<LingoGodotGfxCanvas>());
 
             // separator line above the caption
@@ -206,7 +202,7 @@ namespace LingoEngine.Director.LGodot.Casts
                     if (motion.Position.DistanceSquaredTo(_dragStart) > 16)
                     {
                         _dragging = true;
-                        DirDragDropHolder.StartDrag(_lingoMember, "CastItem");
+                        DirectorDragDropHolder.StartDrag(_lingoMember, "CastItem");
                         //AcceptEvent(); // Prevent default handling
 
                         //var preview = new ColorRect
@@ -233,7 +229,7 @@ namespace LingoEngine.Director.LGodot.Casts
             string? windowCode = _lingoMember switch
             {
                 ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
-                LingoMemberPicture => DirectorMenuCodes.PictureEditWindow,
+                LingoMemberBitmap => DirectorMenuCodes.PictureEditWindow,
                 _ => null
             };
 

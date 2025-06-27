@@ -1,7 +1,8 @@
-using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.SDL2.Core;
 using LingoEngine.SDL2.SDLL;
+using LingoEngine.SDL2.Styles;
+using LingoEngine.Styles;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.SDL2;

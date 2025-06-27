@@ -1,5 +1,5 @@
 using LingoEngine.Primitives;
-namespace LingoEngine._3D.Members;
+namespace LingoEngine.L3D.Core.Members;
 
 /// <summary>
 /// Texture applied to a model surface.

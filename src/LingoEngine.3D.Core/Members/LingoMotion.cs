@@ -1,4 +1,4 @@
-namespace LingoEngine._3D.Members;
+namespace LingoEngine.L3D.Core.Members;
 
 /// <summary>
 /// Motion data applied to a model for animation.

@@ -5,6 +5,9 @@ using LingoEngine.Xtras.BuddyApi;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Members;
 using LingoEngine.Casts;
+using LingoEngine.Sprites;
+using LingoEngine.Commands;
+using LingoEngine.Projects;
 
 namespace LingoEngine
 {
@@ -15,7 +18,7 @@ namespace LingoEngine
 
             services
                    .AddSingleton<LingoPlayer>()
-                   .AddSingleton<ProjectSettings>()
+                   .AddSingleton<LingoProjectSettings>()
                    .AddSingleton<LingoCastLibsContainer>()
                    .AddSingleton<LingoWindow>()
                    .AddSingleton<LingoClock>()

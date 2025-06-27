@@ -34,7 +34,7 @@ public class DirectorFileTests
         var path = GetPath(fileName);
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
     }
 
@@ -45,7 +45,7 @@ public class DirectorFileTests
         var path = GetPath("ImgCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         bool found = false;
@@ -53,8 +53,8 @@ public class DirectorFileTests
         {
             foreach (var id in dir.Casts[0].MemberIDs)
             {
-                var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
-                if (chunk.Type == MemberType.BitmapMember)
+                var chunk = (RaysCastMemberChunk)dir.GetChunk(CASt, id);
+                if (chunk.Type == RaysMemberType.BitmapMember)
                 {
                     found = true;
                     break;
@@ -70,7 +70,7 @@ public class DirectorFileTests
         var path = GetPath("Text_Hallo_fontsize14.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         string text = string.Empty;
@@ -78,13 +78,13 @@ public class DirectorFileTests
         {
             foreach (var id in dir.Casts[0].MemberIDs)
             {
-                var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
+                var chunk = (RaysCastMemberChunk)dir.GetChunk(CASt, id);
                 dir.Logger.LogInformation($"CastMember Type={chunk.Type}, Name='{chunk.GetName()}', ScriptText='{chunk.GetScriptText()}'");
                 dir.Logger.LogInformation("Raw SpecificData: " + BitConverter.ToString(chunk.SpecificData.Data, chunk.SpecificData.Offset, chunk.SpecificData.Size));
-                if (chunk.Type == MemberType.FieldMember)
+                if (chunk.Type == RaysMemberType.FieldMember)
                 {
-                    var field = (CastMemberChunk)dir.GetChunk(CASt, id);
-                    if (field.DecodedText is CastMemberTextRead styled)
+                    var field = (RaysCastMemberChunk)dir.GetChunk(CASt, id);
+                    if (field.DecodedText is RaysCastMemberTextRead styled)
                     {
                         //   var reader = CastMemberTextRead.FromSpecificData(chunk.SpecificData);
                         //Console.WriteLine(reader.Text); // e.g. "Hallo"
@@ -104,7 +104,7 @@ public class DirectorFileTests
         var path = GetPath("Dir_With_One_Tex_Sprite_Hallo.dir");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         string text = string.Empty;
@@ -112,8 +112,8 @@ public class DirectorFileTests
         {
             foreach (var id in cast.MemberIDs)
             {
-                var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
-                if (chunk.Type == MemberType.FieldMember)
+                var chunk = (RaysCastMemberChunk)dir.GetChunk(CASt, id);
+                if (chunk.Type == RaysMemberType.FieldMember)
                 {
                     text = chunk.GetScriptText();
                     break;
@@ -130,7 +130,7 @@ public class DirectorFileTests
         var path = GetPath("Dir_With_One_Img_Sprite_Hallo.dir");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
 
         Assert.NotNull(dir.Score);
@@ -145,7 +145,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
 
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
@@ -154,13 +154,13 @@ public class DirectorFileTests
         {
             foreach (var id in cast.MemberIDs)
             {
-                var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
+                var chunk = (RaysCastMemberChunk)dir.GetChunk(CASt, id);
                 var scriptId = chunk.GetScriptID();
                 if (scriptId != 0)
                 {
                     var script = dir.GetScript((int)scriptId);
                     script?.Parse();
-                    text = script?.ScriptText(FileIO.PlatformLineEnding, false);
+                    text = script?.ScriptText(RaysFileIO.PlatformLineEnding, false);
                     break;
                 }
             }
@@ -176,7 +176,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new DirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger);
         Assert.True(dir.Read(stream));
 
         dir.ParseScripts();
@@ -188,7 +188,7 @@ public class DirectorFileTests
         {
             foreach (var id in cast.MemberIDs)
             {
-                var chunk = (CastMemberChunk)dir.GetChunk(CASt, id);
+                var chunk = (RaysCastMemberChunk)dir.GetChunk(CASt, id);
                 if (chunk.GetScriptID() != 0 && !string.IsNullOrEmpty(chunk.GetScriptText()))
                 {
                     found = true;

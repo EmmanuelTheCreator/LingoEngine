@@ -11,7 +11,7 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Shows or hides the mouse cursor.</summary>
         void HideMouse(bool state);
         /// <summary>Sets a custom cursor image.</summary>
-        void SetCursor(LingoMemberPicture image);
+        void SetCursor(LingoMemberBitmap image);
         /// <summary>Sets a predefined cursor shape.</summary>
         void SetCursor(LingoMouseCursor value);
     }

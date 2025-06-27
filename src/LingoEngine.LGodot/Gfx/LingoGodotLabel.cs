@@ -1,8 +1,8 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using LingoEngine.Events;
 using System;
+using LingoEngine.Styles;
 
 namespace LingoEngine.LGodot.Gfx
 {

@@ -1,4 +1,4 @@
-namespace LingoEngine._3D.Primitives;
+namespace LingoEngine.L3D.Core.Primitives;
 
 /// <summary>
 /// Model resource primitive of type #cylinder.

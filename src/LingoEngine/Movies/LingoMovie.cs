@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using LingoEngine.Casts;
 using LingoEngine.Core;
 using LingoEngine.Events;
-using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Members;
 using System.Linq;
 using LingoEngine.Sounds;
+using LingoEngine.Sprites;
+using LingoEngine.Stages;
+using LingoEngine.Projects;
 
 namespace LingoEngine.Movies
 {
@@ -44,7 +46,7 @@ namespace LingoEngine.Movies
         public event Action? SpriteListChanged;
         public event Action? AudioClipListChanged;
 
-        private readonly List<LingoAudioClip> _audioClips = new();
+        private readonly List<LingoMovieAudioClip> _audioClips = new();
 
         private void RaiseSpriteListChanged()
             => SpriteListChanged?.Invoke();
@@ -115,7 +117,7 @@ namespace LingoEngine.Movies
 
 
 #pragma warning disable CS8618
-        protected internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe, ProjectSettings projectSettings)
+        protected internal LingoMovie(LingoMovieEnvironment environment, LingoStage movieStage, LingoCastLibsContainer castLibContainer, ILingoMemberFactory memberFactory, string name, int number, LingoEventMediator mediator, Action<LingoMovie> onRemoveMe, LingoProjectSettings projectSettings)
 #pragma warning restore CS8618
         {
             _castLibContainer = castLibContainer;
@@ -731,19 +733,19 @@ namespace LingoEngine.Movies
         public int GetPrevSpriteEnd(int channel, int frame)
             => _frameManager.GetPrevSpriteEnd(channel, frame);
 
-        public IReadOnlyList<LingoAudioClip> GetAudioClips() => _audioClips;
+        public IReadOnlyList<LingoMovieAudioClip> GetAudioClips() => _audioClips;
 
-        public LingoAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound)
+        public LingoMovieAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound)
         {
             int lengthFrames = (int)Math.Ceiling(sound.Length * Tempo);
             int end = Math.Clamp(frame + lengthFrames - 1, frame, FrameCount);
-            var clip = new LingoAudioClip(channel, frame, end, sound);
+            var clip = new LingoMovieAudioClip(channel, frame, end, sound);
             _audioClips.Add(clip);
             RaiseAudioClipListChanged();
             return clip;
         }
 
-        public void MoveAudioClip(LingoAudioClip clip, int newFrame)
+        public void MoveAudioClip(LingoMovieAudioClip clip, int newFrame)
         {
             if (!_audioClips.Contains(clip)) return;
             int lengthFrames = clip.EndFrame - clip.BeginFrame;

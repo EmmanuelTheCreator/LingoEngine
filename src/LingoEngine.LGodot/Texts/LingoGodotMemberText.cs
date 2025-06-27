@@ -1,4 +1,4 @@
-﻿using LingoEngine.Events;
+﻿using LingoEngine.Styles;
 using LingoEngine.Texts;
 using LingoEngine.Texts.FrameworkCommunication;
 

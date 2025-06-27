@@ -1,4 +1,4 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.Members;
 
 namespace LingoEngine.LGodot.Core
 {

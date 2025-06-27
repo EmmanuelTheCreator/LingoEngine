@@ -1,8 +1,9 @@
-using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
-using LingoEngine.SDL2;
 using LingoEngine.SDL2.SDLL;
+using LingoEngine.SDL2.Sprites;
+using LingoEngine.SDL2.Stages;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.SDL2.Movies;
 

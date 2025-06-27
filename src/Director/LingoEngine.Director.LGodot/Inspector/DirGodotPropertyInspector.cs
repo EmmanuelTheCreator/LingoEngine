@@ -4,15 +4,20 @@ using LingoEngine.Movies;
 using System.Reflection;
 using LingoEngine.Pictures;
 using LingoEngine.Members;
-using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Core;
 using LingoEngine.Texts;
-using LingoEngine.Director.Core.Commands;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.LGodot.Gfx;
 using LingoEngine.Gfx;
-using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.LGodot.Windowing;
+using LingoEngine.Director.Core.Casts;
+using LingoEngine.Director.LGodot.Icons;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Director.Core.Windowing.Commands;
+using LingoEngine.Sprites;
+using LingoEngine.Commands;
+using LingoEngine.Director.Core.Sprites;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -28,7 +33,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly LingoPlayer _player;
     private readonly LingoGfxPanel _headerPanel;
     private readonly LingoGfxWrapPanel _header;
-    private readonly DirMemberThumbnail _thumb;
+    private readonly DirectorMemberThumbnail _thumb;
     private readonly DirectorPropertyInspectorWindow _inspectorWindow;
     private const int HeaderHeight = 44;
 
@@ -75,8 +80,8 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         //_vScroller.AddChild(_tabs);
         //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
         //_vScroller.Position = new Vector2(0, 60);
-        //_tabs.AddChild(new LingoGfxTabItem(_vScroller));
-
+        //_tabs.AddChild(new LingoGfxTabItem( _vScroller));
+        //_tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
         _mediator.Subscribe(this);
     }
 
@@ -161,7 +166,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             case Texts.LingoMemberText text:
                 AddTab("Text", text);
                 break;
-            case LingoMemberPicture pic:
+            case LingoMemberBitmap pic:
                 AddTab("Picture", pic);
                 break;
             case Sounds.LingoMemberSound sound:
@@ -182,14 +187,14 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         _tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
         var container = new VBoxContainer();
 
-        if (obj is LingoMemberPicture || obj is ILingoMemberTextBase)
+        if (obj is LingoMemberBitmap || obj is ILingoMemberTextBase)
         {
             var editBtn = new Button { Text = "Edit" };
             editBtn.Pressed += () =>
             {
                 string code = obj switch
                 {
-                    LingoMemberPicture => DirectorMenuCodes.PictureEditWindow,
+                    LingoMemberBitmap => DirectorMenuCodes.PictureEditWindow,
                     ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
                     _ => string.Empty
                 };

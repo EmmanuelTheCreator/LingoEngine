@@ -1,4 +1,3 @@
-using LingoEngine.Director.Core.Events;
 using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Director.Core.Menus;
 using LingoEngine.Director.Core.Windows;
@@ -9,6 +8,10 @@ using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.Core.Stages;
 using LingoEngine.Director.Core.FileSystems;
 using LingoEngine.Director.Core.Projects;
+using LingoEngine.Director.Core.Importer;
+using LingoEngine.Director.Core.Pictures;
+using LingoEngine.Director.Core.Texts;
+using LingoEngine.Director.Core.Tools;
 
 namespace LingoEngine.Director.Core
 {
@@ -23,6 +26,7 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<IHistoryManager, HistoryManager>()
                     .AddSingleton<DirectorWindowManager>()
                     .AddSingleton<DirectorProjectManager>()
+                    .AddSingleton<DirectorProjectSettings>()
                     .AddTransient<IDirectorWindowManager>(p => p.GetRequiredService<DirectorWindowManager>())
 
                     // File system
@@ -41,7 +45,7 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<DirectorBinaryViewerWindow>()
                     .AddSingleton<DirectorStageWindow>()
                     .AddSingleton<DirectorTextEditWindow>()
-                    .AddSingleton<DirectorPictureEditWindow>()
+                    .AddSingleton<DirectorBitmapEditWindow>()
                     .AddSingleton<DirectorImportExportWindow>()
                     );
             engineRegistration.AddBuildAction(

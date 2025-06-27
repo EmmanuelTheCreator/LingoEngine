@@ -1,4 +1,4 @@
-namespace LingoEngine._3D.Primitives;
+namespace LingoEngine.L3D.Core.Primitives;
 
 /// <summary>
 /// Represents a point or direction in 3D space.
