@@ -1,7 +1,6 @@
 using Godot;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Movies;
-using System.Reflection;
 using LingoEngine.Pictures;
 using LingoEngine.Members;
 using LingoEngine.Director.Core.Inspector;
@@ -26,7 +25,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
 {
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
-    private readonly ScrollContainer _vScroller = new ScrollContainer();
     private readonly LingoGfxTabContainer _tabs;
     private readonly PanelContainer _behaviorPanel = new PanelContainer();
     private readonly VBoxContainer _behaviorBox = new VBoxContainer();
@@ -78,10 +76,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         closeRow.AddChild(_behaviorClose);
         _behaviorBox.AddChild(closeRow);
 
-        //_vScroller.AddChild(_tabs);
-        //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
-        //_vScroller.Position = new Vector2(0, 60);
-        //_tabs.AddChild(new LingoGfxTabItem( _vScroller));
         //_tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
         _mediator.Subscribe(this);
     }
@@ -114,7 +108,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         {
             godotTabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
         }
-        //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
     }
     public void SpriteSelected(ILingoSprite sprite) => ShowObject(sprite);
     public void MemberSelected(ILingoMember member) => ShowObject(member);
@@ -181,8 +174,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
 
     private void AddTab(string name, object obj)
     {
-        //_vScroller.Size = new Vector2(Size.X - 10, Size.Y - 30);
-        //_vScroller.Position = new Vector2(0, 60);
         var vScroller = new ScrollContainer();
         vScroller.Name = name;
         _tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
@@ -221,97 +212,12 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
             container.AddChild(list);
         }
 
-        BuildProperties(container, obj);
+        var props = _inspectorWindow.BuildProperties(_player.Factory, obj);
+        container.AddChild(props.Framework<LingoGodotWrapPanel>());
 
         vScroller.AddChild(container);
     }
 
-    private void BuildProperties(VBoxContainer root, object obj)
-    {
-        foreach (var prop in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (!prop.CanRead)
-                continue;
-            if (!IsSimpleType(prop.PropertyType) && prop.PropertyType != typeof(LingoEngine.Primitives.LingoPoint))
-                continue;
-            var h = new HBoxContainer();
-            var label = new Label { Text = prop.Name, CustomMinimumSize = new Vector2(80, 16) };
-            h.AddChild(label);
-            Control editor;
-            object? val = prop.GetValue(obj);
-            if (obj is ILingoSprite && prop.Name == "Lock" && prop.PropertyType == typeof(bool))
-            {
-                var btn = new Button { Text = val is bool b && b ? "🔒" : "🔓" };
-                if (prop.CanWrite)
-                    btn.Pressed += () =>
-                    {
-                        bool current = prop.GetValue(obj) is bool b && b;
-                        bool newVal = !current;
-                        prop.SetValue(obj, newVal);
-                        btn.Text = newVal ? "🔒" : "🔓";
-                    };
-                else
-                    btn.Disabled = true;
-                editor = btn;
-            }
-            else if (prop.PropertyType == typeof(bool))
-            {
-                var cb = new CheckBox { ButtonPressed = val is bool b && b };
-                if (prop.CanWrite)
-                    cb.Toggled += v => prop.SetValue(obj, v);
-                else
-                    cb.Disabled = true;
-                editor = cb;
-            }
-            else if (prop.PropertyType == typeof(LingoEngine.Primitives.LingoPoint))
-            {
-                var point = val is LingoEngine.Primitives.LingoPoint p ? p : new LingoEngine.Primitives.LingoPoint();
-                var xSpin = new SpinBox { Value = point.X, CustomMinimumSize = new Vector2(50, 16) };
-                var ySpin = new SpinBox { Value = point.Y, CustomMinimumSize = new Vector2(50, 16) };
-                if (prop.CanWrite)
-                {
-                    xSpin.ValueChanged += v =>
-                    {
-                        var pVal = (LingoEngine.Primitives.LingoPoint)prop.GetValue(obj);
-                        pVal.X = (float)v;
-                        prop.SetValue(obj, pVal);
-                    };
-                    ySpin.ValueChanged += v =>
-                    {
-                        var pVal = (LingoEngine.Primitives.LingoPoint)prop.GetValue(obj);
-                        pVal.Y = (float)v;
-                        prop.SetValue(obj, pVal);
-                    };
-                }
-                else
-                {
-                    xSpin.Editable = false;
-                    ySpin.Editable = false;
-                }
-                h.AddChild(xSpin);
-                h.AddChild(ySpin);
-                root.AddChild(h);
-                continue;
-            }
-            else
-            {
-                var line = new LineEdit { Text = val?.ToString() ?? string.Empty };
-                if (prop.CanWrite)
-                    line.TextSubmitted += t =>
-                    {
-                        try
-                        {
-                            prop.SetValue(obj, ConvertTo(t, prop.PropertyType));
-                        }
-                        catch { }
-                    };
-                else
-                    line.Editable = false;
-                editor = line;
-            }
-            h.AddChild(editor);
-            root.AddChild(h);
-        }
     }
 
     private string GetCastName(ILingoMember m)
@@ -331,7 +237,8 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
                 _behaviorBox.RemoveChild(child);
         }
         var container = new VBoxContainer();
-        BuildProperties(container, behavior);
+        var props = _inspectorWindow.BuildProperties(_player.Factory, behavior);
+        container.AddChild(props.Framework<LingoGodotWrapPanel>());
         if (behavior is ILingoPropertyDescriptionList descProvider)
         {
             string? desc = descProvider.GetBehaviorDescription();
@@ -361,23 +268,3 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         }
         _behaviorBox.AddChild(container);
         _behaviorPanel.Visible = true;
-        OnResizing(Size);
-    }
-
-    private static bool IsSimpleType(Type t)
-    {
-        return t.IsPrimitive || t == typeof(string) || t.IsEnum || t == typeof(float) || t == typeof(double) || t == typeof(decimal);
-    }
-
-    private static object ConvertTo(string text, Type t)
-    {
-        if (t == typeof(string)) return text;
-        if (t.IsEnum) return Enum.Parse(t, text);
-        return Convert.ChangeType(text, t);
-    }
-
- 
-
-
-   
-}

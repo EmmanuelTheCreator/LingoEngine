@@ -226,6 +226,14 @@ namespace LingoEngine.LGodot.Core
             return tab;
         }
 
+        public LingoGfxScrollContainer CreateScrollContainer(string name)
+        {
+            var scroll = new LingoGfxScrollContainer();
+            var impl = new LingoGodotScrollContainer(scroll);
+            scroll.Name = name;
+            return scroll;
+        }
+
         public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
@@ -242,6 +250,14 @@ namespace LingoEngine.LGodot.Core
 
             input.Name = name;
             return input;
+        }
+
+        public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100)
+        {
+            var spin = new LingoGfxSpinBox { Min = min, Max = max };
+            var impl = new LingoGodotSpinBox(spin);
+            spin.Name = name;
+            return spin;
         }
 
         public LingoGfxInputCheckbox CreateInputCheckbox(string name)

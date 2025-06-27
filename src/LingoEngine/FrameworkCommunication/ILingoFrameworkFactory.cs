@@ -87,11 +87,17 @@ namespace LingoEngine.FrameworkCommunication
         /// </summary>
         LingoGfxTabContainer CreateTabContainer(string name);
 
+        /// <summary>Creates a scroll container.</summary>
+        LingoGfxScrollContainer CreateScrollContainer(string name);
+
         /// <summary>Creates a single line text input.</summary>
         LingoGfxInputText CreateInputText(string name, int maxLength = 0);
 
         /// <summary>Creates a numeric input field.</summary>
         LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100);
+
+        /// <summary>Creates a spin box input.</summary>
+        LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100);
 
         /// <summary>Creates a checkbox input.</summary>
         LingoGfxInputCheckbox CreateInputCheckbox(string name);
