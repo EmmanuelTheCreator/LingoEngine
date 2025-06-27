@@ -144,7 +144,7 @@ namespace LingoEngine.LGodot.Gfx
                 var lines = text.Split('\n');
                 _drawActions.Add(() =>
                 {
-                    int lineHeight = fontGodot.GetHeight();
+                    var lineHeight = fontGodot.GetHeight();
                     for (int i = 0; i < lines.Length; i++)
                     {
                         Vector2 pos = new Vector2(position.X, position.Y + i * lineHeight);
