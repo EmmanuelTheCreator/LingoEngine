@@ -288,6 +288,14 @@ namespace LingoEngine.LGodot.Core
             return label;
         }
 
+        public LingoGfxButton CreateButton(string name, string text = "")
+        {
+            var button = new LingoGfxButton { Text = text };
+            var impl = new LingoGodotButton(button);
+            button.Name = name;
+            return button;
+        }
+
         public LingoGfxMenu CreateMenu(string name)
         {
             var menu = new LingoGfxMenu();

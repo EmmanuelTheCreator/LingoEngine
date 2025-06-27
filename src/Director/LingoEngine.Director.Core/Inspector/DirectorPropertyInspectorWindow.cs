@@ -28,13 +28,42 @@ namespace LingoEngine.Director.Core.Inspector
         private ILingoCommandManager? _commandManager;
         private LingoGfxTabContainer? _tabs;
         private DirectorMemberThumbnail? _thumb;
+        private LingoGfxWrapPanel? _header;
+        private const int HeaderHeight = 44;
 
-        public void Setup(LingoPlayer player, ILingoCommandManager commandManager, LingoGfxTabContainer tabs, DirectorMemberThumbnail thumb)
+        public void Setup(LingoPlayer player, ILingoCommandManager commandManager, LingoGfxTabContainer tabs, DirectorMemberThumbnail thumb, LingoGfxWrapPanel header)
         {
             _player = player;
             _commandManager = commandManager;
             _tabs = tabs;
             _thumb = thumb;
+            _header = header;
+        }
+
+        public (float X, float Y, float Width, float Height)? OnResizing(float width, float height, float titleBarHeight, bool behaviorVisible)
+        {
+            if (_tabs == null || _header == null)
+                return null;
+
+            _header.Width = width - 10;
+            _header.Height = HeaderHeight;
+
+            _tabs.X = 0;
+            _tabs.Y = titleBarHeight + HeaderHeight;
+
+            if (behaviorVisible)
+            {
+                var half = (height - 30 - HeaderHeight) / 2f;
+                _tabs.Width = width - 10;
+                _tabs.Height = half;
+                return (0, titleBarHeight + HeaderHeight + half, width - 10, half);
+            }
+            else
+            {
+                _tabs.Width = width - 10;
+                _tabs.Height = height - 30 - HeaderHeight;
+                return null;
+            }
         }
 
         public LingoGfxWrapPanel BuildProperties(ILingoFrameworkFactory factory, object obj)
@@ -189,7 +218,24 @@ namespace LingoEngine.Director.Core.Inspector
             var scroller = _player.Factory.CreateScrollContainer(name + "Scroll");
             var container = _player.Factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
 
-            // TODO: edit button and behavior list
+            if (_commandManager != null && (obj is LingoMemberBitmap || obj is ILingoMemberTextBase))
+            {
+                var editBtn = _player!.Factory.CreateButton("EditButton", "Edit");
+                editBtn.Pressed += () =>
+                {
+                    string code = obj switch
+                    {
+                        LingoMemberBitmap => DirectorMenuCodes.PictureEditWindow,
+                        ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
+                        _ => string.Empty
+                    };
+                    if (!string.IsNullOrEmpty(code))
+                        _commandManager.Handle(new OpenWindowCommand(code));
+                };
+                container.AddChild(editBtn);
+            }
+
+            // TODO: behavior list
 
             var props = BuildProperties(_player.Factory, obj);
             container.AddChild(props);
