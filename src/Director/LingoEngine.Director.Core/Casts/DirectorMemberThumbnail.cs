@@ -77,7 +77,14 @@ public class DirectorMemberThumbnail : IDisposable
 
     private void DrawText(string text)
     {
-        Canvas.DrawText(new LingoPoint(2, 2), text, null, new LingoColor(0, 0, 0), 10);
+        const int fontSize = 10;
+        const int lineHeight = fontSize + 2;
+
+        int lineCount = text.Split('\n').Length;
+        int textHeight = lineCount * lineHeight;
+        int startY = (int)Math.Max((ThumbHeight - textHeight) / 2f, 0);
+
+        Canvas.DrawText(new LingoPoint(2, startY), text, null, new LingoColor(0, 0, 0), fontSize);
     }
 
     private static string GetPreviewText(ILingoMemberTextBase text)
