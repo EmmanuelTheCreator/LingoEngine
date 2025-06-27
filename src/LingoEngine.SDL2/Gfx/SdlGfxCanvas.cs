@@ -157,7 +157,7 @@ namespace LingoEngine.SDL2.Gfx
             });
         }
 
-        public void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12)
+        public void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12, int width = -1)
         {
             UseTexture(() =>
             {
@@ -167,23 +167,43 @@ namespace LingoEngine.SDL2.Gfx
                 if (fnt == nint.Zero) return;
                 SDL.SDL_Color c = new SDL.SDL_Color { r = color?.R ?? 0, g = color?.G ?? 0, b = color?.B ?? 0, a = 255 };
 
-                nint surf = text.Contains('\n')
-                    ? SDL_ttf.TTF_RenderUTF8_Blended_Wrapped(fnt, text, c, 0)
-                    : SDL_ttf.TTF_RenderUTF8_Blended(fnt, text, c);
-                if (surf == nint.Zero)
+                string RenderLine(string line)
                 {
-                    SDL_ttf.TTF_CloseFont(fnt);
-                    return;
+                    if (width >= 0)
+                    {
+                        while (line.Length > 0 && SDL_ttf.TTF_SizeUTF8(fnt, line, out int w, out _) == 0 && w > width)
+                        {
+                            line = line.Substring(0, line.Length - 1);
+                        }
+                    }
+                    return line;
                 }
-                nint tex = SDL.SDL_CreateTextureFromSurface(_renderer, surf);
-                if (tex != nint.Zero)
+
+                string[] lines = text.Split('\n');
+                List<(nint surf, int w, int h)> surfaces = new();
+                foreach (var ln in lines)
                 {
-                    SDL.SDL_QueryTexture(tex, out _, out _, out int w, out int h);
-                    SDL.SDL_Rect dst = new SDL.SDL_Rect { x = (int)position.X, y = (int)position.Y, w = w, h = h };
-                    SDL.SDL_RenderCopy(_renderer, tex, nint.Zero, ref dst);
-                    SDL.SDL_DestroyTexture(tex);
+                    var line = RenderLine(ln);
+                    nint s = SDL_ttf.TTF_RenderUTF8_Blended(fnt, line, c);
+                    if (s == nint.Zero) continue;
+                    var sur = SDL.PtrToStructure<SDL.SDL_Surface>(s);
+                    surfaces.Add((s, sur.w, sur.h));
                 }
-                SDL.SDL_FreeSurface(surf);
+
+                int y = (int)position.Y;
+                foreach (var (s, w, h) in surfaces)
+                {
+                    nint tex = SDL.SDL_CreateTextureFromSurface(_renderer, s);
+                    if (tex != nint.Zero)
+                    {
+                        SDL.SDL_Rect dst = new SDL.SDL_Rect { x = (int)position.X, y = y, w = w, h = h };
+                        SDL.SDL_RenderCopy(_renderer, tex, nint.Zero, ref dst);
+                        SDL.SDL_DestroyTexture(tex);
+                    }
+                    SDL.SDL_FreeSurface(s);
+                    y += h;
+                }
+
                 SDL_ttf.TTF_CloseFont(fnt);
             });
         }
