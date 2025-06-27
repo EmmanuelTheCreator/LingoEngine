@@ -54,7 +54,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         _thumb = headerElems.Thumbnail;
         _header = headerElems.Header;
         _headerPanel = headerElems.Panel;
-        _tabs = _player.Factory.CreateTabContainer();
+        _tabs = _player.Factory.CreateTabContainer("InspectorTabs");
         CreateHeader();
 
         var godotTabs = _tabs.Framework<LingoGodotTabContainer>();
