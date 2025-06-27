@@ -41,9 +41,11 @@ namespace LingoEngine.Director.LGodot.Icons
         {
             var texture = sheet.Image.Texture;
             var image = texture.GetImage();
-            var sub = Image.CreateEmpty(sheet.IconHeight, sheet.IconHeight, false, image.GetFormat());
-            sub.BlitRect(image, new Rect2I(sheet.HorizontalSpacing, x, sheet.IconWidth, sheet.IconHeight), Vector2I.Zero);
-            ImageTexture tex = ImageTexture.CreateFromImage(sub);
+            // Create an image with the correct dimensions for the icon
+            var sub = Image.CreateEmpty(sheet.IconWidth, sheet.IconHeight, false, image.GetFormat());
+            // Copy the icon region from the sprite sheet
+            sub.BlitRect(image, new Rect2I(x, 0, sheet.IconWidth, sheet.IconHeight), Vector2I.Zero);
+            var tex = ImageTexture.CreateFromImage(sub);
             var lingoTexture = new LingoGodotImageTexture(tex);
             return lingoTexture;
         }
