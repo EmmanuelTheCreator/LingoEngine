@@ -60,11 +60,17 @@ namespace LingoEngine.LGodot.Pictures
             string filePath = GodotHelper.EnsureGodotUrl(_lingoMemberPicture.FileName);
 
             // Load the image from the byte array (assuming PNG/JPEG format)
+            if (!ResourceLoader.Exists(filePath))
+            {
+                _logger.LogWarning($"MemberBitmap not found: {filePath}");
+                return;
+            }
+
             var texture = ResourceLoader.Load<Texture2D>(filePath);
 
             if (texture == null)
             {
-                _logger.LogWarning($"Failed to load Texture2D at {filePath}");
+                _logger.LogError($"Failed to load Texture2D for MemberBitmap at {filePath}");
                 return;
             }
 
@@ -75,7 +81,7 @@ namespace LingoEngine.LGodot.Pictures
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Texture.GetImage() failed at {filePath}. Is 'Keep -> Image' enabled in import settings?");
+                _logger.LogError(ex, $"Texture.GetImage() failed at {filePath} for MemberBitmap. Is 'Keep -> Image' enabled in import settings?");
                 return;
             }
 
