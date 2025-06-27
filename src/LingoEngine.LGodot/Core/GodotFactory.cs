@@ -190,7 +190,6 @@ namespace LingoEngine.LGodot.Core
         {
             var canvas = new LingoGfxCanvas();
             var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
-            _rootNode.AddChild(impl);
             canvas.Width = width;
             canvas.Height = height;
             return canvas;
@@ -200,7 +199,6 @@ namespace LingoEngine.LGodot.Core
         {
             var panel = new LingoGfxWrapPanel();
             var impl = new LingoGodotWrapPanel(panel, orientation);
-            _rootNode.AddChild(impl);
             return panel;
         }
 
@@ -208,7 +206,6 @@ namespace LingoEngine.LGodot.Core
         {
             var panel = new LingoGfxPanel();
             var impl = new LingoGodotPanel(panel);
-            _rootNode.AddChild(impl);
             return panel;
         }
 
@@ -216,7 +213,6 @@ namespace LingoEngine.LGodot.Core
         {
             var tab = new LingoGfxTabContainer();
             var impl = new LingoGodotTabContainer(tab);
-            _rootNode.AddChild(impl);
             return tab;
         }
 
@@ -224,7 +220,6 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
-            _rootNode.AddChild(impl);
             return input;
         }
 
@@ -232,7 +227,6 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputNumber { Min = min, Max = max };
             var impl = new LingoGodotInputNumber(input);
-            _rootNode.AddChild(impl);
             return input;
         }
 
@@ -240,7 +234,6 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputCheckbox();
             var impl = new LingoGodotInputCheckbox(input);
-            _rootNode.AddChild(impl);
             return input;
         }
 
@@ -248,7 +241,6 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputCombobox();
             var impl = new LingoGodotInputCombobox(input);
-            _rootNode.AddChild(impl);
             return input;
         }
 
@@ -257,7 +249,6 @@ namespace LingoEngine.LGodot.Core
             var label = new LingoLabel();
             var impl = new LingoGodotLabel(label, _serviceProvider.GetRequiredService<ILingoFontManager>());
             label.Text = text;
-            _rootNode.AddChild(impl);
             return label;
         }
 
@@ -265,7 +256,6 @@ namespace LingoEngine.LGodot.Core
         {
             var menu = new LingoMenu();
             var impl = new LingoGodotMenu(menu, name);
-            _rootNode.AddChild(impl);
             return menu;
         }
 
@@ -273,7 +263,6 @@ namespace LingoEngine.LGodot.Core
         {
             var item = new LingoMenuItem();
             var impl = new LingoGodotMenuItem(name, shortcut);
-            item.Init(impl);
             return item;
         }
     }
