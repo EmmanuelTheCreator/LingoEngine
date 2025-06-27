@@ -26,9 +26,13 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly ColorRect _separator;
         private readonly Action<DirGodotCastItem> _onSelect;
         private readonly ILingoCommandManager _commandManager;
-        private readonly IDirGodotIconManager _iconManager;
         private readonly Label _caption;
         private Control? _dragHelper;
+        private bool _wasClicked;
+        private static bool _openingEditor;
+        private static object _lock = new object();
+        private bool _dragging;
+        private Vector2 _dragStart;
 
         public int LabelHeight { get; set; } = 15;
         public int Width { get; set; } = 50;
@@ -50,7 +54,6 @@ namespace LingoEngine.Director.LGodot.Casts
             _onSelect = onSelect;
             _commandManager = commandManager;
             _factory = factory;
-            _iconManager = iconManager;
             _selectedColor = selectedColor;
             CustomMinimumSize = new Vector2(50, 50);
             MouseFilter = MouseFilterEnum.Stop;
@@ -145,11 +148,7 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             Position = new Vector2(x, y);
         }
-        private bool _wasClicked;
-        private static bool _openingEditor;
-        private static object _lock = new object();
-        private bool _dragging;
-        private Vector2 _dragStart;
+       
         public override void _Input(InputEvent @event)
         {
             if (!IsVisibleInTree()) return;
@@ -267,15 +266,15 @@ namespace LingoEngine.Director.LGodot.Casts
         //    return Variant.From(_lingoMember);
         //}
 
-        public override Variant _GetDragData(Vector2 atPosition)
-        {
-            GD.Print("CastItem: drag triggered at " + atPosition);
-            var label = new Label { Text = "Dragging " + _lingoMember.Name };
-            label.CustomMinimumSize = new Vector2(100, 30);
-            label.Modulate = new Color(1, 1, 0, 0.6f);
-            SetDragPreview(label);
-            return Variant.From(_lingoMember);
-        }
+        //public override Variant _GetDragData(Vector2 atPosition)
+        //{
+        //    GD.Print("CastItem: drag triggered at " + atPosition);
+        //    var label = new Label { Text = "Dragging " + _lingoMember.Name };
+        //    label.CustomMinimumSize = new Vector2(100, 30);
+        //    label.Modulate = new Color(1, 1, 0, 0.6f);
+        //    SetDragPreview(label);
+        //    return Variant.From(_lingoMember);
+        //}
 
 
     }
