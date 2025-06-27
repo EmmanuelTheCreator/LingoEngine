@@ -20,6 +20,8 @@ namespace LingoEngine.Director.LGodot.Scores
         private int _previewChannel;
         
         private bool _isDraggingSprite;
+        private bool _dragStarted;
+        private Vector2 _dragStartPos;
         private Rect2? _spritePreviewRect;
         private int _previewBeginFrame = -1;
         private ILingoSprite? _dragSprite;
@@ -28,6 +30,7 @@ namespace LingoEngine.Director.LGodot.Scores
         private bool _isSpriteDragMove = false;
         private float _dragOffset = 0;
         private float _dragStartY = 0;
+        private const float DragThresholdSq = 16f;
         private int _previewBegin;
         private int _previewEnd;
 
@@ -133,8 +136,10 @@ namespace LingoEngine.Director.LGodot.Scores
                     _dragBegin = false;
                     _dragEnd = false;
                     _isSpriteDragMove = true;
-                    _isDraggingSprite = true;
+                    _isDraggingSprite = false;
+                    _dragStartPos = pos;
                     _dragStartY = pos.Y;
+                    _dragStarted = false;
                     Input.SetDefaultCursorShape(Input.CursorShape.Drag);
                     _grid.SpriteDirty = true;
                 }
@@ -175,6 +180,7 @@ namespace LingoEngine.Director.LGodot.Scores
             _dragBegin = _dragEnd = false;
             _isSpriteDragMove = false;
             _isDraggingSprite = false;
+            _dragStarted = false;
             _spritePreviewRect = null;
             _grid.SpriteDirty = true;
             Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
@@ -206,6 +212,15 @@ namespace LingoEngine.Director.LGodot.Scores
             {
                 if (_isSpriteDragMove)
                 {
+                    if (!_dragStarted)
+                    {
+                        var pos = _grid.GetLocalMousePosition();
+                        if (pos.DistanceSquaredTo(_dragStartPos) > DragThresholdSq)
+                        {
+                            _dragStarted = true;
+                            _isDraggingSprite = true;
+                        }
+                    }
                     if (_isDraggingSprite)
                     {
                         UpdateSpriteDragPreview();
