@@ -10,6 +10,7 @@ using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Windowing.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -47,7 +48,7 @@ namespace LingoEngine.Director.LGodot.Casts
         }
         private readonly ILingoFrameworkFactory _factory;
 
-        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager, ILingoFrameworkFactory factory, IDirGodotIconManager iconManager)
+        public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager, ILingoFrameworkFactory factory, IDirectorIconManager iconManager)
         {
             Name = "CastItem " + number+". "+ element.Name;
             _lingoMember = element;

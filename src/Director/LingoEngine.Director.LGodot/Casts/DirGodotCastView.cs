@@ -5,6 +5,7 @@ using LingoEngine.Members;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -16,12 +17,12 @@ namespace LingoEngine.Director.LGodot.Casts
         private readonly Action<DirGodotCastItem> _onSelectItem;
         private readonly DirectorGodotStyle _style;
         private readonly ILingoCommandManager _commandManager;
-        private readonly IDirGodotIconManager _iconManager;
+        private readonly IDirectorIconManager _iconManager;
         private readonly ILingoFrameworkFactory _factory;
 
         public Node Node => _ScrollContainer;
 
-        public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorGodotStyle style, ILingoCommandManager commandManager, IDirGodotIconManager iconManager, ILingoFrameworkFactory factory)
+        public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorGodotStyle style, ILingoCommandManager commandManager, IDirectorIconManager iconManager, ILingoFrameworkFactory factory)
         {
             _ScrollContainer = new ScrollContainer
             {

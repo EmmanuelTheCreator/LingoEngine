@@ -40,6 +40,8 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
+        string ILingoFrameworkGfxNode.Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;

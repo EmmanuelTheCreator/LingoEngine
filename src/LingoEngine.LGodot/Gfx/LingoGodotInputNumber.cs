@@ -27,9 +27,10 @@ namespace LingoEngine.LGodot.Gfx
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get => Editable; set => Editable = value; }
 
-        public float Value { get => (float)base.Value; set => base.Value = value; }
+        public new float Value { get => (float)base.Value; set => base.Value = value; }
         public float Min { get => (float)MinValue; set => MinValue = value; }
         public float Max { get => (float)MaxValue; set => MaxValue = value; }
+        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
         public LingoNumberType NumberType
         {
             get => _numberType;
@@ -52,6 +53,7 @@ namespace LingoEngine.LGodot.Gfx
                 AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
+
 
         event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {

@@ -7,6 +7,7 @@ using System.Linq;
 using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Director.Core.Icons;
 using LingoEngine.Director.Core.Tools;
+using LingoEngine.LGodot.Bitmaps;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -14,7 +15,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
 {
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
-    private readonly IDirGodotIconManager _iconManager;
+    private readonly IDirectorIconManager _iconManager;
 
     private readonly Button _prevButton = new Button();
     private readonly Button _nextButton = new Button();
@@ -27,7 +28,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
 
     private T? _member;
 
-    public MemberNavigationBar(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotIconManager iconManager, int barHeight = 20)
+    public MemberNavigationBar(IDirectorEventMediator mediator, ILingoPlayer player, IDirectorIconManager iconManager, int barHeight = 20)
     {
         _mediator = mediator;
         _player = player;
@@ -89,7 +90,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _numberLabel.Text = member.NumberInCast.ToString();
         _castLibLabel.Text = GetCastName(member);
         var icon = LingoMemberTypeIcons.GetIconType(member);
-        _typeIcon.Texture = icon.HasValue ? _iconManager.Get(icon.Value) : null;
+        _typeIcon.Texture = icon.HasValue ? ((LingoGodotImageTexture)_iconManager.Get(icon.Value)).Texture : null;
     }
 
     private string GetCastName(ILingoMember m)

@@ -177,7 +177,10 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return key;
     }
 
-    public LingoGfxCanvas CreateGfxCanvas(int width, int height, string name)
+
+    #region Gfx elements
+
+    public LingoGfxCanvas CreateGfxCanvas(string name, int width, int height)
     {
         var canvas = new LingoGfxCanvas();
         var impl = new SdlGfxCanvas(_rootContext.Renderer, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
@@ -275,4 +278,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         item.Init(impl);
         return item;
     }
+    #endregion
+
+
 }

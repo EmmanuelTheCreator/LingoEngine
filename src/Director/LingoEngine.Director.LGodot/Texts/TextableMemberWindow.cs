@@ -11,6 +11,7 @@ using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Director.Core.Texts;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Casts;
 
@@ -27,10 +28,10 @@ internal partial class DirGodotTextableMemberWindow : BaseGodotWindow, IHasMembe
     private readonly HBoxContainer _topBar = new HBoxContainer();
 
     private readonly ILingoPlayer _player;
-    private readonly IDirGodotIconManager _iconManager;
+    private readonly IDirectorIconManager _iconManager;
     private ILingoMemberTextBase? _member;
 
-    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, ILingoPlayer player, DirectorTextEditWindow directorTextEditWindow, IDirGodotWindowManager windowManager, IDirGodotIconManager iconManager)
+    public DirGodotTextableMemberWindow(IDirectorEventMediator mediator, ILingoPlayer player, DirectorTextEditWindow directorTextEditWindow, IDirGodotWindowManager windowManager, IDirectorIconManager iconManager)
         : base(DirectorMenuCodes.TextEditWindow, "Edit Text", windowManager)
     {
         _player = player;

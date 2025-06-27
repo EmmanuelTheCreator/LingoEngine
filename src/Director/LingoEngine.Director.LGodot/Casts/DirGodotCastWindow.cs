@@ -10,6 +10,7 @@ using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -25,11 +26,11 @@ namespace LingoEngine.Director.LGodot.Casts
         private DirGodotCastItem? _selectedItem;
         private LingoPlayer _player;
         private readonly ILingoCommandManager _commandManager;
-        private readonly IDirGodotIconManager _iconManager;
+        private readonly IDirectorIconManager _iconManager;
 
         public ILingoCast? ActiveCastLib { get; private set; }
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorGodotStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager, IDirGodotIconManager iconManager)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorGodotStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager, IDirectorIconManager iconManager)
             : base(DirectorMenuCodes.CastWindow, "Cast", windowManager)
         {
             _mediator = mediator;

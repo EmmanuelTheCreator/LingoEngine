@@ -30,8 +30,9 @@ namespace LingoEngine.LGodot.Gfx
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get => Editable; set => Editable = value; }
 
-        public string Text { get => base.Text; set => base.Text = value; }
-        public int MaxLength { get => base.MaxLength; set => base.MaxLength = value; }
+        public new string Text { get => base.Text; set => base.Text = value; }
+        public new int MaxLength { get => base.MaxLength; set => base.MaxLength = value; }
+        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
         public string? Font
         {
             get => _font;
