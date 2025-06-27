@@ -45,6 +45,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager, ILingoFrameworkFactory factory, IDirGodotIconManager iconManager)
         {
+            Name = "CastItem " + number+". "+ element.Name;
             _lingoMember = element;
             _onSelect = onSelect;
             _commandManager = commandManager;
@@ -55,36 +56,45 @@ namespace LingoEngine.Director.LGodot.Casts
             MouseFilter = MouseFilterEnum.Stop;
             _selectedLabelStyle.BgColor = selectedColor;
             _normalLabelStyle.BgColor = Colors.DimGray;
-            
+
 
             // Selection background - slightly larger than the item itself
-            _selectionBg = new ColorRect { Color = selectedColor, Visible = false };
-            _selectionBg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            _selectionBg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            _selectionBg.AnchorLeft = 0;
-            _selectionBg.AnchorTop = 0;
-            _selectionBg.AnchorRight = 1;
-            _selectionBg.AnchorBottom = 1;
-            _selectionBg.OffsetLeft = -1;
-            _selectionBg.OffsetTop = -1;
-            _selectionBg.OffsetRight = 1;
-            _selectionBg.OffsetBottom = 1;
-            _selectionBg.MouseFilter = MouseFilterEnum.Ignore;
+            _selectionBg = new ColorRect
+            {
+                Name = "ItemSelectionBg",
+                Color = selectedColor,
+                Visible = false,
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                SizeFlagsVertical = SizeFlags.ExpandFill,
+                AnchorLeft = 0,
+                AnchorTop = 0,
+                AnchorRight = 1,
+                AnchorBottom = 1,
+                OffsetLeft = -1,
+                OffsetTop = -1,
+                OffsetRight = 1,
+                OffsetBottom = 1,
+                MouseFilter = MouseFilterEnum.Ignore
+            };
             AddChild(_selectionBg);
 
             // Solid background
-            _bg = new ColorRect { Color = Colors.DimGray };
-            _bg.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            _bg.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            _bg.AnchorLeft = 0;
-            _bg.AnchorTop = 0;
-            _bg.AnchorRight = 1;
-            _bg.AnchorBottom = 1;
-            _bg.OffsetLeft = 0;
-            _bg.OffsetTop = 0;
-            _bg.OffsetRight = 0;
-            _bg.OffsetBottom = 0;
-            _bg.MouseFilter = MouseFilterEnum.Ignore;
+            _bg = new ColorRect
+            {
+                Name = "ItemBackground",
+                Color = Colors.DimGray,
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                SizeFlagsVertical = SizeFlags.ExpandFill,
+                AnchorLeft = 0,
+                AnchorTop = 0,
+                AnchorRight = 1,
+                AnchorBottom = 1,
+                OffsetLeft = 0,
+                OffsetTop = 0,
+                OffsetRight = 0,
+                OffsetBottom = 0,
+                MouseFilter = MouseFilterEnum.Ignore
+            };
             AddChild(_bg);
 
 
@@ -94,6 +104,7 @@ namespace LingoEngine.Director.LGodot.Casts
             // separator line above the caption
             _separator = new ColorRect
             {
+                Name = "NameSeparator",
                 Color = Colors.DarkGray,
                 CustomMinimumSize = new Vector2(Width, 1),
                 MouseFilter = MouseFilterEnum.Ignore
@@ -104,12 +115,13 @@ namespace LingoEngine.Director.LGodot.Casts
             // Bottom label
             _caption = new Label
             {
+                Name = "ItemLabel",
                 HorizontalAlignment = HorizontalAlignment.Center,
-            };
-            _caption.LabelSettings = new LabelSettings
-            {
-                FontSize = 8,
-                FontColor = Colors.Black,
+                LabelSettings = new LabelSettings
+                {
+                    FontSize = 8,
+                    FontColor = Colors.Black,
+                }
             };
             AddChild(_caption);
             _caption.Text = !string.IsNullOrWhiteSpace(element.Name) ? element.NumberInCast + "." + element.Name : number.ToString();

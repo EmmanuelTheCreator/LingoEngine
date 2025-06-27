@@ -82,6 +82,10 @@ namespace LingoEngine.LGodot.Gfx
                 item.RaiseActivated();
         }
 
-        public void Dispose() => QueueFree();
+        public new void Dispose()
+        {
+            base.Dispose();
+            QueueFree();
+        }
     }
 }

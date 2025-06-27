@@ -324,6 +324,8 @@
 	  <None Include="Medias\InternalExt\25.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Content Include="Medias\Icons\General_Icons.png" />
+	  <Content Include="Medias\Icons\Painter_Icons.png" />
 	  <Content Include="Properties\launchSettings.json" />
 	</ItemGroup>
 	<ItemGroup>

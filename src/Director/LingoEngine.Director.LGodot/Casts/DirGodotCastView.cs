@@ -23,13 +23,19 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public DirGodotCastView(Action<DirGodotCastItem> onSelect, DirectorGodotStyle style, ILingoCommandManager commandManager, IDirGodotIconManager iconManager, ILingoFrameworkFactory factory)
         {
-            _ScrollContainer = new ScrollContainer();
-            _ScrollContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            _ScrollContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _ScrollContainer = new ScrollContainer
+            {
+                Name = "CastViewScoller",
+                SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+            };
 
-            _elementsContainer = new HFlowContainer();
-            _elementsContainer.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-            _elementsContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            _elementsContainer = new HFlowContainer
+            {
+                Name = "CastViewFlowContainer",
+                SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+            };
             _ScrollContainer.AddChild(_elementsContainer);
             _onSelectItem = onSelect;
             _style = style;

@@ -1,8 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using System;
-using System.Linq;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -21,9 +19,17 @@ namespace LingoEngine.LGodot.Gfx
             _orientation = orientation;
             _itemMargin = LingoMargin.Zero;
             _margin = LingoMargin.Zero;
-            _container = orientation == LingoOrientation.Horizontal ? new HFlowContainer() : new VFlowContainer();
+            _container = CreateContainer(orientation);
             AddChild(_container);
             panel.Init(this);
+        }
+
+        private FlowContainer CreateContainer(LingoOrientation orientation)
+        {
+            FlowContainer container = orientation == LingoOrientation.Horizontal ? new HFlowContainer() : new VFlowContainer();
+            container.SizeFlagsVertical = SizeFlags.ExpandFill;
+            container.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            return container;
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -45,7 +51,7 @@ namespace LingoEngine.LGodot.Gfx
                 RemoveChild(_container);
                 _container.QueueFree();
                 _orientation = value;
-                _container = value == LingoOrientation.Horizontal ? new HFlowContainer() : new VFlowContainer();
+                _container = CreateContainer(value);
                 AddChild(_container);
                 ApplyMargin();
                 foreach (var c in children)
@@ -88,7 +94,11 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public void Dispose() => QueueFree();
+        public new void Dispose()
+        {
+            base.Dispose();
+            QueueFree();
+        }
 
         private void ApplyItemMargin(Control ctrl)
         {

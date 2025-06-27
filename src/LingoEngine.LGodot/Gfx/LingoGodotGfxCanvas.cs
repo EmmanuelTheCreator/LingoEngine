@@ -179,12 +179,13 @@ namespace LingoEngine.LGodot.Gfx
             MarkDirty();
         }
 
-        public void Dispose()
+        public new void Dispose()
         {
             foreach (var pic in _pictures)
                 pic.tex.Dispose();
             _pictures.Clear();
             QueueFree();
+            base.Dispose();
         }
     }
 }

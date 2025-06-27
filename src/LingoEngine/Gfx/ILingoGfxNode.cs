@@ -7,6 +7,7 @@ namespace LingoEngine.Gfx
     /// </summary>
     public interface ILingoGfxNode
     {
+        string Name { get; set; }
         float X { get; set; }
         float Y { get; set; }
         float Width { get; set; }
