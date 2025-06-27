@@ -1,94 +1,64 @@
 using Godot;
+using LingoEngine.Bitmaps;
 using LingoEngine.Director.Core.Icons;
-using LingoEngine.LGodot.Primitives;
+using LingoEngine.LGodot.Bitmaps;
+using Microsoft.Extensions.Logging;
 
 namespace LingoEngine.Director.LGodot.Icons
 {
-    public interface IDirGodotIconManager : IDirectorIconManager
+
+    public class LingoIconSheetGodot : LingoIconSheet<LingoGodotTexture2D>
     {
-        Texture2D Get(DirectorIcon icon);
-    }
-    public partial class DirGodotIconManager : IDirGodotIconManager
-    {
-        private class IconSheet
+        public LingoIconSheetGodot(LingoGodotTexture2D image, int iconWidth, int iconHeight, int horizontalSpacing, int iconCount) : base(image, iconWidth, iconHeight, horizontalSpacing, iconCount)
         {
-            public Image Image { get; set; } = null!;
-            public int IconWidth { get; set; }
-            public int IconHeight { get; set; }
-            public int HorizontalSpacing { get; set; }
-            public int IconCount { get; set; }
         }
-
-        private readonly List<IconSheet> _sheets = new();
-        private readonly Dictionary<DirectorIcon, Texture2D> _iconCache = new();
-        private readonly Dictionary<DirectorIcon, LingoIconData> _dataCache = new();
+    }
 
 
+    public partial class DirGodotIconManager : DirectorIconManager<LingoIconSheetGodot>
+    {
+        private readonly ILogger _logger;
 
-        public void LoadSheet(string path, int itemCount, int iconWidth, int iconHeight, int horizontalSpacing = 0)
+        public DirGodotIconManager(ILogger<DirGodotIconManager> logger)
+        {
+            _logger = logger;
+        }
+        protected override LingoIconSheetGodot? OnLoadSheet(string path, int itemCount, int iconWidth, int iconHeight, int horizontalSpacing = 0)
         {
             var texture = GD.Load<Texture2D>(path);
             if (texture == null)
-                throw new InvalidOperationException($"Failed to load texture: {path}");
-
-            var image = texture.GetImage();
-            if (image == null || image.IsEmpty())
-                throw new InvalidOperationException($"Failed to get image from texture: {path}");
-
-            _sheets.Add(new IconSheet
             {
-                Image = image,
-                IconWidth = iconWidth,
-                IconHeight = iconHeight,
-                HorizontalSpacing = horizontalSpacing,
-                IconCount = itemCount
-            });
-        }
-
-
-        public Texture2D Get(DirectorIcon icon)
-        {
-            if (_iconCache.TryGetValue(icon, out var cached))
-                return cached;
-
-            int index = (int)icon;
-            int currentIndex = 0;
-            foreach (var sheet in _sheets)
-            {
-                int count = sheet.IconCount;
-                if (index < currentIndex + count)
-                {
-                    int localIndex = index - currentIndex;
-                    int x = localIndex * (sheet.IconWidth + sheet.HorizontalSpacing);
-
-                    var sub = Image.CreateEmpty(sheet.IconWidth, sheet.IconHeight, false, sheet.Image.GetFormat());
-                    sub.BlitRect(sheet.Image, new Rect2I(x, 0, sheet.IconWidth, sheet.IconHeight), Vector2I.Zero);
-
-                    var tex = ImageTexture.CreateFromImage(sub);
-                    _iconCache[icon] = tex;
-                    return tex;
-                }
-                currentIndex += count;
+                _logger.LogWarning($"Failed to load texture: {path}");
+                return null;
             }
-
-            throw new ArgumentOutOfRangeException(nameof(icon), "Icon index out of range.");
+            var lingoTexture = new LingoGodotTexture2D(texture);
+            return new LingoIconSheetGodot(lingoTexture,iconWidth,iconHeight,horizontalSpacing, itemCount);
         }
-
-        public LingoIconData GetData(DirectorIcon icon)
+        protected override ILingoImageTexture? OnGetTextureImage(LingoIconSheetGodot sheet, int x)
         {
-            if (_dataCache.TryGetValue(icon, out var data))
-                return data;
-
-            var tex = Get(icon);
-            var img = tex.GetImage();
-            img.Convert(Image.Format.Rgba8);
-            var bytes = img.GetData();
-            data = new LingoIconData(bytes, img.GetWidth(), img.GetHeight(), img.GetFormat().ToLingoFormat());
-            _dataCache[icon] = data;
-            return data;
+            var texture = sheet.Image.Texture;
+            var image = texture.GetImage();
+            var sub = Image.CreateEmpty(sheet.IconHeight, sheet.IconHeight, false, image.GetFormat());
+            sub.BlitRect(image, new Rect2I(sheet.HorizontalSpacing, 0, sheet.IconWidth, sheet.IconHeight), Vector2I.Zero);
+            ImageTexture tex = ImageTexture.CreateFromImage(sub);
+            var lingoTexture = new LingoGodotImageTexture(tex);
+            return lingoTexture;
         }
+        //public LingoIconData GetData(DirectorIcon icon)
+        //{
+        //    if (_dataCache.TryGetValue(icon, out var data))
+        //        return data;
 
+        //    var tex = Get(icon);
+        //    var img = tex.GetImage();
+        //    //img.Convert(Image.Format.Rgba8);
+        //    //var bytes = img.GetData();
+        //    //data = new LingoIconData(bytes, img.GetWidth(), img.GetHeight(), img.GetFormat().ToLingoFormat());
+        //    _dataCache[icon] = data;
 
+        //    return data;
+        //}
 
+       
     }
 }

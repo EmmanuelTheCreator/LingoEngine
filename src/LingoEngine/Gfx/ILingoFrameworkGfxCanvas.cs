@@ -1,5 +1,5 @@
+using LingoEngine.Bitmaps;
 using LingoEngine.Primitives;
-using System.Collections.Generic;
 
 namespace LingoEngine.Gfx
 {
@@ -17,5 +17,6 @@ namespace LingoEngine.Gfx
         void DrawPolygon(IReadOnlyList<LingoPoint> points, LingoColor color, bool filled = true, float width = 1);
         void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12);
         void DrawPicture(byte[] data, int width, int height, LingoPoint position, LingoPixelFormat format);
+        void DrawPicture(ILingoImageTexture texture, int width, int height, LingoPoint position);
     }
 }

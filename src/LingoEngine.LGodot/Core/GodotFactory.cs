@@ -186,7 +186,9 @@ namespace LingoEngine.LGodot.Core
             return key;
         }
 
-        public LingoGfxCanvas CreateGfxCanvas(int width, int height, string name)
+
+        #region Gfx elements
+        public LingoGfxCanvas CreateGfxCanvas(string name, int width, int height)
         {
             var canvas = new LingoGfxCanvas();
             var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
@@ -200,7 +202,7 @@ namespace LingoEngine.LGodot.Core
         {
             var panel = new LingoGfxWrapPanel();
             var impl = new LingoGodotWrapPanel(panel, orientation);
-            
+
             panel.Name = name;
             return panel;
         }
@@ -209,7 +211,7 @@ namespace LingoEngine.LGodot.Core
         {
             var panel = new LingoGfxPanel();
             var impl = new LingoGodotPanel(panel);
-           
+
             panel.Name = name;
             return panel;
         }
@@ -218,7 +220,7 @@ namespace LingoEngine.LGodot.Core
         {
             var tab = new LingoGfxTabContainer();
             var impl = new LingoGodotTabContainer(tab);
-            
+
             tab.Name = name;
             return tab;
         }
@@ -227,7 +229,7 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
-            
+
             input.Name = name;
             return input;
         }
@@ -236,7 +238,7 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputNumber { Min = min, Max = max };
             var impl = new LingoGodotInputNumber(input);
-            
+
             input.Name = name;
             return input;
         }
@@ -245,7 +247,7 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputCheckbox();
             var impl = new LingoGodotInputCheckbox(input);
-            
+
             input.Name = name;
             return input;
         }
@@ -254,7 +256,7 @@ namespace LingoEngine.LGodot.Core
         {
             var input = new LingoGfxInputCombobox();
             var impl = new LingoGodotInputCombobox(input);
-            
+
             input.Name = name;
             return input;
         }
@@ -264,7 +266,7 @@ namespace LingoEngine.LGodot.Core
             var label = new LingoGfxLabel();
             var impl = new LingoGodotLabel(label, _serviceProvider.GetRequiredService<ILingoFontManager>());
             label.Text = text;
-            
+
             label.Name = name;
             return label;
         }
@@ -281,6 +283,9 @@ namespace LingoEngine.LGodot.Core
             var item = new LingoGfxMenuItem();
             var impl = new LingoGodotMenuItem(name, shortcut);
             return item;
-        }
+        } 
+        #endregion
+
+
     }
 }

@@ -17,6 +17,8 @@
             Right = right;
             Bottom = bottom;
         }
+        public static LingoRect New(float x, float y, float width, float height)
+            => new LingoRect(x, y, x + width, y + height);
 
         public float Width => Right - Left;
         public float Height => Bottom - Top;

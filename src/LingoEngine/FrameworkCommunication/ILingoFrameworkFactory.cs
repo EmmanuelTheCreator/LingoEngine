@@ -11,6 +11,7 @@ using LingoEngine.Texts;
 using LingoEngine.Gfx;
 using LingoEngine.Sprites;
 using LingoEngine.Stages;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.FrameworkCommunication
 {
@@ -64,10 +65,12 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a keyboard handler.</summary>
         LingoKey CreateKey();
 
+
+        #region Gfx Elements
         /// <summary>
         /// Creates a generic drawing canvas instance.
         /// </summary>
-        LingoGfxCanvas CreateGfxCanvas(int width, int height, string name);
+        LingoGfxCanvas CreateGfxCanvas(string name, int width, int height);
 
         /// <summary>
         /// Creates a wrapping panel container.
@@ -104,6 +107,8 @@ namespace LingoEngine.FrameworkCommunication
 
         /// <summary>Creates a menu item.</summary>
         LingoGfxMenuItem CreateMenuItem(string name, string? shortcut = null);
+
+        #endregion
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;

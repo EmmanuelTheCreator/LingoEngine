@@ -18,6 +18,7 @@ using LingoEngine.Director.Core.Windowing.Commands;
 using LingoEngine.Sprites;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Sprites;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -37,7 +38,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     private readonly DirectorPropertyInspectorWindow _inspectorWindow;
     private const int HeaderHeight = 44;
 
-    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, IDirGodotIconManager iconManager)
+    public DirGodotPropertyInspector(IDirectorEventMediator mediator, ILingoCommandManager commandManager, DirectorPropertyInspectorWindow inspectorWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, IDirectorIconManager iconManager)
         : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
     {
         _mediator = mediator;

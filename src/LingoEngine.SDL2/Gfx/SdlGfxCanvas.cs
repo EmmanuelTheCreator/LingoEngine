@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using LingoEngine.Bitmaps;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using LingoEngine.SDL2.Primitives;
@@ -203,6 +204,10 @@ namespace LingoEngine.SDL2.Gfx
                 handle.Free();
             });
         }
+        public void DrawPicture(ILingoImageTexture texture, int width, int height, LingoPoint position)
+        {
+            throw new NotImplementedException();
+        }
 
         public void Dispose()
         {
@@ -212,5 +217,7 @@ namespace LingoEngine.SDL2.Gfx
                 _texture = nint.Zero;
             }
         }
+
+       
     }
 }

@@ -18,6 +18,7 @@ using LingoEngine.Director.Core.Tools;
 using LingoEngine.Director.Core.Pictures.Commands;
 using LingoEngine.Director.Core.Bitmaps;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
@@ -47,7 +48,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private readonly SelectionCanvas _selectionCanvas;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
-    private readonly IDirGodotIconManager _iconManager;
+    private readonly IDirectorIconManager _iconManager;
     private readonly ILingoCommandManager _commandManager;
     private readonly IHistoryManager _historyManager;
     private LingoMemberBitmap? _member;
@@ -69,7 +70,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _spaceHeld;
     private bool _panning;
 
-    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorBitmapEditWindow directorPictureEditWindow, IDirGodotIconManager iconManager, ILingoCommandManager commandManager, IHistoryManager historyManager)
+    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorBitmapEditWindow directorPictureEditWindow, IDirectorIconManager iconManager, ILingoCommandManager commandManager, IHistoryManager historyManager)
         : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
         _mediator = mediator;

@@ -27,6 +27,7 @@ namespace LingoEngine.LGodot.Gfx
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get => !Disabled; set => Disabled = !value; }
+        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 
         public LingoMargin Margin
         {

@@ -7,8 +7,6 @@ using LingoEngine.Director.LGodot.Casts;
 using LingoEngine.Director.LGodot.Scores;
 using LingoEngine.Director.LGodot.Inspector;
 using LingoEngine.Director.LGodot.Movies;
-using System.IO;
-using System;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot.Pictures;
 using LingoEngine.Director.Core.FileSystems;
@@ -24,6 +22,8 @@ using LingoEngine.Director.Core.Stages;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.LGodot.UI;
+using LingoEngine.Director.Core.Icons;
+using Microsoft.Extensions.Logging;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -52,9 +52,9 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotWindowManager>();
                 s.AddSingleton<DirGodotWindowManager>();
                 s.AddSingleton<IExecutableFilePicker, GodotFilePicker>();
-                s.AddSingleton<IDirGodotIconManager>(p =>
+                s.AddSingleton<IDirectorIconManager>(p =>
                 {
-                    var iconManager = new DirGodotIconManager();
+                    var iconManager = new DirGodotIconManager(p.GetRequiredService<ILogger<DirGodotIconManager>>());
                     iconManager.LoadSheet("res://Media/Icons/General_Icons.png", 20,16, 16,8);
                     iconManager.LoadSheet("res://Media/Icons/Painter_Icons.png", 20,16, 16,8);
                     return iconManager;

@@ -15,6 +15,7 @@ namespace LingoEngine.LGodot
         {
             engineRegistration
                 .Services(s => s
+                        .AddGodotLogging()
                         .AddSingleton<ILingoFrameworkFactory, GodotFactory>()
                         .AddSingleton<ILingoFrameworkStageContainer, LingoGodotStageContainer>()
                         .AddSingleton<ILingoFontManager, LingoGodotFontManager>()

@@ -16,17 +16,17 @@ namespace LingoEngine.Director.Core.Casts;
 public class DirectorMemberThumbnail : IDisposable
 {
     private const int LabelHeight = 15;
-    public float ThumbWidth { get; }
-    public float ThumbHeight { get; }
+    public int ThumbWidth { get; }
+    public int ThumbHeight { get; }
     /// <summary>Canvas used for drawing the preview.</summary>
     public LingoGfxCanvas Canvas { get; }
     private readonly IDirectorIconManager? _iconManager;
 
-    public DirectorMemberThumbnail(float width, float height, ILingoFrameworkFactory factory, IDirectorIconManager? iconManager = null)
+    public DirectorMemberThumbnail(int width, int height, ILingoFrameworkFactory factory, IDirectorIconManager? iconManager = null)
     {
         ThumbWidth = width;
         ThumbHeight = height;
-        Canvas = factory.CreateGfxCanvas((int)width, (int)height, "ThumbnailCanvas");
+        Canvas = factory.CreateGfxCanvas("MemberThumbnailCanvas", width, height);
         _iconManager = iconManager;
     }
 
@@ -54,10 +54,11 @@ public class DirectorMemberThumbnail : IDisposable
             var icon = LingoMemberTypeIcons.GetIconType(member);
             if (icon.HasValue)
             {
-                var data = _iconManager.GetData(icon.Value);
+                var data = _iconManager.Get(icon.Value);
                 var x = ThumbWidth - data.Width - 2;
                 var y = ThumbHeight - data.Height - 2;
-                Canvas.DrawPicture(data.Data, data.Width, data.Height, new LingoPoint(x, y), data.Format);
+                Canvas.DrawPicture(data, data.Width, data.Height, new LingoPoint(x, y));
+                Canvas.DrawRect(LingoRect.New(x,y,data.Width, data.Height), LingoColorList.Gray,false);
             }
         }
     }

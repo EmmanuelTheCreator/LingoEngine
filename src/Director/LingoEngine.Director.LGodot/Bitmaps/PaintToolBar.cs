@@ -6,6 +6,7 @@ using LingoEngine.Director.Core.Pictures.Commands;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.LGodot.Icons;
+using LingoEngine.LGodot.Bitmaps;
 using LingoEngine.LGodot.Primitives;
 using System;
 
@@ -13,7 +14,7 @@ namespace LingoEngine.Director.LGodot.Pictures
 {
     public partial class PaintToolbar : Panel
     {
-        private readonly IDirGodotIconManager _iconManager;
+        private readonly IDirectorIconManager _iconManager;
         private readonly ILingoCommandManager _commandManager;
         private DirectorToolButton? _selectedButton = null;
         private HFlowContainer _container;
@@ -23,7 +24,7 @@ namespace LingoEngine.Director.LGodot.Pictures
         public Color SelectedColor { get; private set; } = Colors.Black;
         public Color BGColor { get; set; } = DirectorColors.BG_WhiteMenus.ToGodotColor();
 
-        public PaintToolbar(IDirGodotIconManager iconManager, ILingoCommandManager commandManager)
+        public PaintToolbar(IDirectorIconManager iconManager, ILingoCommandManager commandManager)
         {
             _iconManager = iconManager;
             _commandManager = commandManager;
@@ -60,7 +61,7 @@ namespace LingoEngine.Director.LGodot.Pictures
         private void AddToolButton(DirectorIcon icon)
         {
             var btn = new DirectorToolButton();
-            btn.Icon = _iconManager.Get(icon);
+            btn.Icon = ((LingoGodotImageTexture) _iconManager.Get(icon)).Texture;
 
             btn.Pressed = () =>
             {
