@@ -16,7 +16,7 @@ public static class PixelPerfectMaterial
             var shader = new Shader();
             shader.Code = """
                 shader_type canvas_item;
-                render_mode unshaded, texture_filter_nearest;
+                render_mode unshaded;
             """;
 
             _sharedMaterial = new ShaderMaterial();
@@ -32,5 +32,6 @@ public static class PixelPerfectMaterial
     public static void ApplyTo(CanvasItem target)
     {
         target.Material = GetMaterial();
+        target.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
     }
 }
