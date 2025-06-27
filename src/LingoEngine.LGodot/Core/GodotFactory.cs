@@ -186,78 +186,87 @@ namespace LingoEngine.LGodot.Core
             return key;
         }
 
-        public LingoGfxCanvas CreateGfxCanvas(int width, int height)
+        public LingoGfxCanvas CreateGfxCanvas(int width, int height, string name)
         {
             var canvas = new LingoGfxCanvas();
             var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
             _rootNode.AddChild(impl);
             canvas.Width = width;
             canvas.Height = height;
+            canvas.Name = name;
             return canvas;
         }
 
-        public LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation)
+        public LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation, string name)
         {
             var panel = new LingoGfxWrapPanel();
             var impl = new LingoGodotWrapPanel(panel, orientation);
             _rootNode.AddChild(impl);
+            panel.Name = name;
             return panel;
         }
 
-        public LingoGfxPanel CreatePanel()
+        public LingoGfxPanel CreatePanel(string name)
         {
             var panel = new LingoGfxPanel();
             var impl = new LingoGodotPanel(panel);
             _rootNode.AddChild(impl);
+            panel.Name = name;
             return panel;
         }
 
-        public LingoGfxTabContainer CreateTabContainer()
+        public LingoGfxTabContainer CreateTabContainer(string name)
         {
             var tab = new LingoGfxTabContainer();
             var impl = new LingoGodotTabContainer(tab);
             _rootNode.AddChild(impl);
+            tab.Name = name;
             return tab;
         }
 
-        public LingoGfxInputText CreateInputText(int maxLength = 0)
+        public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
             _rootNode.AddChild(impl);
+            input.Name = name;
             return input;
         }
 
-        public LingoGfxInputNumber CreateInputNumber(float min = 0, float max = 100)
+        public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100)
         {
             var input = new LingoGfxInputNumber { Min = min, Max = max };
             var impl = new LingoGodotInputNumber(input);
             _rootNode.AddChild(impl);
+            input.Name = name;
             return input;
         }
 
-        public LingoGfxInputCheckbox CreateInputCheckbox()
+        public LingoGfxInputCheckbox CreateInputCheckbox(string name)
         {
             var input = new LingoGfxInputCheckbox();
             var impl = new LingoGodotInputCheckbox(input);
             _rootNode.AddChild(impl);
+            input.Name = name;
             return input;
         }
 
-        public LingoGfxInputCombobox CreateInputCombobox()
+        public LingoGfxInputCombobox CreateInputCombobox(string name)
         {
             var input = new LingoGfxInputCombobox();
             var impl = new LingoGodotInputCombobox(input);
             _rootNode.AddChild(impl);
+            input.Name = name;
             return input;
         }
 
-        public LingoLabel CreateLabel(string text = "")
+        public LingoLabel CreateLabel(string name, string text = "")
         {
             var label = new LingoLabel();
             var impl = new LingoGodotLabel(label, _serviceProvider.GetRequiredService<ILingoFontManager>());
             label.Text = text;
             _rootNode.AddChild(impl);
+            label.Name = name;
             return label;
         }
 

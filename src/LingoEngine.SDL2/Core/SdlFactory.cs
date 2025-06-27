@@ -177,77 +177,86 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return key;
     }
 
-    public LingoGfxCanvas CreateGfxCanvas(int width, int height)
+    public LingoGfxCanvas CreateGfxCanvas(int width, int height, string name)
     {
         var canvas = new LingoGfxCanvas();
         var impl = new SdlGfxCanvas(_rootContext.Renderer, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
         canvas.Init(impl);
         canvas.Width = width;
         canvas.Height = height;
+        canvas.Name = name;
         return canvas;
     }
 
-    public LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation)
+    public LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation, string name)
     {
         var panel = new LingoGfxWrapPanel();
         var impl = new SdlGfxWrapPanel(orientation);
         panel.Init(impl);
+        panel.Name = name;
         return panel;
     }
 
-    public LingoGfxPanel CreatePanel()
+    public LingoGfxPanel CreatePanel(string name)
     {
         var panel = new LingoGfxPanel();
         var impl = new SdlGfxPanel();
         panel.Init(impl);
+        panel.Name = name;
         return panel;
     }
 
-    public LingoGfxTabContainer CreateTabContainer()
+    public LingoGfxTabContainer CreateTabContainer(string name)
     {
         var tab = new LingoGfxTabContainer();
         var impl = new SdlGfxTabContainer();
         tab.Init(impl);
+        tab.Name = name;
         return tab;
     }
 
-    public LingoGfxInputText CreateInputText(int maxLength = 0)
+    public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
     {
         var input = new LingoGfxInputText { MaxLength = maxLength };
         var impl = new SdlGfxInputText();
         input.Init(impl);
+        input.Name = name;
         return input;
     }
 
-    public LingoGfxInputNumber CreateInputNumber(float min = 0, float max = 100)
+    public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100)
     {
         var input = new LingoGfxInputNumber { Min = min, Max = max };
         var impl = new SdlGfxInputNumber();
         input.Init(impl);
+        input.Name = name;
         return input;
     }
 
-    public LingoGfxInputCheckbox CreateInputCheckbox()
+    public LingoGfxInputCheckbox CreateInputCheckbox(string name)
     {
         var input = new LingoGfxInputCheckbox();
         var impl = new SdlGfxInputCheckbox();
         input.Init(impl);
+        input.Name = name;
         return input;
     }
 
-    public LingoGfxInputCombobox CreateInputCombobox()
+    public LingoGfxInputCombobox CreateInputCombobox(string name)
     {
         var input = new LingoGfxInputCombobox();
         var impl = new SdlGfxInputCombobox();
         input.Init(impl);
+        input.Name = name;
         return input;
     }
 
-    public LingoLabel CreateLabel(string text = "")
+    public LingoLabel CreateLabel(string name, string text = "")
     {
         var label = new LingoLabel { Text = text };
         var impl = new SdlGfxLabel();
         label.Init(impl);
+        label.Name = name;
         return label;
     }
 
