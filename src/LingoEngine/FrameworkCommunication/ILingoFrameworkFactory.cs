@@ -108,6 +108,9 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a simple text label.</summary>
         LingoGfxLabel CreateLabel(string name, string text = "");
 
+        /// <summary>Creates a clickable button.</summary>
+        LingoGfxButton CreateButton(string name, string text = "");
+
         /// <summary>Creates a menu container.</summary>
         LingoGfxMenu CreateMenu(string name);
 

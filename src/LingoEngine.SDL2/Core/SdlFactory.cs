@@ -281,6 +281,15 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return label;
     }
 
+    public LingoGfxButton CreateButton(string name, string text = "")
+    {
+        var button = new LingoGfxButton { Text = text };
+        var impl = new SdlGfxButton();
+        button.Init(impl);
+        button.Name = name;
+        return button;
+    }
+
     public LingoGfxMenu CreateMenu(string name)
     {
         var menu = new LingoGfxMenu();

@@ -54,7 +54,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         _header = headerElems.Header;
         _headerPanel = headerElems.Panel;
         _tabs = _player.Factory.CreateTabContainer("InspectorTabs");
-        _inspectorWindow.Setup(_player, _commandManager, _tabs, _thumb);
+        _inspectorWindow.Setup(_player, _commandManager, _tabs, _thumb, _header);
         CreateHeader();
 
         var godotTabs = _tabs.Framework<LingoGodotTabContainer>();
@@ -94,20 +94,11 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
     protected override void OnResizing(Vector2 size)
     {
         base.OnResizing(size);
-        _header.Width = size.X - 10;
-        _header.Height = HeaderHeight;
-        var godotTabs = _tabs.Framework<LingoGodotTabContainer>();
-        godotTabs.Position = new Vector2(0, TitleBarHeight + HeaderHeight);
-        if (_behaviorPanel.Visible)
+        var layout = _inspectorWindow.OnResizing(size.X, size.Y, TitleBarHeight, _behaviorPanel.Visible);
+        if (layout is { } rect)
         {
-            var half = (Size.Y - 30 - HeaderHeight) / 2f;
-            godotTabs.Size = new Vector2(Size.X - 10, half);
-            _behaviorPanel.Position = new Vector2(0, TitleBarHeight + HeaderHeight + half);
-            _behaviorPanel.Size = new Vector2(Size.X - 10, half);
-        }
-        else
-        {
-            godotTabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - HeaderHeight);
+            _behaviorPanel.Position = new Vector2(rect.X, rect.Y);
+            _behaviorPanel.Size = new Vector2(rect.Width, rect.Height);
         }
     }
     public void SpriteSelected(ILingoSprite sprite) => _inspectorWindow.ShowObject(sprite);
