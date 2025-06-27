@@ -74,7 +74,11 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public void Dispose() => QueueFree();
+        public new void Dispose()
+        {
+            base.Dispose();
+            QueueFree();
+        }
 
         private void ApplyMargin()
         {

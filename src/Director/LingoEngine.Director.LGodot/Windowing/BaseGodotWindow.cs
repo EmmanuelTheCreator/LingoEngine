@@ -8,8 +8,15 @@ namespace LingoEngine.Director.LGodot
         private readonly IDirGodotWindowManager _windowManager;
         protected bool _dragging;
         protected bool _resizing;
-        private readonly Label _label = new Label();
-        private readonly Button _closeButton = new Button();
+        private readonly Label _label = new Label
+        {
+            Name = "WindowTextTitle",
+        };
+
+        private readonly Button _closeButton = new Button
+        {
+            Name = "WindowCloseButton",
+        };
         protected int TitleBarHeight = 20;
         private int ResizeHandle = 10;
         private Vector2 _dragOffset;
@@ -21,6 +28,7 @@ namespace LingoEngine.Director.LGodot
 
         public BaseGodotWindow(string windowCode,string name, IDirGodotWindowManager windowManager)
         {
+            Name = $"Window {name}";
             WindowName = name;
             WindowCode = windowCode;
             _windowManager = windowManager;

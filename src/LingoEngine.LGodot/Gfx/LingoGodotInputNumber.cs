@@ -59,6 +59,10 @@ namespace LingoEngine.LGodot.Gfx
             remove => _onValueChanged -= value;
         }
 
-        public void Dispose() => QueueFree();
+        public new void Dispose()
+        {
+            base.Dispose();
+            QueueFree();
+        }
     }
 }

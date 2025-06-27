@@ -9,12 +9,6 @@ using LingoEngine.Pictures;
 namespace LingoEngine.LGodot
 {
 
-    /*
-    # In Godot's GDScript
-var lingoMouse = LingoMouse.new()  # Create a LingoMouse instance
-var lingoGodotMouse = LingoGodotMouse.new(lingoMouse)
-add_child(lingoGodotMouse)  # Add it to the scene
-    */
     /// <summary>
     /// Communication between the Godot engine and the Lingo mouse object
     /// </summary>
@@ -35,7 +29,7 @@ add_child(lingoGodotMouse)  # Add it to the scene
             AddChild(_collisionShape2D);
             _RectangleShape2D.Size = new Vector2(1000, 1000);
             _collisionShape2D.Shape = _RectangleShape2D;
-            //Input.MouseMode = Input.MouseModeEnum.Hidden;
+            _collisionShape2D.Name = "MouseDetectionCollisionShape";
         }
        
 
