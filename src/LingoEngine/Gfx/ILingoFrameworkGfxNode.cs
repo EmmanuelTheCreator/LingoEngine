@@ -7,6 +7,8 @@ namespace LingoEngine.Gfx
     /// </summary>
     public interface ILingoFrameworkGfxNode : System.IDisposable
     {
+        /// <summary>Name of the node.</summary>
+        string Name { get; set; }
         float X { get; set; }
         float Y { get; set; }
         float Width { get; set; }
