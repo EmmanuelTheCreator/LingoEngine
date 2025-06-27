@@ -217,7 +217,15 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         tab.Name = name;
         return tab;
     }
+    public LingoGfxTabItem CreateTabItem(string name, string title)
+    {
+        var tab = new LingoGfxTabItem(title);
+        var impl = new SdlGfxTabItem(tab);
 
+        tab.Name = name;
+        return tab;
+    }
+    
     public LingoGfxScrollContainer CreateScrollContainer(string name)
     {
         var scroll = new LingoGfxScrollContainer();

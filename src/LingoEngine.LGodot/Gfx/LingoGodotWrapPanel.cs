@@ -85,16 +85,24 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
+        
         public void AddChild(ILingoFrameworkGfxNode child)
         {
-            if (child is Node node)
-            {
-                if (node is Control ctrl)
-                    ApplyItemMargin(ctrl);
-                _container.AddChild(node);
-            }
+            if (child is not Node node)
+                return;
+            
+            if (node is Control ctrl)
+                ApplyItemMargin(ctrl);
+            _container.AddChild(node);
         }
-
+        public void RemoveChild(ILingoFrameworkGfxNode child)
+        {
+            if (child is not Node node)
+                return;
+            _container.RemoveChild(node);
+        }
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren() => _container.GetChildren().OfType<ILingoFrameworkGfxNode>().ToArray();
+        public ILingoFrameworkGfxNode? GetChild(int index) => _container.GetChild(index) as ILingoFrameworkGfxNode;
         public new void Dispose()
         {
             base.Dispose();
@@ -116,5 +124,6 @@ namespace LingoEngine.LGodot.Gfx
             _container.AddThemeConstantOverride("margin_top", (int)_margin.Top);
             _container.AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
         }
+
     }
 }

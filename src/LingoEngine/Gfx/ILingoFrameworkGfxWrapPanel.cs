@@ -15,5 +15,8 @@ namespace LingoEngine.Gfx
 
         /// <summary>Adds a child node to the container.</summary>
         void AddChild(ILingoFrameworkGfxNode child);
+        void RemoveChild(ILingoFrameworkGfxNode child);
+        IEnumerable<ILingoFrameworkGfxNode> GetChildren();
+        ILingoFrameworkGfxNode? GetChild(int index);
     }
 }

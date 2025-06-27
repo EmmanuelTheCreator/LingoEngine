@@ -86,6 +86,7 @@ namespace LingoEngine.FrameworkCommunication
         /// Creates a tab container for organizing child panels.
         /// </summary>
         LingoGfxTabContainer CreateTabContainer(string name);
+        LingoGfxTabItem CreateTabItem(string name, string title);
 
         /// <summary>Creates a scroll container.</summary>
         LingoGfxScrollContainer CreateScrollContainer(string name);

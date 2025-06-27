@@ -9,6 +9,8 @@ namespace LingoEngine.Gfx
     {
         /// <summary>Adds a child node to the panel.</summary>
         void AddChild(ILingoFrameworkGfxNode child);
+        void RemoveChild(ILingoFrameworkGfxNode child);
+        IEnumerable<ILingoFrameworkGfxNode> GetChildren();
 
         /// <summary>Background color of the panel.</summary>
         LingoColor BackgroundColor { get; set; }
