@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper for a single menu item.
     /// </summary>
-    public class LingoMenuItem
+    public class LingoGfxMenuItem
     {
         private ILingoFrameworkGfxMenuItem _framework = null!;
         internal ILingoFrameworkGfxMenuItem Framework => _framework;

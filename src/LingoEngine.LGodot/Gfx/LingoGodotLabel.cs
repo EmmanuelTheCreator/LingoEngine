@@ -16,7 +16,7 @@ namespace LingoEngine.LGodot.Gfx
         private string? _font;
         private LingoColor _fontColor;
 
-        public LingoGodotLabel(LingoLabel label, ILingoFontManager fontManager)
+        public LingoGodotLabel(LingoGfxLabel label, ILingoFontManager fontManager)
         {
             _fontManager = fontManager;
             label.Init(this);

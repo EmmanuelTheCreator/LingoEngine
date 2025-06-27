@@ -26,7 +26,7 @@ public class DirectorMemberThumbnail : IDisposable
     {
         ThumbWidth = width;
         ThumbHeight = height;
-        Canvas = factory.CreateGfxCanvas((int)width, (int)height);
+        Canvas = factory.CreateGfxCanvas((int)width, (int)height, "ThumbnailCanvas");
         _iconManager = iconManager;
     }
 

@@ -186,82 +186,99 @@ namespace LingoEngine.LGodot.Core
             return key;
         }
 
-        public LingoGfxCanvas CreateGfxCanvas(int width, int height)
+        public LingoGfxCanvas CreateGfxCanvas(int width, int height, string name)
         {
             var canvas = new LingoGfxCanvas();
             var impl = new LingoGodotGfxCanvas(canvas, _serviceProvider.GetRequiredService<ILingoFontManager>(), width, height);
             canvas.Width = width;
             canvas.Height = height;
+            canvas.Name = name;
             return canvas;
         }
 
-        public LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation)
+        public LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation, string name)
         {
             var panel = new LingoGfxWrapPanel();
             var impl = new LingoGodotWrapPanel(panel, orientation);
+            
+            panel.Name = name;
             return panel;
         }
 
-        public LingoGfxPanel CreatePanel()
+        public LingoGfxPanel CreatePanel(string name)
         {
             var panel = new LingoGfxPanel();
             var impl = new LingoGodotPanel(panel);
+           
+            panel.Name = name;
             return panel;
         }
 
-        public LingoGfxTabContainer CreateTabContainer()
+        public LingoGfxTabContainer CreateTabContainer(string name)
         {
             var tab = new LingoGfxTabContainer();
             var impl = new LingoGodotTabContainer(tab);
+            
+            tab.Name = name;
             return tab;
         }
 
-        public LingoGfxInputText CreateInputText(int maxLength = 0)
+        public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
         {
             var input = new LingoGfxInputText { MaxLength = maxLength };
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            
+            input.Name = name;
             return input;
         }
 
-        public LingoGfxInputNumber CreateInputNumber(float min = 0, float max = 100)
+        public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100)
         {
             var input = new LingoGfxInputNumber { Min = min, Max = max };
             var impl = new LingoGodotInputNumber(input);
+            
+            input.Name = name;
             return input;
         }
 
-        public LingoGfxInputCheckbox CreateInputCheckbox()
+        public LingoGfxInputCheckbox CreateInputCheckbox(string name)
         {
             var input = new LingoGfxInputCheckbox();
             var impl = new LingoGodotInputCheckbox(input);
+            
+            input.Name = name;
             return input;
         }
 
-        public LingoGfxInputCombobox CreateInputCombobox()
+        public LingoGfxInputCombobox CreateInputCombobox(string name)
         {
             var input = new LingoGfxInputCombobox();
             var impl = new LingoGodotInputCombobox(input);
+            
+            input.Name = name;
             return input;
         }
 
-        public LingoLabel CreateLabel(string text = "")
+        public LingoGfxLabel CreateLabel(string name, string text = "")
         {
-            var label = new LingoLabel();
+            var label = new LingoGfxLabel();
             var impl = new LingoGodotLabel(label, _serviceProvider.GetRequiredService<ILingoFontManager>());
             label.Text = text;
+            
+            label.Name = name;
             return label;
         }
 
-        public LingoMenu CreateMenu(string name)
+        public LingoGfxMenu CreateMenu(string name)
         {
-            var menu = new LingoMenu();
+            var menu = new LingoGfxMenu();
             var impl = new LingoGodotMenu(menu, name);
             return menu;
         }
 
-        public LingoMenuItem CreateMenuItem(string name, string? shortcut = null)
+        public LingoGfxMenuItem CreateMenuItem(string name, string? shortcut = null)
         {
-            var item = new LingoMenuItem();
+            var item = new LingoGfxMenuItem();
             var impl = new LingoGodotMenuItem(name, shortcut);
             return item;
         }

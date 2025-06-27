@@ -10,9 +10,9 @@ namespace LingoEngine.Director.Core.Inspector
 {
     public class DirectorPropertyInspectorWindow : DirectorWindow<IDirFrameworkPropertyInspectorWindow>
     {
-        private LingoLabel? _sprite;
-        private LingoLabel? _member;
-        private LingoLabel? _cast;
+        private LingoGfxLabel? _sprite;
+        private LingoGfxLabel? _member;
+        private LingoGfxLabel? _cast;
 
         public string SpriteText { get => _sprite?.Text ?? string.Empty; set { if (_sprite != null) _sprite.Text = value; } }
         public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
@@ -24,25 +24,25 @@ namespace LingoEngine.Director.Core.Inspector
         {
             var thumb = new DirectorMemberThumbnail(36, 36, factory, iconManager);
 
-            var thumbPanel = factory.CreatePanel();
+            var thumbPanel = factory.CreatePanel("ThumbPanel");
             thumbPanel.Margin = new LingoMargin(4, 2, 4, 2);
             thumbPanel.BackgroundColor = new LingoColor(255, 255, 255);
             thumbPanel.BorderColor = new LingoColor(64, 64, 64);
             thumbPanel.BorderWidth = 1;
             thumbPanel.AddChild(thumb.Canvas);
 
-            var container = factory.CreateWrapPanel(LingoOrientation.Vertical);
+            var container = factory.CreateWrapPanel(LingoOrientation.Vertical, "InfoContainer");
             container.ItemMargin = new LingoMargin(0, 0, 1, 0);
 
-            _sprite = factory.CreateLabel();
+            _sprite = factory.CreateLabel("SpriteLabel");
             _sprite.FontSize = 10;
             _sprite.FontColor = new LingoColor(0, 0, 0);
 
-            _member = factory.CreateLabel();
+            _member = factory.CreateLabel("MemberLabel");
             _member.FontSize = 10;
             _member.FontColor = new LingoColor(0, 0, 0);
 
-            _cast = factory.CreateLabel();
+            _cast = factory.CreateLabel("CastLabel");
             _cast.FontSize = 10;
             _cast.FontColor = new LingoColor(0, 0, 0);
 
@@ -50,11 +50,11 @@ namespace LingoEngine.Director.Core.Inspector
             container.AddChild(_member);
             container.AddChild(_cast);
 
-            var header = factory.CreateWrapPanel(LingoOrientation.Horizontal);
+            var header = factory.CreateWrapPanel(LingoOrientation.Horizontal, "HeaderPanel");
             header.AddChild(thumbPanel);
             header.AddChild(container);
 
-            var panel = factory.CreatePanel();
+            var panel = factory.CreatePanel("RootPanel");
             panel.BackgroundColor = DirectorColors.BG_WhiteMenus;
             panel.AddChild(header);
 
