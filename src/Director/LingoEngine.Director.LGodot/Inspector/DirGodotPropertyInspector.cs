@@ -268,3 +268,6 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IHasSpriteSele
         }
         _behaviorBox.AddChild(container);
         _behaviorPanel.Visible = true;
+        OnResizing(Size);
+    }
+}
