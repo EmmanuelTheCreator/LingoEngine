@@ -19,7 +19,7 @@ namespace LingoEngine.Gfx
         public float Height { get => _framework.Height; set => _framework.Height = value; }
         public bool Visibility { get => _framework.Visibility; set => _framework.Visibility = value; }
         public LingoMargin Margin { get => _framework.Margin; set => _framework.Margin = value; }
-        public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string Name { get => _framework.Name; set => _framework.Name = value; }
 
         public T Framework<T>() where T : ILingoFrameworkGfxNode => (T)(object)_framework;
 
