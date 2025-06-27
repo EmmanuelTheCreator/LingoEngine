@@ -166,7 +166,10 @@ namespace LingoEngine.SDL2.Gfx
                 nint fnt = SDL_ttf.TTF_OpenFont(path, fontSize);
                 if (fnt == nint.Zero) return;
                 SDL.SDL_Color c = new SDL.SDL_Color { r = color?.R ?? 0, g = color?.G ?? 0, b = color?.B ?? 0, a = 255 };
-                nint surf = SDL_ttf.TTF_RenderUTF8_Blended(fnt, text, c);
+
+                nint surf = text.Contains('\n')
+                    ? SDL_ttf.TTF_RenderUTF8_Blended_Wrapped(fnt, text, c, 0)
+                    : SDL_ttf.TTF_RenderUTF8_Blended(fnt, text, c);
                 if (surf == nint.Zero)
                 {
                     SDL_ttf.TTF_CloseFont(fnt);
