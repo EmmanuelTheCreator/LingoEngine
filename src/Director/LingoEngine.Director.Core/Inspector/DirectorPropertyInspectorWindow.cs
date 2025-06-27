@@ -33,6 +33,8 @@ namespace LingoEngine.Director.Core.Inspector
 
             var container = factory.CreateWrapPanel(LingoOrientation.Vertical, "InfoContainer");
             container.ItemMargin = new LingoMargin(0, 0, 1, 0);
+            // Center the labels within the header panel
+            container.Margin = new LingoMargin(0, 7, 0, 0);
 
             _sprite = factory.CreateLabel("SpriteLabel");
             _sprite.FontSize = 10;

@@ -132,7 +132,26 @@ namespace LingoEngine.LGodot.Gfx
         public void DrawText(LingoPoint position, string text, string? font = null, LingoColor? color = null, int fontSize = 12)
         {
             Font fontGodot = _fontManager.Get<FontFile>(font ?? "") ?? ThemeDB.FallbackFont;
-            _drawActions.Add(() => DrawString(fontGodot, position.ToVector2(), text, HorizontalAlignment.Left, -1, fontSize, color.HasValue ? color.Value.ToGodotColor() : Colors.Black));
+            Color col = color.HasValue ? color.Value.ToGodotColor() : Colors.Black;
+
+            if (!text.Contains('\n'))
+            {
+                _drawActions.Add(() => DrawString(fontGodot, position.ToVector2(), text, HorizontalAlignment.Left, -1, fontSize, col));
+            }
+            else
+            {
+                var lines = text.Split('\n');
+                _drawActions.Add(() =>
+                {
+                    int lineHeight = fontGodot.GetHeight();
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        Vector2 pos = new Vector2(position.X, position.Y + i * lineHeight);
+                        DrawString(fontGodot, pos, lines[i], HorizontalAlignment.Left, -1, fontSize, col);
+                    }
+                });
+            }
+
             MarkDirty();
         }
 
