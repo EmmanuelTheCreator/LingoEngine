@@ -142,7 +142,12 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.AnchorTop = 0;
         _scrollContainer.AnchorRight = 1;
         _scrollContainer.AnchorBottom = 1;
-        _scrollContainer.OffsetLeft = _paintToolbar.Size.X; // Width of the toolbar
+        // Offset the scroll area by the toolbar width so the toolbar isn't overlapped.
+        // Using `Size` here resulted in 0 during initial layout because the
+        // control hasn't been measured yet, causing the scroll container to
+        // cover the toolbar and consume its input. Rely on the toolbar's
+        // configured minimum width instead.
+        _scrollContainer.OffsetLeft = _paintToolbar.CustomMinimumSize.X;
         _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
         _scrollContainer.OffsetRight = 0;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
@@ -386,7 +391,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
-        _scrollContainer.OffsetLeft = 0;
+        // Keep the scroll container offset by the toolbar width when the window
+        // is resized so it doesn't overlap the toolbar.
+        _scrollContainer.OffsetLeft = _paintToolbar.CustomMinimumSize.X;
         _scrollContainer.OffsetRight = 0;
         _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
         UpdateRegPointCanvasSize();
