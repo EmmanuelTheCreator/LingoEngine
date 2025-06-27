@@ -67,43 +67,43 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>
         /// Creates a generic drawing canvas instance.
         /// </summary>
-        LingoGfxCanvas CreateGfxCanvas(int width, int height);
+        LingoGfxCanvas CreateGfxCanvas(int width, int height, string name);
 
         /// <summary>
         /// Creates a wrapping panel container.
         /// </summary>
-        LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation);
+        LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation, string name);
 
         /// <summary>
         /// Creates a simple panel container for absolute positioning.
         /// </summary>
-        LingoGfxPanel CreatePanel();
+        LingoGfxPanel CreatePanel(string name);
 
         /// <summary>
         /// Creates a tab container for organizing child panels.
         /// </summary>
-        LingoGfxTabContainer CreateTabContainer();
+        LingoGfxTabContainer CreateTabContainer(string name);
 
         /// <summary>Creates a single line text input.</summary>
-        LingoGfxInputText CreateInputText(int maxLength = 0);
+        LingoGfxInputText CreateInputText(string name, int maxLength = 0);
 
         /// <summary>Creates a numeric input field.</summary>
-        LingoGfxInputNumber CreateInputNumber(float min = 0, float max = 100);
+        LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100);
 
         /// <summary>Creates a checkbox input.</summary>
-        LingoGfxInputCheckbox CreateInputCheckbox();
+        LingoGfxInputCheckbox CreateInputCheckbox(string name);
 
         /// <summary>Creates a combo box input.</summary>
-        LingoGfxInputCombobox CreateInputCombobox();
+        LingoGfxInputCombobox CreateInputCombobox(string name);
 
         /// <summary>Creates a simple text label.</summary>
-        LingoLabel CreateLabel(string text = "");
+        LingoGfxLabel CreateLabel(string name, string text = "");
 
         /// <summary>Creates a menu container.</summary>
-        LingoMenu CreateMenu(string name);
+        LingoGfxMenu CreateMenu(string name);
 
         /// <summary>Creates a menu item.</summary>
-        LingoMenuItem CreateMenuItem(string name, string? shortcut = null);
+        LingoGfxMenuItem CreateMenuItem(string name, string? shortcut = null);
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;

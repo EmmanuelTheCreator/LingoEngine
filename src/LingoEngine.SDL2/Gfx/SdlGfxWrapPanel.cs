@@ -11,6 +11,7 @@ namespace LingoEngine.SDL2.Gfx
         public float Width { get; set; }
         public float Height { get; set; }
         public bool Visibility { get; set; } = true;
+        public string Name { get; set; } = string.Empty;
         public LingoOrientation Orientation { get; set; }
         public LingoMargin ItemMargin { get; set; }
         public LingoMargin Margin { get; set; }

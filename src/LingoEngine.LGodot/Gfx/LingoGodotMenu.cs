@@ -15,7 +15,7 @@ namespace LingoEngine.LGodot.Gfx
         private string _name;
         private LingoMargin _margin;
 
-        public LingoGodotMenu(LingoMenu menu, string name)
+        public LingoGodotMenu(LingoGfxMenu menu, string name)
         {
             _name = name;
             _margin = LingoMargin.Zero;
