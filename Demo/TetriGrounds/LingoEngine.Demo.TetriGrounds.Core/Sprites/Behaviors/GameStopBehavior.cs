@@ -1,6 +1,9 @@
-using LingoEngine.Events;
 using LingoEngine.Inputs;
+using LingoEngine.Inputs.Events;
 using LingoEngine.Movies;
+using LingoEngine.Movies.Events;
+using LingoEngine.Sprites;
+using LingoEngine.Sprites.Events;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
@@ -51,8 +54,8 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
         public void KeyDown(ILingoKey key)
         {
-            if (key.KeyPressed(35)) SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("PauseGame"));
-            if (key.KeyPressed(49)) SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("SpaceBar"));
+            if (key.KeyPressed(35)) SendSprite<BgScriptBehavior>(myTargetSprite, s => s.PauseGame());
+            if (key.KeyPressed(49)) SendSprite<BgScriptBehavior>(myTargetSprite, s => s.SpaceBar());
         }
 
         public void MouseEnter(ILingoMouse mouse)
@@ -85,34 +88,34 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             if (oldkey1 != keyy1)
             {
                 oldkey1 = keyy1;
-                SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("KeyAction", keyy1, 1));
+                SendSprite<BgScriptBehavior>(myTargetSprite, s => s.KeyAction(keyy1, 1));
             }
             if (oldkey2 != keyy2)
             {
                 oldkey2 = keyy2;
-                SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("KeyAction", keyy2, 2));
+                SendSprite<BgScriptBehavior>(myTargetSprite, s => s.KeyAction(keyy2, 2));
             }
             if (oldkey1Act1 != Act1_1)
             {
                 oldkey1Act1 = Act1_1;
                 if (oldkey1Act1 == 1)
-                    SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("actionkey", new object[] { 1, 5, 0 }));
+                    SendSprite<BgScriptBehavior>(myTargetSprite, s => s.ActionKey(new object[] { 1, 5, 0 }));
             }
             if (oldkey2Act1 != Act2_1)
             {
                 oldkey2Act1 = Act2_1;
                 if (oldkey2Act1 == 1)
-                    SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("actionkey", new object[] { 2, 5, 0 }));
+                    SendSprite<BgScriptBehavior>(myTargetSprite, s => s.ActionKey(new object[] { 2, 5, 0 }));
             }
             if (oldkey1Act2 != Act1_2)
             {
                 oldkey1Act2 = Act1_2;
-                SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("actionkey", new object[] { 1, 6, Act1_2 }));
+                SendSprite<BgScriptBehavior>(myTargetSprite, s => s.ActionKey(new object[] { 1, 6, Act1_2 }));
             }
             if (oldkey2Act2 != Act2_2)
             {
                 oldkey2Act2 = Act2_2;
-                SendSprite(myTargetSprite, s => ((IHasLingoMessage)s)?.HandleMessage("actionkey", new object[] { 2, 6, Act2_2 }));
+                SendSprite<BgScriptBehavior>(myTargetSprite, s => s.ActionKey(new object[] { 2, 6, Act2_2 }));
             }
             _Movie.GoTo(_Movie.CurrentFrame);
         }

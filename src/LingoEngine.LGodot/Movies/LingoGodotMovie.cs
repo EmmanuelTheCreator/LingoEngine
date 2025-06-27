@@ -1,7 +1,8 @@
 ﻿using Godot;
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Sprites;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.LGodot.Movies
 {

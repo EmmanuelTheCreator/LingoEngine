@@ -1,7 +1,7 @@
 using System.IO;
-using LingoEngine.Events;
 using LingoEngine.Primitives;
-using LingoEngine.SDL2;
+using LingoEngine.SDL2.Inputs;
+using LingoEngine.Styles;
 using LingoEngine.Texts;
 using LingoEngine.Texts.FrameworkCommunication;
 

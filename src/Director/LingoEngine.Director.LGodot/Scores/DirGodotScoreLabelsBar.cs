@@ -1,7 +1,7 @@
 ﻿using Godot;
 using LingoEngine.Movies;
-using LingoEngine.Core;
 using LingoEngine.Commands;
+using LingoEngine.Movies.Commands;
 
 namespace LingoEngine.Director.LGodot.Scores;
 

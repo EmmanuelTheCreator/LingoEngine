@@ -1,8 +1,9 @@
 ﻿using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Members;
-using LingoEngine.Movies;
 using LingoEngine.Primitives;
+using LingoEngine.Sprites;
+using LingoEngine.Stages;
 
 namespace LingoEngine.Inputs
 {

@@ -11,6 +11,8 @@ using LingoEngine.Primitives;
 using System.Linq;
 using LingoEngine.Members;
 using LingoEngine.Casts;
+using LingoEngine.Sprites;
+using LingoEngine.FilmLoops;
 
 namespace LingoEngine.IO;
 
@@ -254,7 +256,7 @@ public class JsonStateRepository
                 PurgePriority = baseDto.PurgePriority,
                 Text = text.Text
             },
-            LingoMemberPicture picture => new LingoMemberPictureDTO
+            LingoMemberBitmap picture => new LingoMemberPictureDTO
             {
                 Name = baseDto.Name,
                 Number = baseDto.Number,
@@ -414,7 +416,7 @@ public class JsonStateRepository
         };
     }
 
-    private static string SavePicture(LingoMemberPicture picture, string dir)
+    private static string SavePicture(LingoMemberBitmap picture, string dir)
     {
         if (picture.ImageData == null)
             return string.Empty;
@@ -449,7 +451,7 @@ public class JsonStateRepository
         return ext.ToLowerInvariant();
     }
 
-    private static string GetPictureExtension(LingoMemberPicture picture)
+    private static string GetPictureExtension(LingoMemberBitmap picture)
     {
         var format = picture.Format.ToLowerInvariant();
         if (format.Contains("png") || format.Contains("gif") || format.Contains("tiff"))

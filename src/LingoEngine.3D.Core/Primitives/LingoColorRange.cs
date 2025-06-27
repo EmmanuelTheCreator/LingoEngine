@@ -1,6 +1,6 @@
 using LingoEngine.Primitives;
 
-namespace LingoEngine._3D.Primitives;
+namespace LingoEngine.L3D.Core.Primitives;
 
 /// <summary>
 /// Represents the start and end colors for particle systems.

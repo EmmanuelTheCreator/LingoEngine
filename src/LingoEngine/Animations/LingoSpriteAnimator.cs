@@ -2,6 +2,7 @@ using LingoEngine.Primitives;
 using LingoEngine.Movies;
 using LingoEngine.Events;
 using System.Linq;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.Animations
 {

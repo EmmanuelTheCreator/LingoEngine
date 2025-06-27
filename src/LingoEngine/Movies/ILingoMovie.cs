@@ -4,6 +4,7 @@ using LingoEngine.Casts;
 using LingoEngine.Core;
 using LingoEngine.Members;
 using LingoEngine.Sounds;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.Movies
 {
@@ -318,8 +319,8 @@ namespace LingoEngine.Movies
 
         // Audio clips support
         event Action? AudioClipListChanged;
-        IReadOnlyList<LingoAudioClip> GetAudioClips();
-        LingoAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound);
-        void MoveAudioClip(LingoAudioClip clip, int newFrame);
+        IReadOnlyList<LingoMovieAudioClip> GetAudioClips();
+        LingoMovieAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound);
+        void MoveAudioClip(LingoMovieAudioClip clip, int newFrame);
     }
 }

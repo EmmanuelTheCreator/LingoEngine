@@ -1,5 +1,5 @@
-using LingoEngine.Events;
 using LingoEngine.Primitives;
+using LingoEngine.Styles;
 
 namespace LingoEngine.SDL2.Texts;
 

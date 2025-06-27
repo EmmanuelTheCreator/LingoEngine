@@ -4,7 +4,7 @@ using LingoEngine.Primitives;
 using LingoEngine.Casts;
 using LingoEngine.Members;
 
-namespace LingoEngine._3D.Members;
+namespace LingoEngine.L3D.Core.Members;
 
 /// <summary>
 /// Represents a Shockwave 3D cast member containing a complete 3D world.

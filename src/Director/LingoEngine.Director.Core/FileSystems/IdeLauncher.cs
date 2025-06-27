@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using LingoEngine.Director.Core.Projects;
+using LingoEngine.Projects;
+using System.Diagnostics;
 
 #if USE_WINDOWS_FEATURES
 using System.Runtime.InteropServices;
@@ -10,36 +12,42 @@ namespace LingoEngine.Director.Core.FileSystems
 {
     public interface IIdeLauncher
     {
-        void OpenFile(ProjectSettings settings, string filePath, int line = 0);
+        void OpenFile(LingoProjectSettings lingoProjectSettings, string filePath, int line = 0);
         void ResetSolutionCache();
     }
 
     public class IdeLauncher : IIdeLauncher
     {
         private readonly HashSet<string> _openSolutionPaths = new();
+        private readonly DirectorProjectSettings _directorSettings;
         private bool _hasScanned = false;
 
-        public void OpenFile(ProjectSettings settings, string filePath, int line = 0)
+        public IdeLauncher(DirectorProjectSettings settings)
+        {
+            this._directorSettings = settings;
+        }
+
+        public void OpenFile(LingoProjectSettings lingoProjectSettings, string filePath, int line = 0)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException("File to open does not exist", filePath);
 
-            switch (settings.PreferredIde)
+            switch (_directorSettings.PreferredIde)
             {
-                case IdeType.VisualStudio:
+                case DirectorIdeType.VisualStudio:
 #if USE_WINDOWS_FEATURES
-                    OpenInVisualStudio(settings, filePath, line);
+                    OpenInVisualStudio(_directorSettings, lingoProjectSettings, filePath, line);
 #else
                     OpenInVisualStudio(settings.VisualStudioPath, filePath, line);
 #endif
                     break;
 
-                case IdeType.VisualStudioCode:
-                    OpenInVisualStudioCode(settings.VisualStudioCodePath, filePath, line);
+                case DirectorIdeType.VisualStudioCode:
+                    OpenInVisualStudioCode(_directorSettings.VisualStudioCodePath, filePath, line);
                     break;
 
                 default:
-                    throw new NotSupportedException($"Unsupported IDE type: {settings.PreferredIde}");
+                    throw new NotSupportedException($"Unsupported IDE type: {_directorSettings.PreferredIde}");
             }
         }
         public void ResetSolutionCache()
@@ -88,13 +96,13 @@ namespace LingoEngine.Director.Core.FileSystems
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
-        private void OpenInVisualStudio(ProjectSettings settings, string filePath, int line)
+        private void OpenInVisualStudio(DirectorProjectSettings settings, LingoProjectSettings lingoProjectSettings, string filePath, int line)
         {
             string? vsPath = settings.VisualStudioPath;
             if (string.IsNullOrEmpty(vsPath))
                 throw new InvalidOperationException("VisualStudioPath must be set.");
 
-            string? slnName = FindSolutionName(settings.ProjectFolder);
+            string? slnName = FindSolutionName(lingoProjectSettings.ProjectFolder);
             bool solutionIsOpen = slnName != null && IsVisualStudioSolutionOpen(slnName);
             string args = solutionIsOpen
             ? $"/Edit \"{filePath}\""

@@ -1,11 +1,9 @@
 ﻿using Godot;
 using LingoEngine.Movies;
-using LingoEngine.Director.Core.Events;
-using LingoEngine.Members;
-using LingoEngine.Director.Core.Inputs;
-using LingoEngine.Primitives;
-using LingoEngine.Core;
-using LingoEngine.Director.Core.Stages;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Sprites;
+using LingoEngine.Commands;
+using LingoEngine.Director.Core.Sprites;
 
 namespace LingoEngine.Director.LGodot.Scores;
 

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using LingoEngine.Events;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using LingoEngine.SDL2.Primitives;
 using LingoEngine.SDL2.SDLL;
+using LingoEngine.Styles;
 
 namespace LingoEngine.SDL2.Gfx
 {

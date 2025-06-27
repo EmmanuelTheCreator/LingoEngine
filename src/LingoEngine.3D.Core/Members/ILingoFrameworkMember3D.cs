@@ -1,6 +1,6 @@
-namespace LingoEngine._3D.Members;
+namespace LingoEngine.L3D.Core.Members;
 
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.Members;
 
 public interface ILingoFrameworkMember3D : ILingoFrameworkMember
 {

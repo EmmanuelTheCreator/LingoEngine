@@ -1,6 +1,6 @@
 using LingoEngine.Movies;
 using Microsoft.Extensions.DependencyInjection;
-using LingoEngine.Events;
+using LingoEngine.Movies.Events;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.MovieScripts
 {

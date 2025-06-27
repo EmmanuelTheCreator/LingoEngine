@@ -18,7 +18,7 @@ namespace LingoEngine.Inputs
         /// <summary>
         /// Sets a custom image for the mouse cursor
         /// </summary>
-        LingoMemberPicture? Image { get; set; }
+        LingoMemberBitmap? Image { get; set; }
 
         /// <summary>
         /// Determines whether the cursor is currently visible.

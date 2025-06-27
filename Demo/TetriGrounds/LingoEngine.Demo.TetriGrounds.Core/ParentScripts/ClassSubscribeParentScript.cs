@@ -1,7 +1,6 @@
 using LingoEngine.Core;
 using LingoEngine.Events;
 using LingoEngine.Movies;
-using System.Collections.Generic;
 using System.Reflection;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
@@ -33,17 +32,18 @@ namespace LingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public void ExecuteAllSubscribed(string data)
         {
-            for (int i = 0; i < mySubscribers.Count; i++)
-            {
-                object obj = mySubscribers[i];
-                string function = mySubscribersData[i]["function"];
-                if (obj is IHasLingoMessage msg)
-                {
-                    msg.HandleMessage(function, data);
-                }
-                MethodInfo? mi = obj.GetType().GetMethod("ReturnFromSaveScore", BindingFlags.Public | BindingFlags.Instance);
-                mi?.Invoke(obj, new object[] { data });
-            }
+                throw new NotImplementedException();
+            //for (int i = 0; i < mySubscribers.Count; i++)
+            //{
+            //    object obj = mySubscribers[i];
+            //    string function = mySubscribersData[i]["function"];
+            //    if (obj is IHasLingoMessage msg)
+            //    {
+            //        msg.HandleMessage(function, data);
+            //    }
+            //    MethodInfo? mi = obj.GetType().GetMethod("ReturnFromSaveScore", BindingFlags.Public | BindingFlags.Instance);
+            //    mi?.Invoke(obj, new object[] { data });
+            //}
         }
 
         public void SubscribersDestroy()
