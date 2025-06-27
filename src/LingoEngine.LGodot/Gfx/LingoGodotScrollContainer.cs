@@ -1,6 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
-using System;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -18,6 +18,22 @@ namespace LingoEngine.LGodot.Gfx
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
+
+        public new float ScrollHorizontal
+        {
+            get => base.ScrollHorizontal;
+            set => base.ScrollHorizontal = (int)value;
+        }
+        public new float ScrollVertical
+        {
+            get => base.ScrollVertical;
+            set => base.ScrollVertical = (int)value;
+        }
+        public new bool ClipContents
+        {
+            get => base.ClipContents;
+            set => base.ClipContents = value;
+        }
 
         public LingoMargin Margin
         {
@@ -37,27 +53,23 @@ namespace LingoEngine.LGodot.Gfx
             if (child is Node node)
                 base.AddChild(node);
         }
+        public void RemoveChild(ILingoFrameworkGfxNode lingoFrameworkGfxNode)
+        {
+            if (lingoFrameworkGfxNode is Node node)
+                RemoveChild(node);
+        }
 
-        public float ScrollHorizontal
-        {
-            get => base.ScrollHorizontal;
-            set => base.ScrollHorizontal = (int)value;
-        }
-        public float ScrollVertical
-        {
-            get => base.ScrollVertical;
-            set => base.ScrollVertical = (int)value;
-        }
-        public bool ClipContents
-        {
-            get => base.ClipContents;
-            set => base.ClipContents = value;
-        }
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+            => GetChildren().OfType<ILingoFrameworkGfxNode>();
+
+
 
         public new void Dispose()
         {
             base.Dispose();
             QueueFree();
         }
+
+       
     }
 }

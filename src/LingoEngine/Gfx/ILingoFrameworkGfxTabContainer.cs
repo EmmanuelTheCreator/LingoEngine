@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+
 
 namespace LingoEngine.Gfx
 {
@@ -8,8 +8,15 @@ namespace LingoEngine.Gfx
     public interface ILingoFrameworkGfxTabContainer : ILingoFrameworkGfxNode
     {
         /// <summary>Adds a new tab containing the specified node.</summary>
-        void AddTab(string title, ILingoFrameworkGfxNode content);
+        void AddTab(ILingoFrameworkGfxTabItem content);
+        void RemoveTab(ILingoFrameworkGfxTabItem content);
+        IEnumerable<ILingoFrameworkGfxTabItem> GetTabs();
+
         /// <summary>Removes all tabs and their content.</summary>
         void ClearTabs();
+    }
+    public interface ILingoFrameworkGfxTabItem : ILingoFrameworkGfxNode
+    {
+        public string Title { get; set; }
     }
 }

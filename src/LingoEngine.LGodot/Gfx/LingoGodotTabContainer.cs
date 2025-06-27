@@ -37,12 +37,21 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public void AddTab(string title, ILingoFrameworkGfxNode content)
+       
+        public void AddTab(ILingoFrameworkGfxTabItem content)
         {
             if (content is Node node)
-                AddTab(title, node);
+                AddTab(content.Title, node);
         }
 
+        public void RemoveTab(ILingoFrameworkGfxTabItem content)
+        {
+            if (content is Node node)
+                RemoveChild(node);
+        }
+
+        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs() =>
+            GetChildren().OfType<ILingoFrameworkGfxTabItem>();
         public void AddTab(string title, Node node)
         {
             AddChild(node);
@@ -62,6 +71,36 @@ namespace LingoEngine.LGodot.Gfx
         {
             base.Dispose();
             QueueFree();
+        }
+
+        
+    }
+    public partial class LingoGodotTabItem : Control, ILingoFrameworkGfxTabItem
+    {
+        private LingoMargin _margin = LingoMargin.Zero;
+        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
+        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
+        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
+        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public bool Visibility { get => Visible; set => Visible = value; }
+        public string Title { get => Name; set => Name = value; }
+        public LingoMargin Margin
+        {
+            get => _margin;
+            set
+            {
+                _margin = value;
+                AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+            }
+        }
+        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
+
+        public LingoGodotTabItem(LingoGfxTabItem tab)
+        {
+            tab.Init(this);
         }
     }
 }

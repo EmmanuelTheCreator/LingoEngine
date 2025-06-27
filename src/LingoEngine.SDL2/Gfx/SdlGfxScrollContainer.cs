@@ -18,5 +18,15 @@ namespace LingoEngine.SDL2.Gfx
         public bool ClipContents { get; set; }
         public void AddChild(ILingoFrameworkGfxNode child) { }
         public void Dispose() { }
+
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveChild(ILingoFrameworkGfxNode lingoFrameworkGfxNode)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

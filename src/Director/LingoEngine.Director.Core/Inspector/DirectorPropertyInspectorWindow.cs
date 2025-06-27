@@ -16,58 +16,348 @@ using LingoEngine.Movies;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Windowing.Commands;
 using System;
+using LingoEngine.Director.Core.Events;
+using LingoEngine.Director.Core.Sprites;
+using LingoEngine.Director.Core.Tools;
+using System.Drawing;
+using System.Numerics;
 
 namespace LingoEngine.Director.Core.Inspector
 {
-    public class DirectorPropertyInspectorWindow : DirectorWindow<IDirFrameworkPropertyInspectorWindow>
+    public class DirectorPropertyInspectorWindow : DirectorWindow<IDirFrameworkPropertyInspectorWindow>, IHasSpriteSelectedEvent, IHasMemberSelectedEvent
     {
+        private bool _behaviorVisible;
+        public const int HeaderHeight = 44;
         private LingoGfxLabel? _sprite;
         private LingoGfxLabel? _member;
         private LingoGfxLabel? _cast;
-        private LingoPlayer? _player;
+        private LingoPlayer _player;
         private ILingoCommandManager? _commandManager;
-        private LingoGfxTabContainer? _tabs;
+        private LingoGfxTabContainer _tabs;
         private DirectorMemberThumbnail? _thumb;
         private LingoGfxWrapPanel? _header;
-        private const int HeaderHeight = 44;
+        private ILingoFrameworkFactory _factory;
+        private IDirectorIconManager _iconManager;
+        private LingoGfxPanel _headerPanel;
+        private IDirectorEventMediator _mediator;
 
-        public void Setup(LingoPlayer player, ILingoCommandManager commandManager, LingoGfxTabContainer tabs, DirectorMemberThumbnail thumb, LingoGfxWrapPanel header)
+        private LingoGfxPanel _behaviorPanel;
+        private LingoGfxWrapPanel _behaviorBox;
+        private LingoGfxButton _behaviorClose;
+        private int _titleBarHeight;
+        private float _lastWidh;
+        private float _lastHeight;
+
+        public LingoGfxPanel HeaderPanel => _headerPanel;
+        public LingoGfxTabContainer Tabs => _tabs;
+        public LingoGfxPanel BehaviorPanel => _behaviorPanel;
+        public string SpriteText { get => _sprite?.Text ?? string.Empty; set { if (_sprite != null) _sprite.Text = value; } }
+        public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
+        public string CastText { get => _cast?.Text ?? string.Empty; set { if (_cast != null) _cast.Text = value; } }
+
+        public record HeaderElements(LingoGfxPanel Panel, LingoGfxWrapPanel Header, DirectorMemberThumbnail Thumbnail);
+
+        public DirectorPropertyInspectorWindow(LingoPlayer player, ILingoCommandManager commandManager, ILingoFrameworkFactory factory, IDirectorIconManager iconManager, IDirectorEventMediator mediator)
         {
             _player = player;
             _commandManager = commandManager;
-            _tabs = tabs;
-            _thumb = thumb;
-            _header = header;
+            _factory = factory;
+            _iconManager = iconManager;
+            _mediator = mediator;
+            //_tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
+            _mediator.Subscribe(this);
+        }
+        public override void Dispose()
+        {
+            base.Dispose();
+            _mediator.Unsubscribe(this);
+        }
+        public void Init(IDirFrameworkWindow frameworkWindow, float width, float height, int titleBarHeight)
+        {
+            base.Init(frameworkWindow);
+            _lastHeight = height;
+            _lastWidh = width;
+            _titleBarHeight = titleBarHeight;
+            CreateHeaderElements();
+            _tabs = _factory.CreateTabContainer("InspectorTabs");
+            CreateBehaviorPanel();
         }
 
-        public (float X, float Y, float Width, float Height)? OnResizing(float width, float height, float titleBarHeight, bool behaviorVisible)
+      
+        private LingoGfxPanel CreateHeaderElements()
         {
+            var thumb = new DirectorMemberThumbnail(36, 36, _factory, _iconManager);
+
+            var thumbPanel = _factory.CreatePanel("ThumbPanel");
+            thumbPanel.Margin = new LingoMargin(4, 2, 4, 2);
+            thumbPanel.BackgroundColor = new LingoColor(255, 255, 255);
+            thumbPanel.BorderColor = new LingoColor(64, 64, 64);
+            thumbPanel.BorderWidth = 1;
+            thumbPanel.AddChild(thumb.Canvas);
+            _thumb = thumb;
+
+            var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InfoContainer");
+            container.ItemMargin = new LingoMargin(0, 0, 1, 0);
+            // Center the labels within the header panel
+            container.Margin = new LingoMargin(0, 7, 0, 0);
+
+            _sprite = _factory.CreateLabel("SpriteLabel");
+            _sprite.FontSize = 10;
+            _sprite.FontColor = new LingoColor(0, 0, 0);
+
+            _member = _factory.CreateLabel("MemberLabel");
+            _member.FontSize = 10;
+            _member.FontColor = new LingoColor(0, 0, 0);
+
+            _cast = _factory.CreateLabel("CastLabel");
+            _cast.FontSize = 10;
+            _cast.FontColor = new LingoColor(0, 0, 0);
+
+            container.AddChild(_sprite);
+            container.AddChild(_member);
+            container.AddChild(_cast);
+
+            var header = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "HeaderPanel");
+            header.AddChild(thumbPanel);
+            header.AddChild(container);
+
+            _headerPanel = _factory.CreatePanel("RootHeaderPanel");
+            _headerPanel.BackgroundColor = DirectorColors.BG_WhiteMenus;
+            _headerPanel.AddChild(header);
+            _headerPanel.Height = HeaderHeight;
+            return _headerPanel;
+        }
+
+        private void CreateBehaviorPanel()
+        {
+            _behaviorPanel = _factory.CreatePanel("InspectorTabs");
+            _behaviorBox = _factory.CreateWrapPanel(LingoOrientation.Vertical , "InspectorTabs");
+            _behaviorClose = _factory.CreateButton("InspectorTabs");
+
+            
+            _behaviorPanel.AddChild(_behaviorBox);
+            _behaviorPanel.Visibility = false;
+            //var closeRow = new HBoxContainer();
+            //closeRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+            //_behaviorClose.Text = "X";
+            //_behaviorClose.Modulate = Colors.Red;
+            //_behaviorClose.CustomMinimumSize = new Vector2(12, 12);
+            //_behaviorClose.Pressed += () => { _behaviorPanel.Visible = false; OnResizing(Size); };
+            //closeRow.AddChild(_behaviorClose);
+            //_behaviorBox.AddChild(closeRow);
+        }
+        private void ShowBehavior(LingoSpriteBehavior behavior)
+        {
+            foreach (var child in _behaviorBox.GetChildren())
+            {
+                if (child != _behaviorBox.GetChild(0))
+                    _behaviorBox.RemoveChild(child);
+            }
+            var panel = BuildBehaviorPanel(behavior);
+            _behaviorBox.AddChild(panel);
+            _behaviorPanel.Visibility = true;
+            OnResizing(_lastWidh, _lastHeight);
+        }
+
+
+        public void SpriteSelected(ILingoSprite sprite) => ShowObject(sprite);
+        public void MemberSelected(ILingoMember member) => ShowObject(member);
+
+        public void OnResizing(float width, float height)
+        {
+            _lastWidh = width;
+            _lastHeight = height;
             if (_tabs == null || _header == null)
-                return null;
+                return;
 
             _header.Width = width - 10;
             _header.Height = HeaderHeight;
 
             _tabs.X = 0;
-            _tabs.Y = titleBarHeight + HeaderHeight;
+            _tabs.Y = _titleBarHeight + HeaderHeight;
 
-            if (behaviorVisible)
+            if (_behaviorVisible)
             {
                 var half = (height - 30 - HeaderHeight) / 2f;
                 _tabs.Width = width - 10;
                 _tabs.Height = half;
-                return (0, titleBarHeight + HeaderHeight + half, width - 10, half);
             }
             else
             {
                 _tabs.Width = width - 10;
                 _tabs.Height = height - 30 - HeaderHeight;
-                return null;
+                
+            }
+
+            _behaviorPanel.X = 0; 
+            _behaviorPanel.Y = _tabs.Height;
+            _behaviorPanel.Width = width;
+            _behaviorPanel.Height = _tabs.Height;
+        }
+
+       
+
+        public void ShowObject(object obj)
+        {
+            if (_tabs == null || _thumb == null)
+                return;
+            _tabs.ClearTabs();
+            ILingoMember? member = null;
+            if (obj is LingoSprite sp)
+            {
+                member = sp.Member;
+                if (member != null)
+                {
+                    _thumb.SetMember(member);
+                    SpriteText = $"Sprite : {sp.SpriteNum}: {member.Type}";
+                }
+            }
+            else if (obj is ILingoMember m)
+            {
+                member = m;
+                _thumb.SetMember(member);
+                SpriteText = member.Type.ToString();
+            }
+            if (member != null)
+            {
+                MemberText = member.Name;
+                CastText = GetCastName(member);
+            }
+            switch (obj)
+            {
+                case LingoSprite sp2:
+                    AddTab("Sprite", sp2);
+                    if (sp2.Member != null)
+                        AddMemberTabs(sp2.Member);
+                    break;
+                case ILingoMember member2:
+                    AddMemberTabs(member2);
+                    break;
+                default:
+                    AddTab(obj.GetType().Name, obj);
+                    break;
             }
         }
 
-        public LingoGfxWrapPanel BuildProperties(ILingoFrameworkFactory factory, object obj)
+        private void AddMemberTabs(ILingoMember member)
         {
+            AddTab("Member", member);
+            switch (member)
+            {
+                case LingoMemberText text:
+                    AddTab("Text", text);
+                    break;
+                case LingoMemberBitmap pic:
+                    AddTab("Picture", pic);
+                    break;
+                case LingoMemberSound sound:
+                    AddTab("Sound", sound);
+                    break;
+                case LingoMemberFilmLoop film:
+                    AddTab("FilmLoop", film);
+                    break;
+            }
+        }
+
+        private void AddTab(string name, object obj)
+        {
+            if (_tabs == null)
+                return;
+
+            var scroller = _factory.CreateScrollContainer(name + "Scroll");
+            var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
+
+            if (_commandManager != null && (obj is LingoMemberBitmap || obj is ILingoMemberTextBase))
+            {
+                var editBtn = _factory.CreateButton("EditButton", "Edit");
+                editBtn.Pressed += () =>
+                {
+                    string code = obj switch
+                    {
+                        LingoMemberBitmap => DirectorMenuCodes.PictureEditWindow,
+                        ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
+                        _ => string.Empty
+                    };
+                    if (!string.IsNullOrEmpty(code))
+                        _commandManager.Handle(new OpenWindowCommand(code));
+                };
+                container.AddChild(editBtn);
+            }
+
+            // TODO: behavior list
+            //if (obj as LingoSprite sprite)
+            //    ShowBehavior(sprite)
+
+            var props = BuildProperties(obj);
+            container.AddChild(props);
+
+            scroller.AddChild(container);
+            var tabItem = _factory.CreateTabItem(name, name);
+            tabItem.Content = scroller;
+            _tabs.AddTab(tabItem);
+        }
+
+        public LingoGfxWrapPanel BuildBehaviorPanel(LingoSpriteBehavior behavior)
+        {
+            var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPanel");
+            var propsPanel = BuildProperties(behavior);
+            container.AddChild(propsPanel);
+            if (behavior is ILingoPropertyDescriptionList descProvider)
+            {
+                string? desc = descProvider.GetBehaviorDescription();
+                if (!string.IsNullOrEmpty(desc))
+                    container.AddChild(_factory.CreateLabel("DescLabel", desc));
+
+                var props = behavior.UserProperties;
+                if (props.Count > 0)
+                {
+                    container.AddChild(_factory.CreateLabel("PropsLabel", "Properties"));
+                    foreach (var item in props)
+                    {
+                        string labelText = item.Key.ToString();
+                        if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
+                            labelText = desc2.Comment!;
+                        var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
+                        row.AddChild(_factory.CreateLabel("PropName", labelText));
+                        row.AddChild(_factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
+                        container.AddChild(row);
+                    }
+                }
+            }
+            return container;
+        }
+
+        private string GetCastName(ILingoMember m)
+        {
+            if (_player?.ActiveMovie is ILingoMovie movie)
+                return movie.CastLib.GetCast(m.CastLibNum).Name;
+            return string.Empty;
+        }
+
+
+      
+
+        public override void OpenWindow()
+        {
+            base.OpenWindow();
+        }
+
+        private static bool IsSimpleType(Type t)
+        {
+            return t.IsPrimitive || t == typeof(string) || t.IsEnum || t == typeof(float) || t == typeof(double) || t == typeof(decimal);
+        }
+
+        private static object ConvertTo(string text, Type t)
+        {
+            if (t == typeof(string)) return text;
+            if (t.IsEnum) return Enum.Parse(t, text);
+            return Convert.ChangeType(text, t);
+        }
+
+
+        public LingoGfxWrapPanel BuildProperties(object obj)
+        {
+            ILingoFrameworkFactory factory = _factory;
             var root = factory.CreateWrapPanel(LingoOrientation.Vertical, $"{obj.GetType().Name}Props");
             foreach (var prop in obj.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
             {
@@ -146,205 +436,6 @@ namespace LingoEngine.Director.Core.Inspector
                 root.AddChild(row);
             }
             return root;
-        }
-
-        public void ShowObject(object obj)
-        {
-            if (_player == null || _tabs == null || _thumb == null)
-                return;
-            _tabs.ClearTabs();
-            ILingoMember? member = null;
-            if (obj is LingoSprite sp)
-            {
-                member = sp.Member;
-                if (member != null)
-                {
-                    _thumb.SetMember(member);
-                    SpriteText = $"Sprite : {sp.SpriteNum}: {member.Type}";
-                }
-            }
-            else if (obj is ILingoMember m)
-            {
-                member = m;
-                _thumb.SetMember(member);
-                SpriteText = member.Type.ToString();
-            }
-            if (member != null)
-            {
-                MemberText = member.Name;
-                CastText = GetCastName(member);
-            }
-            switch (obj)
-            {
-                case LingoSprite sp2:
-                    AddTab("Sprite", sp2);
-                    if (sp2.Member != null)
-                        AddMemberTabs(sp2.Member);
-                    break;
-                case ILingoMember member2:
-                    AddMemberTabs(member2);
-                    break;
-                default:
-                    AddTab(obj.GetType().Name, obj);
-                    break;
-            }
-        }
-
-        private void AddMemberTabs(ILingoMember member)
-        {
-            AddTab("Member", member);
-            switch (member)
-            {
-                case LingoMemberText text:
-                    AddTab("Text", text);
-                    break;
-                case LingoMemberBitmap pic:
-                    AddTab("Picture", pic);
-                    break;
-                case LingoMemberSound sound:
-                    AddTab("Sound", sound);
-                    break;
-                case LingoMemberFilmLoop film:
-                    AddTab("FilmLoop", film);
-                    break;
-            }
-        }
-
-        private void AddTab(string name, object obj)
-        {
-            if (_player == null || _tabs == null)
-                return;
-
-            var scroller = _player.Factory.CreateScrollContainer(name + "Scroll");
-            var container = _player.Factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
-
-            if (_commandManager != null && (obj is LingoMemberBitmap || obj is ILingoMemberTextBase))
-            {
-                var editBtn = _player!.Factory.CreateButton("EditButton", "Edit");
-                editBtn.Pressed += () =>
-                {
-                    string code = obj switch
-                    {
-                        LingoMemberBitmap => DirectorMenuCodes.PictureEditWindow,
-                        ILingoMemberTextBase => DirectorMenuCodes.TextEditWindow,
-                        _ => string.Empty
-                    };
-                    if (!string.IsNullOrEmpty(code))
-                        _commandManager.Handle(new OpenWindowCommand(code));
-                };
-                container.AddChild(editBtn);
-            }
-
-            // TODO: behavior list
-
-            var props = BuildProperties(_player.Factory, obj);
-            container.AddChild(props);
-
-            scroller.AddChild(container);
-            _tabs.AddTab(new LingoGfxTabItem(name, scroller));
-        }
-
-        public LingoGfxWrapPanel BuildBehaviorPanel(ILingoFrameworkFactory factory, LingoSpriteBehavior behavior)
-        {
-            var container = factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPanel");
-            var propsPanel = BuildProperties(factory, behavior);
-            container.AddChild(propsPanel);
-            if (behavior is ILingoPropertyDescriptionList descProvider)
-            {
-                string? desc = descProvider.GetBehaviorDescription();
-                if (!string.IsNullOrEmpty(desc))
-                    container.AddChild(factory.CreateLabel("DescLabel", desc));
-
-                var props = behavior.UserProperties;
-                if (props.Count > 0)
-                {
-                    container.AddChild(factory.CreateLabel("PropsLabel", "Properties"));
-                    foreach (var item in props)
-                    {
-                        string labelText = item.Key.ToString();
-                        if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
-                            labelText = desc2.Comment!;
-                        var row = factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
-                        row.AddChild(factory.CreateLabel("PropName", labelText));
-                        row.AddChild(factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
-                        container.AddChild(row);
-                    }
-                }
-            }
-            return container;
-        }
-
-        private string GetCastName(ILingoMember m)
-        {
-            if (_player?.ActiveMovie is ILingoMovie movie)
-                return movie.CastLib.GetCast(m.CastLibNum).Name;
-            return string.Empty;
-        }
-
-        public string SpriteText { get => _sprite?.Text ?? string.Empty; set { if (_sprite != null) _sprite.Text = value; } }
-        public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
-        public string CastText { get => _cast?.Text ?? string.Empty; set { if (_cast != null) _cast.Text = value; } }
-
-        public record HeaderElements(LingoGfxPanel Panel, LingoGfxWrapPanel Header,DirectorMemberThumbnail Thumbnail);
-
-        public HeaderElements CreateHeaderElements(ILingoFrameworkFactory factory, IDirectorIconManager? iconManager)
-        {
-            var thumb = new DirectorMemberThumbnail(36, 36, factory, iconManager);
-
-            var thumbPanel = factory.CreatePanel("ThumbPanel");
-            thumbPanel.Margin = new LingoMargin(4, 2, 4, 2);
-            thumbPanel.BackgroundColor = new LingoColor(255, 255, 255);
-            thumbPanel.BorderColor = new LingoColor(64, 64, 64);
-            thumbPanel.BorderWidth = 1;
-            thumbPanel.AddChild(thumb.Canvas);
-
-            var container = factory.CreateWrapPanel(LingoOrientation.Vertical, "InfoContainer");
-            container.ItemMargin = new LingoMargin(0, 0, 1, 0);
-            // Center the labels within the header panel
-            container.Margin = new LingoMargin(0, 7, 0, 0);
-
-            _sprite = factory.CreateLabel("SpriteLabel");
-            _sprite.FontSize = 10;
-            _sprite.FontColor = new LingoColor(0, 0, 0);
-
-            _member = factory.CreateLabel("MemberLabel");
-            _member.FontSize = 10;
-            _member.FontColor = new LingoColor(0, 0, 0);
-
-            _cast = factory.CreateLabel("CastLabel");
-            _cast.FontSize = 10;
-            _cast.FontColor = new LingoColor(0, 0, 0);
-
-            container.AddChild(_sprite);
-            container.AddChild(_member);
-            container.AddChild(_cast);
-
-            var header = factory.CreateWrapPanel(LingoOrientation.Horizontal, "HeaderPanel");
-            header.AddChild(thumbPanel);
-            header.AddChild(container);
-
-            var panel = factory.CreatePanel("RootPanel");
-            panel.BackgroundColor = DirectorColors.BG_WhiteMenus;
-            panel.AddChild(header);
-
-            return new HeaderElements(panel, header, thumb);
-        }
-
-        public override void OpenWindow()
-        {
-            base.OpenWindow();
-        }
-
-        private static bool IsSimpleType(Type t)
-        {
-            return t.IsPrimitive || t == typeof(string) || t.IsEnum || t == typeof(float) || t == typeof(double) || t == typeof(decimal);
-        }
-
-        private static object ConvertTo(string text, Type t)
-        {
-            if (t == typeof(string)) return text;
-            if (t.IsEnum) return Enum.Parse(t, text);
-            return Convert.ChangeType(text, t);
         }
     }
 }

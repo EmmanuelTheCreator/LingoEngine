@@ -1,5 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
+using LingoEngine.Primitives;
 using System;
 
 namespace LingoEngine.LGodot.Gfx
@@ -35,7 +36,7 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         public bool Enabled { get => Editable; set => Editable = value; }
-        public float Value { get => (float)base.Value; set => base.Value = value; }
+        public new float Value { get => (float)base.Value; set => base.Value = value; }
         public float Min { get => (float)MinValue; set => MinValue = value; }
         public float Max { get => (float)MaxValue; set => MaxValue = value; }
 

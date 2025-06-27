@@ -1,16 +1,17 @@
 using System.Runtime.InteropServices;
+using LingoEngine.Bitmaps;
 using LingoEngine.Pictures;
 using LingoEngine.SDL2.Inputs;
 using LingoEngine.SDL2.SDLL;
 using LingoEngine.Tools;
 
 namespace LingoEngine.SDL2.Pictures;
-
 public class SdlMemberBitmap : ILingoFrameworkMemberBitmap, IDisposable
 {
     private LingoMemberBitmap _member = null!;
     private nint _surface = nint.Zero;
     private SDL.SDL_Surface _surfacePtr;
+    private SdlImageTexture _surfaceLingo;
     public byte[]? ImageData { get; private set; }
     public bool IsLoaded { get; private set; }
     public string Format { get; private set; } = "image/unknown";
@@ -18,6 +19,8 @@ public class SdlMemberBitmap : ILingoFrameworkMemberBitmap, IDisposable
     public int Height { get; private set; }
     public SDL.SDL_Surface Texture => _surfacePtr;
     internal nint Surface => _surface;
+
+    ILingoImageTexture? ILingoFrameworkMemberBitmap.Texture => _surfaceLingo;
 
     internal void Init(LingoMemberBitmap member)
     {
@@ -40,6 +43,7 @@ public class SdlMemberBitmap : ILingoFrameworkMemberBitmap, IDisposable
         _surfacePtr = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
         Width = _surfacePtr.w;
         Height = _surfacePtr.h;
+        _surfaceLingo = new SdlImageTexture(_surfacePtr, Width, Height);
 
         ImageData = File.ReadAllBytes(fullFileName);
         Format = MimeHelper.GetMimeType(_member.FileName);

@@ -42,8 +42,15 @@ namespace LingoEngine.LGodot.Gfx
         public void AddChild(ILingoFrameworkGfxNode child)
         {
             if (child is Node node)
-                base.AddChild(node);
+                AddChild(node);
         }
+        public void RemoveChild(ILingoFrameworkGfxNode child)
+        {
+            if (child is not Node node)
+                return;
+            RemoveChild(node);
+        }
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren() => GetChildren().OfType<ILingoFrameworkGfxNode>().ToArray();
 
         public LingoColor BackgroundColor
         {

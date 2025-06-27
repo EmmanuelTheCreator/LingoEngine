@@ -26,5 +26,20 @@ namespace LingoEngine.SDL2.Gfx
         public void AddChild(ILingoFrameworkGfxNode child) { }
 
         public void Dispose() { }
+
+        public void RemoveChild(ILingoFrameworkGfxNode child)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ILingoFrameworkGfxNode? GetChild(int index)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

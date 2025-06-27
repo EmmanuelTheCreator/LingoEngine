@@ -23,6 +23,7 @@ using LingoEngine.Sprites;
 using LingoEngine.Stages;
 using LingoEngine.Styles;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace LingoEngine.LGodot.Core
 {
@@ -225,6 +226,14 @@ namespace LingoEngine.LGodot.Core
             tab.Name = name;
             return tab;
         }
+        public LingoGfxTabItem CreateTabItem(string name, string title)
+        {
+            var tab = new LingoGfxTabItem(title);
+            var impl = new LingoGodotTabItem(tab);
+
+            tab.Name = name;
+            return tab;
+        }
 
         public LingoGfxScrollContainer CreateScrollContainer(string name)
         {
@@ -236,27 +245,30 @@ namespace LingoEngine.LGodot.Core
 
         public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
         {
-            var input = new LingoGfxInputText { MaxLength = maxLength };
+            var input = new LingoGfxInputText();
             var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
-
+            input.MaxLength = maxLength;
             input.Name = name;
             return input;
         }
 
         public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100)
         {
-            var input = new LingoGfxInputNumber { Min = min, Max = max };
+            var input = new LingoGfxInputNumber();
             var impl = new LingoGodotInputNumber(input);
-
+            input.Min = min;
+            input.Max = max;
             input.Name = name;
             return input;
         }
 
         public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100)
         {
-            var spin = new LingoGfxSpinBox { Min = min, Max = max };
+            var spin = new LingoGfxSpinBox();
             var impl = new LingoGodotSpinBox(spin);
             spin.Name = name;
+            spin.Min = min;
+            spin.Max = max;
             return spin;
         }
 
@@ -290,9 +302,11 @@ namespace LingoEngine.LGodot.Core
 
         public LingoGfxButton CreateButton(string name, string text = "")
         {
-            var button = new LingoGfxButton { Text = text };
+            var button = new LingoGfxButton();
             var impl = new LingoGodotButton(button);
             button.Name = name;
+            if (!string.IsNullOrWhiteSpace(text))
+                button.Text = text;
             return button;
         }
 

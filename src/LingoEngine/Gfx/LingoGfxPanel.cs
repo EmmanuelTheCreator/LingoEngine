@@ -17,6 +17,10 @@ namespace LingoEngine.Gfx
 
         /// <summary>Adds a child without modifying its position.</summary>
         public void AddChild(ILingoGfxNode node) => _framework.AddChild(node.Framework<ILingoFrameworkGfxNode>());
+        public void AddChild(ILingoFrameworkGfxNode node) => _framework.AddChild(node);
+        public void RemoveChild(ILingoGfxNode node) => _framework.RemoveChild(node.Framework<ILingoFrameworkGfxNode>());
+        public void RemoveChild(ILingoFrameworkGfxNode node) => _framework.RemoveChild(node);
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren() => _framework.GetChildren();
 
         public LingoColor BackgroundColor { get => _framework.BackgroundColor; set => _framework.BackgroundColor = value; }
         public LingoColor BorderColor { get => _framework.BorderColor; set => _framework.BorderColor = value; }
