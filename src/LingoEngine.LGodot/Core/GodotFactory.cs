@@ -228,9 +228,9 @@ namespace LingoEngine.LGodot.Core
         }
         public LingoGfxTabItem CreateTabItem(string name, string title)
         {
-            var tab = new LingoGfxTabItem(title);
+            var tab = new LingoGfxTabItem();
             var impl = new LingoGodotTabItem(tab);
-
+            tab.Title = title;
             tab.Name = name;
             return tab;
         }

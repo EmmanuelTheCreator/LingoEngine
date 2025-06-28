@@ -15,6 +15,8 @@ namespace LingoEngine.LGodot.Gfx
         public LingoGodotTabContainer(LingoGfxTabContainer tab)
         {
             tab.Init(this);
+            SizeFlagsVertical = SizeFlags.ExpandFill;
+            SizeFlagsHorizontal = SizeFlags.ExpandFill;
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -38,20 +40,21 @@ namespace LingoEngine.LGodot.Gfx
         }
 
        
-        public void AddTab(ILingoFrameworkGfxTabItem content)
+        public void AddTab(ILingoFrameworkGfxTabItem tabItem)
         {
+            var content = ((LingoGodotTabItem)tabItem).ContentFrameWork;
             if (content is Node node)
-                AddTab(content.Title, node);
+                AddTab(tabItem.Title, node);
         }
 
-        public void RemoveTab(ILingoFrameworkGfxTabItem content)
+        public void RemoveTab(ILingoFrameworkGfxTabItem tabItem)
         {
+            var content = ((LingoGodotTabItem)tabItem).ContentFrameWork;
             if (content is Node node)
                 RemoveChild(node);
         }
 
-        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs() =>
-            GetChildren().OfType<ILingoFrameworkGfxTabItem>();
+        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs() => GetChildren().OfType<ILingoFrameworkGfxTabItem>();
         public void AddTab(string title, Node node)
         {
             AddChild(node);
@@ -75,32 +78,38 @@ namespace LingoEngine.LGodot.Gfx
 
         
     }
-    public partial class LingoGodotTabItem : Control, ILingoFrameworkGfxTabItem
+    public partial class LingoGodotTabItem : ILingoFrameworkGfxTabItem
     {
-        private LingoMargin _margin = LingoMargin.Zero;
-        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
-        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
-        public bool Visibility { get => Visible; set => Visible = value; }
-        public string Title { get => Name; set => Name = value; }
-        public LingoMargin Margin
+        private string _name;
+        private LingoGfxTabItem _tabItem;
+        public LingoGfxTabItem TabItem => _tabItem;
+        public ILingoFrameworkGfxNode ContentFrameWork => Content?.FrameworkObj;
+        public ILingoGfxNode? Content { get; set; }
+
+        public float X { get => ContentFrameWork.X; set => ContentFrameWork.X = value; }
+        public float Y { get => ContentFrameWork.Y; set => ContentFrameWork.Y = value; }
+        public float Width { get => ContentFrameWork.Width; set => ContentFrameWork.Width = value; }
+        public float Height { get => ContentFrameWork.Height; set => ContentFrameWork.Height = value; }
+        public bool Visibility { get => ContentFrameWork.Visibility; set => ContentFrameWork.Visibility = value; }
+        public string Title { get; set; }
+        public LingoMargin Margin { get => ContentFrameWork.Margin; set => ContentFrameWork.Margin = value; }
+        string ILingoFrameworkGfxNode.Name
         {
-            get => _margin;
-            set
+            get => ContentFrameWork.Name; set
             {
-                _margin = value;
-                AddThemeConstantOverride("margin_left", (int)_margin.Left);
-                AddThemeConstantOverride("margin_right", (int)_margin.Right);
-                AddThemeConstantOverride("margin_top", (int)_margin.Top);
-                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+                if (ContentFrameWork != null) 
+                    ContentFrameWork.Name = value;
             }
         }
-        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 
         public LingoGodotTabItem(LingoGfxTabItem tab)
         {
             tab.Init(this);
+            _tabItem = tab;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

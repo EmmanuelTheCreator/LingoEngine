@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// </summary>
     public class LingoGfxTabContainer : LingoGfxNodeBase<ILingoFrameworkGfxTabContainer>
     {
-        public void AddTab(LingoGfxTabItem item) => _framework.AddTab(item.Content.Framework<ILingoFrameworkGfxTabItem>());
+        public void AddTab(LingoGfxTabItem item) => _framework.AddTab(item.Framework<ILingoFrameworkGfxTabItem>());
         public void AddTab(ILingoFrameworkGfxTabItem node) => _framework.AddTab(node);
         public void RemoveTab(LingoGfxTabItem node) => _framework.RemoveTab(node.Framework<ILingoFrameworkGfxTabItem>());
         public void RemoveChild(ILingoFrameworkGfxTabItem node) => _framework.RemoveTab(node);

@@ -22,6 +22,7 @@ namespace LingoEngine.Gfx
         public string Name { get => _framework.Name; set => _framework.Name = value; }
 
         public T Framework<T>() where T : ILingoFrameworkGfxNode => (T)(object)_framework;
+        public ILingoFrameworkGfxNode FrameworkObj => _framework;
 
         public void Init(TFramework framework) => _framework = framework;
 

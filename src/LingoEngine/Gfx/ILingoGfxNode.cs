@@ -15,5 +15,6 @@ namespace LingoEngine.Gfx
         bool Visibility { get; set; }
         LingoMargin Margin { get; set; }
         T Framework<T>() where T : ILingoFrameworkGfxNode;
+        ILingoFrameworkGfxNode FrameworkObj { get; }
     }
 }
