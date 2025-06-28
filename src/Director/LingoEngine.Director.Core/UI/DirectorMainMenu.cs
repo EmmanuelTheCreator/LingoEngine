@@ -1,4 +1,4 @@
-﻿using LingoEngine.Core;
+using LingoEngine.Core;
 using LingoEngine.Director.Core.Menus;
 using LingoEngine.Director.Core.Projects;
 using LingoEngine.Director.Core.Tools;
@@ -6,231 +6,263 @@ using LingoEngine.Director.Core.Windows;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Movies;
+using LingoEngine.Inputs;
+using System.Collections.Generic;
 
 namespace LingoEngine.Director.Core.Gfx
 {
-    public class DirectorMainMenu : DirectorWindow<IDirFrameworkMainMenuWindow>
+    /// <summary>
+    /// Framework independent implementation of the Director main menu.
+    /// </summary>
+    public class DirectorMainMenu : DirectorWindow<IDirFrameworkMainMenuWindow>, ILingoKeyEventHandler
     {
-        //private readonly LingoGfxWrapPanel _menuBar;
-        //private readonly LingoGfxMenuItem _fileMenu;
-        //private readonly LingoGfxMenuItem _editMenu;
-        //private readonly LingoGfxMenuItem _WindowMenu;
-        //private readonly LingoGfxWrapPanel _iconBar;
-        //private readonly IDirectorWindowManager _windowManager;
-        //private readonly DirectorProjectManager _projectManager;
-        //private readonly LingoPlayer _player;
-        //private readonly IDirectorShortCutManager _shortCutManager;
-        //private readonly IHistoryManager _historyManager;
-        //private readonly List<ShortCutInfo> _shortCuts = new();
-        //private readonly Button _rewindButton;
-        //private readonly Button _playButton;
-        //private int _undoIndex;
-        //private int _redoIndex;
-        //private ILingoMovie? _lingoMovie;
+        private readonly LingoGfxWrapPanel _menuBar;
+        private readonly LingoGfxWrapPanel _iconBar;
+        private readonly LingoGfxMenu _fileMenu;
+        private readonly LingoGfxMenu _editMenu;
+        private readonly LingoGfxMenu _windowMenu;
+        private readonly LingoGfxButton _fileButton;
+        private readonly LingoGfxButton _editButton;
+        private readonly LingoGfxButton _windowButton;
+        private readonly LingoGfxButton _rewindButton;
+        private readonly LingoGfxButton _playButton;
+        private readonly IDirectorWindowManager _windowManager;
+        private readonly DirectorProjectManager _projectManager;
+        private readonly LingoPlayer _player;
+        private readonly IDirectorShortCutManager _shortCutManager;
+        private readonly IHistoryManager _historyManager;
+        private readonly List<ShortCutInfo> _shortCuts = new();
+        private LingoGfxMenuItem _undoItem;
+        private LingoGfxMenuItem _redoItem;
+        private ILingoMovie? _lingoMovie;
 
-        //public LingoGfxWrapPanel IconBar => _iconBar;
-        //public LingoGfxWrapPanel MenuBar => _menuBar;
+        private class ShortCutInfo
+        {
+            public DirectorShortCutMap Map { get; init; } = null!;
+            public string Key { get; init; } = string.Empty;
+            public bool Ctrl { get; init; }
+            public bool Alt { get; init; }
+            public bool Shift { get; init; }
+            public bool Meta { get; init; }
+        }
 
-        //private class ShortCutInfo
-        //{
-        //    public DirectorShortCutMap Map { get; init; } = null!;
-        //    public string Key { get; init; } = string.Empty;
-        //    public bool Ctrl { get; init; }
-        //    public bool Alt { get; init; }
-        //    public bool Shift { get; init; }
-        //    public bool Meta { get; init; }
-        //}
+        public DirectorMainMenu(IDirectorWindowManager windowManager,
+            DirectorProjectManager projectManager,
+            LingoPlayer player,
+            IDirectorShortCutManager shortCutManager,
+            IHistoryManager historyManager,
+            ILingoFrameworkFactory factory)
+        {
+            _windowManager = windowManager;
+            _projectManager = projectManager;
+            _player = player;
+            _shortCutManager = shortCutManager;
+            _historyManager = historyManager;
 
-        //public DirectorMainMenu(IDirectorWindowManager windowManager, DirectorProjectManager projectManager, LingoPlayer player, IDirectorShortCutManager shortCutManager, IHistoryManager historyManager, DirectorMainMenu directorMainMenu, ILingoFrameworkFactory factory)
-        //{
-        //    _windowManager = windowManager;
-        //    _projectManager = projectManager;
-        //    _player = player;
-        //    _shortCutManager = shortCutManager;
-        //    _historyManager = historyManager;
-        //    _player.ActiveMovieChanged += OnActiveMovieChanged;
-        //    _shortCutManager.ShortCutAdded += OnShortCutAdded;
-        //    _shortCutManager.ShortCutRemoved += OnShortCutRemoved;
-        //    _fileMenu = factory.CreateMenuItem("File");
-        //    _editMenu = factory.CreateMenuItem("Edit");
-        //    _WindowMenu = factory.CreateMenuItem("Window");
-        //    _menuBar = factory.CreateWrapPanel(Primitives.LingoOrientation.Horizontal,"MenuBar");
-        //    _iconBar = factory.CreateWrapPanel(Primitives.LingoOrientation.Horizontal, "IconBar");
-        //    //AddChild(_menuBar);
-        //    //_menuBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            _menuBar = factory.CreateWrapPanel(LingoOrientation.Horizontal, "MenuBar");
+            _iconBar = factory.CreateWrapPanel(LingoOrientation.Horizontal, "IconBar");
+            _fileMenu = factory.CreateMenu("FileMenu");
+            _editMenu = factory.CreateMenu("EditMenu");
+            _windowMenu = factory.CreateMenu("WindowMenu");
+            _fileButton = factory.CreateButton("FileButton", "File");
+            _editButton = factory.CreateButton("EditButton", "Edit");
+            _windowButton = factory.CreateButton("WindowButton", "Window");
+            _rewindButton = factory.CreateButton("RewindButton", "|<");
+            _playButton = factory.CreateButton("PlayButton", "Play");
 
-        //    ComposeMenu();
+            _menuBar.AddChild(_fileButton);
+            _menuBar.AddChild(_editButton);
+            _menuBar.AddChild(_windowButton);
+            _fileButton.Pressed += () => ShowMenu(_fileMenu, _fileButton);
+            _editButton.Pressed += () => { UpdateUndoRedoState(); ShowMenu(_editMenu, _editButton); };
+            _windowButton.Pressed += () => ShowMenu(_windowMenu, _windowButton);
 
+            ComposeMenu(factory);
 
-        //    //AddChild(_iconBar);
-        //    _iconBar.X = 300;
-        //    _iconBar.Y = 0;
-        //    //_iconBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            _playButton.Pressed += OnPlayPressed;
+            _player.ActiveMovieChanged += OnActiveMovieChanged;
+            _shortCutManager.ShortCutAdded += OnShortCutAdded;
+            _shortCutManager.ShortCutRemoved += OnShortCutRemoved;
+            _player.Key.Subscribe(this);
 
-        //    //_rewindButton = new Button { Text = "|<" };
-        //    //_rewindButton.CustomMinimumSize = new Vector2(20, 16);
-        //    //_rewindButton.Position = new Vector2(3, 2);
-        //    //_iconBar.AddChild(_rewindButton);
+            UpdatePlayButton();
+            foreach (var sc in _shortCutManager.GetShortCuts())
+                _shortCuts.Add(ParseShortCut(sc));
+        }
 
-        //    //_playButton = new Button { Text = "Play", };
-        //    //_playButton.CustomMinimumSize = new Vector2(40, 16);
-        //    //_playButton.Position = new Vector2(26, 2);
-        //    //_playButton.Pressed += OnPlayPressed;
-        //    //_iconBar.AddChild(_playButton);
+        private void ComposeMenu(ILingoFrameworkFactory factory)
+        {
+            // File Menu
+            var load = factory.CreateMenuItem("Load");
+            load.Activated += () => _projectManager.LoadMovie();
+            _fileMenu.AddItem(load);
 
-        //    UpdatePlayButton();
+            var save = factory.CreateMenuItem("Save");
+            save.Activated += () => _projectManager.SaveMovie();
+            _fileMenu.AddItem(save);
 
-        //    foreach (var sc in _shortCutManager.GetShortCuts())
-        //        _shortCuts.Add(ParseShortCut(sc));
-        //}
+            var ie = factory.CreateMenuItem("Import/Export");
+            ie.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.ImportExportWindow);
+            _fileMenu.AddItem(ie);
 
-        //private void ComposeMenu()
-        //{
-        //    // FileMenu
-        //    _menuBar.AddChild(_fileMenu);
-        //    var popupFile = _fileMenu.GetPopup();
-        //    popupFile.AddItem("Load", 1);
-        //    popupFile.AddItem("Save", 2);
-        //    popupFile.AddItem("Import/Export", 4);
-        //    popupFile.AddItem("Quit", 3);
-        //    popupFile.IdPressed += id =>
-        //    {
-        //        switch (id)
-        //        {
-        //            case 1: _projectManager.LoadMovie(); break;
-        //            case 2: _projectManager.SaveMovie(); break;
-        //            case 4: _windowManager.OpenWindow(DirectorMenuCodes.ImportExportWindow); break;
-        //            case 3:
-        //                // TODO: check project for unsaved changes before quitting
-        //                GetTree().Quit();
-        //                break;
-        //        }
-        //    };
+            var quit = factory.CreateMenuItem("Quit");
+            quit.Activated += () => System.Environment.Exit(0);
+            _fileMenu.AddItem(quit);
 
-        //    _menuBar.AddChild(_editMenu);
-        //    var popupEdit = _editMenu.GetPopup();
-        //    _undoIndex = popupEdit.ItemCount;
-        //    popupEdit.AddItem("Undo\tCTRL+Z", 1);
-        //    _redoIndex = popupEdit.ItemCount;
-        //    popupEdit.AddItem("Redo\tCTRL+Y", 2);
-        //    popupEdit.SetItemDisabled(_undoIndex, !_historyManager.CanUndo);
-        //    popupEdit.SetItemDisabled(_redoIndex, !_historyManager.CanRedo);
-        //    popupEdit.AddSeparator();
-        //    popupEdit.AddItem("Project Settings", 20);
-        //    popupEdit.AboutToPopup += () =>
-        //    {
-        //        popupEdit.SetItemDisabled(_undoIndex, !_historyManager.CanUndo);
-        //        popupEdit.SetItemDisabled(_redoIndex, !_historyManager.CanRedo);
-        //    };
-        //    popupEdit.IdPressed += id =>
-        //    {
-        //        switch (id)
-        //        {
-        //            case 1: _historyManager.Undo(); break;
-        //            case 2: _historyManager.Redo(); break;
-        //            case 20: _windowManager.OpenWindow(DirectorMenuCodes.ProjectSettingsWindow); break;
-        //        }
-        //    };
+            // Edit Menu
+            _undoItem = factory.CreateMenuItem("Undo\tCTRL+Z");
+            _undoItem.Activated += () => _historyManager.Undo();
+            _editMenu.AddItem(_undoItem);
 
-        //    // Window Menu
-        //    _menuBar.AddChild(_WindowMenu);
-        //    var popupWindow = _WindowMenu.GetPopup();
-        //    //popupWindow.AddItem("Script", 5);
-        //    popupWindow.AddItem("Stage  \tCTRL+1", 6);
-        //    //popupWindow.AddItem("Control Panel  \tCTRL+2", 7);
-        //    popupWindow.AddItem("Cast  \tCTRL+3", 8);
-        //    popupWindow.AddItem("Score  \tCTRL+4", 9);
-        //    popupWindow.AddItem("Text \tCTRL+T", 13);
-        //    popupWindow.AddItem("Property Inspector  \tCTRL+ALT+S", 15);
-        //    popupWindow.AddItem("Tools  \tCTRL+7", 16);
-        //    popupWindow.AddItem("Binary Viewer", 17);
-        //    popupWindow.AddItem("Paint  \tCTRL+5", 18);
-        //    popupWindow.IdPressed += id =>
-        //    {
-        //        switch (id)
-        //        {
-        //            case 5: _windowManager.OpenWindow(DirectorMenuCodes.ScriptWindow); break;
-        //            case 6: _windowManager.OpenWindow(DirectorMenuCodes.StageWindow); break;
-        //            case 7: _windowManager.OpenWindow(DirectorMenuCodes.ControlPanel); break;
-        //            case 8: _windowManager.OpenWindow(DirectorMenuCodes.CastWindow); break;
-        //            case 9: _windowManager.OpenWindow(DirectorMenuCodes.ScoreWindow); break;
-        //            case 13: _windowManager.OpenWindow(DirectorMenuCodes.TextEditWindow); break;
-        //            case 15: _windowManager.OpenWindow(DirectorMenuCodes.PropertyInspector); break;
-        //            case 16: _windowManager.OpenWindow(DirectorMenuCodes.ToolsWindow); break;
-        //            case 17: _windowManager.OpenWindow(DirectorMenuCodes.BinaryViewerWindow); break;
-        //            case 18: _windowManager.OpenWindow(DirectorMenuCodes.PictureEditWindow); break;
-        //            default:
-        //                break;
-        //        }
-        //    };
-        //}
-        //private void OnActiveMovieChanged(ILingoMovie? movie)
-        //{
-        //    if (_lingoMovie != null)
-        //    {
-        //        _lingoMovie.PlayStateChanged -= OnPlayStateChanged;
-        //        _rewindButton.Pressed -= () => _lingoMovie.GoTo(1);
-        //    }
-        //    _lingoMovie = movie;
-        //    if (_lingoMovie != null)
-        //    {
-        //        _lingoMovie.PlayStateChanged += OnPlayStateChanged;
-        //        _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
-        //    }
-        //}
+            _redoItem = factory.CreateMenuItem("Redo\tCTRL+Y");
+            _redoItem.Activated += () => _historyManager.Redo();
+            _editMenu.AddItem(_redoItem);
 
-        //private void OnPlayPressed()
-        //{
-        //    if (_lingoMovie == null) return;
-        //    if (_lingoMovie.IsPlaying)
-        //        _lingoMovie.Halt();
-        //    else
-        //        _lingoMovie.Play();
-        //}
+            var projectSettings = factory.CreateMenuItem("Project Settings");
+            projectSettings.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.ProjectSettingsWindow);
+            _editMenu.AddItem(projectSettings);
 
-        //private void OnPlayStateChanged(bool isPlaying)
-        //{
-        //    UpdatePlayButton();
-        //}
+            // Window Menu
+            var stage = factory.CreateMenuItem("Stage  \tCTRL+1");
+            stage.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.StageWindow);
+            _windowMenu.AddItem(stage);
 
-        //private void UpdatePlayButton()
-        //{
-        //    _playButton.Text = _lingoMovie != null && _lingoMovie.IsPlaying ? "Stop" : "Play";
-        //}
+            var cast = factory.CreateMenuItem("Cast  \tCTRL+3");
+            cast.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.CastWindow);
+            _windowMenu.AddItem(cast);
 
-        //private void OnShortCutAdded(DirectorShortCutMap map)
-        //    => _shortCuts.Add(ParseShortCut(map));
+            var score = factory.CreateMenuItem("Score  \tCTRL+4");
+            score.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.ScoreWindow);
+            _windowMenu.AddItem(score);
 
-        //private void OnShortCutRemoved(DirectorShortCutMap map)
-        //    => _shortCuts.RemoveAll(s => s.Map == map);
+            var text = factory.CreateMenuItem("Text \tCTRL+T");
+            text.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.TextEditWindow);
+            _windowMenu.AddItem(text);
 
-        //private ShortCutInfo ParseShortCut(DirectorShortCutMap map)
-        //{
-        //    bool ctrl = false, alt = false, shift = false, meta = false;
-        //    string key = string.Empty;
-        //    var parts = map.KeyCombination.Split('+');
-        //    foreach (var p in parts)
-        //    {
-        //        var token = p.Trim();
-        //        if (token.Equals("CTRL", System.StringComparison.OrdinalIgnoreCase)) ctrl = true;
-        //        else if (token.Equals("ALT", System.StringComparison.OrdinalIgnoreCase)) alt = true;
-        //        else if (token.Equals("SHIFT", System.StringComparison.OrdinalIgnoreCase)) shift = true;
-        //        else if (token.Equals("CMD", System.StringComparison.OrdinalIgnoreCase) || token.Equals("META", System.StringComparison.OrdinalIgnoreCase)) meta = true;
-        //        else key = token;
-        //    }
-        //    return new ShortCutInfo { Map = map, Key = key.ToUpperInvariant(), Ctrl = ctrl, Alt = alt, Shift = shift, Meta = meta };
-        //}
+            var inspector = factory.CreateMenuItem("Property Inspector  \tCTRL+ALT+S");
+            inspector.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.PropertyInspector);
+            _windowMenu.AddItem(inspector);
 
-        //public HBoxContainer IconBar => _iconBar;
+            var tools = factory.CreateMenuItem("Tools  \tCTRL+7");
+            tools.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.ToolsWindow);
+            _windowMenu.AddItem(tools);
 
-        //public bool IsOpen => throw new NotImplementedException();
+            var binary = factory.CreateMenuItem("Binary Viewer");
+            binary.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.BinaryViewerWindow);
+            _windowMenu.AddItem(binary);
 
-        //protected void Dispose(bool disposing)
-        //{
-        //    OnActiveMovieChanged(null);
-        //    _player.ActiveMovieChanged -= OnActiveMovieChanged;
-        //    _shortCutManager.ShortCutAdded -= OnShortCutAdded;
-        //    _shortCutManager.ShortCutRemoved -= OnShortCutRemoved;
-        //}
+            var paint = factory.CreateMenuItem("Paint  \tCTRL+5");
+            paint.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.PictureEditWindow);
+            _windowMenu.AddItem(paint);
+        }
+
+        private void OnActiveMovieChanged(ILingoMovie? movie)
+        {
+            if (_lingoMovie != null)
+            {
+                _lingoMovie.PlayStateChanged -= OnPlayStateChanged;
+                _rewindButton.Pressed -= () => _lingoMovie.GoTo(1);
+            }
+            _lingoMovie = movie;
+            if (_lingoMovie != null)
+            {
+                _lingoMovie.PlayStateChanged += OnPlayStateChanged;
+                _rewindButton.Pressed += () => _lingoMovie.GoTo(1);
+            }
+            UpdatePlayButton();
+        }
+
+        private void OnPlayPressed()
+        {
+            if (_lingoMovie == null) return;
+            if (_lingoMovie.IsPlaying)
+                _lingoMovie.Halt();
+            else
+                _lingoMovie.Play();
+        }
+
+        private void OnPlayStateChanged(bool isPlaying) => UpdatePlayButton();
+
+        private void UpdatePlayButton()
+        {
+            _playButton.Text = _lingoMovie != null && _lingoMovie.IsPlaying ? "Stop" : "Play";
+        }
+
+        private void OnShortCutAdded(DirectorShortCutMap map)
+            => _shortCuts.Add(ParseShortCut(map));
+
+        private void OnShortCutRemoved(DirectorShortCutMap map)
+            => _shortCuts.RemoveAll(s => s.Map == map);
+
+        private ShortCutInfo ParseShortCut(DirectorShortCutMap map)
+        {
+            bool ctrl = false, alt = false, shift = false, meta = false;
+            string key = string.Empty;
+            var parts = map.KeyCombination.Split('+');
+            foreach (var p in parts)
+            {
+                var token = p.Trim();
+                if (token.Equals("CTRL", System.StringComparison.OrdinalIgnoreCase)) ctrl = true;
+                else if (token.Equals("ALT", System.StringComparison.OrdinalIgnoreCase)) alt = true;
+                else if (token.Equals("SHIFT", System.StringComparison.OrdinalIgnoreCase)) shift = true;
+                else if (token.Equals("CMD", System.StringComparison.OrdinalIgnoreCase) || token.Equals("META", System.StringComparison.OrdinalIgnoreCase)) meta = true;
+                else key = token;
+            }
+            return new ShortCutInfo { Map = map, Key = key.ToUpperInvariant(), Ctrl = ctrl, Alt = alt, Shift = shift, Meta = meta };
+        }
+
+        private void ShowMenu(LingoGfxMenu menu, LingoGfxButton button)
+        {
+            menu.PositionPopup(button.Framework<ILingoFrameworkGfxButton>());
+            menu.Popup();
+        }
+
+        public void UpdateUndoRedoState()
+        {
+            _undoItem.Enabled = _historyManager.CanUndo;
+            _redoItem.Enabled = _historyManager.CanRedo;
+        }
+
+        public LingoGfxWrapPanel MenuBar => _menuBar;
+        public LingoGfxWrapPanel IconBar => _iconBar;
+        public LingoGfxMenu FileMenu => _fileMenu;
+        public LingoGfxMenu EditMenu => _editMenu;
+        public LingoGfxMenu WindowMenu => _windowMenu;
+        public LingoGfxButton FileButton => _fileButton;
+        public LingoGfxButton EditButton => _editButton;
+        public LingoGfxButton WindowButton => _windowButton;
+        public LingoGfxButton RewindButton => _rewindButton;
+        public LingoGfxButton PlayButton => _playButton;
+
+        public bool IsOpen => false;
+
+        public override void Dispose()
+        {
+            _player.ActiveMovieChanged -= OnActiveMovieChanged;
+            _shortCutManager.ShortCutAdded -= OnShortCutAdded;
+            _shortCutManager.ShortCutRemoved -= OnShortCutRemoved;
+            _player.Key.Unsubscribe(this);
+            base.Dispose();
+        }
+
+        public void RaiseKeyDown(LingoKey key)
+        {
+            var label = key.Key.ToUpperInvariant();
+            bool ctrl = key.ControlDown;
+            bool alt = key.OptionDown;
+            bool shift = key.ShiftDown;
+            bool meta = key.CommandDown;
+
+            foreach (var sc in _shortCuts)
+            {
+                if (sc.Key == label && sc.Ctrl == ctrl && sc.Alt == alt && sc.Shift == shift && sc.Meta == meta)
+                {
+                    _shortCutManager.Execute(sc.Map.KeyCombination);
+                    break;
+                }
+            }
+        }
+
+        public void RaiseKeyUp(LingoKey key) { }
     }
 }

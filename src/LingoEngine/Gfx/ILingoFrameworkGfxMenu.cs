@@ -13,5 +13,9 @@ namespace LingoEngine.Gfx
         void AddItem(ILingoFrameworkGfxMenuItem item);
         /// <summary>Removes all items from the menu.</summary>
         void ClearItems();
+        /// <summary>Positions the popup relative to a button.</summary>
+        void PositionPopup(ILingoFrameworkGfxButton button);
+        /// <summary>Shows the menu.</summary>
+        void Popup();
     }
 }

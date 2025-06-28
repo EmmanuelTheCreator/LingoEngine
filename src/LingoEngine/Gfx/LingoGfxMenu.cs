@@ -7,5 +7,8 @@ namespace LingoEngine.Gfx
     {
         public void AddItem(LingoGfxMenuItem item) => _framework.AddItem(item.Framework);
         public void ClearItems() => _framework.ClearItems();
+        public void Popup() => _framework.Popup();
+        public void PositionPopup(LingoGfxButton button)
+            => _framework.PositionPopup(button.Framework<ILingoFrameworkGfxButton>());
     }
 }
