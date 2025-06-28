@@ -34,8 +34,8 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IDirFrameworkP
         tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - DirectorPropertyInspectorWindow.HeaderHeight);
         AddChild(tabs);
 
-        var behaviorPanel = _inspectorWindow.Tabs.Framework<LingoGodotTabContainer>();
-        behaviorPanel.Visible = false;
+        var behaviorPanel = _inspectorWindow.BehaviorPanel.Framework<LingoGodotPanel>();
+        behaviorPanel.Visibility = false;
         behaviorPanel.Position = new Vector2(0, TitleBarHeight + DirectorPropertyInspectorWindow.HeaderHeight);
         behaviorPanel.Size = new Vector2(Size.X - 10, 0);
         AddChild(behaviorPanel);
