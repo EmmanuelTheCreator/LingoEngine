@@ -197,6 +197,8 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         var impl = new SdlGfxWrapPanel(orientation);
         panel.Init(impl);
         panel.Name = name;
+        // Keep orientation in sync on creation
+        panel.Orientation = orientation;
         return panel;
     }
 

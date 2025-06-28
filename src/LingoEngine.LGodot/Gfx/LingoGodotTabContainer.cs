@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using System;
+using System.Linq;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -54,7 +55,9 @@ namespace LingoEngine.LGodot.Gfx
                 RemoveChild(node);
         }
 
-        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs() => GetChildren().OfType<ILingoFrameworkGfxTabItem>();
+        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs()
+            => base.GetChildren().OfType<Node>()
+                .OfType<ILingoFrameworkGfxTabItem>();
         public void AddTab(string title, Node node)
         {
             AddChild(node);
