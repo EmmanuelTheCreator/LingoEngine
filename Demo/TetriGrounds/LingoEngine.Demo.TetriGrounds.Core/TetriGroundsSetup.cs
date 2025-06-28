@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using LingoEngine;
 using LingoEngine.Movies;
 using LingoEngine.Demo.TetriGrounds.Core.MovieScripts;
 using LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals;
 using LingoEngine.Demo.TetriGrounds.Core.ParentScripts;
 using LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors;
+using LingoEngine.Setup;
 
 namespace LingoEngine.Demo.TetriGrounds.Core
 {

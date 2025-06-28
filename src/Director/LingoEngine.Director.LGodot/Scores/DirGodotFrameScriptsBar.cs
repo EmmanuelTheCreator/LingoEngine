@@ -1,5 +1,6 @@
 ﻿using Godot;
 using LingoEngine.Movies;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.Director.LGodot.Scores;
 

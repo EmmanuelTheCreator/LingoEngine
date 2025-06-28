@@ -1,8 +1,11 @@
 ﻿using Godot;
-using LingoEngine.Events;
+using LingoEngine.LGodot.Helpers;
 using LingoEngine.Primitives;
+using LingoEngine.Styles;
 using LingoEngine.Texts;
 using LingoEngine.Texts.FrameworkCommunication;
+using Microsoft.Extensions.Logging;
+using System.Resources;
 
 namespace LingoEngine.LGodot.Texts
 {
@@ -12,6 +15,7 @@ namespace LingoEngine.LGodot.Texts
         protected TLingoText _lingoMemberText;
         protected string _text = "";
         protected ILingoFontManager _fontManager;
+        private readonly ILogger _logger;
         protected LabelSettings _LabelSettings = new LabelSettings();
         protected readonly Label _labelNode;
         protected readonly CenterContainer _parentNode;
@@ -136,10 +140,11 @@ namespace LingoEngine.LGodot.Texts
         #endregion
 
 #pragma warning disable CS8618
-        public LingoGodotMemberTextBase(ILingoFontManager lingoFontManager)
-#pragma warning restore CS8618 
+        public LingoGodotMemberTextBase(ILingoFontManager lingoFontManager, ILogger logger)
+#pragma warning restore CS8618
         {
             _fontManager = lingoFontManager;
+            _logger = logger;
             _parentNode = new CenterContainer();
             _labelNode = new Label();
             _parentNode.AddChild(_labelNode);
@@ -160,25 +165,26 @@ namespace LingoEngine.LGodot.Texts
         internal void Init(TLingoText lingoInstance)
         {
             _lingoMemberText = lingoInstance;
-            _parentNode.Name = lingoInstance.Name;
+            if (!string.IsNullOrWhiteSpace(lingoInstance.Name))
+                _parentNode.Name = lingoInstance.Name;
         }
 
         public string ReadText()
         {
-            if (!File.Exists(_lingoMemberText.FileName))
+            var file = GodotHelper.ReadFile(_lingoMemberText.FileName);
+            if (file == null)
             {
-                GD.PrintErr("File not found for Text :" + _lingoMemberText.FileName);
+                _logger.LogWarning("File not found for Text :" + _lingoMemberText.FileName);
                 return "";
             }
-            var rawTextData = File.ReadAllText(_lingoMemberText.FileName);
-            return rawTextData;
+            return file;
         }
         public string ReadTextRtf()
         {
-            var rtfVersion = _lingoMemberText.FileName.Replace(".txt", ".rtf");
-            if (File.Exists(rtfVersion))
-                return File.ReadAllText(rtfVersion);
-            return "";
+            var rtfVersion = GodotHelper.ReadFile(_lingoMemberText.FileName.Replace(".txt", ".rtf"));
+            if (rtfVersion == null)
+                return "";
+            return rtfVersion;
         }
         private void UpdateText(string value)
         {

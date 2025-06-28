@@ -3,6 +3,8 @@ using LingoEngine.Core;
 using LingoEngine.SDL2.SDLL;
 using LingoEngine.SDL2.Core;
 using LingoEngine.Movies;
+using LingoEngine.SDL2.Inputs;
+using LingoEngine.SDL2.Stages;
 
 public class SdlRootContext : IDisposable
 {

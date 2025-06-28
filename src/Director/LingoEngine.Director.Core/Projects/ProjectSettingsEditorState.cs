@@ -1,4 +1,4 @@
-﻿
+﻿using LingoEngine.Projects;
 
 namespace LingoEngine.Director.Core.Projects
 {
@@ -6,26 +6,26 @@ namespace LingoEngine.Director.Core.Projects
     {
         public string ProjectName { get; set; } = "";
         public string ProjectFolder { get; set; } = "";
-        public IdeType SelectedIde { get; set; }
+        public DirectorIdeType SelectedIde { get; set; }
         public string VisualStudioPath { get; set; } = "";
         public string VisualStudioCodePath { get; set; } = "";
 
-        public void LoadFrom(ProjectSettings settings)
+        public void LoadFrom(LingoProjectSettings settings, DirectorProjectSettings directorProjectSettings)
         {
             ProjectName = settings.ProjectName;
             ProjectFolder = settings.ProjectFolder;
-            SelectedIde = settings.PreferredIde;
-            VisualStudioPath = settings.VisualStudioPath ?? "";
-            VisualStudioCodePath = settings.VisualStudioCodePath ?? "";
+            SelectedIde = directorProjectSettings.PreferredIde;
+            VisualStudioPath = directorProjectSettings.VisualStudioPath ?? "";
+            VisualStudioCodePath = directorProjectSettings.VisualStudioCodePath ?? "";
         }
 
-        public void SaveTo(ProjectSettings settings)
+        public void SaveTo(LingoProjectSettings settings, DirectorProjectSettings directorProjectSettings)
         {
             settings.ProjectName = ProjectName.Trim();
             settings.ProjectFolder = ProjectFolder.Trim();
-            settings.PreferredIde = SelectedIde;
-            settings.VisualStudioPath = VisualStudioPath.Trim();
-            settings.VisualStudioCodePath = VisualStudioCodePath.Trim();
+            directorProjectSettings.PreferredIde = SelectedIde;
+            directorProjectSettings.VisualStudioPath = VisualStudioPath.Trim();
+            directorProjectSettings.VisualStudioCodePath = VisualStudioCodePath.Trim();
         }
     }
 }

@@ -2,7 +2,9 @@ using Godot;
 using LingoEngine.Demo.TetriGrounds.Core;
 #if DEBUG
 using LingoEngine.Director.LGodot;
-using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.LGodot.UI;
+
+
 #else
 using LingoEngine.LGodot;
 #endif

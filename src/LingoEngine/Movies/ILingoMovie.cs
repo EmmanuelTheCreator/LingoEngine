@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using LingoEngine.Casts;
 using LingoEngine.Core;
 using LingoEngine.Members;
 using LingoEngine.Sounds;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.Movies
 {
@@ -93,10 +95,65 @@ namespace LingoEngine.Movies
         void PrevFrame();
 
         /// <summary>
+        /// Inserts a duplicate of the current frame during score recording.
+        /// Lingo: insertFrame
+        /// </summary>
+        void InsertFrame();
+
+        /// <summary>
+        /// Deletes the current frame during score recording.
+        /// Lingo: deleteFrame
+        /// </summary>
+        void DeleteFrame();
+
+        /// <summary>
+        /// Finalizes any pending changes to the current frame during recording.
+        /// Lingo: updateFrame
+        /// </summary>
+        void UpdateFrame();
+
+        // --- Additional Lingo movie controls ---
+        /// <summary>
+        /// Pauses the playhead for the specified number of ticks (1 tick = 1/60 sec).
+        /// Lingo: delay
+        /// </summary>
+        void Delay(int ticks);
+
+        /// <summary>
+        /// Sends the playhead to the next marker in the movie.
+        /// Lingo: goNext
+        /// </summary>
+        void GoNext();
+
+        /// <summary>
+        /// Sends the playhead to the previous marker in the movie.
+        /// Lingo: goPrevious
+        /// </summary>
+        void GoPrevious();
+
+        /// <summary>
+        /// Sends the playhead to the marker immediately preceding the current frame.
+        /// Lingo: goLoop
+        /// </summary>
+        void GoLoop();
+
+        /// <summary>
         /// Goes to a specific frame and stops playback.
         /// Lingo: go to frame
         /// </summary>
         void GoToAndStop(int frame);
+
+        /// <summary>
+        /// Constrain a horizontal position within the bounds of the specified sprite.
+        /// Lingo: constrainH
+        /// </summary>
+        int ConstrainH(int spriteNumber, int pos);
+
+        /// <summary>
+        /// Constrain a vertical position within the bounds of the specified sprite.
+        /// Lingo: constrainV
+        /// </summary>
+        int ConstrainV(int spriteNumber, int pos);
         
         void UpdateStage();
         ILingoSpriteChannel Channel(int channelNumber);
@@ -182,6 +239,45 @@ namespace LingoEngine.Movies
         /// The rollover() method indicates whether the pointer is over the specified sprite.
         /// </summary>
         bool RollOver(int spriteNumber);
+        /// <summary>
+        /// Returns the sprite number currently under the pointer or 0 if none.
+        /// Lingo: rollOver with no parameter
+        /// </summary>
+        int RollOver();
+
+        /// <summary>
+        /// Performs an action on all active sprite channels.
+        /// Lingo: sendAllSprites
+        /// </summary>
+        void SendAllSprites(Action<ILingoSpriteChannel> actionOnSprite);
+
+        /// <summary>
+        /// Calls the given action on the requested behaviour of all active sprites.
+        /// </summary>
+        void SendAllSprites<T>(Action<T> actionOnSprite) where T : LingoSpriteBehavior;
+
+        /// <summary>
+        /// Calls the given function on the requested behaviour of all active sprites and returns the results.
+        /// </summary>
+        IEnumerable<TResult?> SendAllSprites<T, TResult>(Func<T, TResult> actionOnSprite) where T : LingoSpriteBehavior;
+
+        /// <summary>
+        /// Total number of sprite channels in the movie.
+        /// Lingo: lastChannel
+        /// </summary>
+        int LastChannel { get; }
+
+        /// <summary>
+        /// Number of the last frame in the movie.
+        /// Lingo: lastFrame
+        /// </summary>
+        int LastFrame { get; }
+
+        /// <summary>
+        /// List of markers in the movie as frameNumber:label.
+        /// Lingo: markerList
+        /// </summary>
+        IReadOnlyDictionary<int, string> MarkerList { get; }
 
         IEnumerable<LingoSprite> GetSpritesAtPoint(float x, float y, bool skipLockedSprites = false);
         LingoSprite? GetSpriteAtPoint(float x, float y, bool skipLockedSprites = false);
@@ -223,8 +319,8 @@ namespace LingoEngine.Movies
 
         // Audio clips support
         event Action? AudioClipListChanged;
-        IReadOnlyList<LingoAudioClip> GetAudioClips();
-        LingoAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound);
-        void MoveAudioClip(LingoAudioClip clip, int newFrame);
+        IReadOnlyList<LingoMovieAudioClip> GetAudioClips();
+        LingoMovieAudioClip AddAudioClip(int channel, int frame, LingoMemberSound sound);
+        void MoveAudioClip(LingoMovieAudioClip clip, int newFrame);
     }
 }

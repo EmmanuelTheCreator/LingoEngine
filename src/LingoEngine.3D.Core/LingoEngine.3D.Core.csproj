@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>12</LangVersion>
     <Platforms>AnyCPU;x64;x86</Platforms>
+    <RootNamespace>LingoEngine.L3D.Core</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../LingoEngine/LingoEngine.csproj" />

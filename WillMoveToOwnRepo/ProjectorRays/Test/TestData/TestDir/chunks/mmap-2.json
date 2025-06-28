@@ -1,0 +1,443 @@
+{
+  "headerLength": 24,
+  "entryLength": 20,
+  "chunkCountMax": 60,
+  "chunkCountUsed": 54,
+  "junkHead": 37,
+  "junkHead2": -1,
+  "freeHead": 36,
+  "mapArray": [
+    {
+      "fourCC": "RIFX",
+      "len": 30172,
+      "offset": 0,
+      "flags": 1,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "imap",
+      "len": 24,
+      "offset": 12,
+      "flags": 1,
+      "unknown0": 0,
+      "next": 121147304
+    },
+    {
+      "fourCC": "mmap",
+      "len": 1224,
+      "offset": 28948,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 120995308
+    },
+    {
+      "fourCC": "KEY*",
+      "len": 372,
+      "offset": 14450,
+      "flags": 128,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "junk",
+      "len": 611,
+      "offset": 11690,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 11
+    },
+    {
+      "fourCC": "junk",
+      "len": 4,
+      "offset": 11678,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 51
+    },
+    {
+      "fourCC": "junk",
+      "len": 0,
+      "offset": 12310,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 18
+    },
+    {
+      "fourCC": "junk",
+      "len": 155,
+      "offset": 12326,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 5
+    },
+    {
+      "fourCC": "CASt",
+      "len": 196,
+      "offset": 25264,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "Cinf",
+      "len": 60,
+      "offset": 25184,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "junk",
+      "len": 1431,
+      "offset": 12798,
+      "flags": 4,
+      "unknown0": 0,
+      "next": -1
+    },
+    {
+      "fourCC": "junk",
+      "len": 203,
+      "offset": 14238,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 10
+    },
+    {
+      "fourCC": "DRCF",
+      "len": 100,
+      "offset": 14830,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "FXmp",
+      "len": 7720,
+      "offset": 14970,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "MCsL",
+      "len": 58,
+      "offset": 24076,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "Sord",
+      "len": 24,
+      "offset": 14938,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "VWFI",
+      "len": 155,
+      "offset": 25468,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "VWSC",
+      "len": 292,
+      "offset": 25632,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "junk",
+      "len": 6,
+      "offset": 12784,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 24
+    },
+    {
+      "fourCC": "VWLB",
+      "len": 6,
+      "offset": 25932,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "junk",
+      "len": 0,
+      "offset": 12318,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 6
+    },
+    {
+      "fourCC": "Chan",
+      "len": 6,
+      "offset": 25946,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "XTRl",
+      "len": 1370,
+      "offset": 22698,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "free",
+      "len": 0,
+      "offset": 0,
+      "flags": 12,
+      "unknown0": 0,
+      "next": -1
+    },
+    {
+      "fourCC": "junk",
+      "len": 6,
+      "offset": 12762,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 53
+    },
+    {
+      "fourCC": "VERS",
+      "len": 12,
+      "offset": 24142,
+      "flags": 128,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "FCOL",
+      "len": 56,
+      "offset": 24162,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "PUBL",
+      "len": 862,
+      "offset": 24226,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "GRID",
+      "len": 16,
+      "offset": 25096,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "SCRF",
+      "len": 24,
+      "offset": 25120,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "SCRF",
+      "len": 24,
+      "offset": 25152,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "ediM",
+      "len": 529,
+      "offset": 25960,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "BITD",
+      "len": 1001,
+      "offset": 26498,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "ALFA",
+      "len": 125,
+      "offset": 27508,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "Thum",
+      "len": 1298,
+      "offset": 27642,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "junk",
+      "len": 0,
+      "offset": 12776,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 20
+    },
+    {
+      "fourCC": "free",
+      "len": 0,
+      "offset": 0,
+      "flags": 12,
+      "unknown0": 0,
+      "next": 23
+    },
+    {
+      "fourCC": "junk",
+      "len": 824,
+      "offset": 44,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 38
+    },
+    {
+      "fourCC": "junk",
+      "len": 0,
+      "offset": 12754,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 35
+    },
+    {
+      "fourCC": "junk",
+      "len": 372,
+      "offset": 876,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 4
+    },
+    {
+      "fourCC": "junk",
+      "len": 100,
+      "offset": 1256,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 39
+    },
+    {
+      "fourCC": "junk",
+      "len": 24,
+      "offset": 1364,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 40
+    },
+    {
+      "fourCC": "junk",
+      "len": 7720,
+      "offset": 1396,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 41
+    },
+    {
+      "fourCC": "junk",
+      "len": 1370,
+      "offset": 9124,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 42
+    },
+    {
+      "fourCC": "junk",
+      "len": 58,
+      "offset": 10502,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 43
+    },
+    {
+      "fourCC": "junk",
+      "len": 12,
+      "offset": 10568,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 44
+    },
+    {
+      "fourCC": "junk",
+      "len": 56,
+      "offset": 10588,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 45
+    },
+    {
+      "fourCC": "junk",
+      "len": 862,
+      "offset": 10652,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 46
+    },
+    {
+      "fourCC": "junk",
+      "len": 16,
+      "offset": 11522,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 47
+    },
+    {
+      "fourCC": "junk",
+      "len": 24,
+      "offset": 11546,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 48
+    },
+    {
+      "fourCC": "junk",
+      "len": 24,
+      "offset": 11578,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 49
+    },
+    {
+      "fourCC": "junk",
+      "len": 60,
+      "offset": 11610,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 50
+    },
+    {
+      "fourCC": "CAS*",
+      "len": 4,
+      "offset": 25252,
+      "flags": 0,
+      "unknown0": 0,
+      "next": 0
+    },
+    {
+      "fourCC": "junk",
+      "len": 256,
+      "offset": 12490,
+      "flags": 4,
+      "unknown0": 0,
+      "next": 7
+    }
+  ]
+}

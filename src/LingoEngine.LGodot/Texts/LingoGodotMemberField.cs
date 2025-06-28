@@ -1,7 +1,8 @@
 ﻿using Godot;
-using LingoEngine.Events;
+using LingoEngine.Styles;
 using LingoEngine.Texts;
 using LingoEngine.Texts.FrameworkCommunication;
+using Microsoft.Extensions.Logging;
 
 namespace LingoEngine.LGodot.Texts
 {
@@ -9,7 +10,7 @@ namespace LingoEngine.LGodot.Texts
     {
 
 
-        public LingoGodotMemberField(ILingoFontManager lingoFontManager) : base(lingoFontManager)
+        public LingoGodotMemberField(ILingoFontManager lingoFontManager, ILogger<LingoGodotMemberTextBase<LingoMemberField>> logger) : base(lingoFontManager, logger)
         {
         }
 

@@ -4,7 +4,9 @@ using LingoEngine.Commands;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Movies;
+using LingoEngine.Movies.Commands;
 using LingoEngine.Sounds;
+using LingoEngine.Stages;
 using LingoEngine.Tools;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,7 +18,7 @@ namespace LingoEngine.Core
         ICommandHandler<RewindMovieCommand>,
          ICommandHandler<PlayMovieCommand>,
         ICommandHandler<StepFrameCommand>,
-        ICommandHandler<SetScoreLabelCommand>,
+        ICommandHandler<SetFrameLabelCommand>,
         ICommandHandler<AddFrameLabelCommand>,
         ICommandHandler<UpdateFrameLabelCommand>
     {
@@ -258,9 +260,9 @@ namespace LingoEngine.Core
             return true;
         }
 
-        public bool CanExecute(SetScoreLabelCommand command) => ActiveMovie is LingoMovie;
+        public bool CanExecute(SetFrameLabelCommand command) => ActiveMovie is LingoMovie;
 
-        public bool Handle(SetScoreLabelCommand command)
+        public bool Handle(SetFrameLabelCommand command)
         {
             if (ActiveMovie is LingoMovie movie)
                 movie.SetScoreLabel(command.FrameNumber, command.Name);

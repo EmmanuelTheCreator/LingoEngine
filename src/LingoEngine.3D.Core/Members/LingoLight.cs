@@ -1,6 +1,6 @@
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine.L3D.Core.Members;
 
 /// <summary>
 /// Light used to illuminate a 3D world.

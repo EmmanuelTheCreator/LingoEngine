@@ -1,10 +1,13 @@
 ﻿using LingoEngine.Inputs;
+using LingoEngine.Inputs.Events;
 using LingoEngine.Movies;
+using LingoEngine.Movies.Events;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.Events
 {
 
-    internal class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler, ILingoKeyEventHandler, ILingoSpriteEventHandler
+    public class LingoEventMediator : ILingoEventMediator, ILingoMouseEventHandler, ILingoKeyEventHandler, ILingoSpriteEventHandler
     {
         private readonly List<IHasPrepareMovieEvent> _prepareMovies = new();
         private readonly List<IHasStartMovieEvent> _startMovies = new();

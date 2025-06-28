@@ -4,7 +4,9 @@ using LingoEngine.Events;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Members;
+using LingoEngine.Projects;
 using LingoEngine.Sounds;
+using LingoEngine.Stages;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Movies
@@ -40,7 +42,7 @@ namespace LingoEngine.Movies
         private LingoEventMediator _eventMediator;
         private IServiceScope _scopedServiceProvider;
         private readonly ILingoFrameworkFactory _factory;
-        private readonly ProjectSettings _projectSettings;
+        private readonly LingoProjectSettings _projectSettings;
         private readonly Lazy<ILingoMemberFactory> _memberFactory;
         private readonly IServiceProvider _rootServiceProvider;
         public ILingoEventMediator Events => _eventMediator;
@@ -63,7 +65,7 @@ namespace LingoEngine.Movies
 
 #pragma warning disable CS8618 
 #pragma warning restore CS8618 
-        public LingoMovieEnvironment(IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory, ProjectSettings projectSettings)
+        public LingoMovieEnvironment(IServiceProvider rootServiceProvider, ILingoFrameworkFactory factory, LingoProjectSettings projectSettings)
         {
             _memberFactory = rootServiceProvider.GetRequiredService<Lazy<ILingoMemberFactory>>();
             _rootServiceProvider = rootServiceProvider;

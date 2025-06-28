@@ -1,6 +1,6 @@
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine.L3D.Core.Members;
 
 /// <summary>
 /// Camera used by a 3D sprite to view the world.
