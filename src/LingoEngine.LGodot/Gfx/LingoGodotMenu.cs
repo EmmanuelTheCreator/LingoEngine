@@ -61,6 +61,15 @@ namespace LingoEngine.LGodot.Gfx
             _items.Clear();
         }
 
+        public void PositionPopup(ILingoFrameworkGfxButton button)
+        {
+            if (button is not Button btn)
+                return;
+            Position = btn.GlobalPosition + new Vector2I(0, (int)btn.Size.Y);
+        }
+
+        public void Popup() => base.Popup();
+
         internal void RegisterItem(LingoGodotMenuItem item)
         {
             UpdateItem(item);
