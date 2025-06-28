@@ -9,7 +9,10 @@ namespace LingoEngine.Gfx
     {
         string Name { get; set; }
         bool Visibility { get; set; }
-        T Framework<T>() where T : ILingoFrameworkGfxLayoutNode;
+        float Width { get; set; }
+        float Height { get; set; }
+        LingoMargin Margin { get; set; }
+        T Framework<T>() where T : ILingoFrameworkGfxNode;
         ILingoFrameworkGfxNode FrameworkObj { get; }
     }
     /// <summary>
@@ -19,8 +22,6 @@ namespace LingoEngine.Gfx
     {
         float X { get; set; }
         float Y { get; set; }
-        float Width { get; set; }
-        float Height { get; set; }
-        LingoMargin Margin { get; set; }
+     
     }
 }

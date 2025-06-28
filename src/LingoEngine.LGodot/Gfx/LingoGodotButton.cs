@@ -19,8 +19,8 @@ namespace LingoEngine.LGodot.Gfx
             Pressed += () => _pressed?.Invoke();
         }
 
-        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
-        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
+        //public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
+        //public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
         public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
@@ -39,7 +39,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public string Text { get => base.Text; set => base.Text = value; }
+        public new string Text { get => base.Text; set => base.Text = value; }
         public bool Enabled { get => !Disabled; set => Disabled = !value; }
         event Action? ILingoFrameworkGfxButton.Pressed
         {
@@ -49,8 +49,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
-            base.Dispose();
             QueueFree();
+            base.Dispose();
         }
     }
 }

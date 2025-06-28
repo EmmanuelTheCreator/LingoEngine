@@ -222,8 +222,12 @@ namespace LingoEngine.LGodot.Core
         }
         public LingoGfxLayoutWrapper CreateLayoutWrapper(ILingoGfxNode content, float x, float y)
         {
+            if (content is ILingoGfxLayoutNode)
+                throw new InvalidOperationException($"Content {content.Name} already supports layout — wrapping is unnecessary.");
             var panel = new LingoGfxLayoutWrapper(content);
             var impl = new LingoGodotLayoutWrapper(panel);
+            panel.X = x;
+            panel.Y = y;
             return panel;
         }
 

@@ -7,6 +7,11 @@ namespace LingoEngine.Gfx
         /// <summary>Name of the node.</summary>
         string Name { get; set; }
         bool Visibility { get; set; }
+        float Width { get; set; }
+        float Height { get; set; }
+
+        /// <summary>Margin around the node.</summary>
+        LingoMargin Margin { get; set; }
     }
     /// <summary>
     /// Basic framework object that can be positioned and sized on screen.
@@ -16,11 +21,7 @@ namespace LingoEngine.Gfx
         
         float X { get; set; }
         float Y { get; set; }
-        float Width { get; set; }
-        float Height { get; set; }
-       
-        /// <summary>Margin around the node.</summary>
-        LingoMargin Margin { get; set; }
+     
     }
     
 }

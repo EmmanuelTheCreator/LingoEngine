@@ -3,8 +3,6 @@ using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Styles;
-using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
 using LingoEngine.Bitmaps;
 using LingoEngine.LGodot.Bitmaps;
 

@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxButton" Collapsed="true">
+    <Position X="10.75" Y="6.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAACAAEAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxButton.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxCanvas" Collapsed="true">
+    <Position X="4.75" Y="9.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAAAAAAAQCAAABAIAEAAAABIAIA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxCanvas.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxInputCheckbox" Collapsed="true">
+    <Position X="11.5" Y="7.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxInputCheckbox.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxInputCombobox" Collapsed="true">
+    <Position X="11.5" Y="8.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AACAAAACAAAACAAAAAAAAAAAwAAAAAAAAIAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxInputCombobox.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxInputNumber" Collapsed="true">
+    <Position X="11.75" Y="9.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAEAAAAAAAAAAAAAAAABAgAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxInputNumber.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxInputText" Collapsed="true">
+    <Position X="15" Y="8.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQCAACAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxInputText.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxLabel" Collapsed="true">
+    <Position X="8.25" Y="6.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAAAAAAAgAAAAAAAAAAAAAACAECAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxLabel.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxMenu" Collapsed="true">
+    <Position X="5.5" Y="11.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAQAAQAwAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxMenu.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxMenuItem" Collapsed="true">
+    <Position X="15.5" Y="4.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIBAAAAAAAQABAAAAAAAAAAAAAAAAAE=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxMenuItem.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxNode" Collapsed="true">
+    <Position X="10.75" Y="4.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAABAAAAAAAAAAAAEQAAAAAAAEAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxNode.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxLayoutNode" Collapsed="true">
+    <Position X="5.25" Y="6.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxNode.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxNodeInput" Collapsed="true">
+    <Position X="13.25" Y="6.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAEAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxNodeInput.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxPanel" Collapsed="true">
+    <Position X="4.75" Y="8" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAAAAAAAAACCAJAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxPanel.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxLayoutWrapper" Collapsed="true">
+    <Position X="8" Y="9.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxPanel.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxScrollContainer" Collapsed="true">
+    <Position X="8" Y="10.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAABAAAAEAIAAAAAAAAAAAIAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxScrollContainer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxSpinBox" Collapsed="true">
+    <Position X="15" Y="7.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAEAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxSpinBox.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxTabContainer" Collapsed="true">
+    <Position X="8" Y="8" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAgAQAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxTabContainer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxTabItem" Collapsed="true">
+    <Position X="8" Y="11.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxTabContainer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LingoEngine.Gfx.ILingoFrameworkGfxWrapPanel" Collapsed="true">
+    <Position X="4.75" Y="10.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAEAAAAAIAAAAAAAIAQAAAEAAAAAAAAAA=</HashCode>
+      <FileName>Gfx\ILingoFrameworkGfxWrapPanel.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

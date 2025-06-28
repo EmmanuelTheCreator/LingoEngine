@@ -17,19 +17,21 @@ namespace LingoEngine.Gfx
 
 
         /// <summary>Adds a child to the panel and sets its position.</summary>
-        public void AddChild(ILingoGfxNode node, float x, float y)
+        public ILingoGfxNode AddChild(ILingoGfxNode node, float x, float y)
         {
             if (node is ILingoFrameworkGfxLayoutNode layoutNode)
             {
                 layoutNode.X = x;
                 layoutNode.Y = y;
                 _framework.AddChild(node.Framework<ILingoFrameworkGfxLayoutNode>());
+                return node;
             }
             else
             {
                 LingoGfxLayoutWrapper item = _factory.CreateLayoutWrapper(node ,x, y);
                
                 _framework.AddChild(item.Framework<ILingoFrameworkGfxLayoutNode>());
+                return item;
             }
             
         }
@@ -54,47 +56,32 @@ namespace LingoEngine.Gfx
     {
         public ILingoGfxNode Content { get; set; }
 
-        public override string Name { get => Content.Name; set => Content.Name = value; }
+
         public override bool Visibility { get => Content.Visibility; set => Content.Visibility = value; }
+        public override string Name { get => Content.Name; set => Content.Name = value; }
+        public override LingoMargin Margin { get => Content.Margin; set => Content.Margin = value; }
+        public override float Width { get => Content.Width; set => Content.Width = value; }
+        public override float Height { get => Content.Height; set => Content.Height = value; }
+
+
+        public virtual T FrameworkWrapper<T>() where T : ILingoFrameworkGfxLayoutWrapper => (T)(object)_framework;
+        public virtual ILingoFrameworkGfxNode FrameworkObjWrapper => _framework;
+
+
+        public override T Framework<T>() => Content.Framework<T>();
+        public override ILingoFrameworkGfxNode FrameworkObj => Content.FrameworkObj;
+
+
 
         public LingoGfxLayoutWrapper(ILingoGfxNode content)
         {
             Content = content;
+            
         }
+    
 
-        public override T Framework<T>()
-        {
-            if (typeof(T) == typeof(ILingoFrameworkGfxLayoutNode))
-                return (T)(object)FrameworkObj;
-            return Content.Framework<T>();
-        }
 
-        public override ILingoFrameworkGfxNode FrameworkObj => _wrapped ??= new WrapperFramework(Content.FrameworkObj);
 
-        private ILingoFrameworkGfxLayoutNode? _wrapped;
-
-        private class WrapperFramework : ILingoFrameworkGfxLayoutNode
-        {
-            private readonly ILingoFrameworkGfxNode _inner;
-            private readonly LingoMargin _margin = LingoMargin.Zero;
-            private float _x, _y, _w, _h;
-
-            public WrapperFramework(ILingoFrameworkGfxNode inner)
-            {
-                _inner = inner;
-            }
-
-            public float X { get => _x; set => _x = value; }
-            public float Y { get => _y; set => _y = value; }
-            public float Width { get => _w; set => _w = value; }
-            public float Height { get => _h; set => _h = value; }
-            public LingoMargin Margin { get => _margin; set { } } // optional: ignore or store
-
-            public string Name { get => _inner.Name; set => _inner.Name = value; }
-            public bool Visibility { get => _inner.Visibility; set => _inner.Visibility = value; }
-
-            public void Dispose() => _inner.Dispose();
-        }
     }
 }
 
