@@ -501,6 +501,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                         SelectingPixels();
                     else if (_painter != null && _imageRect.Texture != null)
                         DrawingPixels();
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
 
