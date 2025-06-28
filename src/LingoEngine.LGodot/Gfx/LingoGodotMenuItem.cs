@@ -9,6 +9,7 @@ namespace LingoEngine.LGodot.Gfx
     /// </summary>
     internal partial class LingoGodotMenuItem : ILingoFrameworkGfxMenuItem, IDisposable
     {
+        private readonly LingoGfxMenuItem _LingoMenuItem;
         private string _name;
         private bool _enabled = true;
         private bool _check;
@@ -16,18 +17,21 @@ namespace LingoEngine.LGodot.Gfx
         private LingoGodotMenu? _menu;
         internal int Id { get; private set; }
 
-        public event Action? Activated;
-
-        public LingoGodotMenuItem(string name, string? shortcut)
-        {
-            _name = name;
-            _shortcut = shortcut;
-        }
-
         public string Name { get => _name; set { _name = value; Update(); } }
         public bool Enabled { get => _enabled; set { _enabled = value; Update(); } }
         public bool CheckMark { get => _check; set { _check = value; Update(); } }
         public string? Shortcut { get => _shortcut; set { _shortcut = value; Update(); } }
+
+        public event Action? Activated;
+
+        public LingoGodotMenuItem(LingoGfxMenuItem item, string name, string? shortcut)
+        {
+            _LingoMenuItem = item;
+            _name = name;
+            _shortcut = shortcut;
+            item.Init(this);
+        }
+
 
         internal void Attach(LingoGodotMenu menu, int id)
         {

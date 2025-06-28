@@ -320,7 +320,7 @@ namespace LingoEngine.LGodot.Core
         public LingoGfxMenuItem CreateMenuItem(string name, string? shortcut = null)
         {
             var item = new LingoGfxMenuItem();
-            var impl = new LingoGodotMenuItem(name, shortcut);
+            var impl = new LingoGodotMenuItem(item,name, shortcut);
             return item;
         } 
         #endregion

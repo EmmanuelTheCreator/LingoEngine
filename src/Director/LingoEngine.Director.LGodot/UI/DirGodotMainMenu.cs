@@ -1,5 +1,9 @@
 using Godot;
+using LingoEngine.Core;
 using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Projects;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot;
 
@@ -10,11 +14,9 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
 {
     private readonly LingoGodotWrapPanel _menuBar;
     private readonly LingoGodotWrapPanel _iconBar;
-    private readonly LingoGodotButton _fileButton;
-    private readonly LingoGodotButton _editButton;
-    private readonly LingoGodotButton _windowButton;
+    public bool IsOpen => true;
 
-    public DirGodotMainMenu(IDirectorWindowManager windowManager,
+    public DirGodotMainMenu(
         DirectorProjectManager projectManager,
         LingoPlayer player,
         IDirectorShortCutManager shortCutManager,
@@ -29,9 +31,6 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         AddChild(_menuBar);
         _menuBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
-        _fileButton = directorMainMenu.FileButton.Framework<LingoGodotButton>();
-        _editButton = directorMainMenu.EditButton.Framework<LingoGodotButton>();
-        _windowButton = directorMainMenu.WindowButton.Framework<LingoGodotButton>();
 
         AddChild(_iconBar);
         _iconBar.Position = new Vector2(300, 0);
@@ -60,5 +59,5 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
     {
         // not allowed
     }
-    public bool IsOpen => true;
+    
 }

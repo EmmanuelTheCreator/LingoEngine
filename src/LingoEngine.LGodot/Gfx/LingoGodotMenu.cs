@@ -1,8 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using System;
-using System.Collections.Generic;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -21,9 +19,10 @@ namespace LingoEngine.LGodot.Gfx
             _margin = LingoMargin.Zero;
             menu.Init(this);
             IdPressed += OnIdPressed;
+            
         }
 
-        public string Name { get => _name; set => _name = value; }
+        public new string Name { get => _name; set => _name = value; }
 
         public float X { get => Position.X; set => Position = new Vector2I((int)value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2I(Position.X, (int)value); }
@@ -61,11 +60,12 @@ namespace LingoEngine.LGodot.Gfx
             _items.Clear();
         }
 
+       
         public void PositionPopup(ILingoFrameworkGfxButton button)
         {
             if (button is not Button btn)
                 return;
-            Position = btn.GlobalPosition + new Vector2I(0, (int)btn.Size.Y);
+            Position = new Vector2I((int)btn.GlobalPosition.X, (int)(btn.GlobalPosition.Y + btn.Size.Y));
         }
 
         public void Popup() => base.Popup();
