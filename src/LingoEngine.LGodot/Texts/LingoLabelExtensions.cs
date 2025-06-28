@@ -1,6 +1,6 @@
 ﻿using Godot;
-using LingoEngine.Events;
 using LingoEngine.Primitives;
+using LingoEngine.Styles;
 
 namespace LingoEngine.LGodot.Texts
 {

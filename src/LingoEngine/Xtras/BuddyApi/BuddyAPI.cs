@@ -5,6 +5,7 @@ namespace LingoEngine.Xtras.BuddyApi
 {
     public class BuddyAPI : IBuddyAPI
     {
+        public string Name =>  "BuddyAPI";
         public string baSysFolder(string folder)
         {
             return folder.ToLower() switch

@@ -324,6 +324,8 @@
 	  <None Include="Medias\InternalExt\25.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Content Include="Medias\Icons\General_Icons.png" />
+	  <Content Include="Medias\Icons\Painter_Icons.png" />
 	  <Content Include="Properties\launchSettings.json" />
 	</ItemGroup>
 	<ItemGroup>
@@ -405,8 +407,10 @@
 	  <None Include="project.godot" />
 	  <None Include="Scenes\root_node_tetri_grounds.tscn" />
 	</ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <ProjectReference Include="..\..\..\src\Director\LingoEngine.Director.LGodot\LingoEngine.Director.LGodot.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\src\LingoEngine.LGodot\LingoEngine.LGodot.csproj" />
     <ProjectReference Include="..\LingoEngine.Demo.TetriGrounds.Core\LingoEngine.Demo.TetriGrounds.Core.csproj" />
   </ItemGroup>

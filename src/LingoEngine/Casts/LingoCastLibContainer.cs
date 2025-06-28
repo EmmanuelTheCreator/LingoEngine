@@ -24,7 +24,7 @@ namespace LingoEngine.Casts
     }
 
 
-    internal class LingoCastLibsContainer : ILingoCastLibsContainer
+    public class LingoCastLibsContainer : ILingoCastLibsContainer
     {
         private Dictionary<string, LingoMember> _allMembersByName = new();
         private Dictionary<string, LingoCast> _castsByName = new();

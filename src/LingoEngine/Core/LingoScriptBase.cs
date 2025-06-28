@@ -5,6 +5,7 @@ using LingoEngine.Movies;
 using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.Sounds;
+using LingoEngine.Sprites;
 using LingoEngine.Texts;
 using System;
 using System.Numerics;
@@ -41,7 +42,7 @@ namespace LingoEngine.Core
         protected ILingoSystem _System => _env.System;
 
         #endregion
-        protected LingoMemberPicture? CursorImage { get  => _env.Mouse.Cursor.Image; set => _env.Mouse.Cursor.Image = value; }
+        protected LingoMemberBitmap? CursorImage { get  => _env.Mouse.Cursor.Image; set => _env.Mouse.Cursor.Image = value; }
         protected int Cursor { get  => _env.Mouse.Cursor.Cursor; set => _env.Mouse.Cursor.Cursor = value; }
 
 

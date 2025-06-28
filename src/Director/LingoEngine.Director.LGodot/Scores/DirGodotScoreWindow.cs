@@ -1,11 +1,12 @@
 using Godot;
 using LingoEngine.Movies;
-using LingoEngine.Director.Core.Events;
 using LingoEngine.Core;
-using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Scores;
-using LingoEngine.Director.LGodot;
-using LingoEngine.Director.LGodot.Gfx;
+using LingoEngine.Director.LGodot.Windowing;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Stages.Commands;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Commands;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -13,7 +14,9 @@ namespace LingoEngine.Director.LGodot.Scores;
 /// Simple timeline overlay showing the Score channels and frames.
 /// Toggled with F2.
 /// </summary>
-public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWindow
+public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWindow,
+    ICommandHandler<ChangeSpriteRangeCommand>,
+    ICommandHandler<AddSpriteCommand>
 {
    
     
@@ -40,13 +43,15 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
+    private readonly IHistoryManager _historyManager;
 
 
-    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, DirectorScoreWindow directorScoreWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
+    public DirGodotScoreWindow(IDirectorEventMediator directorMediator, ILingoCommandManager commandManager, IHistoryManager historyManager, DirectorScoreWindow directorScoreWindow, ILingoPlayer player, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.ScoreWindow, "Score", windowManager)
     {
         _mediator = directorMediator;
         _commandManager = commandManager;
+        _historyManager = historyManager;
         directorScoreWindow.Init(this);
         _player = player;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
@@ -66,7 +71,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _soundBar = new DirGodotSoundBar(_gfxValues);
         _soundBar.Collapsed = true;
         _channelBar = new DirGodotScoreChannelBar(_gfxValues, _soundBar);
-        _grid = new DirGodotScoreGrid(directorMediator, _gfxValues);
+        _grid = new DirGodotScoreGrid(directorMediator, _gfxValues, commandManager, historyManager);
         _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader(_gfxValues);
         _frameScripts = new DirGodotFrameScriptsBar(_gfxValues);
@@ -165,6 +170,11 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _soundBar.ScrollX = _masterScroller.ScrollHorizontal;
     }
 
+    private void RefreshGrid()
+    {
+        _grid.MarkSpriteDirty();
+    }
+
     private void UpdateScrollSize()
     {
         if (_movie == null) return;
@@ -225,6 +235,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (!IsActiveWindow) return;
         if (@event is InputEventMouseButton mb && !mb.IsPressed())
         {
             if (mb.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
@@ -237,9 +248,32 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
                         _masterScroller.ScrollVertical -= 20;
                     else
                         _masterScroller.ScrollVertical += 20;
+                    GetViewport().SetInputAsHandled();
                 }
             }
         }
+    }
+
+    public bool CanExecute(ChangeSpriteRangeCommand command) => true;
+    public bool Handle(ChangeSpriteRangeCommand command)
+    {
+        if (command.EndChannel != command.Sprite.SpriteNum - 1)
+            command.Movie.ChangeSpriteChannel(command.Sprite, command.EndChannel);
+        command.Sprite.BeginFrame = command.EndBegin;
+        command.Sprite.EndFrame = command.EndEnd;
+        _historyManager.Push(command.ToUndo(RefreshGrid), command.ToRedo(RefreshGrid));
+        RefreshGrid();
+        return true;
+    }
+
+    public bool CanExecute(AddSpriteCommand command) => true;
+    public bool Handle(AddSpriteCommand command)
+    {
+        var sprite = command.Movie.AddSprite(command.Channel, command.BeginFrame, command.EndFrame, 0, 0,
+            s => s.SetMember(command.Member));
+        _historyManager.Push(command.ToUndo(sprite, RefreshGrid), command.ToRedo(RefreshGrid));
+        RefreshGrid();
+        return true;
     }
 
  

@@ -1,17 +1,21 @@
 using Godot;
 using LingoEngine.Movies;
-using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Stages;
-using LingoEngine.Director.Core.Events;
-using LingoEngine.Director.Core.Windows;
-using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Core;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Stages;
-using LingoEngine.Director.LGodot;
 using System.Linq;
 using System.Collections.Generic;
 using LingoEngine.LGodot.Primitives;
+using LingoEngine.Texts;
+using LingoEngine.Director.LGodot.Windowing;
+using LingoEngine.Director.Core.Gfx;
+using LingoEngine.Director.Core.Stages.Commands;
+using LingoEngine.Director.Core.Tools;
+using LingoEngine.Sprites;
+using LingoEngine.Movies.Commands;
+using LingoEngine.Stages;
+using LingoEngine.Director.Core.Sprites;
 
 
 namespace LingoEngine.Director.LGodot.Movies;
@@ -39,6 +43,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private readonly ColorPickerButton _colorPicker = new ColorPickerButton();
     private readonly ScrollContainer _scrollContainer = new ScrollContainer();
     private readonly SelectionBox _selectionBox = new SelectionBox();
+    private readonly BoundingBoxesOverlay _boundingBoxes = new BoundingBoxesOverlay();
 
     private LingoMovie? _movie;
     private ILingoFrameworkStage? _stage;
@@ -70,6 +75,21 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         
         Size = new Vector2(640 +10, 480+ TitleBarHeight);
         CustomMinimumSize = Size;
+        // Give all nodes clear names for easier debugging
+        Name = "DirGodotStageWindow";
+        _scrollContainer.Name = "StageScrollContainer";
+        _stageBgRect.Name = "StageBackgroundRect";
+        _stageContainer.Container.Name = "StageContainer";
+        _iconBar.Name = "IconBar";
+        _zoomSlider.Name = "ZoomSlider";
+        _zoomDropdown.Name = "ZoomDropdown";
+        _rewindButton.Name = "RewindButton";
+        _playButton.Name = "PlayButton";
+        _prevFrameButton.Name = "PrevFrameButton";
+        _nextFrameButton.Name = "NextFrameButton";
+        _recordButton.Name = "RecordButton";
+        _colorDisplay.Name = "ColorDisplay";
+        _colorPicker.Name = "ColorPicker";
         // Set anchors to stretch fully
         _scrollContainer.AnchorLeft = 0;
         _scrollContainer.AnchorTop = 0;
@@ -90,7 +110,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stageBgRect.SizeFlagsVertical = SizeFlags.ExpandFill;
         _scrollContainer.AddChild(_stageBgRect);
         _scrollContainer.AddChild(_stageContainer.Container);
+        _stageContainer.Container.AddChild(_boundingBoxes);
         _stageContainer.Container.AddChild(_selectionBox);
+        _boundingBoxes.ZIndex = 500;
+        //_boundingBoxes.MouseFilter = MouseFilterEnum.Ignore; // ensure mouse clicks pass through
         _selectionBox.Visible = false;
         _selectionBox.ZIndex = 1000;
         AddChild(_scrollContainer);
@@ -185,6 +208,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _stage = stage;
         if (stage is Node node)
         {
+           
             if (node.GetParent() != this)
             {
                 node.GetParent()?.RemoveChild(node);
@@ -198,7 +222,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     public void SetActiveMovie(LingoMovie? movie)
     {
         if (_movie != null)
+        {
             _movie.PlayStateChanged -= OnPlayStateChanged;
+            _movie.SpriteListChanged -= UpdateBoundingBoxes;
+        }
 
         _stage?.SetActiveMovie(movie);
         _movie = movie;
@@ -207,9 +234,13 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _selectionBox.Visible = false;
 
         if (_movie != null)
+        {
             _movie.PlayStateChanged += OnPlayStateChanged;
+            _movie.SpriteListChanged += UpdateBoundingBoxes;
+        }
 
         UpdatePlayButton();
+        UpdateBoundingBoxes();
     }
 
     private void OnActiveMovieChanged(ILingoMovie? movie)
@@ -220,6 +251,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private void OnPlayStateChanged(bool isPlaying)
     {
         UpdatePlayButton();
+        UpdateBoundingBoxes();
         if (isPlaying)
             _selectionBox.Visible = false;
         else if (_selectedSprites.Count > 0)
@@ -289,10 +321,39 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _selectionBox.Visible = true;
     }
 
+    private void UpdateBoundingBoxes()
+    {
+        if (_movie == null || _movie.IsPlaying)
+        {
+            _boundingBoxes.Visible = false;
+            return;
+        }
+
+        var rects = new List<Rect2>();
+        foreach (var sprite in _selectedSprites)
+        {
+            if (sprite.Member is LingoMemberText || sprite.Member is LingoMemberField)
+            {
+                var r = sprite.Rect;
+                rects.Add(new Rect2(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top));
+            }
+        }
+
+        if (rects.Count > 0)
+        {
+            _boundingBoxes.SetRects(rects);
+            _boundingBoxes.Visible = true;
+        }
+        else
+        {
+            _boundingBoxes.Visible = false;
+        }
+    }
+
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
-        if (!Visible || _movie == null || _movie.IsPlaying) return;
+        if (!Visible || _movie == null || _movie.IsPlaying || !IsActiveWindow) return;
 
         if (@event is InputEventKey spaceKey && spaceKey.Keycode == Key.Space)
         {
@@ -310,11 +371,13 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
                 {
                     _panning = true;
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
                 else if (!mb.Pressed && _panning)
                 {
                     _panning = false;
+                    GetViewport().SetInputAsHandled();
                     return;
                 }
             }
@@ -326,6 +389,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                 _scale = newScale;
                 UpdateScaleDropdown(newScale);
                 _stageContainer.SetScale(newScale);
+                GetViewport().SetInputAsHandled();
                 return;
             }
         }
@@ -333,12 +397,18 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         {
             _scrollContainer.ScrollHorizontal -= (int)motion.Relative.X;
             _scrollContainer.ScrollVertical -= (int)motion.Relative.Y;
+            GetViewport().SetInputAsHandled();
             return;
         }
 
         if (@event is InputEventKey key && key.Pressed && key.Keycode == Key.Z && key.CtrlPressed)
         {
             _historyManager.Undo();
+            return;
+        }
+        if (@event is InputEventKey key2 && key2.Pressed && key2.Keycode == Key.Y && key2.CtrlPressed)
+        {
+            _historyManager.Redo();
             return;
         }
 
@@ -374,6 +444,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                         else
                             _selectedSprites.Add(sprite);
                         UpdateSelectionBox();
+                        UpdateBoundingBoxes();
                     }
                     else
                     {
@@ -381,6 +452,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                         _selectedSprites.Add(sprite);
                         _mediator.RaiseSpriteSelected(sprite);
                         UpdateSelectionBox();
+                        UpdateBoundingBoxes();
                     }
                 }
             }
@@ -425,6 +497,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                     lp.Stage.UpdateKeyFrame(s);
             }
             UpdateSelectionBox();
+            UpdateBoundingBoxes();
         }
     }
 
@@ -469,6 +542,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
                     lp.Stage.UpdateKeyFrame(s);
             }
             UpdateSelectionBox();
+            UpdateBoundingBoxes();
         }
     }
 
@@ -490,8 +564,9 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             kv.Key.LocH = kv.Value.X;
             kv.Key.LocV = kv.Value.Y;
         }
-        _historyManager.Push(command.ToUndo(UpdateSelectionBox));
+        _historyManager.Push(command.ToUndo(UpdateSelectionBox), command.ToRedo(UpdateSelectionBox));
         UpdateSelectionBox();
+        UpdateBoundingBoxes();
         return true;
     }
 
@@ -500,15 +575,19 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     {
         foreach (var kv in command.EndRotations)
             kv.Key.Rotation = kv.Value;
-        _historyManager.Push(command.ToUndo(UpdateSelectionBox));
+        _historyManager.Push(command.ToUndo(UpdateSelectionBox), command.ToRedo(UpdateSelectionBox));
         UpdateSelectionBox();
+        UpdateBoundingBoxes();
         return true;
     }
 
     protected override void Dispose(bool disposing)
     {
         if (_movie != null)
+        {
             _movie.PlayStateChanged -= OnPlayStateChanged;
+            _movie.SpriteListChanged -= UpdateBoundingBoxes;
+        }
         _player.ActiveMovieChanged -= OnActiveMovieChanged;
         _toolManager.ToolChanged -= OnToolChanged;
         _mediator.Unsubscribe(this);
@@ -517,6 +596,10 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
 
     private partial class SelectionBox : Node2D
     {
+        public SelectionBox()
+        {
+            Name = "SelectionBox";
+        }
         private Rect2 _rect;
         public void UpdateRect(Rect2 rect)
         {
@@ -527,6 +610,27 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         public override void _Draw()
         {
             DrawRect(_rect, Colors.Yellow, false, 1);
+        }
+    }
+
+    private partial class BoundingBoxesOverlay : Node2D
+    {
+        public BoundingBoxesOverlay()
+        {
+            Name = "BoundingBoxesOverlay";
+        }
+        private readonly List<Rect2> _rects = new();
+        public void SetRects(IEnumerable<Rect2> rects)
+        {
+            _rects.Clear();
+            _rects.AddRange(rects);
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            foreach (var rect in _rects)
+                DrawRect(rect, Colors.Yellow, false, 1);
         }
     }
     

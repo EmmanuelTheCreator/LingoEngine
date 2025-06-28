@@ -82,7 +82,7 @@ namespace LingoEngine.Casts
         {
             switch (type)
             {
-                case LingoMemberType.Bitmap: return _factory.CreateMemberPicture(this, numberInCast, name, fileName, regPoint);
+                case LingoMemberType.Bitmap: return _factory.CreateMemberBitmap(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.Sound: return _factory.CreateMemberSound(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.FilmLoop: return _factory.CreateMemberFilmLoop(this, numberInCast, name, fileName, regPoint);
                 case LingoMemberType.Text: return _factory.CreateMemberText(this, numberInCast, name, fileName, regPoint);

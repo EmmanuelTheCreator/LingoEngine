@@ -3,7 +3,7 @@
     /// <summary>
     /// Interface representing the BuddyAPI functions.
     /// </summary>
-    public interface IBuddyAPI
+    public interface IBuddyAPI : ILingoXtra
     {
         /// <summary>
         /// Retrieves the location of a special Windows directory.

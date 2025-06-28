@@ -1,7 +1,8 @@
 ﻿using Godot;
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Sprites;
 using LingoEngine.Movies;
 using LingoEngine.Primitives;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.LGodot.Movies
 {
@@ -25,6 +26,7 @@ namespace LingoEngine.LGodot.Movies
             _removeMethod = removeMethod;
 
             _MovieNode2D = new Node2D();
+            _MovieNode2D.Name = "MovieRoot";
             //_MovieNode2D.Position = new Vector2(640/2, 480/2);
 
             stage.ShowMovie(this);

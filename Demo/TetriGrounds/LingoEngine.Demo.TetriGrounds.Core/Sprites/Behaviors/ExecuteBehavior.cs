@@ -1,9 +1,15 @@
-using LingoEngine.Events;
 using LingoEngine.Inputs;
+using LingoEngine.Inputs.Events;
 using LingoEngine.Movies;
+using LingoEngine.Sprites;
+using LingoEngine.Sprites.Events;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
+    public interface IHasLingoMessage
+    {
+        void HandleMessage(string myFunction, params object[]? parameters );
+    }
     // Converted from 22_B_Execute.ls
     public class ExecuteBehavior : LingoSpriteBehavior, IHasBeginSpriteEvent, IHasMouseEnterEvent, IHasMouseLeaveEvent, IHasMouseDownEvent
     {

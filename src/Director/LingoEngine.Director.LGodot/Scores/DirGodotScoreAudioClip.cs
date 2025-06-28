@@ -1,12 +1,12 @@
 using Godot;
-using LingoEngine.Movies;
+using LingoEngine.Sounds;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
 internal class DirGodotScoreAudioClip
 {
-    internal readonly LingoAudioClip Clip;
-    internal DirGodotScoreAudioClip(LingoAudioClip clip)
+    internal readonly LingoMovieAudioClip Clip;
+    internal DirGodotScoreAudioClip(LingoMovieAudioClip clip)
     {
         Clip = clip;
     }

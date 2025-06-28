@@ -15,4 +15,11 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
   </ItemGroup>
 
+
+
+  <ItemGroup>
+    <Folder Include="Inputs\Commands\" />
+    <Folder Include="Scores\Commands\" />
+  </ItemGroup>
+
 </Project>

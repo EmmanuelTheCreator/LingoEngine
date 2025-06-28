@@ -11,6 +11,8 @@ using LingoEngine.Primitives;
 using System.Linq;
 using LingoEngine.Members;
 using LingoEngine.Casts;
+using LingoEngine.Sprites;
+using LingoEngine.FilmLoops;
 
 namespace LingoEngine.IO;
 
@@ -36,6 +38,19 @@ public class JsonStateRepository
         var json = File.ReadAllText(filePath);
         var dto = JsonSerializer.Deserialize<LingoMovieDTO>(json) ?? throw new Exception("Invalid movie file");
 
+        return Load(dto, player, dir);
+    }
+
+    public LingoMovie Load(LingoMovieDTO dto, LingoPlayer player, string resourceDir)
+    {
+        if (string.IsNullOrEmpty(resourceDir))
+            resourceDir = Directory.GetCurrentDirectory();
+
+        return BuildMovieFromDto(dto, player, resourceDir);
+    }
+
+    private static LingoMovie BuildMovieFromDto(LingoMovieDTO dto, LingoPlayer player, string dir)
+    {
         var movie = (LingoMovie)player.NewMovie(dto.Name);
         movie.Tempo = dto.Tempo;
 
@@ -92,10 +107,17 @@ public class JsonStateRepository
                 s.Rotation = sDto.Rotation;
                 s.Skew = sDto.Skew;
                 s.RegPoint = new LingoPoint(sDto.RegPoint.X, sDto.RegPoint.Y);
+                s.Ink = sDto.Ink;
+                s.ForeColor = FromDto(sDto.ForeColor);
+                s.BackColor = FromDto(sDto.BackColor);
+                s.Blend = sDto.Blend;
+                s.Editable = sDto.Editable;
                 s.Width = sDto.Width;
                 s.Height = sDto.Height;
                 s.BeginFrame = sDto.BeginFrame;
                 s.EndFrame = sDto.EndFrame;
+                s.DisplayMember = sDto.DisplayMember;
+                s.SpritePropertiesOffset = sDto.SpritePropertiesOffset;
             });
 
             if (memberMap.TryGetValue(sDto.MemberNum, out var mem))
@@ -234,7 +256,7 @@ public class JsonStateRepository
                 PurgePriority = baseDto.PurgePriority,
                 Text = text.Text
             },
-            LingoMemberPicture picture => new LingoMemberPictureDTO
+            LingoMemberBitmap picture => new LingoMemberPictureDTO
             {
                 Name = baseDto.Name,
                 Number = baseDto.Number,
@@ -261,6 +283,8 @@ public class JsonStateRepository
             Name = sprite.Name,
             SpriteNum = sprite.SpriteNum,
             MemberNum = sprite.MemberNum,
+            DisplayMember = sprite.DisplayMember,
+            SpritePropertiesOffset = sprite.SpritePropertiesOffset,
             Puppet = sprite.Puppet,
             Lock = sprite.Lock,
             Visibility = sprite.Visibility,
@@ -270,6 +294,11 @@ public class JsonStateRepository
             Rotation = sprite.Rotation,
             Skew = sprite.Skew,
             RegPoint = new LingoPointDTO { X = sprite.RegPoint.X, Y = sprite.RegPoint.Y },
+            Ink = sprite.Ink,
+            ForeColor = ToDto(sprite.ForeColor),
+            BackColor = ToDto(sprite.BackColor),
+            Blend = sprite.Blend,
+            Editable = sprite.Editable,
             Width = sprite.Width,
             Height = sprite.Height,
             BeginFrame = sprite.BeginFrame,
@@ -387,7 +416,7 @@ public class JsonStateRepository
         };
     }
 
-    private static string SavePicture(LingoMemberPicture picture, string dir)
+    private static string SavePicture(LingoMemberBitmap picture, string dir)
     {
         if (picture.ImageData == null)
             return string.Empty;
@@ -422,7 +451,7 @@ public class JsonStateRepository
         return ext.ToLowerInvariant();
     }
 
-    private static string GetPictureExtension(LingoMemberPicture picture)
+    private static string GetPictureExtension(LingoMemberBitmap picture)
     {
         var format = picture.Format.ToLowerInvariant();
         if (format.Contains("png") || format.Contains("gif") || format.Contains("tiff"))

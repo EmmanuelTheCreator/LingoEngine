@@ -1,6 +1,6 @@
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Primitives3D;
+namespace LingoEngine.L3D.Core.Primitives;
 
 /// <summary>
 /// Model resource primitive of type #particle.

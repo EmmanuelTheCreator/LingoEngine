@@ -1,7 +1,9 @@
 using System.Numerics;
-using LingoEngine.Events;
 using LingoEngine.Inputs;
+using LingoEngine.Inputs.Events;
 using LingoEngine.Movies;
+using LingoEngine.Sprites;
+using LingoEngine.Sprites.Events;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {

@@ -10,7 +10,7 @@ namespace LingoEngine.Inputs
         private int _cursor;
         private LingoMouseCursor _cursorType;
         private bool _isCursorVisible = true;
-        private LingoMemberPicture? image;
+        private LingoMemberBitmap? image;
         public int this[int index]
         {
             get => _cursor;
@@ -21,7 +21,7 @@ namespace LingoEngine.Inputs
         {
             _frameworkObj = frameworkObj;
         }
-        public LingoMemberPicture? Image
+        public LingoMemberBitmap? Image
         {
             get => image; set
             {

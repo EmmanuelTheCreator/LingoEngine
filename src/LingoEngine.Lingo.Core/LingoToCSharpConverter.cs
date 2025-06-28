@@ -96,8 +96,27 @@ public static class LingoToCSharpConverter
 
         var className = script.Name + suffix;
 
+        var handlers = ExtractHandlerNames(script.Source);
+        string[] propDescRequired =
+        {
+            "getPropertyDescriptionList",
+            "getBehaviorDescription",
+            "getBehaviorTooltip",
+            "runPropertyDialog",
+            "isOKToAttach"
+        };
+        bool hasPropDescHandlers = true;
+        foreach (string h in propDescRequired)
+        {
+            if (!handlers.Contains(h))
+            {
+                hasPropDescHandlers = false;
+                break;
+            }
+        }
+
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"public class {className} : {baseType}");
+        sb.AppendLine($"public class {className} : {baseType}{(hasPropDescHandlers ? ", ILingoPropertyDescriptionList" : string.Empty)}");
         sb.AppendLine("{");
 
         bool needsGlobal = script.Type == LingoScriptType.Movie || script.Type == LingoScriptType.Parent;

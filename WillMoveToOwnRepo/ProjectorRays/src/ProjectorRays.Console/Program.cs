@@ -21,7 +21,7 @@ for (int i = 1; i < args.Length; i++)
 
 byte[] data = System.IO.File.ReadAllBytes(inputPath);
 var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-var dir = new DirectorFile(NullLogger.Instance);
+var dir = new RaysDirectorFile(NullLogger.Instance);
 if (!dir.Read(stream))
 {
     System.Console.WriteLine("Failed to read Director file");
@@ -30,7 +30,7 @@ if (!dir.Read(stream))
 
 if (jsonOutput != null)
 {
-    var writer = new JSONWriter("\n");
+    var writer = new RaysJSONWriter("\n");
     writer.StartObject();
     writer.WriteField("version", dir.Version);
     writer.WriteField("casts", dir.Casts.Count);

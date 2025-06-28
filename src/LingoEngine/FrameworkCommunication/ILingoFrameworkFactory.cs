@@ -8,6 +8,10 @@ using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Shapes;
 using LingoEngine.Texts;
+using LingoEngine.Gfx;
+using LingoEngine.Sprites;
+using LingoEngine.Stages;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.FrameworkCommunication
 {
@@ -33,7 +37,7 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a new cast member instance.</summary>
         T CreateMember<T>(ILingoCast cast, int numberInCast, string name = "") where T : LingoMember;
         /// <summary>Creates a picture member.</summary>
-        LingoMemberPicture CreateMemberPicture(ILingoCast cast,int numberInCast, string name = "", string? fileName = null,
+        LingoMemberBitmap CreateMemberBitmap(ILingoCast cast,int numberInCast, string name = "", string? fileName = null,
             LingoPoint regPoint = default);
         /// <summary>Creates a sound member.</summary>
         LingoMemberSound CreateMemberSound(ILingoCast cast, int numberInCast, string name = "", string? fileName = null, LingoPoint regPoint = default);
@@ -60,6 +64,61 @@ namespace LingoEngine.FrameworkCommunication
         LingoMouse CreateMouse(LingoStage stage);
         /// <summary>Creates a keyboard handler.</summary>
         LingoKey CreateKey();
+
+
+        #region Gfx Elements
+        /// <summary>
+        /// Creates a generic drawing canvas instance.
+        /// </summary>
+        LingoGfxCanvas CreateGfxCanvas(string name, int width, int height);
+
+        /// <summary>
+        /// Creates a wrapping panel container.
+        /// </summary>
+        LingoGfxWrapPanel CreateWrapPanel(LingoOrientation orientation, string name);
+
+        /// <summary>
+        /// Creates a simple panel container for absolute positioning.
+        /// </summary>
+        LingoGfxPanel CreatePanel(string name);
+
+        /// <summary>
+        /// Creates a tab container for organizing child panels.
+        /// </summary>
+        LingoGfxTabContainer CreateTabContainer(string name);
+        LingoGfxTabItem CreateTabItem(string name, string title);
+
+        /// <summary>Creates a scroll container.</summary>
+        LingoGfxScrollContainer CreateScrollContainer(string name);
+
+        /// <summary>Creates a single line text input.</summary>
+        LingoGfxInputText CreateInputText(string name, int maxLength = 0);
+
+        /// <summary>Creates a numeric input field.</summary>
+        LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100);
+
+        /// <summary>Creates a spin box input.</summary>
+        LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100);
+
+        /// <summary>Creates a checkbox input.</summary>
+        LingoGfxInputCheckbox CreateInputCheckbox(string name);
+
+        /// <summary>Creates a combo box input.</summary>
+        LingoGfxInputCombobox CreateInputCombobox(string name);
+
+        /// <summary>Creates a simple text label.</summary>
+        LingoGfxLabel CreateLabel(string name, string text = "");
+
+        /// <summary>Creates a clickable button.</summary>
+        LingoGfxButton CreateButton(string name, string text = "");
+
+        /// <summary>Creates a menu container.</summary>
+        LingoGfxMenu CreateMenu(string name);
+
+        /// <summary>Creates a menu item.</summary>
+        LingoGfxMenuItem CreateMenuItem(string name, string? shortcut = null);
+
+        #endregion
 
         /// <summary>Creates a sprite instance.</summary>
         T CreateSprite<T>(ILingoMovie movie, Action<LingoSprite> onRemoveMe) where T : LingoSprite;
