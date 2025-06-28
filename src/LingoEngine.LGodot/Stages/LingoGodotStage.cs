@@ -51,11 +51,19 @@ namespace LingoEngine.LGodot.Movies
 
         internal void ShowMovie(LingoGodotMovie lingoGodotMovie)
         {
-            AddChild(lingoGodotMovie.GetNode2D());
+            var node = lingoGodotMovie.GetNode2D();
+            // Avoid adding the same node multiple times which results in an error
+            if (node.GetParent() != this)
+            {
+                AddChild(node);
+            }
         }
+
         internal void HideMovie(LingoGodotMovie lingoGodotMovie)
         {
-            RemoveChild(lingoGodotMovie.GetNode2D());
+            var node = lingoGodotMovie.GetNode2D();
+            if (node.GetParent() == this)
+                RemoveChild(node);
         }
 
     public void SetActiveMovie(LingoMovie? lingoMovie)
