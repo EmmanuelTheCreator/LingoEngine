@@ -22,8 +22,8 @@ using LingoEngine.Director.Core.Icons;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
-internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkBitmapEditWindow,
-    ICommandHandler<PainterToolSelectCommand>, ICommandHandler<PainterDrawPixelCommand>, ICommandHandler<PainterFillCommand>
+internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHasMemberSelectedEvent, IDirFrameworkBitmapEditWindow
+  
 {
     private const int NavigationBarHeight = 20;
     private const int IconBarHeight = 20;
@@ -471,96 +471,53 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
+
         if (base._dragging) return;
         if (!Visible) return;
-
+        Rect2 bounds = new Rect2(_scrollContainer.GlobalPosition, _scrollContainer.Size);
+        Vector2 mousePos = GetGlobalMousePosition();
+        if (!bounds.HasPoint(mousePos)) return;
         if (@event is InputEventKey keyEvent)
         {
-
             if (keyEvent.Keycode == Key.Space)
-            {
-                _spaceHeld = keyEvent.Pressed;
-                if (!keyEvent.Pressed)
-                    _panning = false;
-            }
+                SpaceBarPress(keyEvent);
+            return;
         }
-        else if (@event is InputEventMouseButton mb)
-        {
-            Vector2 mousePos = GetGlobalMousePosition();
-            Rect2 bounds = new Rect2(_scrollContainer.GlobalPosition, _scrollContainer.Size);
 
+        if (@event is InputEventMouseButton mb)
+        {
             if (mb.ButtonIndex == MouseButton.Left)
             {
-                if (mb.Pressed && _spaceHeld && bounds.HasPoint(mousePos))
+                if (mb.Pressed && _spaceHeld)
                 {
                     _panning = true;
                     GetViewport().SetInputAsHandled();
-
                     return;
                 }
-                else if (mb.Pressed && !@_spaceHeld && bounds.HasPoint(mousePos))
+
+                if (mb.Pressed && !@_spaceHeld)
                 {
                     if (_paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
-                    {
-                        if (_painter != null)
-                        {
-                            var local = _imageRect.GetLocalMousePosition() / _scale;
-                            _selectStart = new Vector2I((int)local.X, (int)local.Y);
-                            _dragRect = null;
-                            _dragSelecting = true;
-                            _selectionCanvas.QueueRedraw();
-                        }
-                    }
+                        SelectingPixels();
                     else if (_painter != null && _imageRect.Texture != null)
-                    {
-                        var local = _imageRect.GetLocalMousePosition() / _scale;
-                        var pixel = new Vector2I((int)local.X, (int)local.Y);
-                        _commandManager.Handle(new PainterDrawPixelCommand(pixel.X, pixel.Y));
-                    }
-
+                        DrawingPixels();
                     return;
                 }
-                else if (!mb.Pressed)
+
+                if (!mb.Pressed)
                 {
                     if (_dragSelecting && _paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
-                    {
-                        var local = _imageRect.GetLocalMousePosition() / _scale;
-                        var end = new Vector2I((int)local.X, (int)local.Y);
-                        Rect2I rect = RectFromPoints(_selectStart, end);
-                        ApplySelection(rect, mb.CtrlPressed, mb.ShiftPressed);
-                        _dragSelecting = false;
-                        _dragRect = null;
-                        _selectionCanvas.QueueRedraw();
-                    }
+                        SelectingPixelsFinished(mb);
                     else
-                    {
                         _panning = false;
-                    }
                     GetViewport().SetInputAsHandled();
                     return;
                 }
             }
             else if (!mb.Pressed && (mb.ButtonIndex == MouseButton.WheelUp || mb.ButtonIndex == MouseButton.WheelDown))
             {
-                if (bounds.HasPoint(mousePos))
-                {
-                    // Apply zoom factor per scroll step (e.g. 25% per notch)
-                    const float zoomStep = 1.25f;
-                    float factor = mb.ButtonIndex == MouseButton.WheelUp ? zoomStep : 1f / zoomStep;
-
-                    float rawScale = _scale * factor;
-
-                    // Clamp scale within limits
-                    float minScale = _zoomLevels.First();
-                    float maxScale = _zoomLevels.Last();
-                    float newScale = Mathf.Clamp(rawScale, minScale, maxScale);
-
-                    // Update controls and image
-                    _zoomSlider.Value = newScale;
-                    OnZoomChanged(newScale);
-                    GetViewport().SetInputAsHandled();
-                    return;
-                }
+                ZoomingWithMouseScroll(mb);
+                return;
             }
 
         }
@@ -586,6 +543,61 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         }
     }
 
+    private void ZoomingWithMouseScroll(InputEventMouseButton mb)
+    {
+        // Apply zoom factor per scroll step (e.g. 25% per notch)
+        const float zoomStep = 1.25f;
+        float factor = mb.ButtonIndex == MouseButton.WheelUp ? zoomStep : 1f / zoomStep;
+
+        float rawScale = _scale * factor;
+
+        // Clamp scale within limits
+        float minScale = _zoomLevels.First();
+        float maxScale = _zoomLevels.Last();
+        float newScale = Mathf.Clamp(rawScale, minScale, maxScale);
+
+        // Update controls and image
+        _zoomSlider.Value = newScale;
+        OnZoomChanged(newScale);
+        GetViewport().SetInputAsHandled();
+    }
+
+    private void SelectingPixelsFinished(InputEventMouseButton mb)
+    {
+        var local = _imageRect.GetLocalMousePosition() / _scale;
+        var end = new Vector2I((int)local.X, (int)local.Y);
+        Rect2I rect = RectFromPoints(_selectStart, end);
+        ApplySelection(rect, mb.CtrlPressed, mb.ShiftPressed);
+        _dragSelecting = false;
+        _dragRect = null;
+        _selectionCanvas.QueueRedraw();
+    }
+
+    private void DrawingPixels()
+    {
+        var local = _imageRect.GetLocalMousePosition() / _scale;
+        var pixel = new Vector2I((int)local.X, (int)local.Y);
+        _commandManager.Handle(new PainterDrawPixelCommand(pixel.X, pixel.Y));
+    }
+
+    private void SelectingPixels()
+    {
+        if (_painter != null)
+        {
+            var local = _imageRect.GetLocalMousePosition() / _scale;
+            _selectStart = new Vector2I((int)local.X, (int)local.Y);
+            _dragRect = null;
+            _dragSelecting = true;
+            _selectionCanvas.QueueRedraw();
+        }
+    }
+
+    private void SpaceBarPress(InputEventKey keyEvent)
+    {
+        _spaceHeld = keyEvent.Pressed;
+        if (!keyEvent.Pressed)
+            _panning = false;
+    }
 
     public void MemberSelected(ILingoMember member)
     {
@@ -603,11 +615,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _imageRect.FlipV = !_imageRect.FlipV;
     }
 
-    private void OnToolSelected(PainterToolType tool)
-    {
-        _brushSizeSlider.Visible = tool == PainterToolType.PaintBrush;
-    }
-
+   
     private static Rect2I RectFromPoints(Vector2I a, Vector2I b)
     {
         int minX = Math.Min(a.X, b.X);
@@ -682,18 +690,18 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         GD.Print("Changes applied to member.");
     }
 
-    public bool CanExecute(PainterToolSelectCommand command) => true;
-
-    public bool Handle(PainterToolSelectCommand command)
+    public bool SelectTheTool(PainterToolType tool)
     {
-        _paintToolbar.SelectTool(command.Tool);
-        OnToolSelected(command.Tool);
+        _paintToolbar.SelectTool(tool);
+        OnToolSelected(tool);
         return true;
     }
+    private void OnToolSelected(PainterToolType tool)
+    {
+        _brushSizeSlider.Visible = tool == PainterToolType.PaintBrush;
+    }
 
-    public bool CanExecute(PainterDrawPixelCommand command) => _painter != null;
-
-    public bool Handle(PainterDrawPixelCommand command)
+    public bool DrawThePixel(int x, int y)
     {
         if (_painter == null) return false;
 
@@ -701,7 +709,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         var beforeOffset = _painter.Offset;
         var oldReg = _member?.RegPoint ?? new LingoPoint(0, 0);
 
-        var pixel = new Vector2I(command.X, command.Y);
+        var pixel = new Vector2I(x, y);
         if (_paintToolbar.SelectedTool == PainterToolType.Eraser)
             _painter.ErasePixel(pixel);
         else if (_paintToolbar.SelectedTool == PainterToolType.PaintBrush)
@@ -746,8 +754,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         return true;
     }
 
-    public bool CanExecute(PainterFillCommand command) => false;
 
-    public bool Handle(PainterFillCommand command) => true;
+    
+    
 }
 
