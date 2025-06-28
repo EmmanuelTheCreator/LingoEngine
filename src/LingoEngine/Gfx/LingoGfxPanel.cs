@@ -29,11 +29,11 @@ namespace LingoEngine.Gfx
             else
             {
                 LingoGfxLayoutWrapper item = _factory.CreateLayoutWrapper(node ,x, y);
-               
-                _framework.AddChild(item.Framework<ILingoFrameworkGfxLayoutNode>());
+
+                _framework.AddChild(item.FrameworkWrapper<ILingoFrameworkGfxLayoutWrapper>());
                 return item;
             }
-            
+
         }
 
         /// <summary>Adds a child without modifying its position.</summary>
@@ -68,8 +68,14 @@ namespace LingoEngine.Gfx
         public virtual ILingoFrameworkGfxNode FrameworkObjWrapper => _framework;
 
 
-        public override T Framework<T>() => Content.Framework<T>();
-        public override ILingoFrameworkGfxNode FrameworkObj => Content.FrameworkObj;
+        public override T Framework<T>()
+        {
+            if (typeof(T) == typeof(ILingoFrameworkGfxLayoutNode) || typeof(T) == typeof(ILingoFrameworkGfxLayoutWrapper))
+                return (T)(object)_framework;
+            return Content.Framework<T>();
+        }
+
+        public override ILingoFrameworkGfxNode FrameworkObj => _framework;
 
 
 
