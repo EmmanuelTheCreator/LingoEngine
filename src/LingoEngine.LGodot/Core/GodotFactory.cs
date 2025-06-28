@@ -206,6 +206,8 @@ namespace LingoEngine.LGodot.Core
             var impl = new LingoGodotWrapPanel(panel, orientation);
 
             panel.Name = name;
+            // Ensure the public wrapper reflects the initial orientation
+            panel.Orientation = orientation;
             return panel;
         }
 
