@@ -125,6 +125,7 @@ namespace LingoEngine.Director.Core.Inspector
             _headerPanel.BackgroundColor = DirectorColors.BG_WhiteMenus;
             _headerPanel.AddChild(header);
             _headerPanel.Height = HeaderHeight;
+            _header = header;
             return _headerPanel;
         }
 
