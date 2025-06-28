@@ -167,8 +167,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
-            QueueFree();
             base.Dispose();
+            QueueFree();
         }
     }
 

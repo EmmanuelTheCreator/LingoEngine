@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific label used for displaying text.
     /// </summary>
-    public interface ILingoFrameworkGfxLabel : ILingoFrameworkGfxLayoutNode
+    public interface ILingoFrameworkGfxLabel : ILingoFrameworkGfxNode
     {
         string Text { get; set; }
         int FontSize { get; set; }

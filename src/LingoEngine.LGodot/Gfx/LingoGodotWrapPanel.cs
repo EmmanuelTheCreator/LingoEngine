@@ -121,8 +121,8 @@ namespace LingoEngine.LGodot.Gfx
         public ILingoFrameworkGfxLayoutNode? GetChild(int index) => _container.GetChild(index) as ILingoFrameworkGfxLayoutNode;
         public new void Dispose()
         {
-            base.Dispose();
             QueueFree();
+            base.Dispose();
         }
 
         private void ApplyItemMargin(Control ctrl)

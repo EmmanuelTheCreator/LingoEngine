@@ -75,8 +75,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
-            base.Dispose();
             QueueFree();
+            base.Dispose();
         }
 
         
