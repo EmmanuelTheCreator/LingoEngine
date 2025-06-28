@@ -6,7 +6,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific drawing surface implementation.
     /// </summary>
-    public interface ILingoFrameworkGfxCanvas : ILingoFrameworkGfxNode
+    public interface ILingoFrameworkGfxCanvas : ILingoFrameworkGfxLayoutNode
     {
         void Clear(LingoColor color);
         void SetPixel(LingoPoint point, LingoColor color);

@@ -24,6 +24,7 @@ using LingoEngine.Stages;
 using LingoEngine.Styles;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Xml.Linq;
 
 namespace LingoEngine.LGodot.Core
 {
@@ -213,10 +214,16 @@ namespace LingoEngine.LGodot.Core
 
         public LingoGfxPanel CreatePanel(string name)
         {
-            var panel = new LingoGfxPanel();
+            var panel = new LingoGfxPanel(this);
             var impl = new LingoGodotPanel(panel);
 
             panel.Name = name;
+            return panel;
+        }
+        public LingoGfxLayoutWrapper CreateLayoutWrapper(ILingoGfxNode content, float x, float y)
+        {
+            var panel = new LingoGfxLayoutWrapper(content);
+            var impl = new LingoGodotLayoutWrapper(panel);
             return panel;
         }
 
@@ -324,7 +331,9 @@ namespace LingoEngine.LGodot.Core
             var item = new LingoGfxMenuItem();
             var impl = new LingoGodotMenuItem(item,name, shortcut);
             return item;
-        } 
+        }
+
+        
         #endregion
 
 

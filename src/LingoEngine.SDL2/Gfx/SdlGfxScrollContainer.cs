@@ -16,15 +16,15 @@ namespace LingoEngine.SDL2.Gfx
         public float ScrollHorizontal { get; set; }
         public float ScrollVertical { get; set; }
         public bool ClipContents { get; set; }
-        public void AddChild(ILingoFrameworkGfxNode child) { }
+        public void AddChild(ILingoFrameworkGfxLayoutNode child) { }
         public void Dispose() { }
 
-        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
         {
             throw new NotImplementedException();
         }
 
-        public void RemoveChild(ILingoFrameworkGfxNode lingoFrameworkGfxNode)
+        public void RemoveChild(ILingoFrameworkGfxLayoutNode lingoFrameworkGfxNode)
         {
             throw new NotImplementedException();
         }

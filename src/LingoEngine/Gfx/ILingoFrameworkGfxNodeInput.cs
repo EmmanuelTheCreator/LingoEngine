@@ -8,6 +8,6 @@ namespace LingoEngine.Gfx
         /// <summary>Whether the control is enabled.</summary>
         bool Enabled { get; set; }
         /// <summary>Raised when the value of the input changes.</summary>
-        event System.Action? ValueChanged;
+        event Action? ValueChanged;
     }
 }

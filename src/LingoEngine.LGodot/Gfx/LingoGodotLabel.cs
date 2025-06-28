@@ -3,6 +3,7 @@ using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using System;
 using LingoEngine.Styles;
+using LingoEngine.LGodot.Primitives;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -43,7 +44,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public string Text
+        public new string Text
         {
             get => base.Text;
             set => base.Text = value;
@@ -57,6 +58,33 @@ namespace LingoEngine.LGodot.Gfx
                 var ls = LabelSettings ?? new LabelSettings();
                 ls.FontSize = value;
                 LabelSettings = ls;
+            }
+        }
+        private int _lineHeight;
+        public int LineHeight
+        {
+            get => _lineHeight;
+            set
+            {
+                _lineHeight = value;
+                var ls = LabelSettings ?? new LabelSettings();
+                var font = ls.Font;
+                if (font != null)
+                {
+                    // Get base line height for current font size
+                    float lineHeight = font.GetHeight(ls.FontSize);
+
+                    // Add your desired spacing in pixels
+                    float spacingInPixels = value;
+
+                    // Compute scale multiplier
+                    float spacingMultiplier = (lineHeight + spacingInPixels) / lineHeight;
+
+                    // Apply to label
+                    ls.LineSpacing = spacingMultiplier;
+                    LabelSettings = ls;
+                }
+
             }
         }
 
@@ -86,7 +114,7 @@ namespace LingoEngine.LGodot.Gfx
             {
                 _fontColor = value;
                 var ls = LabelSettings ?? new LabelSettings();
-                ls.FontColor = new Color(value.R, value.G, value.B);
+                ls.FontColor = value.ToGodotColor();
                 LabelSettings = ls;
             }
         }

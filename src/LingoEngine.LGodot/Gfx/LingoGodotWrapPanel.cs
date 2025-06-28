@@ -1,6 +1,7 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
+using static Godot.Control;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -13,33 +14,45 @@ namespace LingoEngine.LGodot.Gfx
         private LingoOrientation _orientation;
         private LingoMargin _itemMargin;
         private LingoMargin _margin;
+        private MarginContainer _marginContainer;
 
         public LingoGodotWrapPanel(LingoGfxWrapPanel panel, LingoOrientation orientation)
         {
             _orientation = orientation;
             _itemMargin = LingoMargin.Zero;
             _margin = LingoMargin.Zero;
+            _marginContainer = new();
+            AddChild(_marginContainer);
             _container = CreateContainer(orientation);
-            AddChild(_container);
+            _marginContainer.AddChild(_container);
             panel.Init(this);
         }
 
         private FlowContainer CreateContainer(LingoOrientation orientation)
         {
-            FlowContainer container = orientation == LingoOrientation.Horizontal ? new HFlowContainer() : new VFlowContainer();
-            container.SizeFlagsVertical = SizeFlags.ExpandFill;
-            container.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            SizeFlagsVertical = SizeFlags.ExpandFill;
-            SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            FlowContainer container = orientation == LingoOrientation.Horizontal ? new VFlowContainer() : new HFlowContainer();
+            //container.SizeFlagsVertical = SizeFlags.ExpandFill;
+            //container.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            container.SizeFlagsHorizontal = SizeFlags.Expand;
+            container.SizeFlagsVertical = SizeFlags.Expand;
+
             return container;
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
-        public bool Visibility { get => Visible; set => Visible = value; }
-        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
+        public float Width { get => CustomMinimumSize.X; set => CustomMinimumSize = new Vector2(value, CustomMinimumSize.Y); }
+        public float Height { get => CustomMinimumSize.Y; set => CustomMinimumSize = new Vector2(CustomMinimumSize.X, value); }
+
+        public bool Visibility { get => _container.Visible; set => _container.Visible = value; }
+
+        //public SizeFlags SizeFlagsHorizontal { get => _container.SizeFlagsHorizontal; set => _container.SizeFlagsHorizontal = value; }
+        //public Vector2 Position { get => _container.Position; set => _container.Position = value; }
+        string ILingoFrameworkGfxNode.Name { get => Name; set
+                {
+                Name = value; _container.Name = value + "_Flow";
+            }
+        }
 
         public LingoOrientation Orientation
         {
@@ -51,11 +64,11 @@ namespace LingoEngine.LGodot.Gfx
                 var children = _container.GetChildren().OfType<Node>().ToArray();
                 foreach (var c in children)
                     _container.RemoveChild(c);
-                RemoveChild(_container);
+                _marginContainer.RemoveChild(_container);
                 _container.QueueFree();
                 _orientation = value;
                 _container = CreateContainer(value);
-                AddChild(_container);
+                _marginContainer.AddChild(_container);
                 ApplyMargin();
                 foreach (var c in children)
                 {
@@ -88,7 +101,8 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         
-        public void AddChild(ILingoFrameworkGfxNode child)
+
+        public void AddChild(ILingoFrameworkGfxLayoutNode child)
         {
             if (child is not Node node)
                 return;
@@ -97,14 +111,14 @@ namespace LingoEngine.LGodot.Gfx
                 ApplyItemMargin(ctrl);
             _container.AddChild(node);
         }
-        public void RemoveChild(ILingoFrameworkGfxNode child)
+        public void RemoveChild(ILingoFrameworkGfxLayoutNode child)
         {
             if (child is not Node node)
                 return;
             _container.RemoveChild(node);
         }
-        public IEnumerable<ILingoFrameworkGfxNode> GetChildren() => _container.GetChildren().OfType<ILingoFrameworkGfxNode>().ToArray();
-        public ILingoFrameworkGfxNode? GetChild(int index) => _container.GetChild(index) as ILingoFrameworkGfxNode;
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren() => _container.GetChildren().OfType<ILingoFrameworkGfxLayoutNode>().ToArray();
+        public ILingoFrameworkGfxLayoutNode? GetChild(int index) => _container.GetChild(index) as ILingoFrameworkGfxLayoutNode;
         public new void Dispose()
         {
             base.Dispose();
@@ -121,10 +135,10 @@ namespace LingoEngine.LGodot.Gfx
 
         private void ApplyMargin()
         {
-            _container.AddThemeConstantOverride("margin_left", (int)_margin.Left);
-            _container.AddThemeConstantOverride("margin_right", (int)_margin.Right);
-            _container.AddThemeConstantOverride("margin_top", (int)_margin.Top);
-            _container.AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+            _marginContainer.AddThemeConstantOverride("margin_left", (int)_margin.Left);
+            _marginContainer.AddThemeConstantOverride("margin_right", (int)_margin.Right);
+            _marginContainer.AddThemeConstantOverride("margin_top", (int)_margin.Top);
+            _marginContainer.AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
         }
 
     }

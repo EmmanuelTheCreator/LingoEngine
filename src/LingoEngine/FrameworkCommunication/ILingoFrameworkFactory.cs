@@ -81,6 +81,7 @@ namespace LingoEngine.FrameworkCommunication
         /// Creates a simple panel container for absolute positioning.
         /// </summary>
         LingoGfxPanel CreatePanel(string name);
+        LingoGfxLayoutWrapper CreateLayoutWrapper(ILingoGfxNode content, float x, float y);
 
         /// <summary>
         /// Creates a tab container for organizing child panels.
@@ -126,5 +127,6 @@ namespace LingoEngine.FrameworkCommunication
         T CreateBehavior<T>(LingoMovie lingoMovie) where T : LingoSpriteBehavior;
         /// <summary>Creates a movie script.</summary>
         T CreateMovieScript<T>(LingoMovie lingoMovie) where T : LingoMovieScript;
+        
     }
 }

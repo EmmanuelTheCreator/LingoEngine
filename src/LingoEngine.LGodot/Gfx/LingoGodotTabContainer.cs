@@ -86,7 +86,7 @@ namespace LingoEngine.LGodot.Gfx
         private string _name;
         private LingoGfxTabItem _tabItem;
         public LingoGfxTabItem TabItem => _tabItem;
-        public ILingoFrameworkGfxNode ContentFrameWork => Content?.FrameworkObj;
+        public ILingoFrameworkGfxLayoutNode ContentFrameWork => Content?.FrameworkObj as ILingoFrameworkGfxLayoutNode;
         public ILingoGfxNode? Content { get; set; }
 
         public float X { get => ContentFrameWork.X; set => ContentFrameWork.X = value; }

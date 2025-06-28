@@ -58,6 +58,7 @@ namespace LingoEngine.SDL2.Gfx
         public string Name { get; set; } = string.Empty;
         public string Title { get; set; } = "";
         public LingoMargin Margin { get; set; }
+        public ILingoGfxNode? Content { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void Dispose()
         {

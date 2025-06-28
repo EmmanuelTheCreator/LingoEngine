@@ -5,7 +5,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific menu container capable of holding menu items.
     /// </summary>
-    public interface ILingoFrameworkGfxMenu : ILingoFrameworkGfxNode
+    public interface ILingoFrameworkGfxMenu : ILingoFrameworkGfxLayoutNode
     {
         /// <summary>Name of the menu.</summary>
         string Name { get; set; }

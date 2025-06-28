@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper around a framework tab container.
     /// </summary>
-    public class LingoGfxTabContainer : LingoGfxNodeBase<ILingoFrameworkGfxTabContainer>
+    public class LingoGfxTabContainer : LingoGfxNodeLayoutBase<ILingoFrameworkGfxTabContainer>
     {
         public void AddTab(LingoGfxTabItem item) => _framework.AddTab(item.Framework<ILingoFrameworkGfxTabItem>());
         public void AddTab(ILingoFrameworkGfxTabItem node) => _framework.AddTab(node);
