@@ -21,6 +21,8 @@ namespace LingoEngine.SDL2.Gfx
 
         public void AddItem(ILingoFrameworkGfxMenuItem item) { }
         public void ClearItems() { }
+        public void PositionPopup(ILingoFrameworkGfxButton button) { }
+        public void Popup() { }
         public void Dispose() { }
     }
 }
