@@ -2,6 +2,7 @@ using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using System;
+using System.Linq;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -50,7 +51,9 @@ namespace LingoEngine.LGodot.Gfx
                 return;
             RemoveChild(node);
         }
-        public IEnumerable<ILingoFrameworkGfxNode> GetChildren() => GetChildren().OfType<ILingoFrameworkGfxNode>().ToArray();
+        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+            => base.GetChildren().OfType<Node>()
+                .OfType<ILingoFrameworkGfxNode>().ToArray();
 
         public LingoColor BackgroundColor
         {
