@@ -406,3 +406,5 @@ FodyWeavers.xsd
 *.sln.iml
 src/LingoEngine/CombinedSource.txt
 Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.Godot/.godot/
+Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.Godot/Medias/Icons/General_Icons.png.import
+Demo/TetriGrounds/LingoEngine.Demo.TetriGrounds.Godot/Medias/Icons/Painter_Icons.png.import
