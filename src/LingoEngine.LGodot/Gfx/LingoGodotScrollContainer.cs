@@ -1,6 +1,7 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
+using System.Linq;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -60,7 +61,8 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
-            => GetChildren().OfType<ILingoFrameworkGfxNode>();
+            => base.GetChildren().OfType<Node>()
+                .OfType<ILingoFrameworkGfxNode>();
 
 
 
