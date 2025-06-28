@@ -1,7 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using System;
 using LingoEngine.Styles;
 
 namespace LingoEngine.LGodot.Gfx
@@ -18,6 +17,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public LingoGodotInputText(LingoGfxInputText input, ILingoFontManager fontManager)
         {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
             _fontManager = fontManager;
             input.Init(this);
             TextChanged += _ => _onValueChanged?.Invoke();

@@ -204,7 +204,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
 
     public LingoGfxPanel CreatePanel(string name)
     {
-        var panel = new LingoGfxPanel();
+        var panel = new LingoGfxPanel(this);
         var impl = new SdlGfxPanel();
         panel.Init(impl);
         panel.Name = name;
@@ -221,9 +221,9 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     }
     public LingoGfxTabItem CreateTabItem(string name, string title)
     {
-        var tab = new LingoGfxTabItem(title);
+        var tab = new LingoGfxTabItem();
         var impl = new SdlGfxTabItem(tab);
-
+        tab.Title = title;
         tab.Name = name;
         return tab;
     }
@@ -314,6 +314,11 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         var impl = new SdlGfxMenuItem(name, shortcut);
         item.Init(impl);
         return item;
+    }
+
+    public LingoGfxLayoutWrapper CreateLayoutWrapper(ILingoGfxNode content, float x, float y)
+    {
+        throw new NotImplementedException();
     }
     #endregion
 

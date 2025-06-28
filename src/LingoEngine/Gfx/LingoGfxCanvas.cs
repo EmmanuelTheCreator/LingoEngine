@@ -9,7 +9,7 @@ namespace LingoEngine.Gfx
     /// Rendering back-ends provide the <see cref="ILingoFrameworkGfxCanvas"/>
     /// implementation which performs the actual drawing operations.
     /// </summary>
-    public class LingoGfxCanvas : LingoGfxNodeBase<ILingoFrameworkGfxCanvas>
+    public class LingoGfxCanvas : LingoGfxNodeLayoutBase<ILingoFrameworkGfxCanvas>
     {
 
         public void Clear(LingoColor color) => _framework.Clear(color);

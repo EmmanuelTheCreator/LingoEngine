@@ -5,12 +5,13 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Framework specific container allowing absolute positioning of child nodes.
     /// </summary>
-    public interface ILingoFrameworkGfxPanel : ILingoFrameworkGfxNode
+    
+    public interface ILingoFrameworkGfxPanel : ILingoFrameworkGfxLayoutNode
     {
         /// <summary>Adds a child node to the panel.</summary>
-        void AddChild(ILingoFrameworkGfxNode child);
-        void RemoveChild(ILingoFrameworkGfxNode child);
-        IEnumerable<ILingoFrameworkGfxNode> GetChildren();
+        void AddChild(ILingoFrameworkGfxLayoutNode child);
+        void RemoveChild(ILingoFrameworkGfxLayoutNode child);
+        IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren();
 
         /// <summary>Background color of the panel.</summary>
         LingoColor BackgroundColor { get; set; }
@@ -18,5 +19,9 @@ namespace LingoEngine.Gfx
         LingoColor BorderColor { get; set; }
         /// <summary>Border width around the panel.</summary>
         float BorderWidth { get; set; }
+    }
+    public interface ILingoFrameworkGfxLayoutWrapper : ILingoFrameworkGfxLayoutNode
+    {
+
     }
 }

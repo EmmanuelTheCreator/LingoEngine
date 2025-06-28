@@ -18,6 +18,7 @@ namespace LingoEngine.SDL2.Gfx
         public int FontSize { get; set; }
         public string? Font { get; set; }
         public LingoColor FontColor { get; set; }
+        public int LineHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public event Action? ValueChanged;
         public void Dispose() { }

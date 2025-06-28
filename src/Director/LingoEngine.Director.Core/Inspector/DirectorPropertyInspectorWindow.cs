@@ -35,7 +35,7 @@ namespace LingoEngine.Director.Core.Inspector
         private ILingoCommandManager? _commandManager;
         private LingoGfxTabContainer _tabs;
         private DirectorMemberThumbnail? _thumb;
-        private LingoGfxWrapPanel? _header;
+        private LingoGfxPanel? _header;
         private ILingoFrameworkFactory _factory;
         private IDirectorIconManager _iconManager;
         private LingoGfxPanel _headerPanel;
@@ -64,7 +64,6 @@ namespace LingoEngine.Director.Core.Inspector
             _factory = factory;
             _iconManager = iconManager;
             _mediator = mediator;
-            //_tabs.Framework<LingoGodotTabContainer>().AddTab(name, vScroller);
             _mediator.Subscribe(this);
         }
         public override void Dispose()
@@ -89,35 +88,42 @@ namespace LingoEngine.Director.Core.Inspector
             var thumb = new DirectorMemberThumbnail(36, 36, _factory, _iconManager);
 
             var thumbPanel = _factory.CreatePanel("ThumbPanel");
-            thumbPanel.Margin = new LingoMargin(4, 2, 4, 2);
-            thumbPanel.BackgroundColor = new LingoColor(255, 255, 255);
-            thumbPanel.BorderColor = new LingoColor(64, 64, 64);
+            thumbPanel.X = 4;
+            thumbPanel.Y = 2;
+            thumbPanel.BackgroundColor = DirectorColors.Bg_Thumb;
+            thumbPanel.BorderColor = DirectorColors.Border_Thumb; 
             thumbPanel.BorderWidth = 1;
             thumbPanel.AddChild(thumb.Canvas);
             _thumb = thumb;
+            var lineHeight = 11;
 
             var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InfoContainer");
-            container.ItemMargin = new LingoMargin(0, 0, 1, 0);
-            // Center the labels within the header panel
-            container.Margin = new LingoMargin(0, 7, 0, 0);
+            container.ItemMargin =  new LingoMargin(0, 0, 1, 0);
+            container.X = 50;
 
             _sprite = _factory.CreateLabel("SpriteLabel");
             _sprite.FontSize = 10;
-            _sprite.FontColor = new LingoColor(0, 0, 0);
+            _sprite.FontColor = DirectorColors.TextColorLabels;
+            //_sprite.LineHeight = lineHeight;
+            //_sprite.Height = lineHeight;
 
             _member = _factory.CreateLabel("MemberLabel");
             _member.FontSize = 10;
-            _member.FontColor = new LingoColor(0, 0, 0);
+            _member.FontColor = DirectorColors.TextColorLabels;
+            //_member.LineHeight = lineHeight;
+            //_member.Height = lineHeight;
 
             _cast = _factory.CreateLabel("CastLabel");
             _cast.FontSize = 10;
-            _cast.FontColor = new LingoColor(0, 0, 0);
+            _cast.FontColor = DirectorColors.TextColorLabels;
+            //_cast.LineHeight = lineHeight;
+            //_cast.Height = lineHeight;
 
             container.AddChild(_sprite);
             container.AddChild(_member);
             container.AddChild(_cast);
 
-            var header = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "HeaderPanel");
+            var header = _factory.CreatePanel("HeaderPanel");
             header.AddChild(thumbPanel);
             header.AddChild(container);
 

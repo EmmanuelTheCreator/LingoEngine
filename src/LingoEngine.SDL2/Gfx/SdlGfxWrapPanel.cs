@@ -23,21 +23,21 @@ namespace LingoEngine.SDL2.Gfx
             Margin = LingoMargin.Zero;
         }
 
-        public void AddChild(ILingoFrameworkGfxNode child) { }
+        public void AddChild(ILingoFrameworkGfxLayoutNode child) { }
 
         public void Dispose() { }
 
-        public void RemoveChild(ILingoFrameworkGfxNode child)
+        public void RemoveChild(ILingoFrameworkGfxLayoutNode child)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
         {
             throw new NotImplementedException();
         }
 
-        public ILingoFrameworkGfxNode? GetChild(int index)
+        public ILingoFrameworkGfxLayoutNode? GetChild(int index)
         {
             throw new NotImplementedException();
         }

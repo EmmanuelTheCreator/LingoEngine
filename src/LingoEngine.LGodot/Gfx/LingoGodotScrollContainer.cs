@@ -49,20 +49,20 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public void AddChild(ILingoFrameworkGfxNode child)
+        public void AddChild(ILingoFrameworkGfxLayoutNode child)
         {
             if (child is Node node)
                 base.AddChild(node);
         }
-        public void RemoveChild(ILingoFrameworkGfxNode lingoFrameworkGfxNode)
+        public void RemoveChild(ILingoFrameworkGfxLayoutNode lingoFrameworkGfxNode)
         {
             if (lingoFrameworkGfxNode is Node node)
                 RemoveChild(node);
         }
 
-        public IEnumerable<ILingoFrameworkGfxNode> GetChildren()
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
             => base.GetChildren().OfType<Node>()
-                .OfType<ILingoFrameworkGfxNode>();
+                .OfType<ILingoFrameworkGfxLayoutNode>();
 
 
 
