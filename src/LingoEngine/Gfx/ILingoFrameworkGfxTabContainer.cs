@@ -18,5 +18,6 @@ namespace LingoEngine.Gfx
     public interface ILingoFrameworkGfxTabItem : ILingoFrameworkGfxNode
     {
         public string Title { get; set; }
+        public ILingoGfxNode? Content { get; set; }
     }
 }

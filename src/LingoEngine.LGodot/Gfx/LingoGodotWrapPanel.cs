@@ -29,6 +29,7 @@ namespace LingoEngine.LGodot.Gfx
             FlowContainer container = orientation == LingoOrientation.Horizontal ? new HFlowContainer() : new VFlowContainer();
             container.SizeFlagsVertical = SizeFlags.ExpandFill;
             container.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
             return container;
         }
 

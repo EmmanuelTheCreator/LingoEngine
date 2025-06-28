@@ -5,12 +5,11 @@ namespace LingoEngine.Gfx
     /// </summary>
     public class LingoGfxTabItem : LingoGfxNodeBase<ILingoFrameworkGfxTabItem>
     {
-        public string Title { get; set; }
-        public ILingoGfxNode? Content { get; set; }
+        public string Title { get => _framework.Title; set => _framework.Title = value; }
+        public ILingoGfxNode? Content { get => _framework.Content; set => _framework.Content = value;  }
 
-        public LingoGfxTabItem(string title)
+        public LingoGfxTabItem()
         {
-            Title = title;
         }
     }
 }
