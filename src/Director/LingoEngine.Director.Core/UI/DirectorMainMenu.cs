@@ -8,6 +8,7 @@ using LingoEngine.Gfx;
 using LingoEngine.Movies;
 using LingoEngine.Inputs;
 using System.Collections.Generic;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Director.Core.Gfx
 {
@@ -213,7 +214,7 @@ namespace LingoEngine.Director.Core.Gfx
 
         private void ShowMenu(LingoGfxMenu menu, LingoGfxButton button)
         {
-            menu.PositionPopup(button.Framework<ILingoFrameworkGfxButton>());
+            menu.PositionPopup(button);
             menu.Popup();
         }
 
