@@ -17,7 +17,7 @@ namespace LingoEngine.Gfx
 
 
         /// <summary>Adds a child to the panel and sets its position.</summary>
-        public ILingoGfxNode AddChild(ILingoGfxNode node, float? x= null, float? y = null)
+        public ILingoGfxNode AddItem(ILingoGfxNode node, float? x= null, float? y = null)
         {
             if (node is ILingoGfxLayoutNode layoutNode)
             {
@@ -36,8 +36,8 @@ namespace LingoEngine.Gfx
 
         }
       
-        public void RemoveChild(ILingoGfxNode node) => _framework.RemoveItem(node.Framework<ILingoFrameworkGfxLayoutNode>());
-        public void RemoveChild(ILingoFrameworkGfxLayoutNode node) => _framework.RemoveItem(node);
+        public void RemoveItem(ILingoGfxNode node) => _framework.RemoveItem(node.Framework<ILingoFrameworkGfxLayoutNode>());
+        public void RemoveItem(ILingoFrameworkGfxLayoutNode node) => _framework.RemoveItem(node);
         public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren() => _framework.GetItems();
 
         public LingoColor BackgroundColor { get => _framework.BackgroundColor; set => _framework.BackgroundColor = value; }

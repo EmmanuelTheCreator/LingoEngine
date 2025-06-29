@@ -11,5 +11,6 @@ namespace LingoEngine.Gfx
         float Min { get; set; }
         float Max { get; set; }
         LingoNumberType NumberType { get; set; }
+        int FontSize { get; set; }
     }
 }

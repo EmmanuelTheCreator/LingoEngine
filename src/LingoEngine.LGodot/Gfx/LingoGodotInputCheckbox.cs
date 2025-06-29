@@ -11,11 +11,15 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotInputCheckbox : CheckBox, ILingoFrameworkGfxInputCheckbox, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
+        private Action<bool>? _onChange;
+
         private event Action? _onValueChanged;
-        public LingoGodotInputCheckbox(LingoGfxInputCheckbox input)
+        public LingoGodotInputCheckbox(LingoGfxInputCheckbox input, Action<bool>? onChange)
         {
+            _onChange = onChange;
             input.Init(this);
             Toggled += _ => _onValueChanged?.Invoke();
+            if (_onChange != null) Toggled += _ => _onChange(Checked);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -53,6 +57,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
+            if (_onChange != null) Toggled -= _ => _onChange(Checked);
+            Toggled -= _ => _onValueChanged?.Invoke();
             QueueFree();
             base.Dispose();
         }

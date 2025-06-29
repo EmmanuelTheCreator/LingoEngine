@@ -13,12 +13,16 @@ namespace LingoEngine.LGodot.Gfx
     {
         private readonly List<KeyValuePair<string,string>> _items = new();
         private LingoMargin _margin = LingoMargin.Zero;
+        private Action<string?>? _onChange;
+
         private event Action? _onValueChanged;
 
-        public LingoGodotInputCombobox(LingoGfxInputCombobox input)
+        public LingoGodotInputCombobox(LingoGfxInputCombobox input, LingoEngine.Styles.ILingoFontManager lingoFontManager, Action<string?>? onChange)
         {
             input.Init(this);
             ItemSelected += idx => _onValueChanged?.Invoke();
+            _onChange = onChange;
+            if (_onChange != null) ItemSelected += _ => _onChange(SelectedKey);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -96,6 +100,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
+            if (_onChange != null) ItemSelected -= _ => _onChange(SelectedKey);
+            ItemSelected -= idx => _onValueChanged?.Invoke();
             QueueFree();
             base.Dispose();
         }

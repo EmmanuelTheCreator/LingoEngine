@@ -1,23 +1,29 @@
 using Godot;
 using LingoEngine.Gfx;
-using System;
 using LingoEngine.Primitives;
+using LingoEngine.Styles;
 
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
     /// Godot implementation of <see cref="ILingoFrameworkGfxInputNumber"/>.
     /// </summary>
-    public partial class LingoGodotInputNumber : SpinBox, ILingoFrameworkGfxInputNumber, IDisposable
+    public partial class LingoGodotInputNumber : LineEdit, ILingoFrameworkGfxInputNumber, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
         private LingoNumberType _numberType = LingoNumberType.Float;
+        private Action<float>? _onChange;
+        private readonly ILingoFontManager _fontManager;
+
         private event Action? _onValueChanged;
 
-        public LingoGodotInputNumber(LingoGfxInputNumber input)
+        public LingoGodotInputNumber(LingoGfxInputNumber input, ILingoFontManager fontManager, Action<float>? onChange)
         {
+            _onChange = onChange;
+            _fontManager = fontManager;
             input.Init(this);
-            this.ValueChanged += _ => _onValueChanged?.Invoke();
+            TextChanged += _ => _onValueChanged?.Invoke();
+            if (_onChange != null) TextChanged += _ => _onChange(Value);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -27,9 +33,19 @@ namespace LingoEngine.LGodot.Gfx
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get => Editable; set => Editable = value; }
 
-        public new float Value { get => (float)base.Value; set => base.Value = value; }
-        public float Min { get => (float)MinValue; set => MinValue = value; }
-        public float Max { get => (float)MaxValue; set => MaxValue = value; }
+        private float _value;
+        public float Value
+        {
+            get => _value; set
+            {
+                _value = value;
+                if (_value > Max) _value = Max;
+                if (_value < Min) _value = Min;
+                Text = _value.ToString();
+            }
+        }
+        public float Min { get; set; }
+        public float Max { get; set; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
         public LingoNumberType NumberType
         {
@@ -37,10 +53,57 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _numberType = value;
-                Step = value == LingoNumberType.Integer ? 1 : 0.01f;
             }
         }
 
+        private string? _font;
+        public string? Font
+        {
+            get => _font;
+            set
+            {
+                _font = value;
+                if (string.IsNullOrEmpty(value))
+                {
+                    RemoveThemeFontOverride("font");
+                }
+                else
+                {
+                    var font = _fontManager.Get<FontFile>(value);
+                    if (font != null)
+                        AddThemeFontOverride("font", font);
+                }
+            }
+        }
+        private int _fontSize;
+        public int FontSize
+        {
+            get => _fontSize;
+            set
+            {
+                _fontSize = value;
+                Font? baseFont;
+                if (string.IsNullOrEmpty(_font))
+                    baseFont = _fontManager.GetDefaultFont<Font>();
+                else
+                    baseFont = _fontManager.Get<Font>(_font);
+
+                if (baseFont == null)
+                    return;
+
+                // Create a FontVariation with size applied through theme variation
+                var variation = new FontVariation
+                {
+                    BaseFont = baseFont
+                };
+
+                // Set the size override via theme properties
+                var theme = new Theme();
+                theme.SetFont("font", "LineEdit", variation);
+                theme.SetFontSize("font_size", "LineEdit", _fontSize);
+                Theme = theme;
+            }
+        }
         public LingoMargin Margin
         {
             get => _margin;
@@ -63,6 +126,8 @@ namespace LingoEngine.LGodot.Gfx
         public object FrameworkNode => this;
         public new void Dispose()
         {
+            TextChanged -= _ => _onValueChanged?.Invoke();
+            if (_onChange != null) TextChanged -= _ => _onChange(Value);
             QueueFree();
             base.Dispose();
         }

@@ -8,5 +8,6 @@ namespace LingoEngine.Gfx
         string Text { get; set; }
         int MaxLength { get; set; }
         string? Font { get; set; }
+        int FontSize { get; set; }
     }
 }

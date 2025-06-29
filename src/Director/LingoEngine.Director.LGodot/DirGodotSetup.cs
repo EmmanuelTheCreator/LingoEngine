@@ -24,6 +24,7 @@ using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.LGodot.UI;
 using LingoEngine.Director.Core.Icons;
 using Microsoft.Extensions.Logging;
+using LingoEngine.Styles;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -75,6 +76,7 @@ namespace LingoEngine.Director.LGodot
             });
             engineRegistration.AddBuildAction(p =>
             {
+                p.GetRequiredService<ILingoFontManager>().SetDefaultFont(DirectorGodotStyle.DefaultFont);
                new LingoGodotDirectorRoot(p.GetRequiredService<LingoPlayer>(), p);
             });
             return engineRegistration;

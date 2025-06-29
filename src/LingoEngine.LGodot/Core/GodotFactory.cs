@@ -256,48 +256,47 @@ namespace LingoEngine.LGodot.Core
             return scroll;
         }
 
-        public LingoGfxInputText CreateInputText(string name, int maxLength = 0)
+        public LingoGfxInputText CreateInputText(string name, int maxLength = 0, Action<string>? onChange = null)
         {
             var input = new LingoGfxInputText();
-            var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>());
+            var impl = new LingoGodotInputText(input, _serviceProvider.GetRequiredService<ILingoFontManager>(), onChange);
             input.MaxLength = maxLength;
             input.Name = name;
             return input;
         }
 
-        public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100)
+        public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100, Action<float>? onChange = null)
         {
             var input = new LingoGfxInputNumber();
-            var impl = new LingoGodotInputNumber(input);
+            var impl = new LingoGodotInputNumber(input, _serviceProvider.GetRequiredService<ILingoFontManager>(), onChange);
             input.Min = min;
             input.Max = max;
             input.Name = name;
             return input;
         }
 
-        public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100)
+        public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100, Action<float>? onChange = null)
         {
             var spin = new LingoGfxSpinBox();
-            var impl = new LingoGodotSpinBox(spin);
+            var impl = new LingoGodotSpinBox(spin, _serviceProvider.GetRequiredService<ILingoFontManager>(), onChange);
             spin.Name = name;
             spin.Min = min;
             spin.Max = max;
             return spin;
         }
 
-        public LingoGfxInputCheckbox CreateInputCheckbox(string name)
+        public LingoGfxInputCheckbox CreateInputCheckbox(string name, Action<bool>? onChange = null)
         {
             var input = new LingoGfxInputCheckbox();
-            var impl = new LingoGodotInputCheckbox(input);
-
+            var impl = new LingoGodotInputCheckbox(input, onChange);
             input.Name = name;
             return input;
         }
 
-        public LingoGfxInputCombobox CreateInputCombobox(string name)
+        public LingoGfxInputCombobox CreateInputCombobox(string name, Action<string?>? onChange = null)
         {
             var input = new LingoGfxInputCombobox();
-            var impl = new LingoGodotInputCombobox(input);
+            var impl = new LingoGodotInputCombobox(input, _serviceProvider.GetRequiredService<ILingoFontManager>(), onChange);
 
             input.Name = name;
             return input;
@@ -313,10 +312,10 @@ namespace LingoEngine.LGodot.Core
             return label;
         }
 
-        public LingoGfxButton CreateButton(string name, string text = "")
+        public LingoGfxButton CreateButton(string name, string text = "") //, Action? onClick = null)
         {
             var button = new LingoGfxButton();
-            var impl = new LingoGodotButton(button);
+            var impl = new LingoGodotButton(button, _serviceProvider.GetRequiredService<ILingoFontManager>());
             button.Name = name;
             if (!string.IsNullOrWhiteSpace(text))
                 button.Text = text;

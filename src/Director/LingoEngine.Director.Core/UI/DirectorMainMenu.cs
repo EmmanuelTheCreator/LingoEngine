@@ -71,9 +71,9 @@ namespace LingoEngine.Director.Core.Gfx
             _rewindButton = factory.CreateButton("RewindButton", "|<");
             _playButton = factory.CreateButton("PlayButton", "Play");
 
-            _menuBar.AddChild(_fileButton);
-            _menuBar.AddChild(_editButton);
-            _menuBar.AddChild(_windowButton);
+            _menuBar.AddItem(_fileButton);
+            _menuBar.AddItem(_editButton);
+            _menuBar.AddItem(_windowButton);
             _fileButton.Pressed += () => ShowMenu(_fileMenu, _fileButton);
             _editButton.Pressed += () => { UpdateUndoRedoState(); ShowMenu(_editMenu, _editButton); };
             _windowButton.Pressed += () => ShowMenu(_windowMenu, _windowButton);

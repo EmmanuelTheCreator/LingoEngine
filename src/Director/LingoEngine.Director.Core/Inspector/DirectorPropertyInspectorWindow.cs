@@ -21,6 +21,9 @@ using LingoEngine.Director.Core.Sprites;
 using LingoEngine.Director.Core.Tools;
 using System.Drawing;
 using System.Numerics;
+using System.Xml.Linq;
+using LingoEngine.Director.Core.UI;
+using System.ComponentModel;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -91,51 +94,34 @@ namespace LingoEngine.Director.Core.Inspector
             thumbPanel.X = 4;
             thumbPanel.Y = 2;
             thumbPanel.BackgroundColor = DirectorColors.Bg_Thumb;
-            thumbPanel.BorderColor = DirectorColors.Border_Thumb; 
+            thumbPanel.BorderColor = DirectorColors.Border_Thumb;
             thumbPanel.BorderWidth = 1;
-            thumbPanel.AddChild(thumb.Canvas);
+            thumbPanel.AddItem(thumb.Canvas);
             _thumb = thumb;
             var lineHeight = 11;
 
             var container = _factory.CreatePanel("InfoContainer");
             container.X = 50;
 
-            _sprite = _factory.CreateLabel("SpriteLabel");
-            _sprite.FontSize = 10;
-            _sprite.FontColor = DirectorColors.TextColorLabels;
-            //_sprite.LineHeight = lineHeight;
-            //_sprite.Height = lineHeight;
-            //_sprite.Margin = new LingoMargin(0, 0, 0, 5);
+            _sprite = container.SetLabelAt(_factory, "SpriteLabel", 0, 0);
+            _member = container.SetLabelAt(_factory, "MemberLabel", 0, 13);
+            _cast = container.SetLabelAt(_factory, "MemberLabel", 0, 26);
 
-            _member = _factory.CreateLabel("MemberLabel");
-            _member.FontSize = 10;
-            _member.FontColor = DirectorColors.TextColorLabels;
-            //_member.LineHeight = lineHeight;
-            //_member.Height = lineHeight;
-            //_member.Margin = new LingoMargin(0, 0, 0, -5);
-
-            _cast = _factory.CreateLabel("CastLabel");
-            _cast.FontSize = 10;
-            _cast.FontColor = DirectorColors.TextColorLabels;
-            //_cast.LineHeight = lineHeight;
-            //_cast.Height = lineHeight;
-
-            container.AddChild(_sprite,0,0);
-            container.AddChild(_member,0,13);
-            container.AddChild(_cast,0,26);
 
             var header = _factory.CreatePanel("HeaderPanel");
-            header.AddChild(thumbPanel);
-            header.AddChild(container);
+            header.AddItem(thumbPanel);
+            header.AddItem(container);
 
 
             _headerPanel = _factory.CreatePanel("RootHeaderPanel");
             _headerPanel.BackgroundColor = DirectorColors.BG_WhiteMenus;
-            _headerPanel.AddChild(header);
+            _headerPanel.AddItem(header);
             _headerPanel.Height = HeaderHeight;
             _header = header;
             return _headerPanel;
         }
+
+        
 
         private void CreateBehaviorPanel()
         {
@@ -144,7 +130,7 @@ namespace LingoEngine.Director.Core.Inspector
             _behaviorClose = _factory.CreateButton("InspectorTabs");
 
             
-            _behaviorPanel.AddChild(_behaviorBox);
+            _behaviorPanel.AddItem(_behaviorBox);
             _behaviorPanel.Visibility = false;
             //var closeRow = new HBoxContainer();
             //closeRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
@@ -157,13 +143,13 @@ namespace LingoEngine.Director.Core.Inspector
         }
         private void ShowBehavior(LingoSpriteBehavior behavior)
         {
-            foreach (var child in _behaviorBox.GetChildren())
+            foreach (var child in _behaviorBox.GetItems())
             {
-                if (child != _behaviorBox.GetChild(0))
-                    _behaviorBox.RemoveChild(child);
+                if (child != _behaviorBox.GetItem(0))
+                    _behaviorBox.RemoveItem(child);
             }
             var panel = BuildBehaviorPanel(behavior);
-            _behaviorBox.AddChild(panel);
+            _behaviorBox.AddItem(panel);
             _behaviorPanel.Visibility = true;
             OnResizing(_lastWidh, _lastHeight);
         }
@@ -214,6 +200,7 @@ namespace LingoEngine.Director.Core.Inspector
             ILingoMember? member = null;
             if (obj is LingoSprite sp)
             {
+                
                 member = sp.Member;
                 if (member != null)
                 {
@@ -235,7 +222,8 @@ namespace LingoEngine.Director.Core.Inspector
             switch (obj)
             {
                 case LingoSprite sp2:
-                    AddTab("Sprite", sp2);
+                    AddSpriteTab(sp2);
+                    //AddTab("Sprite", sp2);
                     if (sp2.Member != null)
                         AddMemberTabs(sp2.Member);
                     break;
@@ -268,6 +256,72 @@ namespace LingoEngine.Director.Core.Inspector
             }
         }
 
+        private void AddSpriteTab(LingoSprite sprite)
+        {
+            var wrapContainer = AddTab(sprite.Name);
+            var container = _factory.CreatePanel("SpritePanel");
+            var lineHeight  = 25;
+            var marginLeft = 5;
+            var defaultSmallWidth = 40;
+            wrapContainer.AddItem(container);
+            container.SetLabelAt(_factory, "SpriteLabel", marginLeft, 2,"Name:");
+            container.SetInputTextAt(_factory, sprite, "SpriteNameInput", 100, 0,250, x => x.Name);
+
+            // Row 2: X / Y
+            container.SetLabelAt(_factory, "SpriteLabel", 5, lineHeight * 1, "X:");
+            container.SetInputNumberAt(_factory, sprite, "XInput", 33, lineHeight * 1, defaultSmallWidth, x => x.LocH);
+            container.SetLabelAt(_factory, "SpriteLabel", 70, lineHeight * 1, "Y:");
+            container.SetInputNumberAt(_factory, sprite, "YInput", 88, lineHeight * 1, defaultSmallWidth, x => x.LocV);
+
+            // Row 3: L / T / R / B
+            container.SetLabelAt(_factory, "SpriteLabel", 5, lineHeight * 2, "L:");
+            container.SetInputNumberAt(_factory, sprite, "LInput", 33, lineHeight * 2, defaultSmallWidth, x => x.Left);
+            container.SetLabelAt(_factory, "SpriteLabel", 70, lineHeight * 2, "T:");
+            container.SetInputNumberAt(_factory, sprite, "TInput", 88, lineHeight * 2, defaultSmallWidth, x => x.Top);
+            container.SetLabelAt(_factory, "SpriteLabel", 125, lineHeight * 2, "R:");
+            container.SetInputNumberAt(_factory, sprite, "RInput", 141, lineHeight * 2, defaultSmallWidth, x => x.Right);
+            container.SetLabelAt(_factory, "SpriteLabel", 178, lineHeight * 2, "B:");
+            container.SetInputNumberAt(_factory, sprite, "BInput", 194, lineHeight * 2, defaultSmallWidth, x => x.Bottom);
+
+            // Row 4: W / H
+            container.SetLabelAt(_factory, "SpriteLabel", 5, lineHeight * 3, "W:");
+            container.SetInputNumberAt(_factory, sprite, "WInput", 33, lineHeight * 3, defaultSmallWidth, x => x.Width);
+            container.SetLabelAt(_factory, "SpriteLabel", 70, lineHeight * 3, "H:");
+            container.SetInputNumberAt(_factory, sprite, "HInput", 88, lineHeight * 3, defaultSmallWidth, x => x.Height);
+
+            // Row 5: Ink / %
+            container.SetLabelAt(_factory, "SpriteLabel", 5, lineHeight * 4, "Ink:");
+            container.SetInputNumberAt(_factory, sprite, "InkCombo", 33, lineHeight * 4, 120, x => x.Ink);
+            container.SetInputNumberAt(_factory, sprite, "OpacityCombo", 110, lineHeight * 4,40, x => x.Blend);
+            //container.SetComboBoxAt(_factory, sprite, "InkCombo", 33, lineHeight * 4, x => x.Ink.ToString());
+            //container.SetComboBoxAt(_factory, sprite, "OpacityCombo", 110, lineHeight * 4, x => x.Blend.ToString());
+
+            // Row 6: Start Frame / End Frame
+            container.SetLabelAt(_factory, "SpriteLabel", 5, lineHeight * 5 + 4, "Start Frame:");
+            container.SetInputNumberAt(_factory, sprite, "StartFrameInput", 70, lineHeight * 5 + 4, defaultSmallWidth + 5, x => x.BeginFrame);
+            container.SetLabelAt(_factory, "SpriteLabel", 110, lineHeight * 5 + 4, "End:");
+            container.SetInputNumberAt(_factory, sprite, "EndFrameInput", 140, lineHeight * 5 + 4, defaultSmallWidth, x => x.EndFrame);
+
+            // Row 7: Rotation / Skew
+            container.SetLabelAt(_factory, "SpriteLabel", 5, lineHeight * 6 + 4, "Rotation:");
+            container.SetInputNumberAt(_factory, sprite, "RotationInput", 70, lineHeight * 6 + 4, defaultSmallWidth + 10, x => x.Rotation);
+            container.SetLabelAt(_factory, "SpriteLabel", 130, lineHeight * 6 + 4, "Skew:");
+            container.SetInputNumberAt(_factory, sprite, "SkewInput", 160, lineHeight * 6 + 4, defaultSmallWidth, x => x.Skew);
+
+
+        }
+        private LingoGfxWrapPanel AddTab(string name)
+        { 
+            var scroller = _factory.CreateScrollContainer(name + "Scroll");
+            LingoGfxWrapPanel container = _factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
+            scroller.AddItem(container);
+            var tabItem = _factory.CreateTabItem(name, name);
+            tabItem.Content = scroller;
+            _tabs.AddTab(tabItem);
+            return container;
+        }
+
+
         private void AddTab(string name, object obj)
         {
             if (_tabs == null)
@@ -290,7 +344,7 @@ namespace LingoEngine.Director.Core.Inspector
                     if (!string.IsNullOrEmpty(code))
                         _commandManager.Handle(new OpenWindowCommand(code));
                 };
-                container.AddChild(editBtn);
+                container.AddItem(editBtn);
             }
 
             // TODO: behavior list
@@ -298,9 +352,9 @@ namespace LingoEngine.Director.Core.Inspector
             //    ShowBehavior(sprite)
 
             var props = BuildProperties(obj);
-            container.AddChild(props);
+            container.AddItem(props);
 
-            scroller.AddChild(container);
+            scroller.AddItem(container);
             var tabItem = _factory.CreateTabItem(name, name);
             tabItem.Content = scroller;
             _tabs.AddTab(tabItem);
@@ -310,26 +364,26 @@ namespace LingoEngine.Director.Core.Inspector
         {
             var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPanel");
             var propsPanel = BuildProperties(behavior);
-            container.AddChild(propsPanel);
+            container.AddItem(propsPanel);
             if (behavior is ILingoPropertyDescriptionList descProvider)
             {
                 string? desc = descProvider.GetBehaviorDescription();
                 if (!string.IsNullOrEmpty(desc))
-                    container.AddChild(_factory.CreateLabel("DescLabel", desc));
+                    container.AddItem(_factory.CreateLabel("DescLabel", desc));
 
                 var props = behavior.UserProperties;
                 if (props.Count > 0)
                 {
-                    container.AddChild(_factory.CreateLabel("PropsLabel", "Properties"));
+                    container.AddItem(_factory.CreateLabel("PropsLabel", "Properties"));
                     foreach (var item in props)
                     {
                         string labelText = item.Key.ToString();
                         if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
                             labelText = desc2.Comment!;
                         var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
-                        row.AddChild(_factory.CreateLabel("PropName", labelText));
-                        row.AddChild(_factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
-                        container.AddChild(row);
+                        row.AddItem(_factory.CreateLabel("PropName", labelText));
+                        row.AddItem(_factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
+                        container.AddItem(row);
                     }
                 }
             }
@@ -378,7 +432,7 @@ namespace LingoEngine.Director.Core.Inspector
                 var row = factory.CreateWrapPanel(LingoOrientation.Horizontal, prop.Name + "Row");
                 var label = factory.CreateLabel(prop.Name + "Label", prop.Name);
                 label.Width = 80;
-                row.AddChild(label);
+                row.AddItem(label);
 
                 object? val = prop.GetValue(obj);
 
@@ -390,7 +444,7 @@ namespace LingoEngine.Director.Core.Inspector
                         cb.ValueChanged += () => prop.SetValue(obj, cb.Checked);
                     else
                         cb.Enabled = false;
-                    row.AddChild(cb);
+                    row.AddItem(cb);
                 }
                 else if (prop.PropertyType == typeof(LingoPoint))
                 {
@@ -419,9 +473,9 @@ namespace LingoEngine.Director.Core.Inspector
                         xSpin.Enabled = false;
                         ySpin.Enabled = false;
                     }
-                    row.AddChild(xSpin);
-                    row.AddChild(ySpin);
-                    root.AddChild(row);
+                    row.AddItem(xSpin);
+                    row.AddItem(ySpin);
+                    root.AddItem(row);
                     continue;
                 }
                 else
@@ -439,10 +493,10 @@ namespace LingoEngine.Director.Core.Inspector
                         };
                     else
                         text.Enabled = false;
-                    row.AddChild(text);
+                    row.AddItem(text);
                 }
 
-                root.AddChild(row);
+                root.AddItem(row);
             }
             return root;
         }

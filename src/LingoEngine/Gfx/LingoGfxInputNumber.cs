@@ -1,4 +1,5 @@
 using LingoEngine.Primitives;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace LingoEngine.Gfx
 {
@@ -12,5 +13,6 @@ namespace LingoEngine.Gfx
         public float Max { get => _framework.Max; set => _framework.Max = value; }
 
         public LingoNumberType NumberType { get => _framework.NumberType; set => _framework.NumberType = value; }
+        public int FontSize { get => _framework.FontSize; set => _framework.FontSize = value; }
     }
 }

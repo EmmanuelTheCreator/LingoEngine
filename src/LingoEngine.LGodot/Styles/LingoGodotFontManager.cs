@@ -7,6 +7,11 @@ namespace LingoEngine.LGodot.Styles
     {
         private readonly List<(string Name, string FileName)> _fontsToLoad = new();
         private readonly Dictionary<string, FontFile> _loadedFonts = new();
+        public LingoGodotFontManager()
+        {
+            
+        }
+
         public ILingoFontManager AddFont(string name, string pathAndName)
         {
             _fontsToLoad.Add((name, pathAndName));
@@ -27,5 +32,9 @@ namespace LingoEngine.LGodot.Styles
              => _loadedFonts.TryGetValue(name, out var fontt) ? fontt as T : null;
         public FontFile GetTyped(string name)
             => _loadedFonts[name];
+
+        private Font _defaultStyle = ThemeDB.FallbackFont;
+        public T GetDefaultFont<T>() where T : class => (_defaultStyle as T)!;
+        public void SetDefaultFont<T>(T font) where T : class => _defaultStyle = (font as Font)!;
     }
 }
