@@ -9,9 +9,9 @@ namespace LingoEngine.Gfx
     public interface ILingoFrameworkGfxPanel : ILingoFrameworkGfxLayoutNode
     {
         /// <summary>Adds a child node to the panel.</summary>
-        void AddChild(ILingoFrameworkGfxLayoutNode child);
-        void RemoveChild(ILingoFrameworkGfxLayoutNode child);
-        IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren();
+        void AddItem(ILingoFrameworkGfxLayoutNode child);
+        void RemoveItem(ILingoFrameworkGfxLayoutNode child);
+        IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems();
 
         /// <summary>Background color of the panel.</summary>
         LingoColor BackgroundColor { get; set; }

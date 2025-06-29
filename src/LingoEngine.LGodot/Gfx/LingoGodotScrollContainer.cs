@@ -48,21 +48,24 @@ namespace LingoEngine.LGodot.Gfx
                 AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
+        public object FrameworkNode => this;
 
-        public void AddChild(ILingoFrameworkGfxLayoutNode child)
+
+        private readonly List<ILingoFrameworkGfxLayoutNode> _nodes = new List<ILingoFrameworkGfxLayoutNode>();
+        public void AddItem(ILingoFrameworkGfxLayoutNode child)
         {
-            if (child is Node node)
+            if (child.FrameworkNode is Node node)
                 base.AddChild(node);
+            _nodes.Add(child);
         }
-        public void RemoveChild(ILingoFrameworkGfxLayoutNode lingoFrameworkGfxNode)
+        public void RemoveItem(ILingoFrameworkGfxLayoutNode lingoFrameworkGfxNode)
         {
-            if (lingoFrameworkGfxNode is Node node)
+            if (lingoFrameworkGfxNode.FrameworkNode is Node node)
                 RemoveChild(node);
+            _nodes.Remove(lingoFrameworkGfxNode);
         }
 
-        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
-            => base.GetChildren().OfType<Node>()
-                .OfType<ILingoFrameworkGfxLayoutNode>();
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems() => _nodes.ToArray();
 
 
 

@@ -1,7 +1,6 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using System;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -12,6 +11,8 @@ namespace LingoEngine.LGodot.Gfx
     {
         private LingoMargin _margin = LingoMargin.Zero;
         private event Action? _pressed;
+
+        public object FrameworkNode => this;
 
         public LingoGodotButton(LingoGfxButton button)
         {
@@ -52,5 +53,8 @@ namespace LingoEngine.LGodot.Gfx
             QueueFree();
             base.Dispose();
         }
+
+        
+        
     }
 }

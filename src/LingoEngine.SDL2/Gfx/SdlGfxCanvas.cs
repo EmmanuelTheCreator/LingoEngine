@@ -24,7 +24,7 @@ namespace LingoEngine.SDL2.Gfx
         private readonly int _width;
         private readonly int _height;
         private nint _texture;
-
+        public object FrameworkNode => this;
         public nint Texture => _texture;
 
         public SdlGfxCanvas(nint renderer, ILingoFontManager fontManager, int width, int height)

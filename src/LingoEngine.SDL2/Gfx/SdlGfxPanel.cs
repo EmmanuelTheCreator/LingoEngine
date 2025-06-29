@@ -16,17 +16,17 @@ namespace LingoEngine.SDL2.Gfx
         public LingoColor BackgroundColor { get; set; }
         public LingoColor BorderColor { get; set; }
         public float BorderWidth { get; set; }
-
-        public void AddChild(ILingoFrameworkGfxLayoutNode child) { }
+        public object FrameworkNode => this;
+        public void AddItem(ILingoFrameworkGfxLayoutNode child) { }
 
         public void Dispose() { }
 
-        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems()
         {
             throw new NotImplementedException();
         }
 
-        public void RemoveChild(ILingoFrameworkGfxLayoutNode child)
+        public void RemoveItem(ILingoFrameworkGfxLayoutNode child)
         {
             throw new NotImplementedException();
         }

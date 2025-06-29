@@ -65,6 +65,9 @@ namespace LingoEngine.LGodot.Gfx
                 AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
+        public object FrameworkNode => this;
+
+
 
         event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {

@@ -12,6 +12,7 @@ namespace LingoEngine.Gfx
 
         /// <summary>Margin around the node.</summary>
         LingoMargin Margin { get; set; }
+        object FrameworkNode { get; }
     }
     /// <summary>
     /// Basic framework object that can be positioned and sized on screen.

@@ -45,7 +45,7 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
-
+        public object FrameworkNode => this;
         private void MarkDirty()
         {
             if (!_dirty)

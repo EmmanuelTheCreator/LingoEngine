@@ -60,7 +60,7 @@ namespace LingoEngine.LGodot.Gfx
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;
         }
-
+        public object FrameworkNode => this;
         public new void Dispose()
         {
             QueueFree();

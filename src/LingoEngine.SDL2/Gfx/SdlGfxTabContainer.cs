@@ -18,6 +18,9 @@ namespace LingoEngine.SDL2.Gfx
         public bool Visibility { get; set; } = true;
         public string Name { get; set; } = string.Empty;
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
+        public object FrameworkNode => this;
+
+
 
         public void Dispose() { }
 
@@ -43,7 +46,7 @@ namespace LingoEngine.SDL2.Gfx
     public partial class SdlGfxTabItem : ILingoFrameworkGfxTabItem
     {
         private LingoGfxTabItem tab;
-
+        public object FrameworkNode => this;
         public SdlGfxTabItem(LingoGfxTabItem tab)
         {
             this.tab = tab;

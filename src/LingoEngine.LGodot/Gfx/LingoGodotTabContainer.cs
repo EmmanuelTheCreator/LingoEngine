@@ -40,24 +40,26 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-       
+        public object FrameworkNode => this;
+
+        private readonly List<ILingoFrameworkGfxTabItem> _nodes = new List<ILingoFrameworkGfxTabItem>();
         public void AddTab(ILingoFrameworkGfxTabItem tabItem)
         {
-            var content = ((LingoGodotTabItem)tabItem).ContentFrameWork;
+            var content = ((LingoGodotTabItem)tabItem).ContentFrameWork.FrameworkNode;
             if (content is Node node)
                 AddTab(tabItem.Title, node);
+            _nodes.Add(tabItem);
         }
 
         public void RemoveTab(ILingoFrameworkGfxTabItem tabItem)
         {
-            var content = ((LingoGodotTabItem)tabItem).ContentFrameWork;
+            var content = ((LingoGodotTabItem)tabItem).ContentFrameWork.FrameworkNode;
             if (content is Node node)
                 RemoveChild(node);
+            _nodes.Remove(tabItem);
         }
 
-        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs()
-            => base.GetChildren().OfType<Node>()
-                .OfType<ILingoFrameworkGfxTabItem>();
+        public IEnumerable<ILingoFrameworkGfxTabItem> GetTabs() => _nodes.ToArray();
         public void AddTab(string title, Node node)
         {
             AddChild(node);
@@ -86,7 +88,7 @@ namespace LingoEngine.LGodot.Gfx
         private string _name;
         private LingoGfxTabItem _tabItem;
         public LingoGfxTabItem TabItem => _tabItem;
-        public ILingoFrameworkGfxLayoutNode ContentFrameWork => Content?.FrameworkObj as ILingoFrameworkGfxLayoutNode;
+        public ILingoFrameworkGfxLayoutNode ContentFrameWork => (Content?.FrameworkObj as ILingoFrameworkGfxLayoutNode)!;
         public ILingoGfxNode? Content { get; set; }
 
         public float X { get => ContentFrameWork.X; set => ContentFrameWork.X = value; }
@@ -104,6 +106,8 @@ namespace LingoEngine.LGodot.Gfx
                     ContentFrameWork.Name = value;
             }
         }
+
+        public object FrameworkNode => Content?.FrameworkObj.FrameworkNode!;
 
         public LingoGodotTabItem(LingoGfxTabItem tab)
         {

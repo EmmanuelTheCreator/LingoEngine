@@ -40,6 +40,9 @@ namespace LingoEngine.LGodot.Gfx
         public float Min { get => (float)MinValue; set => MinValue = value; }
         public float Max { get => (float)MaxValue; set => MaxValue = value; }
 
+        public object FrameworkNode => this;
+
+
         event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;

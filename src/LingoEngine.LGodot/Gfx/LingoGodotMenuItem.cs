@@ -21,6 +21,9 @@ namespace LingoEngine.LGodot.Gfx
         public bool Enabled { get => _enabled; set { _enabled = value; Update(); } }
         public bool CheckMark { get => _check; set { _check = value; Update(); } }
         public string? Shortcut { get => _shortcut; set { _shortcut = value; Update(); } }
+        public object FrameworkNode => _menu?.FrameworkNode!;
+
+
 
         public event Action? Activated;
 

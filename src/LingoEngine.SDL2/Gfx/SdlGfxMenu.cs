@@ -13,7 +13,7 @@ namespace LingoEngine.SDL2.Gfx
         public bool Visibility { get; set; } = true;
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
         public string Name { get; set; }
-
+        public object FrameworkNode => this;
         public SdlGfxMenu(string name)
         {
             Name = name;

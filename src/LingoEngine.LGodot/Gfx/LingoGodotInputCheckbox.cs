@@ -42,6 +42,9 @@ namespace LingoEngine.LGodot.Gfx
 
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 
+        public object FrameworkNode => this;
+
+
         event Action? ILingoFrameworkGfxNodeInput.ValueChanged
         {
             add => _onValueChanged += value;

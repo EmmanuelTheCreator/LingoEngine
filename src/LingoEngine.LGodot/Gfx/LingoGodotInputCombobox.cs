@@ -41,7 +41,7 @@ namespace LingoEngine.LGodot.Gfx
                 AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
-
+        public object FrameworkNode => this;
         public IReadOnlyList<KeyValuePair<string,string>> Items => _items;
         public void AddItem(string key, string value)
         {

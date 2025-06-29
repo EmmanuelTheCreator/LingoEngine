@@ -6,9 +6,9 @@ namespace LingoEngine.Gfx
     /// </summary>
     public interface ILingoFrameworkGfxScrollContainer : ILingoFrameworkGfxLayoutNode
     {
-        void AddChild(ILingoFrameworkGfxLayoutNode child);
-        void RemoveChild(ILingoFrameworkGfxLayoutNode lingoFrameworkGfxNode);
-        IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren();
+        void AddItem(ILingoFrameworkGfxLayoutNode child);
+        void RemoveItem(ILingoFrameworkGfxLayoutNode lingoFrameworkGfxNode);
+        IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems();
 
         float ScrollHorizontal { get; set; }
         float ScrollVertical { get; set; }

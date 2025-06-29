@@ -36,8 +36,8 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         _iconBar.Position = new Vector2(300, 0);
         _iconBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
-        _iconBar.AddChild(directorMainMenu.RewindButton.Framework<LingoGodotButton>());
-        _iconBar.AddChild(directorMainMenu.PlayButton.Framework<LingoGodotButton>());
+        _iconBar.AddItem(directorMainMenu.RewindButton.Framework<LingoGodotButton>());
+        _iconBar.AddItem(directorMainMenu.PlayButton.Framework<LingoGodotButton>());
 
         AddChild(directorMainMenu.FileMenu.Framework<LingoGodotMenu>());
         AddChild(directorMainMenu.EditMenu.Framework<LingoGodotMenu>());
