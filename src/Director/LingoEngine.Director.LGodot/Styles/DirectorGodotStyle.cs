@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.LGodot.Primitives;
 
@@ -43,7 +43,7 @@ public sealed class DirectorGodotStyle
         theme.SetStylebox("pressed", "CloseButton", pressed);
         theme.SetColor("font_color", "CloseButton", Colors.White);
 
-        // Default font size (not specific to a control type � fallback)
+        // Default font size (not specific to a control type — fallback)
         theme.DefaultFontSize = 11;
 
         // Font sizes per control type
@@ -96,6 +96,10 @@ public sealed class DirectorGodotStyle
 
     private static void SetTabColors(Theme theme)
     {
+        var fontVariation = new FontVariation
+        {
+            BaseFont = DefaultFont,
+        };
         var tabBgStyle = new StyleBoxFlat
         {
             BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor(),
@@ -112,5 +116,66 @@ public sealed class DirectorGodotStyle
 
         var contentBg = new StyleBoxFlat { BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor(), };
         theme.SetStylebox("panel", "TabContainer", contentBg);
+        theme.SetFont("font", "TabBar", fontVariation);
     }
+    //private static void SetTabColors(Theme theme)
+    //{
+    //    var fontVariation = new FontVariation
+    //    {
+    //        BaseFont = DefaultFont,
+    //    };
+
+    //    var bgWhite = DirectorColors.BG_WhiteMenus.ToGodotColor();
+    //    var tabBgColor = DirectorColors.BG_Tabs.ToGodotColor();
+    //    var borderColor = DirectorColors.Border_Tabs.ToGodotColor();
+
+    //    // Unselected tabs
+    //    var tabBg = new StyleBoxFlat
+    //    {
+    //        BgColor = tabBgColor,
+    //        BorderColor = borderColor,
+    //        BorderWidthBottom = 1
+    //    };
+
+    //    // Selected tab
+    //    var tabFg = new StyleBoxFlat
+    //    {
+    //        BgColor = bgWhite,
+    //        BorderColor = borderColor,
+    //        BorderWidthTop = 1,
+    //        BorderWidthLeft = 1,
+    //        BorderWidthRight = 1,
+    //        BorderWidthBottom = 0 // 👈 IMPORTANT: no bottom border so it blends with content
+    //    };
+
+    //    // Tab bar background
+    //    var tabBarPanel = new StyleBoxFlat
+    //    {
+    //        BgColor = bgWhite,
+    //        BorderWidthBottom = 1,
+    //        BorderColor = borderColor
+    //    };
+
+    //    // Content area
+    //    var contentPanel = new StyleBoxFlat
+    //    {
+    //        BgColor = bgWhite,
+    //        BorderColor = borderColor,
+    //        BorderWidthTop = 0,
+    //        BorderWidthLeft = 1,
+    //        BorderWidthRight = 1,
+    //        BorderWidthBottom = 1
+    //    };
+
+    //    theme.SetStylebox("tab_bg", "TabBar", tabBg);
+    //    theme.SetStylebox("tab_fg", "TabBar", tabFg);
+    //    theme.SetStylebox("panel", "TabBar", tabBarPanel);
+    //    theme.SetStylebox("panel", "TabContainer", contentPanel);
+
+    //    theme.SetColor("font_color", "TabBar", Colors.Black);
+    //    theme.SetColor("font_color_disabled", "TabBar", new Color(0.5f, 0.5f, 0.5f));
+    //    theme.SetColor("font_color_focus", "TabBar", new Color(0.2f, 0.2f, 0.2f));
+
+    //    theme.SetFont("font", "TabBar", fontVariation);
+    //}
 }
