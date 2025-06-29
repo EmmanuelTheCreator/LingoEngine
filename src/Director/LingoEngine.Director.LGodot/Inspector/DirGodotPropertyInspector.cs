@@ -5,6 +5,7 @@ using LingoEngine.LGodot.Gfx;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Director.Core.Styles;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 
@@ -18,7 +19,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IDirFrameworkP
         : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
     {
         _inspectorWindow = inspectorWindow;
-
+        BackgroundColor = DirectorColors.BG_WhiteMenus;
         Size = new Vector2(260, 400);
         _inspectorWindow.Init(this, Size.X, Size.Y,TitleBarHeight);
         CustomMinimumSize = Size;

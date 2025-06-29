@@ -17,31 +17,28 @@ namespace LingoEngine.Gfx
 
 
         /// <summary>Adds a child to the panel and sets its position.</summary>
-        public ILingoGfxNode AddChild(ILingoGfxNode node, float x, float y)
+        public ILingoGfxNode AddChild(ILingoGfxNode node, float? x= null, float? y = null)
         {
-            if (node is ILingoFrameworkGfxLayoutNode layoutNode)
+            if (node is ILingoGfxLayoutNode layoutNode)
             {
-                layoutNode.X = x;
-                layoutNode.Y = y;
-                _framework.AddChild(node.Framework<ILingoFrameworkGfxLayoutNode>());
+                if (x != null) layoutNode.X = x.Value;
+                if (y != null) layoutNode.Y = y.Value;
+                _framework.AddItem(node.Framework<ILingoFrameworkGfxLayoutNode>());
                 return node;
             }
             else
             {
                 LingoGfxLayoutWrapper item = _factory.CreateLayoutWrapper(node ,x, y);
 
-                _framework.AddChild(item.FrameworkWrapper<ILingoFrameworkGfxLayoutWrapper>());
+                _framework.AddItem(item.FrameworkWrapper<ILingoFrameworkGfxLayoutWrapper>());
                 return item;
             }
 
         }
-
-        /// <summary>Adds a child without modifying its position.</summary>
-        public void AddChild(ILingoGfxNode node) => _framework.AddChild(node.Framework<ILingoFrameworkGfxLayoutNode>());
-        public void AddChild(ILingoFrameworkGfxLayoutNode node) => _framework.AddChild(node);
-        public void RemoveChild(ILingoGfxNode node) => _framework.RemoveChild(node.Framework<ILingoFrameworkGfxLayoutNode>());
-        public void RemoveChild(ILingoFrameworkGfxLayoutNode node) => _framework.RemoveChild(node);
-        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren() => _framework.GetChildren();
+      
+        public void RemoveChild(ILingoGfxNode node) => _framework.RemoveItem(node.Framework<ILingoFrameworkGfxLayoutNode>());
+        public void RemoveChild(ILingoFrameworkGfxLayoutNode node) => _framework.RemoveItem(node);
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren() => _framework.GetItems();
 
         public LingoColor BackgroundColor { get => _framework.BackgroundColor; set => _framework.BackgroundColor = value; }
         public LingoColor BorderColor { get => _framework.BorderColor; set => _framework.BorderColor = value; }
@@ -68,12 +65,12 @@ namespace LingoEngine.Gfx
         public virtual ILingoFrameworkGfxNode FrameworkObjWrapper => _framework;
 
 
-        public override T Framework<T>()
-        {
-            if (typeof(T) == typeof(ILingoFrameworkGfxLayoutNode) || typeof(T) == typeof(ILingoFrameworkGfxLayoutWrapper))
-                return (T)(object)_framework;
-            return Content.Framework<T>();
-        }
+        public override T Framework<T>() => Content.Framework<T>();
+        //{
+        //    if (typeof(T) == typeof(ILingoFrameworkGfxLayoutNode) || typeof(T) == typeof(ILingoFrameworkGfxLayoutWrapper))
+        //        return (T)(object)_framework;
+        //    return Content.Framework<T>();
+        //}
 
         public override ILingoFrameworkGfxNode FrameworkObj => _framework;
 

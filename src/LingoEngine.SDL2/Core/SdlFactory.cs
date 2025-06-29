@@ -316,7 +316,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return item;
     }
 
-    public LingoGfxLayoutWrapper CreateLayoutWrapper(ILingoGfxNode content, float x, float y)
+    public LingoGfxLayoutWrapper CreateLayoutWrapper(ILingoGfxNode content, float? x, float? y)
     {
         throw new NotImplementedException();
     }

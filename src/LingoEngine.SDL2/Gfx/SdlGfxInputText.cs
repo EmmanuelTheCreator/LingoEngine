@@ -29,6 +29,7 @@ namespace LingoEngine.SDL2.Gfx
         public int MaxLength { get; set; }
         public string? Font { get; set; }
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
+        public object FrameworkNode => this;
 
         public event Action? ValueChanged;
 

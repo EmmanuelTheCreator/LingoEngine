@@ -17,6 +17,10 @@ namespace LingoEngine.SDL2.Gfx
         public float Min { get; set; }
         public float Max { get; set; }
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
+        public object FrameworkNode => this;
+
+
+
         public event Action? ValueChanged;
         public void Dispose() { }
     }

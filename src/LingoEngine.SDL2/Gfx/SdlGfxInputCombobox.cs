@@ -23,7 +23,7 @@ namespace LingoEngine.SDL2.Gfx
         public string? SelectedValue { get; set; }
 
         public event Action? ValueChanged;
-
+        public object FrameworkNode => this;
         public void AddItem(string key, string value)
         {
             _items.Add(new KeyValuePair<string,string>(key,value));

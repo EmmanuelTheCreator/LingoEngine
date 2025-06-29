@@ -14,9 +14,9 @@ namespace LingoEngine.Gfx
         LingoMargin ItemMargin { get; set; }
 
         /// <summary>Adds a child node to the container.</summary>
-        void AddChild(ILingoFrameworkGfxLayoutNode child);
-        void RemoveChild(ILingoFrameworkGfxLayoutNode child);
-        IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren();
-        ILingoFrameworkGfxLayoutNode? GetChild(int index);
+        void AddItem(ILingoFrameworkGfxNode child);
+        void RemoveItem(ILingoFrameworkGfxNode child);
+        IEnumerable<ILingoFrameworkGfxNode> GetItems();
+        ILingoFrameworkGfxNode? GetItem(int index);
     }
 }

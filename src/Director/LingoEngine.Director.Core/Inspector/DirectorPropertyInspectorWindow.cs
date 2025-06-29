@@ -97,8 +97,7 @@ namespace LingoEngine.Director.Core.Inspector
             _thumb = thumb;
             var lineHeight = 11;
 
-            var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InfoContainer");
-            container.ItemMargin =  new LingoMargin(0, 0, 1, 0);
+            var container = _factory.CreatePanel("InfoContainer");
             container.X = 50;
 
             _sprite = _factory.CreateLabel("SpriteLabel");
@@ -106,12 +105,14 @@ namespace LingoEngine.Director.Core.Inspector
             _sprite.FontColor = DirectorColors.TextColorLabels;
             //_sprite.LineHeight = lineHeight;
             //_sprite.Height = lineHeight;
+            //_sprite.Margin = new LingoMargin(0, 0, 0, 5);
 
             _member = _factory.CreateLabel("MemberLabel");
             _member.FontSize = 10;
             _member.FontColor = DirectorColors.TextColorLabels;
             //_member.LineHeight = lineHeight;
             //_member.Height = lineHeight;
+            //_member.Margin = new LingoMargin(0, 0, 0, -5);
 
             _cast = _factory.CreateLabel("CastLabel");
             _cast.FontSize = 10;
@@ -119,13 +120,14 @@ namespace LingoEngine.Director.Core.Inspector
             //_cast.LineHeight = lineHeight;
             //_cast.Height = lineHeight;
 
-            container.AddChild(_sprite);
-            container.AddChild(_member);
-            container.AddChild(_cast);
+            container.AddChild(_sprite,0,0);
+            container.AddChild(_member,0,13);
+            container.AddChild(_cast,0,26);
 
             var header = _factory.CreatePanel("HeaderPanel");
             header.AddChild(thumbPanel);
             header.AddChild(container);
+
 
             _headerPanel = _factory.CreatePanel("RootHeaderPanel");
             _headerPanel.BackgroundColor = DirectorColors.BG_WhiteMenus;
@@ -272,7 +274,7 @@ namespace LingoEngine.Director.Core.Inspector
                 return;
 
             var scroller = _factory.CreateScrollContainer(name + "Scroll");
-            var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
+            LingoGfxWrapPanel container = _factory.CreateWrapPanel(LingoOrientation.Vertical, name + "Container");
 
             if (_commandManager != null && (obj is LingoMemberBitmap || obj is ILingoMemberTextBase))
             {

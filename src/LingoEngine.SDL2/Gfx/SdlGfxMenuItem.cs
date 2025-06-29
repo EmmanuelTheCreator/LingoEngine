@@ -10,7 +10,7 @@ namespace LingoEngine.SDL2.Gfx
         public bool CheckMark { get; set; }
         public string? Shortcut { get; set; }
         public event Action? Activated;
-
+        public object FrameworkNode => this;
         public SdlGfxMenuItem(string name, string? shortcut)
         {
             Name = name;

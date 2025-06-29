@@ -1,5 +1,7 @@
 using Godot;
 using LingoEngine.Director.LGodot.Windowing;
+using LingoEngine.LGodot.Primitives;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -23,6 +25,7 @@ namespace LingoEngine.Director.LGodot
         private Vector2 _resizeStartSize;
         private Vector2 _resizeStartMousePos;
 
+        protected StyleBoxFlat Style = new StyleBoxFlat();
         public string WindowCode { get; private set; }
         public string WindowName { get; private set; }
 
@@ -46,7 +49,7 @@ namespace LingoEngine.Director.LGodot
             _closeButton.CustomMinimumSize = new Vector2(16, 16);
             _closeButton.Pressed += () => Visible = false;
             _closeButton.ThemeTypeVariation = "CloseButton";
-
+            //AddThemeStyleboxOverride("panel", Style);
             //_closeButton.AddThemeStyleboxOverride().Theme.GetFontList()
 
             // Draw background
@@ -57,6 +60,13 @@ namespace LingoEngine.Director.LGodot
             //};
             //AddThemeStyleboxOverride("panel", styleBox);
             windowManager.Register(this);
+        }
+        public LingoColor BackgroundColor {
+            set
+            {
+                Style.BgColor = value.ToGodotColor();
+                AddThemeStyleboxOverride("panel", Style);
+            }
         }
 
         public override void _Draw()

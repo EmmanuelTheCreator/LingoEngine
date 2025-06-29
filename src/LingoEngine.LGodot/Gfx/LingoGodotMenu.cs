@@ -43,6 +43,8 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
+        public object FrameworkNode => this;
+
         public void AddItem(ILingoFrameworkGfxMenuItem item)
         {
             if (item is not LingoGodotMenuItem godotItem)

@@ -2,29 +2,28 @@ using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Primitives;
-using System;
-using System.ComponentModel;
-using System.Linq;
 
 namespace LingoEngine.LGodot.Gfx
 {
     /// <summary>
     /// Godot implementation of <see cref="ILingoFrameworkGfxPanel"/>.
     /// </summary>
-    public partial class LingoGodotPanel : PanelContainer, ILingoFrameworkGfxPanel, IDisposable
+    public partial class LingoGodotPanel : Panel, ILingoFrameworkGfxPanel, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
         private LingoColor _background = new LingoColor(0,0,0);
         private LingoColor _border = new LingoColor(0,0,0);
-        private float _borderWidth;
+        private float _borderWidth =0;
         private readonly StyleBoxFlat _style = new StyleBoxFlat();
 
         public LingoGodotPanel(LingoGfxPanel panel)
         {
             panel.Init(this);
             SizeFlagsVertical = SizeFlags.ExpandFill;
-            SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            AddThemeStyleboxOverride("panel", _style);
+            //SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            //AddThemeStyleboxOverride("panel", _style);
+
+            Set("theme_override_styles/panel", _style);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -43,22 +42,53 @@ namespace LingoEngine.LGodot.Gfx
                 ApplyMargin();
             }
         }
+        public object FrameworkNode => this;
 
-        public void AddChild(ILingoFrameworkGfxLayoutNode child)
-        {
-            if (child is Node node)
-                AddChild(node);
-        }
-        public void RemoveChild(ILingoFrameworkGfxLayoutNode child)
-        {
-            if (child is not Node node)
-                return;
-            RemoveChild(node);
-        }
-        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
-            => base.GetChildren().OfType<Node>()
-                .OfType<ILingoFrameworkGfxLayoutNode>().ToArray();
 
+
+        private readonly List<ILingoFrameworkGfxLayoutNode> _nodes = new List<ILingoFrameworkGfxLayoutNode>();
+        public void AddItem(ILingoFrameworkGfxLayoutNode child)
+        {
+            if (child.FrameworkNode is Node node)
+            {
+                base.AddChild(node);
+
+                if (node is Control control)
+                {
+                    // Apply positioning
+                    control.Position = new Vector2(child.X, child.Y);
+
+                    // Important: disable anchors
+                    control.AnchorLeft = 0;
+                    control.AnchorTop = 0;
+                    control.AnchorRight = 0;
+                    control.AnchorBottom = 0;
+
+                }
+            }
+            _nodes.Add(child);  
+        }
+
+
+        public void RemoveItem(ILingoFrameworkGfxLayoutNode child)
+        {
+            if (child.FrameworkNode is Node node)
+                RemoveChild(node);
+            _nodes.Remove(child);
+        }
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems() => _nodes.ToArray();
+        //public override void _Draw()
+        //{
+        //    DrawRect(new Rect2(Vector2.Zero, Size), _background.ToGodotColor());
+        //    if (_borderWidth > 0)
+        //        DrawRect(new Rect2(Vector2.Zero, Size), _border.ToGodotColor(), false, _borderWidth);
+
+        //    //foreach (var child in GetItems())
+        //    //{
+        //    //    if (child is Control c)
+        //    //        DrawCircle(c.Position, 2, Colors.Red);
+        //    //}
+        //}
         public LingoColor BackgroundColor
         {
             get => _background;
@@ -113,6 +143,7 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotLayoutWrapper : MarginContainer, ILingoFrameworkGfxLayoutWrapper
     {
         private LingoGfxLayoutWrapper _lingoLayoutWrapper;
+        public object FrameworkNode => this;
 
         public LingoGodotLayoutWrapper(LingoGfxLayoutWrapper layoutWrapper)
         {
@@ -120,16 +151,19 @@ namespace LingoEngine.LGodot.Gfx
             layoutWrapper.Init(this);
             var content = layoutWrapper.Content.FrameworkObj;
 
-            if (content is Control control)
+            if (content is Node node)
             {
-                AddChild(control);
-                control.SizeFlagsHorizontal = SizeFlags.Fill;
-                control.SizeFlagsVertical = SizeFlags.Fill;
+                AddChild(node);
+                if (content is Control control)
+                {
+                    control.SizeFlagsHorizontal = SizeFlags.Fill;
+                    control.SizeFlagsVertical = SizeFlags.Fill;
+                }
             }
             else
             {
                 // todo: use ILogger
-                GD.PushError($"Content of layout wrapper '{layoutWrapper.Name}' is not a Control: {content.GetType().Name}");
+                //GD.PushError($"Content of layout wrapper '{layoutWrapper.Name}' is not a Control: {content.GetType().Name}");
             }
         }
 
@@ -138,7 +172,7 @@ namespace LingoEngine.LGodot.Gfx
         public float Width
         {
             get => Size.X;
-            set => CustomMinimumSize = new Vector2(value, CustomMinimumSize.Y);
+            set => Size = new Vector2(value, Size.Y);
         }
         public float Height
         {

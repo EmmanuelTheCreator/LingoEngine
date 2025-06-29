@@ -31,7 +31,7 @@ namespace LingoEngine.SDL2.Gfx
         public LingoNumberType NumberType { get; set; } = LingoNumberType.Float;
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
         public event Action? ValueChanged;
-
+        public object FrameworkNode => this;
         public void Dispose() { }
     }
 }

@@ -15,6 +15,9 @@ namespace LingoEngine.SDL2.Gfx
         public LingoOrientation Orientation { get; set; }
         public LingoMargin ItemMargin { get; set; }
         public LingoMargin Margin { get; set; }
+        public object FrameworkNode => this;
+
+
 
         public SdlGfxWrapPanel(LingoOrientation orientation)
         {
@@ -23,21 +26,26 @@ namespace LingoEngine.SDL2.Gfx
             Margin = LingoMargin.Zero;
         }
 
-        public void AddChild(ILingoFrameworkGfxLayoutNode child) { }
 
         public void Dispose() { }
 
-        public void RemoveChild(ILingoFrameworkGfxLayoutNode child)
+
+        public void AddItem(ILingoFrameworkGfxNode child)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren()
+        public void RemoveItem(ILingoFrameworkGfxNode child)
         {
             throw new NotImplementedException();
         }
 
-        public ILingoFrameworkGfxLayoutNode? GetChild(int index)
+        IEnumerable<ILingoFrameworkGfxNode> ILingoFrameworkGfxWrapPanel.GetItems()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ILingoFrameworkGfxNode? GetItem(int index)
         {
             throw new NotImplementedException();
         }

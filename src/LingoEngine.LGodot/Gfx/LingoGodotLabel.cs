@@ -119,6 +119,8 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
+        public object FrameworkNode => this;
+
         public new void Dispose()
         {
             QueueFree();
