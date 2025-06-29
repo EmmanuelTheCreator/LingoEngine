@@ -24,6 +24,11 @@ namespace LingoEngine.LGodot.Gfx
             input.Init(this);
             TextChanged += _ => _onValueChanged?.Invoke();
             if (_onChange != null) TextChanged += _ => _onChange(Value);
+            CustomMinimumSize = new Vector2(2, 2);
+            //Height = 8;
+            //Width = 100;
+            SizeFlagsHorizontal = 0;
+            SizeFlagsVertical = 0;
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -62,17 +67,17 @@ namespace LingoEngine.LGodot.Gfx
             get => _font;
             set
             {
-                _font = value;
-                if (string.IsNullOrEmpty(value))
-                {
-                    RemoveThemeFontOverride("font");
-                }
-                else
-                {
-                    var font = _fontManager.Get<FontFile>(value);
-                    if (font != null)
-                        AddThemeFontOverride("font", font);
-                }
+                //_font = value;
+                //if (string.IsNullOrEmpty(value))
+                //{
+                //    RemoveThemeFontOverride("font");
+                //}
+                //else
+                //{
+                //    var font = _fontManager.Get<FontFile>(value);
+                //    if (font != null)
+                //        AddThemeFontOverride("font", font);
+                //}
             }
         }
         private int _fontSize;
@@ -82,26 +87,26 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _fontSize = value;
-                Font? baseFont;
-                if (string.IsNullOrEmpty(_font))
-                    baseFont = _fontManager.GetDefaultFont<Font>();
-                else
-                    baseFont = _fontManager.Get<Font>(_font);
+            //    Font? baseFont;
+            //    if (string.IsNullOrEmpty(_font))
+            //        baseFont = _fontManager.GetDefaultFont<Font>();
+            //    else
+            //        baseFont = _fontManager.Get<Font>(_font);
 
-                if (baseFont == null)
-                    return;
+            //    if (baseFont == null)
+            //        return;
 
-                // Create a FontVariation with size applied through theme variation
-                var variation = new FontVariation
-                {
-                    BaseFont = baseFont
-                };
+            //    // Create a FontVariation with size applied through theme variation
+            //    var variation = new FontVariation
+            //    {
+            //        BaseFont = baseFont
+            //    };
 
-                // Set the size override via theme properties
-                var theme = new Theme();
-                theme.SetFont("font", "LineEdit", variation);
-                theme.SetFontSize("font_size", "LineEdit", _fontSize);
-                Theme = theme;
+            //    // Set the size override via theme properties
+            //    var theme = new Theme();
+            //    theme.SetFont("font", "LineEdit", variation);
+            //    theme.SetFontSize("font_size", "LineEdit", _fontSize);
+            //    Theme = theme;
             }
         }
         public LingoMargin Margin
@@ -110,10 +115,10 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _margin = value;
-                AddThemeConstantOverride("margin_left", (int)_margin.Left);
-                AddThemeConstantOverride("margin_right", (int)_margin.Right);
-                AddThemeConstantOverride("margin_top", (int)_margin.Top);
-                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+                //AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                //AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                //AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                //AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
 

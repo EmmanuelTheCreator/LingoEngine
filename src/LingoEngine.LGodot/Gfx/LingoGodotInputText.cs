@@ -23,10 +23,11 @@ namespace LingoEngine.LGodot.Gfx
             input.Init(this);
             TextChanged += _ => _onValueChanged?.Invoke();
             CustomMinimumSize = new Vector2(2, 2);
-            Height = 8;
-            Width = 100;
+            //Height = 8;
+            //Width = 100;
             SizeFlagsHorizontal =0;
             SizeFlagsVertical =0;
+            //Size = new Vector2(200, 30);
 
         }
 
@@ -96,7 +97,7 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _fontColor = value;
-                AddThemeColorOverride("font_color", _fontColor);
+                //AddThemeColorOverride("font_color", _fontColor);
             }
         }
 
