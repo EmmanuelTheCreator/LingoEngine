@@ -93,19 +93,19 @@ namespace LingoEngine.FrameworkCommunication
         LingoGfxScrollContainer CreateScrollContainer(string name);
 
         /// <summary>Creates a single line text input.</summary>
-        LingoGfxInputText CreateInputText(string name, int maxLength = 0);
+        LingoGfxInputText CreateInputText(string name, int maxLength = 0, Action<string>? onChange = null);
 
         /// <summary>Creates a numeric input field.</summary>
-        LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100);
+        LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100, Action<float>? onChange = null);
 
         /// <summary>Creates a spin box input.</summary>
-        LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100);
+        LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100, Action<float>? onChange = null);
 
         /// <summary>Creates a checkbox input.</summary>
-        LingoGfxInputCheckbox CreateInputCheckbox(string name);
+        LingoGfxInputCheckbox CreateInputCheckbox(string name, Action<bool>? onChange = null);
 
         /// <summary>Creates a combo box input.</summary>
-        LingoGfxInputCombobox CreateInputCombobox(string name);
+        LingoGfxInputCombobox CreateInputCombobox(string name, Action<string?>? onChange = null);
 
         /// <summary>Creates a simple text label.</summary>
         LingoGfxLabel CreateLabel(string name, string text = "");

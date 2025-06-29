@@ -14,7 +14,7 @@ namespace LingoEngine.LGodot.Gfx
 
         public object FrameworkNode => this;
 
-        public LingoGodotButton(LingoGfxButton button)
+        public LingoGodotButton(LingoGfxButton button, LingoEngine.Styles.ILingoFontManager lingoFontManager)
         {
             button.Init(this);
             Pressed += () => _pressed?.Invoke();

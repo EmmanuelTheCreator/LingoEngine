@@ -20,12 +20,12 @@ namespace LingoEngine.Gfx
             set => _framework.ItemMargin = value;
         }
 
-        public void AddChild(ILingoGfxNode node) => _framework.AddItem(node.Framework<ILingoFrameworkGfxNode>());
-        public void AddChild(ILingoFrameworkGfxNode node) => _framework.AddItem(node);
-        public void RemoveChild(ILingoGfxNode node) => _framework.RemoveItem(node.Framework<ILingoFrameworkGfxNode>());
-        public void RemoveChild(ILingoFrameworkGfxNode node) => _framework.RemoveItem(node);
-        public IEnumerable<ILingoFrameworkGfxNode> GetChildren() => _framework.GetItems();
+        public void AddItem(ILingoGfxNode node) => _framework.AddItem(node.Framework<ILingoFrameworkGfxNode>());
+        public void AddItem(ILingoFrameworkGfxNode node) => _framework.AddItem(node);
+        public void RemoveItem(ILingoGfxNode node) => _framework.RemoveItem(node.Framework<ILingoFrameworkGfxNode>());
+        public void RemoveItem(ILingoFrameworkGfxNode node) => _framework.RemoveItem(node);
+        public IEnumerable<ILingoFrameworkGfxNode> GetItems() => _framework.GetItems();
 
-        public ILingoFrameworkGfxNode? GetChild(int index) => _framework.GetItem(index);
+        public ILingoFrameworkGfxNode? GetItem(int index) => _framework.GetItem(index);
     }
 }

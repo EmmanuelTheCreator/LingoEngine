@@ -13,5 +13,8 @@ namespace LingoEngine.Director.Core.Styles
         public static LingoColor Border_Thumb = new LingoColor(64, 64, 64);
 
         public static LingoColor TextColorLabels = new LingoColor(30, 30, 30);
+
+        public static LingoColor InputText = new LingoColor(30, 30, 30);
+        public static LingoColor InputBorder = new LingoColor(30, 30, 30);
     }
 }

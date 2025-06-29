@@ -10,24 +10,31 @@ namespace LingoEngine.LGodot.Gfx
     /// </summary>
     public partial class LingoGodotInputText : LineEdit, ILingoFrameworkGfxInputText, IDisposable
     {
+        private readonly Action<string>? _onChange;
         private readonly ILingoFontManager _fontManager;
         private string? _font;
         private LingoMargin _margin = LingoMargin.Zero;
         private event Action? _onValueChanged;
 
-        public LingoGodotInputText(LingoGfxInputText input, ILingoFontManager fontManager)
+        public LingoGodotInputText(LingoGfxInputText input, ILingoFontManager fontManager, Action<string>? onChange)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill;
-
+            _onChange = onChange;
             _fontManager = fontManager;
             input.Init(this);
             TextChanged += _ => _onValueChanged?.Invoke();
+            CustomMinimumSize = new Vector2(2, 2);
+            Height = 8;
+            Width = 100;
+            SizeFlagsHorizontal =0;
+            SizeFlagsVertical =0;
+
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
         public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public float Height { get => Size.Y;
+            set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get => Editable; set => Editable = value; }
 
@@ -40,16 +47,56 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _font = value;
-                if (string.IsNullOrEmpty(value))
-                {
-                    RemoveThemeFontOverride("font");
-                }
-                else
-                {
-                    var font = _fontManager.Get<FontFile>(value);
-                    if (font != null)
-                        AddThemeFontOverride("font", font);
-                }
+                //if (string.IsNullOrEmpty(value))
+                //{
+                //    RemoveThemeFontOverride("font");
+                //}
+                //else
+                //{
+                //    var font = _fontManager.Get<FontFile>(value);
+                //    if (font != null)
+                //        AddThemeFontOverride("font", font);
+                //}
+            }
+        }
+        private int _fontSize;
+        public int FontSize
+        {
+            get => _fontSize;
+            set
+            {
+                _fontSize = value;
+
+                //Font? baseFont = null;
+                //if (string.IsNullOrEmpty(_font))
+                //    baseFont = _fontManager.GetDefaultFont<Font>();
+                //else
+                //    baseFont = _fontManager.Get<Font>(_font);
+                //if (baseFont == null)
+                //    return;
+
+                //// Create a FontVariation with size applied through theme variation
+                //var variation = new FontVariation
+                //{
+                //    BaseFont = baseFont
+                //};
+
+                //// Set the size override via theme properties
+                //var theme = new Theme();
+                //theme.SetFont("font", "LineEdit", variation);
+                //theme.SetFontSize("font_size", "LineEdit", _fontSize);
+                //Theme = theme;
+            }
+        }
+        private Color _fontColor = Colors.Black;
+
+        public Color FontColor
+        {
+            get => _fontColor;
+            set
+            {
+                _fontColor = value;
+                AddThemeColorOverride("font_color", _fontColor);
             }
         }
 
@@ -59,10 +106,10 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _margin = value;
-                AddThemeConstantOverride("margin_left", (int)_margin.Left);
-                AddThemeConstantOverride("margin_right", (int)_margin.Right);
-                AddThemeConstantOverride("margin_top", (int)_margin.Top);
-                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+                //AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                //AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                //AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                //AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
         public object FrameworkNode => this;

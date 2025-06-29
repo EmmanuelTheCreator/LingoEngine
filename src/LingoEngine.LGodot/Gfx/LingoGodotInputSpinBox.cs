@@ -1,17 +1,20 @@
 using Godot;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
-using System;
 
 namespace LingoEngine.LGodot.Gfx
 {
     public partial class LingoGodotSpinBox : SpinBox, ILingoFrameworkGfxSpinBox, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
-        public LingoGodotSpinBox(LingoGfxSpinBox spin)
+        private Action<float>? _onChange;
+
+        public LingoGodotSpinBox(LingoGfxSpinBox spin, LingoEngine.Styles.ILingoFontManager lingoFontManager, Action<float>? onChange)
         {
+            _onChange = onChange;
             spin.Init(this);
-            this.ValueChanged += _ => _onValueChanged?.Invoke();
+            ValueChanged += _ => _onValueChanged?.Invoke();
+            if (_onChange != null) ValueChanged += _ => _onChange(Value);
         }
         private event Action? _onValueChanged;
 
@@ -51,6 +54,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
+            ValueChanged -= _ => _onValueChanged?.Invoke();
+            if (_onChange != null) ValueChanged -= _ => _onChange(Value);
             QueueFree();
             base.Dispose();
         }
