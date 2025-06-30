@@ -14,18 +14,20 @@ namespace LingoEngine.LGodot.Gfx
         private LingoMargin _margin = LingoMargin.Zero;
         private readonly Action<LingoColor>? _onChange;
         private event Action? _onValueChanged;
-        private Action<Color>? _colorChangedHandler;
 
         public LingoGodotColorPicker(LingoGfxColorPicker picker, Action<LingoColor>? onChange)
         {
             _onChange = onChange;
             picker.Init(this);
-            _colorChangedHandler = c =>
-            {
-                _onValueChanged?.Invoke();
-                _onChange?.Invoke(c.ToLingoColor());
-            };
-            ColorChanged += _colorChangedHandler;
+            Width = 20;
+            Height = 20;
+            ColorChanged += ColorChangedHandler;
+        }
+
+        private void ColorChangedHandler(Color color)
+        {
+            _onValueChanged?.Invoke();
+            _onChange?.Invoke(color.ToLingoColor());
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -49,7 +51,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public LingoColor Color
+        public new LingoColor Color
         {
             get => base.Color.ToLingoColor();
             set => base.Color = value.ToGodotColor();
@@ -65,8 +67,7 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
-            if (_colorChangedHandler != null)
-                ColorChanged -= _colorChangedHandler;
+            ColorChanged -= ColorChangedHandler;
             QueueFree();
             base.Dispose();
         }

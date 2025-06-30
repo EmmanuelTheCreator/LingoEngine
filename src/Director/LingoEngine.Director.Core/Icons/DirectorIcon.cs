@@ -35,19 +35,47 @@ namespace LingoEngine.Director.Core.Icons
         Crosshair,
         Eraser,
         Hand,
+
         Magnifier,
         ColorPicker,
         PaintBucket,
         Text,
         Pencil,
+
+        PaintAirBrush,
         PaintBrush,
         PaintLineCurve,
         PaintStraightLine,
         PaintSquareFilled,
+
         PaintSquare,
         PaintCircleFilled,
         PaintCircle,
         PaintFreeLineFilled,
-        PaintFreeLine
+        PaintFreeLine,
+
+        // Painter2_Icons.png (continuing index)
+        Lock,
+        Editable,
+        Moveable,
+        OrionSkin,
+        FlipHorizontal,
+
+        FlipVertical,
+        PaintRotateLeft,
+        PaintRotateRight,
+        PaintRotateFree,
+        PaintSkew,
+
+        PaintWrap,
+        PaintPerspective,
+        PaintSmooth,
+        PaintTraceEdges,
+        PaintInvert,
+
+        PaintLighten,
+        PaintDarken,
+        PaintFill,
+        PaintSwitchColors
     }
 }

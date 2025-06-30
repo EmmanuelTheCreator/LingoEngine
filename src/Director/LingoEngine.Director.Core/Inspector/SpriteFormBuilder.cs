@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
+using LingoEngine.Director.Core.UI;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
@@ -10,30 +12,39 @@ namespace LingoEngine.Director.Core.Inspector
     /// <summary>
     /// Helper to fluently build sprite property forms with automatic column layout.
     /// </summary>
-    internal class SpriteFormBuilder
+    public class GfxPanelBuilder
     {
         private readonly ILingoFrameworkFactory _factory;
         private readonly LingoGfxPanel _panel;
         private int _columns = 1;
         private int _currentColumn;
         private int _currentRow;
-        private readonly float _rowHeight = 22f;
-        private readonly float _labelWidth = 50f;
-        private readonly float _inputWidth = 60f;
-        private readonly float _gap = 5f;
-        private readonly float _margin = 5f;
+        private readonly float _rowHeight = 24f;
+        private readonly float _labelSmallWidth = 24f;
+        private readonly float _labelLargeWidth = 36f;
+        private readonly float _inputWidth = 24f;
+        private readonly float _gap = 1f;
+        private readonly float _margin = 4f;
+        private readonly float _totalWidth = 254f; // or panel.Width if dynamic
 
-        private float ColumnWidth => _labelWidth + _inputWidth + _gap * 2;
+
+        //private float ColumnWidth => GetLabelWidth();
+        private float ColumnWidth => (_totalWidth - (_margin * 2)) / _columns;
+
+
+        private float GetLabelWidth() => (_columns >= 4 
+                                            ? _labelSmallWidth : _labelLargeWidth)
+                                + _inputWidth + _gap * 2;
 
         public float CurrentHeight => (_currentRow + 1) * _rowHeight;
 
-        public SpriteFormBuilder(LingoGfxPanel panel, ILingoFrameworkFactory factory)
+        public GfxPanelBuilder(LingoGfxPanel panel, ILingoFrameworkFactory factory)
         {
             _panel = panel;
             _factory = factory;
         }
 
-        public SpriteFormBuilder Columns(int cols)
+        public GfxPanelBuilder Columns(int cols)
         {
             _columns = Math.Max(1, cols);
             _currentColumn = 0;
@@ -41,64 +52,83 @@ namespace LingoEngine.Director.Core.Inspector
         }
 
         private float ColumnX(int col) => _margin + col * ColumnWidth;
-
-        private (float labelX, float inputX, float y) Layout(bool showLabel, int inputSpan)
+        //private float ComputeInputWidth(int span) => _inputWidth * span + _gap * 2 * (span - 1);
+        private float ComputeInputWidth(int span, bool hasLabel, bool stretch)
         {
-            float baseX = ColumnX(_currentColumn);
+            if (stretch)
+                return MathF.Floor(ColumnWidth * span - _gap);
+            else
+                return MathF.Min(ColumnWidth - _gap, 26f); // or a fixed width for tight numeric fields
+        }
+        private float ComputeInputWidth(int span) => ComputeInputWidth(span, true, true); // default stretch=true
+
+
+
+        private (float labelX, float inputX, float y) Layout(int labelSpan, int inputSpan)
+        {
             float y = _currentRow * _rowHeight;
+            float baseX = ColumnX(_currentColumn);
             float labelX = baseX;
-            float inputX = baseX + (showLabel ? _labelWidth + _gap : _gap);
+            float inputX = baseX + ColumnWidth * labelSpan;
             return (labelX, inputX, y);
         }
 
-        private float ComputeInputWidth(int span)
-        {
-            return _inputWidth * span + _gap * 2 * (span - 1);
-        }
+
+
 
         private void Advance(int span)
         {
             _currentColumn += span;
             while (_currentColumn >= _columns)
             {
-                _currentColumn -= _columns;
+                _currentColumn = 0;
                 _currentRow++;
             }
         }
 
-        public SpriteFormBuilder AddTextInput<T>(string name, string label, T target, Expression<Func<T, string?>> property, int inputSpan = 1)
+
+        public GfxPanelBuilder AddTextInput<T>(string name, string label, T target, Expression<Func<T, string?>> property, int inputSpan = 1, int labelSpan = 1)
         {
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();
-            var (xLabel, xInput, y) = Layout(true, inputSpan);
+            var (xLabel, xInput, y) = Layout(labelSpan, inputSpan);
             _panel.SetLabelAt(_factory, name + "Label", xLabel, y, label);
-            var input = _panel.SetInputTextAt(_factory, target, name + "Input", xInput, y, (int)ComputeInputWidth(inputSpan), property);
+            var input = _panel.SetInputTextAt(_factory, target, name + "Input", xInput, y, (int)ComputeInputWidth(inputSpan, true, stretch: true), property);
             input.Text = getter(target) ?? string.Empty;
-            Advance(1 + inputSpan);
+            Advance(labelSpan + inputSpan);
             return this;
         }
 
-        public SpriteFormBuilder AddNumericInput<T>(string name, string label, T target, Expression<Func<T, float>> property, int inputSpan = 1, bool showLabel = true)
+        public GfxPanelBuilder AddNumericInput<T>(string name, string label, T target, Expression<Func<T, float>> property,int inputSpan = 1, bool showLabel = true, bool stretch = false, int labelSpan = 1)
         {
-            var (xLabel, xInput, y) = Layout(showLabel, inputSpan);
+            var (xLabel, xInput, y) = Layout(showLabel?labelSpan:0, inputSpan);
             if (showLabel)
                 _panel.SetLabelAt(_factory, name + "Label", xLabel, y, label);
-            _panel.SetInputNumberAt(_factory, target, name + "Input", xInput, y, (int)ComputeInputWidth(inputSpan), property);
-            Advance((showLabel ? 1 : 0) + inputSpan);
+            _panel.SetInputNumberAt(_factory, target, name + "Input", xInput, y,
+                (int)ComputeInputWidth(inputSpan, showLabel, stretch), property);
+            Advance((showLabel ? labelSpan : 0) + inputSpan);
+
+
+
             return this;
         }
 
-        public SpriteFormBuilder AddColorInput<T>(string name, string label, T target, Expression<Func<T, LingoColor>> property, int inputSpan = 1)
+        public GfxPanelBuilder AddColorInput<T>(string name, string label, T target,Expression<Func<T, LingoColor>> property,int inputSpan = 1, int labelSpan = 1)
         {
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();
-            var (xLabel, xInput, y) = Layout(true, inputSpan);
+            var (xLabel, xInput, y) = Layout(labelSpan, inputSpan);
             _panel.SetLabelAt(_factory, name + "Label", xLabel, y, label);
             var picker = _factory.CreateColorPicker(name + "Picker", color => setter(target, color));
             picker.Color = getter(target);
-            picker.Width = ComputeInputWidth(inputSpan);
+            //picker.Width = ComputeInputWidth(inputSpan);
             _panel.AddItem(picker, xInput, y);
-            Advance(1 + inputSpan);
+            Advance(labelSpan + inputSpan);
+            return this;
+        }
+        public GfxPanelBuilder Finalize()
+        {
+            _panel.Height = CurrentHeight;
             return this;
         }
     }

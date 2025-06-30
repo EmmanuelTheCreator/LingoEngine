@@ -256,39 +256,45 @@ namespace LingoEngine.Director.Core.Inspector
         private void AddSpriteTab(LingoSprite sprite)
         {
             var wrapContainer = AddTab(sprite.Name);
-
             var containerIcons = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "SpriteDetailIcons");
-            wrapContainer.AddItem(containerIcons);
-
             var container = _factory.CreatePanel("SpriteDetailPanel");
+            wrapContainer.AddItem(containerIcons);
             wrapContainer.AddItem(container);
 
-            var builder = new SpriteFormBuilder(container, _factory).Columns(4);
+            containerIcons.Margin = new LingoMargin(5, 5, 5, 5);
+            containerIcons.Compose(_factory)
+                .AddStateButton("SpriteLock", sprite, _iconManager.Get(DirectorIcon.Lock),c => c.Lock)
+                .AddStateButton("SpriteFlipH", sprite, _iconManager.Get(DirectorIcon.FlipHorizontal), c => c.FlipH,"")
+                .AddStateButton("SpriteFlipV", sprite, _iconManager.Get(DirectorIcon.FlipVertical), c => c.FlipV)
+                ;
 
-            builder.AddTextInput("Name", "Name:", sprite, s => s.Name, inputSpan: 3)
-                   .Columns(2)
-                   .AddNumericInput("LocH", "X:", sprite, s => s.LocH)
-                   .AddNumericInput("LocV", "Y:", sprite, s => s.LocV)
-                   .Columns(4)
-                   .AddNumericInput("Left", "L:", sprite, s => s.Left)
-                   .AddNumericInput("Top", "T:", sprite, s => s.Top)
-                   .AddNumericInput("Right", "R:", sprite, s => s.Right)
-                   .AddNumericInput("Bottom", "B:", sprite, s => s.Bottom)
-                   .Columns(2)
-                   .AddNumericInput("Width", "W:", sprite, s => s.Width)
-                   .AddNumericInput("Height", "H:", sprite, s => s.Height)
-                   .Columns(4)
-                   .AddNumericInput("Ink", "Ink:", sprite, s => s.Ink, inputSpan: 2)
-                   .AddNumericInput("Blend", "%", sprite, s => s.Blend, showLabel: false)
-                   .Columns(2)
-                   .AddNumericInput("BeginFrame", "Start Frame:", sprite, s => s.BeginFrame)
-                   .AddNumericInput("EndFrame", "End:", sprite, s => s.EndFrame)
-                   .AddNumericInput("Rotation", "Rotation:", sprite, s => s.Rotation)
-                   .AddNumericInput("Skew", "Skew:", sprite, s => s.Skew)
-                   .AddColorInput("ForeColor", "Fore:", sprite, s => s.ForeColor)
-                   .AddColorInput("BackColor", "Back:", sprite, s => s.BackColor);
+          
 
-            container.Height = builder.CurrentHeight;
+
+            container.Compose(_factory)
+                   .Columns(4)
+                   .AddTextInput("SpriteName", "Name:", sprite, s => s.Name, inputSpan: 3)
+                   .Columns(8)
+                   .AddNumericInput("SpriteLocH", "X:", sprite, s => s.LocH)
+                   .AddNumericInput("SpriteLocV", "Y:", sprite, s => s.LocV, inputSpan: 5)
+                   .AddNumericInput("SpriteLeft", "L:", sprite, s => s.Left)
+                   .AddNumericInput("SpriteTop", "T:", sprite, s => s.Top)
+                   .AddNumericInput("SpriteRight", "R:", sprite, s => s.Right)
+                   .AddNumericInput("SpriteBottom", "B:", sprite, s => s.Bottom)
+                   .AddNumericInput("SpriteWidth", "W:", sprite, s => s.Width)
+                   .AddNumericInput("SpriteHeight", "H:", sprite, s => s.Height, inputSpan: 5)
+                   .AddNumericInput("SpriteInk", "Ink:", sprite, s => s.Ink, inputSpan: 6)
+                   .AddNumericInput("SpriteBlend", "%", sprite, s => s.Blend, showLabel: false)
+                   .AddNumericInput("SpriteBeginFrame", "StartFrame:", sprite, s => s.BeginFrame, labelSpan: 3)
+                   .AddNumericInput("SpriteEndFrame", "End:", sprite, s => s.EndFrame, inputSpan: 1, labelSpan: 3)
+                   .AddNumericInput("SpriteRotation", "Rotation:", sprite, s => s.Rotation, labelSpan: 3)
+                   .AddNumericInput("SpriteSkew", "Skew:", sprite, s => s.Skew, inputSpan: 1, labelSpan: 3)
+                   .AddColorInput("SpriteForeColor", "Foreground:", sprite, s => s.ForeColor, inputSpan: 1, labelSpan: 3)
+                   .AddColorInput("SpriteBackColor", "Background:", sprite, s => s.BackColor, inputSpan: 1, labelSpan: 3)
+                   .Finalize();
+                   ;
+
+            
 
         }
         private LingoGfxWrapPanel AddTab(string name)
