@@ -302,6 +302,14 @@ namespace LingoEngine.LGodot.Core
             return input;
         }
 
+        public LingoGfxColorPicker CreateColorPicker(string name, Action<LingoColor>? onChange = null)
+        {
+            var picker = new LingoGfxColorPicker();
+            var impl = new LingoGodotColorPicker(picker, onChange);
+            picker.Name = name;
+            return picker;
+        }
+
         public LingoGfxLabel CreateLabel(string name, string text = "")
         {
             var label = new LingoGfxLabel();
