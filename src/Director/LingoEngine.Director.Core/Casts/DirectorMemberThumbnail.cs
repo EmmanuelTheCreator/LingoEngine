@@ -36,6 +36,8 @@ public class DirectorMemberThumbnail : IDisposable
     public void SetMember(ILingoMember member)
     {
         Canvas.Clear(DirectorColors.BG_WhiteMenus);
+        Canvas.DrawRect(LingoRect.New(1, 1, ThumbWidth-2, ThumbHeight-2), LingoColorList.White, true);
+        Canvas.DrawRect(LingoRect.New(1, 1, ThumbWidth-2, ThumbHeight-2), LingoColorList.Gray, false);
         switch (member)
         {
             case LingoMemberBitmap pic:
@@ -56,8 +58,8 @@ public class DirectorMemberThumbnail : IDisposable
             {
                 var miniIconSize = 16;
                 var data = _iconManager.Get(icon.Value);
-                var x = ThumbWidth - miniIconSize;
-                var y = ThumbHeight - miniIconSize;
+                var x = ThumbWidth - miniIconSize-2;
+                var y = ThumbHeight - miniIconSize-2;
                 Canvas.DrawRect(LingoRect.New(x,y, miniIconSize, miniIconSize), LingoColorList.White,true);
                 Canvas.DrawPicture(data, miniIconSize-2, miniIconSize-2, new LingoPoint(x+1, y+1));
             }
@@ -72,7 +74,8 @@ public class DirectorMemberThumbnail : IDisposable
             return;
         var w = impl.Width;
         var h = impl.Height;
-        Canvas.DrawPicture(impl.Texture, ThumbWidth-2, ThumbHeight-2, new LingoPoint(1, 1));
+       
+        Canvas.DrawPicture(impl.Texture, ThumbWidth-4, ThumbHeight-4, new LingoPoint(2, 2));
     }
 
     private void DrawText(string text)

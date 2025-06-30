@@ -38,7 +38,7 @@ public sealed class DirectorGodotStyle
         theme.SetFontSize("font_size", "Label", 11);
         theme.SetFontSize("font_size", "Tree", 11);
         theme.SetFontSize("title_button_font_size", "Tree", 12);
-
+        theme.SetColor("font_color", "Label", Colors.Black);
         SetCloseButtonStyle(theme);
         //SetInputStyles(theme);
         SetTabColors(theme);

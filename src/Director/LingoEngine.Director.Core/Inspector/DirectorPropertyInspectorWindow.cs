@@ -96,7 +96,6 @@ namespace LingoEngine.Director.Core.Inspector
             thumbPanel.BorderWidth = 1;
             thumbPanel.AddItem(thumb.Canvas);
             _thumb = thumb;
-            var lineHeight = 11;
 
             var container = _factory.CreatePanel("InfoContainer");
             container.X = 50;
@@ -343,6 +342,9 @@ namespace LingoEngine.Director.Core.Inspector
                    .AddCheckBox("BitmapHighLight", "Hightlight: ",member,x => x.Hilite,2,true,2)
                    //.AddLabel("BitmapBitDepth", "BitDepth: ", 2)
                    //.AddLabel("BitmapBitDepthV", member.ColorDepth,2)
+                   .Columns(8)
+                   .AddNumericInput("BitmapRegPointX", "RegPoint X:", member, s => s.RegPoint.X, inputSpan: 1, labelSpan: 3)
+                   .AddNumericInput("BitmapRegPointY", "Y:", member, s => s.RegPoint.Y, inputSpan: 4, labelSpan: 1)
                    .Finalize()
                    ;
         }

@@ -11,6 +11,8 @@ using LingoEngine.Director.Core.Windowing.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Director.Core.Styles;
+using LingoEngine.LGodot.Primitives;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
@@ -35,7 +37,7 @@ namespace LingoEngine.Director.LGodot.Casts
         private bool _dragging;
         private Vector2 _dragStart;
 
-        public int LabelHeight { get; set; } = 15;
+        public int LabelHeight { get; set; } = 12;
         public int Width { get; set; } = 50;
         public int Height { get; set; } = 50;
         public ILingoMember LingoMember => _lingoMember;
@@ -50,7 +52,7 @@ namespace LingoEngine.Director.LGodot.Casts
 
         public DirGodotCastItem(ILingoMember element, int number, Action<DirGodotCastItem> onSelect, Color selectedColor, ILingoCommandManager commandManager, ILingoFrameworkFactory factory, IDirectorIconManager iconManager)
         {
-            Name = "CastItem " + number+". "+ element.Name;
+            Name = "CastItem " + number + ". " + element.Name;
             _lingoMember = element;
             _onSelect = onSelect;
             _commandManager = commandManager;
@@ -58,8 +60,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _selectedColor = selectedColor;
             CustomMinimumSize = new Vector2(50, 50);
             MouseFilter = MouseFilterEnum.Stop;
-            _selectedLabelStyle.BgColor = selectedColor;
-            _normalLabelStyle.BgColor = Colors.DimGray;
+
 
 
             // Selection background - slightly larger than the item itself
@@ -86,7 +87,7 @@ namespace LingoEngine.Director.LGodot.Casts
             _bg = new ColorRect
             {
                 Name = "ItemBackground",
-                Color = Colors.DimGray,
+                Color = Colors.White,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
                 SizeFlagsVertical = SizeFlags.ExpandFill,
                 AnchorLeft = 0,
@@ -107,19 +108,15 @@ namespace LingoEngine.Director.LGodot.Casts
             thumbCanvas.MouseFilter = MouseFilterEnum.Ignore;
             AddChild(thumbCanvas);
 
-            // separator line above the caption
-            _separator = new ColorRect
-            {
-                Name = "NameSeparator",
-                Color = Colors.DarkGray,
-                CustomMinimumSize = new Vector2(Width, 1),
-                MouseFilter = MouseFilterEnum.Ignore
-            };
-            AddChild(_separator);
-            _separator.Position = new Vector2(0, Height - LabelHeight - 1);
-
+          
             // Bottom label
-            _caption = new Label
+            _caption = CreateCaption(element, number, selectedColor);
+
+        }
+
+        private Label CreateCaption(ILingoMember element, int number, Color selectedColor)
+        {
+            var caption = new Label
             {
                 Name = "ItemLabel",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -129,24 +126,25 @@ namespace LingoEngine.Director.LGodot.Casts
                     FontColor = Colors.Black,
                 }
             };
-            AddChild(_caption);
-            _caption.Text = !string.IsNullOrWhiteSpace(element.Name) ? element.NumberInCast + "." + element.Name : number.ToString();
-            _caption.AddThemeColorOverride("font_color", Colors.Black);
+            _selectedLabelStyle.BgColor = selectedColor;
+            _normalLabelStyle.BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor();
+            AddChild(caption);
+            caption.Text = !string.IsNullOrWhiteSpace(element.Name) ? element.NumberInCast + "." + element.Name : number.ToString();
+            caption.AddThemeColorOverride("font_color", Colors.Black);
             // Apply background style to the label using the "normal" stylebox
-            _caption.AddThemeStyleboxOverride("normal", _normalLabelStyle);
-            _caption.MouseFilter = MouseFilterEnum.Ignore;
-
-            _caption.AnchorLeft = 0;
-            _caption.AnchorRight = 1;
-            _caption.AnchorTop = 1;
-            _caption.AnchorBottom = 1;
-            _caption.OffsetLeft = 0;
-            _caption.OffsetRight = 0;
-            _caption.OffsetBottom = 0;
-            _caption.OffsetTop = -LabelHeight;
-
-            
+            caption.AddThemeStyleboxOverride("normal", _normalLabelStyle);
+            caption.MouseFilter = MouseFilterEnum.Ignore;
+            caption.AnchorLeft = 0;
+            caption.AnchorRight = 1;
+            caption.AnchorTop = 1;
+            caption.AnchorBottom = 1;
+            caption.OffsetLeft = 0;
+            caption.OffsetRight = 0;
+            caption.OffsetBottom = 0;
+            caption.OffsetTop = -LabelHeight;
+            return caption;
         }
+
         public void SetPosition(int x, int y)
         {
             Position = new Vector2(x, y);
