@@ -15,7 +15,7 @@ namespace LingoEngine.SDL2.Gfx
         public string Name { get; set; } = string.Empty;
         public bool Enabled { get; set; } = true;
         public string Text { get; set; } = string.Empty;
-        public Bitmaps.ILingoTexture2D? Texture { get; set; }
+        public Bitmaps.ILingoImageTexture? Texture { get; set; }
         private bool _isOn;
         public bool IsOn
         {
