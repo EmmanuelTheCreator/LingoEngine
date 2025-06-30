@@ -21,6 +21,7 @@ using LingoEngine.Director.Core.Sprites;
 using LingoEngine.Director.Core.Tools;
 using System.Numerics;
 using LingoEngine.Director.Core.UI;
+using LingoEngine.Tools;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -120,36 +121,7 @@ namespace LingoEngine.Director.Core.Inspector
 
         
 
-        private void CreateBehaviorPanel()
-        {
-            _behaviorPanel = _factory.CreatePanel("InspectorTabs");
-            _behaviorBox = _factory.CreateWrapPanel(LingoOrientation.Vertical , "InspectorTabs");
-            _behaviorClose = _factory.CreateButton("InspectorTabs");
-
-            
-            _behaviorPanel.AddItem(_behaviorBox);
-            _behaviorPanel.Visibility = false;
-            //var closeRow = new HBoxContainer();
-            //closeRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
-            //_behaviorClose.Text = "X";
-            //_behaviorClose.Modulate = Colors.Red;
-            //_behaviorClose.CustomMinimumSize = new Vector2(12, 12);
-            //_behaviorClose.Pressed += () => { _behaviorPanel.Visible = false; OnResizing(Size); };
-            //closeRow.AddChild(_behaviorClose);
-            //_behaviorBox.AddChild(closeRow);
-        }
-        private void ShowBehavior(LingoSpriteBehavior behavior)
-        {
-            foreach (var child in _behaviorBox.GetItems())
-            {
-                if (child != _behaviorBox.GetItem(0))
-                    _behaviorBox.RemoveItem(child);
-            }
-            var panel = BuildBehaviorPanel(behavior);
-            _behaviorBox.AddItem(panel);
-            _behaviorPanel.Visibility = true;
-            OnResizing(_lastWidh, _lastHeight);
-        }
+       
 
 
         public void SpriteSelected(ILingoSprite sprite) => ShowObject(sprite);
@@ -181,10 +153,10 @@ namespace LingoEngine.Director.Core.Inspector
                 
             }
 
-            _behaviorPanel.X = 0; 
-            _behaviorPanel.Y = _tabs.Height;
-            _behaviorPanel.Width = width;
-            _behaviorPanel.Height = _tabs.Height;
+            //_behaviorPanel.X = 0; 
+            //_behaviorPanel.Y = _tabs.Height;
+            //_behaviorPanel.Width = width;
+            //_behaviorPanel.Height = _tabs.Height;
         }
 
        
@@ -202,7 +174,7 @@ namespace LingoEngine.Director.Core.Inspector
                 if (member != null)
                 {
                     _thumb.SetMember(member);
-                    SpriteText = $"Sprite : {sp.SpriteNum}: {member.Type}";
+                    SpriteText = $"Sprite {sp.SpriteNum}: {member.Type}";
                 }
             }
             else if (obj is ILingoMember m)
@@ -213,7 +185,7 @@ namespace LingoEngine.Director.Core.Inspector
             }
             if (member != null)
             {
-                MemberText = member.Name;
+                MemberText = $"{member.NumberInCast}. {member.Name}";
                 CastText = GetCastName(member);
             }
             switch (obj)
@@ -235,14 +207,14 @@ namespace LingoEngine.Director.Core.Inspector
 
         private void AddMemberTabs(ILingoMember member)
         {
-            AddTab("Member", member);
+            AddMemberTab(member);
             switch (member)
             {
                 case LingoMemberText text:
                     AddTab("Text", text);
                     break;
                 case LingoMemberBitmap pic:
-                    AddTab("Picture", pic);
+                    AddBitmapTab(pic);
                     break;
                 case LingoMemberSound sound:
                     AddTab("Sound", sound);
@@ -255,11 +227,11 @@ namespace LingoEngine.Director.Core.Inspector
 
         private void AddSpriteTab(LingoSprite sprite)
         {
-            var wrapContainer = AddTab(sprite.Name);
+            CreateBehaviorPanel();
+            var wrapContainer = AddTab("Sprite");
             var containerIcons = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "SpriteDetailIcons");
             var container = _factory.CreatePanel("SpriteDetailPanel");
-            wrapContainer.AddItem(containerIcons);
-            wrapContainer.AddItem(container);
+            
 
             containerIcons.Margin = new LingoMargin(5, 5, 5, 5);
             containerIcons.Compose(_factory)
@@ -267,9 +239,6 @@ namespace LingoEngine.Director.Core.Inspector
                 .AddStateButton("SpriteFlipH", sprite, _iconManager.Get(DirectorIcon.FlipHorizontal), c => c.FlipH,"")
                 .AddStateButton("SpriteFlipV", sprite, _iconManager.Get(DirectorIcon.FlipVertical), c => c.FlipV)
                 ;
-
-          
-
 
             container.Compose(_factory)
                    .Columns(4)
@@ -294,8 +263,88 @@ namespace LingoEngine.Director.Core.Inspector
                    .Finalize();
                    ;
 
-            
+            wrapContainer
+                .AddItem(containerIcons)
+                .AddHLine(_factory, "SpriteSplitterIconHLine", _lastWidh - 10, 5)
+                .AddItem(container)
+                .AddHLine(_factory, "SpriteSplitterIconHLine", _lastWidh - 10, 5)
+                .AddItem(_behaviorPanel)
+                ;
+        }
 
+        private void CreateBehaviorPanel()
+        {
+            _behaviorPanel = _factory.CreatePanel("InspectorTabs");
+            _behaviorBox = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InspectorTabs");
+            //_behaviorClose = _factory.CreateButton("InspectorTabs");
+
+
+            _behaviorPanel.AddItem(_behaviorBox);
+            _behaviorPanel.Visibility = false;
+            //var closeRow = new HBoxContainer();
+            //closeRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+            //_behaviorClose.Text = "X";
+            //_behaviorClose.Modulate = Colors.Red;
+            //_behaviorClose.CustomMinimumSize = new Vector2(12, 12);
+            //_behaviorClose.Pressed += () => { _behaviorPanel.Visible = false; OnResizing(Size); };
+            //closeRow.AddChild(_behaviorClose);
+            //_behaviorBox.AddChild(closeRow);
+        }
+        private void ShowBehavior(LingoSpriteBehavior behavior)
+        {
+            foreach (var child in _behaviorBox.GetItems())
+            {
+                if (child != _behaviorBox.GetItem(0))
+                    _behaviorBox.RemoveItem(child);
+            }
+            var panel = BuildBehaviorPanel(behavior);
+            _behaviorBox.AddItem(panel);
+            _behaviorPanel.Visibility = true;
+            OnResizing(_lastWidh, _lastHeight);
+        }
+
+        private void AddMemberTab(ILingoMember member)
+        {
+            var wrapContainer = AddTab("Member");
+            var container = _factory.CreatePanel("MemberDetailPanel");
+            wrapContainer
+                .AddItem(container)
+                ;
+
+            container.Compose(_factory)
+                   .Columns(4)
+                   .AddTextInput("MemberName", "Name:", member, s => s.Name, inputSpan: 3)
+                   .Columns(4)
+                   .AddLabel("MemberSize","Size: ",2)
+                   .AddLabel("MemberSizeV", CommonExtensions.BytesToShortString(member.Size),2)
+                   .AddLabel("MemberCreationDate","Created: ",2)
+                   .AddLabel("MemberCreationDateV",member.CreationDate.ToString("dd/MM/yyyy hh:mm"),2)
+                   .AddLabel("MemberModifyDate","Modified: ",2)
+                   .AddLabel("MemberModifyDateV",member.ModifiedDate.ToString("dd/MM/yyyy hh:mm"),2)
+                   .Columns(4)
+                   .AddTextInput("MemberFileName", "FileName:", member, s => s.FileName, inputSpan: 3)
+                   .Columns(4)
+                   .AddTextInput("MemberComments", "Comments:", member, s => s.Comments, inputSpan: 3)
+                   .Finalize()
+                   ;
+        } 
+        private void AddBitmapTab(LingoMemberBitmap member)
+        {
+            var wrapContainer = AddTab("Bitmap");
+            var container = _factory.CreatePanel("MemberDetailPanel");
+            wrapContainer
+                .AddItem(container)
+                ;
+
+            container.Compose(_factory)
+                   .Columns(4)
+                   .AddLabel("BitmapSize","Dimensions: ",2)
+                   .AddLabel("BitmapSizeV", member.Width + " x " + member.Height,2) 
+                   .AddCheckBox("BitmapHighLight", "Hightlight: ",member,x => x.Hilite,2,true,2)
+                   //.AddLabel("BitmapBitDepth", "BitDepth: ", 2)
+                   //.AddLabel("BitmapBitDepthV", member.ColorDepth,2)
+                   .Finalize()
+                   ;
         }
         private LingoGfxWrapPanel AddTab(string name)
         { 

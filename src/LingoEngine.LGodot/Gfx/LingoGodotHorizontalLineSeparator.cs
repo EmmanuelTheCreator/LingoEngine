@@ -10,23 +10,24 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotHorizontalLineSeparator : Control, ILingoFrameworkGfxHorizontalLineSeparator, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
+        private Color _lightColor;
+        private Color _darkColor;
 
         public LingoGodotHorizontalLineSeparator(LingoGfxHorizontalLineSeparator separator)
         {
             separator.Init(this);
+            _lightColor = new Color(1, 1, 1);
+            _darkColor = new Color("#a0a0a0");
         }
 
-        public override void _Ready()
-        {
-            CustomMinimumSize = new Vector2(0, 2); // 2px tall
-        }
+       
 
         public override void _Draw()
         {
             // Top: light gray
-            DrawLine(new Vector2(0, 0), new Vector2(Size.X, 0), new Color(1, 1, 1), 1);
+            DrawLine(new Vector2(0, 0), new Vector2(Size.X, 0), _lightColor, 1);
             // Bottom: dark gray
-            DrawLine(new Vector2(0, 1), new Vector2(Size.X, 1), new Color(0.4f, 0.4f, 0.4f), 1);
+            DrawLine(new Vector2(0, 1), new Vector2(Size.X, 1), _darkColor, 1);
         }
 
         public override void _Notification(int what)
@@ -37,8 +38,22 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public float Width
+        {
+            get => Size.X; set
+            {
+                Size = new Vector2(value, Size.Y);
+                CustomMinimumSize = new Vector2(value, 2);
+            }
+        }
+        public float Height
+        {
+            get => Size.Y; set
+            {
+                Size = new Vector2(Size.X, value);
+                CustomMinimumSize = new Vector2(Size.X,value);
+            }
+        }
         public bool Visibility { get => Visible; set => Visible = value; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 

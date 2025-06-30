@@ -11,6 +11,7 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotTabContainer : TabContainer, ILingoFrameworkGfxTabContainer, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
+        private Theme _theme;
         private readonly List<ILingoFrameworkGfxTabItem> _nodes = new List<ILingoFrameworkGfxTabItem>();
         private readonly ILingoGodotStyleManager _lingoGodotStyleManager;
 
@@ -30,27 +31,15 @@ namespace LingoEngine.LGodot.Gfx
             SizeFlagsVertical = SizeFlags.ExpandFill;
             SizeFlagsHorizontal = SizeFlags.ExpandFill;
             _lingoGodotStyleManager = lingoGodotStyleManager;
-            SizeFlagsVertical = SizeFlags.ExpandFill;
-            SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
             // Apply the Director tab styling
-            Theme = _lingoGodotStyleManager.GetTheme(LingoGodotThemeElementType.Tabs) ?? new Theme();
-
+            _theme = _lingoGodotStyleManager.GetTheme(LingoGodotThemeElementType.Tabs) ?? new Theme();
+            
+            Theme = Theme;
             ClipTabs = false;
-            ClipTabs = false;
 
-          
         }
-
-        public override void _Ready()
-        {
-            base._Ready();
-            AddThemeConstantOverride("h_separation", 2);
-            AddThemeConstantOverride("side_margin", 2);
-            AddThemeConstantOverride("top_margin", 2);
-            AddThemeConstantOverride("tab_max_width", 120); // optional, keeps tabs from growing too wide
-            AddThemeConstantOverride("tab_min_height", 18); // height that matches Director tabs
-        }
+ 
 
 
 
@@ -73,8 +62,9 @@ namespace LingoEngine.LGodot.Gfx
         public void AddTab(ILingoFrameworkGfxTabItem tabItem)
         {
             var content = ((LingoGodotTabItem)tabItem).ContentFrameWork.FrameworkNode;
-            if (content is Node node)
+            if (content is Control node)
                 AddTab(tabItem.Title, node);
+
             _nodes.Add(tabItem);
         }
 

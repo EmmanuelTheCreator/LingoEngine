@@ -1,4 +1,5 @@
 using Godot;
+using LingoEngine.Director.Core.Styles;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Primitives;
@@ -43,7 +44,7 @@ namespace LingoEngine.Director.LGodot
             _label.LabelSettings.FontSize = 12;
             _label.LabelSettings.FontColor = Colors.Black;
             _label.Text = name;
-
+            BackgroundColor = DirectorColors.BG_WhiteMenus;
             AddChild(_closeButton);
             _closeButton.Text = "X";
             _closeButton.CustomMinimumSize = new Vector2(16, 16);
@@ -71,8 +72,8 @@ namespace LingoEngine.Director.LGodot
 
         public override void _Draw()
         {
-            DrawRect(new Rect2(0, 0, Size.X, TitleBarHeight), new Color("#d2e0ed"));
-            DrawLine(new Vector2(0, TitleBarHeight), new Vector2(Size.X, TitleBarHeight), Colors.Black);
+            DrawRect(new Rect2(0, 0, Size.X, TitleBarHeight), DirectorColors.Window_Title_BG.ToGodotColor());
+            DrawLine(new Vector2(0, TitleBarHeight), new Vector2(Size.X, TitleBarHeight), DirectorColors.Window_Title_Line_Under.ToGodotColor());
             _closeButton.Position = new Vector2(Size.X - 18, 1);
             // draw resize handle
             DrawLine(new Vector2(Size.X - ResizeHandle, Size.Y), new Vector2(Size.X, Size.Y - ResizeHandle), Colors.DarkGray);
