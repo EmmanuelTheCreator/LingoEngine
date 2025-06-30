@@ -92,10 +92,10 @@ In C#, use the `New` factory on `ILingoMovie` to create typed members:
 
 ```csharp
 // equivalent to the Lingo example above
-var newBitmap = _movie.New.Picture(name: "Background");
+var newBitmap = _movie.New.Bitmap(name: "Background");
 ```
 
-The factory exposes helper methods for each member type, such as `Picture()`, `Sound()`, `FilmLoop()` and `Text()`. Optional arguments let you specify the cast slot or member name.
+The factory exposes helper methods for each member type, such as `Bitmap()`, `Sound()`, `FilmLoop()` and `Text()`. Optional arguments let you specify the cast slot or member name.
 
 
 ## 🔁 `put ... into ...` Handling in C#

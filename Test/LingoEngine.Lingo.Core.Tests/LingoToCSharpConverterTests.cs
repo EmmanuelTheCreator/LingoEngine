@@ -125,14 +125,14 @@ public class LingoToCSharpConverterTests
     public void NewMemberCallIsConverted()
     {
         var result = LingoToCSharpConverter.Convert("_movie.newMember(#bitmap)");
-        Assert.Equal("_movie.New.Picture()", result.Trim());
+        Assert.Equal("_movie.New.Bitmap()", result.Trim());
     }
 
     [Fact]
     public void NewMemberAssignmentIsConverted()
     {
         var result = LingoToCSharpConverter.Convert("img = _movie.newMember(#bitmap)");
-        Assert.Equal("img = _movie.New.Picture();", result.Trim());
+        Assert.Equal("img = _movie.New.Bitmap();", result.Trim());
     }
 
     [Fact(Skip = "Converter does not yet fully match the reference implementation")]

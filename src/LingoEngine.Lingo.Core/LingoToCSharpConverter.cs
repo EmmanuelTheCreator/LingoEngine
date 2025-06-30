@@ -192,7 +192,7 @@ public static class LingoToCSharpConverter
         string type = tokens[pos].Lexeme.ToLowerInvariant();
         string method = type switch
         {
-            "bitmap" => "Picture",
+            "bitmap" => "Bitmap",
             "sound" => "Sound",
             "filmloop" => "FilmLoop",
             "text" => "Text",
