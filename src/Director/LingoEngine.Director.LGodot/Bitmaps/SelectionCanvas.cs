@@ -35,6 +35,15 @@ internal partial class DirGodotPictureMemberEditorWindow
                 Vector2 size = ((Vector2)rect.Size) * factor;
                 DrawRect(new Rect2(pos, size), Colors.Cyan, false);
             }
+            else if (_owner._lassoSelecting && _owner._lassoPoints.Count > 1)
+            {
+                for (int i = 0; i < _owner._lassoPoints.Count - 1; i++)
+                {
+                    Vector2 p1 = (offset + _owner._lassoPoints[i]) * factor + canvasHalf * (1 - factor);
+                    Vector2 p2 = (offset + _owner._lassoPoints[i + 1]) * factor + canvasHalf * (1 - factor);
+                    DrawLine(p1, p2, Colors.Cyan);
+                }
+            }
         }
     }
 }
