@@ -10,10 +10,12 @@ using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Director.Core.Casts.Commands;
 
 namespace LingoEngine.Director.LGodot.Casts
 {
-    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable, IHasFindMemberEvent, IDirFrameworkCastWindow
+    internal partial class DirGodotCastWindow : BaseGodotWindow, IDisposable, IHasFindMemberEvent, IDirFrameworkCastWindow,
+        ICommandHandler<RemoveMemberCommand>
     {
         private readonly TabContainer _tabs;
         
@@ -25,11 +27,13 @@ namespace LingoEngine.Director.LGodot.Casts
         private DirGodotCastItem? _selectedItem;
         private LingoPlayer _player;
         private readonly ILingoCommandManager _commandManager;
+        private readonly IHistoryManager _historyManager;
         private readonly IDirectorIconManager _iconManager;
 
         public ILingoCast? ActiveCastLib { get; private set; }
+        internal ILingoMember? SelectedMember => _selectedItem?.LingoMember;
 
-        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorGodotStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager, IDirectorIconManager iconManager)
+        public DirGodotCastWindow(IDirectorEventMediator mediator, DirectorGodotStyle style, DirectorCastWindow directorCastWindow, ILingoPlayer player, IDirGodotWindowManager windowManager, ILingoCommandManager commandManager, IHistoryManager historyManager, IDirectorIconManager iconManager)
             : base(DirectorMenuCodes.CastWindow, "Cast", windowManager)
         {
             _mediator = mediator;
@@ -37,6 +41,7 @@ namespace LingoEngine.Director.LGodot.Casts
             directorCastWindow.Init(this);
             _player = (LingoPlayer)player;
             _commandManager = commandManager;
+            _historyManager = historyManager;
             _iconManager = iconManager;
             _player.ActiveMovieChanged += OnActiveMovieChanged;
             _mediator.Subscribe(this);
@@ -140,6 +145,41 @@ namespace LingoEngine.Director.LGodot.Casts
             _player.ActiveMovieChanged -= OnActiveMovieChanged;
             _mediator.Unsubscribe(this);
             base.Dispose();
+        }
+
+        public bool CanExecute(RemoveMemberCommand command) => true;
+        public bool Handle(RemoveMemberCommand command)
+        {
+            var cast = command.Cast;
+            var member = command.Member;
+
+            int number = member.NumberInCast;
+            string name = member.Name;
+            string fileName = member.FileName;
+            var type = member.Type;
+            var reg = member.RegPoint;
+
+            cast.Remove(member);
+
+            ILingoMember current = member;
+
+            void refresh() => SetActiveMovie(_player.ActiveMovie as LingoMovie);
+
+            Action undo = () =>
+            {
+                current = cast.Add(type, number, name, fileName, reg);
+                refresh();
+            };
+
+            Action redo = () =>
+            {
+                cast.Remove((LingoMember)current);
+                refresh();
+            };
+
+            _historyManager.Push(undo, redo);
+            refresh();
+            return true;
         }
 
        

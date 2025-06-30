@@ -56,7 +56,7 @@ namespace LingoEngine.Casts
             _MembersContainer.Add(member);
             return this;
         }
-        internal ILingoCast Remove(LingoMember member)
+        public ILingoCast Remove(LingoMember member)
         {
             _castLibsContainer.RemoveMember(member);
             _MembersContainer.Remove(member);
