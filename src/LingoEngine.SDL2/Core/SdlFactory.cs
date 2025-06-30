@@ -300,6 +300,18 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return button;
     }
 
+    public LingoGfxStateButton CreateStateButton(string name, LingoEngine.Bitmaps.ILingoTexture2D? texture = null, string text = "", Action<bool>? onChange = null)
+    {
+        var button = new LingoGfxStateButton { Text = text };
+        var impl = new SdlGfxStateButton();
+        if (onChange != null) button.ValueChanged += () => onChange(button.IsOn); // hooking in wrapper since SDL button is dummy
+        button.Init(impl);
+        button.Name = name;
+        if (texture != null)
+            button.Texture = texture;
+        return button;
+    }
+
     public LingoGfxMenu CreateMenu(string name)
     {
         var menu = new LingoGfxMenu();

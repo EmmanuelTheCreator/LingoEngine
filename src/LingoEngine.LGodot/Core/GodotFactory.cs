@@ -18,6 +18,7 @@ using LingoEngine.Members;
 using LingoEngine.Casts;
 using LingoEngine.Shapes;
 using LingoEngine.Gfx;
+using LingoEngine.Bitmaps;
 using LingoEngine.LGodot.Gfx;
 using LingoEngine.Sprites;
 using LingoEngine.Stages;
@@ -319,6 +320,18 @@ namespace LingoEngine.LGodot.Core
             button.Name = name;
             if (!string.IsNullOrWhiteSpace(text))
                 button.Text = text;
+            return button;
+        }
+
+        public LingoGfxStateButton CreateStateButton(string name, ILingoTexture2D? texture = null, string text = "", Action<bool>? onChange = null)
+        {
+            var button = new LingoGfxStateButton();
+            var impl = new LingoGodotStateButton(button, onChange);
+            button.Name = name;
+            if (!string.IsNullOrWhiteSpace(text))
+                button.Text = text;
+            if (texture != null)
+                button.Texture = texture;
             return button;
         }
 
