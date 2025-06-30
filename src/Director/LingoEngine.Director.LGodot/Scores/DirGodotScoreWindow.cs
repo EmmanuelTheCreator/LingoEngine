@@ -9,6 +9,7 @@ using LingoEngine.Director.Core.Stages.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Styles;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -18,7 +19,8 @@ namespace LingoEngine.Director.LGodot.Scores;
 /// </summary>
 public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWindow,
     ICommandHandler<ChangeSpriteRangeCommand>,
-    ICommandHandler<AddSpriteCommand>
+    ICommandHandler<AddSpriteCommand>,
+    ICommandHandler<RemoveSpriteCommand>
 {
    
     
@@ -34,6 +36,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private LingoPlayer _player;
     private readonly DirScoreGfxValues _gfxValues = new();
     private readonly DirGodotScoreGrid _grid;
+    internal LingoSprite? SelectedSprite => _grid.SelectedSprite;
     private readonly DirGodotFrameHeader _header;
     private readonly DirGodotFrameScriptsBar _frameScripts;
     private readonly DirGodotSoundBar _soundBar;
@@ -202,6 +205,11 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         RepositionBars();
     }
 
+    public override void _Input(InputEvent @event)
+    {
+        base._Input(@event);
+    }
+
     private void OnActiveMovieChanged(ILingoMovie? movie)
     {
         SetActiveMovie(movie as LingoMovie);
@@ -274,6 +282,47 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         var sprite = command.Movie.AddSprite(command.Channel, command.BeginFrame, command.EndFrame, 0, 0,
             s => s.SetMember(command.Member));
         _historyManager.Push(command.ToUndo(sprite, RefreshGrid), command.ToRedo(RefreshGrid));
+        RefreshGrid();
+        return true;
+    }
+
+    public bool CanExecute(RemoveSpriteCommand command) => true;
+    public bool Handle(RemoveSpriteCommand command)
+    {
+        var movie = command.Movie;
+        var sprite = command.Sprite;
+
+        int channel = sprite.SpriteNum;
+        int begin = sprite.BeginFrame;
+        int end = sprite.EndFrame;
+        var member = sprite.Member;
+        string name = sprite.Name;
+        float x = sprite.LocH;
+        float y = sprite.LocV;
+
+        sprite.RemoveMe();
+
+        LingoSprite current = sprite;
+        void refresh() => RefreshGrid();
+
+        Action undo = () =>
+        {
+            current = movie.AddSprite(channel, begin, end, x, y, s =>
+            {
+                s.Name = name;
+                if (member != null)
+                    s.SetMember(member);
+            });
+            refresh();
+        };
+
+        Action redo = () =>
+        {
+            current.RemoveMe();
+            refresh();
+        };
+
+        _historyManager.Push(undo, redo);
         RefreshGrid();
         return true;
     }
