@@ -107,6 +107,9 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a combo box input.</summary>
         LingoGfxInputCombobox CreateInputCombobox(string name, Action<string?>? onChange = null);
 
+        /// <summary>Creates a list widget.</summary>
+        LingoGfxItemList CreateItemList(string name, Action<string?>? onChange = null);
+
         /// <summary>Creates a color picker input.</summary>
         LingoGfxColorPicker CreateColorPicker(string name, Action<Primitives.LingoColor>? onChange = null);
 
