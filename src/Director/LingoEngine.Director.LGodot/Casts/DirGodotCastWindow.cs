@@ -55,7 +55,7 @@ namespace LingoEngine.Director.LGodot.Casts
         protected override void OnResizing(Vector2 size)
         {
             base.OnResizing(size);
-            _tabs.Size = new Vector2(Size.X - 10, Size.Y- TitleBarHeight -30);
+            _tabs.Size = new Vector2(Size.X , Size.Y- TitleBarHeight -10);
         }
 
         private void OnActiveMovieChanged(ILingoMovie? movie)
@@ -99,13 +99,7 @@ namespace LingoEngine.Director.LGodot.Casts
         {
             _tabs.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             _tabs.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            _tabs.Size = new Vector2(Size.X - 10, Size.Y - TitleBarHeight - 30);
-            var existingFont = _tabs.GetThemeFont("font", "TabContainer");
-            if (existingFont != null)
-            {
-                _tabs.AddThemeFontOverride("font", existingFont);
-                _tabs.AddThemeFontSizeOverride("font_size", 10);
-            }
+            _tabs.Size = new Vector2(Size.X, Size.Y - TitleBarHeight - 10);
         }
 
         private void OnSelectElement(DirGodotCastItem castItem)
