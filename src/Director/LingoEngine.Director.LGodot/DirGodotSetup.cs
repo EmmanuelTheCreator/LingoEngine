@@ -58,6 +58,7 @@ namespace LingoEngine.Director.LGodot
                     var iconManager = new DirGodotIconManager(p.GetRequiredService<ILogger<DirGodotIconManager>>());
                     iconManager.LoadSheet("Media/Icons/General_Icons.png", 20,16, 16,8);
                     iconManager.LoadSheet("Media/Icons/Painter_Icons.png", 20,16, 16,8);
+                    iconManager.LoadSheet("Media/Icons/Painter2_Icons.png", 20,16, 16,8);
                     return iconManager;
                 });
 

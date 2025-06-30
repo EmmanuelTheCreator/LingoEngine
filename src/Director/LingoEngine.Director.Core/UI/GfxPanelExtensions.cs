@@ -4,11 +4,17 @@ using LingoEngine.Gfx;
 using System.Linq.Expressions;
 using LingoEngine.Tools;
 using LingoEngine.Bitmaps;
+using LingoEngine.Director.Core.Inspector;
 
 namespace LingoEngine.Director.Core.UI
 {
-    public static class UIExtensions
+    public static class GfxPanelExtensions
     {
+        public static GfxPanelBuilder Compose(this LingoGfxPanel panel, ILingoFrameworkFactory factory)
+        {
+            var builder = new GfxPanelBuilder(panel, factory);
+            return builder;
+        }
         public static LingoGfxLabel SetLabelAt(this LingoGfxPanel container, ILingoFrameworkFactory factory, string name, float x, float y, string? text = null, int fontSize = 11)
         {
             LingoGfxLabel lbl = factory.CreateLabel(name,text ??"");
@@ -17,9 +23,9 @@ namespace LingoEngine.Director.Core.UI
             container.AddItem(lbl, x, y);
             return lbl;
         }
-        public static LingoGfxInputText SetInputTextAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, int width, Expression<Func<T,object?>> property, int maxLength = 0)
+        public static LingoGfxInputText SetInputTextAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, int width, Expression<Func<T,string?>> property, int maxLength = 0)
         {
-            Action<T, object?> setter = property.CompileSetter();
+            Action<T, string?> setter = property.CompileSetter();
             var control = factory.CreateInputText(name, maxLength,x => setter(element,x));
             control.Text = property.CompileGetter()(element)?.ToString() ?? string.Empty;
             control.Width = width;
@@ -52,7 +58,7 @@ namespace LingoEngine.Director.Core.UI
             return control;
         }
 
-        public static LingoGfxStateButton SetStateButtonAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, Expression<Func<T,bool>> property, ILingoTexture2D? texture = null)
+        public static LingoGfxStateButton SetStateButtonAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, Expression<Func<T,bool>> property, ILingoImageTexture? texture = null)
         {
             Action<T, bool> setter = property.CompileSetter();
             LingoGfxStateButton control = factory.CreateStateButton(name, texture, string.Empty, onChange: val => setter(element, val));

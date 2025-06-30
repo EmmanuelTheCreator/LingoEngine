@@ -331,7 +331,7 @@ namespace LingoEngine.LGodot.Core
             return button;
         }
 
-        public LingoGfxStateButton CreateStateButton(string name, ILingoTexture2D? texture = null, string text = "", Action<bool>? onChange = null)
+        public LingoGfxStateButton CreateStateButton(string name, ILingoImageTexture? texture = null, string text = "", Action<bool>? onChange = null)
         {
             var button = new LingoGfxStateButton();
             var impl = new LingoGodotStateButton(button, onChange);

@@ -117,7 +117,7 @@ namespace LingoEngine.FrameworkCommunication
         LingoGfxButton CreateButton(string name, string text = "");
 
         /// <summary>Creates a toggle state button.</summary>
-        LingoGfxStateButton CreateStateButton(string name, Bitmaps.ILingoTexture2D? texture = null, string text = "", Action<bool>? onChange = null);
+        LingoGfxStateButton CreateStateButton(string name, ILingoImageTexture? texture = null, string text = "", Action<bool>? onChange = null);
 
         /// <summary>Creates a menu container.</summary>
         LingoGfxMenu CreateMenu(string name);

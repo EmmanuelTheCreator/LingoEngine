@@ -312,7 +312,7 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return button;
     }
 
-    public LingoGfxStateButton CreateStateButton(string name, LingoEngine.Bitmaps.ILingoTexture2D? texture = null, string text = "", Action<bool>? onChange = null)
+    public LingoGfxStateButton CreateStateButton(string name, Bitmaps.ILingoImageTexture? texture = null, string text = "", Action<bool>? onChange = null)
     {
         var button = new LingoGfxStateButton { Text = text };
         var impl = new SdlGfxStateButton();

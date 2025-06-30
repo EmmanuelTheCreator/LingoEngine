@@ -129,7 +129,8 @@ namespace LingoEngine.Sprites
         }
 
         public LingoPoint RegPoint { get; set; }
-        public LingoColor ForeColor { get; set; }
+        public LingoColor ForeColor { get; set; } = LingoColorList.Black;
+        public LingoColor BackColor { get; set; } = LingoColorList.White;
         public List<string> ScriptInstanceList { get; private set; } = new();
 
 
@@ -153,7 +154,7 @@ namespace LingoEngine.Sprites
         }
 
         public LingoColor Color { get; set; }
-        public LingoColor BackColor { get; set; }
+        
         public new LingoRect Rect
         {
             get
