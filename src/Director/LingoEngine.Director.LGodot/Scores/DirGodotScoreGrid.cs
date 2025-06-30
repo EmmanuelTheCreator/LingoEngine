@@ -18,6 +18,10 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
     private readonly List<DirGodotScoreSprite> _sprites = new();
     private DirGodotScoreSprite? _selected;
+    /// <summary>
+    /// Currently selected sprite, if any.
+    /// </summary>
+    internal LingoSprite? SelectedSprite => _selected?.Sprite;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoCommandManager _commandManager;
     private readonly IHistoryManager _historyManager;
