@@ -22,6 +22,8 @@ using LingoEngine.Director.Core.Tools;
 using System.Numerics;
 using LingoEngine.Director.Core.UI;
 using LingoEngine.Tools;
+using System.Xml.Linq;
+using System.ComponentModel.DataAnnotations;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -42,16 +44,17 @@ namespace LingoEngine.Director.Core.Inspector
         private LingoGfxPanel _headerPanel;
         private IDirectorEventMediator _mediator;
 
-        private LingoGfxPanel _behaviorPanel;
-        private LingoGfxWrapPanel _behaviorBox;
+        private LingoGfxWrapPanel _behaviorPanel;
+        private LingoGfxWrapPanel _behaviorDetail;
         private LingoGfxButton _behaviorClose;
         private int _titleBarHeight;
         private float _lastWidh;
         private float _lastHeight;
+        private Dictionary<string, LingoSpriteBehavior> _behaviors = new();
+        private LingoGfxItemList _behaviorList;
 
         public LingoGfxPanel HeaderPanel => _headerPanel;
         public LingoGfxTabContainer Tabs => _tabs;
-        public LingoGfxPanel BehaviorPanel => _behaviorPanel;
         public string SpriteText { get => _sprite?.Text ?? string.Empty; set { if (_sprite != null) _sprite.Text = value; } }
         public string MemberText { get => _member?.Text ?? string.Empty; set { if (_member != null) _member.Text = value; } }
         public string CastText { get => _cast?.Text ?? string.Empty; set { if (_cast != null) _cast.Text = value; } }
@@ -261,6 +264,16 @@ namespace LingoEngine.Director.Core.Inspector
                    .AddColorInput("SpriteBackColor", "Background:", sprite, s => s.BackColor, inputSpan: 1, labelSpan: 3)
                    .Finalize();
                    ;
+            var index = 0;
+            _behaviors = sprite.Behaviors.ToDictionary(b =>
+            {
+                index++;
+                return index + "." + b.Name;
+            });
+            _behaviorList.ClearItems();
+            foreach (var item in _behaviors)
+                _behaviorList.AddItem(item.Key, item.Value.Name);
+            
 
             wrapContainer
                 .AddItem(containerIcons)
@@ -273,13 +286,27 @@ namespace LingoEngine.Director.Core.Inspector
 
         private void CreateBehaviorPanel()
         {
-            _behaviorPanel = _factory.CreatePanel("InspectorTabs");
-            _behaviorBox = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InspectorTabs");
+            _behaviorPanel = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InspectorBehaviors");
+            _behaviorDetail = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InspectorBehaviorsWrapPanel");
             //_behaviorClose = _factory.CreateButton("InspectorTabs");
 
+            _behaviorList = _factory.CreateItemList("BehaviorList", x =>
+            {
+                if (x != null && _behaviors.TryGetValue(x, out var behavior))
+                {
+                    _behaviorDetail.Visibility = true;
+                    ShowBehavior(behavior);
+                }
+                else
+                    _behaviorDetail.Visibility = false;
+            });
 
-            _behaviorPanel.AddItem(_behaviorBox);
-            _behaviorPanel.Visibility = false;
+            _behaviorPanel.AddItem(_behaviorList);
+            _behaviorPanel.AddItem(_behaviorDetail);
+            _behaviorDetail.Visibility = false;
+            
+            
+            
             //var closeRow = new HBoxContainer();
             //closeRow.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
             //_behaviorClose.Text = "X";
@@ -291,14 +318,13 @@ namespace LingoEngine.Director.Core.Inspector
         }
         private void ShowBehavior(LingoSpriteBehavior behavior)
         {
-            foreach (var child in _behaviorBox.GetItems())
+            foreach (var child in _behaviorDetail.GetItems())
             {
-                if (child != _behaviorBox.GetItem(0))
-                    _behaviorBox.RemoveItem(child);
+                if (child != _behaviorDetail.GetItem(0))
+                    _behaviorDetail.RemoveItem(child);
             }
             var panel = BuildBehaviorPanel(behavior);
-            _behaviorBox.AddItem(panel);
-            _behaviorPanel.Visibility = true;
+            _behaviorDetail.AddItem(panel);
             OnResizing(_lastWidh, _lastHeight);
         }
 
