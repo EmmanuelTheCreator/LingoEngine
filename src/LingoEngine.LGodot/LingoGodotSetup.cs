@@ -18,6 +18,7 @@ namespace LingoEngine.LGodot
                         .AddGodotLogging()
                         .AddSingleton<LingoGodotStyle>()
                         .AddSingleton<ILingoFrameworkFactory, GodotFactory>()
+                        .AddSingleton<ILingoGodotStyleManager, LingoGodotStyleManager>()
                         .AddSingleton<ILingoFrameworkStageContainer, LingoGodotStageContainer>()
                         .AddSingleton<ILingoFontManager, LingoGodotFontManager>()
                         .AddSingleton(p => new LingoGodotRootNode(rootNode, withStageInWindow))

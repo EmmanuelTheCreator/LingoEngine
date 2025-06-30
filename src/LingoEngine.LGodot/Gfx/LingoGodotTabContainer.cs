@@ -1,8 +1,7 @@
 using Godot;
 using LingoEngine.Gfx;
+using LingoEngine.LGodot.Styles;
 using LingoEngine.Primitives;
-using System;
-using System.Linq;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -12,12 +11,28 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotTabContainer : TabContainer, ILingoFrameworkGfxTabContainer, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
-
-        public LingoGodotTabContainer(LingoGfxTabContainer tab)
+        private readonly List<ILingoFrameworkGfxTabItem> _nodes = new List<ILingoFrameworkGfxTabItem>();
+        private readonly ILingoGodotStyleManager _lingoGodotStyleManager;
+        public LingoGodotTabContainer(LingoGfxTabContainer tab, ILingoGodotStyleManager lingoGodotStyleManager)
         {
             tab.Init(this);
             SizeFlagsVertical = SizeFlags.ExpandFill;
             SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            _lingoGodotStyleManager = lingoGodotStyleManager;
+            SizeFlagsVertical = SizeFlags.ExpandFill;
+            SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
+            // Apply the Director tab styling
+            Theme = _lingoGodotStyleManager.GetTheme(LingoGodotThemeElementType.Tabs) ?? new Theme();
+
+            ClipTabs = false;
+            ClipTabs = false;
+
+            AddThemeConstantOverride("h_separation", 2);
+            AddThemeConstantOverride("side_margin", 2);
+            AddThemeConstantOverride("top_margin", 2);
+            AddThemeConstantOverride("tab_max_width", 120); // optional, keeps tabs from growing too wide
+            AddThemeConstantOverride("tab_min_height", 18); // height that matches Director tabs
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -42,7 +57,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public object FrameworkNode => this;
 
-        private readonly List<ILingoFrameworkGfxTabItem> _nodes = new List<ILingoFrameworkGfxTabItem>();
+       
+
         public void AddTab(ILingoFrameworkGfxTabItem tabItem)
         {
             var content = ((LingoGodotTabItem)tabItem).ContentFrameWork.FrameworkNode;

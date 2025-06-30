@@ -64,6 +64,8 @@ namespace LingoEngine.LGodot.Styles
                 theme.SetConstant("minimum_width", controlType, 5);
                 theme.SetConstant("minimum_spaces", controlType, 1);
                 theme.SetConstant("minimum_character_width", controlType, 0);
+
+                
             }
 
         }

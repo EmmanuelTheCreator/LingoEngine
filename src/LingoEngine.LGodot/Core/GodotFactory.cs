@@ -26,6 +26,7 @@ using LingoEngine.Styles;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Xml.Linq;
+using LingoEngine.LGodot.Styles;
 
 namespace LingoEngine.LGodot.Core
 {
@@ -235,7 +236,7 @@ namespace LingoEngine.LGodot.Core
         public LingoGfxTabContainer CreateTabContainer(string name)
         {
             var tab = new LingoGfxTabContainer();
-            var impl = new LingoGodotTabContainer(tab);
+            var impl = new LingoGodotTabContainer(tab, _serviceProvider.GetRequiredService<ILingoGodotStyleManager>());
 
             tab.Name = name;
             return tab;
