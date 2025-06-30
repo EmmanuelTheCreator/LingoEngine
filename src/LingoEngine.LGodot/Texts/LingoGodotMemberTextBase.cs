@@ -154,6 +154,11 @@ namespace LingoEngine.LGodot.Texts
             //    FontColor = new Color(1, 0, 0),
             //    FontSize = 40,
             //};
+            // these are needed in the styling:
+            //theme.SetConstant("minimum_height", controlType, 10);
+            //theme.SetConstant("minimum_width", controlType, 5);
+            //theme.SetConstant("minimum_spaces", controlType, 1);
+            //theme.SetConstant("minimum_character_width", controlType, 0);
             _labelNode.LabelSettings = _LabelSettings;
         }
         public void Dispose()

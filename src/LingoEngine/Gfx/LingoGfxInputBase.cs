@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Base class for all engine level input controls.
     /// </summary>
-    public abstract class LingoGfxInputBase<TFramework> : LingoGfxNodetBase<TFramework>
+    public abstract class LingoGfxInputBase<TFramework> : LingoGfxNodeLayoutBase<TFramework>
         where TFramework : ILingoFrameworkGfxNodeInput
     {
         /// <summary>Whether the control is enabled.</summary>

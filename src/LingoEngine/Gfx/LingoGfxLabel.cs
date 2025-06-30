@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper around a framework label.
     /// </summary>
-    public class LingoGfxLabel : LingoGfxNodetBase<ILingoFrameworkGfxLabel>
+    public class LingoGfxLabel : LingoGfxNodeBase<ILingoFrameworkGfxLabel>
     {
         public string Text { get => _framework.Text; set => _framework.Text = value; }
         public int FontSize { get => _framework.FontSize; set => _framework.FontSize = value; }

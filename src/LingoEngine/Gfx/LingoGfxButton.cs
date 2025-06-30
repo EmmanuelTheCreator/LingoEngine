@@ -3,7 +3,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Engine level wrapper for a button control.
     /// </summary>
-    public class LingoGfxButton : LingoGfxNodetBase<ILingoFrameworkGfxButton>
+    public class LingoGfxButton : LingoGfxNodeBase<ILingoFrameworkGfxButton>
     {
         public string Text { get => _framework.Text; set => _framework.Text = value; }
         public bool Enabled { get => _framework.Enabled; set => _framework.Enabled = value; }
