@@ -357,7 +357,23 @@ namespace LingoEngine.LGodot.Core
             return item;
         }
 
-        
+        public LingoGfxHorizontalLineSeparator CreateHorizontalLineSeparator(string name)
+        {
+            var sep = new LingoGfxHorizontalLineSeparator();
+            var impl = new LingoGodotHorizontalLineSeparator(sep);
+            sep.Name = name;
+            return sep;
+        }
+
+        public LingoGfxVerticalLineSeparator CreateVerticalLineSeparator(string name)
+        {
+            var sep = new LingoGfxVerticalLineSeparator();
+            var impl = new LingoGodotVerticalLineSeparator(sep);
+            sep.Name = name;
+            return sep;
+        }
+
+
         #endregion
 
 
