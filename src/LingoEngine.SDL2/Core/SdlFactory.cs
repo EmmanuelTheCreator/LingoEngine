@@ -283,6 +283,17 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return input;
     }
 
+    public LingoGfxItemList CreateItemList(string name, Action<string?>? onChange = null)
+    {
+        var list = new LingoGfxItemList();
+        var impl = new SdlGfxItemList();
+        list.Init(impl);
+        list.Name = name;
+        if (onChange != null)
+            list.ValueChanged += () => onChange(list.SelectedKey);
+        return list;
+    }
+
     public LingoGfxColorPicker CreateColorPicker(string name, Action<LingoColor>? onChange = null)
     {
         var picker = new LingoGfxColorPicker();
