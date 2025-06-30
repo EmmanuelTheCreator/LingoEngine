@@ -19,11 +19,8 @@ using System;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Director.Core.Sprites;
 using LingoEngine.Director.Core.Tools;
-using System.Drawing;
 using System.Numerics;
-using System.Xml.Linq;
 using LingoEngine.Director.Core.UI;
-using System.ComponentModel;
 
 namespace LingoEngine.Director.Core.Inspector
 {
@@ -263,67 +260,35 @@ namespace LingoEngine.Director.Core.Inspector
             var containerIcons = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "SpriteDetailIcons");
             wrapContainer.AddItem(containerIcons);
 
-
             var container = _factory.CreatePanel("SpriteDetailPanel");
             wrapContainer.AddItem(container);
 
+            var builder = new SpriteFormBuilder(container, _factory).Columns(4);
 
-            var lineHeight  = 22;
-            var marginLeft = 5;
-            var defaultSmallWidth = 30;
-            var quadX1 = 33;
-            var quadX2 = 88;
-            var doubleX2 = 70;
-            var doubleX3 = 130;
-            var doubleX4 = 180;
+            builder.AddTextInput("Name", "Name:", sprite, s => s.Name, inputSpan: 3)
+                   .Columns(2)
+                   .AddNumericInput("LocH", "X:", sprite, s => s.LocH)
+                   .AddNumericInput("LocV", "Y:", sprite, s => s.LocV)
+                   .Columns(4)
+                   .AddNumericInput("Left", "L:", sprite, s => s.Left)
+                   .AddNumericInput("Top", "T:", sprite, s => s.Top)
+                   .AddNumericInput("Right", "R:", sprite, s => s.Right)
+                   .AddNumericInput("Bottom", "B:", sprite, s => s.Bottom)
+                   .Columns(2)
+                   .AddNumericInput("Width", "W:", sprite, s => s.Width)
+                   .AddNumericInput("Height", "H:", sprite, s => s.Height)
+                   .Columns(4)
+                   .AddNumericInput("Ink", "Ink:", sprite, s => s.Ink, inputSpan: 2)
+                   .AddNumericInput("Blend", "%", sprite, s => s.Blend, showLabel: false)
+                   .Columns(2)
+                   .AddNumericInput("BeginFrame", "Start Frame:", sprite, s => s.BeginFrame)
+                   .AddNumericInput("EndFrame", "End:", sprite, s => s.EndFrame)
+                   .AddNumericInput("Rotation", "Rotation:", sprite, s => s.Rotation)
+                   .AddNumericInput("Skew", "Skew:", sprite, s => s.Skew)
+                   .AddColorInput("ForeColor", "Fore:", sprite, s => s.ForeColor)
+                   .AddColorInput("BackColor", "Back:", sprite, s => s.BackColor);
 
-
-            
-            container.SetLabelAt(_factory, "SpriteLabel", marginLeft, 2,"Name:");
-            container.SetInputTextAt(_factory, sprite, "SpriteNameInput", 60, 0,140, x => x.Name);
-
-            // Row 2: X / Y
-            container.SetLabelAt(_factory, "SpriteX", 5, lineHeight * 1, "X:");
-            container.SetInputNumberAt(_factory, sprite, "XInput", quadX1, lineHeight * 1, defaultSmallWidth, x => x.LocH);
-            container.SetLabelAt(_factory, "SpriteY", 70, lineHeight * 1, "Y:");
-            container.SetInputNumberAt(_factory, sprite, "YInput", quadX2, lineHeight * 1, defaultSmallWidth, x => x.LocV);
-
-            // Row 3: L / T / R / B
-            container.SetLabelAt(_factory, "SpriteL", 5, lineHeight * 2, "L:");
-            container.SetInputNumberAt(_factory, sprite, "LInput", quadX1, lineHeight * 2, defaultSmallWidth, x => x.Left);
-            container.SetLabelAt(_factory, "SpriteT", 70, lineHeight * 2, "T:");
-            container.SetInputNumberAt(_factory, sprite, "TInput", quadX2, lineHeight * 2, defaultSmallWidth, x => x.Top);
-            container.SetLabelAt(_factory, "SpriteR", 125, lineHeight * 2, "R:");
-            container.SetInputNumberAt(_factory, sprite, "RInput", 141, lineHeight * 2, defaultSmallWidth, x => x.Right);
-            container.SetLabelAt(_factory, "SpriteB", 178, lineHeight * 2, "B:");
-            container.SetInputNumberAt(_factory, sprite, "BInput", 194, lineHeight * 2, defaultSmallWidth, x => x.Bottom);
-
-            // Row 4: W / H
-            container.SetLabelAt(_factory, "SpriteW", 5, lineHeight * 3, "W:");
-            container.SetInputNumberAt(_factory, sprite, "WInput", quadX1, lineHeight * 3, defaultSmallWidth, x => x.Width);
-            container.SetLabelAt(_factory, "SpriteH", 70, lineHeight * 3, "H:");
-            container.SetInputNumberAt(_factory, sprite, "HInput", quadX2, lineHeight * 3, defaultSmallWidth, x => x.Height);
-
-            // Row 5: Ink / %
-            container.SetLabelAt(_factory, "SpriteInk", 5, lineHeight * 4, "Ink:");
-            container.SetInputNumberAt(_factory, sprite, "InkCombo", quadX1, lineHeight * 4, 120, x => x.Ink);
-            container.SetInputNumberAt(_factory, sprite, "OpacityCombo", 150, lineHeight * 4, 40, x => x.Blend);
-            //container.SetComboBoxAt(_factory, sprite, "InkCombo", quadX1, lineHeight * 4, x => x.Ink.ToString());
-            //container.SetComboBoxAt(_factory, sprite, "OpacityCombo", 110, lineHeight * 4, x => x.Blend.ToString());
-
-            // Row 6: Start Frame / End Frame
-            container.SetLabelAt(_factory, "SpriteStartFrame", 5, lineHeight * 5 + 4, "Start Frame:");
-            container.SetInputNumberAt(_factory, sprite, "StartFrameInput", doubleX2, lineHeight * 5 + 4, defaultSmallWidth + 5, x => x.BeginFrame);
-            container.SetLabelAt(_factory, "SpriteEndFrame", doubleX3, lineHeight * 5 + 4, "End:");
-            container.SetInputNumberAt(_factory, sprite, "EndFrameInput", doubleX4, lineHeight * 5 + 4, defaultSmallWidth, x => x.EndFrame);
-
-            // Row 7: Rotation / Skew
-            container.SetLabelAt(_factory, "SpriteRotation", 5, lineHeight * 6 + 4, "Rotation:");
-            container.SetInputNumberAt(_factory, sprite, "RotationInput", doubleX2, lineHeight * 6 + 4, defaultSmallWidth + 10, x => x.Rotation);
-            container.SetLabelAt(_factory, "SpriteSkew", doubleX3, lineHeight * 6 + 4, "Skew:");
-            container.SetInputNumberAt(_factory, sprite, "SkewInput", doubleX4, lineHeight * 6 + 4, defaultSmallWidth, x => x.Skew);
-
-
+            container.Height = builder.CurrentHeight;
 
         }
         private LingoGfxWrapPanel AddTab(string name)
