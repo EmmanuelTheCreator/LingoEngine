@@ -52,7 +52,7 @@ namespace LingoEngine.Director.Core.UI
             return control;
         }
 
-        public static LingoGfxStateButton SetStateButtonAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, Expression<Func<T,bool>> property, Bitmaps.ILingoTexture2D? texture = null)
+        public static LingoGfxStateButton SetStateButtonAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, Expression<Func<T,bool>> property, ILingoTexture2D? texture = null)
         {
             Action<T, bool> setter = property.CompileSetter();
             LingoGfxStateButton control = factory.CreateStateButton(name, texture, string.Empty, onChange: val => setter(element, val));

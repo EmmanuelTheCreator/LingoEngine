@@ -332,6 +332,31 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     {
         throw new NotImplementedException();
     }
+
+    public LingoGfxInputText CreateInputText(string name, int maxLength = 0, Action<string>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100, Action<float>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100, Action<float>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxInputCheckbox CreateInputCheckbox(string name, Action<bool>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxInputCombobox CreateInputCombobox(string name, Action<string?>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
     #endregion
 
 

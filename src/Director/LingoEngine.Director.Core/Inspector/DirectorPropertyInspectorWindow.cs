@@ -259,7 +259,15 @@ namespace LingoEngine.Director.Core.Inspector
         private void AddSpriteTab(LingoSprite sprite)
         {
             var wrapContainer = AddTab(sprite.Name);
-            var container = _factory.CreatePanel("SpritePanel");
+
+            var containerIcons = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "SpriteDetailIcons");
+            wrapContainer.AddItem(containerIcons);
+
+
+            var container = _factory.CreatePanel("SpriteDetailPanel");
+            wrapContainer.AddItem(container);
+
+
             var lineHeight  = 22;
             var marginLeft = 5;
             var defaultSmallWidth = 30;
@@ -270,7 +278,7 @@ namespace LingoEngine.Director.Core.Inspector
             var doubleX4 = 180;
 
 
-            wrapContainer.AddItem(container);
+            
             container.SetLabelAt(_factory, "SpriteLabel", marginLeft, 2,"Name:");
             container.SetInputTextAt(_factory, sprite, "SpriteNameInput", 60, 0,140, x => x.Name);
 
