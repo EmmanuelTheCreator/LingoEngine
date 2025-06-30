@@ -125,6 +125,12 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a menu item.</summary>
         LingoGfxMenuItem CreateMenuItem(string name, string? shortcut = null);
 
+        /// <summary>Creates a horizontal line separator.</summary>
+        LingoGfxHorizontalLineSeparator CreateHorizontalLineSeparator(string name);
+
+        /// <summary>Creates a vertical line separator.</summary>
+        LingoGfxVerticalLineSeparator CreateVerticalLineSeparator(string name);
+
         #endregion
 
         /// <summary>Creates a sprite instance.</summary>
