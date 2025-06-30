@@ -1,3 +1,4 @@
+using LingoEngine.Director.Core.Styles;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
@@ -27,6 +28,7 @@ public class DirScoreGridPainter
     /// <summary>Redraws the grid to the canvas.</summary>
     public void Draw()
     {
+        var colorLines = DirectorColors.ScoreGridLineDark;
         float width = _gfxValues.LeftMargin + FrameCount * _gfxValues.FrameWidth;
         float height = ChannelCount * _gfxValues.ChannelHeight;
         Canvas.Width = width;
@@ -45,16 +47,16 @@ public class DirScoreGridPainter
         {
             float x = -ScrollX + _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
             if (f % 5 == 0)
-                Canvas.DrawRect(LingoRect.New(x, 0, _gfxValues.FrameWidth, height), LingoColorList.DarkGray, true);
+                Canvas.DrawRect(LingoRect.New(x, 0, _gfxValues.FrameWidth, height), colorLines, true);
         }
 
         for (int f = 0; f <= FrameCount; f++)
         {
             float x = -ScrollX + _gfxValues.LeftMargin + f * _gfxValues.FrameWidth;
-            Canvas.DrawLine(new LingoPoint(x, 0), new LingoPoint(x, height), LingoColorList.DarkGray);
+            Canvas.DrawLine(new LingoPoint(x, 0), new LingoPoint(x, height), colorLines);
         }
 
-        Canvas.DrawLine(new LingoPoint(-ScrollX, 0), new LingoPoint(width - ScrollX, 0), LingoColorList.DarkGray);
-        Canvas.DrawLine(new LingoPoint(-ScrollX, height), new LingoPoint(width - ScrollX, height), LingoColorList.DarkGray);
+        Canvas.DrawLine(new LingoPoint(-ScrollX, 0), new LingoPoint(width - ScrollX, 0), colorLines);
+        Canvas.DrawLine(new LingoPoint(-ScrollX, height), new LingoPoint(width - ScrollX, height), colorLines);
     }
 }

@@ -32,13 +32,13 @@ internal partial class DirGodotFrameScriptsBar : Control
 
         _gridViewport.SetDisable3D(true);
         _gridViewport.TransparentBg = true;
-        _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+        _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Once);
         _gridCanvas = new DirScoreGridPainter(_factory, _gfxValues);
         _gridViewport.AddChild(_gridCanvas.Canvas.Framework<LingoGodotGfxCanvas>());
 
         _spriteViewport.SetDisable3D(true);
         _spriteViewport.TransparentBg = true;
-        _spriteViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+        _spriteViewport.SetUpdateMode(SubViewport.UpdateMode.Once);
         _spriteCanvas = new SpriteCanvas(this);
         _spriteViewport.AddChild(_spriteCanvas);
 
@@ -55,7 +55,16 @@ internal partial class DirGodotFrameScriptsBar : Control
         AddChild(_gridTexture);
         AddChild(_spriteTexture);
     }
+    private void ForceRefreshSpriteViewPort()
+    {
+        _spriteViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+        _spriteViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
+        _spriteViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
 
+        _gridViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+        _gridViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
+        _gridViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+    }
     public void SetMovie(LingoMovie? movie)
     {
         if (_movie != null)
@@ -121,6 +130,7 @@ internal partial class DirGodotFrameScriptsBar : Control
         int cur = _movie?.CurrentFrame ?? -1;
         if (_spriteDirty || cur != _lastFrame)
         {
+            ForceRefreshSpriteViewPort();
             _spriteDirty = false;
             _lastFrame = cur;
             _spriteCanvas.QueueRedraw();

@@ -43,7 +43,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _viewport = new SubViewport();
             _viewport.SetDisable3D(true);
             _viewport.TransparentBg = false;
-            _viewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+            _viewport.SetUpdateMode(SubViewport.UpdateMode.Once);// use ForceRefreshViewPort instead of always
             AddChild(_viewport);
 
             _textureRect = new TextureRect
@@ -95,6 +95,12 @@ namespace LingoEngine.Director.LGodot.Gfx
 
             _textureRect.QueueRedraw();
             _scroll.QueueRedraw();
+        }
+        private void ForceRefreshViewPort()
+        {
+            _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+            _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
+            _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
         }
         public override void _Ready()
         {
@@ -175,6 +181,7 @@ namespace LingoEngine.Director.LGodot.Gfx
             _textureRect.CustomMinimumSize = contentSize;
 
             RenderDescriptions();
+            ForceRefreshViewPort();
         }
 
 
