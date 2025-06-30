@@ -2,49 +2,31 @@
 
 This document tracks the current implementation status of Lingo language elements in **LingoEngine**. The percentages are based on the comparison between the Director MX 2004 scripting manual and the interfaces implemented in the repository.
 
+Completed features are omitted from the tables to keep them concise. Only unimplemented or partial features are listed and marked "No".
+
 ## Overview
 
 | Lingo element | Progress | Notes |
 |--------------|---------|-------|
-| Sprite object | 93% properties implemented; no 3D camera methods | 3D camera features still missing |
+| Sprite object | 96% properties implemented | 2D sprite features largely complete; 3D handled separately |
 | Movie object | 10% properties, 12% methods implemented | Only a small subset of movie control features exist. |
-| Sprite3D object | 0% implemented | 3D sprite features not yet supported |
-| Movie3D object | 0% implemented | 3D movie features not yet supported |
+| Sprite3D object | 20% implemented | Basic camera management available |
+| Movie3D object | 5% implemented | Renderer properties only |
 | Player object | 42% properties, 58% methods implemented | Basic environment control only |
 
 ## Sprite Object Details
-Sprite properties implemented: 93% (28 of 30)
+Sprite properties implemented: 96% (29 of 30)
 
 | Property | Implemented | Notes |
 |----------|-------------|-------|
-| bottom | No |
-| constraint | No |
-| cursor | No |
-| flipH | No |
-| flipV | No |
-| left | No |
-| quad | No |
-| right | No |
-| top | No |
 | antiAliasingEnabled | No |
-| directToStage | No |
 
 ## Sprite3D Object Details
-Sprite3D support is not yet implemented. The following features are missing:
+Initial Sprite3D support has been added with camera management APIs.
 
 ### Properties
-| Property | Implemented | Notes |
-|----------|-------------|-------|
-| camera | No |
 
 ### Methods
-| Method | Implemented | Notes |
-|-------|------------|------|
-| addCamera | No |
-| cameraCount | No |
-| deleteCamera | No |
-
-
 ## Movie Object Details
 
 ### Properties
@@ -149,13 +131,9 @@ Movie methods implemented: 12% (5 of 41)
 | mergeDisplayTemplate | No |
 
 ## Movie3D Object Details
-Movie3D functionality is not yet implemented.
+Basic Movie3D functionality is available.
 
 ### Properties
-| Property | Implemented | Notes |
-|----------|-------------|-------|
-| active3dRenderer | No |
-| preferred3dRenderer | No |
 
 ## Player Object Details
 Player properties implemented: 42% (15 of 36)
