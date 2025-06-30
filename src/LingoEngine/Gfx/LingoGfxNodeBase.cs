@@ -6,7 +6,7 @@ namespace LingoEngine.Gfx
     /// <summary>
     /// Base class for all engine level graphics nodes exposing common properties.
     /// </summary>
-    public abstract class LingoGfxNodetBase<TFramework> : ILingoGfxNode, IDisposable
+    public abstract class LingoGfxNodeBase<TFramework> : ILingoGfxNode, IDisposable
         where TFramework : ILingoFrameworkGfxNode
     {
 #pragma warning disable CS8618
@@ -30,7 +30,7 @@ namespace LingoEngine.Gfx
         public virtual void Dispose() => (_framework as IDisposable)?.Dispose();
     }
 
-    public abstract class LingoGfxNodeLayoutBase<TFramework> : LingoGfxNodetBase<TFramework> , ILingoGfxLayoutNode
+    public abstract class LingoGfxNodeLayoutBase<TFramework> : LingoGfxNodeBase<TFramework> , ILingoGfxLayoutNode
        where TFramework : ILingoFrameworkGfxLayoutNode
     {
 

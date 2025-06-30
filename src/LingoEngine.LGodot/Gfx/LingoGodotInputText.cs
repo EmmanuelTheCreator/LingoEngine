@@ -22,20 +22,44 @@ namespace LingoEngine.LGodot.Gfx
             _fontManager = fontManager;
             input.Init(this);
             TextChanged += _ => _onValueChanged?.Invoke();
+            if (_onChange != null) TextChanged += _ => _onChange(Text);
             CustomMinimumSize = new Vector2(2, 2);
-            //Height = 8;
-            //Width = 100;
             SizeFlagsHorizontal =0;
             SizeFlagsVertical =0;
-            //Size = new Vector2(200, 30);
-
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y;
-            set => Size = new Vector2(Size.X, value); }
+        private float _wantedWidth = 10;
+        public float Width
+        {
+            get => Size.X;
+            set
+            {
+                _wantedWidth = value;
+                CustomMinimumSize = new Vector2(_wantedWidth, _wantedHeight);
+                Size = new Vector2(value, _wantedHeight);
+            }
+        }
+        private float _wantedHeight = 10;
+        public float Height
+        {
+            get => Size.Y;
+            set
+            {
+                _wantedHeight = Height;
+                CustomMinimumSize = new Vector2(_wantedWidth, _wantedHeight);
+                Size = new Vector2(_wantedWidth, value);
+            }
+        }
+
+        public override void _Ready()
+        {
+            base._Ready();
+            CustomMinimumSize = new Vector2(_wantedWidth, _wantedHeight);
+            Size = new Vector2(_wantedWidth, _wantedHeight);
+        }
+
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get => Editable; set => Editable = value; }
 
@@ -48,16 +72,16 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _font = value;
-                //if (string.IsNullOrEmpty(value))
-                //{
-                //    RemoveThemeFontOverride("font");
-                //}
-                //else
-                //{
-                //    var font = _fontManager.Get<FontFile>(value);
-                //    if (font != null)
-                //        AddThemeFontOverride("font", font);
-                //}
+                if (string.IsNullOrEmpty(value))
+                {
+                    RemoveThemeFontOverride("font");
+                }
+                else
+                {
+                    var font = _fontManager.Get<FontFile>(value);
+                    if (font != null)
+                        AddThemeFontOverride("font", font);
+                }
             }
         }
         private int _fontSize;
@@ -68,25 +92,25 @@ namespace LingoEngine.LGodot.Gfx
             {
                 _fontSize = value;
 
-                //Font? baseFont = null;
-                //if (string.IsNullOrEmpty(_font))
-                //    baseFont = _fontManager.GetDefaultFont<Font>();
-                //else
-                //    baseFont = _fontManager.Get<Font>(_font);
-                //if (baseFont == null)
-                //    return;
+                Font? baseFont = null;
+                if (string.IsNullOrEmpty(_font))
+                    baseFont = _fontManager.GetDefaultFont<Font>();
+                else
+                    baseFont = _fontManager.Get<Font>(_font);
+                if (baseFont == null)
+                    return;
 
-                //// Create a FontVariation with size applied through theme variation
-                //var variation = new FontVariation
-                //{
-                //    BaseFont = baseFont
-                //};
+                // Create a FontVariation with size applied through theme variation
+                var variation = new FontVariation
+                {
+                    BaseFont = baseFont
+                };
 
-                //// Set the size override via theme properties
-                //var theme = new Theme();
-                //theme.SetFont("font", "LineEdit", variation);
-                //theme.SetFontSize("font_size", "LineEdit", _fontSize);
-                //Theme = theme;
+                // Set the size override via theme properties
+                var theme = new Theme();
+                theme.SetFont("font", "LineEdit", variation);
+                theme.SetFontSize("font_size", "LineEdit", _fontSize);
+                Theme = theme;
             }
         }
         private Color _fontColor = Colors.Black;
@@ -97,7 +121,7 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _fontColor = value;
-                //AddThemeColorOverride("font_color", _fontColor);
+                AddThemeColorOverride("font_color", _fontColor);
             }
         }
 
@@ -107,10 +131,10 @@ namespace LingoEngine.LGodot.Gfx
             set
             {
                 _margin = value;
-                //AddThemeConstantOverride("margin_left", (int)_margin.Left);
-                //AddThemeConstantOverride("margin_right", (int)_margin.Right);
-                //AddThemeConstantOverride("margin_top", (int)_margin.Top);
-                //AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
+                AddThemeConstantOverride("margin_left", (int)_margin.Left);
+                AddThemeConstantOverride("margin_right", (int)_margin.Right);
+                AddThemeConstantOverride("margin_top", (int)_margin.Top);
+                AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
             }
         }
         public object FrameworkNode => this;
@@ -125,6 +149,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
+            TextChanged -= _ => _onValueChanged?.Invoke();
+            if (_onChange != null) TextChanged -= _ => _onChange(Text);
             QueueFree();
             base.Dispose();
         }

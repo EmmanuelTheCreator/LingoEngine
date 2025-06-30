@@ -8,11 +8,11 @@ namespace LingoEngine.Director.Core.UI
 {
     public static class UIExtensions
     {
-        public static LingoGfxLabel SetLabelAt(this LingoGfxPanel container, ILingoFrameworkFactory factory, string name, float x, float y, string? text = null)
+        public static LingoGfxLabel SetLabelAt(this LingoGfxPanel container, ILingoFrameworkFactory factory, string name, float x, float y, string? text = null, int fontSize = 11)
         {
             LingoGfxLabel lbl = factory.CreateLabel(name,text ??"");
-            lbl.FontSize = 10;
             lbl.FontColor = DirectorColors.TextColorLabels;
+            lbl.FontSize = fontSize;
             container.AddItem(lbl, x, y);
             return lbl;
         }
@@ -21,9 +21,7 @@ namespace LingoEngine.Director.Core.UI
             Action<T, object?> setter = property.CompileSetter();
             var control = factory.CreateInputText(name, maxLength,x => setter(element,x));
             control.Text = property.CompileGetter()(element)?.ToString() ?? string.Empty;
-            control.FontSize = 8;
             control.Width = width;
-            //lbl.FontColor = DirectorColors.TextColorLabels;
             container.AddItem(control, x, y);
             return control;
         }
@@ -32,9 +30,7 @@ namespace LingoEngine.Director.Core.UI
             Action<T, float> setter = property.CompileSetter();
             LingoGfxInputNumber control = factory.CreateInputNumber(name, min, max, x => setter(element, x));
             control.Value = property.CompileGetter()(element);
-            control.FontSize = 10;
             control.Width = width;
-            //lbl.FontColor = DirectorColors.TextColorLabels;
             container.AddItem(control, x, y);
             return control;
         }
@@ -51,8 +47,6 @@ namespace LingoEngine.Director.Core.UI
             Action<T, string?> setter = propertyKey.CompileSetter();
             LingoGfxInputCombobox control = factory.CreateInputCombobox(name,  x => setter(element, x));
             control.SelectedKey = propertyKey.CompileGetter()(element);
-            //lbl.FontSize = 10;
-            //lbl.FontColor = DirectorColors.TextColorLabels;
             container.AddItem(control, x, y);
             return control;
         }
