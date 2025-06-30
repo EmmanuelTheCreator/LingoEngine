@@ -4,6 +4,7 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using LingoEngine.Tools;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LingoEngine.Director.Core.UI
@@ -71,6 +72,18 @@ namespace LingoEngine.Director.Core.UI
             colorPicker.Color = getter(target);
             colorPicker.Width = width;
             _panel.AddItem(colorPicker);
+            return this;
+        }
+
+        public GfxWrapPanelBuilder AddItemList(string name, IEnumerable<KeyValuePair<string,string>> items, int width = 100, string? selectedKey = null, Action<string?>? onChange = null)
+        {
+            var list = _factory.CreateItemList(name, onChange);
+            foreach (var item in items)
+                list.AddItem(item.Key, item.Value);
+            if (selectedKey != null)
+                list.SelectedKey = selectedKey;
+            list.Width = width;
+            _panel.AddItem(list);
             return this;
         }
 

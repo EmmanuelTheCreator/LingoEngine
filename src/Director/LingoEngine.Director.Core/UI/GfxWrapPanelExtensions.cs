@@ -1,6 +1,7 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
+using System.Collections.Generic;
 
 namespace LingoEngine.Director.Core.UI
 {
@@ -27,6 +28,16 @@ namespace LingoEngine.Director.Core.UI
             if (paddingTop > 0) line.Margin = new LingoMargin(0, paddingTop, 0, 0);
             panel.AddItem(line);
             return panel;
+        }
+
+        public static LingoGfxItemList AddItemList(this LingoGfxWrapPanel panel, ILingoFrameworkFactory factory, string name, IEnumerable<KeyValuePair<string,string>> items, int width = 100)
+        {
+            var list = factory.CreateItemList(name);
+            foreach (var item in items)
+                list.AddItem(item.Key, item.Value);
+            list.Width = width;
+            panel.AddItem(list);
+            return list;
         }
     }
 }
