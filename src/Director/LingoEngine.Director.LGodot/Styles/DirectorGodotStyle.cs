@@ -63,30 +63,89 @@ public sealed class DirectorGodotStyle
         theme.SetFontSize("font_size", "CloseButton", 10); // already done
     }
 
+    public static Theme GetTabContainerTheme()
+    {
+        var theme = new Theme();
+        SetTabColors(theme);
+        return theme;
+    }
+    public static Theme GetTabItemTheme()
+    {
+        var theme = new Theme();
+        // You could define styles for buttons inside the tabs if needed
+        return theme;
+    }
     private static void SetTabColors(Theme theme)
     {
         var fontVariation = new FontVariation
         {
-            BaseFont = DefaultFont,
+            BaseFont = DefaultFont
         };
-        var tabBgStyle = new StyleBoxFlat
+
+        // Style for inactive tab
+        var tabBg = new StyleBoxFlat
+        {
+            BgColor = DirectorColors.BG_Tabs.ToGodotColor(),
+            BorderColor = DirectorColors.Border_Tabs.ToGodotColor(),
+            BorderWidthTop = 1,
+            BorderWidthBottom = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusBottomLeft = 0,
+            CornerRadiusBottomRight = 0,
+        };
+
+        // Style for active (selected) tab
+        var tabFg = new StyleBoxFlat
         {
             BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor(),
+            BorderColor = DirectorColors.TabActiveBorder.ToGodotColor(),
+            BorderWidthTop = 1,
+            BorderWidthBottom = 0, // active tab blends into content area
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusBottomLeft = 0,
+            CornerRadiusBottomRight = 0,
         };
-        var tabBg = new StyleBoxFlat { BgColor = DirectorColors.BG_Tabs.ToGodotColor() };  // unselected
-        var tabFg = new StyleBoxFlat { BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor(), };  // selected
 
-        theme.SetStylebox("tab_bg", "TabBar", tabBg);
-        theme.SetStylebox("tab_fg", "TabBar", tabFg);
-        theme.SetStylebox("panel", "TabBar", tabBgStyle); // background behind tabs
-        theme.SetColor("font_color", "TabBar", new Color(0, 0, 0));         // normal
-        theme.SetColor("font_color_disabled", "TabBar", new Color(0.5f, 0.5f, 0.5f)); // disabled
-        theme.SetColor("font_color_focus", "TabBar", new Color(0.2f, 0.2f, 0.2f)); // focused
+        // Background behind all tabs
+        var tabPanel = new StyleBoxFlat
+        {
+            BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor()
+        };
 
-        var contentBg = new StyleBoxFlat { BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor(), };
-        theme.SetStylebox("panel", "TabContainer", contentBg);
+        // Content panel of the TabContainer
+        var contentPanel = new StyleBoxFlat
+        {
+            BgColor = DirectorColors.BG_WhiteMenus.ToGodotColor()
+        };
+
+        theme.SetStylebox("tab_bg", "TabBar", tabBg);        // Inactive tabs
+        theme.SetStylebox("tab_fg", "TabBar", tabFg);        // Active tab
+        theme.SetStylebox("panel", "TabBar", tabPanel);      // TabBar background
+        theme.SetStylebox("panel", "TabContainer", contentPanel); // Main content background
+
         theme.SetFont("font", "TabBar", fontVariation);
         theme.SetFontSize("font_size", "TabBar", 10);
+
+        theme.SetColor("font_color", "TabBar", DirectorColors.TextColorLabels.ToGodotColor());
+        theme.SetColor("font_color_disabled", "TabBar", DirectorColors.TextColorDisabled.ToGodotColor());
+        theme.SetColor("font_color_focus", "TabBar", DirectorColors.TextColorFocused.ToGodotColor());
+
+        theme.SetStylebox("focus", "TabBar", new StyleBoxEmpty()); // Remove blue focus ring
+
+        // Optional: tighter spacing
+        theme.SetConstant("h_separation", "TabBar", 2);
+        theme.SetConstant("side_margin", "TabBar", 2);
+        theme.SetConstant("top_margin", "TabBar", 2);
+        theme.SetConstant("tab_min_height", "TabBar", 18);
+
+        theme.SetConstant("h_separation", "TabBar", 2);
+        theme.SetConstant("side_margin", "TabBar", 2);
+        theme.SetConstant("top_margin", "TabBar", 2);
+        theme.SetConstant("tab_max_width", "TabBar", 120);
+        theme.SetConstant("tab_min_height", "TabBar", 18);
     }
-  
+
+
 }

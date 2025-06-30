@@ -25,6 +25,7 @@ using LingoEngine.Director.LGodot.UI;
 using LingoEngine.Director.Core.Icons;
 using Microsoft.Extensions.Logging;
 using LingoEngine.Styles;
+using LingoEngine.LGodot.Styles;
 
 namespace LingoEngine.Director.LGodot
 {
@@ -78,6 +79,8 @@ namespace LingoEngine.Director.LGodot
             engineRegistration.AddBuildAction(p =>
             {
                 p.GetRequiredService<ILingoFontManager>().SetDefaultFont(DirectorGodotStyle.DefaultFont);
+                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.Tabs, DirectorGodotStyle.GetTabContainerTheme());
+                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.TabItem, DirectorGodotStyle.GetTabItemTheme());
                new LingoGodotDirectorRoot(p.GetRequiredService<LingoPlayer>(), p);
             });
             return engineRegistration;
