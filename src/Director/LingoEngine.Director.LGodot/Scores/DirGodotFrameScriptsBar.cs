@@ -1,6 +1,9 @@
 ﻿using Godot;
 using LingoEngine.Movies;
 using LingoEngine.Sprites;
+using LingoEngine.Director.Core.Scores;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -8,28 +11,30 @@ internal partial class DirGodotFrameScriptsBar : Control
 {
     private LingoMovie? _movie;
     private readonly List<DirGodotScoreSprite> _sprites = new();
-    private readonly DirGodotScoreGfxValues _gfxValues;
+    private readonly DirScoreGfxValues _gfxValues;
 
     private readonly SubViewport _gridViewport = new();
     private readonly SubViewport _spriteViewport = new();
     private readonly TextureRect _gridTexture = new();
     private readonly TextureRect _spriteTexture = new();
-    private readonly DirGodotGridPainter _gridCanvas;
+    private readonly DirScoreGridPainter _gridCanvas;
+    private readonly ILingoFrameworkFactory _factory;
     private readonly SpriteCanvas _spriteCanvas;
     private bool _spriteDirty = true;
     private int _lastFrame = -1;
     private LingoSprite? _dragSprite;
     private int _dragFrame;
 
-    public DirGodotFrameScriptsBar(DirGodotScoreGfxValues gfxValues)
+    public DirGodotFrameScriptsBar(DirScoreGfxValues gfxValues, ILingoFrameworkFactory factory)
     {
         _gfxValues = gfxValues;
+        _factory = factory;
 
         _gridViewport.SetDisable3D(true);
         _gridViewport.TransparentBg = true;
         _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
-        _gridCanvas = new DirGodotGridPainter(_gfxValues);
-        _gridViewport.AddChild(_gridCanvas);
+        _gridCanvas = new DirScoreGridPainter(_factory, _gfxValues);
+        _gridViewport.AddChild(_gridCanvas.Canvas.Framework<LingoGodotGfxCanvas>());
 
         _spriteViewport.SetDisable3D(true);
         _spriteViewport.TransparentBg = true;
@@ -65,6 +70,7 @@ internal partial class DirGodotFrameScriptsBar : Control
             _movie.SpriteListChanged += OnSpritesChanged;
             _gridCanvas.FrameCount = _movie.FrameCount;
             _gridCanvas.ChannelCount = 1;
+            _gridCanvas.Draw();
         }
         UpdateViewportSize();
         _spriteDirty = true;
@@ -133,7 +139,7 @@ internal partial class DirGodotFrameScriptsBar : Control
         _spriteTexture.CustomMinimumSize = new Vector2(width, 20);
         _gridCanvas.FrameCount = _movie.FrameCount;
         _gridCanvas.ChannelCount = 1;
-        _gridCanvas.QueueRedraw();
+        _gridCanvas.Draw();
         _spriteCanvas.QueueRedraw();
     }
 

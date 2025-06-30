@@ -1,17 +1,18 @@
 ﻿using Godot;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
 internal partial class DirGodotScoreChannelBar : Control
 {
 
-    DirGodotScoreGfxValues _gfxValues;
+    DirScoreGfxValues _gfxValues;
 
     private LingoMovie? _movie;
     private readonly DirGodotSoundBar _soundBar;
 
-    public DirGodotScoreChannelBar(DirGodotScoreGfxValues gfxValues, DirGodotSoundBar soundBar)
+    public DirGodotScoreChannelBar(DirScoreGfxValues gfxValues, DirGodotSoundBar soundBar)
     {
         _gfxValues = gfxValues;
         _soundBar = soundBar;

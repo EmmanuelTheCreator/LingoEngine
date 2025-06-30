@@ -2,6 +2,7 @@
 using LingoEngine.Movies;
 using LingoEngine.Commands;
 using LingoEngine.Movies.Commands;
+using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -9,7 +10,7 @@ internal partial class DirGodotScoreLabelsBar : Control
 {
     private LingoMovie? _movie;
 
-    private readonly DirGodotScoreGfxValues _gfxValues;
+    private readonly DirScoreGfxValues _gfxValues;
     private readonly ILingoCommandManager _commandManager;
     private readonly LineEdit _editField = new();
     private string? _activeLabel;
@@ -20,7 +21,7 @@ internal partial class DirGodotScoreLabelsBar : Control
 
     public event Action<bool>? HeaderCollapseChanged;
 
-    public DirGodotScoreLabelsBar(DirGodotScoreGfxValues gfxValues, ILingoCommandManager commandManager)
+    public DirGodotScoreLabelsBar(DirScoreGfxValues gfxValues, ILingoCommandManager commandManager)
     {
         _gfxValues = gfxValues;
         _commandManager = commandManager;
