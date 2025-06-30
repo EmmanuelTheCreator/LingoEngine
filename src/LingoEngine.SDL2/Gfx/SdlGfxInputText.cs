@@ -31,6 +31,8 @@ namespace LingoEngine.SDL2.Gfx
         public LingoMargin Margin { get; set; } = LingoMargin.Zero;
         public object FrameworkNode => this;
 
+        public int FontSize { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public event Action? ValueChanged;
 
 

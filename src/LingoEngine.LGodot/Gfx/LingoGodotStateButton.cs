@@ -11,9 +11,8 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotStateButton : Button, ILingoFrameworkGfxStateButton, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
-        private Bitmaps.ILingoTexture2D? _texture;
+        private ILingoTexture2D? _texture;
         private readonly StyleBoxFlat _style = new StyleBoxFlat();
-        private readonly Action<bool> _toggleHandler;
         private Action<bool>? _onChange;
         private event Action? _onValueChanged;
 
@@ -23,14 +22,17 @@ namespace LingoEngine.LGodot.Gfx
             ToggleMode = true;
             CustomMinimumSize = new Vector2(2, 2);
             button.Init(this);
-            _toggleHandler = pressed =>
-            {
-                UpdateStyle();
-                _onValueChanged?.Invoke();
-                _onChange?.Invoke(pressed);
-            };
-            Toggled += _toggleHandler;
+
+            //Toggled += _toggleHandler;
+            Pressed += BtnClicked;
             UpdateStyle();
+        }
+
+        private void BtnClicked()
+        {
+            UpdateStyle();
+            _onValueChanged?.Invoke();
+            _onChange?.Invoke(IsOn);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -54,14 +56,14 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public string Text { get => base.Text; set => base.Text = value; }
-        public Bitmaps.ILingoTexture2D? Texture
+        public new string Text { get => base.Text; set => base.Text = value; }
+        public ILingoTexture2D? Texture
         {
             get => _texture;
             set
             {
                 _texture = value;
-                if (value is Bitmaps.ILingoTexture2D tex && tex is LingoEngine.LGodot.Bitmaps.LingoGodotTexture2D godot)
+                if (value is ILingoTexture2D tex && tex is Bitmaps.LingoGodotTexture2D godot)
                     Icon = godot.Texture;
             }
         }
@@ -85,7 +87,8 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
-            Toggled -= _toggleHandler;
+           
+            Pressed -= BtnClicked;
             QueueFree();
             base.Dispose();
         }
@@ -97,15 +100,12 @@ namespace LingoEngine.LGodot.Gfx
             if (ButtonPressed)
             {
                 _style.BgColor = Colors.DarkGray;
-                _style.BorderWidthAll = 1;
-                _style.BorderColor = Colors.White;
             }
             else
             {
                 _style.BgColor = Colors.Transparent;
-                _style.BorderWidthAll = 0;
             }
-
+            _style.SetBorderWidthAll(0);
             AddThemeStyleboxOverride("normal", _style);
             AddThemeStyleboxOverride("hover", _style);
         }
