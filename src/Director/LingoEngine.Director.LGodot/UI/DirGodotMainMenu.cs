@@ -4,6 +4,16 @@ using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Projects;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.LGodot.Gfx;
+using LingoEngine.Commands;
+using LingoEngine.Director.LGodot.Windowing;
+using LingoEngine.Director.Core.Stages.Commands;
+using LingoEngine.Director.Core.Casts.Commands;
+using LingoEngine.Movies;
+using LingoEngine.Sprites;
+using LingoEngine.Casts;
+using LingoEngine.Members;
+using LingoEngine.Director.LGodot.Scores;
+using LingoEngine.Director.LGodot.Casts;
 
 namespace LingoEngine.Director.LGodot;
 
@@ -14,6 +24,9 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
 {
     private readonly LingoGodotWrapPanel _menuBar;
     private readonly LingoGodotWrapPanel _iconBar;
+    private readonly IDirGodotWindowManager _windowManager;
+    private readonly ILingoCommandManager _commandManager;
+    private readonly LingoPlayer _player;
     public bool IsOpen => true;
 
     public DirGodotMainMenu(
@@ -21,8 +34,13 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         LingoPlayer player,
         IDirectorShortCutManager shortCutManager,
         IHistoryManager historyManager,
+        IDirGodotWindowManager windowManager,
+        ILingoCommandManager commandManager,
         DirectorMainMenu directorMainMenu)
     {
+        _windowManager = windowManager;
+        _commandManager = commandManager;
+        _player = player;
         directorMainMenu.Init(this);
 
         _menuBar = directorMainMenu.MenuBar.Framework<LingoGodotWrapPanel>();
@@ -44,6 +62,30 @@ internal partial class DirGodotMainMenu : Control, IDirFrameworkMainMenuWindow
         AddChild(directorMainMenu.WindowMenu.Framework<LingoGodotMenu>());
 
         // button events handled in core
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        base._Input(@event);
+        if (@event is InputEventKey key && key.Pressed && !key.Echo && key.Keycode == Key.Delete)
+        {
+            var active = _windowManager.ActiveWindow;
+            if (active is DirGodotScoreWindow scoreWin && _player.ActiveMovie is LingoMovie movie)
+            {
+                var sprite = scoreWin.SelectedSprite;
+                if (sprite != null)
+                    _commandManager.Handle(new RemoveSpriteCommand(movie, sprite));
+            }
+            else if (active is DirGodotCastWindow castWin && _player.ActiveMovie is LingoMovie movie2)
+            {
+                var member = castWin.SelectedMember as LingoMember;
+                if (member != null)
+                {
+                    var cast = (LingoCast)movie2.CastLib.GetCast(member.CastLibNum);
+                    _commandManager.Handle(new RemoveMemberCommand(cast, member));
+                }
+            }
+        }
     }
 
 
