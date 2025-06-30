@@ -50,6 +50,7 @@ namespace LingoEngine.Director.LGodot.Pictures
             AddToolButton(DirectorIcon.Pencil);
             AddToolButton(DirectorIcon.PaintBrush);
             AddToolButton(DirectorIcon.Eraser);
+            AddToolButton(DirectorIcon.PaintLasso);
             AddToolButton(DirectorIcon.RectangleSelect);
             AddToolButton(DirectorIcon.PaintBucket);
             AddColorPickerForegound();
@@ -71,6 +72,7 @@ namespace LingoEngine.Director.LGodot.Pictures
                     DirectorIcon.Pencil => PainterToolType.Pencil,
                     DirectorIcon.PaintBrush => PainterToolType.PaintBrush,
                     DirectorIcon.Eraser => PainterToolType.Eraser,
+                    DirectorIcon.PaintLasso => PainterToolType.SelectLasso,
                     DirectorIcon.RectangleSelect => PainterToolType.SelectRectangle,
                     DirectorIcon.ColorPicker => PainterToolType.ColorPicker,
                     DirectorIcon.PaintBucket => PainterToolType.Fill,
