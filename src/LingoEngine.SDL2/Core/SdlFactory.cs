@@ -1,3 +1,4 @@
+using System;
 using LingoEngine.Casts;
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
@@ -280,6 +281,17 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         input.Init(impl);
         input.Name = name;
         return input;
+    }
+
+    public LingoGfxColorPicker CreateColorPicker(string name, Action<LingoColor>? onChange = null)
+    {
+        var picker = new LingoGfxColorPicker();
+        var impl = new SdlGfxColorPicker();
+        picker.Init(impl);
+        picker.Name = name;
+        if (onChange != null)
+            picker.ValueChanged += () => onChange(picker.Color);
+        return picker;
     }
 
     public LingoGfxLabel CreateLabel(string name, string text = "")
