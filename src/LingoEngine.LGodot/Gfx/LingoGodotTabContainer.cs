@@ -13,6 +13,17 @@ namespace LingoEngine.LGodot.Gfx
         private LingoMargin _margin = LingoMargin.Zero;
         private readonly List<ILingoFrameworkGfxTabItem> _nodes = new List<ILingoFrameworkGfxTabItem>();
         private readonly ILingoGodotStyleManager _lingoGodotStyleManager;
+
+        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
+        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
+        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
+        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public bool Visibility { get => Visible; set => Visible = value; }
+        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
+
+        public object FrameworkNode => this;
+
+
         public LingoGodotTabContainer(LingoGfxTabContainer tab, ILingoGodotStyleManager lingoGodotStyleManager)
         {
             tab.Init(this);
@@ -28,6 +39,12 @@ namespace LingoEngine.LGodot.Gfx
             ClipTabs = false;
             ClipTabs = false;
 
+          
+        }
+
+        public override void _Ready()
+        {
+            base._Ready();
             AddThemeConstantOverride("h_separation", 2);
             AddThemeConstantOverride("side_margin", 2);
             AddThemeConstantOverride("top_margin", 2);
@@ -35,12 +52,7 @@ namespace LingoEngine.LGodot.Gfx
             AddThemeConstantOverride("tab_min_height", 18); // height that matches Director tabs
         }
 
-        public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
-        public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
-        public bool Visibility { get => Visible; set => Visible = value; }
-        string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
+
 
         public LingoMargin Margin
         {
@@ -55,8 +67,7 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public object FrameworkNode => this;
-
+        
        
 
         public void AddTab(ILingoFrameworkGfxTabItem tabItem)

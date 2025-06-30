@@ -8,6 +8,7 @@ using LingoEngine.LGodot.Primitives;
 using LingoEngine.Director.Core.Stages.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Styles;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -30,7 +31,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly Control _topStripContent = new Control();
     private readonly Control _scrollContent = new Control();
     private ColorRect _hClipper;
-    private ILingoPlayer _player;
+    private LingoPlayer _player;
     private readonly DirScoreGfxValues _gfxValues = new();
     private readonly DirGodotScoreGrid _grid;
     private readonly DirGodotFrameHeader _header;
@@ -54,9 +55,9 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _commandManager = commandManager;
         _historyManager = historyManager;
         directorScoreWindow.Init(this);
-        _player = player;
+        _player = (LingoPlayer) player;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
-
+        BackgroundColor = DirectorColors.BG_WhiteMenus;
 
         var height = 400;
         var width = 800;
@@ -69,13 +70,13 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
         Size = new Vector2(width, height);
         CustomMinimumSize = Size;
-        _soundBar = new DirGodotSoundBar(_gfxValues, player.Factory);
+        _soundBar = new DirGodotSoundBar(_gfxValues, _player.Factory);
         _soundBar.Collapsed = true;
         _channelBar = new DirGodotScoreChannelBar(_gfxValues, _soundBar);
-        _grid = new DirGodotScoreGrid(directorMediator, _gfxValues, commandManager, historyManager, player.Factory);
+        _grid = new DirGodotScoreGrid(directorMediator, _gfxValues, commandManager, historyManager, _player.Factory);
         _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader(_gfxValues);
-        _frameScripts = new DirGodotFrameScriptsBar(_gfxValues, player.Factory);
+        _frameScripts = new DirGodotFrameScriptsBar(_gfxValues, _player.Factory);
         _labelBar = new DirGodotScoreLabelsBar(_gfxValues, commandManager);
         _labelBar.HeaderCollapseChanged += OnHeaderCollapseChanged;
         _labelBar.HeaderCollapsed = _soundBar.Collapsed;

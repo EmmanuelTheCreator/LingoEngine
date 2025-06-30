@@ -8,6 +8,7 @@ using LingoEngine.Director.Core.Stages.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Sprites;
 using LingoEngine.Commands;
+using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores
 {

@@ -145,6 +145,16 @@ public sealed class DirectorGodotStyle
         theme.SetConstant("top_margin", "TabBar", 2);
         theme.SetConstant("tab_max_width", "TabBar", 120);
         theme.SetConstant("tab_min_height", "TabBar", 18);
+
+
+        theme.SetFont("font", "TabBar", new FontVariation { BaseFont = DefaultFont });
+        theme.SetFontSize("font_size", "TabBar", 10);
+
+        var tabBarPanel = new StyleBoxFlat
+        {
+            BgColor = DirectorColors.BG_PropWindowBar.ToGodotColor(), // <- blueish bar!
+        };
+        theme.SetStylebox("panel", "TabBar", tabBarPanel);
     }
 
 

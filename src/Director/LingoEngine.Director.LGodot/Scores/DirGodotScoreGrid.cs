@@ -62,13 +62,14 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
         _gridViewport.SetDisable3D(true);
         _gridViewport.TransparentBg = true;
-        _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+        _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Once);
         _gridCanvas = new DirScoreGridPainter(_factory, _gfxValues);
         _gridViewport.AddChild(_gridCanvas.Canvas.Framework<LingoGodotGfxCanvas>());
 
+        
         _spriteViewport.SetDisable3D(true);
         _spriteViewport.TransparentBg = true;
-        _spriteViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
+        _spriteViewport.SetUpdateMode(SubViewport.UpdateMode.Once);
         _spriteCanvas = new SpriteCanvas(this);
         _spriteViewport.AddChild(_spriteCanvas);
 
@@ -136,8 +137,10 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
 
     private void RefreshSprites()
     {
+        
         if (_spriteListDirty)
         {
+            ForceRefreshSpriteViewPort();
             BuildSpriteList();
             UpdateViewportSize();
             _spriteListDirty = false;
@@ -145,6 +148,12 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         }
     }
 
+    private void ForceRefreshSpriteViewPort()
+    {
+        _spriteViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+        _spriteViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
+        _spriteViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+    }
 
 
     internal void SelectSprite(DirGodotScoreSprite? sprite, bool raiseEvent = true)
@@ -323,6 +332,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         int cur = _movie?.CurrentFrame ?? -1;
         if (_spriteDirty || cur != _lastFrame)
         {
+            ForceRefreshSpriteViewPort();
             _spriteDirty = false;
             _lastFrame = cur;
             _spriteCanvas.QueueRedraw();

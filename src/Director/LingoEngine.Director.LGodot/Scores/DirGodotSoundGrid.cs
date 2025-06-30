@@ -55,7 +55,7 @@ internal partial class DirGodotSoundGrid : Control
             _scrollX = value;
             _canvas.QueueRedraw();
             _gridCanvas.ScrollX = _scrollX;
-            _gridCanvas.Draw();
+            //_gridCanvas.Draw();
             QueueRedraw();
         }
     }
