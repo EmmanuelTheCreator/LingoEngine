@@ -1,5 +1,6 @@
 using Godot;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -9,11 +10,11 @@ namespace LingoEngine.Director.LGodot.Scores;
 internal partial class DirGodotSoundHeader : Control
 {
     private LingoMovie? _movie;
-    private readonly DirGodotScoreGfxValues _gfxValues;
+    private readonly DirScoreGfxValues _gfxValues;
     private readonly bool[] _muted = new bool[4];
     private bool _collapsed;
 
-    public DirGodotSoundHeader(DirGodotScoreGfxValues gfxValues)
+    public DirGodotSoundHeader(DirScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
         Size = new Vector2(_gfxValues.ChannelInfoWidth, 0);

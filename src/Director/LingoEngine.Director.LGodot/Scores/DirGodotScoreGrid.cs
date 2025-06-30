@@ -4,6 +4,9 @@ using LingoEngine.Director.Core.Tools;
 using LingoEngine.Sprites;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Sprites;
+using LingoEngine.Director.Core.Scores;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -20,13 +23,12 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private readonly IHistoryManager _historyManager;
     private readonly PopupMenu _contextMenu = new();
     private DirGodotScoreSprite? _contextSprite;
-    private readonly DirGodotScoreGfxValues _gfxValues;
+    private readonly DirScoreGfxValues _gfxValues;
 
     private readonly SubViewport _gridViewport = new();
     private readonly SubViewport _spriteViewport = new();
     private readonly TextureRect _gridTexture = new();
     private readonly TextureRect _spriteTexture = new();
-    private readonly DirGodotGridPainter _gridCanvas;
     private readonly SpriteCanvas _spriteCanvas;
     private readonly DirGodotScoreDragHandler _dragHandler;
     private bool _spriteDirty = true;
@@ -45,20 +47,24 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
     private Vector2I? _lastSelectedCell = null;
 
 
-    public DirGodotScoreGrid(IDirectorEventMediator mediator, DirGodotScoreGfxValues gfxValues, ILingoCommandManager commandManager, IHistoryManager historyManager)
+    private readonly ILingoFrameworkFactory _factory;
+    private readonly DirScoreGridPainter _gridCanvas;
+
+    public DirGodotScoreGrid(IDirectorEventMediator mediator, DirScoreGfxValues gfxValues, ILingoCommandManager commandManager, IHistoryManager historyManager, ILingoFrameworkFactory factory)
     {
         _gfxValues = gfxValues;
         _mediator = mediator;
         _commandManager = commandManager;
         _historyManager = historyManager;
+        _factory = factory;
         AddChild(_contextMenu);
         _contextMenu.IdPressed += OnContextMenuItem;
 
         _gridViewport.SetDisable3D(true);
         _gridViewport.TransparentBg = true;
         _gridViewport.SetUpdateMode(SubViewport.UpdateMode.Always);
-        _gridCanvas = new DirGodotGridPainter(_gfxValues);
-        _gridViewport.AddChild(_gridCanvas);
+        _gridCanvas = new DirScoreGridPainter(_factory, _gfxValues);
+        _gridViewport.AddChild(_gridCanvas.Canvas.Framework<LingoGodotGfxCanvas>());
 
         _spriteViewport.SetDisable3D(true);
         _spriteViewport.TransparentBg = true;
@@ -100,6 +106,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
             _gridCanvas.FrameCount = _movie.FrameCount;
             _gridCanvas.ChannelCount = _movie.MaxSpriteChannelCount;
             _dragHandler.SetMovie(_movie);
+            _gridCanvas.Draw();
         }
 
         UpdateViewportSize();
@@ -374,7 +381,7 @@ internal partial class DirGodotScoreGrid : Control, IHasSpriteSelectedEvent
         _spriteTexture.CustomMinimumSize = new Vector2(width, height);
         _gridCanvas.FrameCount = _movie.FrameCount;
         _gridCanvas.ChannelCount = _movie.MaxSpriteChannelCount;
-        _gridCanvas.QueueRedraw();
+        _gridCanvas.Draw();
         _spriteCanvas.QueueRedraw();
     }
 

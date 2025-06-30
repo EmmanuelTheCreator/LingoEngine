@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using LingoEngine.Movies;
 using LingoEngine.Members;
 using LingoEngine.Sounds;
+using LingoEngine.Director.Core.Scores;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -13,20 +16,22 @@ internal partial class DirGodotSoundGrid : Control
 {
     private LingoMovie? _movie;
     private readonly List<DirGodotScoreAudioClip> _clips = new();
-    private readonly DirGodotScoreGfxValues _gfxValues;
+    private readonly DirScoreGfxValues _gfxValues;
     private bool _collapsed;
     private bool _clipDirty = true;
     private float _scrollX;
 
-    private readonly DirGodotGridPainter _gridCanvas;
+    private readonly DirScoreGridPainter _gridCanvas;
+    private readonly ILingoFrameworkFactory _factory;
     private readonly ClipCanvas _canvas;
 
-    public DirGodotSoundGrid(DirGodotScoreGfxValues gfxValues)
+    public DirGodotSoundGrid(DirScoreGfxValues gfxValues, ILingoFrameworkFactory factory)
     {
         _gfxValues = gfxValues;
-        _gridCanvas = new DirGodotGridPainter(gfxValues);
+        _factory = factory;
+        _gridCanvas = new DirScoreGridPainter(factory, gfxValues);
         _canvas = new ClipCanvas(this);
-        AddChild(_gridCanvas);
+        AddChild(_gridCanvas.Canvas.Framework<LingoGodotGfxCanvas>());
         AddChild(_canvas);
     }
 
@@ -50,7 +55,7 @@ internal partial class DirGodotSoundGrid : Control
             _scrollX = value;
             _canvas.QueueRedraw();
             _gridCanvas.ScrollX = _scrollX;
-            _gridCanvas.QueueRedraw();
+            _gridCanvas.Draw();
             QueueRedraw();
         }
     }
@@ -68,6 +73,7 @@ internal partial class DirGodotSoundGrid : Control
             _movie.AudioClipListChanged += OnClipsChanged;
             _gridCanvas.FrameCount = _movie.FrameCount;
             _gridCanvas.ChannelCount = 4;
+            _gridCanvas.Draw();
         }
         UpdateSize();
         _clipDirty = true;
@@ -135,9 +141,11 @@ internal partial class DirGodotSoundGrid : Control
         float height = (_collapsed ? 0 : 4 * _gfxValues.ChannelHeight);
         CustomMinimumSize = new Vector2(width, height);
         _canvas.CustomMinimumSize = CustomMinimumSize;
-        _gridCanvas.CustomMinimumSize = CustomMinimumSize;
+        _gridCanvas.Canvas.Width = width;
+        _gridCanvas.Canvas.Height = height;
         _gridCanvas.FrameCount = _movie.FrameCount;
         _gridCanvas.ChannelCount = 4;
+        _gridCanvas.Draw();
     }
 
     private partial class ClipCanvas : Control
