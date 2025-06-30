@@ -57,7 +57,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         directorScoreWindow.Init(this);
         _player = (LingoPlayer) player;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
-        BackgroundColor = DirectorColors.BG_WhiteMenus;
+        
 
         var height = 400;
         var width = 800;

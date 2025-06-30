@@ -87,7 +87,14 @@ namespace LingoEngine.Director.Core.Inspector
         }
 
 
-        public GfxPanelBuilder AddTextInput<T>(string name, string label, T target, Expression<Func<T, string?>> property, int inputSpan = 1, int labelSpan = 1)
+        public GfxPanelBuilder AddLabel(string name, string text, int labelSpan = 1)
+        {
+            var (xLabel, xInput, y) = Layout(labelSpan, 0);
+            _panel.SetLabelAt(_factory, name, xLabel, y, text);
+            Advance(labelSpan);
+            return this;
+        }
+         public GfxPanelBuilder AddTextInput<T>(string name, string label, T target, Expression<Func<T, string?>> property, int inputSpan = 1, int labelSpan = 1)
         {
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();
@@ -107,9 +114,15 @@ namespace LingoEngine.Director.Core.Inspector
             _panel.SetInputNumberAt(_factory, target, name + "Input", xInput, y,
                 (int)ComputeInputWidth(inputSpan, showLabel, stretch), property);
             Advance((showLabel ? labelSpan : 0) + inputSpan);
-
-
-
+            return this;
+        } 
+        public GfxPanelBuilder AddCheckBox<T>(string name, string label, T target, Expression<Func<T, bool>> property,int inputSpan = 1, bool showLabel = true, int labelSpan = 1)
+        {
+            var (xLabel, xInput, y) = Layout(showLabel?labelSpan:0, inputSpan);
+            if (showLabel)
+                _panel.SetLabelAt(_factory, name + "Label", xLabel, y, label);
+            _panel.SetCheckboxAt(_factory, target, name + "Label", xInput, y, property);
+            Advance((showLabel ? labelSpan : 0) + inputSpan);
             return this;
         }
 

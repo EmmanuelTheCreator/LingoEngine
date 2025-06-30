@@ -19,7 +19,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IDirFrameworkP
         : base(DirectorMenuCodes.PropertyInspector, "Property Inspector", windowManager)
     {
         _inspectorWindow = inspectorWindow;
-        BackgroundColor = DirectorColors.BG_WhiteMenus;
+        
         Size = new Vector2(260, 400);
         _inspectorWindow.Init(this, Size.X, Size.Y,TitleBarHeight);
         CustomMinimumSize = Size;
@@ -32,14 +32,14 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IDirFrameworkP
 
         var tabs = _inspectorWindow.Tabs.Framework<LingoGodotTabContainer>();
         tabs.Position = new Vector2(0, TitleBarHeight + DirectorPropertyInspectorWindow.HeaderHeight);
-        tabs.Size = new Vector2(Size.X - 10, Size.Y - 30 - DirectorPropertyInspectorWindow.HeaderHeight);
+        tabs.Size = new Vector2(Size.X, Size.Y - 30 - DirectorPropertyInspectorWindow.HeaderHeight);
         AddChild(tabs);
 
-        var behaviorPanel = _inspectorWindow.BehaviorPanel.Framework<LingoGodotPanel>();
-        behaviorPanel.Visibility = false;
-        behaviorPanel.Position = new Vector2(0, TitleBarHeight + DirectorPropertyInspectorWindow.HeaderHeight);
-        behaviorPanel.Size = new Vector2(Size.X - 10, 0);
-        AddChild(behaviorPanel);
+        //var behaviorPanel = _inspectorWindow.BehaviorPanel.Framework<LingoGodotPanel>();
+        //behaviorPanel.Visibility = false;
+        //behaviorPanel.Position = new Vector2(0, TitleBarHeight + DirectorPropertyInspectorWindow.HeaderHeight);
+        //behaviorPanel.Size = new Vector2(Size.X - 10, 0);
+        //AddChild(behaviorPanel);
 
     }
   

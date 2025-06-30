@@ -6,10 +6,12 @@ using LingoEngine.Tools;
 using LingoEngine.Bitmaps;
 using LingoEngine.Director.Core.Inspector;
 
+
 namespace LingoEngine.Director.Core.UI
 {
     public static class GfxPanelExtensions
     {
+        
         public static GfxPanelBuilder Compose(this LingoGfxPanel panel, ILingoFrameworkFactory factory)
         {
             var builder = new GfxPanelBuilder(panel, factory);
