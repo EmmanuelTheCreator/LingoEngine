@@ -1,7 +1,5 @@
 using Godot;
 using LingoEngine.Gfx;
-using System;
-using System.Collections.Generic;
 using LingoEngine.Primitives;
 
 namespace LingoEngine.LGodot.Gfx
@@ -16,21 +14,12 @@ namespace LingoEngine.LGodot.Gfx
         private Action<string?>? _onChange;
         private event Action? _onValueChanged;
 
-        public LingoGodotItemList(LingoGfxItemList list, Action<string?>? onChange)
-        {
-            _onChange = onChange;
-            list.Init(this);
-            ItemSelected += idx => _onValueChanged?.Invoke();
-            if (_onChange != null)
-                ItemSelected += idx => _onChange(SelectedKey);
-        }
-
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
         public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
         public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
         public bool Visibility { get => Visible; set => Visible = value; }
-        public bool Enabled { get => !Disabled; set => Disabled = !value; }
+        public bool Enabled { get; set; } // { get => !Disabled; set => Disabled = !value; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 
         public LingoMargin Margin
@@ -47,7 +36,21 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         public object FrameworkNode => this;
-        public IReadOnlyList<KeyValuePair<string,string>> Items => _items;
+        public IReadOnlyList<KeyValuePair<string, string>> Items => _items;
+
+        public LingoGodotItemList(LingoGfxItemList list, Action<string?>? onChange)
+        {
+            _onChange = onChange;
+            list.Init(this);
+            ItemSelected += idx => _onValueChanged?.Invoke();
+            if (_onChange != null)
+                ItemSelected += idx => _onChange(SelectedKey);
+            Width = 200;
+            Height = 200;
+
+        }
+
+      
         public void AddItem(string key, string value)
         {
             _items.Add(new KeyValuePair<string,string>(key, value));
@@ -60,17 +63,19 @@ namespace LingoEngine.LGodot.Gfx
             _items.Clear();
             Clear();
         }
+        public int _selectedIndex;
         public int SelectedIndex
         {
-            get => SelectedItems.Length > 0 ? SelectedItems[0] : -1;
+            get => _selectedIndex;
             set
             {
                 if (value < 0 || value >= ItemCount)
                 {
-                    UnselectAll();
+                    DeselectAll();
                 }
                 else
                 {
+                    _selectedIndex = value;
                     Select(value);
                 }
             }
@@ -80,7 +85,7 @@ namespace LingoEngine.LGodot.Gfx
             get => SelectedIndex >= 0 ? (string?)GetItemMetadata(SelectedIndex) : null;
             set
             {
-                if (value is null) { UnselectAll(); return; }
+                if (value is null) { DeselectAll(); return; }
                 for (int i = 0; i < ItemCount; i++)
                 {
                     if ((string?)GetItemMetadata(i) == value)

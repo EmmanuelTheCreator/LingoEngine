@@ -13,11 +13,13 @@ namespace LingoEngine.Sprites
         /// Properties configured by the user via the property dialog.
         /// </summary>
         public BehaviorPropertiesContainer UserProperties { get; } = new();
+        public string Name { get; set; }
 
 #pragma warning disable CS8618
         public LingoSpriteBehavior(ILingoMovieEnvironment env) : base(env)
 #pragma warning restore CS8618
         {
+            Name = GetType().Name;
         }
 
         internal void SetMe(LingoSprite sprite)
