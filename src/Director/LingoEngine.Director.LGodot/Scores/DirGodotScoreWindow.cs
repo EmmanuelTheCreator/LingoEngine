@@ -4,6 +4,7 @@ using LingoEngine.Core;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.Core.Gfx;
+using LingoEngine.LGodot.Primitives;
 using LingoEngine.Director.Core.Stages.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
@@ -30,7 +31,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
     private readonly Control _scrollContent = new Control();
     private ColorRect _hClipper;
     private ILingoPlayer _player;
-    private readonly DirGodotScoreGfxValues _gfxValues = new();
+    private readonly DirScoreGfxValues _gfxValues = new();
     private readonly DirGodotScoreGrid _grid;
     private readonly DirGodotFrameHeader _header;
     private readonly DirGodotFrameScriptsBar _frameScripts;
@@ -68,13 +69,13 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
         Size = new Vector2(width, height);
         CustomMinimumSize = Size;
-        _soundBar = new DirGodotSoundBar(_gfxValues);
+        _soundBar = new DirGodotSoundBar(_gfxValues, player.Factory);
         _soundBar.Collapsed = true;
         _channelBar = new DirGodotScoreChannelBar(_gfxValues, _soundBar);
-        _grid = new DirGodotScoreGrid(directorMediator, _gfxValues, commandManager, historyManager);
+        _grid = new DirGodotScoreGrid(directorMediator, _gfxValues, commandManager, historyManager, player.Factory);
         _mediator.Subscribe(_grid);
         _header = new DirGodotFrameHeader(_gfxValues);
-        _frameScripts = new DirGodotFrameScriptsBar(_gfxValues);
+        _frameScripts = new DirGodotFrameScriptsBar(_gfxValues, player.Factory);
         _labelBar = new DirGodotScoreLabelsBar(_gfxValues, commandManager);
         _labelBar.HeaderCollapseChanged += OnHeaderCollapseChanged;
         _labelBar.HeaderCollapsed = _soundBar.Collapsed;
@@ -280,9 +281,9 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
 
     internal partial class DirGodotCastLeftTopLabels : Control
     {
-        private readonly DirGodotScoreGfxValues _gfxValues;
+        private readonly DirScoreGfxValues _gfxValues;
 
-        public DirGodotCastLeftTopLabels(DirGodotScoreGfxValues gfxValues)
+        public DirGodotCastLeftTopLabels(DirScoreGfxValues gfxValues)
         {
             _gfxValues = gfxValues;
             Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, 40);
@@ -304,21 +305,21 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
                 DrawLines(top);
                
             }
-            DrawLine(new Vector2(0, top + height), new Vector2(Size.X, top + height), _gfxValues.ColLineDark);
-            DrawLine(new Vector2(0, top + height + 1), new Vector2(Size.X, top + height + 1), _gfxValues.ColLineLight);
+            DrawLine(new Vector2(0, top + height), new Vector2(Size.X, top + height), _gfxValues.ColLineDark.ToGodotColor());
+            DrawLine(new Vector2(0, top + height + 1), new Vector2(Size.X, top + height + 1), _gfxValues.ColLineLight.ToGodotColor());
         }
         private void DrawLines(int top)
         {
-            DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark);
-            DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight);
+            DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark.ToGodotColor());
+            DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight.ToGodotColor());
         }
     }
 
     internal partial class DirGodotCastLeftLabel : Control
     {
-        private readonly DirGodotScoreGfxValues _gfxValues;
+        private readonly DirScoreGfxValues _gfxValues;
 
-        public DirGodotCastLeftLabel(DirGodotScoreGfxValues gfxValues)
+        public DirGodotCastLeftLabel(DirScoreGfxValues gfxValues)
         {
             _gfxValues = gfxValues;
             Size = new Vector2(gfxValues.ChannelLabelWidth + gfxValues.ChannelHeight, 20);
@@ -337,14 +338,14 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
             if (withTopLines)
                 DrawLines(top);
             DrawString(font, new Vector2(5, top + font.GetAscent() - 3), text, HorizontalAlignment.Left, -1, 10, new Color("#666666"));
-            DrawLine(new Vector2(0, top + height), new Vector2(Size.X, top + height), _gfxValues.ColLineDark);
-            DrawLine(new Vector2(0, top + height + 1), new Vector2(Size.X, top + height + 1), _gfxValues.ColLineLight);
+            DrawLine(new Vector2(0, top + height), new Vector2(Size.X, top + height), _gfxValues.ColLineDark.ToGodotColor());
+            DrawLine(new Vector2(0, top + height + 1), new Vector2(Size.X, top + height + 1), _gfxValues.ColLineLight.ToGodotColor());
         }
 
         private void DrawLines(int top)
         {
-            DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark);
-            DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight);
+            DrawLine(new Vector2(0, top), new Vector2(Size.X, top), _gfxValues.ColLineDark.ToGodotColor());
+            DrawLine(new Vector2(0, top + 1), new Vector2(Size.X, top + 1), _gfxValues.ColLineLight.ToGodotColor());
         }
     }
 
