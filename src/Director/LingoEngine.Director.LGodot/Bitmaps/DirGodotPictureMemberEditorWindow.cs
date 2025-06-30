@@ -60,6 +60,8 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _dragSelecting;
     private Vector2I _selectStart;
     private Rect2I? _dragRect;
+    private bool _lassoSelecting;
+    private List<Vector2I> _lassoPoints = new();
 
 
     private readonly float[] _zoomLevels = new float[]
@@ -498,7 +500,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 if (mb.Pressed && !@_spaceHeld)
                 {
                     if (_paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
-                        SelectingPixels();
+                        StartRectangleSelection();
+                    else if (_paintToolbar.SelectedTool == PainterToolType.SelectLasso)
+                        StartLassoSelection();
                     else if (_painter != null && _imageRect.Texture != null)
                         DrawingPixels();
                     GetViewport().SetInputAsHandled();
@@ -508,7 +512,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 if (!mb.Pressed)
                 {
                     if (_dragSelecting && _paintToolbar.SelectedTool == PainterToolType.SelectRectangle)
-                        SelectingPixelsFinished(mb);
+                        FinishRectangleSelection(mb);
+                    else if (_lassoSelecting && _paintToolbar.SelectedTool == PainterToolType.SelectLasso)
+                        FinishLassoSelection(mb);
                     else
                         _panning = false;
                     GetViewport().SetInputAsHandled();
@@ -529,6 +535,15 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
                 var local = _imageRect.GetLocalMousePosition() / _scale;
                 var end = new Vector2I((int)local.X, (int)local.Y);
                 _dragRect = RectFromPoints(_selectStart, end);
+                _selectionCanvas.QueueRedraw();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            else if (_lassoSelecting && _paintToolbar.SelectedTool == PainterToolType.SelectLasso)
+            {
+                var local = _imageRect.GetLocalMousePosition() / _scale;
+                var point = new Vector2I((int)local.X, (int)local.Y);
+                _lassoPoints.Add(point);
                 _selectionCanvas.QueueRedraw();
                 GetViewport().SetInputAsHandled();
                 return;
@@ -563,7 +578,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         GetViewport().SetInputAsHandled();
     }
 
-    private void SelectingPixelsFinished(InputEventMouseButton mb)
+    private void FinishRectangleSelection(InputEventMouseButton mb)
     {
         var local = _imageRect.GetLocalMousePosition() / _scale;
         var end = new Vector2I((int)local.X, (int)local.Y);
@@ -581,7 +596,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _commandManager.Handle(new PainterDrawPixelCommand(pixel.X, pixel.Y));
     }
 
-    private void SelectingPixels()
+    private void StartRectangleSelection()
     {
         if (_painter != null)
         {
@@ -591,6 +606,26 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             _dragSelecting = true;
             _selectionCanvas.QueueRedraw();
         }
+    }
+
+    private void StartLassoSelection()
+    {
+        if (_painter != null)
+        {
+            var local = _imageRect.GetLocalMousePosition() / _scale;
+            _lassoPoints = new List<Vector2I> { new((int)local.X, (int)local.Y) };
+            _lassoSelecting = true;
+            _selectionCanvas.QueueRedraw();
+        }
+    }
+
+    private void FinishLassoSelection(InputEventMouseButton mb)
+    {
+        if (_lassoPoints.Count > 2)
+            ApplySelection(PointsInsidePolygon(_lassoPoints), mb.CtrlPressed, mb.ShiftPressed);
+        _lassoSelecting = false;
+        _lassoPoints.Clear();
+        _selectionCanvas.QueueRedraw();
     }
 
     private void SpaceBarPress(InputEventKey keyEvent)
@@ -626,6 +661,34 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         return new Rect2I(minX, minY, maxX - minX + 1, maxY - minY + 1);
     }
 
+    private static IEnumerable<Vector2I> PointsInsidePolygon(List<Vector2I> poly)
+    {
+        int minX = poly.Min(p => p.X);
+        int maxX = poly.Max(p => p.X);
+        int minY = poly.Min(p => p.Y);
+        int maxY = poly.Max(p => p.Y);
+
+        for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
+                if (PointInPolygon(new Vector2I(x, y), poly))
+                    yield return new Vector2I(x, y);
+    }
+
+    private static bool PointInPolygon(Vector2I p, List<Vector2I> poly)
+    {
+        bool inside = false;
+        for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+        {
+            var pi = poly[i];
+            var pj = poly[j];
+            bool intersect = ((pi.Y > p.Y) != (pj.Y > p.Y)) &&
+                             (p.X < (float)(pj.X - pi.X) * (p.Y - pi.Y) / (pj.Y - pi.Y) + pi.X);
+            if (intersect)
+                inside = !inside;
+        }
+        return inside;
+    }
+
     private void ApplySelection(Rect2I rect, bool ctrl, bool shift)
     {
         var pixels = new List<Vector2I>();
@@ -633,6 +696,11 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
             for (int x = 0; x < rect.Size.X; x++)
                 pixels.Add(rect.Position + new Vector2I(x, y));
 
+        ApplySelection(pixels, ctrl, shift);
+    }
+
+    private void ApplySelection(IEnumerable<Vector2I> pixels, bool ctrl, bool shift)
+    {
         if (shift)
         {
             foreach (var p in pixels)
