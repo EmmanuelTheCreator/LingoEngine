@@ -24,6 +24,11 @@ public partial class RootNodeTetriGrounds : Node2D
     {
         try
         {
+            /*
+ // TODO:  Apply Director UI theme from IoC
+ var style = serviceProvider.GetRequiredService<LingoGodotStyle>();
+ this.Theme = style.Theme;
+*/
 #if DEBUG
             ProjectSettings.SetSetting("display/window/stretch/mode", "disabled");
             ProjectSettings.SetSetting("display/window/stretch/aspect", "ignore");

@@ -1,6 +1,7 @@
 ﻿using Godot;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.LGodot.Primitives;
+using LingoEngine.LGodot.Styles;
 
 namespace LingoEngine.Director.LGodot;
 
@@ -10,21 +11,24 @@ namespace LingoEngine.Director.LGodot;
 /// </summary>
 public sealed class DirectorGodotStyle
 {
+    private readonly LingoGodotStyle lingoGodotStyle;
+
     public Theme Theme { get; }
     /// <summary>
     /// Highlight color for selected elements in the Director UI.
     /// </summary>
     public Color SelectedColor { get; } = Colors.DodgerBlue;
 
-    public DirectorGodotStyle()
+    public DirectorGodotStyle(LingoGodotStyle lingoGodotStyle)
     {
+        this.lingoGodotStyle = lingoGodotStyle;
         Theme = BuildTheme();
     }
     public static Font DefaultFont => GD.Load<Font>("res://Media/Fonts/ARIAL.TTF");
-    private static Theme BuildTheme()
+    private Theme BuildTheme()
     {
-        var theme = new Theme();
-  
+        var theme = lingoGodotStyle.Theme;
+
         // Default font size (not specific to a control type — fallback)
         theme.DefaultFontSize = 11;
 
@@ -35,50 +39,12 @@ public sealed class DirectorGodotStyle
         theme.SetFontSize("title_button_font_size", "Tree", 12);
 
         SetCloseButtonStyle(theme);
-        SetInputStyles(theme);
+        //SetInputStyles(theme);
         SetTabColors(theme);
         return theme;
     }
 
-    private static void SetInputStyles(Theme theme)
-    {
-        var fontVariation = new FontVariation
-        {
-            BaseFont = DefaultFont,
-        };
-
-        // Define padding via content margins in a StyleBoxFlat
-        var inputStyle = new StyleBoxFlat
-        {
-            BgColor = new Color("#FFFFFF"), // or keep default
-            ContentMarginLeft = 1,
-            ContentMarginRight = 1,
-            ContentMarginTop = 1,
-            ContentMarginBottom = 1,
-            BorderWidthTop = 1,
-            BorderWidthBottom = 1,
-            BorderWidthLeft = 1,
-            BorderWidthRight = 1,
-            BorderColor = DirectorColors.InputBorder.ToGodotColor(),
-        };
-
-        // Apply to each input-like control
-        foreach (var controlType in new[] { "LineEdit", "TextEdit", "SpinBox", "SearchBox" })
-        {
-            theme.SetStylebox("normal", controlType, inputStyle);
-            theme.SetStylebox("focus", controlType, inputStyle); // optional
-            theme.SetStylebox("hover", controlType, inputStyle); // optional
-            theme.SetColor("font_color", controlType, DirectorColors.InputText.ToGodotColor());
-            theme.SetFont("font", controlType, fontVariation);
-            theme.SetFontSize("font_size", controlType, 11);
-            theme.SetConstant("minimum_height", controlType, 10);
-            theme.SetConstant("minimum_width", controlType, 5);
-            theme.SetConstant("minimum_spaces", controlType, 1);
-            theme.SetConstant("minimum_character_width", controlType, 0);
-        }
-     
-    }
-
+   
     private static void SetCloseButtonStyle(Theme theme)
     {
         // StyleBoxes for CloseButton
