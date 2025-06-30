@@ -1,5 +1,6 @@
 ﻿using Godot;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core.Scores;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -7,8 +8,8 @@ internal partial class DirGodotFrameHeader : Control
 {
     private LingoMovie? _movie;
 
-    private readonly DirGodotScoreGfxValues _gfxValues;
-    public DirGodotFrameHeader(DirGodotScoreGfxValues gfxValues)
+    private readonly DirScoreGfxValues _gfxValues;
+    public DirGodotFrameHeader(DirScoreGfxValues gfxValues)
     {
         _gfxValues = gfxValues;
     }

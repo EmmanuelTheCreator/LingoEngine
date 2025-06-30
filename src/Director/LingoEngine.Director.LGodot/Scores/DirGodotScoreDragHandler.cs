@@ -39,7 +39,7 @@ namespace LingoEngine.Director.LGodot.Scores
         private int _origEnd;
 
         private ILingoMember? _previewMember;
-        private readonly DirGodotScoreGfxValues _gfxValues;
+        private readonly DirScoreGfxValues _gfxValues;
         private readonly List<DirGodotScoreSprite> _sprites;
 
         internal Rect2? SpritePreviewRect => _spritePreviewRect;
@@ -49,7 +49,7 @@ namespace LingoEngine.Director.LGodot.Scores
         internal int PreviewEnd => _previewEnd;
 
 
-        public DirGodotScoreDragHandler(DirGodotScoreGrid grid, LingoMovie movie, DirGodotScoreGfxValues gfxValues, List<DirGodotScoreSprite> sprites, ILingoCommandManager commandManager)
+        public DirGodotScoreDragHandler(DirGodotScoreGrid grid, LingoMovie movie, DirScoreGfxValues gfxValues, List<DirGodotScoreSprite> sprites, ILingoCommandManager commandManager)
         {
             _movie = movie;
             _grid = grid;

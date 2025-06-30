@@ -1,5 +1,8 @@
 using Godot;
 using LingoEngine.Movies;
+using LingoEngine.Director.Core.Scores;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Gfx;
 
 namespace LingoEngine.Director.LGodot.Scores;
 
@@ -12,10 +15,10 @@ internal partial class DirGodotSoundBar : Control
     private readonly DirGodotSoundGrid _grid;
     private readonly Control _gridClipper = new();
 
-    public DirGodotSoundBar(DirGodotScoreGfxValues gfxValues)
+    public DirGodotSoundBar(DirScoreGfxValues gfxValues, ILingoFrameworkFactory factory)
     {
         _header = new DirGodotSoundHeader(gfxValues);
-        _grid = new DirGodotSoundGrid(gfxValues);
+        _grid = new DirGodotSoundGrid(gfxValues, factory);
         _gridClipper.ClipContents = true;
         _gridClipper.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(_header);
