@@ -5,7 +5,6 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Members;
 using LingoEngine.Movies;
-using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.SDL2.Movies;
 using LingoEngine.SDL2.Pictures;
@@ -23,6 +22,7 @@ using LingoEngine.Stages;
 using LingoEngine.Styles;
 using LingoEngine.SDL2.Stages;
 using LingoEngine.SDL2.Inputs;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.SDL2.Core;
 
@@ -365,16 +365,6 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         throw new NotImplementedException();
     }
 
-    public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100, Action<float>? onChange = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100, Action<float>? onChange = null)
-    {
-        throw new NotImplementedException();
-    }
-
     public LingoGfxInputCheckbox CreateInputCheckbox(string name, Action<bool>? onChange = null)
     {
         throw new NotImplementedException();
@@ -386,6 +376,26 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     }
 
     public LingoGfxWindow CreateWindow(string name, string title = "")
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxInputNumber CreateInputNumber(string name, float? min = null, float? max = null, Action<float>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxSpinBox CreateSpinBox(string name, float? min = null, float? max = null, Action<float>? onChange = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxHorizontalLineSeparator CreateHorizontalLineSeparator(string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    public LingoGfxVerticalLineSeparator CreateVerticalLineSeparator(string name)
     {
         throw new NotImplementedException();
     }

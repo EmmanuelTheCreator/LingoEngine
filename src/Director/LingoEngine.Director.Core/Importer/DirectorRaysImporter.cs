@@ -6,7 +6,7 @@ using ProjectorRays.IO;
 using ProjectorRays.Common;
 using LingoEngine.IO.Data.DTO;
 
-namespace LingoEngine.Director.Core.Import;
+namespace LingoEngine.Director.Core.Importer;
 
 /// <summary>
 /// Utility to convert Director files using the ProjectorRays library into

@@ -1,4 +1,4 @@
-namespace LingoEngine.Director.Core.Gfx
+namespace LingoEngine.Director.Core.UI
 {
     public class DirectorMenuCodes
     {

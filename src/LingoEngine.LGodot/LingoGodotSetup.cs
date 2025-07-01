@@ -1,9 +1,9 @@
 ﻿using Godot;
-using LingoEngine;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Core;
 using LingoEngine.LGodot.Stages;
 using LingoEngine.LGodot.Styles;
+using LingoEngine.Setup;
 using LingoEngine.Stages;
 using LingoEngine.Styles;
 using Microsoft.Extensions.DependencyInjection;

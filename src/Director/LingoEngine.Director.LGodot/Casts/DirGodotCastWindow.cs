@@ -6,11 +6,12 @@ using LingoEngine.Casts;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot.Windowing;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Icons;
 using LingoEngine.Director.Core.Casts.Commands;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Director.LGodot.Styles;
 
 namespace LingoEngine.Director.LGodot.Casts
 {

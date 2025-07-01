@@ -1,9 +1,9 @@
 ﻿using LingoEngine.FrameworkCommunication;
 using LingoEngine.Movies;
-using LingoEngine.Pictures;
 using LingoEngine.Sounds;
 using LingoEngine.Shapes;
 using LingoEngine.Texts;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.Members
 {

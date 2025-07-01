@@ -1,5 +1,5 @@
-﻿using LingoEngine.Inputs;
-using LingoEngine.Pictures;
+﻿using LingoEngine.Bitmaps;
+using LingoEngine.Inputs;
 
 namespace LingoEngine.FrameworkCommunication
 {

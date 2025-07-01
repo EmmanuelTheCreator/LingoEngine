@@ -1,6 +1,6 @@
-﻿using LingoEngine.Movies;
+﻿using LingoEngine.Bitmaps;
+using LingoEngine.Movies;
 using LingoEngine.Movies.Events;
-using LingoEngine.Pictures;
 using LingoEngine.Sprites;
 using LingoEngine.Sprites.Events;
 

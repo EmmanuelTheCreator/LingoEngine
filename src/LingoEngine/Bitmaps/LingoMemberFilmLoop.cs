@@ -3,7 +3,7 @@ using LingoEngine.FilmLoops;
 using LingoEngine.Members;
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Pictures
+namespace LingoEngine.Bitmaps
 {
     /// <summary>
     /// Represents a film loop cast member.

@@ -1,10 +1,9 @@
 ﻿using LingoEngine.Commands;
-using LingoEngine.Director.Core.Bitmaps;
-using LingoEngine.Director.Core.Pictures.Commands;
-using LingoEngine.Director.Core.Windows;
+using LingoEngine.Director.Core.Bitmaps.Commands;
+using LingoEngine.Director.Core.Windowing;
 using System.Reflection;
 
-namespace LingoEngine.Director.Core.Pictures
+namespace LingoEngine.Director.Core.Bitmaps
 {
     public class DirectorBitmapEditWindow : DirectorWindow<IDirFrameworkBitmapEditWindow>,
             ICommandHandler<PainterToolSelectCommand>,
@@ -17,7 +16,7 @@ namespace LingoEngine.Director.Core.Pictures
 
         public bool CanExecute(PainterDrawPixelCommand command) => true;
 
-        public bool Handle(PainterDrawPixelCommand command) => Framework.DrawThePixel(command.X,command.Y);
+        public bool Handle(PainterDrawPixelCommand command) => Framework.DrawThePixel(command.X, command.Y);
 
         public bool CanExecute(PainterFillCommand command) => false;
 

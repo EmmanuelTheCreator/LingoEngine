@@ -1,11 +1,10 @@
 ﻿using LingoEngine.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Director.Core.Tools.Commands;
-using LingoEngine.Director.Core.Windowing;
 using LingoEngine.Director.Core.Windowing.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LingoEngine.Director.Core.Menus
+namespace LingoEngine.Director.Core.Windowing
 {
     public interface IDirFrameworkWindowManager
     {
@@ -65,7 +64,7 @@ namespace LingoEngine.Director.Core.Menus
 
 
 
-        public IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null) 
+        public IDirectorWindowManager Register<TWindow>(string windowCode, DirectorShortCutMap? shortCutMap = null)
             where TWindow : IDirectorWindow
         {
             if (_windowRegistrations.ContainsKey(windowCode))
@@ -97,7 +96,7 @@ namespace LingoEngine.Director.Core.Menus
             registration.Instance.OpenWindow();
             SetActiveWindow(registration);
             return true;
-        } 
+        }
         public bool CloseWindow(string windowCode)
         {
             if (!_windowRegistrations.TryGetValue(windowCode, out var registration)) return false;
@@ -121,7 +120,7 @@ namespace LingoEngine.Director.Core.Menus
             return true;
         }
 
-       
+
 
         private class WindowRegistration : IDirectorWindowRegistration
         {
@@ -141,7 +140,7 @@ namespace LingoEngine.Director.Core.Menus
                 {
                     if (_instance == null)
                         _instance = _constructor();
-                    
+
                     return _instance;
                 }
             }

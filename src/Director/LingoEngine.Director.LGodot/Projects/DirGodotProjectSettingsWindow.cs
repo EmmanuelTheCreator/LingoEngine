@@ -1,8 +1,8 @@
 using Godot;
 using LingoEngine.Director.Core;
 using LingoEngine.Director.Core.FileSystems;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Projects;
+using LingoEngine.Director.Core.UI;
 using LingoEngine.Director.LGodot.Windowing;
 
 namespace LingoEngine.Director.LGodot.Gfx;

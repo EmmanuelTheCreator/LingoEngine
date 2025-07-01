@@ -1,9 +1,8 @@
-﻿
-using LingoEngine.Casts;
+﻿using LingoEngine.Casts;
 using LingoEngine.Members;
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Pictures
+namespace LingoEngine.Bitmaps
 {
 
     /// <summary>

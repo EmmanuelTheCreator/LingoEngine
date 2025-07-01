@@ -1,8 +1,4 @@
 using Godot;
-using LingoEngine.Director.Core.Windows;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using LingoEngine.Lingo.Core;
 using LingoEngine.Projects;
 

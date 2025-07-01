@@ -1,12 +1,10 @@
 ﻿using Godot;
 using LingoEngine.Bitmaps;
-using LingoEngine.LGodot.Bitmaps;
 using LingoEngine.LGodot.Helpers;
-using LingoEngine.Pictures;
 using LingoEngine.Tools;
 using Microsoft.Extensions.Logging;
 
-namespace LingoEngine.LGodot.Pictures
+namespace LingoEngine.LGodot.Bitmaps
 {
     public class LingoGodotMemberBitmap : ILingoFrameworkMemberBitmap, IDisposable
     {
@@ -98,7 +96,7 @@ namespace LingoEngine.LGodot.Pictures
             UpdateImageData(_image);
         }
 
-        
+
 
         private void UpdateImageData(Image image)
         {
@@ -180,8 +178,8 @@ namespace LingoEngine.LGodot.Pictures
             _lingoMemberPicture.SetImageData(_image.GetData());
         }
 
-        public void SetImageData(byte[] bytes) => this.ImageData = bytes;
+        public void SetImageData(byte[] bytes) => ImageData = bytes;
 
-       
+
     }
 }

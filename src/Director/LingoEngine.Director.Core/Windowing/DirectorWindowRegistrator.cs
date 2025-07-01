@@ -1,18 +1,17 @@
-﻿using LingoEngine.Director.Core.Menus;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Director.Core.Stages;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Casts;
 using LingoEngine.Director.Core.Importer;
 using LingoEngine.Director.Core.Projects;
-using LingoEngine.Director.Core.Pictures;
 using LingoEngine.Director.Core.Texts;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Director.Core.Tools.Commands;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Director.Core.Bitmaps;
 
-namespace LingoEngine.Director.Core.Windows
+namespace LingoEngine.Director.Core.Windowing
 {
     public static class DirectorWindowRegistrator
     {
@@ -37,6 +36,6 @@ namespace LingoEngine.Director.Core.Windows
             return serviceProvider;
         }
 
-        
+
     }
 }

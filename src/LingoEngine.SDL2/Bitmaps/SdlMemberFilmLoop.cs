@@ -1,6 +1,6 @@
 using System;
+using LingoEngine.Bitmaps;
 using LingoEngine.FilmLoops;
-using LingoEngine.Pictures;
 using LingoEngine.SDL2.Inputs;
 
 namespace LingoEngine.SDL2.Pictures;

@@ -1,17 +1,17 @@
 using Microsoft.Extensions.DependencyInjection;
-using LingoEngine.Director.Core.Menus;
-using LingoEngine.Director.Core.Windows;
 using LingoEngine.Director.Core.Casts;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.Core.Stages;
 using LingoEngine.Director.Core.FileSystems;
 using LingoEngine.Director.Core.Projects;
 using LingoEngine.Director.Core.Importer;
-using LingoEngine.Director.Core.Pictures;
 using LingoEngine.Director.Core.Texts;
 using LingoEngine.Director.Core.Tools;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Director.Core.Bitmaps;
+using LingoEngine.Director.Core.Windowing;
+using LingoEngine.Setup;
 
 namespace LingoEngine.Director.Core
 {

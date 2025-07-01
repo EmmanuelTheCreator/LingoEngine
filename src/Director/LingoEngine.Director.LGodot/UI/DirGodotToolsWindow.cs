@@ -1,18 +1,23 @@
 using Godot;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.Core.Stages;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Director.Core.Bitmaps;
+using LingoEngine.LGodot.Gfx;
+using LingoEngine.Commands;
+using LingoEngine.Director.Core.Icons;
+using LingoEngine.FrameworkCommunication;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
 internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkToolsWindow
 {
-    private readonly GridContainer _grid = new GridContainer();
     private readonly IStageToolManager _toolManager;
+    private StageToolbar _stageToolbar;
 
     public event Action<int>? IconPressed;
 
-    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow, IStageToolManager toolManager, IDirGodotWindowManager windowManager)
+    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow, IStageToolManager toolManager, IDirGodotWindowManager windowManager, IDirectorIconManager iconManager, ILingoCommandManager commandManager, ILingoFrameworkFactory factory)
         : base(DirectorMenuCodes.ToolsWindow, "Tools", windowManager)
     {
         directorToolsWindow.Init(this);
@@ -21,22 +26,17 @@ internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkTools
         Size = new Vector2(80, 200);
         CustomMinimumSize = Size;
 
-        _grid.Columns = 2;
-        _grid.Position = new Vector2(5, TitleBarHeight + 5);
-        AddChild(_grid);
+        _stageToolbar = new StageToolbar(iconManager, commandManager, factory);
+        var toolbarPanel = _stageToolbar.Panel.Framework<LingoGodotPanel>();
+        toolbarPanel.Position = new Vector2(5, TitleBarHeight + 5);
+        AddChild(toolbarPanel);
 
-        AddButton("P", StageTool.Pointer);
-        AddButton("M", StageTool.Move);
-        AddButton("R", StageTool.Rotate);
+        //AddButton("P", StageTool.Pointer);
+        //AddButton("M", StageTool.Move);
+        //AddButton("R", StageTool.Rotate);
     }
 
-    private void AddButton(string text, StageTool tool)
-    {
-        var btn = new Button { Text = text };
-        btn.CustomMinimumSize = new Vector2(30, 20);
-        btn.Pressed += () => _toolManager.CurrentTool = tool;
-        _grid.AddChild(btn);
-    }
+   
 
   
 }

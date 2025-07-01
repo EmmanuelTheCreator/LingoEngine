@@ -1,16 +1,15 @@
 using LingoEngine.Core;
-using LingoEngine.Director.Core.Menus;
 using LingoEngine.Director.Core.Projects;
 using LingoEngine.Director.Core.Tools;
-using LingoEngine.Director.Core.Windows;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Movies;
 using LingoEngine.Inputs;
 using System.Collections.Generic;
 using LingoEngine.Primitives;
+using LingoEngine.Director.Core.Windowing;
 
-namespace LingoEngine.Director.Core.Gfx
+namespace LingoEngine.Director.Core.UI
 {
     /// <summary>
     /// Framework independent implementation of the Director main menu.
@@ -107,7 +106,7 @@ namespace LingoEngine.Director.Core.Gfx
             _fileMenu.AddItem(ie);
 
             var quit = factory.CreateMenuItem("Quit");
-            quit.Activated += () => System.Environment.Exit(0);
+            quit.Activated += () => Environment.Exit(0);
             _fileMenu.AddItem(quit);
 
             // Edit Menu
@@ -203,10 +202,10 @@ namespace LingoEngine.Director.Core.Gfx
             foreach (var p in parts)
             {
                 var token = p.Trim();
-                if (token.Equals("CTRL", System.StringComparison.OrdinalIgnoreCase)) ctrl = true;
-                else if (token.Equals("ALT", System.StringComparison.OrdinalIgnoreCase)) alt = true;
-                else if (token.Equals("SHIFT", System.StringComparison.OrdinalIgnoreCase)) shift = true;
-                else if (token.Equals("CMD", System.StringComparison.OrdinalIgnoreCase) || token.Equals("META", System.StringComparison.OrdinalIgnoreCase)) meta = true;
+                if (token.Equals("CTRL", StringComparison.OrdinalIgnoreCase)) ctrl = true;
+                else if (token.Equals("ALT", StringComparison.OrdinalIgnoreCase)) alt = true;
+                else if (token.Equals("SHIFT", StringComparison.OrdinalIgnoreCase)) shift = true;
+                else if (token.Equals("CMD", StringComparison.OrdinalIgnoreCase) || token.Equals("META", StringComparison.OrdinalIgnoreCase)) meta = true;
                 else key = token;
             }
             return new ShortCutInfo { Map = map, Key = key.ToUpperInvariant(), Ctrl = ctrl, Alt = alt, Shift = shift, Meta = meta };

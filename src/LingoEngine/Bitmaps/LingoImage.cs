@@ -1,4 +1,4 @@
-﻿namespace LingoEngine.Pictures
+﻿namespace LingoEngine.Bitmaps
 {
     public interface ILingoImage
     {
@@ -14,7 +14,7 @@
         public static int[] AllowedBitDepthsValues => [1, 2, 4, 8, 16, 32];
         public int Width { get; private set; }
 
-        public int Height  { get; private set; }
+        public int Height { get; private set; }
 
         public int BitDepths { get; private set; }
 

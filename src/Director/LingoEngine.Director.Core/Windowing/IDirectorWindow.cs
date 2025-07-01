@@ -1,7 +1,5 @@
 ﻿namespace LingoEngine.Director.Core.Windowing
 {
-    using LingoEngine.Director.Core.Windows;
-
     public interface IDirectorWindow
     {
         void Init(IDirFrameworkWindow frameworkWindow);

@@ -1,6 +1,6 @@
+using LingoEngine.Bitmaps;
 using LingoEngine.Events;
 using LingoEngine.Movies;
-using LingoEngine.Pictures;
 using LingoEngine.Sprites;
 
 namespace LingoEngine.FilmLoops

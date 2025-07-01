@@ -1,6 +1,6 @@
 ﻿using LingoEngine.Primitives;
 
-namespace LingoEngine.FrameworkCommunication
+namespace LingoEngine.Sprites
 {
     /// <summary>
     /// Defines sprite functionality required by the engine. Implemented by
@@ -14,7 +14,7 @@ namespace LingoEngine.FrameworkCommunication
         float X { get; set; }
         float Y { get; set; }
         float Width { get; }
-        float Height { get;  }
+        float Height { get; }
         string Name { get; set; }
         LingoPoint RegPoint { get; set; }
         float SetDesiredHeight { get; set; }

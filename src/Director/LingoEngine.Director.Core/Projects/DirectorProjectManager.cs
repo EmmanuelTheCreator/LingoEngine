@@ -1,10 +1,9 @@
 using LingoEngine.Core;
 using LingoEngine.IO;
 using LingoEngine.Movies;
-using LingoEngine.Director.Core.Windows;
-using LingoEngine.Director.Core.Menus;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Projects;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Director.Core.Windowing;
 
 namespace LingoEngine.Director.Core.Projects;
 

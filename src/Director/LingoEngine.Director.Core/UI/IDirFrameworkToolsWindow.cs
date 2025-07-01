@@ -1,6 +1,6 @@
-﻿using LingoEngine.Director.Core.Windows;
+﻿using LingoEngine.Director.Core.Windowing;
 
-namespace LingoEngine.Director.Core.Gfx
+namespace LingoEngine.Director.Core.UI
 {
     public interface IDirFrameworkToolsWindow : IDirFrameworkWindow { }
 }

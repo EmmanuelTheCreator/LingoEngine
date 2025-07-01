@@ -4,7 +4,7 @@ using LingoEngine.LGodot.Primitives;
 using LingoEngine.LGodot.Styles;
 using LingoEngine.Primitives;
 
-namespace LingoEngine.Director.LGodot;
+namespace LingoEngine.Director.LGodot.Styles;
 
 /// <summary>
 /// Provides the default theme used by the Director UI.
@@ -48,7 +48,7 @@ public sealed class DirectorGodotStyle
         return theme;
     }
 
-   
+
     private static void SetCloseButtonStyle(Theme theme)
     {
         // StyleBoxes for CloseButton
@@ -78,7 +78,7 @@ public sealed class DirectorGodotStyle
         var theme = new Theme();
         // You could define styles for buttons inside the tabs if needed
         return theme;
-    } 
+    }
     public Theme GetPopupWindowTheme()
     {
         return Theme;
@@ -150,7 +150,7 @@ public sealed class DirectorGodotStyle
             BgColor = LingoColorList.Magenta.ToGodotColor(), //DirectorColors.BG_WhiteMenus.ToGodotColor()
         };
 
-       
+
         // Background behind the tabs
         var tabBarBackground = new StyleBoxFlat
         {
@@ -195,7 +195,7 @@ public sealed class DirectorGodotStyle
             BgColor = DirectorColors.Input_Bg.ToGodotColor(),
             BorderColor = DirectorColors.Input_Border.ToGodotColor(),
             BorderWidthTop = 1,
-            BorderWidthBottom = 1, 
+            BorderWidthBottom = 1,
             BorderWidthLeft = 1,
             BorderWidthRight = 1,
             CornerRadiusBottomLeft = 2,
@@ -216,7 +216,7 @@ public sealed class DirectorGodotStyle
         {
             BgColor = Colors.DodgerBlue,
             BorderColor = Colors.Black,
-        }; 
+        };
         var hover = new StyleBoxFlat
         {
             BgColor = Colors.DarkGray,

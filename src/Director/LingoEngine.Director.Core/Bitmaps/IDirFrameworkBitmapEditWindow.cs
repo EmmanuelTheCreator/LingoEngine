@@ -1,5 +1,4 @@
-﻿using LingoEngine.Director.Core.Pictures;
-using LingoEngine.Director.Core.Windows;
+﻿using LingoEngine.Director.Core.Windowing;
 
 namespace LingoEngine.Director.Core.Bitmaps
 {

@@ -2,7 +2,6 @@
 using LingoEngine.Core;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.LGodot.Movies;
-using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Sounds;
 using LingoEngine.LGodot.Texts;
 using LingoEngine.LGodot.Shapes;
@@ -12,7 +11,6 @@ using LingoEngine.Primitives;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 using Microsoft.Extensions.DependencyInjection;
-using LingoEngine.Pictures;
 using LingoEngine.LGodot.Stages;
 using LingoEngine.Members;
 using LingoEngine.Casts;
@@ -27,6 +25,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Xml.Linq;
 using LingoEngine.LGodot.Styles;
+using LingoEngine.LGodot.Bitmaps;
 
 namespace LingoEngine.LGodot.Core
 {

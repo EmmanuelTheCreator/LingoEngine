@@ -1,7 +1,7 @@
 using LingoEngine.FilmLoops;
 using LingoEngine.Members;
 
-namespace LingoEngine.Pictures
+namespace LingoEngine.Bitmaps
 {
     /// <summary>
     /// Framework specific implementation details for a film loop member.

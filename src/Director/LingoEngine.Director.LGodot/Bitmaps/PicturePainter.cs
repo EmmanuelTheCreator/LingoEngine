@@ -2,7 +2,7 @@
 
 using Godot;
 
-namespace LingoEngine.Director.LGodot.Pictures
+namespace LingoEngine.Director.LGodot.Bitmaps
 {
 
     /// <summary>
@@ -21,7 +21,7 @@ namespace LingoEngine.Director.LGodot.Pictures
 
             // In Godot 4.5: use flags to control filtering
             _texture = ImageTexture.CreateFromImage(_image);
-            
+
 
         }
 
