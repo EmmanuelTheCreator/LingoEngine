@@ -1,4 +1,5 @@
-﻿using LingoEngine.FrameworkCommunication;
+﻿using LingoEngine.Director.Core.Styles;
+using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
 using LingoEngine.Sprites;
@@ -55,6 +56,9 @@ namespace LingoEngine.Director.Core.Inspector
                     string labelText = !string.IsNullOrEmpty(prop.Value.Comment) ? prop.Value.Comment! : prop.Key.ToString();
                     var label = _factory.CreateLabel($"PropLabel_{prop.Key}", labelText);
                     label.Width = 80;
+                    label.WrapMode = LingoTextWrapMode.WordSmart;
+                    label.FontColor = DirectorColors.TextColorLabels;
+                    label.FontSize = 10;
                     row.AddItem(label);
 
                     object? current = props[prop.Key];
@@ -65,6 +69,7 @@ namespace LingoEngine.Director.Core.Inspector
                     if (format == "string")
                     {
                         var input = _factory.CreateInputText($"PropInput_{prop.Key}");
+                        input.Width = 70;
                         input.Text = current?.ToString() ?? string.Empty;
                         input.ValueChanged += () => props[prop.Key] = input.Text;
                         row.AddItem(input);
@@ -72,6 +77,7 @@ namespace LingoEngine.Director.Core.Inspector
                     else if (format == "int" || format == "integer")
                     {
                         var input = _factory.CreateInputNumber($"PropInput_{prop.Key}");
+                        input.Width = 70;
                         input.NumberType = LingoNumberType.Integer;
                         if (current is int i)
                             input.Value = i;
@@ -85,6 +91,7 @@ namespace LingoEngine.Director.Core.Inspector
                     else if (format == "boolean" || format == "bool")
                     {
                         var input = _factory.CreateInputCheckbox($"PropInput_{prop.Key}");
+                        input.Width = 70;
                         if (current is bool bval)
                             input.Checked = bval;
                         else if (current is string s && bool.TryParse(s, out var bv))
@@ -95,6 +102,7 @@ namespace LingoEngine.Director.Core.Inspector
                     else
                     {
                         var input = _factory.CreateInputText($"PropInput_{prop.Key}");
+                        input.Width = 70;
                         input.Text = current?.ToString() ?? string.Empty;
                         input.ValueChanged += () => props[prop.Key] = input.Text;
                         row.AddItem(input);
