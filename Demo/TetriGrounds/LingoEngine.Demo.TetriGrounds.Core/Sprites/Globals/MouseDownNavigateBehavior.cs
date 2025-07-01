@@ -2,6 +2,7 @@
 using LingoEngine.Inputs.Events;
 using LingoEngine.Movies;
 using LingoEngine.Movies.Events;
+using LingoEngine.Primitives;
 using LingoEngine.Sprites;
 
 namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
@@ -18,15 +19,23 @@ namespace LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
             _Movie.GoTo(_Movie.CurrentFrame + FrameOffsetOnClick);
         }
     }
-    public class MouseDownNavigateWithStayBehavior : LingoSpriteBehavior, IHasMouseDownEvent, IHasExitFrameEvent
+    public class MouseDownNavigateWithStayBehavior : LingoSpriteBehavior, IHasMouseDownEvent, IHasExitFrameEvent, ILingoPropertyDescriptionList
     {
         private int i;
         public int TickWait = 10;
-        public int FrameOffsetWhenDone = 1;
-        public int FrameOffsetOnClick = 1;
+        public int FrameOffsetWhenDone { get; set; } = 1;
+        public int FrameOffsetOnClick { get; set; } = 1;
         public MouseDownNavigateWithStayBehavior(ILingoMovieEnvironment env) : base(env)
         {
         }
+        public BehaviorPropertyDescriptionList? GetPropertyDescriptionList() => new()
+            {
+                { this, x => x.FrameOffsetWhenDone, "FrameOffset When Done" },
+                { this, x => x.FrameOffsetOnClick, "FrameOffset On Click" }
+            };
+        public string? GetBehaviorDescription() => "Navigate on mpusedown";
+        public string? GetBehaviorTooltip() => "Navigate to the next frame on mouse down, and stay on the current frame for a number of ticks before navigating again.";
+        public bool IsOKToAttach(LingoSymbol spriteType, int spriteNum) => true;
 
         public void MouseDown(ILingoMouse mouse)
         {
