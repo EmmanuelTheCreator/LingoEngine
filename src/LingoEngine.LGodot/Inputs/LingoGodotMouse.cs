@@ -1,9 +1,9 @@
 ﻿using Godot;
 using LingoEngine.FrameworkCommunication;
-using LingoEngine.LGodot.Pictures;
 using LingoEngine.Inputs;
 using static Godot.Input;
-using LingoEngine.Pictures;
+using LingoEngine.Bitmaps;
+using LingoEngine.LGodot.Bitmaps;
 
 
 namespace LingoEngine.LGodot

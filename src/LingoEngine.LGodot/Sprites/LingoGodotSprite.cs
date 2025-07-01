@@ -1,13 +1,12 @@
 ﻿using Godot;
 using LingoEngine.Casts;
-using LingoEngine.FrameworkCommunication;
-using LingoEngine.LGodot.Pictures;
 using LingoEngine.LGodot.Texts;
-using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.Texts;
 using LingoEngine.Members;
 using LingoEngine.Sprites;
+using LingoEngine.Bitmaps;
+using LingoEngine.LGodot.Bitmaps;
 
 namespace LingoEngine.LGodot.Sprites
 {

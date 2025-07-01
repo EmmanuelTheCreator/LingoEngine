@@ -1,8 +1,8 @@
-﻿using LingoEngine;
-using LingoEngine.Core;
+﻿using LingoEngine.Core;
 using LingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors;
 using LingoEngine.Demo.TetriGrounds.Core.Sprites.Globals;
 using LingoEngine.Movies;
+using LingoEngine.Setup;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.Demo.TetriGrounds.Core

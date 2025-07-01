@@ -6,12 +6,12 @@ using LingoEngine.Projects;
 using LingoEngine.Sprites;
 using LingoEngine.Styles;
 using Microsoft.Extensions.DependencyInjection;
-namespace LingoEngine
+namespace LingoEngine.Setup
 {
     public interface ILingoEngineRegistration
     {
         ILingoEngineRegistration Services(Action<IServiceCollection> services);
-        ILingoEngineRegistration AddFont(string name,string pathAndName);
+        ILingoEngineRegistration AddFont(string name, string pathAndName);
         ILingoEngineRegistration ForMovie(string name, Action<IMovieRegistration> action);
         ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class, ILingoFrameworkFactory;
         ILingoEngineRegistration WithProjectSettings(Action<LingoProjectSettings> setup);
@@ -55,7 +55,7 @@ namespace LingoEngine
             _container.WithGodotEngine();
         }
 
-        public ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class,ILingoFrameworkFactory
+        public ILingoEngineRegistration WithFrameworkFactory<T>(Action<T>? setup = null) where T : class, ILingoFrameworkFactory
         {
             _container.AddSingleton<ILingoFrameworkFactory, T>();
             if (setup != null)
@@ -68,8 +68,8 @@ namespace LingoEngine
             _projectSettingsSetup = setup;
             return this;
         }
-     
-        
+
+
 
         public LingoPlayer Build()
             => Build(_container.BuildServiceProvider());
@@ -151,9 +151,10 @@ namespace LingoEngine
             public IMovieRegistration AddMovieScript<T>() where T : LingoMovieScript
             {
                 _container.AddScoped<T>();
-                _MovieScripts.Add(movie => {
+                _MovieScripts.Add(movie =>
+                {
                     movie.AddMovieScript<T>();
-                    });
+                });
                 return this;
             }
             public IMovieRegistration AddParentScript<T>() where T : LingoParentScript
@@ -162,7 +163,7 @@ namespace LingoEngine
                 return this;
             }
 
-           
+
         }
     }
 }

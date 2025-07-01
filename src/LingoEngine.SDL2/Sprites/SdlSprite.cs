@@ -1,6 +1,5 @@
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.Bitmaps;
 using LingoEngine.Members;
-using LingoEngine.Pictures;
 using LingoEngine.Primitives;
 using LingoEngine.SDL2.Pictures;
 using LingoEngine.SDL2.SDLL;

@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace LingoEngine.Director.LGodot.Helpers
+namespace LingoEngine.Director.LGodot.Tools
 {
     /// <summary>
     /// Adds drag-and-drop support via internal GDScript helper.

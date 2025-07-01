@@ -36,6 +36,12 @@ namespace LingoEngine.LGodot.Gfx
             return container;
         }
 
+        public override void _Ready()
+        {
+            base._Ready();
+            ApplyMargin();
+        }
+
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
         public float Width { get => CustomMinimumSize.X; set => CustomMinimumSize = new Vector2(value, CustomMinimumSize.Y); }

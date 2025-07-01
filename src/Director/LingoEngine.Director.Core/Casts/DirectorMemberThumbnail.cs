@@ -1,12 +1,12 @@
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Members;
-using LingoEngine.Pictures;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 using LingoEngine.Primitives;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.Director.Core.Casts;
 

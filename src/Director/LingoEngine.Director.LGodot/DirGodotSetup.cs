@@ -20,12 +20,14 @@ using LingoEngine.Director.Core.Projects;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.Core.Stages;
 using LingoEngine.Director.Core.Casts;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.LGodot.UI;
 using LingoEngine.Director.Core.Icons;
 using Microsoft.Extensions.Logging;
 using LingoEngine.Styles;
 using LingoEngine.LGodot.Styles;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Setup;
+using LingoEngine.Director.LGodot.Styles;
 
 namespace LingoEngine.Director.LGodot
 {

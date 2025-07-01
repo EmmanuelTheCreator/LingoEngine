@@ -3,12 +3,12 @@ using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Core;
 using LingoEngine.LGodot.Gfx;
 using LingoEngine.Director.LGodot.Windowing;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Icons;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.Sprites;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
+using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot.Inspector;
 

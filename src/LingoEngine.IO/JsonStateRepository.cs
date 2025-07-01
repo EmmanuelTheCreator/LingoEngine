@@ -5,7 +5,6 @@ using LingoEngine.Core;
 using LingoEngine.Texts;
 using LingoEngine.Sounds;
 using LingoEngine.IO.Data.DTO;
-using LingoEngine.Pictures;
 using LingoEngine.Animations;
 using LingoEngine.Primitives;
 using System.Linq;
@@ -13,6 +12,7 @@ using LingoEngine.Members;
 using LingoEngine.Casts;
 using LingoEngine.Sprites;
 using LingoEngine.FilmLoops;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.IO;
 

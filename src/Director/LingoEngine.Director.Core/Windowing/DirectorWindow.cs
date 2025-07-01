@@ -1,6 +1,4 @@
-using LingoEngine.Director.Core.Windowing;
-
-namespace LingoEngine.Director.Core.Windows
+namespace LingoEngine.Director.Core.Windowing
 {
     public class DirectorWindow<TFrameworkWindow> : IDirectorWindow, IDisposable
         where TFrameworkWindow : IDirFrameworkWindow
@@ -22,12 +20,12 @@ namespace LingoEngine.Director.Core.Windows
 
         public virtual void Dispose()
         {
-            
+
         }
 
         public IDirFrameworkWindow FrameworkObj => _Framework;
-       
-        
+
+
 
     }
 }

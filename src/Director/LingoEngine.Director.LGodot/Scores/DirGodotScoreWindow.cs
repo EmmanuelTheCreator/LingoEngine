@@ -3,13 +3,13 @@ using LingoEngine.Movies;
 using LingoEngine.Core;
 using LingoEngine.Director.Core.Scores;
 using LingoEngine.Director.LGodot.Windowing;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Director.Core.Stages.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Styles;
 using LingoEngine.Sprites;
+using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot.Scores;
 

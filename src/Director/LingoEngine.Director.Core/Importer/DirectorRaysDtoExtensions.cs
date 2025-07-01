@@ -3,7 +3,7 @@ using ProjectorRays.Director;
 using ProjectorRays.director.Chunks;
 using LingoEngine.IO.Data.DTO;
 
-namespace LingoEngine.Director.Core.Import;
+namespace LingoEngine.Director.Core.Importer;
 
 internal static class DirectorRaysDtoExtensions
 {

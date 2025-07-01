@@ -1,6 +1,5 @@
 using Godot;
 using LingoEngine.Core;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Projects;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.LGodot.Gfx;
@@ -14,6 +13,7 @@ using LingoEngine.Casts;
 using LingoEngine.Members;
 using LingoEngine.Director.LGodot.Scores;
 using LingoEngine.Director.LGodot.Casts;
+using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot;
 

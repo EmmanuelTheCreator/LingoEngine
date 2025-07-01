@@ -4,7 +4,7 @@ using System.Linq;
 using LingoEngine.Commands;
 using LingoEngine.Sprites;
 
-namespace LingoEngine.Director.Core.Stages
+namespace LingoEngine.Director.Core.Stages.Commands
 {
     public sealed record RotateSpritesCommand(
         IReadOnlyDictionary<LingoSprite, float> StartRotations,

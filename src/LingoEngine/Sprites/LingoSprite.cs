@@ -1,16 +1,15 @@
 ﻿using LingoEngine.Core;
 using LingoEngine.Events;
-using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
 using LingoEngine.Primitives;
 using LingoEngine.Animations;
-using LingoEngine.Pictures;
 using System.Linq;
 using LingoEngine.Members;
 using LingoEngine.Casts;
 using LingoEngine.Movies;
 using LingoEngine.FilmLoops;
 using LingoEngine.Sprites.Events;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.Sprites
 {

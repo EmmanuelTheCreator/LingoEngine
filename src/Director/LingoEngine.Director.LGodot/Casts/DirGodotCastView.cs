@@ -6,6 +6,7 @@ using LingoEngine.FrameworkCommunication;
 using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Director.LGodot.Styles;
 
 namespace LingoEngine.Director.LGodot.Casts
 {

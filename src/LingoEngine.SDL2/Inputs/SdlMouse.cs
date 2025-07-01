@@ -1,6 +1,6 @@
+using LingoEngine.Bitmaps;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Inputs;
-using LingoEngine.Pictures;
 using LingoEngine.SDL2.Pictures;
 using LingoEngine.SDL2.SDLL;
 using System.Runtime.InteropServices;

@@ -2,8 +2,8 @@ using Godot;
 using LingoEngine.Core;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.Core.Importer;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Projects;
+using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 

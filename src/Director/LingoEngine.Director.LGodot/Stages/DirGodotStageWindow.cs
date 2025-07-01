@@ -9,13 +9,13 @@ using System.Collections.Generic;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.Texts;
 using LingoEngine.Director.LGodot.Windowing;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Stages.Commands;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Sprites;
 using LingoEngine.Movies.Commands;
 using LingoEngine.Stages;
 using LingoEngine.Director.Core.Sprites;
+using LingoEngine.Director.Core.UI;
 
 
 namespace LingoEngine.Director.LGodot.Movies;

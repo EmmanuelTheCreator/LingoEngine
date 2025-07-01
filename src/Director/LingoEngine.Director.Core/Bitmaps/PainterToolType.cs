@@ -1,4 +1,4 @@
-﻿namespace LingoEngine.Director.Core.Pictures
+﻿namespace LingoEngine.Director.Core.Bitmaps
 {
     public enum PainterToolType
     {

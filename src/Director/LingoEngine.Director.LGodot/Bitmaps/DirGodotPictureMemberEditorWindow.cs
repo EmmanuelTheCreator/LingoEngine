@@ -1,6 +1,4 @@
 ﻿using Godot;
-using LingoEngine.Pictures;
-using LingoEngine.LGodot.Pictures;
 using LingoEngine.Director.LGodot.Gfx;
 using LingoEngine.Director.Core.Events;
 using LingoEngine.Members;
@@ -12,13 +10,18 @@ using System;
 using System.Collections.Generic;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.LGodot.Icons;
-using LingoEngine.Director.Core.Pictures;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
-using LingoEngine.Director.Core.Pictures.Commands;
 using LingoEngine.Director.Core.Bitmaps;
 using LingoEngine.Commands;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.FrameworkCommunication;
+using LingoEngine.LGodot.Gfx;
+using LingoEngine.LGodot.Primitives;
+using LingoEngine.Director.Core.UI;
+using LingoEngine.Bitmaps;
+using LingoEngine.LGodot.Bitmaps;
+using LingoEngine.Director.LGodot.Bitmaps;
+using LingoEngine.Director.Core.Bitmaps.Commands;
 
 namespace LingoEngine.Director.LGodot.Pictures;
 
@@ -98,7 +101,6 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         var toolbarPanel = _paintToolbar.Panel.Framework<LingoGodotPanel>();
         AddChild(toolbarPanel);
         toolbarPanel.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
-        _paintToolbar.ToolSelected += OnToolSelected;
 
 
         _flipHButton.Text = "Flip H";
@@ -783,9 +785,9 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         if (_paintToolbar.SelectedTool == PainterToolType.Eraser)
             _painter.ErasePixel(pixel);
         else if (_paintToolbar.SelectedTool == PainterToolType.PaintBrush)
-            _painter.PaintBrush(pixel, _paintToolbar.SelectedColor, _brushSize);
+            _painter.PaintBrush(pixel, _paintToolbar.SelectedColor.ToGodotColor(), _brushSize);
         else
-            _painter.PaintPixel(pixel, _paintToolbar.SelectedColor);
+            _painter.PaintPixel(pixel, _paintToolbar.SelectedColor.ToGodotColor());
 
         var delta = _painter.Offset - beforeOffset;
         if (delta != Vector2I.Zero && _member != null)

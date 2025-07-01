@@ -1,4 +1,5 @@
 using LingoEngine.FrameworkCommunication;
+using LingoEngine.Setup;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LingoEngine.L3D.Core;

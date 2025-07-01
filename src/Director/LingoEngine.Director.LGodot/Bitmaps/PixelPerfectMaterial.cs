@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace LingoEngine.Director.LGodot.Pictures;
+namespace LingoEngine.Director.LGodot.Bitmaps;
 
 /// <summary>
 /// Utility to apply a pixel-perfect (nearest-filtered) material to any Control or CanvasItem.

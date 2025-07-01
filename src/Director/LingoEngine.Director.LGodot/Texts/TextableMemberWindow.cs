@@ -9,9 +9,9 @@ using System.Linq;
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.LGodot.Icons;
 using LingoEngine.Director.Core.Texts;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Director.Core.Icons;
+using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot.Casts;
 

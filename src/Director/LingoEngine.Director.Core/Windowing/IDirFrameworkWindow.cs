@@ -1,6 +1,5 @@
-using LingoEngine.Director.Core.Pictures;
 
-namespace LingoEngine.Director.Core.Windows
+namespace LingoEngine.Director.Core.Windowing
 {
     public interface IDirFrameworkWindow
     {
@@ -8,6 +7,6 @@ namespace LingoEngine.Director.Core.Windows
         void OpenWindow();
         void CloseWindow();
         void MoveWindow(int x, int y);
-     
+
     }
 }

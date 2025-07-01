@@ -2,10 +2,10 @@
 using LingoEngine.Director.LGodot.Windowing;
 using LingoEngine.Director.LGodot.Importer;
 using LingoEngine.Director.Core.Importer;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Tools;
 using LingoEngine.Director.Core.Inspector;
 using LingoEngine.Director.LGodot.Importer.TestData;
+using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {

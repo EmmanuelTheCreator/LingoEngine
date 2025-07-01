@@ -1,8 +1,8 @@
 using Godot;
+using LingoEngine.Bitmaps;
 using LingoEngine.FilmLoops;
-using LingoEngine.Pictures;
 
-namespace LingoEngine.LGodot.Pictures
+namespace LingoEngine.LGodot.Bitmaps
 {
     /// <summary>
     /// Godot framework implementation for film loop members.

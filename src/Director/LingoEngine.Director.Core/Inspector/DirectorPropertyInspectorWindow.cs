@@ -1,4 +1,3 @@
-using LingoEngine.Director.Core.Windows;
 using LingoEngine.FrameworkCommunication;
 using LingoEngine.Gfx;
 using LingoEngine.Primitives;
@@ -10,10 +9,8 @@ using LingoEngine.Commands;
 using LingoEngine.Members;
 using LingoEngine.Sprites;
 using LingoEngine.Texts;
-using LingoEngine.Pictures;
 using LingoEngine.Sounds;
 using LingoEngine.Movies;
-using LingoEngine.Director.Core.Gfx;
 using LingoEngine.Director.Core.Windowing.Commands;
 using System;
 using LingoEngine.Director.Core.Events;
@@ -24,6 +21,8 @@ using LingoEngine.Director.Core.UI;
 using LingoEngine.Tools;
 using System.Xml.Linq;
 using System.ComponentModel.DataAnnotations;
+using LingoEngine.Director.Core.Windowing;
+using LingoEngine.Bitmaps;
 
 namespace LingoEngine.Director.Core.Inspector
 {

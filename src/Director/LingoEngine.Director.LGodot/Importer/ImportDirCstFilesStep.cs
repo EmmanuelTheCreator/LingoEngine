@@ -2,9 +2,9 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using LingoEngine.Director.Core.Import;
 using LingoEngine.IO;
 using LingoEngine.Core;
+using LingoEngine.Director.Core.Importer;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 

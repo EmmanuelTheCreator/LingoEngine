@@ -1,6 +1,6 @@
 ﻿using LingoEngine.Commands;
 
-namespace LingoEngine.Director.Core.Pictures.Commands
+namespace LingoEngine.Director.Core.Bitmaps.Commands
 {
     /// <summary>
     /// Command to draw a single pixel at a given canvas coordinate with the currently selected color.

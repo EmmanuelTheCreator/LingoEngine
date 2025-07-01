@@ -1,4 +1,4 @@
-using LingoEngine.FrameworkCommunication;
+using LingoEngine.Sprites;
 
 namespace LingoEngine.L3D.Core.Sprites;
 

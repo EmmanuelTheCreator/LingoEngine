@@ -1,5 +1,5 @@
+using LingoEngine.Bitmaps;
 using LingoEngine.Members;
-using LingoEngine.Pictures;
 using LingoEngine.Sounds;
 using LingoEngine.Texts;
 

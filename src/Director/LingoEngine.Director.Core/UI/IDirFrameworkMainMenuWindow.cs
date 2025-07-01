@@ -1,10 +1,10 @@
-﻿using LingoEngine.Director.Core.Windows;
+﻿using LingoEngine.Director.Core.Windowing;
 using LingoEngine.Gfx;
 
-namespace LingoEngine.Director.Core.Gfx
+namespace LingoEngine.Director.Core.UI
 {
-    public interface IDirFrameworkMainMenuWindow : IDirFrameworkWindow 
+    public interface IDirFrameworkMainMenuWindow : IDirFrameworkWindow
     {
-      
+
     }
 }
