@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Threading.Channels;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjectorRays.director.Scores
 {
@@ -169,18 +170,35 @@ namespace ProjectorRays.director.Scores
 
             int frameStart = reader.Pos;
             var decoder = new RayKeyframeDeltaDecoder();
+            var found = false;
             for (int fr = 0; fr < FrameCount; fr++)
             {
                 ushort frameDataLen = reader.ReadUint16();
                 var frameData = new ReadStream(reader.ReadBytes(frameDataLen - 2), frameDataLen - 2, reader.Endianness);
                 var rawata = frameData.LogHex(frameData.Size);
-                //_logger.LogInformation("FrameData:" + rawata);
-                if (rawata.Contains("3C"))
+                _logger.LogInformation("FrameData:" + rawata);
+                if (rawata.Contains("3C") || rawata.Contains("00 2E"))
                 {
-
+                    found = true;
+                }
+                if (frameData.Size >= 28 && found)
+                {
+                    ushort keyframeCount = 1; // reader.ReadUint16(); // always 2 here
+                    for (int i = 0; i < keyframeCount; i ++)
+                    {
+                        var keyframeData = frameData.ReadBytesAt(i * 28 +4, 28);
+                        _logger.LogInformation($"RAW: {BitConverter.ToString(keyframeData)}");
+                        if (keyframeData.Length >= 24)
+                        {
+                            var decoded = decoder.Decode(1, 1, keyframeData);
+                            _logger.LogInformation(
+                $"KeyFrame: {decoded.SpriteChannel}x{decoded.Frame}:Ink=?,Blend={decoded.Blend}:Skew={decoded.Skew},Rot={decoded.Rotation}," +
+                $"Loc=({decoded.LocH},{decoded.LocV}),Size=({decoded.Width},{decoded.Height})," +
+                $"Fore={decoded.ForeColor},Back={decoded.BackColor},Member={decoded.Member}");
+                        }
+                    }
                 }
                 var items = new List<FrameDeltaItem>();
-                var readIndex = 0;
                 while (!frameData.Eof)
                 {
                     //var itemLen = frameData.ReadUint16() ;
@@ -189,31 +207,35 @@ namespace ProjectorRays.director.Scores
                     //items.Add(new FrameDeltaItem(offset, data));
                     var itemLen = frameData.ReadUint16();
                     ushort offset = frameData.ReadUint16();
+                    if (frameData.Size - frameData.Position < 4)
+                    {
+                        _logger.LogWarning($"Frame {fr}, channel {offset}: Invalid itemLen={itemLen}, skipping.");
+                        break;
+                    }
+
                     byte[] data = frameData.ReadBytes(itemLen);
                     items.Add(new FrameDeltaItem(offset, data));
 
-                    // Check if this is a potential keyframe (size + signature)
-                    if (data.Length > 0 && data[0] == 0x10)
-                    {
-                        try
-                        {
-                            //_logger.LogInformation($"RAW: {BitConverter.ToString(data)}");
-                            var result = decoder.Decode(fr, offset, data);
-                            _logger.LogInformation(
-                                $"KeyFrame: {result.SpriteChannel}x{result.Frame}:Ink=?,Blend={result.Blend}:Skew={result.Skew},Rot={result.Rotation}," +
-                                $"Loc=({result.LocH},{result.LocV}),Size=({result.Width},{result.Height})," +
-                                $"Fore={result.ForeColor},Back={result.BackColor},Member={result.Member}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning($"Decode failed at frame {fr}, offset {offset}: {ex.Message}");
-                        }
-                    }
-                    readIndex++;
+                    //// Use opcode check for keyframe detection
+                    //if (itemLen >= 48 && data.Length >= 48)
+                    //{
+                    //    try
+                    //    {
+                    //        _logger.LogInformation($"RAW: {BitConverter.ToString(data)}");
+                    //        var result = decoder.Decode(fr, offset, data);
+                    //        _logger.LogInformation(
+                    //            $"KeyFrame: {result.SpriteChannel}x{result.Frame}:Ink=?,Blend={result.Blend}:Skew={result.Skew},Rot={result.Rotation}," +
+                    //            $"Loc=({result.LocH},{result.LocV}),Size=({result.Width},{result.Height})," +
+                    //            $"Fore={result.ForeColor},Back={result.BackColor},Member={result.Member}");
+                    //    }
+                    //    catch (Exception ex)
+                    //    {
+                    //        _logger.LogWarning($"Decode failed at frame {fr}, offset {offset}: {ex.Message}");
+                    //    }
+                    //}
                 }
 
-
-
+                
                 _frameTable.Add(new FrameDelta(items));
             }
 
