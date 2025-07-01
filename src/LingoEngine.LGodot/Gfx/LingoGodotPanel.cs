@@ -11,8 +11,8 @@ namespace LingoEngine.LGodot.Gfx
     public partial class LingoGodotPanel : Panel, ILingoFrameworkGfxPanel, IDisposable
     {
         private LingoMargin _margin = LingoMargin.Zero;
-        private LingoColor _background = new LingoColor(0,0,0);
-        private LingoColor _border = new LingoColor(0,0,0);
+        private LingoColor? _background = null;
+        private LingoColor? _borderColor = null;
         private float _borderWidth =0;
         private readonly StyleBoxFlat _style = new StyleBoxFlat();
 
@@ -22,14 +22,13 @@ namespace LingoEngine.LGodot.Gfx
             SizeFlagsVertical = SizeFlags.ExpandFill;
             //SizeFlagsHorizontal = SizeFlags.ExpandFill;
             //AddThemeStyleboxOverride("panel", _style);
-
             Set("theme_override_styles/panel", _style);
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public float Width { get => Size.X; set { Size = new Vector2(value, Size.Y); } }// CustomMinimumSize = new Vector2(value, Size.Y); } } 
+        public float Height { get => Size.Y; set { Size = new Vector2(Size.X, value); CustomMinimumSize = new Vector2(Size.X, value); } }
         public bool Visibility { get => Visible; set => Visible = value; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 
@@ -89,7 +88,7 @@ namespace LingoEngine.LGodot.Gfx
         //    //        DrawCircle(c.Position, 2, Colors.Red);
         //    //}
         //}
-        public LingoColor BackgroundColor
+        public LingoColor? BackgroundColor
         {
             get => _background;
             set
@@ -99,12 +98,12 @@ namespace LingoEngine.LGodot.Gfx
             }
         }
 
-        public LingoColor BorderColor
+        public LingoColor? BorderColor
         {
-            get => _border;
+            get => _borderColor;
             set
             {
-                _border = value;
+                _borderColor = value;
                 ApplyStyle();
             }
         }
@@ -135,8 +134,8 @@ namespace LingoEngine.LGodot.Gfx
 
         private void ApplyStyle()
         {
-            _style.BgColor = _background.ToGodotColor();
-            _style.BorderColor = _border.ToGodotColor();
+            _style.BgColor = _background != null? _background.Value.ToGodotColor() : Colors.Transparent;
+            _style.BorderColor = _borderColor != null ? _borderColor.Value.ToGodotColor() : Colors.Transparent;
             _style.BorderWidthTop = _style.BorderWidthBottom = _style.BorderWidthLeft = _style.BorderWidthRight = (int)_borderWidth;
         }
     }

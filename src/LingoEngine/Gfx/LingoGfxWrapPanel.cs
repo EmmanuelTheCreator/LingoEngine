@@ -37,5 +37,7 @@ namespace LingoEngine.Gfx
         public IEnumerable<ILingoFrameworkGfxNode> GetItems() => _framework.GetItems();
 
         public ILingoFrameworkGfxNode? GetItem(int index) => _framework.GetItem(index);
+
+        public void RemoveAll() => _framework.RemoveAll();
     }
 }

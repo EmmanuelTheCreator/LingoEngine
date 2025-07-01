@@ -141,7 +141,7 @@ namespace LingoEngine.Director.Core.Inspector
         }
         public GfxPanelBuilder Finalize()
         {
-            _panel.Height = CurrentHeight;
+            _panel.Height = CurrentHeight- _rowHeight;
             return this;
         }
     }

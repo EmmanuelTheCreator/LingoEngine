@@ -7,7 +7,7 @@ namespace LingoEngine.LGodot.Gfx
     /// <summary>
     /// Godot implementation of <see cref="ILingoFrameworkGfxWrapPanel"/>.
     /// </summary>
-    public partial class LingoGodotWrapPanel : MarginContainer ,ILingoFrameworkGfxWrapPanel, IDisposable
+    public partial class LingoGodotWrapPanel : MarginContainer, ILingoFrameworkGfxWrapPanel, IDisposable
     {
         private FlowContainer _container;
         private LingoOrientation _orientation;
@@ -29,9 +29,10 @@ namespace LingoEngine.LGodot.Gfx
             FlowContainer container = orientation == LingoOrientation.Horizontal ? new VFlowContainer() : new HFlowContainer();
             //container.SizeFlagsVertical = SizeFlags.ExpandFill;
             //container.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            container.SizeFlagsHorizontal = SizeFlags.Expand;
-            container.SizeFlagsVertical = SizeFlags.Expand;
-
+            //container.SizeFlagsHorizontal = SizeFlags.Expand;
+            //container.SizeFlagsVertical = SizeFlags.Expand;
+            container.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            container.SizeFlagsVertical = SizeFlags.ExpandFill;
             return container;
         }
 
@@ -117,6 +118,16 @@ namespace LingoEngine.LGodot.Gfx
         }
         public IEnumerable<ILingoFrameworkGfxNode> GetItems() => _nodes.ToArray();
         public ILingoFrameworkGfxNode? GetItem(int index) => _nodes[index];
+        public void RemoveAll()
+        {
+            foreach (var child in GetItems())
+            {
+                if (child != GetItem(0))
+                    RemoveItem(child);
+            }
+        }
+
+
         public new void Dispose()
         {
             QueueFree();
@@ -125,10 +136,10 @@ namespace LingoEngine.LGodot.Gfx
 
         private void ApplyItemMargin(Control ctrl)
         {
-            ctrl.AddThemeConstantOverride("margin_left", (int)_itemMargin.Left);
-            ctrl.AddThemeConstantOverride("margin_right", (int)_itemMargin.Right);
-            ctrl.AddThemeConstantOverride("margin_top", (int)_itemMargin.Top);
-            ctrl.AddThemeConstantOverride("margin_bottom", (int)_itemMargin.Bottom);
+            //ctrl.AddThemeConstantOverride("margin_left", (int)_itemMargin.Left);
+            //ctrl.AddThemeConstantOverride("margin_right", (int)_itemMargin.Right);
+            //ctrl.AddThemeConstantOverride("margin_top", (int)_itemMargin.Top);
+            //ctrl.AddThemeConstantOverride("margin_bottom", (int)_itemMargin.Bottom);
         }
 
         private void ApplyMargin()
@@ -139,5 +150,6 @@ namespace LingoEngine.LGodot.Gfx
            AddThemeConstantOverride("margin_bottom", (int)_margin.Bottom);
         }
 
+        
     }
 }

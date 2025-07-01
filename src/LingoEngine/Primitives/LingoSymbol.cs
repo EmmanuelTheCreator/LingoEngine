@@ -10,8 +10,15 @@ namespace LingoEngine.Primitives
         private static readonly ConcurrentDictionary<string, LingoSymbol> _symbolTable = new();
 
         public string Name { get; }
-        public static LingoSymbol Empty => LingoSymbol.New("");
+        private static LingoSymbol _empty = new LingoSymbol("");
+        public static LingoSymbol Empty => _empty;
         public bool IsEmpty => Name =="";
+
+        static LingoSymbol()
+        {
+            _symbolTable.AddOrUpdate("", _empty, (key, oldValue) => _empty);
+        }
+
         private LingoSymbol(string name)
         {
             Name = name;

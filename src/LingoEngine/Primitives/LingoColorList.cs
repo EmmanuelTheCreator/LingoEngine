@@ -19,6 +19,7 @@
         public static LingoColor LightGray => new(8, 192, 192, 192, "lightgray");
         public static LingoColor DarkGray => new(9, 64, 64, 64, "darkgray");
 
+
         /// <summary>
         /// Dictionary of all predefined Lingo colors by lowercase name.
         /// </summary>
