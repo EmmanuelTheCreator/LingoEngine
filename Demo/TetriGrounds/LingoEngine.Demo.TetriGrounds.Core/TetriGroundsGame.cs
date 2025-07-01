@@ -55,6 +55,7 @@ namespace LingoEngine.Demo.TetriGrounds.Core
         {
             var MyBG = _movie.Member["Game"];
             //_movie.AddFrameBehavior<GameStopBehavior>(3);
+            _movie.AddFrameBehavior<WaiterFrameScript>(1);
             _movie.AddFrameBehavior<StayOnFrameFrameScript>(4);
             //_movie.AddFrameBehavior<MouseDownNavigateWithStayBehavior>(11, b => b.TickWait = 60);
             _movie.AddSprite(1, 1, 15, 320, 240)
