@@ -9,6 +9,8 @@ namespace LingoEngine.Director.Core.Inspector
     public interface IDirectorBehaviorDescriptionManager
     {
         LingoGfxWrapPanel BuildBehaviorPanel(LingoSpriteBehavior behavior);
+        /// <summary>Builds a popup window for editing the given behavior.</summary>
+        LingoGfxWindow BuildBehaviorPopup(LingoSpriteBehavior behavior);
     }
 
     internal class DirectorBehaviorDescriptionManager : IDirectorBehaviorDescriptionManager
@@ -29,6 +31,30 @@ namespace LingoEngine.Director.Core.Inspector
                 BuildDescriptionList(behavior, container, descProvider);
 
             return container;
+        }
+
+        public LingoGfxWindow BuildBehaviorPopup(LingoSpriteBehavior behavior)
+        {
+            var win = _factory.CreateWindow("BehaviorParams", $"Parameters for \"{behavior.Name}\"");
+            var root = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehaviorPopupRoot");
+            win.AddItem(root);
+
+            var panel = BuildBehaviorPanel(behavior);
+            root.AddItem(panel);
+
+            root.AddItem(_factory.CreateVerticalLineSeparator("BehaviorPopupLine"));
+
+            var right = _factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPopupRight");
+            right.Width = 90;
+            var ok = _factory.CreateButton("BehaviorPopupOk", "OK");
+            ok.Width = 14;
+            float margin = (90 - 14) / 2f;
+            ok.Margin = new LingoMargin(margin, 0, margin, 0);
+            ok.Pressed += () => win.Hide();
+            right.AddItem(ok);
+            root.AddItem(right);
+
+            return win;
         }
 
 
