@@ -72,7 +72,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
     private bool _spaceHeld;
     private bool _panning;
 
-    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorBitmapEditWindow directorPictureEditWindow, IDirectorIconManager iconManager, ILingoCommandManager commandManager, IHistoryManager historyManager)
+    public DirGodotPictureMemberEditorWindow(IDirectorEventMediator mediator, ILingoPlayer player, IDirGodotWindowManager windowManager, DirectorBitmapEditWindow directorPictureEditWindow, IDirectorIconManager iconManager, ILingoCommandManager commandManager, IHistoryManager historyManager, ILingoFrameworkFactory factory)
         : base(DirectorMenuCodes.PictureEditWindow, "Picture Editor", windowManager)
     {
         _mediator = mediator;
@@ -94,9 +94,10 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         AddChild(_iconBar);
         _iconBar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight);
         _iconBar.CustomMinimumSize = new Vector2(Size.X, IconBarHeight);
-        _paintToolbar = new PaintToolbar(_iconManager, _commandManager);
-        AddChild(_paintToolbar);
-        _paintToolbar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
+        _paintToolbar = new PaintToolbar(_iconManager, _commandManager, factory);
+        var toolbarPanel = _paintToolbar.Panel.Framework<LingoGodotPanel>();
+        AddChild(toolbarPanel);
+        toolbarPanel.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
         _paintToolbar.ToolSelected += OnToolSelected;
 
 
@@ -149,7 +150,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         // control hasn't been measured yet, causing the scroll container to
         // cover the toolbar and consume its input. Rely on the toolbar's
         // configured minimum width instead.
-        _scrollContainer.OffsetLeft = _paintToolbar.CustomMinimumSize.X;
+        _scrollContainer.OffsetLeft = _paintToolbar.Panel.Width;
         _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
         _scrollContainer.OffsetRight = 0;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
@@ -395,7 +396,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scrollContainer.OffsetBottom = -BottomBarHeight;
         // Keep the scroll container offset by the toolbar width when the window
         // is resized so it doesn't overlap the toolbar.
-        _scrollContainer.OffsetLeft = _paintToolbar.CustomMinimumSize.X;
+        _scrollContainer.OffsetLeft = _paintToolbar.Panel.Width;
         _scrollContainer.OffsetRight = 0;
         _centerContainer.PivotOffset = _centerContainer.CustomMinimumSize / 2f;
         UpdateRegPointCanvasSize();
