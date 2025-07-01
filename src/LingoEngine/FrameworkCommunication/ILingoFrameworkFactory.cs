@@ -134,6 +134,9 @@ namespace LingoEngine.FrameworkCommunication
         /// <summary>Creates a vertical line separator.</summary>
         LingoGfxVerticalLineSeparator CreateVerticalLineSeparator(string name);
 
+        /// <summary>Creates a window container.</summary>
+        LingoGfxWindow CreateWindow(string name, string title = "");
+
         #endregion
 
         /// <summary>Creates a sprite instance.</summary>
