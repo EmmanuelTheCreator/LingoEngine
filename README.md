@@ -153,6 +153,8 @@ To get started:
 
 Please include examples or documentation when appropriate.
 
+Please also read our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ---
 
 ## ⭐ Why Use LingoEngine?
