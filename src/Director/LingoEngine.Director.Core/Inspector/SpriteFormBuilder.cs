@@ -139,6 +139,32 @@ namespace LingoEngine.Director.Core.Inspector
             Advance(labelSpan + inputSpan);
             return this;
         }
+
+        public GfxPanelBuilder AddEnumInput<T, TEnum>(string name, string label, T target,
+            Expression<Func<T, int>> property, int inputSpan = 1, bool showLabel = true,
+            int labelSpan = 1) where TEnum : Enum
+        {
+            var setter = property.CompileSetter();
+            var getter = property.CompileGetter();
+            var (xLabel, xInput, y) = Layout(showLabel ? labelSpan : 0, inputSpan);
+            if (showLabel)
+                _panel.SetLabelAt(_factory, name + "Label", xLabel, y + _labelYOffset, label);
+            var combo = _factory.CreateInputCombobox(name + "Combo", val =>
+            {
+                if (int.TryParse(val, out int v))
+                    setter(target, v);
+            });
+            foreach (var value in Enum.GetValues(typeof(TEnum)))
+            {
+                int key = Convert.ToInt32(value);
+                combo.AddItem(key.ToString(), value!.ToString());
+            }
+            combo.SelectedKey = getter(target).ToString();
+            combo.Width = (int)ComputeInputWidth(inputSpan, showLabel, stretch: true);
+            _panel.AddItem(combo, xInput, y);
+            Advance((showLabel ? labelSpan : 0) + inputSpan);
+            return this;
+        }
         public GfxPanelBuilder Finalize()
         {
             _panel.Height = CurrentHeight- _rowHeight;
