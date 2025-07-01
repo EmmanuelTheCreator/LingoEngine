@@ -95,28 +95,26 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
 
         // Icon bar below navigation
         AddChild(_iconBar);
-        _iconBar.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight);
+        _iconBar.Position = new Vector2(150, TitleBarHeight + NavigationBarHeight+5);
         _iconBar.CustomMinimumSize = new Vector2(Size.X, IconBarHeight);
         _paintToolbar = new PaintToolbar(_iconManager, _commandManager, factory);
         var toolbarPanel = _paintToolbar.Panel.Framework<LingoGodotPanel>();
         AddChild(toolbarPanel);
-        toolbarPanel.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight + IconBarHeight);
+        toolbarPanel.Position = new Vector2(0, TitleBarHeight + NavigationBarHeight+5 + IconBarHeight);
 
-
-        _flipHButton.Text = "Flip H";
-        _flipHButton.CustomMinimumSize = new Vector2(60, IconBarHeight);
+        StyleIconButton(_flipHButton, DirectorIcon.FlipHorizontal);
         _flipHButton.Pressed += OnFlipH;
         _iconBar.AddChild(_flipHButton);
 
-        _flipVButton.Text = "Flip V";
-        _flipVButton.CustomMinimumSize = new Vector2(60, IconBarHeight);
+
+        StyleIconButton(_flipVButton, DirectorIcon.FlipVertical);
         _flipVButton.Pressed += OnFlipV;
         _iconBar.AddChild(_flipVButton);
 
-        _toggleRegPointButton.Text = "Reg";
+
+        StyleIconButton(_toggleRegPointButton, DirectorIcon.Crosshair);
         _toggleRegPointButton.ToggleMode = true;
         _toggleRegPointButton.ButtonPressed = true;
-        _toggleRegPointButton.CustomMinimumSize = new Vector2(40, IconBarHeight);
         _toggleRegPointButton.Toggled += pressed =>
         {
             _showRegPoint = pressed;
@@ -153,7 +151,7 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         // cover the toolbar and consume its input. Rely on the toolbar's
         // configured minimum width instead.
         _scrollContainer.OffsetLeft = _paintToolbar.Panel.Width;
-        _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight;
+        _scrollContainer.OffsetTop = TitleBarHeight + NavigationBarHeight + IconBarHeight+10;
         _scrollContainer.OffsetRight = 0;
         _scrollContainer.OffsetBottom = -BottomBarHeight;
         _scrollContainer.GuiInput += (InputEvent @event) =>
@@ -256,7 +254,19 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         _scaleDropdown.ItemSelected += id => OnScaleSelected(id);
         _bottomBar.AddChild(_scaleDropdown);
     }
-
+    private void StyleIconButton(Button button, DirectorIcon icon)
+    {
+        button.Icon = ((LingoGodotImageTexture)_iconManager.Get(icon)).Texture;
+        button.CustomMinimumSize = new Vector2(20, IconBarHeight);
+        button.AddThemeStyleboxOverride("normal", new StyleBoxFlat
+        {
+            BgColor = Colors.Transparent,
+            BorderWidthBottom = 0,
+            BorderWidthTop = 0,
+            BorderWidthLeft = 0,
+            BorderWidthRight = 0
+        });
+    }
     private void ResetView()
     {
         _panning = false;
