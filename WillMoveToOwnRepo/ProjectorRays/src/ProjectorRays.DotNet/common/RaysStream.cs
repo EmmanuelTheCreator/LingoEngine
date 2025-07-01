@@ -44,13 +44,15 @@ public class BufferView
     public string LogHex(int length = 256, int bytesPerLine = 16)
     {
         var sb = new StringBuilder();
-        int limit = Math.Min(_data.Length, length);
+        int start = _offset;
+        int limit = Math.Min(_size, length);
+
         for (int i = 0; i < limit; i += bytesPerLine)
         {
             sb.Append($"{i:X4}: ");
             for (int j = 0; j < bytesPerLine && i + j < limit; j++)
             {
-                sb.Append($"{_data[i + j]:X2} ");
+                sb.Append($"{_data[start + i + j]:X2} ");
             }
             sb.AppendLine();
         }

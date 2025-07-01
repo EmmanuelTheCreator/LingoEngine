@@ -134,8 +134,8 @@ public class DirectorFileTests
         Assert.True(dir.Read(stream));
 
         Assert.NotNull(dir.Score);
-        Assert.NotEmpty(dir.Score!.Frames);
-        var first = dir.Score.Frames[0];
+        Assert.NotEmpty(dir.Score!.Sprites);
+        var first = dir.Score.Sprites[0];
         Assert.True(first.EndFrame >= first.StartFrame);
     }
 
