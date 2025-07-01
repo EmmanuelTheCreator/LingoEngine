@@ -796,7 +796,13 @@ internal partial class DirGodotPictureMemberEditorWindow : BaseGodotWindow, IHas
         var newReg = _member?.RegPoint ?? oldReg;
         _imageRect.Texture = _painter.Texture;
         if (delta != Vector2I.Zero)
+        {
             RefreshImageSize();
+            // Keep the registration point under the cursor when the bitmap
+            // expands by adjusting the scroll offsets by the padded amount.
+            _scrollContainer.ScrollHorizontal += (int)(delta.X * _scale);
+            _scrollContainer.ScrollVertical += (int)(delta.Y * _scale);
+        }
         _regPointCanvas.QueueRedraw();
 
         _historyManager.Push(() =>

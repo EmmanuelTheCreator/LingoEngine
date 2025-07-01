@@ -7,6 +7,18 @@ namespace LingoEngine.Primitives
 
     public readonly struct LingoSymbol : IEquatable<LingoSymbol>
     {
+        // Base types
+        public static LingoSymbol String = new LingoSymbol("string");
+        public static LingoSymbol Int = new LingoSymbol("int");
+        public static LingoSymbol Float = new LingoSymbol("float");
+        public static LingoSymbol Boolean = new LingoSymbol("Boolean");
+        // member types
+        public static LingoSymbol Text = new LingoSymbol("text");
+        public static LingoSymbol Video = new LingoSymbol("video");
+        public static LingoSymbol Audio = new LingoSymbol("audio");
+        public static LingoSymbol Bitmap = new LingoSymbol("bitmap");
+
+
         private static readonly ConcurrentDictionary<string, LingoSymbol> _symbolTable = new();
 
         public string Name { get; }

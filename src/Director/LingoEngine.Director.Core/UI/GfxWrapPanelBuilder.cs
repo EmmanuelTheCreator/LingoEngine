@@ -40,7 +40,7 @@ namespace LingoEngine.Director.Core.UI
             return this;
         }
 
-        public GfxWrapPanelBuilder AddNumericInput<T>(string name, T target, Expression<Func<T, float>> property, int width = 40, float min = 0, float max = 100)
+        public GfxWrapPanelBuilder AddNumericInput<T>(string name, T target, Expression<Func<T, float>> property, int width = 40, float? min = null, float? max = null)
         {
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();

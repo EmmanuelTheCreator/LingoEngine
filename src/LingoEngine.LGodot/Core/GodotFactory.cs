@@ -267,23 +267,23 @@ namespace LingoEngine.LGodot.Core
             return input;
         }
 
-        public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100, Action<float>? onChange = null)
+        public LingoGfxInputNumber CreateInputNumber(string name, float? min = null, float? max = null, Action<float>? onChange = null)
         {
             var input = new LingoGfxInputNumber();
             var impl = new LingoGodotInputNumber(input, _serviceProvider.GetRequiredService<ILingoFontManager>(), onChange);
-            input.Min = min;
-            input.Max = max;
+            if (min.HasValue) input.Min = min.Value;
+            if (max.HasValue) input.Max = max.Value;
             input.Name = name;
             return input;
         }
 
-        public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100, Action<float>? onChange = null)
+        public LingoGfxSpinBox CreateSpinBox(string name, float? min = null, float? max = null, Action<float>? onChange = null)
         {
             var spin = new LingoGfxSpinBox();
             var impl = new LingoGodotSpinBox(spin, _serviceProvider.GetRequiredService<ILingoFontManager>(), onChange);
             spin.Name = name;
-            spin.Min = min;
-            spin.Max = max;
+            if (min.HasValue) spin.Min = min.Value;
+            if (max.HasValue) spin.Max = max.Value;
             return spin;
         }
 

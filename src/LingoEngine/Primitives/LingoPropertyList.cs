@@ -10,7 +10,7 @@
     /// </summary>
     public class LingoPropertyList<TValue> : LingoPropertyList<LingoSymbol,TValue>
     {
-
+       
     }
     /// <summary>
     /// A property list implementation that mimics Lingo's propList behavior, preserving insertion order.
@@ -72,6 +72,7 @@
                 _keyOrder.Add(key);
             _dict.Add(key, value);
         }
+        
 
         /// <inheritdoc/>
         public bool ContainsKey(TKey key) => _dict.ContainsKey(key);

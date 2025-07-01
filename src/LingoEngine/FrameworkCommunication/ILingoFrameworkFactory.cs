@@ -96,10 +96,10 @@ namespace LingoEngine.FrameworkCommunication
         LingoGfxInputText CreateInputText(string name, int maxLength = 0, Action<string>? onChange = null);
 
         /// <summary>Creates a numeric input field.</summary>
-        LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100, Action<float>? onChange = null);
+        LingoGfxInputNumber CreateInputNumber(string name, float? min = null, float? max = null, Action<float>? onChange = null);
 
         /// <summary>Creates a spin box input.</summary>
-        LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100, Action<float>? onChange = null);
+        LingoGfxSpinBox CreateSpinBox(string name, float? min = null, float? max = null, Action<float>? onChange = null);
 
         /// <summary>Creates a checkbox input.</summary>
         LingoGfxInputCheckbox CreateInputCheckbox(string name, Action<bool>? onChange = null);

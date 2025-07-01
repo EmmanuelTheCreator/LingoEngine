@@ -49,5 +49,10 @@ namespace LingoEngine.SDL2.Gfx
         {
             throw new NotImplementedException();
         }
+
+        public void RemoveAll()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
