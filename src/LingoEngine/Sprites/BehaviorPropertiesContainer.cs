@@ -4,6 +4,11 @@ using static LingoEngine.Sprites.BehaviorPropertiesContainer;
 
 namespace LingoEngine.Sprites;
 
+
+public class BehaviorPropertyDescriptionList : LingoPropertyList<LingoPropertyDescription>
+{
+
+}
 /// <summary>
 /// Container for behavior properties set by the user. Holds the values
 /// and, optionally, the description list returned by
@@ -24,7 +29,7 @@ public class BehaviorPropertiesContainer : IEnumerable<LingoPropertyItem>
     /// Optional property description list describing each property as
     /// returned by <c>getPropertyDescriptionList</c>.
     /// </summary>
-    public LingoPropertyList<LingoPropertyDescription>? DescriptionList { get; set; }
+    public BehaviorPropertyDescriptionList? DescriptionList { get; set; }
 
     /// <summary>Gets or sets a property by key.</summary>
     public object? this[LingoSymbol key]

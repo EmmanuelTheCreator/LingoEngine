@@ -46,20 +46,30 @@ namespace LingoEngine.Director.Core.Inspector
             }
 
             var props = behavior.UserProperties;
-            if (props.Count > 0)
+            var definitions = descProvider.GetPropertyDescriptionList();
+            if (definitions != null)
             {
-                container.AddItem(_factory.CreateLabel("PropsLabel", "Properties"));
-                foreach (var item in props)
+                foreach (var prop in definitions)
                 {
-                    string labelText = item.Key.ToString();
-                    if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
-                        labelText = desc2.Comment!;
-                    var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
-                    row.AddItem(_factory.CreateLabel("PropName", labelText));
-                    row.AddItem(_factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
-                    container.AddItem(row);
+                    //if (Symbol Type == #string)
+                    // show label with value from behavior.UserProperties
                 }
             }
+            //// old, wrong
+            //if (props.Count > 0)
+            //{
+            //    container.AddItem(_factory.CreateLabel("PropsLabel", "Properties"));
+            //    foreach (var item in props)
+            //    {
+            //        string labelText = item.Key.ToString();
+            //        if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
+            //            labelText = desc2.Comment!;
+            //        var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
+            //        row.AddItem(_factory.CreateLabel("PropName", labelText));
+            //        row.AddItem(_factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
+            //        container.AddItem(row);
+            //    }
+            //}
         }
 
         public LingoGfxWrapPanel BuildProperties(object obj)
