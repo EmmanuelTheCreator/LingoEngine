@@ -153,7 +153,10 @@ public class ReadStream : RaysStream
         _pos += len;
         return len;
     }
-
+    public byte[] ReadBytesAt(int offset, int length)
+    {
+        return _data.Skip(offset).Take(length).ToArray();
+    }
     public int ReadZlibBytes(int len, byte[] dest, int destLen)
     {
         var view = ReadByteView(len);

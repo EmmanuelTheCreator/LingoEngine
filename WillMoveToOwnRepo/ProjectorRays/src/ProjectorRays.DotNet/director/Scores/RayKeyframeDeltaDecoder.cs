@@ -15,56 +15,49 @@ namespace ProjectorRays.director.Scores
             float Rotation, float Skew,
             int ForeColor, int BackColor,
             int Blend,
-            RaysBehaviourRef Member);
+            RaysBehaviourRef Member, int FrameOffset);
 
         public DecodedKeyframe Decode(int frame, int channel, byte[] data)
         {
             var s = new ReadStream(data, data.Length, Endianness.BigEndian);
-            //int foreColor = s.ReadInt16();        
-            //int backColor2 = s.ReadInt16();       
-            //int height2 = s.ReadInt8();      
-            //int foreColor3 = s.ReadInt16();   
-            //int foreColor2 = s.ReadInt16();  
-            //int backColor = s.ReadInt16();   
-            //int ink = s.ReadUint8();         
-            //int blend = s.ReadUint8();       
-            //int rotationRaw = s.ReadUint16();
-            //float rotation = 0;
-            //int locV = s.ReadUint16();    
-            //float skew = 0;
-            //int locH = s.ReadUint16();
-            //int gg = s.ReadUint16();
-            //int propOffset = s.ReadUint16();  
-            //int castLib = s.ReadUint16();
-            //int memberNum = s.ReadUint16();
-            byte flags = s.ReadUint8();
-            byte inkByte = s.ReadUint8();
-            var ink = inkByte & 0x7F;
-            var foreColor = s.ReadUint8();
-            var backColor = s.ReadUint8();
-            int castLib = s.ReadUint16();
-            int memberNum = s.ReadUint16();
-            s.ReadUint16();
-            //Skip(2); // unknown
-            var spritePropertiesOffset = s.ReadUint16(); //18,27,30,33,36
-            var locV = s.ReadInt16();
-            var locH = s.ReadInt16();
-            var height = s.ReadInt16();
-            var width = s.ReadInt16();
-            byte colorcode = s.ReadUint8();
-            var editable = (colorcode & 0x40) != 0;
-            var scoreColor = colorcode & 0x0F;
-            var blendA = s.ReadUint8();
-            var blend = (int)Math.Round(100f - blendA / 255f * 100f);
-            byte flag2 = s.ReadUint8();
-            var flipV = (flag2 & 0x04) != 0;
-            var flipH = (flag2 & 0x02) != 0;
-            s.Skip(5);
-            //var test = stream.ReadInt16();
-            var rotation = s.ReadUint32() / 100f;
-            var skew = s.ReadUint32() / 100f;
-            var refMember = new RaysBehaviourRef { CastLib = castLib, CastMmb = memberNum };
-            return new DecodedKeyframe(frame, channel, locH, locV, width, height, rotation, skew, foreColor, backColor, blend, refMember);
+
+            // Skip header or unrelated bytes
+            //s.Skip(4); // Unknown
+            int foreColor = s.ReadUint8();      // 0x32
+            int backColor = s.ReadUint8();      // 0x33
+            int frameOffset = s.ReadUint16();      
+            int someValue = s.ReadUint16();      //0x01 0x90 // 400 or 1 and 144
+
+            int height = s.ReadUint16();        // 0x003E = 62
+            int width = s.ReadUint16();         // 0x003C = 60
+            int blendByte = s.ReadUint8();      // 0xCC
+            int blend = (int)Math.Round(100f - blendByte / 255f * 100f);
+
+            // Continue decoding based on field position
+            int propOffset1 = s.ReadUint8();  
+            int propOffset2 = s.ReadUint8();  
+            int memberNum = s.ReadUint8();    
+            int memberNum2 = s.ReadUint8();    
+            int castLib = s.ReadUint8();       // 0x0000
+            int castLib2 = s.ReadUint8();       // 0x0000
+
+            int ink = s.ReadUint8();            // next block
+            int skew = s.ReadUint8();           // skew numerator
+            int rotation = s.ReadUint8();       // rotation numerator
+            int skewDenom = s.ReadUint8();      // skew denominator
+            int rotationDenom = s.ReadUint8();  // rotation denominator
+
+            int locH = s.ReadUint8();          // x
+            int locV = s.ReadUint8();          // y
+            //int locV2 = s.ReadUint8();          // y
+
+            var refMember = new RaysBehaviourRef
+            {
+                CastLib = castLib,
+                CastMmb = memberNum
+            };
+
+            return new DecodedKeyframe(frame, channel, locH, locV, width, height, rotation, skew, foreColor, backColor, blend, refMember, frameOffset);
         }
     }
 }
