@@ -380,6 +380,11 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
     {
         throw new NotImplementedException();
     }
+
+    public LingoGfxWindow CreateWindow(string name, string title = "")
+    {
+        throw new NotImplementedException();
+    }
     #endregion
 
 
