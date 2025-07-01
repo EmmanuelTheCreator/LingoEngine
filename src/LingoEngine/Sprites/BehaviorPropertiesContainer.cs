@@ -1,14 +1,9 @@
 using System.Collections;
 using LingoEngine.Primitives;
+using LingoEngine.Tools;
 using static LingoEngine.Sprites.BehaviorPropertiesContainer;
 
 namespace LingoEngine.Sprites;
-
-
-public class BehaviorPropertyDescriptionList : LingoPropertyList<LingoPropertyDescription>
-{
-
-}
 /// <summary>
 /// Container for behavior properties set by the user. Holds the values
 /// and, optionally, the description list returned by
@@ -25,7 +20,15 @@ public class BehaviorPropertiesContainer : IEnumerable<LingoPropertyItem>
 
     private readonly List<LingoPropertyItem> _items = new();
 
-    
+    public void Apply(BehaviorPropertyDescriptionList definitions)
+    {
+        foreach (var definition in definitions)
+        {
+            var newValue = this[definition.Key];
+            if (newValue != null)
+                definition.Value.ApplyValue(newValue);
+        }
+    }
 
     /// <summary>Gets or sets a property by key.</summary>
     public object? this[LingoSymbol key]

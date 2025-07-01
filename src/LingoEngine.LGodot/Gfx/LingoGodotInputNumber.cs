@@ -15,15 +15,22 @@ namespace LingoEngine.LGodot.Gfx
         private Action<float>? _onChange;
         private readonly ILingoFontManager _fontManager;
 
-        private event Action? _onValueChanged;
+        private event Action _onValueChanged;
 
         public LingoGodotInputNumber(LingoGfxInputNumber input, ILingoFontManager fontManager, Action<float>? onChange)
         {
             _onChange = onChange;
             _fontManager = fontManager;
             input.Init(this);
-            TextChanged += _ => _onValueChanged?.Invoke();
-            if (_onChange != null) TextChanged += _ => _onChange(Value);
+            _onValueChanged = () =>
+            {
+                if (!float.TryParse(base.Text, out var newValue))
+                    return;
+                if (Value == newValue) return;
+                Value = newValue;
+                _onChange?.Invoke(Value);
+            };
+            TextChanged += _ => _onValueChanged.Invoke();
             CustomMinimumSize = new Vector2(2, 2);
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
             SizeFlagsVertical = SizeFlags.ShrinkBegin;
@@ -80,8 +87,8 @@ namespace LingoEngine.LGodot.Gfx
                 Text = _value.ToString();
             }
         }
-        public float Min { get; set; }
-        public float Max { get; set; }
+        public float Min { get; set; } = float.MinValue;
+        public float Max { get; set; } = float.MaxValue;
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
         public LingoNumberType NumberType
         {
@@ -162,8 +169,7 @@ namespace LingoEngine.LGodot.Gfx
         public object FrameworkNode => this;
         public new void Dispose()
         {
-            TextChanged -= _ => _onValueChanged?.Invoke();
-            if (_onChange != null) TextChanged -= _ => _onChange(Value);
+            TextChanged -= _ => _onValueChanged.Invoke();
             QueueFree();
             base.Dispose();
         }

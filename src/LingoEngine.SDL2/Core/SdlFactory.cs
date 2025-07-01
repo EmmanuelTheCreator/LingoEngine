@@ -247,21 +247,25 @@ public class SdlFactory : ILingoFrameworkFactory, IDisposable
         return input;
     }
 
-    public LingoGfxInputNumber CreateInputNumber(string name, float min = 0, float max = 100)
+    public LingoGfxInputNumber CreateInputNumber(string name, float? min = null, float? max = null)
     {
-        var input = new LingoGfxInputNumber { Min = min, Max = max };
+        var input = new LingoGfxInputNumber();
         var impl = new SdlGfxInputNumber();
         input.Init(impl);
         input.Name = name;
+        if (min.HasValue) input.Min = min.Value;
+        if (max.HasValue) input.Max = max.Value;
         return input;
     }
 
-    public LingoGfxSpinBox CreateSpinBox(string name, float min = 0, float max = 100)
+    public LingoGfxSpinBox CreateSpinBox(string name, float? min = null, float? max = null)
     {
-        var spin = new LingoGfxSpinBox { Min = min, Max = max };
+        var spin = new LingoGfxSpinBox( );
         var impl = new SdlGfxSpinBox();
         spin.Init(impl);
         spin.Name = name;
+        if (min.HasValue) spin.Min = min.Value;
+        if (max.HasValue) spin.Max = max.Value;
         return spin;
     }
 

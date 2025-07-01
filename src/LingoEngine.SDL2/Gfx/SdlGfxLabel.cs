@@ -21,6 +21,9 @@ namespace LingoEngine.SDL2.Gfx
         public int LineHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public object FrameworkNode => this;
+
+        public LingoTextWrapMode WrapMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public event Action? ValueChanged;
         public void Dispose() { }
     }

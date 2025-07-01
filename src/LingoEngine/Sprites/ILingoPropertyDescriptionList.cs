@@ -22,15 +22,18 @@ namespace LingoEngine.Sprites
         string? GetBehaviorTooltip();
 
         /// <summary>
-        /// Called when the user edits properties. Implementations should
-        /// update and return the initializer list.
-        /// </summary>
-        BehaviorPropertiesContainer? RunPropertyDialog(BehaviorPropertiesContainer currentInitializerList);
-
-        /// <summary>
         /// Called before attaching the behavior to a sprite. Should return
         /// <see langword="true"/> if the attachment is allowed.
         /// </summary>
         bool IsOKToAttach(LingoSymbol spriteType, int spriteNum);
+    }
+    public interface ILingoPropertyDescriptionListDialog
+    {
+
+        /// <summary>
+        /// Called when the user edits properties. Implementations should
+        /// update and return the initializer list.
+        /// </summary>
+        BehaviorPropertiesContainer RunPropertyDialog(BehaviorPropertiesContainer currentInitializerList);
     }
 }

@@ -17,6 +17,10 @@ namespace LingoEngine.SDL2.Gfx
         public LingoColor BorderColor { get; set; }
         public float BorderWidth { get; set; }
         public object FrameworkNode => this;
+
+        LingoColor? ILingoFrameworkGfxPanel.BackgroundColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        LingoColor? ILingoFrameworkGfxPanel.BorderColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public void AddItem(ILingoFrameworkGfxLayoutNode child) { }
 
         public void Dispose() { }

@@ -17,6 +17,45 @@ namespace LingoEngine.Tools
             }
 
             throw new ArgumentException("Invalid expression. Expression should be a simple property access.");
+        } 
+        public static string GetPropertyName<T>(this Expression<Func<T, string>> expression)
+        {
+            if (expression.Body is MemberExpression member)
+            {
+                return member.Member.Name;
+            }
+            if (expression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember)
+            {
+                return unaryMember.Member.Name;
+            }
+
+            throw new ArgumentException("Invalid expression. Expression should be a simple property access.");
+        }
+        public static string GetPropertyName<T>(this Expression<Func<T, int>> expression)
+        {
+            if (expression.Body is MemberExpression member)
+            {
+                return member.Member.Name;
+            }
+            if (expression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember)
+            {
+                return unaryMember.Member.Name;
+            }
+
+            throw new ArgumentException("Invalid expression. Expression should be a simple property access.");
+        }
+        public static string GetPropertyName<T>(this Expression<Func<T, bool>> expression)
+        {
+            if (expression.Body is MemberExpression member)
+            {
+                return member.Member.Name;
+            }
+            if (expression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember)
+            {
+                return unaryMember.Member.Name;
+            }
+
+            throw new ArgumentException("Invalid expression. Expression should be a simple property access.");
         }
         public static Func<T, TResult?> CompileGetter<T, TResult>(this Expression<Func<T, TResult?>> expression)
         {

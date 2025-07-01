@@ -15,22 +15,30 @@ namespace LingoEngine.Director.Core.Inspector
     internal class DirectorBehaviorDescriptionManager : IDirectorBehaviorDescriptionManager
     {
         private readonly ILingoFrameworkFactory _factory;
-
+        private Action? _onClose;
         public DirectorBehaviorDescriptionManager(ILingoFrameworkFactory factory)
         {
             _factory = factory;
             
         }
 
-       
+        
         public LingoGfxWindow? BuildBehaviorPopup(LingoSpriteBehavior behavior, Action onClose)
         {
             if (!(behavior is ILingoPropertyDescriptionList))
-            return null;
+               return null;
+            if (behavior is ILingoPropertyDescriptionListDialog dialog)
+                dialog.RunPropertyDialog(behavior.UserProperties);
+
             var width = 390;
             var height = 250;
             var rightWidth = 90;
 
+            var behaviorPanel = BuildBehaviorPanel(behavior, width - rightWidth - 10, height);
+            if (behaviorPanel == null ) return null;
+            var panel = behaviorPanel.Value.Node;
+           
+           
             var win = _factory.CreateWindow("BehaviorParams", $"Parameters for \"{behavior.Name}\"");
             var root = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehaviorPopupRoot");
             win.AddItem(root);
@@ -38,8 +46,15 @@ namespace LingoEngine.Director.Core.Inspector
             win.Height = height;
             win.BackgroundColor = DirectorColors.BG_WhiteMenus;
             win.IsPopup = true;
+            _onClose = () =>
+            {
+                onClose.Invoke();
+                win.OnClose -= _onClose;
+            };
+            win.OnClose += _onClose;
 
-            var panel = BuildBehaviorPanel(behavior, width- rightWidth-10, height);
+
+            
             root.AddItem(panel);
 
             var vLine = _factory.CreateVerticalLineSeparator("BehaviorPopupLine");
@@ -54,8 +69,8 @@ namespace LingoEngine.Director.Core.Inspector
             ok.Margin = new LingoMargin(margin, 0, margin, 0);
             ok.Pressed += () =>
             {
+                behavior.UserProperties.Apply(behaviorPanel.Value.Definitions);
                 win.Hide();
-                onClose();
             };
             right.AddItem(ok);
             root.AddItem(right);
@@ -63,8 +78,10 @@ namespace LingoEngine.Director.Core.Inspector
             return win;
         }
 
-        private ILingoGfxLayoutNode BuildBehaviorPanel(LingoSpriteBehavior behavior, int width, int height)
+        private (ILingoGfxLayoutNode Node, BehaviorPropertyDescriptionList Definitions)? BuildBehaviorPanel(LingoSpriteBehavior behavior, int width, int height)
         {
+            
+
             // todo : fix container with scroll
             //var scroller = _factory.CreateScrollContainer("BehaviorPanelScroller");
             //scroller.Width = width;
@@ -75,106 +92,126 @@ namespace LingoEngine.Director.Core.Inspector
             //scroller.AddItem(container);
             //var propsPanel = BuildProperties(behavior);
             //container.AddItem(propsPanel);
+            BehaviorPropertyDescriptionList? definitions = null;
             if (behavior is ILingoPropertyDescriptionList descProvider)
-                BuildDescriptionList(behavior, container, descProvider);
-
-            return container;
+            {
+                definitions = BuildDescriptionList(behavior, container, descProvider);
+                if (definitions == null)
+                {
+                    container.Dispose();
+                    return null;
+                }
+                return (container, definitions);
+            }
+            return null;
         }
 
 
-        private void BuildDescriptionList(LingoSpriteBehavior behavior, LingoGfxWrapPanel container, ILingoPropertyDescriptionList descProvider)
+        private BehaviorPropertyDescriptionList? BuildDescriptionList(LingoSpriteBehavior behavior, LingoGfxWrapPanel container, ILingoPropertyDescriptionList descProvider)
         {
+            BehaviorPropertyDescriptionList? definitions = descProvider.GetPropertyDescriptionList();
+            if (definitions == null || definitions.Count == 0)
+                return null;
             string? desc = descProvider.GetBehaviorDescription();
+
+
             if (!string.IsNullOrEmpty(desc))
             {
                 var descLabel = _factory.CreateLabel("BehaviorDescLabel_"+ behavior.Name, desc);
                 descLabel.FontColor = LingoColorList.Black;
                 descLabel.Width = 200;
-                descLabel.FontSize = 10;
+                descLabel.FontSize = 14;
                 descLabel.WrapMode = LingoTextWrapMode.WordSmart;
                 container.AddItem(descLabel);
             }
 
-            var props = behavior.UserProperties;
-            var definitions = descProvider.GetPropertyDescriptionList();
-            if (definitions != null)
+            var properties = behavior.UserProperties;
+            foreach (var propDefinition in definitions)
             {
-                foreach (var prop in definitions)
+                var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, $"PropRow_{propDefinition.Key}");
+                string labelText = !string.IsNullOrEmpty(propDefinition.Value.Comment) ? propDefinition.Value.Comment! : propDefinition.Key.ToString();
+                var label = _factory.CreateLabel($"PropLabel_{propDefinition.Key}", labelText);
+                label.Width = 80;
+                label.WrapMode = LingoTextWrapMode.WordSmart;
+                label.FontColor = DirectorColors.TextColorLabels;
+                label.FontSize = 10;
+                row.AddItem(label);
+
+                object? propValue = propDefinition.Value.CurrentValue;
+
+                string format = propDefinition.Value.Format;
+                if (format == LingoSymbol.String)
+                    row.AddItem(CreateString(properties, propDefinition.Key, propValue));
+                else if (format == LingoSymbol.Int)
+                    row.AddItem(CreateInt(properties, propDefinition.Key, propValue)); 
+                else if (format == LingoSymbol.Float)
+                    row.AddItem(CreateFloat(properties, propDefinition.Key, propValue));
+                else if (format == LingoSymbol.Boolean)
+                    row.AddItem(CreateBoolean(properties, propDefinition.Key, propValue));
+                else
                 {
-                    var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, $"PropRow_{prop.Key}");
-                    string labelText = !string.IsNullOrEmpty(prop.Value.Comment) ? prop.Value.Comment! : prop.Key.ToString();
-                    var label = _factory.CreateLabel($"PropLabel_{prop.Key}", labelText);
-                    label.Width = 80;
-                    label.WrapMode = LingoTextWrapMode.WordSmart;
-                    label.FontColor = DirectorColors.TextColorLabels;
-                    label.FontSize = 10;
-                    row.AddItem(label);
-
-                    object? current = props[prop.Key];
-                    if (current == null)
-                        current = prop.Value.Default;
-
-                    string format = prop.Value.Format.Name.ToLowerInvariant();
-                    if (format == "string")
-                    {
-                        var input = _factory.CreateInputText($"PropInput_{prop.Key}");
-                        input.Width = 70;
-                        input.Text = current?.ToString() ?? string.Empty;
-                        input.ValueChanged += () => props[prop.Key] = input.Text;
-                        row.AddItem(input);
-                    }
-                    else if (format == "int" || format == "integer")
-                    {
-                        var input = _factory.CreateInputNumber($"PropInput_{prop.Key}");
-                        input.Width = 70;
-                        input.NumberType = LingoNumberType.Integer;
-                        if (current is int i)
-                            input.Value = i;
-                        else if (current is float f)
-                            input.Value = f;
-                        else if (current != null && float.TryParse(current.ToString(), out var fv))
-                            input.Value = fv;
-                        input.ValueChanged += () => props[prop.Key] = (int)input.Value;
-                        row.AddItem(input);
-                    }
-                    else if (format == "boolean" || format == "bool")
-                    {
-                        var input = _factory.CreateInputCheckbox($"PropInput_{prop.Key}");
-                        input.Width = 70;
-                        if (current is bool bval)
-                            input.Checked = bval;
-                        else if (current is string s && bool.TryParse(s, out var bv))
-                            input.Checked = bv;
-                        input.ValueChanged += () => props[prop.Key] = input.Checked;
-                        row.AddItem(input);
-                    }
-                    else
-                    {
-                        var input = _factory.CreateInputText($"PropInput_{prop.Key}");
-                        input.Width = 70;
-                        input.Text = current?.ToString() ?? string.Empty;
-                        input.ValueChanged += () => props[prop.Key] = input.Text;
-                        row.AddItem(input);
-                    }
-
-                    container.AddItem(row);
+                    var input = _factory.CreateLabel($"PropInput_{propDefinition.Key}","Not implemtype "+format);
+                    row.AddItem(input);
                 }
+
+                container.AddItem(row);
             }
-            //// old, wrong
-            //if (props.Count > 0)
-            //{
-            //    container.AddItem(_factory.CreateLabel("PropsLabel", "Properties"));
-            //    foreach (var item in props)
-            //    {
-            //        string labelText = item.Key.ToString();
-            //        if (props.DescriptionList != null && props.DescriptionList.TryGetValue(item.Key, out var desc2) && !string.IsNullOrEmpty(desc2.Comment))
-            //            labelText = desc2.Comment!;
-            //        var row = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehPropRow");
-            //        row.AddItem(_factory.CreateLabel("PropName", labelText));
-            //        row.AddItem(_factory.CreateLabel("PropVal", item.Value?.ToString() ?? string.Empty));
-            //        container.AddItem(row);
-            //    }
-            //}
+            return definitions;
+           
+        }
+
+        private LingoGfxInputText CreateString(BehaviorPropertiesContainer properties, string key, object? propValue)
+        {
+            var input = _factory.CreateInputText($"PropInput_{key}");
+            input.Width = 70;
+            input.Text = propValue?.ToString() ?? string.Empty;
+            input.ValueChanged += () => properties[key] = input.Text;
+            return input;
+        }
+
+        private LingoGfxInputNumber CreateInt(BehaviorPropertiesContainer properties, string key, object? propValue)
+        {
+            var input = _factory.CreateInputNumber($"PropInput_{key}");
+            input.Width = 70;
+            input.NumberType = LingoNumberType.Integer;
+            if (propValue is int i)
+                input.Value = i;
+            else if (propValue is float f)
+                input.Value = f;
+            else if (propValue != null && float.TryParse(propValue.ToString(), out var fv))
+                input.Value = fv;
+            input.ValueChanged += () => properties[key] = (int)input.Value;
+            return input;
+        } 
+        private LingoGfxInputNumber CreateFloat(BehaviorPropertiesContainer properties, string key, object? propValue)
+        {
+            var input = _factory.CreateInputNumber($"PropInput_{key}");
+            input.Width = 70;
+            input.NumberType = LingoNumberType.Integer;
+            if (propValue is int i)
+                input.Value = i;
+            else if (propValue is float f)
+                input.Value = f;
+            else if (propValue != null && float.TryParse(propValue.ToString(), out var fv))
+                input.Value = fv;
+            input.ValueChanged +=
+                () =>
+                {
+                    properties[key] = input.Value;
+                };
+            return input;
+        }
+
+        private LingoGfxInputCheckbox CreateBoolean(BehaviorPropertiesContainer properties, string key, object? propValue)
+        {
+            var input = _factory.CreateInputCheckbox($"PropInput_{key}");
+            input.Width = 70;
+            if (propValue is bool bval)
+                input.Checked = bval;
+            else if (propValue is string s && bool.TryParse(s, out var bv))
+                input.Checked = bv;
+            input.ValueChanged += () => properties[key] = input.Checked;
+            return input;
         }
 
         public LingoGfxWrapPanel BuildProperties(object obj)

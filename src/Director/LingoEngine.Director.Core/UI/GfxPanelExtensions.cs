@@ -34,7 +34,7 @@ namespace LingoEngine.Director.Core.UI
             container.AddItem(control, x, y);
             return control;
         }
-        public static LingoGfxInputNumber SetInputNumberAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, int width, Expression<Func<T,float>> property, float min = 0, float max = 100)
+        public static LingoGfxInputNumber SetInputNumberAt<T>(this LingoGfxPanel container, ILingoFrameworkFactory factory, T element, string name, float x, float y, int width, Expression<Func<T,float>> property, float? min = null, float? max = null)
         {
             Action<T, float> setter = property.CompileSetter();
             LingoGfxInputNumber control = factory.CreateInputNumber(name, min, max, x => setter(element, x));
