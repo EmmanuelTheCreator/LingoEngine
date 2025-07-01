@@ -9,8 +9,11 @@ namespace LingoEngine.Sprites
     /// </summary>
     public interface ILingoPropertyDescriptionList
     {
-        /// <summary>Returns property descriptions for this behavior.</summary>
-        BehaviorPropertiesContainer? GetPropertyDescriptionList();
+        /// <summary>
+        /// This method tells Director what custom properties a behavior has, what type of input they accept, and how they should appear in the Property Inspector. 
+        /// It's part of Director’s way of exposing editable fields for behaviors, similar to how Unity or Godot might expose serialized properties in the Inspector.
+        /// </summary>
+        BehaviorPropertyDescriptionList? GetPropertyDescriptionList();
 
         /// <summary>Returns a descriptive string for the behavior.</summary>
         string? GetBehaviorDescription();
