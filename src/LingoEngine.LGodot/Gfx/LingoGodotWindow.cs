@@ -3,6 +3,7 @@ using LingoEngine.Gfx;
 using LingoEngine.LGodot.Primitives;
 using LingoEngine.LGodot.Styles;
 using LingoEngine.Primitives;
+using System;
 using static Godot.Control;
 
 namespace LingoEngine.LGodot.Gfx
@@ -16,6 +17,9 @@ namespace LingoEngine.LGodot.Gfx
         private readonly List<ILingoFrameworkGfxLayoutNode> _nodes = new();
         private readonly Panel _panel;
         private readonly StyleBoxFlat _panelStyle;
+        private event Action? _onOpen;
+        private event Action? _onClose;
+        private event Action<float, float>? _onResize;
         private bool _isPopup;
         public LingoGodotWindow(LingoGfxWindow window, ILingoGodotStyleManager lingoGodotStyleManager)
         {
@@ -90,6 +94,22 @@ namespace LingoEngine.LGodot.Gfx
 
         public object FrameworkNode => this;
 
+        event Action? ILingoFrameworkGfxWindow.OnOpen
+        {
+            add => _onOpen += value;
+            remove => _onOpen -= value;
+        }
+        event Action? ILingoFrameworkGfxWindow.OnClose
+        {
+            add => _onClose += value;
+            remove => _onClose -= value;
+        }
+        event Action<float, float>? ILingoFrameworkGfxWindow.OnResize
+        {
+            add => _onResize += value;
+            remove => _onResize -= value;
+        }
+
         public void AddItem(ILingoFrameworkGfxLayoutNode child)
         {
             if (child.FrameworkNode is Node node)
@@ -106,11 +126,20 @@ namespace LingoEngine.LGodot.Gfx
 
         public IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems() => _nodes.ToArray();
 
-        public void Popup() => base.Popup();
-        public void PopupCentered() => base.PopupCentered();
+        public void Popup()
+        {
+            base.Popup();
+            _onOpen?.Invoke();
+        }
+        public void PopupCentered()
+        {
+            base.PopupCentered();
+            _onOpen?.Invoke();
+        }
         public new void Hide()
         {
             base.Hide();
+            _onClose?.Invoke();
         }
 
         public override void _Notification(int what)
@@ -119,6 +148,7 @@ namespace LingoEngine.LGodot.Gfx
             if (what == 1008)// NotificationResized
             {
                 _panel.Size = Size;
+                _onResize?.Invoke(Size.X, Size.Y);
             }
         }
         public new void Dispose()
