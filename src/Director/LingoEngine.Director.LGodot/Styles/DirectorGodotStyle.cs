@@ -44,6 +44,7 @@ public sealed class DirectorGodotStyle
         SetTabColors(theme);
         SetItemListStyle(theme);
         SetButtonStyle(theme);
+        SetPopupWindowStyle(theme);
         return theme;
     }
 
@@ -66,17 +67,21 @@ public sealed class DirectorGodotStyle
         theme.SetFontSize("font_size", "CloseButton", 10); // already done
     }
 
-    public static Theme GetTabContainerTheme()
+    public Theme GetTabContainerTheme()
     {
         var theme = new Theme();
         SetTabColors(theme);
         return theme;
     }
-    public static Theme GetTabItemTheme()
+    public Theme GetTabItemTheme()
     {
         var theme = new Theme();
         // You could define styles for buttons inside the tabs if needed
         return theme;
+    } 
+    public Theme GetPopupWindowTheme()
+    {
+        return Theme;
     }
     private static void SetTabColors(Theme theme)
     {
@@ -263,5 +268,14 @@ public sealed class DirectorGodotStyle
         theme.SetColor("font_focus_color", "Button", DirectorColors.Button_Text_Normal.ToGodotColor());
         theme.SetFontSize("font_size", "Button", 10);
     }
-
+    private static void SetPopupWindowStyle(Theme theme)
+    {
+        //theme.SetStylebox("embedded_border", "Window", header);
+        theme.SetColor("title_color", "Window", DirectorColors.PopupWindow_Header_Text.ToGodotColor());
+        theme.SetColor("title_outline_modulate", "Window", DirectorColors.PopupWindow_Header_BG.ToGodotColor());
+        theme.SetFont("title_font", "Window", new FontVariation { BaseFont = DefaultFont });
+        theme.SetFontSize("font_size", "Window", 11);
+        theme.SetFontSize("title_font_size", "Window", 12);
+        theme.SetFontSize("title_height", "Window", 20);
+    }
 }

@@ -385,7 +385,7 @@ namespace LingoEngine.LGodot.Core
         public LingoGfxWindow CreateWindow(string name, string title = "")
         {
             var win = new LingoGfxWindow();
-            var impl = new LingoGodotWindow(win);
+            var impl = new LingoGodotWindow(win, _serviceProvider.GetRequiredService<ILingoGodotStyleManager>());
             win.Name = name;
             if (!string.IsNullOrWhiteSpace(title))
                 win.Title = title;

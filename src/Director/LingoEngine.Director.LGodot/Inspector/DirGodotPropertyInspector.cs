@@ -66,8 +66,10 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IDirFrameworkP
         }
 
         var win = _inspectorWindow.BuildBehaviorPopup(behavior);
+        if (win == null) return;
         if (win.Framework<ILingoFrameworkGfxWindow>().FrameworkNode is Node node)
             GetTree().Root.AddChild(node);
+        
         win.PopupCentered();
         _behaviorWindow = win;
     }

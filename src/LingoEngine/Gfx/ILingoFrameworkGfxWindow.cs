@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Gfx
 {
@@ -9,6 +9,9 @@ namespace LingoEngine.Gfx
     {
         /// <summary>Window title.</summary>
         string Title { get; set; }
+        LingoColor BackgroundColor { get; set; }
+        bool IsPopup { get; set; }
+
 
         /// <summary>Adds a child node to the window.</summary>
         void AddItem(ILingoFrameworkGfxLayoutNode child);

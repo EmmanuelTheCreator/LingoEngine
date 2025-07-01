@@ -8,9 +8,8 @@ namespace LingoEngine.Director.Core.Inspector
 {
     public interface IDirectorBehaviorDescriptionManager
     {
-        LingoGfxWrapPanel BuildBehaviorPanel(LingoSpriteBehavior behavior);
         /// <summary>Builds a popup window for editing the given behavior.</summary>
-        LingoGfxWindow BuildBehaviorPopup(LingoSpriteBehavior behavior);
+        LingoGfxWindow? BuildBehaviorPopup(LingoSpriteBehavior behavior, Action onClose);
     }
 
     internal class DirectorBehaviorDescriptionManager : IDirectorBehaviorDescriptionManager
@@ -20,11 +19,60 @@ namespace LingoEngine.Director.Core.Inspector
         public DirectorBehaviorDescriptionManager(ILingoFrameworkFactory factory)
         {
             _factory = factory;
+            
         }
 
-        public LingoGfxWrapPanel BuildBehaviorPanel(LingoSpriteBehavior behavior)
+       
+        public LingoGfxWindow? BuildBehaviorPopup(LingoSpriteBehavior behavior, Action onClose)
         {
+            if (!(behavior is ILingoPropertyDescriptionList))
+            return null;
+            var width = 390;
+            var height = 250;
+            var rightWidth = 90;
+
+            var win = _factory.CreateWindow("BehaviorParams", $"Parameters for \"{behavior.Name}\"");
+            var root = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehaviorPopupRoot");
+            win.AddItem(root);
+            win.Width = width;
+            win.Height = height;
+            win.BackgroundColor = DirectorColors.BG_WhiteMenus;
+            win.IsPopup = true;
+
+            var panel = BuildBehaviorPanel(behavior, width- rightWidth-10, height);
+            root.AddItem(panel);
+
+            var vLine = _factory.CreateVerticalLineSeparator("BehaviorPopupLine");
+            vLine.Height = height;
+            root.AddItem(vLine);
+
+            var right = _factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPopupRight");
+            right.Width = rightWidth;
+            var ok = _factory.CreateButton("BehaviorPopupOk", "OK");
+            ok.Width = 74;
+            float margin = (rightWidth - ok.Width) / 2f;
+            ok.Margin = new LingoMargin(margin, 0, margin, 0);
+            ok.Pressed += () =>
+            {
+                win.Hide();
+                onClose();
+            };
+            right.AddItem(ok);
+            root.AddItem(right);
+
+            return win;
+        }
+
+        private ILingoGfxLayoutNode BuildBehaviorPanel(LingoSpriteBehavior behavior, int width, int height)
+        {
+            // todo : fix container with scroll
+            //var scroller = _factory.CreateScrollContainer("BehaviorPanelScroller");
+            //scroller.Width = width;
+            //scroller.Height = height;
             var container = _factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPanel");
+            container.Width = width;
+            container.Height = height;
+            //scroller.AddItem(container);
             //var propsPanel = BuildProperties(behavior);
             //container.AddItem(propsPanel);
             if (behavior is ILingoPropertyDescriptionList descProvider)
@@ -32,31 +80,6 @@ namespace LingoEngine.Director.Core.Inspector
 
             return container;
         }
-
-        public LingoGfxWindow BuildBehaviorPopup(LingoSpriteBehavior behavior)
-        {
-            var win = _factory.CreateWindow("BehaviorParams", $"Parameters for \"{behavior.Name}\"");
-            var root = _factory.CreateWrapPanel(LingoOrientation.Horizontal, "BehaviorPopupRoot");
-            win.AddItem(root);
-
-            var panel = BuildBehaviorPanel(behavior);
-            root.AddItem(panel);
-
-            root.AddItem(_factory.CreateVerticalLineSeparator("BehaviorPopupLine"));
-
-            var right = _factory.CreateWrapPanel(LingoOrientation.Vertical, "BehaviorPopupRight");
-            right.Width = 90;
-            var ok = _factory.CreateButton("BehaviorPopupOk", "OK");
-            ok.Width = 14;
-            float margin = (90 - 14) / 2f;
-            ok.Margin = new LingoMargin(margin, 0, margin, 0);
-            ok.Pressed += () => win.Hide();
-            right.AddItem(ok);
-            root.AddItem(right);
-
-            return win;
-        }
-
 
 
         private void BuildDescriptionList(LingoSpriteBehavior behavior, LingoGfxWrapPanel container, ILingoPropertyDescriptionList descProvider)
