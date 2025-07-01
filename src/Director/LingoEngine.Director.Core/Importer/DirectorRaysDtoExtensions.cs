@@ -2,6 +2,7 @@ using System;
 using ProjectorRays.Director;
 using ProjectorRays.director.Chunks;
 using LingoEngine.IO.Data.DTO;
+using ProjectorRays.director.Scores;
 
 namespace LingoEngine.Director.Core.Importer;
 
@@ -14,7 +15,7 @@ internal static class DirectorRaysDtoExtensions
             Name = movieName,
             Number = 0,
             Tempo = 0,
-            FrameCount = dir.Score?.Frames.Count ?? 0
+            FrameCount = dir.Score?.FrameDescriptors.Count ?? 0
         };
 
         int castNum = 1;
@@ -23,7 +24,7 @@ internal static class DirectorRaysDtoExtensions
 
         if (dir.Score != null)
         {
-            foreach (var f in dir.Score.Frames)
+            foreach (var f in dir.Score.FrameDescriptors)
                 movie.Sprites.Add(f.ToDto());
         }
 
@@ -152,7 +153,7 @@ internal static class DirectorRaysDtoExtensions
         return dto;
     }
 
-    public static LingoSpriteDTO ToDto(this RaysScoreChunk.FrameDescriptor f)
+    public static LingoSpriteDTO ToDto(this RaysScoreChunk.RaySprite f)
         => new LingoSpriteDTO
         {
             Name = $"Sprite{f.SpriteNumber}",

@@ -6,6 +6,7 @@ using ProjectorRays.IO;
 using Microsoft.Extensions.Logging;
 using ProjectorRays.director.Chunks;
 using ProjectorRays.director;
+using ProjectorRays.director.Scores;
 
 namespace ProjectorRays.Director;
 
