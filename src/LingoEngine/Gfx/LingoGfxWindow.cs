@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using LingoEngine.Primitives;
 
 namespace LingoEngine.Gfx
 {
@@ -8,6 +8,8 @@ namespace LingoEngine.Gfx
     public class LingoGfxWindow : LingoGfxNodeLayoutBase<ILingoFrameworkGfxWindow>
     {
         public string Title { get => _framework.Title; set => _framework.Title = value; }
+        public LingoColor BackgroundColor { get => _framework.BackgroundColor; set => _framework.BackgroundColor = value; }
+        public bool IsPopup { get => _framework.IsPopup; set => _framework.IsPopup = value; }
 
         public LingoGfxWindow AddItem(ILingoGfxNode node)
         {

@@ -78,9 +78,11 @@ namespace LingoEngine.Director.LGodot
             });
             engineRegistration.AddBuildAction(p =>
             {
+                var styles = p.GetRequiredService<DirectorGodotStyle>();
                 p.GetRequiredService<ILingoFontManager>().SetDefaultFont(DirectorGodotStyle.DefaultFont);
-                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.Tabs, DirectorGodotStyle.GetTabContainerTheme());
-                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.TabItem, DirectorGodotStyle.GetTabItemTheme());
+                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.Tabs, styles.GetTabContainerTheme());
+                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.TabItem, styles.GetTabItemTheme());
+                p.GetRequiredService<ILingoGodotStyleManager>().Register(LingoGodotThemeElementType.PopupWindow, styles.GetPopupWindowTheme());
                new LingoGodotDirectorRoot(p.GetRequiredService<LingoPlayer>(), p);
             });
             return engineRegistration;

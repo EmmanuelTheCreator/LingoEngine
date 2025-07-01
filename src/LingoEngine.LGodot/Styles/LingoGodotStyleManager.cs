@@ -5,7 +5,8 @@ namespace LingoEngine.LGodot.Styles
     public enum LingoGodotThemeElementType
     {
         Tabs,
-        TabItem
+        TabItem,
+        PopupWindow
     }
 
     public interface ILingoGodotStyleManager

@@ -18,10 +18,12 @@ namespace LingoEngine.Director.Core.Styles
         public static LingoColor Bg_Thumb = new LingoColor(255, 255, 255);
         public static LingoColor Border_Thumb = new LingoColor(64, 64, 64);
 
+
         // Text
         public static LingoColor TextColorLabels = new LingoColor(30, 30, 30);        // Property labels
         public static LingoColor TextColorDisabled = new LingoColor(130, 130, 130);   // Grayed-out text
         public static LingoColor TextColorFocused = new LingoColor(20, 20, 20);       // Active focus color
+
 
         // Inputs
         public static LingoColor InputText = new LingoColor(30, 30, 30);
@@ -31,6 +33,7 @@ namespace LingoEngine.Director.Core.Styles
         public static LingoColor Input_Border = new LingoColor(50, 50, 50);           // Border for text inputs
         public static LingoColor Input_Bg = new LingoColor(255, 255, 255);            // Background for text inputs
 
+
         // Tabs
         public static LingoColor BG_Tabs = new LingoColor(157, 172, 191);             // Inactive tabs
         public static LingoColor BG_Tabs_Hover = new LingoColor(120, 133, 150);             // Inactive tabs
@@ -39,11 +42,15 @@ namespace LingoEngine.Director.Core.Styles
         public static LingoColor Tab_Selected_TextColor = new LingoColor(0, 0, 0);         // text of the selected tab
         public static LingoColor Tab_Deselected_TextColor = new LingoColor(255, 255, 255); // text of the deselected tab
 
+
         // Dividers and lines
         public static LingoColor DividerLines = new LingoColor(190, 190, 190);        // Light panel separators
+
+
         // Score grid
         public static LingoColor ScoreGridLineLight = LingoColor.FromHex("f9f9f9");
         public static LingoColor ScoreGridLineDark = LingoColor.FromHex("d0d0d0");
+
 
         // Buttons
         public static LingoColor Button_Bg_Normal = new LingoColor(240, 240, 240);      // Classic light gray
@@ -58,5 +65,19 @@ namespace LingoEngine.Director.Core.Styles
 
         public static LingoColor Button_Text_Normal = new LingoColor(0, 0, 0);
         public static LingoColor Button_Text_Disabled = new LingoColor(130, 130, 130);
+
+
+
+        // Popup Window
+        public static LingoColor PopupWindow_Background = new LingoColor(255, 255, 255);   // Main background
+        public static LingoColor PopupWindow_Border = new LingoColor(160, 160, 160);       // Frame border
+
+        public static LingoColor PopupWindow_Header_BG = new LingoColor(216, 216, 216);    // Header bar (light gray)
+        public static LingoColor PopupWindow_Header_Text = new LingoColor(0, 0, 0);        // Title text
+
+        public static LingoColor PopupWindow_CloseButton_BG = new LingoColor(221, 221, 221);
+        public static LingoColor PopupWindow_CloseButton_Border = new LingoColor(130, 130, 130);
+        public static LingoColor PopupWindow_CloseButton_Hover = new LingoColor(255, 0, 0);
+
     }
 }

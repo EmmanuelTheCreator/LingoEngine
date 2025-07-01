@@ -280,11 +280,12 @@ namespace LingoEngine.Director.Core.Inspector
 
         }
 
-        public LingoGfxWrapPanel BuildBehaviorPanel(LingoSpriteBehavior behavior)
-            => _descriptionManager.BuildBehaviorPanel(behavior);
 
-        public LingoGfxWindow BuildBehaviorPopup(LingoSpriteBehavior behavior)
-            => _descriptionManager.BuildBehaviorPopup(behavior);
+        public LingoGfxWindow? BuildBehaviorPopup(LingoSpriteBehavior behavior)
+            => _descriptionManager.BuildBehaviorPopup(behavior,() =>
+            {
+                _behaviorList.SelectedIndex = -1;
+            });
 
         private void AddMemberTab(ILingoMember member)
         {
