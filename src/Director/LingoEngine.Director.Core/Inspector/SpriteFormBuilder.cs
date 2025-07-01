@@ -140,9 +140,8 @@ namespace LingoEngine.Director.Core.Inspector
             return this;
         }
 
-        public GfxPanelBuilder AddEnumInput<T, TEnum>(string name, string label, T target,
-            Expression<Func<T, int>> property, int inputSpan = 1, bool showLabel = true,
-            int labelSpan = 1) where TEnum : Enum
+        public GfxPanelBuilder AddEnumInput<T, TEnum>(string name, string label, T target,Expression<Func<T, int>> property, int inputSpan = 1, bool showLabel = true,int labelSpan = 1) 
+            where TEnum : Enum
         {
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();

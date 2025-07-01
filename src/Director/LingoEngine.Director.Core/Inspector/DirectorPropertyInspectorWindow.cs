@@ -234,7 +234,7 @@ namespace LingoEngine.Director.Core.Inspector
                    .AddNumericInput("SpriteBottom", "B:", sprite, s => s.Bottom)
                    .AddNumericInput("SpriteWidth", "W:", sprite, s => s.Width)
                    .AddNumericInput("SpriteHeight", "H:", sprite, s => s.Height, inputSpan: 5)
-                   .AddEnumInput<LingoInkType>("SpriteInk", "Ink:", sprite, s => s.Ink, inputSpan: 6)
+                   .AddEnumInput<LingoSprite,LingoInkType>("SpriteInk", "Ink:", sprite, s => s.Ink, inputSpan: 6)
                    .AddNumericInput("SpriteBlend", "%", sprite, s => s.Blend, showLabel: false)
                    .AddNumericInput("SpriteBeginFrame", "StartFrame:", sprite, s => s.BeginFrame, labelSpan: 3)
                    .AddNumericInput("SpriteEndFrame", "End:", sprite, s => s.EndFrame, inputSpan: 1, labelSpan: 3)
