@@ -382,6 +382,16 @@ namespace LingoEngine.LGodot.Core
             return sep;
         }
 
+        public LingoGfxWindow CreateWindow(string name, string title = "")
+        {
+            var win = new LingoGfxWindow();
+            var impl = new LingoGodotWindow(win);
+            win.Name = name;
+            if (!string.IsNullOrWhiteSpace(title))
+                win.Title = title;
+            return win;
+        }
+
 
         #endregion
 
