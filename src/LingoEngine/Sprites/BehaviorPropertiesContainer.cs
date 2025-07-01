@@ -25,11 +25,7 @@ public class BehaviorPropertiesContainer : IEnumerable<LingoPropertyItem>
 
     private readonly List<LingoPropertyItem> _items = new();
 
-    /// <summary>
-    /// Optional property description list describing each property as
-    /// returned by <c>getPropertyDescriptionList</c>.
-    /// </summary>
-    public BehaviorPropertyDescriptionList? DescriptionList { get; set; }
+    
 
     /// <summary>Gets or sets a property by key.</summary>
     public object? this[LingoSymbol key]

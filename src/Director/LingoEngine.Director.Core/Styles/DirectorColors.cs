@@ -4,6 +4,8 @@ namespace LingoEngine.Director.Core.Styles
 {
     public class DirectorColors
     {
+        public static LingoColor BlueSelectColor = new LingoColor(0, 120, 215);
+        public static LingoColor BlueLightSelectColor = new LingoColor(229,241,251);
         public static LingoColor BG_PropWindowBar = new LingoColor(178, 180, 191);    // Top bar of panels
         public static LingoColor BG_WhiteMenus = new LingoColor(240, 240, 240);       // Common window background
 
@@ -42,5 +44,19 @@ namespace LingoEngine.Director.Core.Styles
         // Score grid
         public static LingoColor ScoreGridLineLight = LingoColor.FromHex("f9f9f9");
         public static LingoColor ScoreGridLineDark = LingoColor.FromHex("d0d0d0");
+
+        // Buttons
+        public static LingoColor Button_Bg_Normal = new LingoColor(240, 240, 240);      // Classic light gray
+        public static LingoColor Button_Bg_Hover = BlueLightSelectColor;                // Hover highlight
+        public static LingoColor Button_Bg_Pressed = new LingoColor(204, 204, 204);     // Pressed darker gray
+        public static LingoColor Button_Bg_Disabled = new LingoColor(230, 230, 230);    // Disabled gray
+
+        public static LingoColor Button_Border_Normal = new LingoColor(50, 50, 50);     // Standard border
+        public static LingoColor Button_Border_Pressed = new LingoColor(100, 100, 100); // Slightly darker on press
+        public static LingoColor Button_Border_Disabled = new LingoColor(190, 190, 190);// Faded border
+        public static LingoColor Button_Border_Hover = BlueSelectColor;                 // Border hover
+
+        public static LingoColor Button_Text_Normal = new LingoColor(0, 0, 0);
+        public static LingoColor Button_Text_Disabled = new LingoColor(130, 130, 130);
     }
 }

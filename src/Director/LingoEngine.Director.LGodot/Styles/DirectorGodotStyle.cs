@@ -43,6 +43,7 @@ public sealed class DirectorGodotStyle
         //SetInputStyles(theme);
         SetTabColors(theme);
         SetItemListStyle(theme);
+        SetButtonStyle(theme);
         return theme;
     }
 
@@ -118,7 +119,7 @@ public sealed class DirectorGodotStyle
             ContentMarginLeft = 5,
             ContentMarginRight = 5,
         };
-        var tabHovered = tabUnselected.Duplicate() as StyleBoxFlat;
+        var tabHovered = (StyleBoxFlat)tabUnselected.Duplicate() as StyleBoxFlat;
         tabHovered.BgColor = DirectorColors.BG_Tabs_Hover.ToGodotColor();
         // Focus style (optional)
         var tabFocus = new StyleBoxFlat
@@ -222,6 +223,45 @@ public sealed class DirectorGodotStyle
         theme.SetStylebox("hovered_selected_focus", "ItemList", selected);
         theme.SetStylebox("hovered", "ItemList", hover);
         theme.SetStylebox("hovered_selected", "ItemList", selected);
+    }
+    private static void SetButtonStyle(Theme theme)
+    {
+        var normal = new StyleBoxFlat
+        {
+            BgColor = DirectorColors.Button_Bg_Normal.ToGodotColor(),
+            BorderColor = DirectorColors.Button_Border_Normal.ToGodotColor(),
+            BorderWidthTop = 1,
+            BorderWidthBottom = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusTopLeft = 2,
+            CornerRadiusTopRight = 2,
+            CornerRadiusBottomLeft = 2,
+            CornerRadiusBottomRight = 2
+        };
+
+        var hover = (StyleBoxFlat)normal.Duplicate();
+        hover.BgColor = DirectorColors.Button_Bg_Hover.ToGodotColor();
+        hover.BorderColor = DirectorColors.Button_Border_Hover.ToGodotColor();
+
+        var pressed = (StyleBoxFlat)normal.Duplicate();
+        pressed.BgColor = DirectorColors.Button_Bg_Pressed.ToGodotColor();
+        pressed.BorderColor = DirectorColors.Button_Border_Pressed.ToGodotColor();
+
+        var disabled = (StyleBoxFlat)normal.Duplicate();
+        disabled.BgColor = DirectorColors.Button_Bg_Disabled.ToGodotColor();
+        disabled.BorderColor = DirectorColors.Button_Border_Disabled.ToGodotColor();
+
+        theme.SetStylebox("normal", "Button", normal);
+        theme.SetStylebox("hover", "Button", hover);
+        theme.SetStylebox("pressed", "Button", pressed);
+        theme.SetStylebox("disabled", "Button", disabled);
+        theme.SetColor("font_color", "Button", DirectorColors.Button_Text_Normal.ToGodotColor());
+        theme.SetColor("font_disabled_color", "Button", DirectorColors.Button_Text_Disabled.ToGodotColor());
+        theme.SetFont("font", "Button", new FontVariation { BaseFont = DefaultFont });
+        theme.SetColor("font_hover_color", "Button", DirectorColors.Button_Text_Normal.ToGodotColor());
+        theme.SetColor("font_focus_color", "Button", DirectorColors.Button_Text_Normal.ToGodotColor());
+        theme.SetFontSize("font_size", "Button", 10);
     }
 
 }
