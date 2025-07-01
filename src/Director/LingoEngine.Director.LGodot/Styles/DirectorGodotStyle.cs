@@ -42,6 +42,7 @@ public sealed class DirectorGodotStyle
         SetCloseButtonStyle(theme);
         //SetInputStyles(theme);
         SetTabColors(theme);
+        SetItemListStyle(theme);
         return theme;
     }
 
@@ -181,6 +182,46 @@ public sealed class DirectorGodotStyle
 
         //theme.SetStylebox("panel", "TabBar", tabBarPanel);
     }
+    private static void SetItemListStyle(Theme theme)
+    {
+        var panelStyle = new StyleBoxFlat
+        {
+            BgColor = DirectorColors.Input_Bg.ToGodotColor(),
+            BorderColor = DirectorColors.Input_Border.ToGodotColor(),
+            BorderWidthTop = 1,
+            BorderWidthBottom = 1, 
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusBottomLeft = 2,
+            CornerRadiusBottomRight = 2,
+            CornerRadiusTopLeft = 2,
+            CornerRadiusTopRight = 2,
+            ContentMarginLeft = 5,
+            ContentMarginRight = 5,
+            ContentMarginTop = 5,
+            ContentMarginBottom = 5,
+        };
 
+        theme.SetStylebox("panel", "ItemList", panelStyle);
+        theme.SetColor("font_color", "ItemList", Colors.Black);
+        theme.SetFontSize("font_size", "ItemList", 10);
+
+        var selected = new StyleBoxFlat
+        {
+            BgColor = Colors.DodgerBlue,
+            BorderColor = Colors.Black,
+        }; 
+        var hover = new StyleBoxFlat
+        {
+            BgColor = Colors.DarkGray,
+            BorderColor = Colors.Black,
+        };
+
+        theme.SetStylebox("selected", "ItemList", selected);
+        theme.SetStylebox("selected_focus", "ItemList", selected);
+        theme.SetStylebox("hovered_selected_focus", "ItemList", selected);
+        theme.SetStylebox("hovered", "ItemList", hover);
+        theme.SetStylebox("hovered_selected", "ItemList", selected);
+    }
 
 }

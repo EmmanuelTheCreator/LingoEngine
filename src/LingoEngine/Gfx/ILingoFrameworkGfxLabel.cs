@@ -12,5 +12,6 @@ namespace LingoEngine.Gfx
         string? Font { get; set; }
         LingoColor FontColor { get; set; }
         int LineHeight { get; set; }
+        LingoTextWrapMode WrapMode { get; set; }
     }
 }

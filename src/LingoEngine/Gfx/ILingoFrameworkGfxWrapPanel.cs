@@ -18,5 +18,6 @@ namespace LingoEngine.Gfx
         void RemoveItem(ILingoFrameworkGfxNode child);
         IEnumerable<ILingoFrameworkGfxNode> GetItems();
         ILingoFrameworkGfxNode? GetItem(int index);
+        void RemoveAll();
     }
 }

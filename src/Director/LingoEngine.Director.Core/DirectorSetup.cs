@@ -28,6 +28,7 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<DirectorProjectManager>()
                     .AddSingleton<DirectorProjectSettings>()
                     .AddTransient<IDirectorWindowManager>(p => p.GetRequiredService<DirectorWindowManager>())
+                    .AddTransient<IDirectorBehaviorDescriptionManager, DirectorBehaviorDescriptionManager>()
 
                     // File system
                     .AddSingleton<IIdePathResolver, IdePathResolver>()

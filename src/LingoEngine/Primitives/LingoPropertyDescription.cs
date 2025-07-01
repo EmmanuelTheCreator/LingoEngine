@@ -16,5 +16,13 @@ namespace LingoEngine.Primitives
 
         /// <summary>Optional range or list of valid values.</summary>
         public IEnumerable<object?>? Range { get; set; }
+
+        public LingoPropertyDescription(object? @default, LingoSymbol format, string? comment, IEnumerable<object?>? range = null)
+        {
+            Default = @default;
+            Format = format;
+            Comment = comment;
+            Range = range;
+        }
     }
 }

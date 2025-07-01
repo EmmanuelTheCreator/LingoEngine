@@ -40,8 +40,8 @@ namespace LingoEngine.Gfx
         public void RemoveItem(ILingoFrameworkGfxLayoutNode node) => _framework.RemoveItem(node);
         public IEnumerable<ILingoFrameworkGfxLayoutNode> GetChildren() => _framework.GetItems();
 
-        public LingoColor BackgroundColor { get => _framework.BackgroundColor; set => _framework.BackgroundColor = value; }
-        public LingoColor BorderColor { get => _framework.BorderColor; set => _framework.BorderColor = value; }
+        public LingoColor? BackgroundColor { get => _framework.BackgroundColor; set => _framework.BackgroundColor = value; }
+        public LingoColor? BorderColor { get => _framework.BorderColor; set => _framework.BorderColor = value; }
         public float BorderWidth { get => _framework.BorderWidth; set => _framework.BorderWidth = value; }
     }
 

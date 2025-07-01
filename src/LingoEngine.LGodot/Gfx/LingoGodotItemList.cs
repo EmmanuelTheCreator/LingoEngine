@@ -13,11 +13,12 @@ namespace LingoEngine.LGodot.Gfx
         private LingoMargin _margin = LingoMargin.Zero;
         private Action<string?>? _onChange;
         private event Action? _onValueChanged;
+        private ItemSelectedEventHandler? _onItemSelected;
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public float Width { get => Size.X; set { Size = new Vector2(value, Size.Y); CustomMinimumSize = new Vector2(value, Size.Y); } }
+        public float Height { get => Size.Y; set { Size = new Vector2(Size.X, value); CustomMinimumSize = new Vector2(Size.X, value); } }
         public bool Visibility { get => Visible; set => Visible = value; }
         public bool Enabled { get; set; } // { get => !Disabled; set => Disabled = !value; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
@@ -42,15 +43,18 @@ namespace LingoEngine.LGodot.Gfx
         {
             _onChange = onChange;
             list.Init(this);
-            ItemSelected += idx => _onValueChanged?.Invoke();
-            if (_onChange != null)
-                ItemSelected += idx => _onChange(SelectedKey);
-            Width = 200;
-            Height = 200;
-
+            _onItemSelected = idx =>
+            {
+                _onValueChanged?.Invoke();
+                _onChange?.Invoke(SelectedKey);
+            };
+            ItemSelected += _onItemSelected;
+            SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            SizeFlagsVertical = SizeFlags.ExpandFill;
+            CustomMinimumSize = new Vector2(100, 50);
         }
 
-      
+
         public void AddItem(string key, string value)
         {
             _items.Add(new KeyValuePair<string,string>(key, value));
@@ -120,9 +124,7 @@ namespace LingoEngine.LGodot.Gfx
 
         public new void Dispose()
         {
-            if (_onChange != null)
-                ItemSelected -= idx => _onChange(SelectedKey);
-            ItemSelected -= idx => _onValueChanged?.Invoke();
+            if (_onItemSelected != null) ItemSelected -= _onItemSelected;
             QueueFree();
             base.Dispose();
         }

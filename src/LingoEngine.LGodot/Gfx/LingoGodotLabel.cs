@@ -4,6 +4,7 @@ using LingoEngine.Primitives;
 using System;
 using LingoEngine.Styles;
 using LingoEngine.LGodot.Primitives;
+using static Godot.TextServer;
 
 namespace LingoEngine.LGodot.Gfx
 {
@@ -22,12 +23,14 @@ namespace LingoEngine.LGodot.Gfx
             _fontManager = fontManager;
             label.Init(this);
             LabelSettings = new LabelSettings();
+            AutowrapMode = TextServer.AutowrapMode.Off;
         }
 
         //public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
         //public float Y { get => Position.Y; set => Position = new Vector2(Position.X, value); }
-        public float Width { get => Size.X; set => Size = new Vector2(value, Size.Y); }
-        public float Height { get => Size.Y; set => Size = new Vector2(Size.X, value); }
+        public float Width { get => Size.X; set { Size = new Vector2(value, Size.Y); CustomMinimumSize = new Vector2(value, Size.Y); } }
+        public float Height { get => Size.Y; set { Size = new Vector2(Size.X, value); CustomMinimumSize = new Vector2(Size.X, value); } }
+    
         public bool Visibility { get => Visible; set => Visible = value; }
         string ILingoFrameworkGfxNode.Name { get => Name; set => Name = value; }
 
@@ -120,6 +123,8 @@ namespace LingoEngine.LGodot.Gfx
         }
 
         public object FrameworkNode => this;
+
+        public LingoTextWrapMode WrapMode { get => (LingoTextWrapMode)(int)AutowrapMode; set => AutowrapMode = (AutowrapMode)(int)value; }
 
         public new void Dispose()
         {

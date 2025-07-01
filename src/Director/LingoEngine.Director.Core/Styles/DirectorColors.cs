@@ -24,9 +24,10 @@ namespace LingoEngine.Director.Core.Styles
         // Inputs
         public static LingoColor InputText = new LingoColor(30, 30, 30);
         public static LingoColor InputBorder = new LingoColor(30, 30, 30);
-        public static LingoColor InputBg = new LingoColor(255, 255, 255);
         public static LingoColor InputSelection = new LingoColor(0, 120, 215);        // Windows blue selection
         public static LingoColor InputSelectionText = new LingoColor(255, 255, 255);  // Text over selection
+        public static LingoColor Input_Border = new LingoColor(50, 50, 50);           // Border for text inputs
+        public static LingoColor Input_Bg = new LingoColor(255, 255, 255);            // Background for text inputs
 
         // Tabs
         public static LingoColor BG_Tabs = new LingoColor(157, 172, 191);             // Inactive tabs

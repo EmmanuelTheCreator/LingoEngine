@@ -20,7 +20,7 @@ public partial class DirGodotPropertyInspector : BaseGodotWindow, IDirFrameworkP
     {
         _inspectorWindow = inspectorWindow;
         
-        Size = new Vector2(260, 400);
+        Size = new Vector2(260, 450);
         _inspectorWindow.Init(this, Size.X, Size.Y,TitleBarHeight);
         CustomMinimumSize = Size;
 

@@ -39,6 +39,18 @@ public class BehaviorPropertiesContainer : IEnumerable<LingoPropertyItem>
                 _items.Add(new LingoPropertyItem { Key = key, Value = value });
         }
     }
+    public BehaviorPropertiesContainer Add(LingoSymbol key, object? value)
+    {
+        _items.Add(new LingoPropertyItem { Key = key, Value = value });
+        return this;
+    }
+    public BehaviorPropertiesContainer Remove(LingoSymbol key)
+    {
+        var idx = _items.FindIndex(i => i.Key.Equals(key));
+        if (idx >= 0)
+            _items.RemoveAt(idx);
+        return this;
+    }
 
     /// <summary>Enumerates all property keys.</summary>
     public IEnumerable<LingoSymbol> Keys => _items.Select(i => i.Key);
