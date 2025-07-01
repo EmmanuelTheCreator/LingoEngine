@@ -12,18 +12,16 @@ namespace LingoEngine.Director.LGodot.Gfx;
 
 internal partial class DirGodotToolsWindow : BaseGodotWindow, IDirFrameworkToolsWindow
 {
-    private readonly IStageToolManager _toolManager;
     private StageToolbar _stageToolbar;
 
     public event Action<int>? IconPressed;
 
-    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow, IStageToolManager toolManager, IDirGodotWindowManager windowManager, IDirectorIconManager iconManager, ILingoCommandManager commandManager, ILingoFrameworkFactory factory)
+    public DirGodotToolsWindow(DirectorToolsWindow directorToolsWindow,IDirGodotWindowManager windowManager, IDirectorIconManager iconManager, ILingoCommandManager commandManager, ILingoFrameworkFactory factory)
         : base(DirectorMenuCodes.ToolsWindow, "Tools", windowManager)
     {
         directorToolsWindow.Init(this);
-        _toolManager = toolManager;
 
-        Size = new Vector2(80, 200);
+        Size = new Vector2(60, 300);
         CustomMinimumSize = Size;
 
         _stageToolbar = new StageToolbar(iconManager, commandManager, factory);

@@ -20,15 +20,13 @@ using LingoEngine.Director.Core.UI;
 
 namespace LingoEngine.Director.LGodot.Movies;
 
-internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelectedEvent, IDirFrameworkStageWindow,
-    ICommandHandler<MoveSpritesCommand>, ICommandHandler<RotateSpritesCommand>
+internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelectedEvent, IDirFrameworkStageWindow
 {
     private const int IconBarHeight = 12;
     private readonly LingoGodotStageContainer _stageContainer;
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
     private readonly ILingoCommandManager _commandManager;
-    private readonly IStageToolManager _toolManager;
     private readonly IHistoryManager _historyManager;
     private readonly HBoxContainer _iconBar = new HBoxContainer();
     private readonly HSlider _zoomSlider = new HSlider();
@@ -48,6 +46,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private LingoMovie? _movie;
     private ILingoFrameworkStage? _stage;
     private readonly List<LingoSprite> _selectedSprites = new();
+    private readonly DirectorStageWindow _directorStageWindow;
     private LingoSprite? _primarySelectedSprite;
     private Vector2? _dragStart;
     private Dictionary<LingoSprite, Primitives.LingoPoint>? _initialPositions;
@@ -57,7 +56,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
     private bool _panning;
     private float _scale = 1f;
 
-    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, IStageToolManager toolManager, IHistoryManager historyManager, ILingoPlayer player, DirectorStageWindow directorStageWindow, IDirGodotWindowManager windowManager)
+    public DirGodotStageWindow(ILingoFrameworkStageContainer stageContainer, IDirectorEventMediator directorEventMediator, ILingoCommandManager commandManager, IHistoryManager historyManager, ILingoPlayer player, DirectorStageWindow directorStageWindow, IDirGodotWindowManager windowManager)
         : base(DirectorMenuCodes.StageWindow, "Stage", windowManager)
     {
         _stageContainer = (LingoGodotStageContainer)stageContainer;
@@ -65,13 +64,13 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _player = player;
         _player.ActiveMovieChanged += OnActiveMovieChanged;
         _commandManager = commandManager;
-        _toolManager = toolManager;
         _historyManager = historyManager;
         directorStageWindow.Init(this);
+        _directorStageWindow = directorStageWindow;
 
         _mediator.Subscribe(this);
 
-        _toolManager.ToolChanged += OnToolChanged;
+        
         
         Size = new Vector2(640 +10, 480+ TitleBarHeight);
         CustomMinimumSize = Size;
@@ -305,7 +304,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             UpdateSelectionBox();
     }
 
-    private void UpdateSelectionBox()
+    public void UpdateSelectionBox()
     {
         if (_selectedSprites.Count == 0)
         {
@@ -321,7 +320,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         _selectionBox.Visible = true;
     }
 
-    private void UpdateBoundingBoxes()
+    public void UpdateBoundingBoxes()
     {
         if (_movie == null || _movie.IsPlaying)
         {
@@ -412,7 +411,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             return;
         }
 
-        switch (_toolManager.CurrentTool)
+        switch (_directorStageWindow.SelectedTool)
         {
             case StageTool.Pointer:
                 HandlePointerInput(@event);
@@ -556,30 +555,7 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
         return new Vector2((left + right) / 2f, (top + bottom) / 2f);
     }
 
-    public bool CanExecute(MoveSpritesCommand command) => true;
-    public bool Handle(MoveSpritesCommand command)
-    {
-        foreach (var kv in command.EndPositions)
-        {
-            kv.Key.LocH = kv.Value.X;
-            kv.Key.LocV = kv.Value.Y;
-        }
-        _historyManager.Push(command.ToUndo(UpdateSelectionBox), command.ToRedo(UpdateSelectionBox));
-        UpdateSelectionBox();
-        UpdateBoundingBoxes();
-        return true;
-    }
-
-    public bool CanExecute(RotateSpritesCommand command) => true;
-    public bool Handle(RotateSpritesCommand command)
-    {
-        foreach (var kv in command.EndRotations)
-            kv.Key.Rotation = kv.Value;
-        _historyManager.Push(command.ToUndo(UpdateSelectionBox), command.ToRedo(UpdateSelectionBox));
-        UpdateSelectionBox();
-        UpdateBoundingBoxes();
-        return true;
-    }
+  
 
     protected override void Dispose(bool disposing)
     {
@@ -589,7 +565,6 @@ internal partial class DirGodotStageWindow : BaseGodotWindow, IHasSpriteSelected
             _movie.SpriteListChanged -= UpdateBoundingBoxes;
         }
         _player.ActiveMovieChanged -= OnActiveMovieChanged;
-        _toolManager.ToolChanged -= OnToolChanged;
         _mediator.Unsubscribe(this);
         base.Dispose(disposing);
     }

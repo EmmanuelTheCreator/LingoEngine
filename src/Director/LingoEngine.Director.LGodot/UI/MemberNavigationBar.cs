@@ -16,7 +16,7 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
     private readonly IDirectorEventMediator _mediator;
     private readonly ILingoPlayer _player;
     private readonly IDirectorIconManager _iconManager;
-
+    private readonly int _barHeight;
     private readonly Button _prevButton = new Button();
     private readonly Button _nextButton = new Button();
     private readonly PanelContainer _typePanel = new();
@@ -33,16 +33,15 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _mediator = mediator;
         _player = player;
         _iconManager = iconManager;
+        _barHeight = barHeight;
 
         CustomMinimumSize = new Vector2(0, barHeight);
 
-        _prevButton.Text = "<";
-        _prevButton.CustomMinimumSize = new Vector2(20, barHeight);
+        StyleIconButton(_prevButton, DirectorIcon.Previous);
         _prevButton.Pressed += () => Navigate(-1);
         AddChild(_prevButton);
 
-        _nextButton.Text = ">";
-        _nextButton.CustomMinimumSize = new Vector2(20, barHeight);
+        StyleIconButton(_nextButton, DirectorIcon.Next);
         _nextButton.Pressed += () => Navigate(1);
         AddChild(_nextButton);
 
@@ -73,16 +72,26 @@ internal partial class MemberNavigationBar<T> : HBoxContainer where T : class, I
         _numberLabel.CustomMinimumSize = new Vector2(40, barHeight);
         AddChild(_numberLabel);
 
-        _infoButton.Text = "I";
-        _infoButton.Modulate = Colors.Blue;
-        _infoButton.CustomMinimumSize = new Vector2(20, barHeight);
+        StyleIconButton(_infoButton, DirectorIcon.Info);
         _infoButton.Pressed += OnInfo;
         AddChild(_infoButton);
 
         _castLibLabel.CustomMinimumSize = new Vector2(80, barHeight);
         AddChild(_castLibLabel);
     }
-
+    private void StyleIconButton(Button button, DirectorIcon icon)
+    {
+        button.Icon = ((LingoGodotImageTexture)_iconManager.Get(icon)).Texture;
+        button.CustomMinimumSize = new Vector2(20, _barHeight);
+        button.AddThemeStyleboxOverride("normal", new StyleBoxFlat
+        {
+            BgColor = Colors.Transparent,
+            BorderWidthBottom = 0,
+            BorderWidthTop = 0,
+            BorderWidthLeft = 0,
+            BorderWidthRight = 0
+        });
+    }
     public void SetMember(T member)
     {
         _member = member;

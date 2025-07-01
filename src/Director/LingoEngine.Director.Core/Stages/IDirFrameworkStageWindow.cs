@@ -2,5 +2,9 @@
 
 namespace LingoEngine.Director.Core.Stages
 {
-    public interface IDirFrameworkStageWindow : IDirFrameworkWindow { }
+    public interface IDirFrameworkStageWindow : IDirFrameworkWindow
+    {
+        void UpdateBoundingBoxes();
+        void UpdateSelectionBox();
+    }
 }

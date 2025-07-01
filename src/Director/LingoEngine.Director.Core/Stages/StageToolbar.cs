@@ -9,13 +9,19 @@ using LingoEngine.Primitives;
 
 namespace LingoEngine.Director.Core.Stages;
 
+public enum StageTool
+{
+    Pointer,
+    Move,
+    Rotate
+}
 public class StageToolbar : DirectorToolbar<StageTool>
 {
 
     public LingoColor SelectedColor { get; private set; } = new LingoColor(0, 0, 0);
     public StageToolbar(IDirectorIconManager iconManager, ILingoCommandManager commandManager, ILingoFrameworkFactory factory) : base("StageToolbarRoot", iconManager, commandManager, factory)
     {
-        AddToolButton(DirectorIcon.Pencil);
+        AddToolButton(DirectorIcon.Pointer);
         AddToolButton(DirectorIcon.PaintRotateFree);
         AddToolButton(DirectorIcon.Hand);
         //AddToolButton(DirectorIcon.Magnifier);
@@ -30,7 +36,7 @@ public class StageToolbar : DirectorToolbar<StageTool>
     {
         return icon switch
         {
-            DirectorIcon.Pencil => StageTool.Pointer,
+            DirectorIcon.Pointer => StageTool.Pointer,
             DirectorIcon.PaintRotateFree => StageTool.Rotate,
             DirectorIcon.Hand => StageTool.Move,
             _ => throw new ArgumentOutOfRangeException(nameof(icon), icon.ToString())

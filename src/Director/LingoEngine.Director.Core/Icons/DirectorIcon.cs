@@ -76,6 +76,33 @@ namespace LingoEngine.Director.Core.Icons
         PaintLighten,
         PaintDarken,
         PaintFill,
-        PaintSwitchColors
+        PaintSwitchColors,
+        Unused1,
+
+        // Director_Icons.png (continuing index)
+        Add,
+        Previous,
+        Next,
+        Info,
+        Pointer,
+
+        Rewind,
+        Stop,
+        Play,
+        ViewGrid,
+        ViewList,
+        
+        WindowStage,
+        WindowCast,
+        WindowScore,
+        WindowProperty,
+        WindowSearch,
+
+        ReplaceMember,
+        WindowPaint,
+        WindowText,
+        WindowPath,
+        Window3D,
+
     }
 }
