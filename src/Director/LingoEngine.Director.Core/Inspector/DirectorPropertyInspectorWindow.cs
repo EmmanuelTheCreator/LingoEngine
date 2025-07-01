@@ -40,15 +40,16 @@ namespace LingoEngine.Director.Core.Inspector
         private LingoGfxPanel? _header;
         private ILingoFrameworkFactory _factory;
         private IDirectorIconManager _iconManager;
+        public ILingoFrameworkFactory Factory => _factory;
         private LingoGfxPanel _headerPanel;
         private IDirectorEventMediator _mediator;
         private readonly IDirectorBehaviorDescriptionManager _descriptionManager;
         private LingoGfxWrapPanel _behaviorPanel;
-        private LingoGfxWrapPanel _behaviorDetail;
         private float _lastWidh;
         private float _lastHeight;
         private Dictionary<string, LingoSpriteBehavior> _behaviors = new();
         private LingoGfxItemList _behaviorList;
+        public event Action<LingoSpriteBehavior>? BehaviorSelected;
 
         public LingoGfxPanel HeaderPanel => _headerPanel;
         public LingoGfxTabContainer Tabs => _tabs;
@@ -138,7 +139,6 @@ namespace LingoEngine.Director.Core.Inspector
             _tabs.Width = width - 10;
             _tabs.Height = height - 30 - HeaderHeight;
             _behaviorList.Width = _lastWidh - 15;
-            _behaviorDetail.Width = _lastWidh - 15;
         }
 
        
@@ -267,35 +267,24 @@ namespace LingoEngine.Director.Core.Inspector
         private void CreateBehaviorPanel()
         {
             _behaviorPanel = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InspectorBehaviors");
-            _behaviorDetail = _factory.CreateWrapPanel(LingoOrientation.Vertical, "InspectorBehaviorsWrapPanel");
 
             _behaviorList = _factory.CreateItemList("BehaviorList", x =>
             {
                 if (x != null && _behaviors.TryGetValue(x, out var behavior))
-                {
-                    _behaviorDetail.Visibility = true;
-                    ShowBehavior(behavior);
-                }
-                else
-                    _behaviorDetail.Visibility = false;
+                    BehaviorSelected?.Invoke(behavior);
             });
             _behaviorList.Height = 45;
             _behaviorList.Width = _lastWidh - 15;
-            _behaviorDetail.Width = _lastWidh - 15;
             _behaviorList.Margin = new LingoMargin(5,0,0,0);
             _behaviorPanel.AddItem(_behaviorList);
-            _behaviorPanel.AddItem(_behaviorDetail);
-            _behaviorDetail.Visibility = false;
-      
+
         }
-        private void ShowBehavior(LingoSpriteBehavior behavior)
-        {
-            _behaviorDetail.RemoveAll();
-            
-            var panel = _descriptionManager.BuildBehaviorPanel(behavior);
-            _behaviorDetail.AddItem(panel);
-            OnResizing(_lastWidh, _lastHeight);
-        }
+
+        public LingoGfxWrapPanel BuildBehaviorPanel(LingoSpriteBehavior behavior)
+            => _descriptionManager.BuildBehaviorPanel(behavior);
+
+        public LingoGfxWindow BuildBehaviorPopup(LingoSpriteBehavior behavior)
+            => _descriptionManager.BuildBehaviorPopup(behavior);
 
         private void AddMemberTab(ILingoMember member)
         {
