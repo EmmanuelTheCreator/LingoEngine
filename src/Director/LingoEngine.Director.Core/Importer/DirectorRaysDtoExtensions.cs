@@ -15,7 +15,7 @@ internal static class DirectorRaysDtoExtensions
             Name = movieName,
             Number = 0,
             Tempo = 0,
-            FrameCount = dir.Score?.FrameDescriptors.Count ?? 0
+            FrameCount = dir.Score?.Sprites.Count ?? 0
         };
 
         int castNum = 1;
@@ -24,7 +24,7 @@ internal static class DirectorRaysDtoExtensions
 
         if (dir.Score != null)
         {
-            foreach (var f in dir.Score.FrameDescriptors)
+            foreach (var f in dir.Score.Sprites)
                 movie.Sprites.Add(f.ToDto());
         }
 
@@ -166,7 +166,7 @@ internal static class DirectorRaysDtoExtensions
             Visibility = true,
             LocH = f.LocH,
             LocV = f.LocV,
-            LocZ = f.Channel,
+            LocZ = f.LocZ,
             Rotation = f.Rotation,
             Skew = f.Skew,
             RegPoint = new LingoPointDTO(),

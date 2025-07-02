@@ -83,6 +83,7 @@ public class RaysScoreChunk : RaysChunk
         public List<int> ExtraValues { get; internal set; } = new();
         public List<RaysBehaviourRef> Behaviors { get; internal set; } = new();
         public List<RayKeyFrame> Keyframes { get; internal set; } = new();
+        public int LocZ { get; set; }
     }
 
     public record RayKeyframeBlock
