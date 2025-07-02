@@ -48,6 +48,7 @@ namespace LingoEngine.Director.LGodot
                 s.AddSingleton<DirGodotScoreWindow>();
                 s.AddSingleton<DirGodotStageWindow>();
                 s.AddSingleton<DirGodotBinaryViewerWindow>();
+                s.AddSingleton<DirGodotBinaryViewerWindowV2>();
                 s.AddSingleton<DirGodotImportExportWindow>();
                 s.AddSingleton<DirGodotPropertyInspector>();
                 s.AddSingleton<DirGodotTextableMemberWindow>();
@@ -72,6 +73,7 @@ namespace LingoEngine.Director.LGodot
                 s.AddTransient<IDirFrameworkScoreWindow>(p => p.GetRequiredService<DirGodotScoreWindow>());
                 s.AddTransient<IDirFrameworkStageWindow>(p => p.GetRequiredService<DirGodotStageWindow>());
                 s.AddTransient<IDirFrameworkBinaryViewerWindow>(p => p.GetRequiredService<DirGodotBinaryViewerWindow>());
+                s.AddTransient<IDirFrameworkBinaryViewerWindowV2>(p => p.GetRequiredService<DirGodotBinaryViewerWindowV2>());
                 s.AddTransient<IDirFrameworkPropertyInspectorWindow>(p => p.GetRequiredService<DirGodotPropertyInspector>());
                 s.AddTransient<IDirFrameworkBitmapEditWindow>(p => p.GetRequiredService<DirGodotPictureMemberEditorWindow>());
                 s.AddTransient<IDirFrameworkImportExportWindow>(p => p.GetRequiredService<DirGodotImportExportWindow>());
