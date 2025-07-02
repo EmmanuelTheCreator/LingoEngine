@@ -72,7 +72,7 @@ namespace LingoEngine.Director.LGodot.UI
             // close some windows
             _projectSettingsWindow.CloseWindow();
             _binaryViewer.CloseWindow();
-            _binaryViewerV2.CloseWindow();
+            //_binaryViewerV2.CloseWindow();
             _importExportWindow.CloseWindow();
             _textWindow.CloseWindow();
             _picture.CloseWindow();

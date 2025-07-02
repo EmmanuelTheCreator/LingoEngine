@@ -237,7 +237,7 @@ namespace ProjectorRays.director.Scores
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
                 ushort frameDataLen = reader.ReadUint16("frameLen", fk);
-                var frameBytes = reader.ReadBytes(frameDataLen - 2, "frameBytes", fk);
+                var frameBytes = reader.ReadBytes(frameDataLen - 2); //, "frameBytes", fk);
                 var frameData = new ReadStream(frameBytes, frameDataLen - 2, reader.Endianness,
                     annotator: Annotator);
                 var rawata = frameData.LogHex(frameData.Size);
@@ -391,7 +391,7 @@ namespace ProjectorRays.director.Scores
                             {
                                 var stream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
                                 var test1 = stream.LogHex(stream.Size);
-                                _logger.LogInformation("Raw data:" + test1);
+                                //_logger.LogInformation("Raw data:" + test1);
                                 continue;
                             }
                             sprite = ReadChannelSprite(channelStream, new() { ["frame"] = i, ["channel"] = spriteNum });
@@ -674,7 +674,7 @@ namespace ProjectorRays.director.Scores
                     break;
                 }
 
-                byte[] data = frameData.ReadBytes(itemLen, "deltaBytes", new Dictionary<string, int> { ["frame"] = frameIndex, ["offset"] = offset });
+                byte[] data = frameData.ReadBytes(itemLen); //, "deltaBytes", new Dictionary<string, int> { ["frame"] = frameIndex, ["offset"] = offset });
                 items.Add(new FrameDeltaItem(offset, data));
             }
 
@@ -772,7 +772,7 @@ namespace ProjectorRays.director.Scores
             int position = 0;
 
             // Convert the reader stream to a byte array
-            byte[] frameBytes = reader.ReadBytes(reader.Size, "frameBytes");
+            byte[] frameBytes = reader.ReadBytes(reader.Size);//, "frameBytes");
 
             while (position < frameBytes.Length)
             {

@@ -5,6 +5,7 @@ using LingoEngine.Director.Core.UI;
 using ProjectorRays.Common;
 using System;
 using System.Collections.Generic;
+using LingoEngine.Director.Core.Inspector;
 
 namespace LingoEngine.Director.LGodot.Gfx;
 
@@ -24,7 +25,7 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
         : base(DirectorMenuCodes.BinaryViewerWindowV2, "Binary Viewer V2", windowManager)
     {
         viewerWindow.Init(this);
-        Size = new Vector2(1000, 600);
+        Size = new Vector2(1400, 600);
         CustomMinimumSize = Size;
 
         _viewport = new SubViewport();
