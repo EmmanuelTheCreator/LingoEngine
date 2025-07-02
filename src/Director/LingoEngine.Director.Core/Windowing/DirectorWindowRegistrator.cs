@@ -27,6 +27,7 @@ namespace LingoEngine.Director.Core.Windowing
                 .Register<DirectorScoreWindow>(DirectorMenuCodes.ScoreWindow, shortCutManager.CreateShortCut(DirectorMenuCodes.ScoreWindow, "Ctrl+4", sc => new ExecuteShortCutCommand(sc)))
                 .Register<DirectorPropertyInspectorWindow>(DirectorMenuCodes.PropertyInspector, shortCutManager.CreateShortCut(DirectorMenuCodes.PropertyInspector, "Ctrl+Alt+S", sc => new ExecuteShortCutCommand(sc)))
                 .Register<DirectorBinaryViewerWindow>(DirectorMenuCodes.BinaryViewerWindow)
+                .Register<DirectorBinaryViewerWindowV2>(DirectorMenuCodes.BinaryViewerWindowV2)
                 .Register<DirectorStageWindow>(DirectorMenuCodes.StageWindow, shortCutManager.CreateShortCut(DirectorMenuCodes.StageWindow, "Ctrl+1", sc => new ExecuteShortCutCommand(sc)))
                 .Register<DirectorTextEditWindow>(DirectorMenuCodes.TextEditWindow, shortCutManager.CreateShortCut(DirectorMenuCodes.TextEditWindow, "Ctrl+T", sc => new ExecuteShortCutCommand(sc)))
                 .Register<DirectorBitmapEditWindow>(DirectorMenuCodes.PictureEditWindow, shortCutManager.CreateShortCut(DirectorMenuCodes.PictureEditWindow, "Ctrl+5", sc => new ExecuteShortCutCommand(sc)))
