@@ -23,6 +23,7 @@ namespace LingoEngine.Director.LGodot.UI
         private readonly DirGodotMainMenu _dirGodotMainMenu;
         private readonly DirGodotProjectSettingsWindow _projectSettingsWindow;
         private readonly DirGodotBinaryViewerWindow _binaryViewer;
+        private readonly DirGodotBinaryViewerWindowV2 _binaryViewerV2;
         private readonly DirGodotImportExportWindow _importExportWindow;
         private readonly DirGodotTextableMemberWindow _textWindow;
         private readonly DirGodotPictureMemberEditorWindow _picture;
@@ -47,6 +48,7 @@ namespace LingoEngine.Director.LGodot.UI
             _propertyInspector = serviceProvider.GetRequiredService<DirGodotPropertyInspector>();
             _toolsWindow = serviceProvider.GetRequiredService<DirGodotToolsWindow>();
             _binaryViewer = serviceProvider.GetRequiredService<DirGodotBinaryViewerWindow>();
+            _binaryViewerV2 = serviceProvider.GetRequiredService<DirGodotBinaryViewerWindowV2>();
             _importExportWindow = serviceProvider.GetRequiredService<DirGodotImportExportWindow>();
             _textWindow = serviceProvider.GetRequiredService<DirGodotTextableMemberWindow>();
             _picture = serviceProvider.GetRequiredService<DirGodotPictureMemberEditorWindow>();
@@ -62,6 +64,7 @@ namespace LingoEngine.Director.LGodot.UI
             _directorParent.AddChild(_textWindow);
             _directorParent.AddChild(_propertyInspector);
             _directorParent.AddChild(_binaryViewer);
+            _directorParent.AddChild(_binaryViewerV2);
 
             // Set all positions
             SetDefaultPositions();
@@ -69,6 +72,7 @@ namespace LingoEngine.Director.LGodot.UI
             // close some windows
             _projectSettingsWindow.CloseWindow();
             _binaryViewer.CloseWindow();
+            _binaryViewerV2.CloseWindow();
             _importExportWindow.CloseWindow();
             _textWindow.CloseWindow();
             _picture.CloseWindow();
@@ -83,6 +87,7 @@ namespace LingoEngine.Director.LGodot.UI
             _propertyInspector.Position = new Vector2(1330, 25);
             _toolsWindow.Position = new Vector2(10, 25);
             _binaryViewer.Position = new Vector2(20, 120);
+            _binaryViewerV2.Position = new Vector2(20, 280);
             _importExportWindow.Position = new Vector2(120, 120);
             _projectSettingsWindow.Position = new Vector2(100, 100);
             _textWindow.Position = new Vector2(20, 120);
@@ -99,6 +104,7 @@ namespace LingoEngine.Director.LGodot.UI
             _propertyInspector.Dispose();
             _toolsWindow.Dispose();
             _binaryViewer.Dispose();
+            _binaryViewerV2.Dispose();
             _importExportWindow.Dispose();
         }
     }
