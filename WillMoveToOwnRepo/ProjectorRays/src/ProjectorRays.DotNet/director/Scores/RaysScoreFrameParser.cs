@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Threading.Channels;
@@ -11,6 +12,7 @@ namespace ProjectorRays.director.Scores
     internal class RaysScoreFrameParser
     {
         private readonly ILogger _logger;
+        public StreamAnnotatorDecorator Annotator { get; }
         private BufferView _FrameDataBufferView;
         private List<BufferView> _FrameIntervalDescriptorBuffers= new();
         private List<BufferView> _BehaviorScriptBuffers = new();
@@ -47,20 +49,24 @@ namespace ProjectorRays.director.Scores
         }
 
 
-        public RaysScoreFrameParser(ILogger logger)
+        public RaysScoreFrameParser(ILogger logger, long baseOffset = 0)
         {
             _logger = logger;
+            Annotator = new StreamAnnotatorDecorator(baseOffset);
         }
 
 
         public void ReadAllIntervals(int entryCount, ReadStream stream)
         {
+            var s = new ReadStream(new BufferView(stream.Data, stream.Offset, stream.Size),
+                stream.Endianness, stream.Pos, Annotator);
+
             // Offsets from the start of the entries area
             int[] offsets = new int[entryCount + 1];
             for (int i = 0; i < offsets.Length; i++)
-                offsets[i] = stream.ReadInt32();
+                offsets[i] = s.ReadInt32($"offset[{i}]");
 
-            int entriesStart = stream.Pos;
+            int entriesStart = s.Pos;
             // Parse framedata header and decode the delta encoded frames
             if (entryCount < 1)
                 return;
@@ -75,12 +81,12 @@ namespace ProjectorRays.director.Scores
                 size = offsets[2] - offsets[1];
                 int absoluteStart2 = stream.Offset + entriesStart + offsets[1];
                 var orderView = new BufferView(stream.Data, absoluteStart2, offsets[2] - offsets[1]);
-                var os = new ReadStream(orderView, Endianness.BigEndian);
+                var os = new ReadStream(orderView, Endianness.BigEndian, annotator: Annotator);
                 if (os.Size >= 4)
                 {
-                    int count = os.ReadInt32();
+                    int count = os.ReadInt32("orderCount");
                     for (int i = 0; i < count && os.Pos + 4 <= os.Size; i++)
-                        IntervalOrder.Add(os.ReadInt32());
+                        IntervalOrder.Add(os.ReadInt32("order", new() { ["index"] = i }));
                 }
             }
 
@@ -102,7 +108,6 @@ namespace ProjectorRays.director.Scores
                     continue;
                 size = offsets[primaryIdx + 1] - offsets[primaryIdx];
                 int absoluteStart2 = stream.Offset + entriesStart + offsets[primaryIdx];
-                var ps = new ReadStream(new BufferView(stream.Data, absoluteStart2, size), Endianness.BigEndian);
                 _FrameIntervalDescriptorBuffers.Add(new BufferView(stream.Data, absoluteStart2, size));
                 
 
@@ -121,7 +126,8 @@ namespace ProjectorRays.director.Scores
             int ind = 0;
             foreach (var frameIntervalDescriptor in _FrameIntervalDescriptorBuffers)
             {
-                var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian);
+                var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian,
+                    annotator: Annotator);
                 var descriptor = ReadFrameIntervalDescriptor(ind, ps);
                 if (descriptor != null)
                 {
@@ -136,7 +142,8 @@ namespace ProjectorRays.director.Scores
             int ind = 0;
             foreach (var frameIntervalDescriptor in _BehaviorScriptBuffers)
             {
-                var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian);
+                var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian,
+                    annotator: Annotator);
                 var behaviourRefs = ReadBehaviors(ind, ps);
                 _FrameDescriptors[ind].Behaviors.AddRange(behaviourRefs);
                 FrameScripts.Add(behaviourRefs);
@@ -147,16 +154,17 @@ namespace ProjectorRays.director.Scores
        
 
         public void ReadFrameData()
-            => ReadFrameData(new ReadStream(_FrameDataBufferView));
+            => ReadFrameData(new ReadStream(_FrameDataBufferView,
+                Endianness.BigEndian, annotator: Annotator));
         private void ReadFrameData(ReadStream reader)
         {
-            int actualSize = reader.ReadInt32();
-            int c2 = reader.ReadInt32(); // usually -3
-            FrameCount = reader.ReadInt32();
-            short c4 = reader.ReadInt16();
-            SpriteSize = reader.ReadInt16();
-            short c6 = reader.ReadInt16();
-            MemberSpritesCount = reader.ReadInt16();
+            int actualSize = reader.ReadInt32("actualSize");
+            int c2 = reader.ReadInt32("constMinus3"); // usually -3
+            FrameCount = reader.ReadInt32("frameCount");
+            short c4 = reader.ReadInt16("const4");
+            SpriteSize = reader.ReadInt16("spriteSize");
+            short c6 = reader.ReadInt16("const6");
+            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
             // 6 sprites:
             // - 1 puppettempo
             // - 1 pallete
@@ -169,12 +177,15 @@ namespace ProjectorRays.director.Scores
             _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {FrameCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
-            var decoder = new RayKeyframeDeltaDecoder();
+            var decoder = new RayKeyframeDeltaDecoder(Annotator);
             var found = false;
             for (int fr = 0; fr < FrameCount; fr++)
             {
-                ushort frameDataLen = reader.ReadUint16();
-                var frameData = new ReadStream(reader.ReadBytes(frameDataLen - 2), frameDataLen - 2, reader.Endianness);
+                var fk = new Dictionary<string, int> { ["frame"] = fr };
+                ushort frameDataLen = reader.ReadUint16("frameLen", fk);
+                var frameBytes = reader.ReadBytes(frameDataLen - 2, "frameBytes", fk);
+                var frameData = new ReadStream(frameBytes, frameDataLen - 2, reader.Endianness,
+                    annotator: Annotator);
                 var rawata = frameData.LogHex(frameData.Size);
                 _logger.LogInformation("FrameData:" + rawata);
                 if (rawata.Contains("3C") || rawata.Contains("00 2E"))
@@ -205,15 +216,15 @@ namespace ProjectorRays.director.Scores
                     //ushort offset = frameData.ReadUint16();
                     //byte[] data = frameData.ReadBytes(itemLen);
                     //items.Add(new FrameDeltaItem(offset, data));
-                    var itemLen = frameData.ReadUint16();
-                    ushort offset = frameData.ReadUint16();
+                    var itemLen = frameData.ReadUint16("deltaLen", fk);
+                    ushort offset = frameData.ReadUint16("offset", fk);
                     if (frameData.Size - frameData.Position < 4)
                     {
                         _logger.LogWarning($"Frame {fr}, channel {offset}: Invalid itemLen={itemLen}, skipping.");
                         break;
                     }
 
-                    byte[] data = frameData.ReadBytes(itemLen);
+                    byte[] data = frameData.ReadBytes(itemLen, "deltaBytes", new Dictionary<string,int>{["frame"]=fr, ["offset"]=offset});
                     items.Add(new FrameDeltaItem(offset, data));
 
                     //// Use opcode check for keyframe detection
@@ -253,8 +264,9 @@ namespace ProjectorRays.director.Scores
                     if (item.Data.Length < 20)
                         continue;
 
-                    var channelStream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
-                    var sprite = ReadChannelSprite(channelStream);
+                    var channelStream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian,
+                        annotator: Annotator);
+                    var sprite = ReadChannelSprite(channelStream, new() { ["frame"] = frameIndex, ["channel"] = (item.Offset / SpriteSize) - 6 });
 
                     // Match descriptor by index in _FrameDescriptors
                     var spriteNumber = (item.Offset / SpriteSize)-6;
@@ -294,21 +306,22 @@ namespace ProjectorRays.director.Scores
                 return null;
             
             var desc = new IntervalDescriptor();
-            desc.StartFrame = stream.ReadInt32();
-            desc.EndFrame = stream.ReadInt32();
-            desc.Unknown1 = stream.ReadInt32();
-            desc.Unknown2 = stream.ReadInt32();
-            desc.Channel = stream.ReadInt32(); // after top channels , so start at 6 if 2 audio channels
-            desc.UnknownAlwaysOne = stream.ReadInt16(); // seems always 1
-            desc.UnknownNearConstant15_0 = stream.ReadInt32();  // always 0F
-            desc.UnknownE1 = stream.ReadUint8();  // always E1
-            desc.UnknownFD = stream.ReadUint8();  // always FD
+            var k = new Dictionary<string, int> { ["entry"] = index };
+            desc.StartFrame = stream.ReadInt32("startFrame", k);
+            desc.EndFrame = stream.ReadInt32("endFrame", k);
+            desc.Unknown1 = stream.ReadInt32("unk1", k);
+            desc.Unknown2 = stream.ReadInt32("unk2", k);
+            desc.Channel = stream.ReadInt32("channel", k); // after top channels , so start at 6 if 2 audio channels
+            desc.UnknownAlwaysOne = stream.ReadInt16("const1", k); // seems always 1
+            desc.UnknownNearConstant15_0 = stream.ReadInt32("const15", k);  // always 0F
+            desc.UnknownE1 = stream.ReadUint8("e1", k);  // always E1
+            desc.UnknownFD = stream.ReadUint8("fd", k);  // always FD
                                                   //desc.SpriteNumber = stream.ReadInt32(); <- not found
                                                   //stream.Skip(16);
-            desc.Unknown7 = stream.ReadInt16();
-            desc.Unknown8 = stream.ReadInt32();
+            desc.Unknown7 = stream.ReadInt16("unk7", k);
+            desc.Unknown8 = stream.ReadInt32("unk8", k);
             while (stream.Pos + 4 <= stream.Size)
-                desc.ExtraValues.Add(stream.ReadInt32());
+                desc.ExtraValues.Add(stream.ReadInt32("extra", k));
             _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, U2={desc.Unknown2}, U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
             return desc;
         }
@@ -319,9 +332,10 @@ namespace ProjectorRays.director.Scores
             var behaviours = new List<RaysBehaviourRef>();
             while (ss.Pos + 8 <= ss.Size)
             {
-                short cl = ss.ReadInt16();
-                short cm = ss.ReadInt16();
-                ss.ReadInt32(); // constant 0
+                var k = new Dictionary<string, int> { ["entry"] = ind };
+                short cl = ss.ReadInt16("castLib", k);
+                short cm = ss.ReadInt16("castMmb", k);
+                ss.ReadInt32("zero", k); // constant 0
                 behaviours.Add(new RaysBehaviourRef { CastLib = cl, CastMmb = cm });
             }
            return behaviours;
@@ -358,8 +372,9 @@ namespace ProjectorRays.director.Scores
                         //}
                         continue;
                     }
-                    var channelStream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
-                    var sprite = ReadChannelSprite(channelStream);
+                    var channelStream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian,
+                        annotator: Annotator);
+                    var sprite = ReadChannelSprite(channelStream, new() { ["frame"] = i, ["channel"] = (item.Offset / SpriteSize) - 6 });
                     spritesInFrame.Add(sprite);
                     
                     var descriptor = _FrameDescriptors[idx];
@@ -379,35 +394,35 @@ namespace ProjectorRays.director.Scores
             return allFrames;
         }
 
-        private RaySprite ReadChannelSprite(ReadStream stream)
+        private RaySprite ReadChannelSprite(ReadStream stream, Dictionary<string, int>? keys = null)
         {
             var sprite = new RaySprite();
             //var always16 = stream.ReadUint8(); // always 16 it seems
             //var val2 = stream.ReadUint8(); // 0 ,8, 36, 1 , 2
-            var val3 = stream.ReadUint8();// flags, unused
-            byte inkByte = stream.ReadUint8();
+            var val3 = stream.ReadUint8("flags", keys); // flags, unused
+            byte inkByte = stream.ReadUint8("ink", keys);
             sprite.Ink = inkByte & 0x7F;
-            sprite.ForeColor = stream.ReadUint8();
-            sprite.BackColor = stream.ReadUint8();
-            sprite.DisplayMember = (int)stream.ReadUint32();
+            sprite.ForeColor = stream.ReadUint8("foreColor", keys);
+            sprite.BackColor = stream.ReadUint8("backColor", keys);
+            sprite.DisplayMember = (int)stream.ReadUint32("member", keys);
             stream.Skip(2); // unknown
-            sprite.SpritePropertiesOffset = stream.ReadUint16(); //18,27,30,33,36
-            sprite.LocV = stream.ReadInt16();
-            sprite.LocH = stream.ReadInt16();
-            sprite.Height = stream.ReadInt16();
-            sprite.Width = stream.ReadInt16();
-            byte colorcode = stream.ReadUint8();
+            sprite.SpritePropertiesOffset = stream.ReadUint16("propOffset", keys); //18,27,30,33,36
+            sprite.LocV = stream.ReadInt16("locV", keys);
+            sprite.LocH = stream.ReadInt16("locH", keys);
+            sprite.Height = stream.ReadInt16("height", keys);
+            sprite.Width = stream.ReadInt16("width", keys);
+            byte colorcode = stream.ReadUint8("color", keys);
             sprite.Editable = (colorcode & 0x40) != 0;
             sprite.ScoreColor = colorcode & 0x0F;
-            var blend = stream.ReadUint8();
+            var blend = stream.ReadUint8("blendRaw", keys);
             sprite.Blend = (int)Math.Round(100f - blend / 255f * 100f);
-            byte flag2 = stream.ReadUint8();
+            byte flag2 = stream.ReadUint8("flipFlags", keys);
             sprite.FlipV = (flag2 & 0x04) != 0;
             sprite.FlipH = (flag2 & 0x02) != 0;
             stream.Skip(5);
             //var test = stream.ReadInt16();
-            sprite.Rotation = stream.ReadUint32() / 100f;
-            sprite.Skew = stream.ReadUint32() / 100f;
+            sprite.Rotation = stream.ReadUint32("rotation", keys) / 100f;
+            sprite.Skew = stream.ReadUint32("skew", keys) / 100f;
             //stream.Skip(12);
             _logger.LogInformation($"{sprite.LocH}x{sprite.LocV}:Ink={sprite.Ink}:Blend={sprite.Blend}:Skew={sprite.Skew}:Rot={sprite.Rotation}:PropOffset={sprite.SpritePropertiesOffset}:Member={sprite.DisplayMember}");
             return sprite;

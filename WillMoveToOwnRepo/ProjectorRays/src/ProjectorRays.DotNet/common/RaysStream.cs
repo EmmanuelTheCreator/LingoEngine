@@ -13,6 +13,63 @@ public enum Endianness
     LittleEndian = 1
 }
 
+public class StreamAnnotation
+{
+    public long Address { get; }
+    public int Length { get; }
+    public string Description { get; }
+    public Dictionary<string, int> Keys { get; }
+
+    public StreamAnnotation(long address, int length, string description, Dictionary<string, int>? keys = null)
+    {
+        Address = address;
+        Length = length;
+        Description = description;
+        Keys = keys ?? new();
+    }
+}
+
+public class StreamAnnotatorDecorator
+{
+    private readonly List<StreamAnnotation> _annotations = new();
+    public IReadOnlyList<StreamAnnotation> Annotations => _annotations;
+    public long StreamOffsetBase { get; }
+
+    public StreamAnnotatorDecorator(long baseOffset)
+    {
+        StreamOffsetBase = baseOffset;
+    }
+
+    public void Annotate(long relativeOffset, int length, string description, Dictionary<string, int>? keys = null)
+    {
+        _annotations.Add(new StreamAnnotation(StreamOffsetBase + relativeOffset, length, description, keys));
+    }
+
+    public List<(long Start, long Length)> GetUnknownRanges(long totalLength)
+    {
+        var known = _annotations
+            .OrderBy(a => a.Address)
+            .Select(a => (Start: a.Address, End: a.Address + a.Length))
+            .ToList();
+
+        var unknown = new List<(long Start, long Length)>();
+        long current = StreamOffsetBase;
+
+        foreach (var (start, end) in known)
+        {
+            if (start > current)
+                unknown.Add((current, start - current));
+
+            current = Math.Max(current, end);
+        }
+
+        if (current < StreamOffsetBase + totalLength)
+            unknown.Add((current, StreamOffsetBase + totalLength - current));
+
+        return unknown;
+    }
+}
+
 public class BufferView
 {
     protected byte[] _data;
@@ -112,11 +169,21 @@ public class RaysStream : BufferView
 
 public class ReadStream : RaysStream
 {
-    public ReadStream(byte[] d, int s, Endianness e = Endianness.BigEndian, int p = 0)
-        : base(d, s, e, p) { }
+    private readonly StreamAnnotatorDecorator? _annotator;
 
-    public ReadStream(BufferView view, Endianness e = Endianness.BigEndian, int p = 0)
-        : base(view, e, p) { }
+    public ReadStream(byte[] d, int s, Endianness e = Endianness.BigEndian, int p = 0,
+                      StreamAnnotatorDecorator? annotator = null)
+        : base(d, s, e, p)
+    {
+        _annotator = annotator;
+    }
+
+    public ReadStream(BufferView view, Endianness e = Endianness.BigEndian, int p = 0,
+                      StreamAnnotatorDecorator? annotator = null)
+        : base(view, e, p)
+    {
+        _annotator = annotator;
+    }
     public int Position
     {
         get => _pos;
@@ -127,13 +194,15 @@ public class ReadStream : RaysStream
             _pos = value;
         }
     }
-    public BufferView ReadByteView(int len)
+    public BufferView ReadByteView(int len, string description = "", Dictionary<string, int>? keys = null)
     {
+        int current = _pos;
         var view = new BufferView(_data, _offset + _pos, len);
         _pos += len;
+        _annotator?.Annotate(_offset + current, len, description, keys);
         return view;
     }
-    public byte[] ReadBytes(int len)
+    public byte[] ReadBytes(int len, string description = "", Dictionary<string, int>? keys = null)
     {
         if (PastEOF || _pos + len > _size)
             throw new InvalidOperationException("ReadStream.ReadBytes: Read past end of stream!");
@@ -141,25 +210,28 @@ public class ReadStream : RaysStream
         var result = new byte[len];
         Array.Copy(_data, _offset + _pos, result, 0, len);
         _pos += len;
+        _annotator?.Annotate(_offset + _pos - len, len, description, keys);
         return result;
     }
-    public int ReadUpToBytes(int len, byte[] dest)
+    public int ReadUpToBytes(int len, byte[] dest, string description = "", Dictionary<string, int>? keys = null)
     {
         if (Eof)
             return 0;
         if (_pos + len > _size)
             len = _size - _pos;
         Array.Copy(_data, _offset + _pos, dest, 0, len);
+        int current = _pos;
         _pos += len;
+        _annotator?.Annotate(_offset + current, len, description, keys);
         return len;
     }
     public byte[] ReadBytesAt(int offset, int length)
     {
         return _data.Skip(offset).Take(length).ToArray();
     }
-    public int ReadZlibBytes(int len, byte[] dest, int destLen)
+    public int ReadZlibBytes(int len, byte[] dest, int destLen, string description = "", Dictionary<string, int>? keys = null)
     {
-        var view = ReadByteView(len);
+        var view = ReadByteView(len, description, keys);
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadZlibBytes: Read past end of stream!");
 
@@ -168,66 +240,71 @@ public class ReadStream : RaysStream
         return zs.Read(dest, 0, destLen);
     }
 
-    public byte ReadUint8()
+    public byte ReadUint8(string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
         _pos += 1;
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadUint8: Read past end of stream!");
+        _annotator?.Annotate(_offset + p, 1, description, keys);
         return _data[_offset + p];
     }
 
-    public sbyte ReadInt8() => (sbyte)ReadUint8();
+    public sbyte ReadInt8(string description = "", Dictionary<string, int>? keys = null) => (sbyte)ReadUint8(description, keys);
 
-    public ushort ReadUint16()
+    public ushort ReadUint16(string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
         _pos += 2;
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadUint16: Read past end of stream!");
+        _annotator?.Annotate(_offset + p, 2, description, keys);
         return Endianness == Endianness.LittleEndian
             ? BinaryPrimitives.ReadUInt16LittleEndian(_data.AsSpan(_offset + p, 2))
             : BinaryPrimitives.ReadUInt16BigEndian(_data.AsSpan(_offset + p, 2));
     }
 
-    public short ReadInt16() => (short)ReadUint16();
+    public short ReadInt16(string description = "", Dictionary<string, int>? keys = null) => (short)ReadUint16(description, keys);
 
-    public uint ReadUint32()
+    public uint ReadUint32(string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
         _pos += 4;
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadUint32: Read past end of stream!");
+        _annotator?.Annotate(_offset + p, 4, description, keys);
         return Endianness == Endianness.LittleEndian
             ? BinaryPrimitives.ReadUInt32LittleEndian(_data.AsSpan(_offset + p, 4))
             : BinaryPrimitives.ReadUInt32BigEndian(_data.AsSpan(_offset + p, 4));
     }
 
-    public int ReadInt32() => (int)ReadUint32();
+    public int ReadInt32(string description = "", Dictionary<string, int>? keys = null) => (int)ReadUint32(description, keys);
 
-    public float ReadFloat32()
+    public float ReadFloat32(string description = "", Dictionary<string, int>? keys = null)
     {
-        return BitConverter.Int32BitsToSingle((int)ReadUint32());
+        return BitConverter.Int32BitsToSingle((int)ReadUint32(description, keys));
     }
 
-    public double ReadDouble()
+    public double ReadDouble(string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
         _pos += 8;
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadDouble: Read past end of stream!");
+        _annotator?.Annotate(_offset + p, 8, description, keys);
         ulong val = Endianness == Endianness.LittleEndian
             ? BinaryPrimitives.ReadUInt64LittleEndian(_data.AsSpan(_offset + p, 8))
             : BinaryPrimitives.ReadUInt64BigEndian(_data.AsSpan(_offset + p, 8));
         return BitConverter.Int64BitsToDouble((long)val);
     }
 
-    public double ReadAppleFloat80()
+    public double ReadAppleFloat80(string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
         _pos += 10;
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadAppleFloat80: Read past end of stream!");
+        _annotator?.Annotate(_offset + p, 10, description, keys);
 
         ushort exponent = BinaryPrimitives.ReadUInt16BigEndian(_data.AsSpan(_offset + p, 2));
         ulong f64sign = (ulong)(exponent & 0x8000) << 48;
@@ -256,43 +333,44 @@ public class ReadStream : RaysStream
         return BitConverter.Int64BitsToDouble((long)f64bin);
     }
 
-    public uint ReadVarInt()
+    public uint ReadVarInt(string description = "", Dictionary<string, int>? keys = null)
     {
         uint val = 0;
         byte b;
         do
         {
-            b = ReadUint8();
+            b = ReadUint8(description, keys);
             val = (val << 7) | (uint)(b & 0x7f);
         } while ((b >> 7) != 0);
         return val;
     }
 
-    public string ReadString(int len)
+    public string ReadString(int len, string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
         _pos += len;
         if (PastEOF)
             throw new InvalidOperationException("ReadStream.ReadString: Read past end of stream!");
+        _annotator?.Annotate(_offset + p, len, description, keys);
         return Encoding.ASCII.GetString(_data, _offset + p, len);
     }
 
-    public string ReadCString()
+    public string ReadCString(string description = "", Dictionary<string, int>? keys = null)
     {
         var sb = new StringBuilder();
-        byte ch = ReadUint8();
+        byte ch = ReadUint8(description, keys);
         while (ch != 0)
         {
             sb.Append((char)ch);
-            ch = ReadUint8();
+            ch = ReadUint8(description, keys);
         }
         return sb.ToString();
     }
 
-    public string ReadPascalString()
+    public string ReadPascalString(string description = "", Dictionary<string, int>? keys = null)
     {
-        int len = ReadUint8();
-        return ReadString(len);
+        int len = ReadUint8(description, keys);
+        return ReadString(len, description, keys);
     }
 
     public byte PeekChar()
