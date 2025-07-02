@@ -14,6 +14,10 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
     private readonly ScrollContainer _scroll = new();
     private readonly ScrollContainer _descScroll = new();
     private readonly VBoxContainer _descTable = new();
+    private readonly List<HBoxContainer> _descRows = new();
+    private readonly StyleBoxFlat _normalRowStyle = new();
+    private readonly StyleBoxFlat _selectedRowStyle = new() { BgColor = Colors.SkyBlue };
+    private int _selectedRow = -1;
     private SubViewport _viewport;
     private TextureRect _textureRect;
 
@@ -95,6 +99,7 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
             }
 
         var drawControl = new HexDrawControlV2(data, annotator);
+        drawControl.ByteClicked += OnByteClicked;
         var rowHeight = 24;
         var totalRows = (int)Math.Ceiling(data.Length / 32.0);
         var contentSize = new Vector2(1400, totalRows * rowHeight);
@@ -116,10 +121,12 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
 
     private void RenderDescriptions()
     {
+        _descRows.Clear();
         int idx = 0;
         foreach (var block in _blocks)
         {
             var h = new HBoxContainer();
+            h.AddThemeStyleboxOverride("panel", _normalRowStyle);
             var range = block.Length == 1
                 ? $"0x{block.Address:X4}"
                 : $"0x{block.Address:X4}-0x{block.Address + block.Length - 1:X4}";
@@ -133,6 +140,7 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
             h.AddChild(offsetLabel);
             h.AddChild(descLabel);
             _descTable.AddChild(h);
+            _descRows.Add(h);
             idx++;
         }
     }
@@ -145,6 +153,24 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
                 container.RemoveChild(node);
                 node.QueueFree();
             }
+    }
+
+    private void OnByteClicked(int blockIndex)
+    {
+        HighlightRow(blockIndex);
+    }
+
+    private void HighlightRow(int index)
+    {
+        if (_selectedRow >= 0 && _selectedRow < _descRows.Count)
+            _descRows[_selectedRow].AddThemeStyleboxOverride("panel", _normalRowStyle);
+
+        _selectedRow = index;
+        if (index >= 0 && index < _descRows.Count)
+        {
+            _descRows[index].AddThemeStyleboxOverride("panel", _selectedRowStyle);
+            _descScroll.ScrollVertical = _descRows[index].Position.Y;
+        }
     }
 
     protected override void OnResizing(Vector2 size)

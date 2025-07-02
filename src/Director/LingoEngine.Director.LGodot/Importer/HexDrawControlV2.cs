@@ -2,6 +2,7 @@ using Godot;
 using ProjectorRays.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LingoEngine.Director.LGodot.Gfx
 {
@@ -11,6 +12,9 @@ namespace LingoEngine.Director.LGodot.Gfx
         private readonly RayStreamAnnotatorDecorator _annotator;
         private readonly Dictionary<int, Color> _blockColors = new();
         private readonly Dictionary<int, int> _blockIndexByOffset = new();
+
+        private readonly Label _tooltip = new();
+        public event Action<int>? ByteClicked;
 
         private const int BytesPerRow = 32;
         private const int ByteSpacing = 24;
@@ -45,6 +49,74 @@ namespace LingoEngine.Director.LGodot.Gfx
             int totalRows = (int)Math.Ceiling(data.Length / (float)BytesPerRow);
             CustomMinimumSize = new Vector2(AsciiOffsetX + 300, totalRows * RowHeight);
             Size = CustomMinimumSize;
+            MouseFilter = MouseFilterEnum.Pass;
+        }
+
+        public override void _Ready()
+        {
+            _tooltip.Visible = false;
+            _tooltip.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = new Color(1f, 1f, 0.8f), BorderWidthAll = 1, BorderColor = Colors.Black });
+            AddChild(_tooltip);
+        }
+
+        private int GetOffsetFromPosition(Vector2 pos)
+        {
+            if (pos.X < LeftMargin || pos.Y < 0)
+                return -1;
+
+            int row = (int)(pos.Y / RowHeight);
+            int column = -1;
+            for (int j = 0; j < BytesPerRow; j++)
+            {
+                int group = j / GroupGap;
+                float hexX = LeftMargin + (j + group) * ByteSpacing;
+                if (pos.X >= hexX && pos.X <= hexX + ByteSpacing - 2)
+                {
+                    column = j;
+                    break;
+                }
+            }
+
+            if (column == -1)
+                return -1;
+
+            int offset = row * BytesPerRow + column;
+            return offset >= 0 && offset < _data.Length ? offset : -1;
+        }
+
+        public override void _GuiInput(InputEvent @event)
+        {
+            if (@event is InputEventMouseMotion motion)
+            {
+                int offset = GetOffsetFromPosition(motion.Position);
+                if (offset >= 0)
+                {
+                    string text = $"0x{_annotator.StreamOffsetBase + offset:X4}";
+                    if (_blockIndexByOffset.TryGetValue(offset, out int blockId))
+                    {
+                        var ann = _annotator.Annotations[blockId];
+                        text += $" {ann.Description}";
+                        if (ann.Keys.Count > 0)
+                        {
+                            string keys = string.Join(", ", ann.Keys.Select(kv => $"{kv.Key}={kv.Value}"));
+                            text += $" ({keys})";
+                        }
+                    }
+                    _tooltip.Text = text;
+                    _tooltip.Position = motion.Position + new Vector2(12, 12);
+                    _tooltip.Visible = true;
+                }
+                else
+                {
+                    _tooltip.Visible = false;
+                }
+            }
+            else if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed)
+            {
+                int offset = GetOffsetFromPosition(mb.Position);
+                if (offset >= 0 && _blockIndexByOffset.TryGetValue(offset, out int blockId))
+                    ByteClicked?.Invoke(blockId);
+            }
         }
 
         public override void _Draw()
