@@ -1,0 +1,12 @@
+{
+  "articles/overview.html": {
+    "href": "articles/overview.html",
+    "title": "Overview | LingoEngine API",
+    "summary": "Overview This section hosts manual articles for LingoEngine."
+  },
+  "index.html": {
+    "href": "index.html",
+    "title": "LingoEngine Documentation | LingoEngine API",
+    "summary": "LingoEngine Documentation Generated API reference and guides live here. Run scripts/build-docs.sh (or scripts/build-docs.ps1 on Windows) to rebuild this site."
+  }
+}

@@ -28,11 +28,6 @@ Get-ChildItem "$articlesPath\*.md" | ForEach-Object {
     Copy-Item $_.FullName -Destination $wikiTempDir -Force
 }
 
-# Commit and push
-Set-Location $wikiTempDir
-git add .
-git commit -m "Update wiki with generated docs" -ErrorAction SilentlyContinue
-# Push may fail on read-only or CI environments
-try { git push } catch { Write-Warning $_ }
+
 
 Write-Host "`n✅ Wiki updated!"
