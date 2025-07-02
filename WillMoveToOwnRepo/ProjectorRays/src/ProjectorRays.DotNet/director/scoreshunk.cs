@@ -13,7 +13,7 @@ namespace ProjectorRays.Director;
 /// </summary>
 public class ScoreShunk : RaysChunk
 {
-    public StreamAnnotatorDecorator? Annotator { get; private set; }
+    public RayStreamAnnotatorDecorator? Annotator { get; private set; }
     /// <summary>Simple representation of a frame interval descriptor.</summary>
     public class IntervalDescriptor
     {
@@ -73,13 +73,17 @@ public class ScoreShunk : RaysChunk
     /// interval table.</summary>
     public List<List<BehaviourRef>> FrameScripts { get; } = new();
 
-    public ScoreShunk(RaysDirectorFile? dir) : base(dir, ChunkType.ScoreChunk) { }
+    public ScoreShunk(RaysDirectorFile? dir, RayStreamAnnotatorDecorator decorator) : base(dir, ChunkType.ScoreChunk) 
+    {
+        Annotator = decorator;
+    }
+
+  
 
     public override void Read(ReadStream stream)
     {
         // VWSC data is stored big endian regardless of overall movie endianness
         stream.Endianness = Endianness.BigEndian;
-        Annotator = new StreamAnnotatorDecorator(stream.Offset);
 
         var s = new ReadStream(new BufferView(stream.Data, stream.Offset, stream.Size),
             Endianness.BigEndian, stream.Pos, Annotator);
@@ -113,7 +117,7 @@ public class ScoreShunk : RaysChunk
         {
             var orderView = new BufferView(s.Data,
                 entriesStart + offsets[1], offsets[2] - offsets[1]);
-            var os = new ReadStream(orderView, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(orderView.Offset));
+            var os = new ReadStream(orderView, Endianness.BigEndian, annotator: Annotator);
             if (os.Size >= 4)
             {
                 int count = os.ReadInt32("orderCount");
@@ -140,7 +144,7 @@ public class ScoreShunk : RaysChunk
 
             var psView = new BufferView(s.Data,
                     entriesStart + offsets[primaryIdx], offsets[primaryIdx + 1] - offsets[primaryIdx]);
-            var ps = new ReadStream(psView, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(psView.Offset));
+            var ps = new ReadStream(psView, Endianness.BigEndian, annotator: Annotator);
 
             var d = new IntervalDescriptor();
             if (ps.Size >= 44)
@@ -172,7 +176,7 @@ public class ScoreShunk : RaysChunk
             // Secondary bytestring lists behaviour scripts
             var secView = new BufferView(s.Data,
                 entriesStart + offsets[primaryIdx + 1], offsets[primaryIdx + 2] - offsets[primaryIdx + 1]);
-            var ss = new ReadStream(secView, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(secView.Offset));
+            var ss = new ReadStream(secView, Endianness.BigEndian, annotator: Annotator);
             var behaviours = new List<BehaviourRef>();
             while (ss.Pos + 8 <= ss.Size)
             {
@@ -190,7 +194,7 @@ public class ScoreShunk : RaysChunk
 
     private void ReadFrameData(BufferView view)
     {
-        var fs = new ReadStream(view, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(view.Offset));
+        var fs = new ReadStream(view, Endianness.BigEndian, annotator: Annotator);
         FrameDataActualLength = fs.ReadInt32("frameDataActualLength");
         FrameDataHeaderSize = fs.ReadInt32("frameDataHeaderSize");
         FrameCount = fs.ReadInt32("frameCount");

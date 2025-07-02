@@ -7,28 +7,56 @@ namespace ProjectorRays.Common;
 
 public static class StreamAnnotationMarkdownWriter
 {
-    public static string WriteMarkdown(StreamAnnotatorDecorator annotator, byte[] data)
+    public static string WriteMarkdown(RayStreamAnnotatorDecorator annotator, byte[] data)
     {
         var sb = new StringBuilder();
         sb.AppendLine("| Offset (hex) | Bytes | ASCII | Description | Keys |");
         sb.AppendLine("|--------------|-------|--------|-------------|------|");
 
         var annotations = annotator.Annotations.OrderBy(a => a.Address).ToList();
-        long current = annotator.StreamOffsetBase;
+        long baseOffset = annotator.StreamOffsetBase;
+        long current = baseOffset;
+
+        const int collapseThreshold = 32;
+        string ascii = "";
         foreach (var annotation in annotations)
         {
-            if (annotation.Address > current)
+            long gapStart = current;
+            long gapEnd = annotation.Address;
+
+            if (gapEnd > gapStart)
             {
-                int unknownLength = (int)(annotation.Address - current);
-                string hex = string.Join(" ", data.Skip((int)current).Take(unknownLength).Select(_ => "??"));
-                string ascii = new string('?', unknownLength);
-                sb.AppendLine($"| 0x{current:X4} | `{hex}` | `{ascii}` | *(Unknown bytes)* | |");
-                current = annotation.Address;
+                int gapLength = (int)(gapEnd - gapStart);
+                int relativeOffset = (int)(gapStart - baseOffset);
+
+                if (gapLength > collapseThreshold)
+                {
+                    sb.AppendLine($"| 0x{gapStart:X4} | ... | ... | *(Unknown: {gapLength} bytes skipped)* | |");
+                }
+                else
+                {
+                    string hex = string.Join(" ", data.Skip(relativeOffset).Take(gapLength).Select(_ => "??"));
+                    ascii = new string('?', gapLength);
+                    sb.AppendLine($"| 0x{gapStart:X4} | `{hex}` | `{ascii}` | *(Unknown bytes)* | |");
+                }
+
+                current = gapEnd;
             }
 
-            string hexBytes = string.Join(" ", data.Skip((int)annotation.Address).Take(annotation.Length).Select(b => b.ToString("X2")));
-            string ascii = Encoding.ASCII.GetString(data, (int)annotation.Address, annotation.Length)
-                .Select(c => char.IsControl(c) ? '.' : c).Aggregate("", (a, b) => a + b);
+            int relativeAnnotationOffset = (int)(annotation.Address - baseOffset);
+            string hexBytes = string.Join(" ", data.Skip(relativeAnnotationOffset).Take(annotation.Length).Select(b => b.ToString("X2")));
+
+            try
+            {
+                ascii = new string(Encoding.ASCII
+                    .GetString(data, relativeAnnotationOffset, annotation.Length)
+                    .Select(c => char.IsControl(c) ? '.' : c)
+                    .ToArray());
+            }
+            catch
+            {
+                ascii = new string('?', annotation.Length);
+            }
 
             string keys = string.Join(", ", annotation.Keys.Select(k => $"{k.Key}:{k.Value}"));
             sb.AppendLine($"| 0x{annotation.Address:X4} | `{hexBytes}` | `{ascii}` | {annotation.Description} | {keys} |");
@@ -36,14 +64,26 @@ public static class StreamAnnotationMarkdownWriter
             current = annotation.Address + annotation.Length;
         }
 
-        if (current < annotator.StreamOffsetBase + data.Length)
+        // Final tail gap
+        long tailStart = current;
+        long tailLength = baseOffset + data.Length - current;
+        int tailRelative = (int)(tailStart - baseOffset);
+
+        if (tailLength > 0)
         {
-            int unknownLength = data.Length - (int)(current - annotator.StreamOffsetBase);
-            string hex = string.Join(" ", data.Skip((int)current).Take(unknownLength).Select(_ => "??"));
-            string ascii = new string('?', unknownLength);
-            sb.AppendLine($"| 0x{current:X4} | `{hex}` | `{ascii}` | *(Unknown bytes)* | |");
+            if (tailLength > collapseThreshold)
+            {
+                sb.AppendLine($"| 0x{tailStart:X4} | ... | ... | *(Unknown: {tailLength} bytes skipped)* | |");
+            }
+            else
+            {
+                string hex = string.Join(" ", data.Skip(tailRelative).Take((int)tailLength).Select(_ => "??"));
+                ascii = new string('?', (int)tailLength);
+                sb.AppendLine($"| 0x{tailStart:X4} | `{hex}` | `{ascii}` | *(Unknown bytes)* | |");
+            }
         }
 
         return sb.ToString();
     }
+
 }

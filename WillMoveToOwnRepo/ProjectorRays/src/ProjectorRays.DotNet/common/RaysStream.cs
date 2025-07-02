@@ -13,63 +13,6 @@ public enum Endianness
     LittleEndian = 1
 }
 
-public class StreamAnnotation
-{
-    public long Address { get; }
-    public int Length { get; }
-    public string Description { get; }
-    public Dictionary<string, int> Keys { get; }
-
-    public StreamAnnotation(long address, int length, string description, Dictionary<string, int>? keys = null)
-    {
-        Address = address;
-        Length = length;
-        Description = description;
-        Keys = keys ?? new();
-    }
-}
-
-public class StreamAnnotatorDecorator
-{
-    private readonly List<StreamAnnotation> _annotations = new();
-    public IReadOnlyList<StreamAnnotation> Annotations => _annotations;
-    public long StreamOffsetBase { get; }
-
-    public StreamAnnotatorDecorator(long baseOffset)
-    {
-        StreamOffsetBase = baseOffset;
-    }
-
-    public void Annotate(long relativeOffset, int length, string description, Dictionary<string, int>? keys = null)
-    {
-        _annotations.Add(new StreamAnnotation(StreamOffsetBase + relativeOffset, length, description, keys));
-    }
-
-    public List<(long Start, long Length)> GetUnknownRanges(long totalLength)
-    {
-        var known = _annotations
-            .OrderBy(a => a.Address)
-            .Select(a => (Start: a.Address, End: a.Address + a.Length))
-            .ToList();
-
-        var unknown = new List<(long Start, long Length)>();
-        long current = StreamOffsetBase;
-
-        foreach (var (start, end) in known)
-        {
-            if (start > current)
-                unknown.Add((current, start - current));
-
-            current = Math.Max(current, end);
-        }
-
-        if (current < StreamOffsetBase + totalLength)
-            unknown.Add((current, StreamOffsetBase + totalLength - current));
-
-        return unknown;
-    }
-}
-
 public class BufferView
 {
     protected byte[] _data;
@@ -169,17 +112,17 @@ public class RaysStream : BufferView
 
 public class ReadStream : RaysStream
 {
-    private readonly StreamAnnotatorDecorator? _annotator;
+    private readonly RayStreamAnnotatorDecorator? _annotator;
 
     public ReadStream(byte[] d, int s, Endianness e = Endianness.BigEndian, int p = 0,
-                      StreamAnnotatorDecorator? annotator = null)
+                      RayStreamAnnotatorDecorator? annotator = null)
         : base(d, s, e, p)
     {
         _annotator = annotator;
     }
 
     public ReadStream(BufferView view, Endianness e = Endianness.BigEndian, int p = 0,
-                      StreamAnnotatorDecorator? annotator = null)
+                      RayStreamAnnotatorDecorator? annotator = null)
         : base(view, e, p)
     {
         _annotator = annotator;
@@ -194,6 +137,17 @@ public class ReadStream : RaysStream
             _pos = value;
         }
     }
+
+    public int BytesLeft => Size - Position;
+    public byte Peek(int offset = 0)
+    {
+        int targetPos = Position + offset;
+        if (targetPos < 0 || targetPos >= Size)
+            throw new IndexOutOfRangeException($"Cannot peek at offset {offset}, out of bounds.");
+        return Data[targetPos];
+    }
+
+
     public BufferView ReadByteView(int len, string description = "", Dictionary<string, int>? keys = null)
     {
         int current = _pos;

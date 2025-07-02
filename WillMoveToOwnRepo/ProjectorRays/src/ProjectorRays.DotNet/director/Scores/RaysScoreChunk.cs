@@ -33,8 +33,24 @@ public class RaysScoreChunk : RaysChunk
     public short Constant13;
     public short LastChannelMinus6;
 
-    
 
+    public class RayKeyFrame
+    {
+        public int LocH { get; set; }
+        public int LocV { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public float Rotation { get; set; }
+        public float Skew { get; set; }
+        public int Blend { get; set; }
+        public int Ink { get; set; }
+        public int ForeColor { get; set; }
+        public int BackColor { get; set; }
+        public int MemberCastLib { get; set; }
+        public int MemberNum { get; set; }
+
+
+    }
     /// <summary>Descriptor of a sprite on the score timeline.</summary>
     public class RaySprite
     {
@@ -60,9 +76,12 @@ public class RaysScoreChunk : RaysChunk
         public bool FlipV {get; internal set; }
         public bool Editable { get; internal set; }
 
-      
+        public int MemberCastLib { get; set; }
+        public int MemberNum { get; set; }
+
         public List<int> ExtraValues { get; internal set; } = new();
         public List<RaysBehaviourRef> Behaviors { get; internal set; } = new();
+        public List<RayKeyFrame> Keyframes { get; internal set; } = new();
     }
 
     public record RayKeyframeBlock
@@ -126,7 +145,7 @@ public class RaysScoreChunk : RaysChunk
         stream.Endianness = Endianness.BigEndian;
 
         //var bytes22 = stream.ReadBytes(stream.Size);
-        //var bytes3raw = RaysUtilities.LogHex(bytes22, bytes22.Length+1200);
+        //var bytes3raw = RaysUtilities.LogHex(bytes22, bytes22.Length + 1200);
 
 
         int totalLength = stream.ReadInt32();
@@ -140,12 +159,17 @@ public class RaysScoreChunk : RaysChunk
         Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
 
         int entriesStart = stream.Pos;
-        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, stream.Offset);
+        var annotator = new RayStreamAnnotatorDecorator(stream.Offset);
+        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, annotator);
         scoreFrameParser.ReadAllIntervals(entryCount,stream);
         scoreFrameParser.ReadFrameData();
         scoreFrameParser.ReadFrameDescriptors();
         scoreFrameParser.ReadBehaviors();
         Sprites = scoreFrameParser.ReadAllFrameSprites();
+
+        //var spriteStates = scoreFrameParser.ParseAllFrameDeltasSafe();
+
+        System.IO.File.WriteAllText("c:\\temp\\director\\tes.md",StreamAnnotationMarkdownWriter.WriteMarkdown(annotator, stream.Data));
         //var keyFrames = scoreFrameParser.ReadKeyFramesPerChannel();
     }
     /// <summary>
