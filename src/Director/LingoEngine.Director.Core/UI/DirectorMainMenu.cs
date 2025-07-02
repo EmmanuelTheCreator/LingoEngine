@@ -151,6 +151,10 @@ namespace LingoEngine.Director.Core.UI
             binary.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.BinaryViewerWindow);
             _windowMenu.AddItem(binary);
 
+            var binaryV2 = factory.CreateMenuItem("Binary Viewer V2");
+            binaryV2.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.BinaryViewerWindowV2);
+            _windowMenu.AddItem(binaryV2);
+
             var paint = factory.CreateMenuItem("Paint  \tCTRL+5");
             paint.Activated += () => _windowManager.OpenWindow(DirectorMenuCodes.PictureEditWindow);
             _windowMenu.AddItem(paint);

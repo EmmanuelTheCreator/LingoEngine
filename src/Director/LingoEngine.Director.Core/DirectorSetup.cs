@@ -43,6 +43,7 @@ namespace LingoEngine.Director.Core
                     .AddSingleton<DirectorScoreWindow>()
                     .AddSingleton<DirectorPropertyInspectorWindow>()
                     .AddSingleton<DirectorBinaryViewerWindow>()
+                    .AddSingleton<DirectorBinaryViewerWindowV2>()
                     .AddSingleton<DirectorStageWindow>()
                     .AddSingleton<DirectorTextEditWindow>()
                     .AddSingleton<DirectorBitmapEditWindow>()
