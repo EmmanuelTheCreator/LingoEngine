@@ -113,7 +113,7 @@ Need to install the SDK?
 
 ### API Reference
 
-Documentation generated from the source code is available using [DocFX](https://github.com/dotnet/docfx). Run `scripts/build-docs.sh` to produce the site in `docs/docfx/_site`. The pages include "View Source" links back to the repository.
+Documentation generated from the source code is available using [DocFX](https://github.com/dotnet/docfx). Run `scripts/build-docs.sh` (or `scripts/build-docs.ps1` on Windows) to produce the site in `docs/docfx/_site`. The pages include "View Source" links back to the repository.
 
 ### Component READMEs
 
