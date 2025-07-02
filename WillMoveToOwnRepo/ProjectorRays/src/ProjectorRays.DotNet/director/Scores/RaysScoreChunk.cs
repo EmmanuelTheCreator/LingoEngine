@@ -48,8 +48,9 @@ public class RaysScoreChunk : RaysChunk
         public int BackColor { get; set; }
         public int MemberCastLib { get; set; }
         public int MemberNum { get; set; }
-
-
+        public int Duration { get; set; }
+        public float ScaleX { get; internal set; }
+        public float ScaleY { get; internal set; }
     }
     /// <summary>Descriptor of a sprite on the score timeline.</summary>
     public class RaySprite
