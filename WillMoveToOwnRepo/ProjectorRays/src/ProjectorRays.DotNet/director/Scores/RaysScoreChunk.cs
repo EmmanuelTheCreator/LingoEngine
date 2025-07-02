@@ -32,7 +32,7 @@ public class RaysScoreChunk : RaysChunk
     public int FrameDataHeaderSize;
     public short Constant13;
     public short LastChannelMinus6;
-
+    public static RayStreamAnnotatorDecorator Annotator;
 
     public class RayKeyFrame
     {
@@ -159,17 +159,19 @@ public class RaysScoreChunk : RaysChunk
         Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
 
         int entriesStart = stream.Pos;
-        var annotator = new RayStreamAnnotatorDecorator(stream.Offset);
-        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, annotator);
+        Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
+        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, Annotator);
         scoreFrameParser.ReadAllIntervals(entryCount,stream);
         scoreFrameParser.ReadFrameData();
         scoreFrameParser.ReadFrameDescriptors();
         scoreFrameParser.ReadBehaviors();
         Sprites = scoreFrameParser.ReadAllFrameSprites();
 
+
+
         //var spriteStates = scoreFrameParser.ParseAllFrameDeltasSafe();
 
-        System.IO.File.WriteAllText("c:\\temp\\director\\tes.md",StreamAnnotationMarkdownWriter.WriteMarkdown(annotator, stream.Data));
+        //System.IO.File.WriteAllText("c:\\temp\\director\\tes.md",StreamAnnotationMarkdownWriter.WriteMarkdown(annotator, stream.Data));
         //var keyFrames = scoreFrameParser.ReadKeyFramesPerChannel();
     }
     /// <summary>
