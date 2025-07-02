@@ -13,6 +13,7 @@ namespace ProjectorRays.Director;
 /// </summary>
 public class ScoreShunk : RaysChunk
 {
+    public StreamAnnotatorDecorator? Annotator { get; private set; }
     /// <summary>Simple representation of a frame interval descriptor.</summary>
     public class IntervalDescriptor
     {
@@ -78,27 +79,31 @@ public class ScoreShunk : RaysChunk
     {
         // VWSC data is stored big endian regardless of overall movie endianness
         stream.Endianness = Endianness.BigEndian;
+        Annotator = new StreamAnnotatorDecorator(stream.Offset);
 
-        int totalLength = stream.ReadInt32();
-        int constantMinus3 = stream.ReadInt32();
-        int constant12 = stream.ReadInt32();
-        int entryCount = stream.ReadInt32();
-        int entryCountPlus1 = stream.ReadInt32();
-        int entrySizeSum = stream.ReadInt32();
+        var s = new ReadStream(new BufferView(stream.Data, stream.Offset, stream.Size),
+            Endianness.BigEndian, stream.Pos, Annotator);
+
+        int totalLength = s.ReadInt32("totalLength");
+        int constantMinus3 = s.ReadInt32("constMinus3");
+        int constant12 = s.ReadInt32("const12");
+        int entryCount = s.ReadInt32("entryCount");
+        int entryCountPlus1 = s.ReadInt32("entryCountPlus1");
+        int entrySizeSum = s.ReadInt32("entrySizeSum");
         _ = totalLength; _ = constantMinus3; _ = constant12;
         _ = entrySizeSum; _ = entryCountPlus1;
 
         // Offsets from the start of the entries area
         int[] offsets = new int[entryCount + 1];
         for (int i = 0; i < offsets.Length; i++)
-            offsets[i] = stream.ReadInt32();
+            offsets[i] = s.ReadInt32($"offset[{i}]");
 
-        int entriesStart = stream.Pos;
+        int entriesStart = s.Pos;
 
         // Parse framedata header and decode the delta encoded frames
         if (entryCount >= 1)
         {
-            var fdView = new BufferView(stream.Data,
+            var fdView = new BufferView(s.Data,
                 entriesStart + offsets[0], offsets[1] - offsets[0]);
             ReadFrameData(fdView);
         }
@@ -106,14 +111,14 @@ public class ScoreShunk : RaysChunk
         // Interval order table
         if (entryCount >= 2)
         {
-            var orderView = new BufferView(stream.Data,
+            var orderView = new BufferView(s.Data,
                 entriesStart + offsets[1], offsets[2] - offsets[1]);
-            var os = new ReadStream(orderView, Endianness.BigEndian);
+            var os = new ReadStream(orderView, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(orderView.Offset));
             if (os.Size >= 4)
             {
-                int count = os.ReadInt32();
+                int count = os.ReadInt32("orderCount");
                 for (int i = 0; i < count && os.Pos + 4 <= os.Size; i++)
-                    IntervalOrder.Add(os.ReadInt32());
+                    IntervalOrder.Add(os.ReadInt32("order", new() { ["index"] = i }));
             }
         }
 
@@ -133,27 +138,28 @@ public class ScoreShunk : RaysChunk
             if (primaryIdx + 2 >= offsets.Length)
                 continue;
 
-            var ps = new ReadStream(new BufferView(stream.Data,
-                    entriesStart + offsets[primaryIdx], offsets[primaryIdx + 1] - offsets[primaryIdx]),
-                Endianness.BigEndian);
+            var psView = new BufferView(s.Data,
+                    entriesStart + offsets[primaryIdx], offsets[primaryIdx + 1] - offsets[primaryIdx]);
+            var ps = new ReadStream(psView, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(psView.Offset));
 
             var d = new IntervalDescriptor();
             if (ps.Size >= 44)
             {
-                d.StartFrame = ps.ReadInt32();
-                d.EndFrame = ps.ReadInt32();
-                d.Unknown0 = ps.ReadInt32();
-                d.Unknown1 = ps.ReadInt32();
-                d.SpriteNumber = ps.ReadInt32();
-                d.Unknown2 = ps.ReadUint16();
-                d.Unknown3 = ps.ReadInt32();
-                d.Unknown4 = ps.ReadUint16();
-                d.Unknown5 = ps.ReadInt32();
-                d.Unknown6 = ps.ReadInt32();
-                d.Unknown7 = ps.ReadInt32();
-                d.Unknown8 = ps.ReadInt32();
+                var k = new Dictionary<string, int> { ["entry"] = primaryIdx };
+                d.StartFrame = ps.ReadInt32("startFrame", k);
+                d.EndFrame = ps.ReadInt32("endFrame", k);
+                d.Unknown0 = ps.ReadInt32("unk0", k);
+                d.Unknown1 = ps.ReadInt32("unk1", k);
+                d.SpriteNumber = ps.ReadInt32("sprite", k);
+                d.Unknown2 = ps.ReadUint16("unk2", k);
+                d.Unknown3 = ps.ReadInt32("unk3", k);
+                d.Unknown4 = ps.ReadUint16("unk4", k);
+                d.Unknown5 = ps.ReadInt32("unk5", k);
+                d.Unknown6 = ps.ReadInt32("unk6", k);
+                d.Unknown7 = ps.ReadInt32("unk7", k);
+                d.Unknown8 = ps.ReadInt32("unk8", k);
                 while (ps.Pos + 4 <= ps.Size)
-                    d.ExtraValues.Add(ps.ReadInt32());
+                    d.ExtraValues.Add(ps.ReadInt32("extra", k));
             }
             else
             {
@@ -164,15 +170,16 @@ public class ScoreShunk : RaysChunk
             Intervals.Add(d);
 
             // Secondary bytestring lists behaviour scripts
-            var secView = new BufferView(stream.Data,
+            var secView = new BufferView(s.Data,
                 entriesStart + offsets[primaryIdx + 1], offsets[primaryIdx + 2] - offsets[primaryIdx + 1]);
-            var ss = new ReadStream(secView, Endianness.BigEndian);
+            var ss = new ReadStream(secView, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(secView.Offset));
             var behaviours = new List<BehaviourRef>();
             while (ss.Pos + 8 <= ss.Size)
             {
-                short cl = ss.ReadInt16();
-                short cm = ss.ReadInt16();
-                ss.ReadInt32(); // constant 0
+                var k = new Dictionary<string, int> { ["entry"] = primaryIdx };
+                short cl = ss.ReadInt16("castLib", k);
+                short cm = ss.ReadInt16("castMmb", k);
+                ss.ReadInt32("zero", k); // constant 0
                 behaviours.Add(new BehaviourRef { CastLib = cl, CastMmb = cm });
             }
             d.Behaviours.AddRange(behaviours);
@@ -183,27 +190,28 @@ public class ScoreShunk : RaysChunk
 
     private void ReadFrameData(BufferView view)
     {
-        var fs = new ReadStream(view, Endianness.BigEndian);
-        FrameDataActualLength = fs.ReadInt32();
-        FrameDataHeaderSize = fs.ReadInt32();
-        FrameCount = fs.ReadInt32();
-        Constant13 = fs.ReadInt16();
-        SpriteByteSize = fs.ReadInt16();
-        ChannelCount = fs.ReadInt16();
-        LastChannelMinus6 = fs.ReadInt16(); // multiple of 10, often 50
+        var fs = new ReadStream(view, Endianness.BigEndian, annotator: new StreamAnnotatorDecorator(view.Offset));
+        FrameDataActualLength = fs.ReadInt32("frameDataActualLength");
+        FrameDataHeaderSize = fs.ReadInt32("frameDataHeaderSize");
+        FrameCount = fs.ReadInt32("frameCount");
+        Constant13 = fs.ReadInt16("const13");
+        SpriteByteSize = fs.ReadInt16("spriteByteSize");
+        ChannelCount = fs.ReadInt16("channelCount");
+        LastChannelMinus6 = fs.ReadInt16("lastChannelMinus6"); // multiple of 10, often 50
         SpriteCount = LastChannelMinus6 + 6;
 
         byte[] current = new byte[SpriteByteSize * ChannelCount];
         for (int f = 0; f < FrameCount && !fs.Eof; f++)
         {
-            ushort len = fs.ReadUint16();
+            var fk = new Dictionary<string, int> { ["frame"] = f };
+            ushort len = fs.ReadUint16("frameLen", fk);
             int start = fs.Pos;
             int end = start + len - 2;
             while (fs.Pos < end)
             {
-                ushort deltaLen = fs.ReadUint16();
-                ushort offset = fs.ReadUint16();
-                byte[] delta = fs.ReadBytes(deltaLen);
+                ushort deltaLen = fs.ReadUint16("deltaLen", fk);
+                ushort offset = fs.ReadUint16("offset", fk);
+                byte[] delta = fs.ReadBytes(deltaLen, "deltaBytes", new Dictionary<string,int>{["frame"]=f, ["offset"]=offset});
                 Array.Copy(delta, 0, current, offset, deltaLen);
             }
             byte[] copy = new byte[current.Length];

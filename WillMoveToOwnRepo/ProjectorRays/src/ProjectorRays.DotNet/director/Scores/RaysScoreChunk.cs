@@ -140,7 +140,7 @@ public class RaysScoreChunk : RaysChunk
         Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
 
         int entriesStart = stream.Pos;
-        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger);
+        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, stream.Offset);
         scoreFrameParser.ReadAllIntervals(entryCount,stream);
         scoreFrameParser.ReadFrameData();
         scoreFrameParser.ReadFrameDescriptors();
