@@ -8,8 +8,8 @@ namespace ProjectorRays.director.Scores
 {
 internal class RayKeyframeDeltaDecoder
     {
-        public StreamAnnotatorDecorator Annotator { get; }
-        public RayKeyframeDeltaDecoder(StreamAnnotatorDecorator annotator)
+        public RayStreamAnnotatorDecorator Annotator { get; }
+        public RayKeyframeDeltaDecoder(RayStreamAnnotatorDecorator annotator)
         {
             Annotator = annotator;
         }
