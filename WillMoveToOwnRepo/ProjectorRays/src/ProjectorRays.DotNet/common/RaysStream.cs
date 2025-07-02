@@ -251,6 +251,22 @@ public class ReadStream : RaysStream
             : BinaryPrimitives.ReadUInt64BigEndian(_data.AsSpan(_offset + p, 8));
         return BitConverter.Int64BitsToDouble((long)val);
     }
+    public float ReadFloat(string description = "", Dictionary<string, int>? keys = null)
+    {
+        int p = _pos;
+        _pos += 4; // 4 bytes for a float
+        if (PastEOF)
+            throw new InvalidOperationException("ReadStream.ReadFloat: Read past end of stream!");
+
+        _annotator?.Annotate(_offset + p, 4, description, keys);
+
+        // Read the 4-byte value and convert to float based on the Endianness
+        uint rawValue = Endianness == Endianness.LittleEndian
+            ? BinaryPrimitives.ReadUInt32LittleEndian(_data.AsSpan(_offset + p, 4))
+            : BinaryPrimitives.ReadUInt32BigEndian(_data.AsSpan(_offset + p, 4));
+
+        return BitConverter.ToSingle(BitConverter.GetBytes(rawValue), 0);
+    }
 
     public double ReadAppleFloat80(string description = "", Dictionary<string, int>? keys = null)
     {

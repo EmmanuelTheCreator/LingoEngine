@@ -1,16 +1,25 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Reflection.PortableExecutable;
 using System.Threading.Channels;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
+using static ProjectorRays.director.Scores.RaysScoreFrameParser;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjectorRays.director.Scores
 {
     internal class RaysScoreFrameParser
     {
+        public enum KeyframeType : byte
+        {
+            Sprite = 0x01,
+            Animation = 0x02
+        }
+
         private readonly ILogger _logger;
         public RayStreamAnnotatorDecorator Annotator { get; }
         private BufferView _FrameDataBufferView;
@@ -66,14 +75,25 @@ namespace ProjectorRays.director.Scores
             // Offsets from the start of the entries area
             int[] offsets = new int[entryCount + 1];
             for (int i = 0; i < offsets.Length; i++)
+            {
                 offsets[i] = s.ReadInt32($"offset[{i}]");
 
+                // Log each offset to ensure correctness
+                //_logger.LogInformation($"Offset {i}: {offsets[i]:X}");
+            }
+
             int entriesStart = s.Pos;
-            // Parse framedata header and decode the delta encoded frames
+
+            // Parse frame data header and decode the delta encoded frames
             if (entryCount < 1)
                 return;
+
+            // Check the size calculation
             var size = offsets[1] - offsets[0];
             int absoluteStart = stream.Offset + entriesStart + offsets[0];
+
+            // Log for debugging
+            //_logger.LogInformation($"Frame data size: {size}, Absolute start: {absoluteStart:X}");
 
             _FrameDataBufferView = new BufferView(stream.Data, absoluteStart, size);
 
@@ -84,17 +104,29 @@ namespace ProjectorRays.director.Scores
                 int absoluteStart2 = stream.Offset + entriesStart + offsets[1];
                 var orderView = new BufferView(stream.Data, absoluteStart2, offsets[2] - offsets[1]);
                 var os = new ReadStream(orderView, Endianness.BigEndian, annotator: Annotator);
+
                 if (os.Size >= 4)
                 {
                     int count = os.ReadInt32("orderCount");
+
+                    // Log the count for debugging
+                    //_logger.LogInformation($"IntervalOrder count: {count}");
+
                     for (int i = 0; i < count && os.Pos + 4 <= os.Size; i++)
-                        IntervalOrder.Add(os.ReadInt32("order", new() { ["index"] = i }));
+                    {
+                        int order = os.ReadInt32("order", new() { ["index"] = i });
+                        IntervalOrder.Add(order);
+
+                        // Log each entry added to the interval order
+                        //_logger.LogInformation($"IntervalOrder[{i}]: {order}");
+                    }
+
+                    // Log IntervalOrder for debugging
+                    //_logger.LogInformation($"Interval Order: {string.Join(", ", IntervalOrder)}");
                 }
             }
 
-            // Beginning at entry[3] the entries form triples that describe the
-            // frame interval descriptors. Parse only the entries referenced by the
-            // interval order list when available.
+            // Process entry indices based on interval order or fallback
             var entryIndices = IntervalOrder.Count > 0 ? IntervalOrder : null;
             if (entryIndices == null)
             {
@@ -108,19 +140,35 @@ namespace ProjectorRays.director.Scores
             {
                 if (primaryIdx + 2 >= offsets.Length)
                     continue;
+
+                // Check size and calculate absolute start for the frame interval descriptors
                 size = offsets[primaryIdx + 1] - offsets[primaryIdx];
                 int absoluteStart2 = stream.Offset + entriesStart + offsets[primaryIdx];
-                _FrameIntervalDescriptorBuffers.Add(new BufferView(stream.Data, absoluteStart2, size));
 
+                // Log for debugging
+                //_logger.LogInformation($"Entry {primaryIdx}: size={size}, absoluteStart={absoluteStart2:X}");
+
+                _FrameIntervalDescriptorBuffers.Add(new BufferView(stream.Data, absoluteStart2, size));
 
                 // Secondary bytestring lists behaviour scripts
                 var secSize = offsets[primaryIdx + 2] - offsets[primaryIdx + 1];
-                int absoluteStart3 = stream.Offset + entriesStart + offsets[primaryIdx + 1];
-                var secView = new BufferView(stream.Data, absoluteStart3, secSize);
-                _BehaviorScriptBuffers.Add(secView);
-                // tertiary entry usually empty, skip
+                if (secSize > 0)
+                {
+                    int absoluteStart3 = stream.Offset + entriesStart + offsets[primaryIdx + 1];
+
+                    // Log secondary size and absolute start
+                    //_logger.LogInformation($"Entry {primaryIdx}: Secondary size={secSize}, absoluteStart={absoluteStart3:X}");
+
+                    var secView = new BufferView(stream.Data, absoluteStart3, secSize);
+                    _BehaviorScriptBuffers.Add(secView);
+                }
+                else
+                {
+                   // _logger.LogWarning($"Frame {primaryIdx}: Secondary data size is zero, skipping behavior scripts.");
+                }
             }
         }
+
         public void ReadFrameDescriptors()
         {
             _channelToDescriptor = new();
@@ -158,47 +206,6 @@ namespace ProjectorRays.director.Scores
         public void ReadFrameData()
             => ReadFrameData(new ReadStream(_FrameDataBufferView,
                 Endianness.BigEndian, annotator: Annotator));
-
-
-
-        private List<FrameDeltaItem> ReadFrameData(ReadStream frameData, int frameIndex)
-        {
-            var items = new List<FrameDeltaItem>();
-            int totalSize = frameData.Size;
-            int startPosition = frameData.Position;
-
-            while (!frameData.Eof)
-            {
-                if (frameData.Size - frameData.Position < 4)
-                {
-                    _logger.LogWarning($"Frame {frameIndex}: Not enough bytes to read item header.");
-                    break;
-                }
-
-                ushort itemLen = frameData.ReadUint16("deltaLen", new() { ["frame"] = frameIndex });
-                ushort offset = frameData.ReadUint16("offset", new() { ["frame"] = frameIndex });
-
-                if (itemLen == 0 || frameData.Position + itemLen > totalSize)
-                {
-                    _logger.LogWarning($"Frame {frameIndex}, offset={offset}: Invalid itemLen={itemLen}, skipping.");
-                    break;
-                }
-
-                byte[] data = frameData.ReadBytes(itemLen, "deltaBytes", new Dictionary<string, int> { ["frame"] = frameIndex, ["offset"] = offset });
-                items.Add(new FrameDeltaItem(offset, data));
-            }
-
-            return items;
-        }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -281,6 +288,7 @@ namespace ProjectorRays.director.Scores
 
         }
 
+       
 
 
         private void TryLogFixedRawKeyframeSpriteBlock(ReadStream frameData, int frameNum)
@@ -343,161 +351,11 @@ namespace ProjectorRays.director.Scores
 
 
 
-        private void TryLogRawKeyframeColor(ReadStream frameData, int frameNum)
-        {
-            int originalPos = frameData.Position;
-
-            try
-            {
-                if (frameData.Size < 48)
-                    return;
-
-                byte[] buf = frameData.PeekBytes(48);
-
-                short locH = (short)((buf[0x00] << 8) | buf[0x01]);
-                short locV = (short)((buf[0x02] << 8) | buf[0x03]);
-                short width = (short)((buf[0x04] << 8) | buf[0x05]);
-                short height = (short)((buf[0x06] << 8) | buf[0x07]);
-
-                byte ink = buf[0x0A];
-                byte foreColor = buf[0x0E];
-                byte backColor = buf[0x0F];
-
-                ushort rotationRaw = (ushort)((buf[0x20] << 8) | buf[0x21]);
-                ushort skewRaw = (ushort)((buf[0x22] << 8) | buf[0x23]);
-
-                ushort memberNum = (ushort)((buf[0x2A] << 8) | buf[0x2B]);
-                ushort castLibNum = (ushort)((buf[0x2C] << 8) | buf[0x2D]);
-                uint memberId = (uint)((castLibNum << 16) | memberNum);
-
-                float rotation = rotationRaw / 100f;
-                float skew = skewRaw / 100f;
-
-                int blendPercent = 100 - (int)Math.Round(ink / 255f * 100f);
-
-                _logger.LogInformation(
-                    $"🎨 Frame {frameNum}, Raw Sprite Block:\n" +
-                    $"  LocH={locH}, LocV={locV}, Width={width}, Height={height}\n" +
-                    $"  ForeColor={foreColor}, BackColor={backColor}, Ink={ink}, Blend={blendPercent}%\n" +
-                    $"  Rotation={rotation:F2}, Skew={skew:F2}, Member={memberId} (CastLib={castLibNum}, Member={memberNum})");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"Keyframe sprite decode failed in frame {frameNum}: {ex.Message}");
-            }
-            finally
-            {
-                frameData.Position = originalPos;
-            }
-        }
-
-
-
-
-        private List<FrameDeltaItem> TryExtractSingleKeyframe(byte[] frameBytes)
-        {
-            var results = new List<FrameDeltaItem>();
-            var stream = new ReadStream(frameBytes, frameBytes.Length, Endianness.BigEndian, annotator: Annotator);
-
-            int originalPos = stream.Pos;
-
-            try
-            {
-                while (!stream.Eof)
-                {
-                    long currentOffset = stream.Position;
-
-                    // Sanity: Must be at least large enough to contain a valid sprite chunk
-                    if (stream.BytesLeft < 20)
-                        break;
-
-                    // Peek into fields to validate
-                    byte flags = stream.Peek(0);
-                    byte ink = stream.Peek(1);
-                    byte foreColor = stream.Peek(2);
-                    byte backColor = stream.Peek(3);
-                    // optionally verify member = 65538 (0x00010002) etc.
-
-                    // Try parsing with standard sprite structure size
-                    // If fails, break gracefully
-                    int chunkSize = 48; // standard sprite size
-                    if (stream.BytesLeft < chunkSize)
-                        chunkSize = stream.BytesLeft;
-
-                    byte[] chunk = stream.ReadBytes(chunkSize);
-                    results.Add(new FrameDeltaItem((int)currentOffset, chunk));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"Failed to extract keyframe from frameBytes: {ex.Message}");
-            }
-
-            return results;
-        }
-        private void TryParseMinimalSpriteProperties(byte[] data, int frameNum)
-        {
-            var stream = new ReadStream(data, data.Length, Endianness.BigEndian, annotator: Annotator);
-            var keys = new Dictionary<string, int> { ["frame"] = frameNum };
-
-            try
-            {
-                // Look ahead for member ID 65538 (0x00010002) — this is Sprite 3
-                for (int i = 0; i < data.Length - 12; i++)
-                {
-                    if (data[i] == 0x00 && data[i + 1] == 0x01 && data[i + 2] == 0x00 && data[i + 3] == 0x02)
-                    {
-                        int offset = i;
-                        stream.Position = offset;
-
-                        uint member = stream.ReadUint32("member", keys);
-                        if (member != 65538)
-                            continue;
-
-                        // Attempt to decode sprite properties near this member
-                        ushort propOffset = stream.ReadUint16("propOffset", keys);
-                        short locV = stream.ReadInt16("locV", keys);
-                        short locH = stream.ReadInt16("locH", keys);
-
-                        // We may not always have height/width, but try:
-                        short height = stream.ReadInt16("height", keys);
-                        short width = stream.ReadInt16("width", keys);
-
-                        byte colorcode = stream.ReadUint8("color", keys);
-                        byte blendRaw = stream.ReadUint8("blendRaw", keys);
-                        byte ink = stream.ReadUint8("ink", keys);
-                        stream.Skip(5); // skip extra flags/padding if present
-
-                        float rotation = stream.ReadUint32("rotation", keys) / 100f;
-                        float skew = stream.ReadUint32("skew", keys) / 100f;
-
-                        int blendPercent = (int)Math.Round(100f - (blendRaw / 255f * 100f));
-
-                        _logger.LogInformation(
-                            $"✅ Frame {frameNum} — Partial Sprite 3 (Member 65538)\n" +
-                            $"  LocH={locH}, LocV={locV}, Blend={blendPercent}%, Ink={ink}\n" +
-                            $"  Fore/BackColor=?, Rotation={rotation:F2}, Skew={skew:F2}, PropOffset={propOffset}");
-                        return;
-                    }
-                }
-
-                _logger.LogWarning($"Frame {frameNum}: Sprite 3 (Member 65538) not found in partial blob.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Frame {frameNum}: error parsing minimal sprite: {ex.Message}");
-            }
-        }
-
-
-
-
-
-
         public List<RaySprite> ReadAllFrameSprites()
         {
             var allFrames = new List<RaySprite>();
             var idx = 0;
+            RaySprite? sprite = null;
             for (int i = 0; i < _frameTable.Count; i++)
             {
                 var frame = _frameTable[i];
@@ -506,25 +364,65 @@ namespace ProjectorRays.director.Scores
 
                 foreach (var item in frame.Items)
                 {
-                    if (item.Data.Length < 20)
-                    {
-                        var stream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
-                        var test = stream.LogHex(stream.Size);
+                    //if (item.Data.Length < 20)
+                    //{
+                    //    var stream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
+                    //    var test = stream.LogHex(stream.Size);
 
-                        continue;
-                    }
+                    //    continue;
+                    //}
                     var channelStream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian,
                         annotator: Annotator);
-                    var sprite = ReadChannelSprite(channelStream, new() { ["frame"] = i, ["channel"] = (item.Offset / SpriteSize) - 6 });
-                    spritesInFrame.Add(sprite);
+                    var test = channelStream.LogHex(8);
+                    //_logger.LogInformation($"Frame {item.Offset}:  {test}");
+                    //continue;
+                    //byte keyframeTypeByte = channelStream.ReadUint8("keyframeType", new Dictionary<string, int> { ["item.offset"] = item.Offset });
+                    //KeyframeType keyframeType = (KeyframeType)keyframeTypeByte;
+                    var keyframeType =  KeyframeType.Sprite;
+                    //_logger.LogInformation($"Frame {item.Offset}: Keyframe type = {keyframeType}");
 
-                    var descriptor = _FrameDescriptors[idx];
-                    sprite.Behaviors = descriptor.Behaviors;
-                    sprite.StartFrame = descriptor.StartFrame;
-                    sprite.EndFrame = descriptor.EndFrame;
-                    sprite.SpriteNumber = descriptor.Channel;
-                    sprite.ExtraValues = descriptor.ExtraValues;
-                    idx++;
+                    var spriteNum = (item.Offset / SpriteSize) - 6 ;
+
+
+                switch (keyframeType)
+                    {
+                        case KeyframeType.Sprite:
+                            if (item.Data.Length < 20)
+                            {
+                                var stream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
+                                var test1 = stream.LogHex(stream.Size);
+                                _logger.LogInformation("Raw data:" + test1);
+                                continue;
+                            }
+                            sprite = ReadChannelSprite(channelStream, new() { ["frame"] = i, ["channel"] = spriteNum });
+                            spritesInFrame.Add(sprite);
+
+                            var descriptor = _FrameDescriptors[idx];
+                            sprite.Behaviors = descriptor.Behaviors;
+                            sprite.StartFrame = descriptor.StartFrame;
+                            sprite.EndFrame = descriptor.EndFrame;
+                            sprite.SpriteNumber = descriptor.Channel;
+                            sprite.ExtraValues = descriptor.ExtraValues;
+                            idx++;
+                            break;
+
+                        case KeyframeType.Animation:
+                            if (channelStream.Size <= 16)
+                            {
+                                _logger.LogWarning($"Frame {spriteNum}: Frame data is too small (size={channelStream.Size}), skipping.");
+                                continue; // Skip this frame if it's too short to process
+                            }
+                            var keyFrame = HandleAnimationKeyframe(channelStream, item.Offset);
+                            if (sprite != null)
+                                sprite.Keyframes.Add(keyFrame);
+                            break;
+
+                        default:
+                           // _logger.LogWarning($"Frame {spriteNum}: Unknown keyframe type {keyframeType}, skipping.");
+                            break;
+                    }
+
+
                 }
                 if (spritesInFrame.Count == 0)
                     continue;
@@ -535,10 +433,45 @@ namespace ProjectorRays.director.Scores
             return allFrames;
         }
 
+        public RayKeyFrame HandleAnimationKeyframe(ReadStream stream, int frameIndex)
+        {
+            RayKeyFrame keyframe = new RayKeyFrame();
+
+            // Read animation frame properties into the RayKeyFrame object
+            keyframe.LocH = stream.ReadInt16("locH", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.LocV = stream.ReadInt16("locV", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.Width = stream.ReadUint16("width", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.Height = stream.ReadUint16("height", new Dictionary<string, int> { ["frame"] = frameIndex });
+
+            // Additional properties for full keyframe
+            keyframe.Rotation = stream.ReadFloat("rotation", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.Skew = stream.ReadFloat("skew", new Dictionary<string, int> { ["frame"] = frameIndex });
+
+            // Blend (Opacity) - it's represented as an 8-bit value between 0-255, which we convert to percentage (0-100)
+            keyframe.Blend = stream.ReadUint8("blend", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.Ink = stream.ReadUint8("ink", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.ForeColor = stream.ReadUint8("foreColor", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.BackColor = stream.ReadUint8("backColor", new Dictionary<string, int> { ["frame"] = frameIndex });
+
+            keyframe.MemberNum = stream.ReadUint16("memberNum", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.MemberCastLib = stream.ReadUint16("castLib", new Dictionary<string, int> { ["frame"] = frameIndex });
+
+            // Read the scale values (if available)
+            keyframe.ScaleX = stream.ReadFloat("scaleX", new Dictionary<string, int> { ["frame"] = frameIndex });
+            keyframe.ScaleY = stream.ReadFloat("scaleY", new Dictionary<string, int> { ["frame"] = frameIndex });
+
+            // Read the duration (time the keyframe will last)
+            keyframe.Duration = stream.ReadUint16("duration", new Dictionary<string, int> { ["frame"] = frameIndex });
 
 
+            // Optionally, log the parsed data
+            _logger.LogInformation($"Frame {frameIndex}: Duration={keyframe.Duration}, Rotation={keyframe.Rotation}, " +
+                                   $"ScaleX={keyframe.ScaleX}, ScaleY={keyframe.ScaleY}, Skew={keyframe.Skew}, " +
+                                   $"Opacity={keyframe.Blend}%, ForeColor={keyframe.ForeColor}, BackColor={keyframe.BackColor}");
 
-
+            // Return the populated RayKeyFrame object
+            return keyframe;
+        }
 
 
         private IntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
@@ -583,12 +516,20 @@ namespace ProjectorRays.director.Scores
         }
 
 
+        
 
 
+        // First byte type:
+        //If keyframeType indicates a sprite, the frame data might include properties like position(LocH, LocV), size, rotation, skew, color, etc.
 
+        // If it's an animation keyframe, it could contain information about the animation state (e.g., blending modes, speed).
         private RaySprite ReadChannelSprite(ReadStream stream, Dictionary<string, int>? keys = null)
         {
             var sprite = new RaySprite();
+            // info from scummVM:
+            //uint8 keyframeType = stream.readUint8(); // 1 byte for the type  // always 16 it seems
+            //uint16 keyframeSize = stream.readUint16(); // 2 bytes for size -> // 0 ,8, 36, 1 , 2 -> this seems strange because we read the flags
+
             //var always16 = stream.ReadUint8(); // always 16 it seems
             //var val2 = stream.ReadUint8(); // 0 ,8, 36, 1 , 2
             var val3 = stream.ReadUint8("flags", keys); // flags, unused
@@ -647,6 +588,175 @@ namespace ProjectorRays.director.Scores
 
 
         #endregion
+
+
+
+
+
+
+        public void ReadFrameData5()
+        {
+            var reader = new ReadStream(_FrameDataBufferView, Endianness.BigEndian, annotator: Annotator);
+            int actualSize = reader.ReadInt32("actualSize");
+            int c2 = reader.ReadInt32("constMinus3"); // usually -3
+            FrameCount = reader.ReadInt32("frameCount");
+            short c4 = reader.ReadInt16("const4");
+            SpriteSize = reader.ReadInt16("spriteSize");
+            short c6 = reader.ReadInt16("const6");
+            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
+            // 6 sprites:
+            // - 1 puppettempo
+            // - 1 pallete
+            // - 1 Transition
+            // - 2 audio
+            // - 1 framescript
+
+            TotalSpriteCount = MemberSpritesCount + 6;
+
+            _logger.LogInformation($"Frame Count: {FrameCount}, Sprite Size: {SpriteSize}");
+
+            int frameStart = reader.Pos;
+            for (int fr = 0; fr < FrameCount; fr++)
+            {
+                var fk = new Dictionary<string, int> { ["frame"] = fr };
+                ushort frameDataLen = reader.ReadUint16("frameLen", fk);
+
+                // Skip frames with zero-length data
+                if (frameDataLen == 0)
+                {
+                    _logger.LogWarning($"Frame {fr}: Zero-length frame data, skipping.");
+                    continue;
+                }
+
+                var frameBytes = reader.ReadBytes(frameDataLen - 2, "frameBytes", fk);
+                var frameData = new ReadStream(frameBytes, frameDataLen - 2, reader.Endianness, annotator: Annotator);
+
+                // Check if frame data size is valid
+                if (frameData.Size < 4)
+                {
+                    _logger.LogWarning($"Frame {fr}: Frame data is too small (size={frameData.Size}), skipping.");
+                    continue;
+                }
+
+                // Validate span or offset for this frame
+                if (frameData.Position >= frameData.Size || frameData.Position + 8 > frameData.Size)
+                {
+                    _logger.LogWarning($"Frame {fr}: Invalid span or offset. Start={frameData.Position}, End={frameData.Position + 8}, Skipping frame.");
+                    continue;
+                }
+
+                var deltaItems = ReadKeyframeData(frameData, fr);
+                _frameTable.Add(new FrameDelta(deltaItems));
+            }
+        }
+
+
+        private List<FrameDeltaItem> ReadKeyframeData(ReadStream frameData, int frameIndex)
+        {
+            var items = new List<FrameDeltaItem>();
+            int totalSize = frameData.Size;
+            int startPosition = frameData.Position;
+
+            while (!frameData.Eof)
+            {
+                if (frameData.Size - frameData.Position < 4)
+                {
+                    _logger.LogWarning($"Frame {frameIndex}: Not enough bytes to read item header. Skipping frame.");
+                    break;
+                }
+
+                ushort itemLen = frameData.ReadUint16("deltaLen", new() { ["frame"] = frameIndex });
+                ushort offset = frameData.ReadUint16("offset", new() { ["frame"] = frameIndex });
+
+                if (itemLen == 0 || frameData.Position + itemLen > totalSize)
+                {
+                    _logger.LogWarning($"Frame {frameIndex}, offset={offset}: Invalid itemLen={itemLen}, skipping.");
+                    break;
+                }
+
+                byte[] data = frameData.ReadBytes(itemLen, "deltaBytes", new Dictionary<string, int> { ["frame"] = frameIndex, ["offset"] = offset });
+                items.Add(new FrameDeltaItem(offset, data));
+            }
+
+            // Add a check to log when we haven't added items for the frame
+            if (items.Count == 0)
+            {
+                _logger.LogWarning($"Frame {frameIndex}: No valid keyframe data found.");
+            }
+
+            return items;
+        }
+
+
+        private void LogKeyframeSpriteProperties(ReadStream frameData, int frameNum)
+        {
+            int originalPos = frameData.Position;
+
+            try
+            {
+                // Ensure there are enough bytes to process
+                if (frameData.Size < 48)
+                {
+                    _logger.LogWarning($"Frame {frameNum}: Not enough data to parse sprite properties (size={frameData.Size})");
+                    return;
+                }
+
+                // Ensure we have enough bytes to read (after skipping the first 16 bytes)
+                byte[] buf = frameData.PeekBytes(64);
+                if (buf.Length < 48)
+                {
+                    _logger.LogWarning($"Frame {frameNum}: Not enough data in the sprite block (size={buf.Length})");
+                    return;
+                }
+
+                // Skip the first 16 bytes and take the next 48 bytes for sprite properties
+                buf = buf.Skip(16).Take(48).ToArray();
+
+                string hexDump = string.Join(" ", buf.Select(b => b.ToString("X2")));
+                _logger.LogInformation($"🔍 Frame {frameNum} raw PeekBytes(48):\n{hexDump}");
+
+                short locH = (short)((buf[0x02] << 8) | buf[0x03]);
+                short locV = (short)((buf[0x00] << 8) | buf[0x01]);
+                short width = (short)((buf[0x04] << 8) | buf[0x05]);
+                short height = (short)((buf[0x06] << 8) | buf[0x07]);
+
+                byte blendRaw = buf[0x09];
+                byte ink = buf[0x0A];
+                int blend = 100 - (int)Math.Round(blendRaw / 255f * 100f);
+
+                byte foreColor = buf[0x0E];
+                byte backColor = buf[0x0F];
+
+                float rotation = (short)((buf[0x20] << 8) | buf[0x21]) / 100f;
+                float skew = (short)((buf[0x22] << 8) | buf[0x23]) / 100f;
+
+                ushort memberNum = (ushort)((buf[0x2A] << 8) | buf[0x2B]);
+                ushort castLib = (ushort)((buf[0x2C] << 8) | buf[0x2D]);
+                uint memberId = ((uint)castLib << 16) | memberNum;
+
+                _logger.LogInformation(
+                    $"🟨 Raw Sprite Block in Frame {frameNum}:\n" +
+                    $"  LocH={locH}, LocV={locV}, Width={width}, Height={height}\n" +
+                    $"  ForeColor={foreColor}, BackColor={backColor}, Ink={ink}, Blend={blend}%\n" +
+                    $"  Rotation={rotation:F2}, Skew={skew:F2}, Member={memberId} (CastLib={castLib}, Member={memberNum})");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Keyframe decode failed in frame {frameNum}: {ex.Message}");
+            }
+            finally
+            {
+                frameData.Position = originalPos;
+            }
+        }
+
+
+
+
+
+
+
+        #region OLD ChatGPT test
 
 
 
@@ -729,6 +839,7 @@ namespace ProjectorRays.director.Scores
 
         public void InspectLocHLocV(byte[] frameData, int frameIndex)
         {
+            return;
             // Log the raw frame data as hex for inspection
             //var rawata = BitConverter.ToString(frameData).Replace("-", " ");
             //_logger.LogInformation($"FrameIndex {frameIndex + 1} Raw Data: {rawata}");
@@ -841,7 +952,7 @@ namespace ProjectorRays.director.Scores
                     default:
                         if (!loggedUnknownTags.Contains(tag))
                         {
-                           // _logger.LogInformation($"Unknown tag 0x{tag:X4} with value {value} encountered.");
+                            // _logger.LogInformation($"Unknown tag 0x{tag:X4} with value {value} encountered.");
                             loggedUnknownTags.Add(tag);
                         }
                         break;
@@ -1081,6 +1192,7 @@ namespace ProjectorRays.director.Scores
             return true;
         }
 
+        #endregion
 
     }
 }
