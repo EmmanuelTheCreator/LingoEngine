@@ -169,7 +169,7 @@ internal partial class DirGodotBinaryViewerWindowV2 : BaseGodotWindow, IDirFrame
         if (index >= 0 && index < _descRows.Count)
         {
             _descRows[index].AddThemeStyleboxOverride("panel", _selectedRowStyle);
-            _descScroll.ScrollVertical = _descRows[index].Position.Y;
+            _descScroll.ScrollVertical = (int)_descRows[index].Position.Y;
         }
     }
 

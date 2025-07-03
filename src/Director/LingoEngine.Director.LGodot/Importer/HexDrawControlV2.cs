@@ -55,7 +55,7 @@ namespace LingoEngine.Director.LGodot.Gfx
         public override void _Ready()
         {
             _tooltip.Visible = false;
-            _tooltip.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = new Color(1f, 1f, 0.8f), BorderWidthAll = 1, BorderColor = Colors.Black });
+            _tooltip.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = new Color(1f, 1f, 0.8f), BorderColor = Colors.Black });
             AddChild(_tooltip);
         }
 
