@@ -36,7 +36,7 @@ public class RaysListChunk : RaysChunk
         for (int i = 0; i < OffsetTableLen; i++)
             OffsetTable.Add(stream.ReadUint32());
 
-        Dir?.Logger.LogInformation($"ReadOffsetTable: {string.Join(',', OffsetTable)}");
+        //Dir?.Logger.LogInformation($"ReadOffsetTable: {string.Join(',', OffsetTable)}");
     }
 
     public void ReadItems(ReadStream stream)
