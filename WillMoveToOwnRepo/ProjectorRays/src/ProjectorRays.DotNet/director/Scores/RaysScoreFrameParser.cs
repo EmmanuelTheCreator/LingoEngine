@@ -24,17 +24,18 @@ namespace ProjectorRays.director.Scores
         /// <summary>Frame order and additional metadata parsed from the chunk.</summary>
         public List<int> IntervalOrder { get; } = new();
 
-        public int MemberSpritesCount { get; private set; }
+        public int HighestFrameNumber { get; private set; }
         public int TotalSpriteCount { get; set; }
         public int SpriteSize { get; set; }
-        public int FrameCount { get; set; }
+        public int SpriteChannelCount { get; set; }
         public List<RaySprite> AllSprites { get; private set; }
 
         public class FrameDeltaItem
         {
-            public int Offset;
-            public byte[] Data;
-            public FrameDeltaItem(int offset, byte[] data)
+            public int Offset {get; private set; }
+            public byte[] Data {get; private set; }
+            public RayScoreTags.ScoreKeyframeTag? Type { get;  private set; }
+            public FrameDeltaItem(int offset, byte[] data, RayScoreTags.ScoreKeyframeTag? type)
             {
                 Offset = offset;
                 Data = data;
@@ -197,74 +198,162 @@ namespace ProjectorRays.director.Scores
                 Endianness.BigEndian, annotator: Annotator));
 
 
-        private void ReadFrameData(ReadStream reader)
-        {
-            // Read the header (first 16 bytes or based on the known header size)
-            int actualSize = reader.ReadInt32("actualSize");
-            int c2 = reader.ReadInt32("constMinus3"); // usually -3
-            FrameCount = reader.ReadInt32("frameCount");
-            short c4 = reader.ReadInt16("const4");
-            SpriteSize = reader.ReadInt16("spriteSize");
-            short c6 = reader.ReadInt16("const6");
-            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
+        /*
+        Custom bytes blocks for keyframes:
+        ----------------------------------
+        Byte 1 : Unkown
+        ---------------
+        
+        numbers found 
+        02: key frame one blank
+        08: 
+        26: 
+        28: 
+        0A: 
+        3E:
+        36: 
 
-            TotalSpriteCount = MemberSpritesCount + 6;
+        Byte 2,3: Sprite Channels mapping (for header byte 02 in Animation_types.dir)
+        ---------------------------------
+        These tags encode the channel by spacing each tag 0x30 apart
+        tag = 0x0136 + (channel - 6) * 0x30
+        And vice versa:
+        channel = ((tag - 0x0136) / 0x30) + 6
+
+        Byte 4: Flags if keyframe is real or tweeening
+        ----------------------------------------------
+        01 → a real keyframe
+        81 → no new keyframe, just continuation or tween data
+        Then next byte: 
+        02 advance one keyframe
+        */
+
+
+
+        private void ReadFrameData(ReadStream readerSource)
+        {
+           // log all bytes
+
+           //var frameBytes1 = readerSource.ReadBytes(readerSource.BytesLeft);
+           // var frameData1 = new ReadStream(frameBytes1, frameBytes1.Length, readerSource.Endianness,
+           //     annotator: Annotator);
+           // var rawata1 = frameData1.LogHex(frameData1.Size);
+           // _logger.LogInformation("FrameData:" + rawata1);
+           // return;
+
+            // Read the header (first 16 bytes or based on the known header size)
+            int actualSize = readerSource.ReadInt32("actualSize");
+            var blockBytes = readerSource.ReadBytes(actualSize-4);
+            var reader = new ReadStream(blockBytes, blockBytes.Length, readerSource.Endianness, annotator: Annotator);
+
+            var unkA1 = reader.ReadInt8(); // usually -3
+            var unkA2 = reader.ReadInt8(); // 
+            var unkA3 = reader.ReadInt8(); // 
+            var unkA4 = reader.ReadInt8(); // 
+            HighestFrameNumber = reader.ReadInt32("HighestFrameNumber");
+            var unkB1 = reader.ReadInt8(); // "const4"
+            var unkB2 = reader.ReadInt8();
+            SpriteSize = reader.ReadInt16("spriteSize");
+            var unkC1 = reader.ReadInt8(); // "const6"
+            var unkC2 = reader.ReadInt8();
+            SpriteChannelCount = reader.ReadInt16("SpriteChannelCount");
+            var unkD1 = reader.ReadInt16();
+
+            // TotalSpriteCount = Something + 6;
 
             // Log the parsed header values for verification
-            _logger.LogInformation($"DB| Header parsed - actualSize: {actualSize}, constMinus3: {c2}, frameCount: {FrameCount}, const4: {c4}, spriteSize: {SpriteSize}, const6: {c6}, memberSpriteCount: {MemberSpritesCount}");
-
-            var i = 0;
+            _logger.LogInformation($"DB | actualSize: {actualSize}, SpriteChannelCount: {SpriteChannelCount}, spriteSize: {SpriteSize}, HighestFrameNumber: {HighestFrameNumber}");
+            _logger.LogInformation($"DB | unkA1: {unkA1}, unkA2: {unkA2}, unkA3: {unkA3}, unkA4: {unkA4} | unkB1: {unkB1}: unkB2: {unkB2}| unkC1: {unkC1}: unkC2: {unkC2}| unkD1: {unkD1}");
+            var offsetTable = new List<int>();
+            
+            var mappingTables = new List<(int offset, int size)>();
             ushort nextByte = 0;
             nextByte = reader.ReadUint16();
-            while (nextByte != 48 && i < 16)
+            while (nextByte != 48 && !reader.Eof) // check if its a keyframe?
             {
+                if (nextByte == 2)
+                    mappingTables.Add((reader.ReadUint16(), reader.ReadUint16()));
+                else
+                {
+                    for (int i = 0; i < nextByte; i++)
+                    {
+                        if (reader.BytesLeft < 2)
+                            break;
+                        var val1 = reader.ReadUint16();
+                        _logger.LogInformation($"unkown:{val1} ");
+                    }
+                }
+                if (reader.BytesLeft < 2)
+                    break;
                 nextByte = reader.ReadUint16();
-                if (i > 16)
-                    return;
             }
-
-            int unkown = reader.ReadInt16("Unkwown"); // 54
+            _logger.LogInformation("MappingTable:" + string.Join(", ", mappingTables.Select(m => $"{m.offset}({m.size})")));
 
             // Now continue reading the rest of the data blocks after the header
-            var dataBlocks = new List<(ushort tag, byte[] data)>();  // List to store parsed data blocks
+            //var dataBlocks = new List<(ushort tag, byte[] data)>();  // List to store parsed data blocks
             var firstRead = true;
+            FrameDelta? lastKeyFrame =null;
             while (!reader.Eof)
             {
                 if (!firstRead)
                     nextByte = reader.ReadUint16();
                 else
                     firstRead = false;
-                
-                // Check if we are at a keyframe (48 bytes)
-                if (nextByte == 48)
+
+                // Check if we are at a keyframe (SpriteSize = 48 bytes)
+                if (nextByte == SpriteSize)
                 {
-                    byte[] mainKeyframeData = reader.ReadBytes(48);
-                    _logger.LogInformation("Keyframe (48 bytes) read.");
-                    dataBlocks.Add((0, mainKeyframeData));  // Tag 0 for keyframe as no specific tag is used here
-                    _frameTable.Add(new FrameDelta([new FrameDeltaItem(reader.Pos - 48, mainKeyframeData)]));
+                    byte[] mainKeyframeData = reader.ReadBytes(SpriteSize); // SpriteSize = 48
+                    //_logger.LogInformation($"Keyframe ({SpriteSize} bytes) read.");
+                    //dataBlocks.Add((0, mainKeyframeData));  // Tag 0 for keyframe as no specific tag is used here
+                    lastKeyFrame = new FrameDelta([new FrameDeltaItem(reader.Pos - 48, mainKeyframeData,null)]);
+                    _frameTable.Add(lastKeyFrame);
+                    //var frameData = new ReadStream(mainKeyframeData, mainKeyframeData.Length, reader.Endianness, annotator: Annotator);
+                    //var rawata = frameData.LogHex(frameData.Size);
+                    //_logger.LogInformation("FrameData:" + rawata);
                     continue;
                 }
+
+                // skip 0 length
                 while (nextByte == 0 && reader.BytesLeft>0) 
                     nextByte = reader.ReadUint16();
                 if (reader.BytesLeft == 0)
                     break;
 
+                var tag = nextByte;
+                var tagEnum = (RayScoreTags.ScoreKeyframeTag?)Enum.ToObject(typeof(RayScoreTags.ScoreKeyframeTag), tag);
+                var tagLength = tagEnum.HasValue ? RayScoreTags.GetDataLength(tagEnum.Value) : 0;
+
+                // Read entire block: tag (2 bytes already read) + tagLength
+                int length = tagLength + 2;
+                byte[] blockData = new byte[length];
+                BitConverter.GetBytes(tag).CopyTo(blockData, 0);
+                byte[] rest = reader.ReadBytes(tagLength);
+                Array.Copy(rest, 0, blockData, 2, tagLength);
+
+                //_logger.LogInformation($"Read Tag: 0x{tag:X4} ({tagEnum?.ToString() ?? "Unknown"}) | Length: {length}");
+                //dataBlocks.Add((tagEnum, blockData));
+                lastKeyFrame.Items.Add(new FrameDeltaItem(reader.Pos - length, blockData, tagEnum));
+
                 //var tag = nextByte;
-                //var length = GetLengthFromTag(tag)+2;
+                //var length = GetLengthFromTag(tag) + 2;
+                //_logger.LogInformation($"length={length}, tag={tag}");
+                //byte[] testData = reader.ReadBytes(length);
                 //var bytesToRead = Math.Min(length, reader.BytesLeft);
                 //HandleAnimationKeyframe(reader, (RayKeyframeEnabled)(tag & 0xFF));
                 ////byte[] keyframeData = reader.ReadBytes(bytesToRead);
                 ////dataBlocks.Add((tag, keyframeData));
-                while (nextByte != 48 && reader.BytesLeft > 0)
-                    nextByte = reader.ReadUint16();
-                firstRead = true;
+                //while (nextByte != 48 && reader.BytesLeft > 0)
+                //    nextByte = reader.ReadUint16();
+                //firstRead = true;
             }
 
             // Optionally, log the total number of blocks read
-            _logger.LogInformation($"Total parsed data blocks: {dataBlocks.Count}");
+            _logger.LogInformation($"Total parsed data blocks: {_frameTable.Count}");
 
             // You can now process `dataBlocks` further or store them as needed
         }
+        
 
 
 
@@ -302,11 +391,11 @@ Ease-out : 1 byte?
 
             int actualSize = reader.ReadInt32("actualSize");
             int c2 = reader.ReadInt32("constMinus3"); // usually -3
-            FrameCount = reader.ReadInt32("frameCount");
+            SpriteChannelCount = reader.ReadInt32("frameCount");
             short c4 = reader.ReadInt16("const4");
             SpriteSize = reader.ReadInt16("spriteSize");
             short c6 = reader.ReadInt16("const6");
-            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
+            HighestFrameNumber = reader.ReadInt16("memberSpriteCount");
             // 6 sprites:
             // - 1 puppettempo
             // - 1 pallete
@@ -314,14 +403,14 @@ Ease-out : 1 byte?
             // - 2 audio
             // - 1 framescript
 
-            TotalSpriteCount = MemberSpritesCount + 6;
+            TotalSpriteCount = HighestFrameNumber + 6;
 
-            _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {FrameCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
+            _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {SpriteChannelCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
             var decoder = new RayKeyframeDeltaDecoder(Annotator);
             
-            for (int fr = 0; fr < FrameCount; fr++)
+            for (int fr = 0; fr < SpriteChannelCount; fr++)
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
                 //ushort frameDataLensomething = reader.ReadUint16("frameLen");
@@ -343,11 +432,11 @@ Ease-out : 1 byte?
 
             int actualSize = reader.ReadInt32("actualSize");
             int c2 = reader.ReadInt32("constMinus3"); // usually -3
-            FrameCount = reader.ReadInt32("frameCount");
+            SpriteChannelCount = reader.ReadInt32("frameCount");
             short c4 = reader.ReadInt16("const4");
             SpriteSize = reader.ReadInt16("spriteSize");
             short c6 = reader.ReadInt16("const6");
-            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
+            HighestFrameNumber = reader.ReadInt16("memberSpriteCount");
             // 6 sprites:
             // - 1 puppettempo
             // - 1 pallete
@@ -355,13 +444,13 @@ Ease-out : 1 byte?
             // - 2 audio
             // - 1 framescript
 
-            TotalSpriteCount = MemberSpritesCount + 6;
+            TotalSpriteCount = HighestFrameNumber + 6;
 
-            _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {FrameCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
+            _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {SpriteChannelCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
             var decoder = new RayKeyframeDeltaDecoder(Annotator);
-            for (int fr = 0; fr < FrameCount; fr++)
+            for (int fr = 0; fr < SpriteChannelCount; fr++)
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
                 ushort frameDataLen = reader.ReadUint16("frameLen", fk);
@@ -381,7 +470,7 @@ Ease-out : 1 byte?
                     }
                     var pos = frameData.Pos;
                     byte[] data = frameData.ReadBytes(itemLen, "deltaBytes", new Dictionary<string, int> { ["frame"] = fr, ["offset"] = offset });
-                    items.Add(new FrameDeltaItem(offset, data));
+                    items.Add(new FrameDeltaItem(offset, data, null));
 
                     if (data.Length >= 48)
                     {
@@ -398,11 +487,11 @@ Ease-out : 1 byte?
 
             int actualSize = reader.ReadInt32("actualSize");
             int c2 = reader.ReadInt32("constMinus3"); // usually -3
-            FrameCount = reader.ReadInt32("frameCount");
+            SpriteChannelCount = reader.ReadInt32("frameCount");
             short c4 = reader.ReadInt16("const4");
             SpriteSize = reader.ReadInt16("spriteSize");
             short c6 = reader.ReadInt16("const6");
-            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
+            HighestFrameNumber = reader.ReadInt16("memberSpriteCount");
             // 6 sprites:
             // - 1 puppettempo
             // - 1 pallete
@@ -410,16 +499,16 @@ Ease-out : 1 byte?
             // - 2 audio
             // - 1 framescript
 
-            TotalSpriteCount = MemberSpritesCount + 6;
+            TotalSpriteCount = HighestFrameNumber + 6;
 
-            _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {FrameCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
+            _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {SpriteChannelCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
             var decoder = new RayKeyframeDeltaDecoder(Annotator);
             var frame10And12found = false;
             RaySprite? sprite = null;
             var idx = 0;
-            for (int fr = 0; fr < FrameCount; fr++)
+            for (int fr = 0; fr < SpriteChannelCount; fr++)
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
                 ushort frameDataLen = reader.ReadUint16("frameLen", fk);
@@ -555,10 +644,12 @@ Ease-out : 1 byte?
                 var frame = _frameTable[i];
                 var spritesInFrame = new List<RaySprite>();
 
-
-                foreach (var item in frame.Items)
+                var mainFrame = frame.Items.FirstOrDefault();
+                if (mainFrame == null)
+                    continue;
+                //foreach (var mainFrame in frame.Items)
                 {
-                    var keys = new Dictionary<string, int> { ["frame"] = i, ["offset"] = item.Offset };
+                    var keys = new Dictionary<string, int> { ["frame"] = i, ["offset"] = mainFrame.Offset };
                     //if (item.Data.Length < 20)
                     //{
                     //    var stream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian);
@@ -566,15 +657,15 @@ Ease-out : 1 byte?
 
                     //    continue;
                     //}
-                    var channelStream = new ReadStream(item.Data, item.Data.Length, Endianness.BigEndian,
+                    var channelStream = new ReadStream(mainFrame.Data, mainFrame.Data.Length, Endianness.BigEndian,
                         annotator: Annotator);
                     // Read the flag byte and convert it to the KeyframeFlags enum
                     
 
-                    var spriteNum = (item.Offset / SpriteSize) - 6;
-                    if (channelStream.Data.Length < 4) continue;
+                    var spriteNum = (mainFrame.Offset / SpriteSize) - 6;
+                    //if (channelStream.Data.Length < 4) continue;
                     //if ((flags & RayKeyframeEnabled.TweeningEnabled) != 0)
-                    if (channelStream.Data.Length >= 48)
+                    if (mainFrame.Type == null) // keyframe
                     {
                         // 16 36 203 -> 10 24 CB
                         sprite = ReadChannelSprite(channelStream, RayKeyframeEnabled.None, keys);
@@ -588,8 +679,12 @@ Ease-out : 1 byte?
                         sprite.ExtraValues = descriptor.ExtraValues;
                         idx++;
                     }
-                    else
-                    {
+                    //else
+                    //{
+                        //var keyFrame = RayScoreTags.CreateKeyFrameFromTags(frame);
+                        //if (sprite != null && keyFrame != null)
+                        //    sprite.Keyframes.Add(keyFrame);
+
                         //byte flags1 = channelStream.ReadUint8("Flag1", keys);
                         //byte flagByte = channelStream.ReadUint8("KeyframeType", keys);
                         //var flags = (RayKeyframeEnabled)flagByte;
@@ -597,7 +692,7 @@ Ease-out : 1 byte?
                         //var keyFrame = HandleAnimationKeyframe(channelStream, flags, keys);
                         //if (sprite != null && keyFrame != null)
                         //    sprite.Keyframes.Add(keyFrame);
-                    }
+                    //}
                 }
                 if (spritesInFrame.Count == 0)
                     continue;
@@ -703,9 +798,20 @@ Ease-out : 1 byte?
         }
 
 
-        
 
-
+        [Flags]
+        public enum RayKeyFrameType
+        {
+            None = 0,
+            Type0 = 1 << 0,
+            Type1 = 1 << 1,
+            Type2 = 1 << 2,
+            Type3 = 1 << 3,
+            Type4 = 1 << 4,
+            Type5 = 1 << 5,
+            Type6 = 1 << 6,
+            Type7 = 1 << 7,      
+        }
         // First byte type:
         //If keyframeType indicates a sprite, the frame data might include properties like position(LocH, LocV), size, rotation, skew, color, etc.
 
@@ -714,12 +820,19 @@ Ease-out : 1 byte?
         {
             var sprite = new RaySprite();
             // info from scummVM:
-            //uint8 keyframeType = stream.readUint8(); // 1 byte for the type  // always 16 it seems
-            //uint16 keyframeSize = stream.readUint16(); // 2 bytes for size -> // 0 ,8, 36, 1 , 2 -> this seems strange because we read the flags
+            // 1 byte for the type  // always 16 it seems
+            // 2 bytes for size -> // 0 ,8, 36, 1 , 2 -> this seems strange because we read the flags
 
-            //var always16 = stream.ReadUint8(); // always 16 it seems
-            //var val2 = stream.ReadUint8(); // 0 ,8, 36, 1 , 2
-            var val3 = stream.ReadUint8("flags", keys); // flags, unused
+            var flags1 = stream.ReadUint8(); 
+            var flags11 = (RayKeyFrameType)(flags1 & 0xFF);
+            _logger.LogInformation("Sprite flags=" + flags11.ToString());
+            if (!flags11.HasFlag(RayKeyFrameType.Type4) && flags1 != 0)
+            {
+                var keyframeType = stream.ReadUint8(); 
+                var keyframeSize = stream.ReadUint8();
+                _logger.LogInformation($"something1={keyframeType}, something2={keyframeSize}");
+            }
+            
             byte inkByte = stream.ReadUint8("ink", keys);
             sprite.Ink = inkByte & 0x7F;
             sprite.ForeColor = stream.ReadUint8("foreColor", keys);
@@ -786,11 +899,11 @@ Ease-out : 1 byte?
             var reader = new ReadStream(_FrameDataBufferView, Endianness.BigEndian, annotator: Annotator);
             int actualSize = reader.ReadInt32("actualSize");
             int c2 = reader.ReadInt32("constMinus3"); // usually -3
-            FrameCount = reader.ReadInt32("frameCount");
+            SpriteChannelCount = reader.ReadInt32("frameCount");
             short c4 = reader.ReadInt16("const4");
             SpriteSize = reader.ReadInt16("spriteSize");
             short c6 = reader.ReadInt16("const6");
-            MemberSpritesCount = reader.ReadInt16("memberSpriteCount");
+            HighestFrameNumber = reader.ReadInt16("memberSpriteCount");
             // 6 sprites:
             // - 1 puppettempo
             // - 1 pallete
@@ -798,12 +911,12 @@ Ease-out : 1 byte?
             // - 2 audio
             // - 1 framescript
 
-            TotalSpriteCount = MemberSpritesCount + 6;
+            TotalSpriteCount = HighestFrameNumber + 6;
 
-            _logger.LogInformation($"Frame Count: {FrameCount}, Sprite Size: {SpriteSize}");
+            _logger.LogInformation($"Frame Count: {SpriteChannelCount}, Sprite Size: {SpriteSize}");
 
             int frameStart = reader.Pos;
-            for (int fr = 0; fr < FrameCount; fr++)
+            for (int fr = 0; fr < SpriteChannelCount; fr++)
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
                 ushort frameDataLen = reader.ReadUint16("frameLen", fk);
@@ -862,7 +975,7 @@ Ease-out : 1 byte?
                 }
 
                 byte[] data = frameData.ReadBytes(itemLen); //, "deltaBytes", new Dictionary<string, int> { ["frame"] = frameIndex, ["offset"] = offset });
-                items.Add(new FrameDeltaItem(offset, data));
+                items.Add(new FrameDeltaItem(offset, data, null));
             }
 
             // Add a check to log when we haven't added items for the frame

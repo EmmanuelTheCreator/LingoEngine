@@ -1,0 +1,189 @@
+5spritesTest
+------------
+ actualSize: 670 , SpriteChannelCount: 150, spriteSize: 48, HighestFrameNumber: 15
+ unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| unkD1: 54
+   376	753
+
+
+Item Desc. 0: Start=1, End=3, Channel=6, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
+Item Desc. 1: Start=4, End=6, Channel=7, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
+Item Desc. 2: Start=7, End=12, Channel=8, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
+Item Desc. 3: Start=10, End=12, Channel=9, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
+Item Desc. 4: Start=13, End=15, Channel=10, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
+
+Sprite flags=Type4
+9x10:Ink=0:Blend=30:Skew=11,2:Rot=11,1:PropOffset=18:Member=1,2
+
+Sprite flags=Type0
+something1=80, something2=16
+11x12:Ink=8:Blend=40:Skew=12,2:Rot=12,1:PropOffset=27:Member=1,2
+
+Sprite flags=Type0
+something1=128, something2=16
+10x11:Ink=36:Blend=50:Skew=13,2:Rot=13,1:PropOffset=30:Member=1,2
+
+Sprite flags=Type0
+something1=176, something2=16
+15x16:Ink=1:Blend=60:Skew=14,2:Rot=14,1:PropOffset=33:Member=1,2
+
+Sprite flags=Type0
+something1=224, something2=16
+17x18:Ink=2:Blend=70:Skew=15,2:Rot=15,1:PropOffset=36:Member=1,2
+
+ ---------------
+[HEADER]
+00 00 02 9E 00 00 00 14 00 00 00 0F 00 0D 00 30 
+03 EE 00 96 00 36 
+ ---------------
+00 30 [STARTKEYFRAME]
+01 20 10 00 C8 64 00 01 00 02 00 00 00 12 00 0A 
+00 09 00 11 00 11 00 B2 11 00 00 00 00 00 00 00 
+04 56 00 00 04 60 00 00 00 00 00 00 00 00 00 00
+---------------
+[UNKOWN] 1.
+00 00 00 08              ; Length = 8 bytes (possibly only for next block?)
+
+00 02 
+01 36                   ; Tag 0136 (Path: LocH/LocV)
+91 00                   ; Value (could be flags, or unknown — possibly LocH/LocV-related?)
+
+00 00 08 
+00 02 
+01 66                   ; Tag 0166
+01                      ; Could be flag (tweening?)
+00 00 
+60                     ; Unknown
+00 08 
+01 20                   ; Tag 0120
+00 00 
+00 00 
+00 00 
+00 00
+
+00 0E 
+01 2A                   ; Tag 012A
+00 00 
+00 00 
+00 00 
+00 00 
+00 00
+
+00 00 
+00 02 
+01 3E                   ; Tag 013E
+00 00
+
+00 02 
+01 42                   ; Tag 0142
+00 00
+ ---------------
+00 30 [STARTKEYFRAME]
+01 50 10 08 C9 65 00 01 00 02 00 00 00 1B 00 0C 
+00 0B 00 11 00 11 00 99 11 00 00 00 00 00 00 00 
+04 BA 00 00 04 C4 00 00 00 00 00 00 00 00 00 00 
+ ---------------
+ [UNKOWN] 2. this
+00 00 00 0E 00 02 01 66 91 00 00 02 01 96 01 00 
+00 02 00 60 00 08 01 50 00 00 00 00 00 00 00 00 
+00 0E 01 5A 00 00 00 00 00 00 00 00 00 00 00 00 
+01 00 00 02 01 6E 00 00 
+00 02 01 72 00 00 
+---------------
+00 30 [STARTKEYFRAME]
+01 80 10 24 CB 67 00 01 00 02 00 00 00 1E 00 0B 
+00 0A 00 11 00 11 00 7F 11 00 00 00 00 00 00 00 
+05 1E 00 00 05 28 00 00 00 00 00 00 00 00 00 00 
+---------------
+[UNKOWN] 3. frame 10
+00 00 
+00 28 00 02 01 66 00 
+00 00 04 01 80 10 A4 
+98 56 
+00 08    -> 30 long
+01 90 			Bitmask 4 : Size, Rotation, Skew, Blend, ForeColor/BackColor
+00 20 			Width		32
+00 1F 			Height		31
+00 96 			Blend	=	41%	150
+91 00 			Ink?	= 	
+00 02 
+01 9E 
+05 A7 			Rotation	14.47
+00 02 
+01 A2 			Skew		14.76
+05 C4 
+00 1E 
+00 02 01 82 
+65 				Foregournd 101
+45 				Background 69
+00 06   -> 26 long
+01 90 
+00 2F 			Width		47
+00 2E 			Height		46
+00 AF 			Blend		31%  175
+00 02 01 9E 
+06 31 			Rotation	15.85
+00 02 01 A2 
+06 60 			Skew		16.32
+00 54 
+00 02 01 82 
+32  			Foregournd 50
+33 				Background 51
+00 08	-> 24 long
+01 90 
+00 3E  			Width		62
+00 3C 			Height		60
+00 CC 			Blend		20%  204
+11 00 
+00 02 01 9E 
+06 BB 			Rotation		17.23
+00 02 01 A2 
+06 FC 			Skew	17.88
+---------------
+00 30 [STARTKEYFRAME]
+01 B0 10 01 CB 67 00 01 00 02 00 00 00 21 00 10
+00 0F 00 11 00 11 00 66 11 00 00 00 00 00 00 00 
+05 82 00 00 05 8C 00 00 00 00 00 00 00 00 00 00 
+---------------
+[UNKOWN] 4.
+00 00 
+00 26 00 02 01 82 
+82                          Foreground = 130
+51                          Background = 81
+00 08 
+01 90 
+00 2B 
+00 29 00 72 91 00 00 02 01 9E 
+07 45 						Rotation = 18.61
+00 02 01 A2 
+07 97 						Skew = 19.43
+00 02 01 C6 
+91 00 00 20 
+00 02 01 82 
+D3                          Foreground = 211
+6F                          Background = 111 
+
+00 08 01 90 00 17 00 16 
+00 19 11 00
+00 02 01 9E 
+07 D0                       Rotation = 20.00
+00 02 01 A2 
+08 34                       Skew = 21.00
+00 8A 
+
+00 08 01 80 00 00 00 00 00 00 00 00 
+00 0E 01 8A 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 02 01 9E 00 00 
+00 02 01 A2 00 00
+ 
+00 08 01 B0 00 00 00 00 00 00 00 00 
+00 0E 01 BA 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 02 01 CE 00 00 
+00 02 01 D2 00 00
+---------------
+00 30 [STARTKEYFRAME] 
+01 E0 10 02 CC 68 00 01 00 02 00 00 00 24 
+00 12 00 11 00 11 00 11 00 4C 11 00 00 00 00 00 
+00 00 05 E6 00 00 05 F0 00 00 00 00 00 00 00 00 
+00 00 00 00 00 08 00 02 01 F6 91 00 00 02 00 
+---------------
+00 
