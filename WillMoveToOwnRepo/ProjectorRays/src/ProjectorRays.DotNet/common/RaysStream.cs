@@ -268,6 +268,23 @@ public class ReadStream : RaysStream
         return BitConverter.ToSingle(BitConverter.GetBytes(rawValue), 0);
     }
 
+    public float ReadFixed16_16(string description = "", Dictionary<string, int>? keys = null)
+    {
+        int p = _pos;
+        _pos += 4;
+
+        if (PastEOF)
+            throw new InvalidOperationException("ReadStream.ReadFixed16_16: Read past end of stream!");
+
+        _annotator?.Annotate(_offset + p, 4, description, keys);
+
+        int raw = Endianness == Endianness.LittleEndian
+            ? BinaryPrimitives.ReadInt32LittleEndian(_data.AsSpan(_offset + p, 4))
+            : BinaryPrimitives.ReadInt32BigEndian(_data.AsSpan(_offset + p, 4));
+
+        return raw / 65536f;
+    }
+
     public double ReadAppleFloat80(string description = "", Dictionary<string, int>? keys = null)
     {
         int p = _pos;
