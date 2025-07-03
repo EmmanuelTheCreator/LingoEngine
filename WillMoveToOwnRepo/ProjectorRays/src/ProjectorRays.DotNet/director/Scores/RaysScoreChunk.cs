@@ -33,9 +33,58 @@ public class RaysScoreChunk : RaysChunk
     public short Constant13;
     public short LastChannelMinus6;
     public static RayStreamAnnotatorDecorator Annotator;
+    /// <summary>
+    /// Defines flags for keyframe properties in Director's sprite and animation system.
+    /// These flags correspond to properties like position, size, rotation, color, tweening, and more.
+    /// </summary>
+    [Flags]
+    public enum RayKeyframeEnabled: int
+    {
+        /// <summary>Indicates no properties are enabled.</summary>
+        None = 0,
 
+        /// <summary>Indicates tweening is enabled.</summary>
+        TweeningEnabled = 1 << 0,
+
+        /// <summary>Indicates position (LocH + LocV) is enabled.</summary>
+        Path = 1 << 1,
+
+        /// <summary>Indicates size (Width + Height) is enabled.</summary>
+        Size = 1 << 2,
+
+        /// <summary>Indicates rotation is enabled.</summary>
+        Rotation = 1 << 3,
+
+        /// <summary>Indicates skew is enabled.</summary>
+        Skew = 1 << 4,
+
+        /// <summary>Indicates blend is enabled.</summary>
+        Blend = 1 << 5,
+
+        /// <summary>Indicates fore color is enabled.</summary>
+        ForeColor = 1 << 6,        // ForeColor (2 bytes)
+
+        /// <summary>Indicates back color is enabled.</summary>
+        BackColor = 1 << 7,        // BackColor (2 bytes)
+
+        /// <summary>Indicates continuous tweening at the endpoint.</summary>
+        ContinuousAtEndpoint = 1 << 8, // For Continuous checkbox
+
+        /// <summary>Indicates speed (used in tweening).</summary>
+        Speed = 1 << 9,              // For Speed setting (1 bit)
+
+        /// <summary>Indicates ease-in for the tweening.</summary>
+        EaseIn = 1 << 10,            // Ease-in (1 byte)
+
+        /// <summary>Indicates ease-out for the tweening.</summary>
+        EaseOut = 1 << 11,           // Ease-out (1 byte)
+
+        /// <summary>Indicates curvature for the tweening.</summary>
+        Curvature = 1 << 12          // Curvature (1 byte)
+    }
     public class RayKeyFrame
     {
+        public RayKeyframeEnabled EnabledProperties { get; set; } = RayKeyframeEnabled.None;
         public int LocH { get; set; }
         public int LocV { get; set; }
         public int Width { get; set; }
@@ -60,7 +109,8 @@ public class RaysScoreChunk : RaysChunk
         public int StartFrame {get; internal set; }
         public int EndFrame {get; internal set; }
         public int SpriteNumber {get; internal set; }
-        public int DisplayMember {get; internal set; }
+        public int MemberCastLib { get; set; }
+        public int MemberNum { get; set; }
         public int SpritePropertiesOffset {get; internal set; }
         public int LocH {get; internal set; }
         public int LocV {get; internal set; }
@@ -77,8 +127,6 @@ public class RaysScoreChunk : RaysChunk
         public bool FlipV {get; internal set; }
         public bool Editable { get; internal set; }
 
-        public int MemberCastLib { get; set; }
-        public int MemberNum { get; set; }
 
         public List<int> ExtraValues { get; internal set; } = new();
         public List<RaysBehaviourRef> Behaviors { get; internal set; } = new();
@@ -156,9 +204,9 @@ public class RaysScoreChunk : RaysChunk
         int entryCount = stream.ReadInt32();
         int notationBase = stream.ReadInt32(); // entryCountPlus1
         int entrySizeSum = stream.ReadInt32();
+        
 
-
-        Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
+        //Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
 
         int entriesStart = stream.Pos;
         Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
@@ -168,7 +216,7 @@ public class RaysScoreChunk : RaysChunk
         scoreFrameParser.ReadFrameDescriptors();
         scoreFrameParser.ReadBehaviors();
         Sprites = scoreFrameParser.ReadAllFrameSprites();
-
+        return;
 
 
         //var spriteStates = scoreFrameParser.ParseAllFrameDeltasSafe();
@@ -223,7 +271,8 @@ public class RaysScoreChunk : RaysChunk
             json.WriteField("start", f.StartFrame);
             json.WriteField("end", f.EndFrame);
             json.WriteField("sprite", f.SpriteNumber);
-            json.WriteField("displayMember", f.DisplayMember);
+            json.WriteField("MemberCastLib", f.MemberCastLib.ToString());
+            json.WriteField("MemberNum", f.MemberNum.ToString());
             json.WriteField("spritePropertiesOffset", f.SpritePropertiesOffset);
             json.WriteField("locH", f.LocH);
             json.WriteField("locV", f.LocV);
