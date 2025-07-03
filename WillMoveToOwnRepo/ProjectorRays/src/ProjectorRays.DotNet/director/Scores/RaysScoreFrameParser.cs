@@ -433,43 +433,67 @@ namespace ProjectorRays.director.Scores
             return allFrames;
         }
 
+        [Flags]
+        public enum KeyframeFlags
+        {
+            None = 0,
+            TweeningEnabled = 1 << 0,  // Bit 0 for Tweening
+            Path = 1 << 1,             // Bit 1 for Path (LocH + LocV)
+            Size = 1 << 2,             // Bit 2 for Size (Width + Height)
+            Rotation = 1 << 3,         // Bit 3 for Rotation
+            Skew = 1 << 4,             // Bit 4 for Skew
+            Blend = 1 << 5,            // Bit 5 for Blend
+            ForeColor = 1 << 6,        // Bit 6 for ForeColor
+            BackColor = 1 << 7         // Bit 7 for BackColor
+        }
+
         public RayKeyFrame HandleAnimationKeyframe(ReadStream stream, int frameIndex)
         {
             RayKeyFrame keyframe = new RayKeyFrame();
 
-            // Read animation frame properties into the RayKeyFrame object
-            keyframe.LocH = stream.ReadInt16("locH", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.LocV = stream.ReadInt16("locV", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.Width = stream.ReadUint16("width", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.Height = stream.ReadUint16("height", new Dictionary<string, int> { ["frame"] = frameIndex });
+            // Read the flag byte and convert it to the KeyframeFlags enum
+            byte flagByte = stream.ReadUint8("FlagByte", new Dictionary<string, int> { ["frame"] = frameIndex });
+            KeyframeFlags flags = (KeyframeFlags)flagByte;
 
-            // Additional properties for full keyframe
-            keyframe.Rotation = stream.ReadFloat("rotation", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.Skew = stream.ReadFloat("skew", new Dictionary<string, int> { ["frame"] = frameIndex });
+            // Parse properties based on flag bits
+            if ((flags & KeyframeFlags.Path) != 0) // Path = LocH + LocV
+            {
+                keyframe.LocH = stream.ReadInt16("LocH", new Dictionary<string, int> { ["frame"] = frameIndex });
+                keyframe.LocV = stream.ReadInt16("LocV", new Dictionary<string, int> { ["frame"] = frameIndex });
+            }
 
-            // Blend (Opacity) - it's represented as an 8-bit value between 0-255, which we convert to percentage (0-100)
-            keyframe.Blend = stream.ReadUint8("blend", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.Ink = stream.ReadUint8("ink", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.ForeColor = stream.ReadUint8("foreColor", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.BackColor = stream.ReadUint8("backColor", new Dictionary<string, int> { ["frame"] = frameIndex });
+            if ((flags & KeyframeFlags.Size) != 0)
+            {
+                keyframe.Width = stream.ReadUint16("Width", new Dictionary<string, int> { ["frame"] = frameIndex }) / 100f;
+                keyframe.Height = stream.ReadUint16("Height", new Dictionary<string, int> { ["frame"] = frameIndex }) / 100f;
+            }
 
-            keyframe.MemberNum = stream.ReadUint16("memberNum", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.MemberCastLib = stream.ReadUint16("castLib", new Dictionary<string, int> { ["frame"] = frameIndex });
+            if ((flags & KeyframeFlags.Rotation) != 0)
+                keyframe.Rotation = stream.ReadFloat("Rotation", new Dictionary<string, int> { ["frame"] = frameIndex });
 
-            // Read the scale values (if available)
-            keyframe.ScaleX = stream.ReadFloat("scaleX", new Dictionary<string, int> { ["frame"] = frameIndex });
-            keyframe.ScaleY = stream.ReadFloat("scaleY", new Dictionary<string, int> { ["frame"] = frameIndex });
+            if ((flags & KeyframeFlags.Skew) != 0)
+                keyframe.Skew = stream.ReadFloat("Skew", new Dictionary<string, int> { ["frame"] = frameIndex });
 
-            // Read the duration (time the keyframe will last)
-            keyframe.Duration = stream.ReadUint16("duration", new Dictionary<string, int> { ["frame"] = frameIndex });
+            if ((flags & KeyframeFlags.Blend) != 0)
+            {
+                byte blendByte = stream.ReadUint8("Blend", new Dictionary<string, int> { ["frame"] = frameIndex });
+                keyframe.Blend = (int)((blendByte / 255f) * 100f);
+            }
 
+            if ((flags & KeyframeFlags.ForeColor) != 0)
+                keyframe.ForeColor = stream.ReadUint8("ForeColor", new Dictionary<string, int> { ["frame"] = frameIndex });
 
-            // Optionally, log the parsed data
-            _logger.LogInformation($"Frame {frameIndex}: Duration={keyframe.Duration}, Rotation={keyframe.Rotation}, " +
-                                   $"ScaleX={keyframe.ScaleX}, ScaleY={keyframe.ScaleY}, Skew={keyframe.Skew}, " +
-                                   $"Opacity={keyframe.Blend}%, ForeColor={keyframe.ForeColor}, BackColor={keyframe.BackColor}");
+            if ((flags & KeyframeFlags.BackColor) != 0)
+                keyframe.BackColor = stream.ReadUint8("BackColor", new Dictionary<string, int> { ["frame"] = frameIndex });
 
-            // Return the populated RayKeyFrame object
+            // Log the parsed keyframe
+            _logger.LogDebug($"Parsed keyframe {frameIndex}: Flags={flags}; " +
+                             $"LocH={keyframe.LocH}, LocV={keyframe.LocV}, " +
+                             $"Width={keyframe.Width}, Height={keyframe.Height}, " +
+                             $"Rotation={keyframe.Rotation}, Skew={keyframe.Skew}, " +
+                             $"Blend={keyframe.Blend}, ForeColor={keyframe.ForeColor}, " +
+                             $"BackColor={keyframe.BackColor}");
+
             return keyframe;
         }
 
