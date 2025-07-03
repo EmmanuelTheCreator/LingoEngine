@@ -1,5 +1,8 @@
+using LingoEngine.Director.Core.Inspector;
+using LingoEngine.Director.Core.Windowing;
 using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
+using ProjectorRays.director.Scores;
 using ProjectorRays.Director;
 using System;
 using System.IO;
@@ -9,7 +12,7 @@ namespace LingoEngine.Director.Core.Importer;
 /// <summary>
 /// Experimental binary viewer window that parses test data and exposes stream annotations.
 /// </summary>
-public class DirectorBinaryViewerWindowV2 : DirectorBinaryViewerWindow
+public class DirectorBinaryViewerWindowV2 : DirectorWindow<IDirFrameworkBinaryViewerWindowV2>
 {
     private readonly ILogger<DirectorBinaryViewerWindowV2> _logger;
 
@@ -22,7 +25,7 @@ public class DirectorBinaryViewerWindowV2 : DirectorBinaryViewerWindow
     public DirectorBinaryViewerWindowV2(ILogger<DirectorBinaryViewerWindowV2> logger)
     {
         _logger = logger;
-        LoadTestData();
+        //LoadTestData();
     }
 
     private void LoadTestData()
@@ -30,11 +33,9 @@ public class DirectorBinaryViewerWindowV2 : DirectorBinaryViewerWindow
         try
         {
             string path = Path.Combine(
-                "WillMoveToOwnRepo",
-                "ProjectorRays",
-                "Test",
-                "TestData",
-                "KeyFramesTest.dir");
+                "..", "..", "Libraries", "LingoEngine", "WillMoveToOwnRepo", "ProjectorRays","Test", "TestData", 
+                "KeyFramesTest.dir"
+                );
             Data = File.ReadAllBytes(path);
             var stream = new ReadStream(Data, Data.Length, Endianness.BigEndian);
             var dir = new RaysDirectorFile(_logger);
