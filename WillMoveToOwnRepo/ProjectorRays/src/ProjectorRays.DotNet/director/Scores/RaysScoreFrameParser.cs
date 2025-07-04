@@ -203,6 +203,29 @@ namespace ProjectorRays.director.Scores
        
         I'm not sure nut I think tags change depending on files. So it can be that every tag is a point to memory, with there the real command. Unsure.
         We need to understaand all "head' tags. What I mean, we need to keep in memory: curent frame + current channel. We saw that we had a next frame.  
+        the header is 16 byte, thats clear, and then it starts reading. It can be a reader block inside a reader block it seems.
+
+        And then there is te special first byte sizes:
+        # Keyframe Block Prefixes and Meanings
+
+        This table summarizes known 2-byte prefixes found in Director keyframe data blocks, along with their interpreted meanings based on analysis across multiple `.dir` files.
+
+        | Prefix      | Meaning / Description                          | Notes                                                                 |
+        |-------------|------------------------------------------------|-----------------------------------------------------------------------|
+        | `00 02`     | **Repeat / advance tag**                       | Most common; used to repeat a tag with new data, or to advance frame. |
+        | `00 08`     | **End of bytes-frame**                         | Signals end of keyframe block or end of per-frame data.               |
+        | `00 30`     | **Read keyframe (48 bytes)**                   | Fixed-format full sprite block (used in `Animation_types.dir`).       |
+        | `00 0A`     | **Variable-length control block (A)**          | Common in `KeyFramesTest`, usually followed by `01 EC` (frame+sprite).|
+        | `00 0C`     | **Variable-length control block (B)**          | Like above, possibly longer; also seen before `01 EC` in some files.  |
+        | `00 36`     | **Block length (54 bytes)**                    | Likely denotes start of a fixed-size data block.                      |
+        | `00 1E`     | **Tag/data block**                             | Usually part of a tag (e.g., blend, ink) or chunk header.             |
+        | `00 42`     | **Block length (66 bytes)**                    | Matches one fixed full block + trailing tag data.                     |
+        | `00 96`     | **Block length or padding indicator**          | Seen after file headers like `03 EE`; likely total frame data size.   |
+        | `01 20`     | **Tag pointer / lookup address**               | Possibly start of address table for tags.                             |
+        | `01 80`     | **Total keyframe data size**                   | e.g., `0x180 = 384 = 8×48`, confirms 8 full keyframes.                |
+        | `02 62`     | **UnkD1 (used channels?)**                     | Seen in headers, `0x0262 = 610`, likely keyframe sprite offset.       |
+        | `03 EE`     | **Header marker or channel offset max**        | Common in headers, possibly total block size or max pointer.          |
+
 
         Custom bytes blocks for keyframes:
         ----------------------------------

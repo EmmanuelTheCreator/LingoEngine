@@ -33,6 +33,13 @@ Item Desc. 11: Start=1, End=6, Channel=154, U1=0, U2=0, U3=1, U4=15, U5=225, U6=
 86,  Size
 105, Size
 154, Size
+channel  8 (+6)
+| Property     | Value      | Notes                                  |
+|--------------|------------|----------------------------------------|
+| Curvature    | 71%        | Slider visually between Normal & Extreme |
+| Speed        | Smooth     | "Smooth Changes" was selected           |
+| Ease-In      | 30%        | From visible text box                   |
+| Ease-Out     | 55%        | From visible text box                   |
 
 -------------------
 [HEADER]
@@ -86,12 +93,19 @@ Frame 4 , Total = 394 bytes,  First 6 bytes for each is the channel link, every 
 00 04 13 C0 00 2E 00 4D 
 00 02 13 C6 81 00 
 00 02 1C E0 10 80 
-00 04 1C F0 00 2E 00 4D 			<- from here on, tweening data???
-00 02 1C F6 81 00 00 4A 00 04 01 30 00 49 
-00 58 00 04 01 5C 00 8D 00 89 00 02 01 9E 12 3A 
-00 02 01 D2 08 AE 00 02 01 F4 00 96 00 02 02 12 
-98 21 00 04 04 C0 00 49 00 58 00 04 10 30 00 49
-00 58 00 04 13 C0 00 49 00 58 00 04 1C F0 00 49 00 58 00 94 
+00 04 1C F0 00 2E 00 4D 			
+00 02 1C F6 81 00 00 4A 			<- Payload 0x4A → Flag bits = 01001010 (Path, Rotation, Blend)
+00 04 01 30 00 49 00 58 			<- Tag 0130, Width=73, Height=88
+00 04 01 5C 00 8D 00 89 			<- Tag 015C, LocH=141, LocV=137
+00 02 01 9E 12 3A 					<- Tag 019E, Rotation = 0x123A = 4666 / 100 = 46.66°
+00 02 01 D2 08 AE 					<- Tag 01D2, Skew = 0x08AE = 2222 / 100 = 22.22
+00 02 01 F4 00 96 					<- Tag 01F4, value = 0x96 = 150 
+00 02 02 12 98 21 					<- Tag 0212, ForeColor = 152, BackColor = 33
+00 04 04 C0 00 49 00 58 			<- Unknown — possibly same width/height again
+00 04 10 30 00 49 00 58 
+00 04 13 C0 00 49 00 58 
+00 04 1C F0 00 49 00 58 
+00 94 
 
 00 04 01 30 00 64 00 64  						<- Size  		00 64 00 64 = 100 x 100		tag = 01 30
 00 02 01 36 01 00
