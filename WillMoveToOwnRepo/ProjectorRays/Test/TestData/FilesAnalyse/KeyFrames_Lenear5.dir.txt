@@ -1,7 +1,7 @@
 KeyFrames_Lenear5.dir
 ---------------------
  actualSize: 302 , SpriteChannelCount: 150, spriteSize: 48, HighestFrameNumber: 55
- unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| unkD1: 8
+ unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| FirstBlockSize: 8
  872	1744
  
  Item Desc. 0: Start=5, End=55, Channel=6, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253

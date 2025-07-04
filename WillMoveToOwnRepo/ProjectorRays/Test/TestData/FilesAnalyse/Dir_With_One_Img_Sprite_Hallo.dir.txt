@@ -1,7 +1,7 @@
 Dir_With_One_Img_Sprite_Hallo
 ------------------------------
  actualSize: 138 , SpriteChannelCount: 150, spriteSize: 48, HighestFrameNumber: 30
- unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| unkD1: 54
+ unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| FirstBlockSize: 54
  74	148
  Item Desc. 0: Start=1, End=30, Channel=6, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
 

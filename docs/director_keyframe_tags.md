@@ -8,7 +8,7 @@ This document outlines all currently understood fixed and variable tag formats u
 
 # 🧱 Director Keyframe Block Header Bytes
 
-This section documents the **header structure** found at the beginning of each Director Score keyframe block (VWSC). These values are typically fixed across files, except for `HighestFrameNumber`, `actualSize`, and occasionally `unkD1`.
+This section documents the **header structure** found at the beginning of each Director Score keyframe block (VWSC). These values are typically fixed across files, except for `HighestFrameNumber`, `actualSize`
 
 ---
 
@@ -20,7 +20,7 @@ This section documents the **header structure** found at the beginning of each D
 | 0x04   | unkA1                 | int8     | Constant? Usually 0             | 0                   |
 | 0x05   | unkA2                 | int8     | Constant? Usually 0             | 0                   |
 | 0x06   | unkA3                 | int8     | Constant? Usually 0             | 0                   |
-| 0x07   | unkA4                 | int8     | Unknown – often 20              | 20                  |
+| 0x07   | unkA4                 | int8     | Constant 20                     | 20                  |
 | 0x08   | HighestFrameNumber    | int32    | Highest referenced frame        | 6–55                |
 | 0x0C   | unkB1                 | int8     | Constant?                       | 0                   |
 | 0x0D   | unkB2                 | int8     | Unknown                         | 13                  |
@@ -28,13 +28,13 @@ This section documents the **header structure** found at the beginning of each D
 | 0x10   | unkC1                 | int8     | Constant?                       | 3                   |
 | 0x11   | unkC2                 | int8     | Unknown                         | -18                 |
 | 0x12   | SpriteChannelCount    | int16    | Max channel slots available     | 150                 |
-| 0x14   | unkD1                 | int16    | Possibly tag count or pointer   | 8–610               |
+| 0x14   | FirstBlockSize        | int16    | Possibly tag count or pointer   | 8–610               |
 
 ---
 
 ## 📂 Sample Files & Header Values
 
-| File                        | actualSize | HighestFrameNumber | SpriteSize | SpriteChannelCount | unkD1 |
+| File                        | actualSize | HighestFrameNumber | SpriteSize | SpriteChannelCount | FirstBlockSize |
 |-----------------------------|------------|---------------------|------------|---------------------|--------|
 | 5spritesTest                | 670        | 15                  | 48         | 150                 | 54     |
 | KeyFramesTestMultiple.dir   | 1908       | 44                  | 48         | 150                 | 66     |
@@ -50,7 +50,6 @@ This section documents the **header structure** found at the beginning of each D
 - Fields `unkA1–unkA3` are always 0 so far.
 - `unkA4` is always `20`.
 - `unkC1` and `unkC2` are consistent (`3` and `-18`) across all samples.
-- `unkD1` **may** point to an offset or block size, possibly related to tag lists — **TBD**.
 
 ---
 
@@ -86,7 +85,7 @@ These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the typ
 | `01 F4`   | Curvature      | 2         | Tween curvature                            | Single byte: 0–255 = 0–100% approx                                  |
 | `01 90`   | Combo Tag      | 8         | Width, Height, Blend, Ink                  | Composite tag seen in complex frames                                |
 | `01 F6`   | Tween Flags    | 1         | Bitmask flags for tweening properties      | Bit 1=Path, 2=Size, 3=Rotation, 4=Skew, 5=Blend, 6=Foreground 7=Background      |
-| `01 80`   | BlockSize      | -         | Number of following bytes                  | Seen after `unkD1`                                                  |
+| `01 80`   | BlockSize      | -         | Number of following bytes                  | Seen after `Last header byte, the Main block size in header`                                                  |
 | `01 20`   | ?              | -         | Possibly memory offset or data pointer     | Always follows `01 80`                                              |
 | `02 12`   | Colors         | 2         | Foreground + Background                    | 1 byte each                                                         |
 | `02 26`   | ?              | 2         | Possibly palette?                          | Unknown                                                             |
@@ -124,6 +123,31 @@ PS.: Tweening: The tweening are not keyframe based but sprite based!
 | `0x0212` | 2 bytes    | 0      | ForeColor      | Foreground color index (1 byte)        |
 |          |            | 1      | BackColor      | Background color index (1 byte)        |
 | `0x01F6` | 1 byte     | 0      | Tween Flags    | Bit flags for tweening fields (see below) |
+
+
+
+## 📌 Sprite-Based Tweening: Association and Scoping
+
+> 🔁 **Tweening values (EaseIn, EaseOut, Curvature, Speed, Flags) are associated with entire sprites, not individual keyframes.**
+
+When you select a sprite in the Director GUI, the **tweening panel (sliders and toggles)** applies to all its keyframes collectively. This behavior is reflected in the binary:
+
+### 🧩 Per-Sprite Association
+
+- **Tweening tags (`0x0120`, `0x01F4`, `0x01F6`)** appear **outside the main keyframe stream**.
+- They are grouped **after `0x0180` and `0x0120`**, which together define:
+  - **How many bytes follow (block size)**
+  - **Which sprite these values are assigned to** (e.g. `0x1080` = sprite 8)
+
+### ✅ Example
+
+```hex
+00 04 01 80 00 30 00 00   ; 48 bytes follow
+00 02 01 20 10 80         ; Sprite 8 (channel = 8)
+00 02 01 F4 00 96         ; Curvature = 150 (~59%)
+00 02 01 20 10 80         ; EaseIn = 0x10, EaseOut = 0x80
+00 02 01 F6 00 4A         ; Tween Flags = Path, Rotation, Blend
+```
 
 
 ## 🧭 Director Tag Ranges (Hypothesis)
@@ -202,6 +226,8 @@ It’s possible that these tag values encode **bitfields**, with each bit corres
 | 6   | `0x40`      | ForeColor         |
 | 7   | `0x80`      | BackColor         |
 
+### Bitflag Hypothesis:
+Several composite tags (such as 0x0190, 0x01FE, and 0x01F6) are believed to encode multiple sprite properties using bitflags, where each bit corresponds to a particular attribute (e.g., Path, Size, Rotation, Skew, Blend, ForeColor, BackColor). This hypothesis helps explain the grouping of related properties within single tag payloads and should be considered when parsing these tags.
 
 
 ### Example:
@@ -215,6 +241,129 @@ Possibly means:
 → **Size + Blend + Skew**, which matches reality.
 
 
-## Observations
+# Director Keyframe Blocks: Header and Nested Block Structure
 
-- A header byte (`unkD1`) often points to a count of tags or blocks. Not discovered yet.
+This chapter details the structure of Director keyframe blocks across various sample files. It includes header field descriptions, nested block organization, and file-specific variations.
+
+---
+
+## Keyframe Files Overview
+
+| File                        | Header Length (Bytes) | actualSize (Bytes) | SpriteChannelCount | SpriteSize | HighestFrameNumber | FirstBlockSize | Notes                      |
+|-----------------------------|----------------------|--------------------|--------------------|------------|--------------------|-------|----------------------------|
+| 5spritesTest                | 20                   | 670                | 150                | 48         | 15                 | 54    | Standard multi-block       |
+| KeyFramesTestMultiple.dir   | 20                   | 1908               | 150                | 48         | 44                 | 66    | Large block, multi-frames  |
+| KeyFramesTest.dir           | 20                   | 834                | 150                | 48         | 30                 | 66    | Mid-size, nested inner blocks |
+| Dir_With_One_Img_Sprite_Hallo | 20                | 138                | 150                | 48         | 30                 | 54    | Smallest file              |
+| KeyFrames_Lenear5.dir       | 20                   | 302                | 150                | 48         | 55                 | 8     | Linear frames, small FirstBlockSize |
+
+---
+
+## Keyframe Block Header Structure (20 bytes)
+
+| Offset | Field                 | Type     | Meaning                        | Typical Values      |
+|--------|------------------------|----------|--------------------------------|---------------------|
+| 0x00   | actualSize            | int32    | Total size of keyframe block   | Varies              |
+| 0x04   | unkA1                 | int8     | Constant?                     | 0                   |
+| 0x05   | unkA2                 | int8     | Constant?                     | 0                   |
+| 0x06   | unkA3                 | int8     | Constant?                     | 0                   |
+| 0x07   | unkA4                 | int8     | Unknown, often 20             | always 20 it seems  |
+| 0x08   | HighestFrameNumber    | int32    | Highest frame number          | Varies              |
+| 0x0C   | unkB1                 | int8     | Constant?                     | 0                   |
+| 0x0D   | unkB2                 | int8     | Unknown                      | 13                  |
+| 0x0E   | spriteSize            | int16    | Size of each sprite block     | 48                  |
+| 0x10   | unkC1                 | int8     | Constant?                     | 3                   |
+| 0x11   | unkC2                 | int8     | Unknown                      | -18                 |
+| 0x12   | SpriteChannelCount    | int16    | Number of sprite channels     | 150                 |
+| 0x14   | FirstBlockSize        | int16    | Size of first inner block     | Varies (e.g., 54-610) |
+
+---
+
+## Nested Block Structure Overview
+
+#### Note:
+Each fixed keyframe block of 48 bytes is typically followed by approximately 6 bytes of control data (flags or padding) before the end marker (00 00 00 08). This control byte section is important for understanding the full block structure and should be parsed accordingly.
+
+### Common pattern:
+```
+[Header] (20 bytes)
+[Inner Block 1] (size = main block size bytes)
+├─ Frame skip / continuation markers (optional)
+├─ Fixed-size keyframe block (48 bytes)
+├─ Control bytes
+└─ End marker (00 00 00 08)
+[Inner Block 2] (size = next block size)
+└─ ...
+```
+
+---
+
+## File-specific Nested Block Diagrams
+
+### 5spritesTest.dir
+```
+[Header: 20 bytes]
+[Inner Block 1: 54 bytes]
+├─ Fixed keyframe block (48 bytes)
+├─ Control bytes (6 bytes)
+└─ End marker (00 00 00 08)
+[Inner Block 2: ...]
+```
+
+### KeyFramesTestMultiple.dir
+```
+[Header: 20 bytes]
+[Inner Block 1: 66 bytes]
+├─ Frame skip markers
+├─ Fixed keyframe block (48 bytes)
+├─ Control bytes
+└─ End marker (00 00 00 08)
+[Inner Block 2: ...]
+```
+
+### KeyFramesTest.dir
+```
+[Header: 20 bytes]
+[Inner Block 1: 66 bytes] 
+├─ Frame skip markers (e.g., skip 6 frames) 
+├─ Fixed keyframe block (48 bytes) 
+├─ Control bytes 
+└─ End marker (00 00 00 08) 
+```
+[Inner Block 2: ...]
+
+
+
+### Dir_With_One_Img_Sprite_Hallo
+```
+[Header: 20 bytes]
+[Inner Block 1: 54 bytes]
+├─ Fixed keyframe block (48 bytes)
+├─ Control bytes
+└─ End marker (00 00 00 08)
+```
+
+### KeyFrames_Lenear5.dir
+```
+[Header: 20 bytes]
+[Inner Block 1: 54 bytes]
+├─ Frame skip markers (00 02 sequences)
+├─ Fixed keyframe block (48 bytes)
+├─ Control bytes
+└─ End marker (00 00 00 08)
+[Inner Block 2: ...]
+
+```
+
+---
+
+## Notes
+
+- **Frame skip markers (`00 02 ...`)** appear before keyframe blocks to indicate frame advancement or continuation.
+- The **end marker `00 00 00 08`** clearly marks the end of a keyframe data block.
+- `FirstBlockSize` from the header matches the size of the first nested block, enabling precise parsing.
+- The **fixed-size keyframe block is always 48 bytes**, consistent across files.
+- Control bytes (typically 6 bytes) contain flags or padding after the keyframe block.
+
+---
+
