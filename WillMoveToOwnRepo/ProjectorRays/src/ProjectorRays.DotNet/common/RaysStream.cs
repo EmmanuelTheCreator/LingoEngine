@@ -375,6 +375,17 @@ public class ReadStream : RaysStream
         Array.Copy(_data, _offset + _pos, buffer, 0, count);
         return buffer;
     }
+
+    public ushort PeekUint16(int offset = 0)
+    {
+        int targetPos = _pos + offset;
+        if (targetPos < 0 || targetPos + 2 > _size)
+            throw new IndexOutOfRangeException("PeekUint16 out of bounds");
+        var span = _data.AsSpan(_offset + targetPos, 2);
+        return Endianness == Endianness.LittleEndian
+            ? BinaryPrimitives.ReadUInt16LittleEndian(span)
+            : BinaryPrimitives.ReadUInt16BigEndian(span);
+    }
     public byte[] PeekBytesAt(int pos, int count)
     {
         if (pos < 0 || pos >= _size)
