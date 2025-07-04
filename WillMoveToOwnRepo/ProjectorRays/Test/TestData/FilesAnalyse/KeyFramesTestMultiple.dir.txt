@@ -3,7 +3,7 @@ KeyFramesTestMultiple.dir
  actualSize: 1908, SpriteChannelCount: 150, spriteSize: 48, HighestFrameNumber: 44
  unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| unkD1: 66
  872	1744
- MappingTable: 310(256), 406(256)
+
  
  Sprite flags=Type4
  88x130:Ink=0:Blend=100:Skew=32,33:Rot=-11,33:PropOffset=57:Member=1,1
@@ -24,22 +24,24 @@ KeyFramesTestMultiple.dir
  ---------------
 [HEADER]
 00 00 07 74 00 00 00 14 00 00 00 2C 00 0D 00 30 
-03 EE 00 96 00 42 00 02 01 36 01 00 00 02 01 96 
-01 00 
+03 EE 00 96 
+00 42  <- full block size to read = 16 +2 + 48+4
+00 02 01 36 01 00 <- skip 6 frame (with next bytes)
+00 02 01 96 01 00 
 ---------------
-00 30 [STARTKEYFRAME]
+00 30 [STARTKEYFRAME] <- 48 bytes
 01 E0 10 80 FF 00 00 01 00 01 00 00 00 39 00 82 
 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF 
 FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 
 -----------------------
+00 00 00 08 
 [UNKOWN]
-00 00 
-00 08 00 02 01 F6 81 00 
-00 08 00 02 01 66 01 00 00 02 
+00 02 01 F6 81 00 
+00 08 00 02 01 66 01 00 00 02 (16)
 00 08 00 02 01 F6 01 00 
-00 1E 00 0C 01 EC 00 88 00 55 00 45 00 53 00 1E 
-91 00 00 02 01 FE FE 43 00 02 02 02 0A 86 00 58 
-00 02 01 66 00 00 
+00 1E 00 0C 01 EC 00 88 00 55 00 45 00 53 00 1E  (16)
+91 00 00 02 01 FE FE 43 00 02 02 02 0A 86 00 58  (16)
+00 02 01 66 00 00 (6)
  ---------------
 00 30 [STARTKEYFRAME]
 01 80 10 24 CB 67 00 01 00 02 00 00 00 3C 00 0B 

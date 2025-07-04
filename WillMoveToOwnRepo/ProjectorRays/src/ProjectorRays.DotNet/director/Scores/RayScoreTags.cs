@@ -15,13 +15,12 @@ namespace ProjectorRays.director.Scores
         public enum ScoreKeyframeTag
         {
             Ink = 0x0136,
-            ForegroundColor = 0x0182,
-            BackgroundColor = 0x0183, // If ever distinct
+            Colors = 0x0212,
             Blend = 0x0190,
             Rotation = 0x019E,
-            Skew = 0x01A2,
-            Position = 0x01EC, // LocH, LocV (Path)
-            Size = 0x0190, // Width/Height also in Blend block
+            Skew = 0x01D2,
+            Position = 0x015C, // LocH, LocV (Path)
+            Size = 0x0130, // Width/Height 
             Custom_01C6 = 0x01C6,
             Custom_01F6 = 0x01F6,
             Custom_01FC = 0x01FC,
@@ -46,13 +45,16 @@ namespace ProjectorRays.director.Scores
         public static int GetDataLength(ScoreKeyframeTag tag)
         {
             return tag switch
-            {
-                ScoreKeyframeTag.Ink => 2, // 0x0136
-                ScoreKeyframeTag.ForegroundColor => 2, // 0x0182 (FG + BG)
-                ScoreKeyframeTag.Blend => 6, // 0x0190 (Width + Height + Blend)
-                ScoreKeyframeTag.Rotation => 2, // 0x019E
-                ScoreKeyframeTag.Skew => 2, // 0x01A2
-                ScoreKeyframeTag.Position => 4, // 0x01EC (LocH + LocV)
+            {                                                                       // composed
+                                                                                    // tag = 01 90     0001 1001 0000 = Size + Blend
+
+                ScoreKeyframeTag.Size => 2, //                                         tag = 01 30     0001 0011 0000 = Size
+                ScoreKeyframeTag.Ink => 2, // 0x0136                                   
+                ScoreKeyframeTag.Colors => 2, // 0x0182 (FG + BG)                      tag = 02 12     0010 0001 0010
+                ScoreKeyframeTag.Blend => 6, // 0x0190                                 tag = 01 20     0001 0010 0000 = Blend  ???????       <- is wrong probably
+                ScoreKeyframeTag.Rotation => 2, // 0x019E                              tag = 01 9E     0001 1001 1110
+                ScoreKeyframeTag.Skew => 2, // 0x01A2                                  tag = 01 D2     0001 1010 0010
+                ScoreKeyframeTag.Position => 4, // 0x01EC (LocH + LocV)                tag = 01 5C     0001 0101 1100
 
                 // These are unknown/customs but often seen with a fixed length of 0 or placeholder
                 ScoreKeyframeTag.Custom_01C6 => 4,
@@ -62,7 +64,6 @@ namespace ProjectorRays.director.Scores
                 ScoreKeyframeTag.Custom_0202 => 4,
                 ScoreKeyframeTag.Custom_0200 => 2,
                 ScoreKeyframeTag.Custom_0210 => 2,
-                ScoreKeyframeTag.Custom_0212 => 2,
                 ScoreKeyframeTag.Custom_0132 => 2,
                 ScoreKeyframeTag.Custom_0150 => 0,
                 ScoreKeyframeTag.Custom_015A => 0,
@@ -72,7 +73,6 @@ namespace ProjectorRays.director.Scores
                 ScoreKeyframeTag.Custom_01B0 => 0,
                 ScoreKeyframeTag.Custom_01BA => 0,
                 ScoreKeyframeTag.Custom_01CE => 2,
-                ScoreKeyframeTag.Custom_01D2 => 2,
 
                 _ => 0 // Unknown or unhandled
             };
@@ -118,7 +118,7 @@ namespace ProjectorRays.director.Scores
                         keyframe.Ink = reader.ReadInt16();
                         break;
 
-                    case ScoreKeyframeTag.ForegroundColor:
+                    case ScoreKeyframeTag.Colors:
                         keyframe.ForeColor = reader.ReadUint8();
                         keyframe.BackColor = reader.ReadUint8();
                         break;

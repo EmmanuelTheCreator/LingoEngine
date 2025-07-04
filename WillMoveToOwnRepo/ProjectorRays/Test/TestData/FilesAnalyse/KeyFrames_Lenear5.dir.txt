@@ -3,21 +3,25 @@ KeyFrames_Lenear5.dir
  actualSize: 302 , SpriteChannelCount: 150, spriteSize: 48, HighestFrameNumber: 55
  unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| unkD1: 8
  872	1744
- MappingTable:310(256), 2(2), 8(2)
+ 
  Item Desc. 0: Start=5, End=55, Channel=6, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
 
 [HEADER]
 00 00 01 2E 00 00 00 14 00 00 00 37 00 0D 00 30 
-03 EE 00 96 00 08 00 02 01 36 01 00 00 02 00 02 
-00 02 00 36 
+03 EE 00 96 
+00 08 
+00 02 01 36 01 00  00 02 00 02 00 02   -> skip 4 frames
+
+00 36 <- Full block size in bytes = 54
 -------------
-00 30 [STARTKEYFRAME]
+00 30 [STARTKEYFRAME]  <- 48 bytes
 01 20 10 00 FF 00 00 01 00 03 00 00 00 06 00 82 
 00 25 00 13 00 41 00 00 01 00 00 00 00 00 00 00 
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
 -------------
+
+00 00 00 08 <- rest from the previous block
 [UNKOWN]
-00 00 00 08 
 00 02 01 36 81 00 00 02 00 02 00 02 00 08 
 00 02 01 36 01 00 00 08 
 00 02 01 36 81 00 00 02 00 02 00 02 00 08 
