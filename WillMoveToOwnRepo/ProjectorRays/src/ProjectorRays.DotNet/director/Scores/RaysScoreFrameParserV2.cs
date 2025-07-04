@@ -87,22 +87,47 @@ internal class RaysScoreFrameParserV2
         int size = length > 0 ? length : header.SpriteSize;
         var view = stream.ReadByteView(size, "spriteBlock", ctx.ToDict());
         var rs = new ReadStream(view, Endianness.BigEndian, annotator: ctx.Annotator);
-        RaySprite sprite = RaysScoreReader.ReadChannelSprite(rs, _logger, RayKeyframeEnabled.None, ctx.ToDict());
-        int channel = ctx.CurrentSprite + 6;
-        if (ctx.ChannelToDescriptor.TryGetValue(channel, out var desc))
+
+        RayKeyframeBlock block = new()
         {
-            sprite.StartFrame = desc.StartFrame;
-            sprite.EndFrame = desc.EndFrame;
-            sprite.SpriteNumber = desc.Channel;
-            sprite.Behaviors.AddRange(desc.Behaviors);
-            sprite.ExtraValues.AddRange(desc.ExtraValues);
+            Offset = rs.ReadUint16("offset", ctx.ToDict()),
+            TimeMarker = rs.ReadUint16("timeMarker", ctx.ToDict()),
+            Width = rs.ReadUint16("width", ctx.ToDict()),
+            Height = rs.ReadUint16("height", ctx.ToDict()),
+            LocH = rs.ReadUint16("locH", ctx.ToDict()),
+            LocV = rs.ReadUint16("locV", ctx.ToDict()),
+            Rotation = rs.ReadUint16("rot", ctx.ToDict()),
+            BlendRaw = rs.ReadUint8("blendRaw", ctx.ToDict()),
+            ForeColor = rs.ReadUint8("foreColor", ctx.ToDict()),
+            BackColor = rs.ReadUint8("backColor", ctx.ToDict()),
+            Padding1 = rs.ReadUint8("pad1", ctx.ToDict()),
+            Padding2 = rs.ReadUint8("pad2", ctx.ToDict())
+        };
+
+        var remaining = size - rs.Position;
+        if (remaining > 0)
+            rs.Skip(remaining);
+
+        int channel = ctx.CurrentSprite + 6;
+        RaysScoreReader.IntervalDescriptor desc;
+        if (ctx.ChannelToDescriptor.TryGetValue(channel, out var known))
+        {
+            desc = known;
         }
         else
         {
-            sprite.StartFrame = ctx.CurrentFrame;
-            sprite.EndFrame = ctx.CurrentFrame;
-            sprite.SpriteNumber = channel;
+            desc = new RaysScoreReader.IntervalDescriptor
+            {
+                StartFrame = ctx.CurrentFrame,
+                EndFrame = ctx.CurrentFrame,
+                Channel = channel
+            };
         }
+
+        RaySprite sprite = RaySpriteFactory.CreateSpriteFromBlock(block, desc);
+        sprite.Behaviors.AddRange(desc.Behaviors);
+        sprite.ExtraValues.AddRange(desc.ExtraValues);
+        sprite.SpriteNumber = channel;
         sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, sprite.StartFrame));
         return sprite;
     }
@@ -132,7 +157,19 @@ internal class RaysScoreFrameParserV2
             if (data.Length >= 2)
             {
                 ushort flags = BinaryPrimitives.ReadUInt16BigEndian(data);
-                if ((flags & RayScoreTagsV2.KeyframeCreateFlag) == RayScoreTagsV2.KeyframeCreateFlag)
+
+                const ushort CreateKeyframeBit = 0x8000;
+                const ushort AdvanceFrameMask = 0x7F00;
+
+                bool createKeyframe = (flags & CreateKeyframeBit) != 0;
+                int framesToAdvance = (flags & AdvanceFrameMask) >> 8;
+
+                if (framesToAdvance == 0)
+                    framesToAdvance = 1;
+
+                ctx.CurrentFrame += framesToAdvance;
+
+                if (createKeyframe)
                     sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, ctx.CurrentFrame));
             }
             return;
