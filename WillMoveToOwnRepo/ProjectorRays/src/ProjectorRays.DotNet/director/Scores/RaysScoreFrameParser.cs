@@ -199,13 +199,18 @@ namespace ProjectorRays.director.Scores
 
 
         /*
+
+       
+        I'm not sure nut I think tags change depending on files. So it can be that every tag is a point to memory, with there the real command. Unsure.
+        We need to understaand all "head' tags. What I mean, we need to keep in memory: curent frame + current channel. We saw that we had a next frame.  
+
         Custom bytes blocks for keyframes:
         ----------------------------------
         Byte 1 : Unkown
         ---------------
         
         numbers found 
-        02: key frame one blank
+        02: key frame, skip one frame
         08: 
         26: 
         28: 
@@ -224,12 +229,28 @@ namespace ProjectorRays.director.Scores
         ----------------------------------------------
         01 → a real keyframe
         81 → no new keyframe, just continuation or tween data
+        Important -> it can be that 01 and 08 are flags togther with an offset in one byte. : 8-th bit can be  the sign flag
+
         Then next byte: 
         02 advance one keyframe
+
+        00 02 01 36 81 -> real key frame => advance, every next following 00 02 seems to be a repeat previous command, or next frame.
+        00 02 01 36 01 -> no key frame => idem
+        00 08 -> seem to be end of byte-frame. 
+
+
+        
+        HOW TO read:
+        2 bytes: the number of bytes to read after the tag
+        2 bytes : the tag        -> it is not impossible that all the tags reference a mapping table, so in each addres (tag), there you see what the commmand realy is
+                                 -> or it is possible we need to work with bit flags
+        X bytes : read the number if bytes
+        
+        
+        
+        
+
         */
-
-
-
         private void ReadFrameData(ReadStream readerSource)
         {
            // log all bytes
@@ -264,6 +285,8 @@ namespace ProjectorRays.director.Scores
             // Log the parsed header values for verification
             _logger.LogInformation($"DB | actualSize: {actualSize}, SpriteChannelCount: {SpriteChannelCount}, spriteSize: {SpriteSize}, HighestFrameNumber: {HighestFrameNumber}");
             _logger.LogInformation($"DB | unkA1: {unkA1}, unkA2: {unkA2}, unkA3: {unkA3}, unkA4: {unkA4} | unkB1: {unkB1}: unkB2: {unkB2}| unkC1: {unkC1}: unkC2: {unkC2}| unkD1: {unkD1}");
+
+            // TODO: fix : this is not the mapping table, this is already start reading 
             var offsetTable = new List<int>();
             
             var mappingTables = new List<(int offset, int size)>();

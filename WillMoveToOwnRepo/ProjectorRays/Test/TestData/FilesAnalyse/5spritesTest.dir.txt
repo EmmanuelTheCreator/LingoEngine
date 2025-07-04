@@ -33,15 +33,17 @@ something1=224, something2=16
  ---------------
 [HEADER]
 00 00 02 9E 00 00 00 14 00 00 00 0F 00 0D 00 30 
-03 EE 00 96 00 36 
+03 EE 00 96 
+00 36 <- Full block size in bytes = 54 , 00 means key frame, 36 means size?
  ---------------
-00 30 [STARTKEYFRAME]
+00 30 [STARTKEYFRAME] <- 48 bytes
 01 20 10 00 C8 64 00 01 00 02 00 00 00 12 00 0A 
 00 09 00 11 00 11 00 B2 11 00 00 00 00 00 00 00 
 04 56 00 00 04 60 00 00 00 00 00 00 00 00 00 00
 ---------------
+00 00 00 08               <- rest from the previous block
 [UNKOWN] 1.
-00 00 00 08              ; Length = 8 bytes (possibly only for next block?)
+
 
 00 02 
 01 36                   ; Tag 0136 (Path: LocH/LocV)
