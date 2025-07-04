@@ -16,6 +16,8 @@ internal class RaysScoreFrameParserV2
 {
     private readonly ILogger _logger;
     private readonly RayStreamAnnotatorDecorator _annotator;
+    private readonly RaysScoreReader _reader;
+
     public RayStreamAnnotatorDecorator Annotator => _annotator;
 
 
@@ -25,26 +27,26 @@ internal class RaysScoreFrameParserV2
     {
         _logger = logger;
         _annotator = annotator;
+        _reader = new RaysScoreReader(logger);
     }
 
     public List<RaySprite> ParseScore(ReadStream stream, int entryCount)
     {
         stream.Endianness = Endianness.BigEndian;
 
-        var sprites = new List<RaySprite>();
-        var spriteMap = new Dictionary<int, RaySprite>();
-        var ctx = new RayScoreParseContext(_annotator, spriteMap, sprites, _logger);
+       
+        var ctx = new RayScoreParseContext(_annotator, _logger, _reader);
 
         ctx.ReadAllIntervals(entryCount, stream);
         ctx.ReadFrameDescriptors();
         ctx.ReadBehaviors();
 
-        RaysScoreReader.ScoreHeader header = RaysScoreReader.ReadHeader(stream);
+        RaysScoreReader.ScoreHeader header = _reader.ReadHeader(stream);
         _logger.LogDebug($"Score header: size={header.ActualSize} frames={header.HighestFrame} channels={header.ChannelCount}");
 
         ParseBlock(stream, header.ActualSize - 20, header, ctx);
 
-        return sprites;
+        return ctx.Sprites;
     }
 
     private void ParseBlock(ReadStream stream, int length, RaysScoreReader.ScoreHeader header, RayScoreParseContext ctx)
@@ -53,7 +55,7 @@ internal class RaysScoreFrameParserV2
         ctx.BlockDepth++;
         while (stream.Position < end && stream.BytesLeft >= 2)
         {
-            ushort prefix = stream.ReadUint16("prefix", ctx.ToDict());
+            ushort prefix = stream.ReadUint16("prefix", ctx.GetAnnotationKeys());
             if (prefix == RayScoreTagsV2.BlockEnd)
             {
                 ctx.BlockDepth--;
@@ -73,8 +75,8 @@ internal class RaysScoreFrameParserV2
                 continue;
             }
 
-            ushort tag = stream.ReadUint16("tag", ctx.ToDict());
-            byte[] data = prefix > 0 ? stream.ReadBytes(prefix, "tagData", ctx.ToDict()) : Array.Empty<byte>();
+            ushort tag = stream.ReadUint16("tag", ctx.GetAnnotationKeys());
+            byte[] data = prefix > 0 ? stream.ReadBytes(prefix, "tagData", ctx.GetAnnotationKeys()) : Array.Empty<byte>();
             HandleTag(tag, data, ctx);
         }
         ctx.BlockDepth--;
@@ -84,29 +86,8 @@ internal class RaysScoreFrameParserV2
 
     private RaySprite ParseSpriteBlock(ReadStream stream, RaysScoreReader.ScoreHeader header, RayScoreParseContext ctx, int length = -1)
     {
-        int size = length > 0 ? length : header.SpriteSize;
-        var view = stream.ReadByteView(size, "spriteBlock", ctx.ToDict());
-        var rs = new ReadStream(view, Endianness.BigEndian, annotator: ctx.Annotator);
-
-        RayKeyframeBlock block = new()
-        {
-            Offset = rs.ReadUint16("offset", ctx.ToDict()),
-            TimeMarker = rs.ReadUint16("timeMarker", ctx.ToDict()),
-            Width = rs.ReadUint16("width", ctx.ToDict()),
-            Height = rs.ReadUint16("height", ctx.ToDict()),
-            LocH = rs.ReadUint16("locH", ctx.ToDict()),
-            LocV = rs.ReadUint16("locV", ctx.ToDict()),
-            Rotation = rs.ReadUint16("rot", ctx.ToDict()),
-            BlendRaw = rs.ReadUint8("blendRaw", ctx.ToDict()),
-            ForeColor = rs.ReadUint8("foreColor", ctx.ToDict()),
-            BackColor = rs.ReadUint8("backColor", ctx.ToDict()),
-            Padding1 = rs.ReadUint8("pad1", ctx.ToDict()),
-            Padding2 = rs.ReadUint8("pad2", ctx.ToDict())
-        };
-
-        var remaining = size - rs.Position;
-        if (remaining > 0)
-            rs.Skip(remaining);
+        //RayKeyframeBlock block = ReadSprite(stream, header, ctx, length);
+        var sprite = _reader.ReadChannelSprite(stream, ctx);
 
         int channel = ctx.CurrentSprite + 6;
         RaysScoreReader.IntervalDescriptor desc;
@@ -116,6 +97,7 @@ internal class RaysScoreFrameParserV2
         }
         else
         {
+            _logger.LogError($"No descriptor found for channel {channel} at frame {ctx.CurrentFrame}. Creating default descriptor.");
             desc = new RaysScoreReader.IntervalDescriptor
             {
                 StartFrame = ctx.CurrentFrame,
@@ -124,7 +106,6 @@ internal class RaysScoreFrameParserV2
             };
         }
 
-        RaySprite sprite = RaySpriteFactory.CreateSpriteFromBlock(block, desc);
         sprite.Behaviors.AddRange(desc.Behaviors);
         sprite.ExtraValues.AddRange(desc.ExtraValues);
         sprite.SpriteNumber = channel;
@@ -132,6 +113,7 @@ internal class RaysScoreFrameParserV2
         return sprite;
     }
 
+  
 
     private void HandleTag(ushort tag, byte[] data, RayScoreParseContext ctx)
     {

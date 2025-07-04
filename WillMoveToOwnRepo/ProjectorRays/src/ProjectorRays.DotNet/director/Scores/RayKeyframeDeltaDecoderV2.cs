@@ -16,57 +16,57 @@ internal static class RayKeyframeDeltaDecoderV2
         switch (tag)
         {
             case ScoreTagV2.Size:
-                kf.Width = rs.ReadInt16("width", ctx.ToDict());
-                kf.Height = rs.ReadInt16("height", ctx.ToDict());
+                kf.Width = rs.ReadInt16("width", ctx.GetAnnotationKeys());
+                kf.Height = rs.ReadInt16("height", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Position:
-                kf.LocH = rs.ReadInt16("locH", ctx.ToDict());
-                kf.LocV = rs.ReadInt16("locV", ctx.ToDict());
+                kf.LocH = rs.ReadInt16("locH", ctx.GetAnnotationKeys());
+                kf.LocV = rs.ReadInt16("locV", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Colors:
-                kf.ForeColor = rs.ReadUint8("foreColor", ctx.ToDict());
-                kf.BackColor = rs.ReadUint8("backColor", ctx.ToDict());
+                kf.ForeColor = rs.ReadUint8("foreColor", ctx.GetAnnotationKeys());
+                kf.BackColor = rs.ReadUint8("backColor", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Ink:
-                kf.Ink = rs.ReadInt16("ink", ctx.ToDict());
+                kf.Ink = rs.ReadInt16("ink", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Rotation:
-                kf.Rotation = rs.ReadInt16("rot", ctx.ToDict()) / 100f;
+                kf.Rotation = rs.ReadInt16("rot", ctx.GetAnnotationKeys()) / 100f;
                 break;
             case ScoreTagV2.Skew:
-                kf.Skew = rs.ReadInt16("skew", ctx.ToDict()) / 100f;
+                kf.Skew = rs.ReadInt16("skew", ctx.GetAnnotationKeys()) / 100f;
                 break;
             case ScoreTagV2.Ease:
-                sprite.EaseIn = rs.ReadUint8("easeIn", ctx.ToDict());
-                sprite.EaseOut = rs.ReadUint8("easeOut", ctx.ToDict());
+                sprite.EaseIn = rs.ReadUint8("easeIn", ctx.GetAnnotationKeys());
+                sprite.EaseOut = rs.ReadUint8("easeOut", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Curvature:
-                sprite.Curvature = rs.ReadUint16("curv", ctx.ToDict());
+                sprite.Curvature = rs.ReadUint16("curv", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.AdvanceFrame:
-                rs.ReadUint16("adv", ctx.ToDict());
+                rs.ReadUint16("adv", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Composite:
-                kf.Width = rs.ReadInt16("width", ctx.ToDict());
-                kf.Height = rs.ReadInt16("height", ctx.ToDict());
-                byte blendRaw = rs.ReadUint8("blendRaw", ctx.ToDict());
+                kf.Width = rs.ReadInt16("width", ctx.GetAnnotationKeys());
+                kf.Height = rs.ReadInt16("height", ctx.GetAnnotationKeys());
+                byte blendRaw = rs.ReadUint8("blendRaw", ctx.GetAnnotationKeys());
                 kf.Blend = 100 - blendRaw * 100 / 255;
-                kf.Ink = rs.ReadUint8("ink", ctx.ToDict());
+                kf.Ink = rs.ReadUint8("ink", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.FrameRect:
-                kf.LocH = rs.ReadInt16("locH", ctx.ToDict());
-                kf.LocV = rs.ReadInt16("locV", ctx.ToDict());
-                kf.Width = rs.ReadInt16("width", ctx.ToDict());
-                kf.Height = rs.ReadInt16("height", ctx.ToDict());
+                kf.LocH = rs.ReadInt16("locH", ctx.GetAnnotationKeys());
+                kf.LocV = rs.ReadInt16("locV", ctx.GetAnnotationKeys());
+                kf.Width = rs.ReadInt16("width", ctx.GetAnnotationKeys());
+                kf.Height = rs.ReadInt16("height", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Flags:
-                rs.ReadUint16("flags", ctx.ToDict());
+                rs.ReadUint16("flags", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.FlagsControl:
-                rs.ReadUint16("flagsCtrl", ctx.ToDict());
+                rs.ReadUint16("flagsCtrl", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.TweenFlags:
-                sprite.TweenFlags = rs.ReadUint8("tweenFlags", ctx.ToDict());
+                sprite.TweenFlags = rs.ReadUint8("tweenFlags", ctx.GetAnnotationKeys());
                 break;
             default:
                 break;

@@ -1,5 +1,5 @@
 using ProjectorRays.Common;
-using System.Collections.Generic;
+using System.Reflection.PortableExecutable;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
@@ -9,22 +9,14 @@ namespace ProjectorRays.director.Scores;
 /// </summary>
 internal class RayScoreParseContext
 {
-    public RayScoreParseContext(RayStreamAnnotatorDecorator annotator,
-        Dictionary<int, RaySprite> spriteMap, List<RaySprite> sprites,
-        Microsoft.Extensions.Logging.ILogger logger)
-    {
-        Annotator = annotator;
-        SpriteMap = spriteMap;
-        Sprites = sprites;
-        Logger = logger;
-    }
+    private readonly RaysScoreReader _reader;
 
     public RayStreamAnnotatorDecorator Annotator { get; }
-    public Dictionary<int, RaySprite> SpriteMap { get; }
-    public List<RaySprite> Sprites { get; }
+    public Dictionary<int, RaySprite> SpriteMap { get; } = new();
+    public List<RaySprite> Sprites { get; } = new();
     public Microsoft.Extensions.Logging.ILogger Logger { get; }
 
-    public BufferView FrameDataBufferView { get; private set; }
+    public BufferView? FrameDataBufferView { get; private set; }
     public List<BufferView> FrameIntervalDescriptorBuffers { get; } = new();
     public List<BufferView> BehaviorScriptBuffers { get; } = new();
     public List<RaysScoreReader.IntervalDescriptor> Descriptors { get; } = new();
@@ -36,6 +28,14 @@ internal class RayScoreParseContext
     public int CurrentSprite { get; private set; }
     public int BlockDepth { get; set; }
     public int UpcomingBlockSize { get; set; }
+
+
+    public RayScoreParseContext(RayStreamAnnotatorDecorator annotator,Microsoft.Extensions.Logging.ILogger logger, RaysScoreReader reader)
+    {
+        Annotator = annotator;
+        Logger = logger;
+        _reader = reader;
+    }
 
     public void SetCurrentFrame(int frame) => CurrentFrame = frame;
 
@@ -63,7 +63,7 @@ internal class RayScoreParseContext
         return sprite;
     }
 
-    public Dictionary<string, int> ToDict() => new()
+    public Dictionary<string, int> GetAnnotationKeys() => new()
     {
         ["frame"] = CurrentFrame,
         ["sprite"] = CurrentSprite
@@ -139,7 +139,7 @@ internal class RayScoreParseContext
         {
             var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian,
                 annotator: Annotator);
-            var descriptor = RaysScoreReader.ReadFrameIntervalDescriptor(ind, ps);
+            var descriptor = _reader.ReadFrameIntervalDescriptor(ind, ps);
             if (descriptor != null)
             {
                 Descriptors.Add(descriptor);

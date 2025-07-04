@@ -1,11 +1,13 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
 
-internal static class RaysScoreReader
+internal class RaysScoreReader
 {
+    private readonly ILogger _logger;
+
     internal record ScoreHeader(
         int ActualSize,
         byte UnkA1,
@@ -21,7 +23,12 @@ internal static class RaysScoreReader
         short ChannelCount,
         short FirstBlockSize);
 
-    internal static ScoreHeader ReadHeader(ReadStream stream)
+    public RaysScoreReader(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    internal ScoreHeader ReadHeader(ReadStream stream)
     {
         int actualSize = stream.ReadInt32("actualSize");
         byte unkA1 = stream.ReadUint8("unkA1");
@@ -42,19 +49,46 @@ internal static class RaysScoreReader
             firstBlockSize);
     }
 
-    internal static RaySprite ReadChannelSprite(ReadStream stream, ILogger logger,
-        RayKeyframeEnabled flags, Dictionary<string, int>? keys = null)
+    //private static RayKeyframeBlock ReadSprite(ReadStream stream, RaysScoreReader.ScoreHeader header, RayScoreParseContext ctx, int length)
+    //{
+    //    int size = length > 0 ? length : header.SpriteSize;
+    //    var view = stream.ReadByteView(size, "spriteBlock", ctx.ToDict());
+    //    var rs = new ReadStream(view, Endianness.BigEndian, annotator: ctx.Annotator);
+
+    //    RayKeyframeBlock block = new()
+    //    {
+    //        Offset = rs.ReadUint16("offset", ctx.ToDict()),
+    //        TimeMarker = rs.ReadUint16("timeMarker", ctx.ToDict()),
+    //        Width = rs.ReadUint16("width", ctx.ToDict()),
+    //        Height = rs.ReadUint16("height", ctx.ToDict()),
+    //        LocH = rs.ReadUint16("locH", ctx.ToDict()),
+    //        LocV = rs.ReadUint16("locV", ctx.ToDict()),
+    //        Rotation = rs.ReadUint16("rot", ctx.ToDict()),
+    //        BlendRaw = rs.ReadUint8("blendRaw", ctx.ToDict()),
+    //        ForeColor = rs.ReadUint8("foreColor", ctx.ToDict()),
+    //        BackColor = rs.ReadUint8("backColor", ctx.ToDict()),
+    //        Padding1 = rs.ReadUint8("pad1", ctx.ToDict()),
+    //        Padding2 = rs.ReadUint8("pad2", ctx.ToDict())
+    //    };
+
+    //    var remaining = size - rs.Position;
+    //    if (remaining > 0)
+    //        rs.Skip(remaining);
+    //    return block;
+    //}
+
+    public RaySprite ReadChannelSprite(ReadStream stream, RayScoreParseContext ctx)
     {
         var sprite = new RaySprite();
-
+        var keys = ctx.GetAnnotationKeys();
         var flags1 = stream.ReadUint8();
-        logger.LogInformation("Sprite flags=" + flags1);
+        _logger.LogInformation("Sprite flags=" + flags1);
 
         if ((flags1 & 0xFF) != 0 && (flags1 & 0x10) == 0)
         {
             var keyframeType = stream.ReadUint8();
             var keyframeSize = stream.ReadUint8();
-            logger.LogInformation($"something1={keyframeType}, something2={keyframeSize}");
+            _logger.LogInformation($"something1={keyframeType}, something2={keyframeSize}");
         }
 
         byte inkByte = stream.ReadUint8("ink", keys);
@@ -84,11 +118,11 @@ internal static class RaysScoreReader
             sprite.Skew = stream.ReadInt32("skew", keys) / 100f;
         }
 
-        logger.LogInformation($"{sprite.LocH}x{sprite.LocV}:Ink={sprite.Ink}:Blend={sprite.Blend}:Skew={sprite.Skew}:Rot={sprite.Rotation}:PropOffset={sprite.SpritePropertiesOffset}:Member={sprite.MemberCastLib},{sprite.MemberNum}");
+        _logger.LogInformation($"{sprite.LocH}x{sprite.LocV}:Ink={sprite.Ink}:Blend={sprite.Blend}:Skew={sprite.Skew}:Rot={sprite.Rotation}:PropOffset={sprite.SpritePropertiesOffset}:Member={sprite.MemberCastLib},{sprite.MemberNum}");
         return sprite;
     }
 
-    internal static IntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
+    internal IntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
     {
         if (stream.Size < 44)
             return null;
@@ -98,7 +132,18 @@ internal static class RaysScoreReader
         desc.StartFrame = stream.ReadInt32("startFrame", k);
         desc.EndFrame = stream.ReadInt32("endFrame", k);
         desc.Unknown1 = stream.ReadInt32("unk1", k);
-        desc.Unknown2 = stream.ReadInt32("unk2", k);
+
+        // Correctly cast to flag enum and extract bitfield
+        var flags = (SpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
+
+        desc.FlipH = flags.HasFlag(SpriteFlags.FlipH);
+        desc.FlipV = flags.HasFlag(SpriteFlags.FlipV);
+        desc.Editable = flags.HasFlag(SpriteFlags.Editable);
+        desc.Moveable = flags.HasFlag(SpriteFlags.Moveable);
+        desc.Trails = flags.HasFlag(SpriteFlags.Trails);
+        desc.IsLocked = flags.HasFlag(SpriteFlags.Locked);
+
+
         desc.Channel = stream.ReadInt32("channel", k);
         desc.UnknownAlwaysOne = stream.ReadInt16("const1", k);
         desc.UnknownNearConstant15_0 = stream.ReadInt32("const15", k);
@@ -108,6 +153,7 @@ internal static class RaysScoreReader
         desc.Unknown8 = stream.ReadInt32("unk8", k);
         while (stream.Pos + 4 <= stream.Size)
             desc.ExtraValues.Add(stream.ReadInt32("extra", k));
+        _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, Flip={desc.FlipH},{desc.FlipV},🔒={desc.IsLocked}, , U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
         return desc;
     }
 
@@ -141,5 +187,11 @@ internal static class RaysScoreReader
         public List<int> ExtraValues { get; } = new();
         public int Channel { get; internal set; }
         public List<RaysBehaviourRef> Behaviors { get; internal set; } = new List<RaysBehaviourRef>();
+        public bool FlipH { get; internal set; }
+        public bool FlipV { get; internal set; }
+        public bool Editable { get; internal set; }
+        public bool Moveable { get; internal set; }
+        public bool Trails { get; internal set; }
+        public bool IsLocked { get; internal set; }
     }
 }

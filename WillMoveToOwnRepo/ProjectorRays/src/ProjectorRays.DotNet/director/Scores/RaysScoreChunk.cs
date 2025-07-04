@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
 using ProjectorRays.director.Chunks;
 using ProjectorRays.Director;
+using System.Reflection.PortableExecutable;
 using static ProjectorRays.director.Scores.RaysScoreFrameParser;
 using static ProjectorRays.director.Scores.RaysScoreFrameParserV2;
 
@@ -133,6 +134,9 @@ public class RaysScoreChunk : RaysChunk
         public bool FlipH {get; internal set; }
         public bool FlipV {get; internal set; }
         public bool Editable { get; internal set; }
+        public bool Moveable { get; internal set; }
+        public bool Trails { get; internal set; }
+        public bool IsLocked { get; internal set; }
 
         public byte EaseIn { get; set; }
         public byte EaseOut { get; set; }
@@ -146,26 +150,52 @@ public class RaysScoreChunk : RaysChunk
         public int LocZ { get; set; }
     }
 
-    public record RayKeyframeBlock
+    //public record RayKeyframeBlock
+    //{
+    //    /// <summary>
+    //    /// Offset from previous key frame
+    //    /// </summary>
+    //    public ushort Offset;          
+    //    public ushort TimeMarker;      // maybe frame
+    //    public ushort Width;
+    //    public ushort Height;
+    //    public ushort LocH;
+    //    public ushort LocV;
+    //    public ushort Rotation;
+    //    public byte BlendRaw;          // blend = 100 - BlendRaw
+    //    public byte ForeColor;
+    //    public byte BackColor;
+    //    public byte Padding1;
+    //    public byte Padding2;
+    //}
+
+
+    /// <summary>
+    /// Flags used in Director sprite control byte (Flip/Edit/Trail/Lock/etc).
+    /// </summary>
+    [Flags]
+    internal enum SpriteFlags : byte
     {
-        /// <summary>
-        /// Offset from previous key frame
-        /// </summary>
-        public ushort Offset;          
-        public ushort TimeMarker;      // maybe frame
-        public ushort Width;
-        public ushort Height;
-        public ushort LocH;
-        public ushort LocV;
-        public ushort Rotation;
-        public byte BlendRaw;          // blend = 100 - BlendRaw
-        public byte ForeColor;
-        public byte BackColor;
-        public byte Padding1;
-        public byte Padding2;
+        None = 0,
+
+        /// <summary>Sprite is flipped horizontally.</summary>
+        FlipH = 1 << 0, // 0x01
+
+        /// <summary>Sprite is flipped vertically.</summary>
+        FlipV = 1 << 6, // 0x40
+
+        /// <summary>Sprite is editable at runtime (typically for text sprites).</summary>
+        Editable = 1 << 5, // 0x20
+
+        /// <summary>Sprite is moveable during playback.</summary>
+        Moveable = 1 << 4, // 0x10
+
+        /// <summary>Sprite leaves a trail behind while moving.</summary>
+        Trails = 1 << 3, // 0x08
+
+        /// <summary>Sprite is locked and cannot be edited.</summary>
+        Locked = 1 << 2  // 0x04
     }
-
-
 
     /// <summary>Default sprite data for a channel.</summary>
     //public class RaysChannelSprite
@@ -216,16 +246,41 @@ public class RaysScoreChunk : RaysChunk
         int entryCount = stream.ReadInt32();
         int notationBase = stream.ReadInt32(); // entryCountPlus1
         int entrySizeSum = stream.ReadInt32();
-        
+
 
         //Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
 
         int entriesStart = stream.Pos;
+        
         Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
         var parser = new RaysScoreFrameParserV2(Dir.Logger, Annotator);
-        Sprites = parser.ParseScore(stream, entryCount);
+        try
+        {
+            Sprites = parser.ParseScore(stream, entryCount);
+        }
+        catch (Exception ex)
+        {
+            System.IO.File.WriteAllText("c:\\temp\\director\\tes.md", StreamAnnotationMarkdownWriter.WriteMarkdown(Annotator, stream.Data));
+            throw ex;
+        }
+        finally
+        {
+
+            
+        }
+        System.IO.File.WriteAllText("c:\\temp\\director\\tes.md", StreamAnnotationMarkdownWriter.WriteMarkdown(Annotator, stream.Data));
         return;
 
+
+        //int entriesStart = stream.Pos;
+        //Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
+        //var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, Annotator);
+        //scoreFrameParser.ReadAllIntervals(entryCount, stream);
+        //scoreFrameParser.ReadFrameData();
+        //scoreFrameParser.ReadFrameDescriptors();
+        //scoreFrameParser.ReadBehaviors();
+        //Sprites = scoreFrameParser.ReadAllFrameSprites();
+        //return;
 
         //var spriteStates = scoreFrameParser.ParseAllFrameDeltasSafe();
 

@@ -803,6 +803,7 @@ Ease-out : 1 byte?
         }
 
 
+       
         private IntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
         {
             if (stream.Size < 44)
@@ -813,7 +814,17 @@ Ease-out : 1 byte?
             desc.StartFrame = stream.ReadInt32("startFrame", k);
             desc.EndFrame = stream.ReadInt32("endFrame", k);
             desc.Unknown1 = stream.ReadInt32("unk1", k);
-            desc.Unknown2 = stream.ReadInt32("unk2", k);
+
+            // Correctly cast to flag enum and extract bitfield
+            var flags = (SpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
+
+            desc.FlipH = flags.HasFlag(SpriteFlags.FlipH);
+            desc.FlipV = flags.HasFlag(SpriteFlags.FlipV);
+            desc.Editable = flags.HasFlag(SpriteFlags.Editable);
+            desc.Moveable = flags.HasFlag(SpriteFlags.Moveable);
+            desc.Trails = flags.HasFlag(SpriteFlags.Trails);
+            desc.IsLocked = flags.HasFlag(SpriteFlags.Locked);
+
             desc.Channel = stream.ReadInt32("channel", k); // after top channels , so start at 6 if 2 audio channels
             desc.UnknownAlwaysOne = stream.ReadInt16("const1", k); // seems always 1
             desc.UnknownNearConstant15_0 = stream.ReadInt32("const15", k);  // always 0F
@@ -825,7 +836,7 @@ Ease-out : 1 byte?
             desc.Unknown8 = stream.ReadInt32("unk8", k);
             while (stream.Pos + 4 <= stream.Size)
                 desc.ExtraValues.Add(stream.ReadInt32("extra", k));
-            _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, U2={desc.Unknown2}, U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
+            _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, U2={desc.flagsBit}, U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
             return desc;
         }
 
@@ -918,7 +929,7 @@ Ease-out : 1 byte?
             public int StartFrame { get; internal set; }
             public int EndFrame { get; internal set; }
             public int Unknown1 { get; internal set; }
-            public int Unknown2 { get; internal set; }
+            public int flagsBit { get; internal set; }
             public int SpriteNumber { get; internal set; }
             public int UnknownAlwaysOne { get; internal set; }
             public int UnknownNearConstant15_0 { get; internal set; }
@@ -929,6 +940,13 @@ Ease-out : 1 byte?
             public List<int> ExtraValues { get; } = new();
             public int Channel { get; internal set; }
             public List<RaysBehaviourRef> Behaviors { get; internal set; } = new List<RaysBehaviourRef>();
+            public bool IsLocked { get; internal set; }
+            public bool IsVisible { get; internal set; }
+            public bool FlipH { get; internal set; }
+            public bool FlipV { get; internal set; }
+            public bool Editable { get; internal set; }
+            public bool Moveable { get; internal set; }
+            public bool Trails { get; internal set; }
         }
 
 
