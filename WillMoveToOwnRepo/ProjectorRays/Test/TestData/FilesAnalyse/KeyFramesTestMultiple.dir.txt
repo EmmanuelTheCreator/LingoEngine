@@ -1,7 +1,7 @@
 KeyFramesTestMultiple.dir
 ------------
  actualSize: 1908, SpriteChannelCount: 150, spriteSize: 48, HighestFrameNumber: 44
- unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| unkD1: 66
+ unkA1: 0, unkA2: 0, unkA3: 0, unkA4: 20 | unkB1: 0: unkB2: 13| unkC1: 3: unkC2: -18| FirstBlockSize: 66
  872	1744
 
  

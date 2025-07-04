@@ -226,6 +226,7 @@ namespace ProjectorRays.director.Scores
         | `02 62`     | **UnkD1 (used channels?)**                     | Seen in headers, `0x0262 = 610`, likely keyframe sprite offset.       |
         | `03 EE`     | **Header marker or channel offset max**        | Common in headers, possibly total block size or max pointer.          |
 
+        Tweening: The tweening are not keyframe based but sprite based!
 
         Custom bytes blocks for keyframes:
         ----------------------------------
@@ -301,13 +302,13 @@ namespace ProjectorRays.director.Scores
             var unkC1 = reader.ReadInt8(); // "const6"
             var unkC2 = reader.ReadInt8();
             SpriteChannelCount = reader.ReadInt16("SpriteChannelCount");
-            var unkD1 = reader.ReadInt16();
+            var firstBlockSize = reader.ReadInt16();
 
             // TotalSpriteCount = Something + 6;
 
             // Log the parsed header values for verification
             _logger.LogInformation($"DB | actualSize: {actualSize}, SpriteChannelCount: {SpriteChannelCount}, spriteSize: {SpriteSize}, HighestFrameNumber: {HighestFrameNumber}");
-            _logger.LogInformation($"DB | unkA1: {unkA1}, unkA2: {unkA2}, unkA3: {unkA3}, unkA4: {unkA4} | unkB1: {unkB1}: unkB2: {unkB2}| unkC1: {unkC1}: unkC2: {unkC2}| unkD1: {unkD1}");
+            _logger.LogInformation($"DB | unkA1: {unkA1}, unkA2: {unkA2}, unkA3: {unkA3}, unkA4: {unkA4} | unkB1: {unkB1}: unkB2: {unkB2}| unkC1: {unkC1}: unkC2: {unkC2}| FirstBlockSize: {firstBlockSize}");
 
             // TODO: fix : this is not the mapping table, this is already start reading 
             var offsetTable = new List<int>();
