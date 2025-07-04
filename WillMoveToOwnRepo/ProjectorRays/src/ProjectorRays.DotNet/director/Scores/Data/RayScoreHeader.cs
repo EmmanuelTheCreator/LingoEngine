@@ -14,7 +14,7 @@ internal record RayScoreHeader
     public byte UnkC1 {get; set; }
     public byte UnkC2 {get; set; }
     public short ChannelCount {get; set; }
-    public short FirstBlockSize { get; set; }
+    //public short FirstBlockSize { get; set; }
     public int EntryCount { get; internal set; }
     public int EntrySizeSum { get; internal set; }
     public int NotationBase { get; internal set; }

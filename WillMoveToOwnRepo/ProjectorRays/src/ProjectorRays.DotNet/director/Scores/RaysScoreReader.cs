@@ -107,7 +107,7 @@ internal class RaysScoreReader
         header.UnkC1 = stream.ReadUint8("unkC1");
         header.UnkC2 = stream.ReadUint8("unkC2");
         header.ChannelCount = stream.ReadInt16("channelCount");
-        header.FirstBlockSize = stream.ReadInt16("firstBlockSize");
+        //header.FirstBlockSize = stream.ReadInt16("firstBlockSize");
     }
 
 
@@ -188,7 +188,7 @@ internal class RaysScoreReader
         }
     }
    
-    public RaySprite ReadChannelSprite(ReadStream stream, RayScoreParseContext ctx)
+    public RaySprite CreateChannelSprite(ReadStream stream, RayScoreParseContext ctx)
     {
         var startPos = stream.Pos;
         var sprite = new RaySprite();

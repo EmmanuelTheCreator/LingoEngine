@@ -12,7 +12,6 @@ internal class RayScoreParseContext
 {
 
     public RayStreamAnnotatorDecorator Annotator { get; }
-    public Dictionary<int, RaySprite> SpriteMap { get; } = new();
     public List<RaySprite> Sprites { get; } = new();
     public Microsoft.Extensions.Logging.ILogger Logger { get; }
 
@@ -25,10 +24,10 @@ internal class RayScoreParseContext
     //public List<int> IntervalOrder { get; } = new();
 
     public int CurrentFrame { get; private set; }
-    public int CurrentSprite { get; private set; }
+    public int CurrentSpriteNum { get; private set; }
     public int BlockDepth { get; set; }
     public int UpcomingBlockSize { get; set; }
-
+    public bool IsInAdvanceFrameMode { get; private set; }
 
     public RayScoreParseContext(RayStreamAnnotatorDecorator annotator,Microsoft.Extensions.Logging.ILogger logger)
     {
@@ -43,38 +42,51 @@ internal class RayScoreParseContext
 
     public void SetCurrentSprite(int channel)
     {
-        CurrentSprite = channel - 6;
-        if (SpriteMap.TryGetValue(channel, out var sp))
-            CurrentFrame = sp.StartFrame;
+        CurrentSpriteNum = channel - 6;
+        var sprite = Sprites.FirstOrDefault(x => x.SpriteNumber == channel);
+        if (sprite != null)
+            CurrentFrame = sprite.StartFrame;
+      
     }
-
+    public void AddSprite(RaySprite sprite)
+    {
+          Sprites.Add(sprite);
+    }
     public RaySprite GetOrCreateSprite(int channel)
     {
-        if (!SpriteMap.TryGetValue(channel, out var sprite))
+        // todo : smarter system based on begin sprite and end sprite
+        var sprite = Sprites.FirstOrDefault(x => x.SpriteNumber == channel);
+        if (sprite != null)
         {
-            sprite = new RaySprite
-            {
-                SpriteNumber = channel,
-                StartFrame = CurrentFrame,
-                EndFrame = CurrentFrame
-            };
-            sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, CurrentFrame));
-            SpriteMap[channel] = sprite;
-            Sprites.Add(sprite);
+            CurrentFrame = sprite.StartFrame;
+            return sprite;
         }
+
+        
+        sprite = new RaySprite
+        {
+            SpriteNumber = channel,
+            StartFrame = CurrentFrame,
+            EndFrame = CurrentFrame
+        };
+        sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, CurrentFrame));
+        Sprites.Add(sprite);
         return sprite;
     }
 
     public Dictionary<string, int> GetAnnotationKeys() => new()
     {
         ["frame"] = CurrentFrame,
-        ["sprite"] = CurrentSprite
+        ["sprite"] = CurrentSpriteNum
     };
 
-    
 
+
+    internal void ClearAdvanceFrame()
+        => IsInAdvanceFrameMode = false;
     internal void AdvanceFrame(int framesToAdvance)
     {
+        IsInAdvanceFrameMode = true;
          CurrentFrame += framesToAdvance;
     }
 

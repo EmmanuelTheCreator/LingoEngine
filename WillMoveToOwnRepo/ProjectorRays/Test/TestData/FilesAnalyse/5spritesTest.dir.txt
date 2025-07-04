@@ -45,11 +45,10 @@ something1=224, something2=16
 [UNKOWN] 1.
 
 
-00 02 
-01 36                   ; Tag 0136 (Path: LocH/LocV)
-91 00                   ; Value (could be flags, or unknown — possibly LocH/LocV-related?)
+00 02 01 36 91 00 00 00 08                  ; Tag 0136 (Path: LocH/LocV)
+                  ; Value (could be flags, or unknown — possibly LocH/LocV-related?)
 
-00 00 08 
+ 
 00 02 
 01 66                   ; Tag 0166
 01                      ; Could be flag (tweening?)

@@ -55,7 +55,7 @@ internal class RaysScoreFrameParserV2
         _logger.LogDebug($"Score header: size={header.ActualSize} frames={header.HighestFrame} channels={header.ChannelCount}");
 
         //ParseBlock(newReader, header.ActualSize - 20, header, ctx);
-        ParseBlock(newReader, header.FirstBlockSize, header, ctx);
+        ParseBlock(newReader, newReader.Size, header, ctx);
 
         return ctx.Sprites;
     }
@@ -70,6 +70,7 @@ internal class RaysScoreFrameParserV2
         return;
     }
 
+  
     private void ParseBlock(ReadStream stream, int length, RayScoreHeader header, RayScoreParseContext ctx)
     {
         long end = stream.Position + length;
@@ -77,12 +78,16 @@ internal class RaysScoreFrameParserV2
         while (stream.Position < end && stream.BytesLeft >= 2)
         {
             ushort prefix = stream.ReadUint16("prefix", ctx.GetAnnotationKeys());
+            if (prefix == 0) continue;
             if (prefix == RayScoreTagsV2.BlockEnd)
             {
+                if (ctx.IsInAdvanceFrameMode)
+                {
+                    ctx.ClearAdvanceFrame();
+                    continue;
+                }
                 ctx.BlockDepth--;
-                if (ctx.BlockDepth ==0)
-                    return;
-                continue;
+                return;
             }
 
             if (prefix == header.SpriteSize)
@@ -129,9 +134,9 @@ internal class RaysScoreFrameParserV2
     private RaySprite ParseSpriteBlock(ReadStream stream, RayScoreHeader header, RayScoreParseContext ctx, int length = -1)
     {
         //RayKeyframeBlock block = ReadSprite(stream, header, ctx, length);
-        var sprite = _reader.ReadChannelSprite(stream, ctx);
+        var sprite = _reader.CreateChannelSprite(stream, ctx);
 
-        int channel = ctx.CurrentSprite + 6;
+        int channel = ctx.CurrentSpriteNum + 6;
         RayScoreIntervalDescriptor desc;
         if (ctx.ChannelToDescriptor.TryGetValue(channel, out var known))
         {
@@ -152,6 +157,7 @@ internal class RaysScoreFrameParserV2
         sprite.ExtraValues.AddRange(desc.ExtraValues);
         sprite.SpriteNumber = channel;
         sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, sprite.StartFrame));
+        ctx.AddSprite(sprite);  
         return sprite;
     }
 
@@ -186,12 +192,12 @@ internal class RaysScoreFrameParserV2
                 const ushort AdvanceFrameMask = 0x7F00;
 
                 bool createKeyframe = (flags & CreateKeyframeBit) != 0;
-                // todo check if vlid assumption first
-                //int framesToAdvance = (flags & AdvanceFrameMask) >> 8;
+                
+                int framesToAdvance = (flags & AdvanceFrameMask) >> 8;
 
-                //if (framesToAdvance == 0)
-                //    framesToAdvance = 1;
-                var framesToAdvance = 1;
+                if (framesToAdvance == 0)
+                    framesToAdvance = 1;
+                
                 ctx.AdvanceFrame(framesToAdvance);
 
                 if (createKeyframe)
@@ -200,7 +206,7 @@ internal class RaysScoreFrameParserV2
             return;
         }
 
-        var target = ctx.GetOrCreateSprite(ctx.CurrentSprite + 6);
+        var target = ctx.GetOrCreateSprite(ctx.CurrentSpriteNum + 6);
         var kf = target.Keyframes.Count > 0 ? target.Keyframes[^1] : RaySpriteFactory.CreateKeyFrame(target, ctx.CurrentFrame);
         if (target.Keyframes.Count == 0)
             target.Keyframes.Add(kf);

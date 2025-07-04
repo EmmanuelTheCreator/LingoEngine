@@ -43,10 +43,16 @@ internal static class RayScoreTagsV2
     }
 
     public static ScoreTagMain? TryParseTagMain(ushort raw)
-      => Enum.IsDefined(typeof(ScoreTagMain), (ushort)raw) ? (ScoreTagMain?)raw : null;
+    {
+        object boxed = raw;
+        return Enum.IsDefined(typeof(ScoreTagMain), boxed) ? (ScoreTagMain?)raw : null;
+    }
 
     public static ScoreTagV2? TryParseTag(ushort raw)
-        => Enum.IsDefined(typeof(ScoreTagV2), (int)raw) ? (ScoreTagV2?)raw : null;
+    {
+        object boxed = raw;
+        return Enum.IsDefined(typeof(ScoreTagV2), boxed) ? (ScoreTagV2?)raw : null;
+    }
 
     public static int GetDataLength(ScoreTagV2 tag)
         => tag switch
