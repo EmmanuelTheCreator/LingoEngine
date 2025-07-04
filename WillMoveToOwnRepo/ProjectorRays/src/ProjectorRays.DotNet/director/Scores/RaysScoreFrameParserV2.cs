@@ -162,12 +162,13 @@ internal class RaysScoreFrameParserV2
                 const ushort AdvanceFrameMask = 0x7F00;
 
                 bool createKeyframe = (flags & CreateKeyframeBit) != 0;
-                int framesToAdvance = (flags & AdvanceFrameMask) >> 8;
+                // todo check if vlid assumption first
+                //int framesToAdvance = (flags & AdvanceFrameMask) >> 8;
 
-                if (framesToAdvance == 0)
-                    framesToAdvance = 1;
-
-                ctx.CurrentFrame += framesToAdvance;
+                //if (framesToAdvance == 0)
+                //    framesToAdvance = 1;
+                var framesToAdvance = 1;
+                ctx.AdvanceFrame(framesToAdvance);
 
                 if (createKeyframe)
                     sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, ctx.CurrentFrame));

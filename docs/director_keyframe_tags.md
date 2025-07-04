@@ -199,6 +199,16 @@ These are used to direct the upcoming data to the correct sprite channel.
 
 Special handling is required for composite tags (e.g. `01 90`), frame-level headers (e.g. `01 EC`), and control sequences (`00 08`, `00 0A`, etc).
 
+### Byte 4: Flags if keyframe is real or tweeening
+for tag 0x0136:
+ - 01 → a real keyframe
+ - 81 → no new keyframe, just continuation or tween data
+ 
+ Important -> it can be that 01 and 08 are flags togther with an offset in one byte. : 8-th bit can be  the sign flag
+
+ Then next byte: 
+ 00 02 advance one keyframe
+
 
 This table lists all **tags observed to contain multiple sprite properties**, drawn from real data in `5spritesTest.dir` and `KeyFramesTest.dir`. These are not followed by separate property tags — the values are bundled directly in the payload.
 

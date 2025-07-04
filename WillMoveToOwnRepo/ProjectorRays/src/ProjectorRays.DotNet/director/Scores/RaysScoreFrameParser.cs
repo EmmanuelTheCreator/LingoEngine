@@ -277,14 +277,14 @@ namespace ProjectorRays.director.Scores
         */
         private void ReadFrameData(ReadStream readerSource)
         {
-           // log all bytes
+            // log all bytes
 
-           //var frameBytes1 = readerSource.ReadBytes(readerSource.BytesLeft);
-           // var frameData1 = new ReadStream(frameBytes1, frameBytes1.Length, readerSource.Endianness,
-           //     annotator: Annotator);
-           // var rawata1 = frameData1.LogHex(frameData1.Size);
-           // _logger.LogInformation("FrameData:" + rawata1);
-           // return;
+            var frameBytes1 = readerSource.ReadBytes(readerSource.BytesLeft);
+            var frameData1 = new ReadStream(frameBytes1, frameBytes1.Length, readerSource.Endianness,
+                annotator: Annotator);
+            var rawata1 = frameData1.LogHex(frameData1.Size);
+            _logger.LogInformation("FrameData:" + rawata1);
+            return;
 
             // Read the header (first 16 bytes or based on the known header size)
             int actualSize = readerSource.ReadInt32("actualSize");

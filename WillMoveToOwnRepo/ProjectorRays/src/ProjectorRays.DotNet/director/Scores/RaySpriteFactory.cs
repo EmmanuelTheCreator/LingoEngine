@@ -1,4 +1,5 @@
 using ProjectorRays.director.Scores;
+using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
 

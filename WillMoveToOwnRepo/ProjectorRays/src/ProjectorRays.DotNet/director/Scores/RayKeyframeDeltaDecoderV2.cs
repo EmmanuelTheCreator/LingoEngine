@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
 using static ProjectorRays.director.Scores.RayScoreTagsV2;
+using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
 
@@ -43,7 +45,6 @@ internal static class RayKeyframeDeltaDecoderV2
                 break;
             case ScoreTagV2.AdvanceFrame:
                 rs.ReadUint16("adv", ctx.ToDict());
-                ctx.CurrentFrame++;
                 break;
             case ScoreTagV2.Composite:
                 kf.Width = rs.ReadInt16("width", ctx.ToDict());

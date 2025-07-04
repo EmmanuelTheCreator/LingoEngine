@@ -51,7 +51,7 @@ namespace ProjectorRays.director.Scores
                 ScoreKeyframeTag.Size => 2, //                                         tag = 01 30     0001 0011 0000 = Size
                 ScoreKeyframeTag.Ink => 2, // 0x0136                                   
                 ScoreKeyframeTag.Colors => 2, // 0x0182 (FG + BG)                      tag = 02 12     0010 0001 0010
-                ScoreKeyframeTag.Blend => 6, // 0x0190                                 tag = 01 20     0001 0010 0000 = Blend  ???????       <- is wrong probably
+                ScoreKeyframeTag.Blend => 6, // 0x0190                                 ?????? test  tag = 01 20     0001 0010 0000 = Blend  ???????       <- is wrong probably
                 ScoreKeyframeTag.Rotation => 2, // 0x019E                              tag = 01 9E     0001 1001 1110
                 ScoreKeyframeTag.Skew => 2, // 0x01A2                                  tag = 01 D2     0001 1010 0010
                 ScoreKeyframeTag.Position => 4, // 0x01EC (LocH + LocV)                tag = 01 5C     0001 0101 1100

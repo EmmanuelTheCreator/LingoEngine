@@ -1,5 +1,6 @@
 using ProjectorRays.Common;
 using System.Collections.Generic;
+using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
 
@@ -161,5 +162,10 @@ internal class RayScoreParseContext
             FrameScripts.Add(behaviourRefs);
             ind++;
         }
+    }
+
+    internal void AdvanceFrame(int framesToAdvance)
+    {
+         CurrentFrame += framesToAdvance;
     }
 }

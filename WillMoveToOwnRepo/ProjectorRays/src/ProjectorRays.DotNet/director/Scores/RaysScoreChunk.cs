@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
 using ProjectorRays.director.Chunks;
 using ProjectorRays.Director;
+using static ProjectorRays.director.Scores.RaysScoreFrameParser;
 using static ProjectorRays.director.Scores.RaysScoreFrameParserV2;
 
 namespace ProjectorRays.director.Scores;
