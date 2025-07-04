@@ -6,6 +6,54 @@ This document outlines all currently understood fixed and variable tag formats u
 
 ---
 
+# 🧱 Director Keyframe Block Header Bytes
+
+This section documents the **header structure** found at the beginning of each Director Score keyframe block (VWSC). These values are typically fixed across files, except for `HighestFrameNumber`, `actualSize`, and occasionally `unkD1`.
+
+---
+
+## 🧾 Header Structure (Offsets 0x00–0x13)
+
+| Offset | Field                 | Type     | Meaning                        | Example Values     |
+|--------|------------------------|----------|--------------------------------|---------------------|
+| 0x00   | actualSize            | int32    | Total size of the keyframe block | Varies (e.g., 670)  |
+| 0x04   | unkA1                 | int8     | Constant? Usually 0             | 0                   |
+| 0x05   | unkA2                 | int8     | Constant? Usually 0             | 0                   |
+| 0x06   | unkA3                 | int8     | Constant? Usually 0             | 0                   |
+| 0x07   | unkA4                 | int8     | Unknown – often 20              | 20                  |
+| 0x08   | HighestFrameNumber    | int32    | Highest referenced frame        | 6–55                |
+| 0x0C   | unkB1                 | int8     | Constant?                       | 0                   |
+| 0x0D   | unkB2                 | int8     | Unknown                         | 13                  |
+| 0x0E   | spriteSize            | int16    | bytes count of fixed sprite block      | 48 (always)         |
+| 0x10   | unkC1                 | int8     | Constant?                       | 3                   |
+| 0x11   | unkC2                 | int8     | Unknown                         | -18                 |
+| 0x12   | SpriteChannelCount    | int16    | Max channel slots available     | 150                 |
+| 0x14   | unkD1                 | int16    | Possibly tag count or pointer   | 8–610               |
+
+---
+
+## 📂 Sample Files & Header Values
+
+| File                        | actualSize | HighestFrameNumber | SpriteSize | SpriteChannelCount | unkD1 |
+|-----------------------------|------------|---------------------|------------|---------------------|--------|
+| 5spritesTest                | 670        | 15                  | 48         | 150                 | 54     |
+| KeyFramesTestMultiple.dir   | 1908       | 44                  | 48         | 150                 | 66     |
+| KeyFramesTest.dir           | 834        | 30                  | 48         | 150                 | 66     |
+| Dir_With_One_Img_Sprite_Hallo | 138      | 30                  | 48         | 150                 | 54     |
+| KeyFrames_Lenear5.dir       | 302        | 55                  | 48         | 150                 | 8      |
+| Animation_types.dir         | 1344       | 6                   | 48         | 150                 | 610    |
+
+---
+
+## 🧠 Observations
+
+- Fields `unkA1–unkA3` are always 0 so far.
+- `unkA4` is always `20`.
+- `unkC1` and `unkC2` are consistent (`3` and `-18`) across all samples.
+- `unkD1` **may** point to an offset or block size, possibly related to tag lists — **TBD**.
+
+---
+
 ## Control Prefixes (Header Byte Sequences)
 
 | Prefix       | Meaning                                  | Notes                                                                 |
@@ -47,6 +95,36 @@ These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the typ
 | `02 02`   | ?              | 2         | Possibly transition-related                | Appears in complex transitions                                      |
 
 ---
+
+PS.: Tweening: The tweening are not keyframe based but sprite based!
+
+
+
+
+
+## 🧩 Offset Diagram for Composite Tags
+
+
+| Tag     | Total Size | Offset | Field         | Description                            |
+|----------|------------|--------|----------------|----------------------------------------|
+| `0x0130` | 4 bytes    | 0–1    | Width          | Sprite width (pixels)                  |
+|          |            | 2–3    | Height         | Sprite height (pixels)                 |
+| `0x015C` | 4 bytes    | 0–1    | LocH           | Horizontal screen position             |
+|          |            | 2–3    | LocV           | Vertical screen position               |
+| `0x0182` | 2 bytes    | 0      | ForeColor      | Foreground color (palette index)       |
+|          |            | 1      | BackColor      | Background color (palette index)       |
+| `0x0190` | 6 bytes    | 0–1    | Width          | Sprite width                           |
+|          |            | 2–3    | Height         | Sprite height                          |
+|          |            | 4      | Blend          | Blend percentage (byte, 0–255)         |
+|          |            | 5      | Ink            | Drawing ink mode (constant index)      |
+| `0x01EC` | 8 bytes    | 0–1    | LocH           | Frame rectangle left                   |
+|          |            | 2–3    | LocV           | Frame rectangle top                    |
+|          |            | 4–5    | Width          | Frame rectangle width                  |
+|          |            | 6–7    | Height         | Frame rectangle height                 |
+| `0x0212` | 2 bytes    | 0      | ForeColor      | Foreground color index (1 byte)        |
+|          |            | 1      | BackColor      | Background color index (1 byte)        |
+| `0x01F6` | 1 byte     | 0      | Tween Flags    | Bit flags for tweening fields (see below) |
+
 
 ## 🧭 Director Tag Ranges (Hypothesis)
 
@@ -97,22 +175,6 @@ These are used to direct the upcoming data to the correct sprite channel.
 
 Special handling is required for composite tags (e.g. `01 90`), frame-level headers (e.g. `01 EC`), and control sequences (`00 08`, `00 0A`, etc).
 
-More tags and their purpose are under investigation.
-
-# 🔧 Composite Tags with Multiple Properties
-
----
-
-## Observations
-
-- Some tags include multiple fields (e.g., `01 90` includes size, blend, ink).
-- Fixed-length `00 30` blocks use 48-byte sprite structures.
-- Tag `00 08` appears to end logical keyframe groups.
-- A header byte (`unkD1`) often points to a count of tags or blocks.
-- `01 80` and `01 20` appear to define a known block size and memory region offset.
-
----
-
 
 This table lists all **tags observed to contain multiple sprite properties**, drawn from real data in `5spritesTest.dir` and `KeyFramesTest.dir`. These are not followed by separate property tags — the values are bundled directly in the payload.
 
@@ -125,7 +187,7 @@ This table lists all **tags observed to contain multiple sprite properties**, dr
 | **Extended Frame Flags** | `0x01FE` | Mode/transition flags (unclear)     | `0001 1111 1110`            | Found in many frame blocks     |
 | **Block Control** | `0x0180`| Possibly: Size, Channel count, Offsets? | `0001 1000 0000`            | Payload = 6+ bytes, unknown format |
 
-## 🧪 Bit Flag Hypothesis (Unconfirmed)
+## 🧪 Bit Flag H
 
 It’s possible that these tag values encode **bitfields**, with each bit corresponding to a sprite property:
 
@@ -140,6 +202,8 @@ It’s possible that these tag values encode **bitfields**, with each bit corres
 | 6   | `0x40`      | ForeColor         |
 | 7   | `0x80`      | BackColor         |
 
+
+
 ### Example:
 
 `0x0190` → `0001 1001 0000`  
@@ -150,15 +214,7 @@ Possibly means:
 
 → **Size + Blend + Skew**, which matches reality.
 
-## ✅ Composite Tags Summary
 
-| Tag     | Composite? | Fields                                 | Confirmed in |
-|---------|------------|----------------------------------------|--------------|
-| `0x0130`| No         | Width, Height                          | All files    |
-| `0x0182`| Yes        | ForeColor, BackColor                   | All files    |
-| `0x0190`| Yes        | Width, Height, Blend, Ink              | All files    |
-| `0x01FE`| Maybe      | Frame mode / bitmask                   | Many frames  |
-| `0x0180`| Maybe      | Control structure, possibly compressed | Seen with `0x01FC` |
+## Observations
 
-
-Tweening: The tweening are not keyframe based but sprite based!
+- A header byte (`unkD1`) often points to a count of tags or blocks. Not discovered yet.
