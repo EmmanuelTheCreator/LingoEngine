@@ -4,12 +4,12 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
-namespace ProjectorRays.director.Scores
+namespace ProjectorRays.director.Old
 {
-internal class RayKeyframeDeltaDecoder
+    internal class RayKeyframeDeltaDecoderOld
     {
         public RayStreamAnnotatorDecorator Annotator { get; }
-        public RayKeyframeDeltaDecoder(RayStreamAnnotatorDecorator annotator)
+        public RayKeyframeDeltaDecoderOld(RayStreamAnnotatorDecorator annotator)
         {
             Annotator = annotator;
         }

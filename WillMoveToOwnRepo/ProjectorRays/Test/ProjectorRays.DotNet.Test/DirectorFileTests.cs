@@ -27,13 +27,13 @@ public class DirectorFileTests
 
     [Theory]
     //[InlineData("Dir_With_One_Img_Sprite_Hallo.dir")]
-     //[InlineData("5spritesTest.dir")]
+     [InlineData("5spritesTest.dir")]
     //[InlineData("KeyFramesTestMultiple.dir")]
     //[InlineData("KeyFrames_Lenear5.dir")]
     //[InlineData("KeyFrames_Lenear1234_deleteFrame3.dir")]
     //[InlineData("Animation_types.dir")]
     //[InlineData("KeyFramesTest.dir")]
-    [InlineData("SpriteLock.dir")]
+    //[InlineData("SpriteLock.dir")]
     //[InlineData("5spritesTest_With_Behavior.dir")]
     //[InlineData("Dir_With_One_Tex_Sprite_Hallo.dir")]
     public void CanReadDirectorFile(string fileName)

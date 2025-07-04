@@ -415,8 +415,12 @@ public class ReadStream : RaysStream
 
         return sb.ToString();
     }
-
-    
+    public ReadStream Clone()
+    {
+        var clone = new ReadStream(Data, Size, Endianness);
+        clone._pos = this._pos; // Copy current position
+        return clone;
+    }
 }
 
 public class WriteStream : RaysStream

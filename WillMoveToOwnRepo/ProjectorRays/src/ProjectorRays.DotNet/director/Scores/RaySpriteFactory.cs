@@ -1,4 +1,4 @@
-using ProjectorRays.director.Scores;
+using ProjectorRays.director.Scores.Data;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
@@ -32,9 +32,9 @@ internal static class RaySpriteFactory
     //    };
     //}
 
-    internal static RayKeyFrame CreateKeyFrame(RaySprite sprite, int frame)
+    internal static RayScoreKeyFrame CreateKeyFrame(RaySprite sprite, int frame)
     {
-        return new RayKeyFrame
+        return new RayScoreKeyFrame
         {
             Frame = frame,
             LocH = sprite.LocH,

@@ -1,10 +1,11 @@
 ﻿using ProjectorRays.Common;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
-using static ProjectorRays.director.Scores.RaysScoreFrameParser;
+using static ProjectorRays.director.Old.RaysScoreFrameParserOld;
+using ProjectorRays.director.Scores.Data;
 
-namespace ProjectorRays.director.Scores
+namespace ProjectorRays.director.Old
 {
-    internal class RayScoreTags
+    internal class RayScoreTagsOld
     {
         public static ScoreKeyframeTag? TryParseTag(ushort rawTag)
         {
@@ -41,7 +42,7 @@ namespace ProjectorRays.director.Scores
             Custom_01D2 = 0x01D2
         }
 
-       // this is stil seriously wrong
+        // this is stil seriously wrong
         public static int GetDataLength(ScoreKeyframeTag tag)
         {
             return tag switch
@@ -78,9 +79,9 @@ namespace ProjectorRays.director.Scores
             };
         }
         // this is stil seriously wrong
-        public static RayKeyFrame CreateKeyFrameFromTags(FrameDelta frameDelta)
+        public static RayScoreKeyFrame CreateKeyFrameFromTags(FrameDelta frameDelta)
         {
-            var keyframe = new RayKeyFrame();
+            var keyframe = new RayScoreKeyFrame();
 
             foreach (var item in frameDelta.Items)
             {
@@ -149,8 +150,8 @@ namespace ProjectorRays.director.Scores
         /// </summary>
         public static int GetChannelForTag(int tag)
         {
-            return ((tag - BaseTag) / Step) + BaseChannel;
+            return (tag - BaseTag) / Step + BaseChannel;
         }
     }
-    
+
 }

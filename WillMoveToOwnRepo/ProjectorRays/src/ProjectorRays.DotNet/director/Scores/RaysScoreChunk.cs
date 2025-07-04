@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
 using ProjectorRays.director.Chunks;
+using ProjectorRays.director.Old;
+using ProjectorRays.director.Scores.Data;
 using ProjectorRays.Director;
 using System.Reflection.PortableExecutable;
-using static ProjectorRays.director.Scores.RaysScoreFrameParser;
+using static ProjectorRays.director.Old.RaysScoreFrameParserOld;
 using static ProjectorRays.director.Scores.RaysScoreFrameParserV2;
 
 namespace ProjectorRays.director.Scores;
@@ -35,167 +37,11 @@ public class RaysScoreChunk : RaysChunk
     public short Constant13;
     public short LastChannelMinus6;
     public static RayStreamAnnotatorDecorator Annotator;
-    /// <summary>
-    /// Defines flags for keyframe properties in Director's sprite and animation system.
-    /// These flags correspond to properties like position, size, rotation, color, tweening, and more.
-    /// </summary>
-    [Flags]
-    public enum RayKeyframeEnabled: int
-    {
-        /// <summary>Indicates no properties are enabled.</summary>
-        None = 0,
-
-        /// <summary>Indicates tweening is enabled.</summary>
-        TweeningEnabled = 1 << 0,
-
-        /// <summary>Indicates position (LocH + LocV) is enabled.</summary>
-        Path = 1 << 1,
-
-        /// <summary>Indicates size (Width + Height) is enabled.</summary>
-        Size = 1 << 2,
-
-        /// <summary>Indicates rotation is enabled.</summary>
-        Rotation = 1 << 3,
-
-        /// <summary>Indicates skew is enabled.</summary>
-        Skew = 1 << 4,
-
-        /// <summary>Indicates blend is enabled.</summary>
-        Blend = 1 << 5,
-
-        /// <summary>Indicates fore color is enabled.</summary>
-        ForeColor = 1 << 6,        // ForeColor (2 bytes)
-
-        /// <summary>Indicates back color is enabled.</summary>
-        BackColor = 1 << 7,        // BackColor (2 bytes)
-
-        /// <summary>Indicates continuous tweening at the endpoint.</summary>
-        ContinuousAtEndpoint = 1 << 8, // For Continuous checkbox
-
-        /// <summary>Indicates speed (used in tweening).</summary>
-        Speed = 1 << 9,              // For Speed setting (1 bit)
-
-        /// <summary>Indicates ease-in for the tweening.</summary>
-        EaseIn = 1 << 10,            // Ease-in (1 byte)
-
-        /// <summary>Indicates ease-out for the tweening.</summary>
-        EaseOut = 1 << 11,           // Ease-out (1 byte)
-
-        /// <summary>Indicates curvature for the tweening.</summary>
-        Curvature = 1 << 12          // Curvature (1 byte)
-    }
-    public class RayKeyFrame
-    {
-        public RayKeyframeEnabled EnabledProperties { get; set; } = RayKeyframeEnabled.None;
-        public int LocH { get; set; }
-        public int LocV { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public float Rotation { get; set; }
-        public float Skew { get; set; }
-        public int Blend { get; set; }
-        public int Ink { get; set; }
-        public int ForeColor { get; set; }
-        public int BackColor { get; set; }
-        public int MemberCastLib { get; set; }
-        public int MemberNum { get; set; }
-        public int Duration { get; set; }
-        /// <summary>Absolute frame this keyframe applies to.</summary>
-        public int Frame { get; set; }
-        public float ScaleX { get; internal set; }
-        public float ScaleY { get; internal set; }
-        public List<UnknownTag> UnknownTags { get; } = new();
-    }
-
-    /// <summary>Unknown tag entry encountered during keyframe parsing.</summary>
-    public record UnknownTag(ushort Tag, byte[] Data);
-    /// <summary>Descriptor of a sprite on the score timeline.</summary>
-    public class RaySprite
-    {
-        /// <summary>Cast member displayed by this sprite.</summary>
-        /// <summary>Offset to sprite property table for behaviors.</summary>
-        public int StartFrame {get; internal set; }
-        public int EndFrame {get; internal set; }
-        public int SpriteNumber {get; internal set; }
-        public int MemberCastLib { get; set; }
-        public int MemberNum { get; set; }
-        public int SpritePropertiesOffset {get; internal set; }
-        public int LocH {get; internal set; }
-        public int LocV {get; internal set; }
-        public int Width {get; internal set; }
-        public int Height {get; internal set; }
-        public float Rotation {get; internal set; }
-        public float Skew {get; internal set; }
-        public int Ink {get; internal set; }
-        public int ForeColor {get; internal set; }
-        public int BackColor {get; internal set; }
-        public int ScoreColor {get; internal set; }
-        public int Blend {get; internal set; }
-        public bool FlipH {get; internal set; }
-        public bool FlipV {get; internal set; }
-        public bool Editable { get; internal set; }
-        public bool Moveable { get; internal set; }
-        public bool Trails { get; internal set; }
-        public bool IsLocked { get; internal set; }
-
-        public byte EaseIn { get; set; }
-        public byte EaseOut { get; set; }
-        public ushort Curvature { get; set; }
-        public byte TweenFlags { get; set; }
+    
+    
 
 
-        public List<int> ExtraValues { get; internal set; } = new();
-        public List<RaysBehaviourRef> Behaviors { get; internal set; } = new();
-        public List<RayKeyFrame> Keyframes { get; internal set; } = new();
-        public int LocZ { get; set; }
-    }
-
-    //public record RayKeyframeBlock
-    //{
-    //    /// <summary>
-    //    /// Offset from previous key frame
-    //    /// </summary>
-    //    public ushort Offset;          
-    //    public ushort TimeMarker;      // maybe frame
-    //    public ushort Width;
-    //    public ushort Height;
-    //    public ushort LocH;
-    //    public ushort LocV;
-    //    public ushort Rotation;
-    //    public byte BlendRaw;          // blend = 100 - BlendRaw
-    //    public byte ForeColor;
-    //    public byte BackColor;
-    //    public byte Padding1;
-    //    public byte Padding2;
-    //}
-
-
-    /// <summary>
-    /// Flags used in Director sprite control byte (Flip/Edit/Trail/Lock/etc).
-    /// </summary>
-    [Flags]
-    internal enum SpriteFlags : byte
-    {
-        None = 0,
-
-        /// <summary>Sprite is flipped horizontally.</summary>
-        FlipH = 1 << 0, // 0x01
-
-        /// <summary>Sprite is flipped vertically.</summary>
-        FlipV = 1 << 6, // 0x40
-
-        /// <summary>Sprite is editable at runtime (typically for text sprites).</summary>
-        Editable = 1 << 5, // 0x20
-
-        /// <summary>Sprite is moveable during playback.</summary>
-        Moveable = 1 << 4, // 0x10
-
-        /// <summary>Sprite leaves a trail behind while moving.</summary>
-        Trails = 1 << 3, // 0x08
-
-        /// <summary>Sprite is locked and cannot be edited.</summary>
-        Locked = 1 << 2  // 0x04
-    }
+   
 
     /// <summary>Default sprite data for a channel.</summary>
     //public class RaysChannelSprite
@@ -239,42 +85,37 @@ public class RaysScoreChunk : RaysChunk
         //var bytes22 = stream.ReadBytes(stream.Size);
         //var bytes3raw = RaysUtilities.LogHex(bytes22, bytes22.Length + 1200);
 
-
-        int totalLength = stream.ReadInt32();
-        int headerType = stream.ReadInt32(); // constantMinus3
-        int offsetsOffset = stream.ReadInt32(); // constant12
-        int entryCount = stream.ReadInt32();
-        int notationBase = stream.ReadInt32(); // entryCountPlus1
-        int entrySizeSum = stream.ReadInt32();
-
-
         //Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
-
         int entriesStart = stream.Pos;
-        
         Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
+
+
         var parser = new RaysScoreFrameParserV2(Dir.Logger, Annotator);
         try
         {
-            Sprites = parser.ParseScore(stream, entryCount);
+            Sprites = parser.ParseScore(stream);
         }
         catch (Exception ex)
         {
-            System.IO.File.WriteAllText("c:\\temp\\director\\tes.md", StreamAnnotationMarkdownWriter.WriteMarkdown(Annotator, stream.Data));
             throw ex;
         }
         finally
         {
+            System.IO.File.WriteAllText("c:\\temp\\director\\tes.md", StreamAnnotationMarkdownWriter.WriteMarkdown(Annotator, stream.Data));
 
-            
         }
-        System.IO.File.WriteAllText("c:\\temp\\director\\tes.md", StreamAnnotationMarkdownWriter.WriteMarkdown(Annotator, stream.Data));
         return;
 
 
-        //int entriesStart = stream.Pos;
-        //Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
-        //var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, Annotator);
+
+
+        //int totalLength = stream.ReadInt32();
+        //int headerType = stream.ReadInt32(); // constantMinus3
+        //int offsetsOffset = stream.ReadInt32(); // constant12
+        //int entryCount = stream.ReadInt32();
+        //int notationBase = stream.ReadInt32(); // entryCountPlus1
+        //int entrySizeSum = stream.ReadInt32();
+        //var scoreFrameParser = new RaysScoreFrameParserOld(Dir.Logger, Annotator);
         //scoreFrameParser.ReadAllIntervals(entryCount, stream);
         //scoreFrameParser.ReadFrameData();
         //scoreFrameParser.ReadFrameDescriptors();

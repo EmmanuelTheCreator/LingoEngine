@@ -1,95 +1,208 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
+using ProjectorRays.director.Scores.Data;
+using static ProjectorRays.director.Scores.RayScoreTagsV2;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
-
 internal class RaysScoreReader
 {
     private readonly ILogger _logger;
 
-    internal record ScoreHeader(
-        int ActualSize,
-        byte UnkA1,
-        byte UnkA2,
-        byte UnkA3,
-        byte UnkA4,
-        int HighestFrame,
-        byte UnkB1,
-        byte UnkB2,
-        short SpriteSize,
-        byte UnkC1,
-        byte UnkC2,
-        short ChannelCount,
-        short FirstBlockSize);
+   
 
     public RaysScoreReader(ILogger logger)
     {
         _logger = logger;
     }
 
-    internal ScoreHeader ReadHeader(ReadStream stream)
-    {
-        int actualSize = stream.ReadInt32("actualSize");
-        byte unkA1 = stream.ReadUint8("unkA1");
-        byte unkA2 = stream.ReadUint8("unkA2");
-        byte unkA3 = stream.ReadUint8("unkA3");
-        byte unkA4 = stream.ReadUint8("unkA4");
-        int highestFrame = stream.ReadInt32("highestFrame");
-        byte unkB1 = stream.ReadUint8("unkB1");
-        byte unkB2 = stream.ReadUint8("unkB2");
-        short spriteSize = stream.ReadInt16("spriteSize");
-        byte unkC1 = stream.ReadUint8("unkC1");
-        byte unkC2 = stream.ReadUint8("unkC2");
-        short channelCount = stream.ReadInt16("channelCount");
-        short firstBlockSize = stream.ReadInt16("firstBlockSize");
 
-        return new ScoreHeader(actualSize, unkA1, unkA2, unkA3, unkA4,
-            highestFrame, unkB1, unkB2, spriteSize, unkC1, unkC2, channelCount,
-            firstBlockSize);
+    #region Header
+    internal void ReadAllIntervals(int entryCount, ReadStream stream, RayScoreParseContext ctx)
+    {
+        var s = new ReadStream(new BufferView(stream.Data, stream.Offset, stream.Size),
+            stream.Endianness, stream.Pos, Annotator);
+
+        int[] offsets = new int[entryCount + 1];
+        for (int i = 0; i < offsets.Length; i++)
+            offsets[i] = s.ReadInt32($"offset[{i}]");
+
+        int entriesStart = s.Pos;
+
+        if (entryCount < 1)
+            return;
+
+        var size = offsets[1] - offsets[0];
+        int absoluteStart = stream.Offset + entriesStart + offsets[0];
+
+        ctx.SetFrameDataBufferView(stream.Data, absoluteStart, size);
+        List<int> intervalOrder = new();
+        if (entryCount >= 2)
+        {
+            size = offsets[2] - offsets[1];
+            int absoluteStart2 = stream.Offset + entriesStart + offsets[1];
+            var orderView = new BufferView(stream.Data, absoluteStart2, offsets[2] - offsets[1]);
+            var os = new ReadStream(orderView, Endianness.BigEndian, annotator: Annotator);
+            if (os.Size >= 4)
+            {
+                int count = os.ReadInt32("orderCount");
+                for (int i = 0; i < count && os.Pos + 4 <= os.Size; i++)
+                    intervalOrder.Add(os.ReadInt32("order", new() { ["index"] = i }));
+            }
+        }
+        
+        var entryIndices = intervalOrder.Count > 0 ? intervalOrder : null;
+        if (entryIndices == null)
+        {
+            entryIndices = new List<int>();
+            for (int i = 3; i + 2 < offsets.Length; i += 3)
+                entryIndices.Add(i);
+        }
+        ctx.ResetFrameDescriptorBuffers();
+
+        foreach (int primaryIdx in entryIndices)
+        {
+            if (primaryIdx + 2 >= offsets.Length)
+                continue;
+
+            size = offsets[primaryIdx + 1] - offsets[primaryIdx];
+            int absoluteStart2 = stream.Offset + entriesStart + offsets[primaryIdx];
+            ctx.AddFrameDescriptorBuffer(new BufferView(stream.Data, absoluteStart2, size));
+
+
+            var secSize = offsets[primaryIdx + 2] - offsets[primaryIdx + 1];
+            if (secSize > 0)
+            {
+                int absoluteStart3 = stream.Offset + entriesStart + offsets[primaryIdx + 1];
+                var secView = new BufferView(stream.Data, absoluteStart3, secSize);
+                ctx.AddBehaviorScriptBuffer(secView);
+            }
+        }
+        
+    }
+    internal RayScoreHeader ReadMainHeader(ReadStream stream)
+    {
+        return new RayScoreHeader
+        {
+            TotalLength = stream.ReadInt32(),
+            HeaderType = stream.ReadInt32(), // constantMinus3
+            OffsetsOffset = stream.ReadInt32(), // constant12
+            EntryCount = stream.ReadInt32(),
+            NotationBase = stream.ReadInt32(), // entryCountPlus1
+            EntrySizeSum = stream.ReadInt32(),
+        };
     }
 
-    //private static RayKeyframeBlock ReadSprite(ReadStream stream, RaysScoreReader.ScoreHeader header, RayScoreParseContext ctx, int length)
-    //{
-    //    int size = length > 0 ? length : header.SpriteSize;
-    //    var view = stream.ReadByteView(size, "spriteBlock", ctx.ToDict());
-    //    var rs = new ReadStream(view, Endianness.BigEndian, annotator: ctx.Annotator);
+    internal void ReadHeader(ReadStream stream, RayScoreHeader header)
+    {
+        header.ActualSize = stream.ReadInt32("actualSize");
+        header.UnkA1 = stream.ReadUint8("unkA1");
+        header.UnkA2 = stream.ReadUint8("unkA2");
+        header.UnkA3 = stream.ReadUint8("unkA3");
+        header.UnkA4 = stream.ReadUint8("unkA4");
+        header.HighestFrame = stream.ReadInt32("highestFrame");
+        header.UnkB1 = stream.ReadUint8("unkB1");
+        header.UnkB2 = stream.ReadUint8("unkB2");
+        header.SpriteSize = stream.ReadInt16("spriteSize");
+        header.UnkC1 = stream.ReadUint8("unkC1");
+        header.UnkC2 = stream.ReadUint8("unkC2");
+        header.ChannelCount = stream.ReadInt16("channelCount");
+        header.FirstBlockSize = stream.ReadInt16("firstBlockSize");
+    }
 
-    //    RayKeyframeBlock block = new()
-    //    {
-    //        Offset = rs.ReadUint16("offset", ctx.ToDict()),
-    //        TimeMarker = rs.ReadUint16("timeMarker", ctx.ToDict()),
-    //        Width = rs.ReadUint16("width", ctx.ToDict()),
-    //        Height = rs.ReadUint16("height", ctx.ToDict()),
-    //        LocH = rs.ReadUint16("locH", ctx.ToDict()),
-    //        LocV = rs.ReadUint16("locV", ctx.ToDict()),
-    //        Rotation = rs.ReadUint16("rot", ctx.ToDict()),
-    //        BlendRaw = rs.ReadUint8("blendRaw", ctx.ToDict()),
-    //        ForeColor = rs.ReadUint8("foreColor", ctx.ToDict()),
-    //        BackColor = rs.ReadUint8("backColor", ctx.ToDict()),
-    //        Padding1 = rs.ReadUint8("pad1", ctx.ToDict()),
-    //        Padding2 = rs.ReadUint8("pad2", ctx.ToDict())
-    //    };
 
-    //    var remaining = size - rs.Position;
-    //    if (remaining > 0)
-    //        rs.Skip(remaining);
-    //    return block;
-    //}
+    #endregion
 
+
+
+    public ScoreTagMain? ReadMainTag(ushort data, ReadStream stream,RayScoreParseContext ctx)
+    {
+        var tag = RayScoreTagsV2.TryParseTagMain(data);
+        return tag;
+    }
+
+
+    public void ApplyKnownTag(RaySprite sprite, RayScoreKeyFrame kf, ScoreTagV2 tag, byte[] data, RayScoreParseContext ctx)
+    {
+        var rs = new ReadStream(data, data.Length, Endianness.BigEndian, annotator: ctx.Annotator);
+        int expectedSize = GetDataLength(tag);
+        if (expectedSize > 0 && data.Length != expectedSize)
+            ctx.Logger.LogWarning($"Tag {tag:X4} expected {expectedSize} bytes, got {data.Length}");
+        switch (tag)
+        {
+            case ScoreTagV2.Size:
+                kf.Width = rs.ReadInt16("width", ctx.GetAnnotationKeys());
+                kf.Height = rs.ReadInt16("height", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Position:
+                kf.LocH = rs.ReadInt16("locH", ctx.GetAnnotationKeys());
+                kf.LocV = rs.ReadInt16("locV", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Colors:
+                kf.ForeColor = rs.ReadUint8("foreColor", ctx.GetAnnotationKeys());
+                kf.BackColor = rs.ReadUint8("backColor", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Ink:
+                kf.Ink = rs.ReadInt16("ink", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Rotation:
+                kf.Rotation = rs.ReadInt16("rot", ctx.GetAnnotationKeys()) / 100f;
+                break;
+            case ScoreTagV2.Skew:
+                kf.Skew = rs.ReadInt16("skew", ctx.GetAnnotationKeys()) / 100f;
+                break;
+            case ScoreTagV2.Ease:
+                sprite.EaseIn = rs.ReadUint8("easeIn", ctx.GetAnnotationKeys());
+                sprite.EaseOut = rs.ReadUint8("easeOut", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Curvature:
+                sprite.Curvature = rs.ReadUint16("curv", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.AdvanceFrame:
+                rs.ReadUint16("adv", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Composite:
+                kf.Width = rs.ReadInt16("width", ctx.GetAnnotationKeys());
+                kf.Height = rs.ReadInt16("height", ctx.GetAnnotationKeys());
+                byte blendRaw = rs.ReadUint8("blendRaw", ctx.GetAnnotationKeys());
+                kf.Blend = 100 - blendRaw * 100 / 255;
+                kf.Ink = rs.ReadUint8("ink", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.FrameRect:
+                kf.LocH = rs.ReadInt16("locH", ctx.GetAnnotationKeys());
+                kf.LocV = rs.ReadInt16("locV", ctx.GetAnnotationKeys());
+                kf.Width = rs.ReadInt16("width", ctx.GetAnnotationKeys());
+                kf.Height = rs.ReadInt16("height", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.Flags:
+                rs.ReadUint16("flags", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.FlagsControl:
+                rs.ReadUint16("flagsCtrl", ctx.GetAnnotationKeys());
+                break;
+            case ScoreTagV2.TweenFlags:
+                sprite.TweenFlags = rs.ReadUint8("tweenFlags", ctx.GetAnnotationKeys());
+                break;
+            default:
+                break;
+        }
+    }
+   
     public RaySprite ReadChannelSprite(ReadStream stream, RayScoreParseContext ctx)
     {
+        var startPos = stream.Pos;
         var sprite = new RaySprite();
         var keys = ctx.GetAnnotationKeys();
         var flags1 = stream.ReadUint8();
-        _logger.LogInformation("Sprite flags=" + flags1);
+        var something2 = stream.ReadInt16();
+        //_logger.LogInformation("Sprite flags=" + flags1);
 
-        if ((flags1 & 0xFF) != 0 && (flags1 & 0x10) == 0)
-        {
-            var keyframeType = stream.ReadUint8();
-            var keyframeSize = stream.ReadUint8();
-            _logger.LogInformation($"something1={keyframeType}, something2={keyframeSize}");
-        }
+        //if ((flags1 & 0xFF) != 0 && (flags1 & 0x10) == 0)
+        //{
+        //    var keyframeType = stream.ReadUint8();
+        //    var keyframeSize = stream.ReadUint8();
+        //    _logger.LogInformation($"something1={keyframeType}, something2={keyframeSize}");
+        //}
 
         byte inkByte = stream.ReadUint8("ink", keys);
         sprite.Ink = inkByte & 0x7F;
@@ -112,36 +225,39 @@ internal class RaysScoreReader
         sprite.FlipV = (flag2 & 0x04) != 0;
         sprite.FlipH = (flag2 & 0x02) != 0;
         stream.Skip(5);
-        if (stream.Size > 28)
-        {
-            sprite.Rotation = stream.ReadInt32("rotation", keys) / 100f;
-            sprite.Skew = stream.ReadInt32("skew", keys) / 100f;
-        }
+        sprite.Rotation = stream.ReadInt32("rotation", keys) / 100f;
+        sprite.Skew = stream.ReadInt32("skew", keys) / 100f;
+        var skip = 48 - (stream.Pos - startPos);
+        stream.Skip(skip); // We need to read exactly 48 bytes
 
         _logger.LogInformation($"{sprite.LocH}x{sprite.LocV}:Ink={sprite.Ink}:Blend={sprite.Blend}:Skew={sprite.Skew}:Rot={sprite.Rotation}:PropOffset={sprite.SpritePropertiesOffset}:Member={sprite.MemberCastLib},{sprite.MemberNum}");
         return sprite;
     }
 
-    internal IntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
+
+
+    #region Frame descriptors
+
+    internal RayScoreIntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
     {
         if (stream.Size < 44)
             return null;
 
-        var desc = new IntervalDescriptor();
+        var desc = new RayScoreIntervalDescriptor();
         var k = new Dictionary<string, int> { ["entry"] = index };
         desc.StartFrame = stream.ReadInt32("startFrame", k);
         desc.EndFrame = stream.ReadInt32("endFrame", k);
         desc.Unknown1 = stream.ReadInt32("unk1", k);
 
         // Correctly cast to flag enum and extract bitfield
-        var flags = (SpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
+        var flags = (RaySpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
 
-        desc.FlipH = flags.HasFlag(SpriteFlags.FlipH);
-        desc.FlipV = flags.HasFlag(SpriteFlags.FlipV);
-        desc.Editable = flags.HasFlag(SpriteFlags.Editable);
-        desc.Moveable = flags.HasFlag(SpriteFlags.Moveable);
-        desc.Trails = flags.HasFlag(SpriteFlags.Trails);
-        desc.IsLocked = flags.HasFlag(SpriteFlags.Locked);
+        desc.FlipH = flags.HasFlag(RaySpriteFlags.FlipH);
+        desc.FlipV = flags.HasFlag(RaySpriteFlags.FlipV);
+        desc.Editable = flags.HasFlag(RaySpriteFlags.Editable);
+        desc.Moveable = flags.HasFlag(RaySpriteFlags.Moveable);
+        desc.Trails = flags.HasFlag(RaySpriteFlags.Trails);
+        desc.IsLocked = flags.HasFlag(RaySpriteFlags.Locked);
 
 
         desc.Channel = stream.ReadInt32("channel", k);
@@ -153,10 +269,46 @@ internal class RaysScoreReader
         desc.Unknown8 = stream.ReadInt32("unk8", k);
         while (stream.Pos + 4 <= stream.Size)
             desc.ExtraValues.Add(stream.ReadInt32("extra", k));
-        _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, Flip={desc.FlipH},{desc.FlipV},🔒={desc.IsLocked}, , U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
+        _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, Flip={desc.FlipH},{desc.FlipV},🔒={desc.IsLocked},Trails={desc.Trails},Editable={desc.Editable},Moveable={desc.Moveable} , U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
         return desc;
     }
+    internal void ReadFrameDescriptors(RayScoreParseContext ctx)
+    {
+        ctx.ResetFrameDescriptors();
 
+        int ind = 0;
+        foreach (var frameIntervalDescriptor in ctx.FrameIntervalDescriptorBuffers)
+        {
+            var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian,
+                annotator: Annotator);
+            var descriptor = ReadFrameIntervalDescriptor(ind, ps);
+            if (descriptor != null)
+                ctx.AddFrameDescriptor(descriptor);
+
+
+            ind++;
+        }
+    }
+    #endregion
+
+
+
+    #region Behaviors
+    internal void ReadBehaviors(RayScoreParseContext ctx)
+    {
+        int ind = 0;
+        foreach (var frameIntervalDescriptor in ctx.BehaviorScriptBuffers)
+        {
+            var ps = new ReadStream(frameIntervalDescriptor, Endianness.BigEndian,
+                annotator: Annotator);
+            var behaviourRefs = ReadBehaviors(ind, ps);
+            if (ind < ctx.Descriptors.Count)
+                ctx.Descriptors[ind].Behaviors.AddRange(behaviourRefs);
+            ctx.AddFrameScript(behaviourRefs);
+
+            ind++;
+        }
+    }
     internal static List<RaysBehaviourRef> ReadBehaviors(int ind, ReadStream ss)
     {
         var behaviours = new List<RaysBehaviourRef>();
@@ -171,27 +323,9 @@ internal class RaysScoreReader
         return behaviours;
     }
 
-    internal class IntervalDescriptor
-    {
-        public int StartFrame { get; internal set; }
-        public int EndFrame { get; internal set; }
-        public int Unknown1 { get; internal set; }
-        public int Unknown2 { get; internal set; }
-        public int SpriteNumber { get; internal set; }
-        public int UnknownAlwaysOne { get; internal set; }
-        public int UnknownNearConstant15_0 { get; internal set; }
-        public int UnknownE1 { get; internal set; }
-        public int UnknownFD { get; internal set; }
-        public int Unknown7 { get; internal set; }
-        public int Unknown8 { get; internal set; }
-        public List<int> ExtraValues { get; } = new();
-        public int Channel { get; internal set; }
-        public List<RaysBehaviourRef> Behaviors { get; internal set; } = new List<RaysBehaviourRef>();
-        public bool FlipH { get; internal set; }
-        public bool FlipV { get; internal set; }
-        public bool Editable { get; internal set; }
-        public bool Moveable { get; internal set; }
-        public bool Trails { get; internal set; }
-        public bool IsLocked { get; internal set; }
-    }
+    #endregion
+
+
+
 }
+

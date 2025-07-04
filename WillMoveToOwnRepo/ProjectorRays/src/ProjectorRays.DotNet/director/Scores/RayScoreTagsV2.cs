@@ -32,8 +32,18 @@ internal static class RayScoreTagsV2
         Curvature = 0x01F4,
         Flags = 0x01FE,
         FlagsControl = 0x01FC,
-        TweenFlags = 0x01F6
+        TweenFlags = 0x01F6,
+
+       
     }
+    public enum ScoreTagMain : ushort
+    {
+        NextByteIsSpriteIf10Hex = 0x0120, // followed by   0x0120 , SpriteLock.dir
+        ThisIsASpriteBlock = 0x1000, // followed by 0x0030, SpriteBlock.dir
+    }
+
+    public static ScoreTagMain? TryParseTagMain(ushort raw)
+      => Enum.IsDefined(typeof(ScoreTagMain), (ushort)raw) ? (ScoreTagMain?)raw : null;
 
     public static ScoreTagV2? TryParseTag(ushort raw)
         => Enum.IsDefined(typeof(ScoreTagV2), (int)raw) ? (ScoreTagV2?)raw : null;

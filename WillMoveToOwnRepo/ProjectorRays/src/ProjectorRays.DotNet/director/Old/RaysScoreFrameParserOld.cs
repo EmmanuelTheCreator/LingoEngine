@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
+using ProjectorRays.director.Scores.Data;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
-namespace ProjectorRays.director.Scores
+namespace ProjectorRays.director.Old
 {
-    internal class RaysScoreFrameParser
+    internal class RaysScoreFrameParserOld
     {
 
         private readonly ILogger _logger;
@@ -32,10 +33,10 @@ namespace ProjectorRays.director.Scores
 
         public class FrameDeltaItem
         {
-            public int Offset {get; private set; }
-            public byte[] Data {get; private set; }
-            public RayScoreTags.ScoreKeyframeTag? Type { get;  private set; }
-            public FrameDeltaItem(int offset, byte[] data, RayScoreTags.ScoreKeyframeTag? type)
+            public int Offset { get; private set; }
+            public byte[] Data { get; private set; }
+            public RayScoreTagsOld.ScoreKeyframeTag? Type { get; private set; }
+            public FrameDeltaItem(int offset, byte[] data, RayScoreTagsOld.ScoreKeyframeTag? type)
             {
                 Offset = offset;
                 Data = data;
@@ -49,7 +50,7 @@ namespace ProjectorRays.director.Scores
         }
 
 
-        public RaysScoreFrameParser(ILogger logger, RayStreamAnnotatorDecorator streamAnnotator)
+        public RaysScoreFrameParserOld(ILogger logger, RayStreamAnnotatorDecorator streamAnnotator)
         {
             _logger = logger;
             Annotator = streamAnnotator;
@@ -154,7 +155,7 @@ namespace ProjectorRays.director.Scores
                 }
                 else
                 {
-                   // _logger.LogWarning($"Frame {primaryIdx}: Secondary data size is zero, skipping behavior scripts.");
+                    // _logger.LogWarning($"Frame {primaryIdx}: Secondary data size is zero, skipping behavior scripts.");
                 }
             }
         }
@@ -279,16 +280,16 @@ namespace ProjectorRays.director.Scores
         {
             // log all bytes
 
-            var frameBytes1 = readerSource.ReadBytes(readerSource.BytesLeft);
-            var frameData1 = new ReadStream(frameBytes1, frameBytes1.Length, readerSource.Endianness,
-                annotator: Annotator);
-            var rawata1 = frameData1.LogHex(frameData1.Size);
-            _logger.LogInformation("FrameData:" + rawata1);
-            return;
+            //var frameBytes1 = readerSource.ReadBytes(readerSource.BytesLeft);
+            //var frameData1 = new ReadStream(frameBytes1, frameBytes1.Length, readerSource.Endianness,
+            //    annotator: Annotator);
+            //var rawata1 = frameData1.LogHex(frameData1.Size);
+            //_logger.LogInformation("FrameData:" + rawata1);
+            //return;
 
             // Read the header (first 16 bytes or based on the known header size)
             int actualSize = readerSource.ReadInt32("actualSize");
-            var blockBytes = readerSource.ReadBytes(actualSize-4);
+            var blockBytes = readerSource.ReadBytes(actualSize - 4);
             var reader = new ReadStream(blockBytes, blockBytes.Length, readerSource.Endianness, annotator: Annotator);
 
             var unkA1 = reader.ReadInt8(); // usually -3
@@ -312,7 +313,7 @@ namespace ProjectorRays.director.Scores
 
             // TODO: fix : this is not the mapping table, this is already start reading 
             var offsetTable = new List<int>();
-            
+
             var mappingTables = new List<(int offset, int size)>();
             ushort nextByte = 0;
             nextByte = reader.ReadUint16();
@@ -339,7 +340,7 @@ namespace ProjectorRays.director.Scores
             // Now continue reading the rest of the data blocks after the header
             //var dataBlocks = new List<(ushort tag, byte[] data)>();  // List to store parsed data blocks
             var firstRead = true;
-            FrameDelta? lastKeyFrame =null;
+            FrameDelta? lastKeyFrame = null;
             while (!reader.Eof)
             {
                 if (!firstRead)
@@ -353,7 +354,7 @@ namespace ProjectorRays.director.Scores
                     byte[] mainKeyframeData = reader.ReadBytes(SpriteSize); // SpriteSize = 48
                     //_logger.LogInformation($"Keyframe ({SpriteSize} bytes) read.");
                     //dataBlocks.Add((0, mainKeyframeData));  // Tag 0 for keyframe as no specific tag is used here
-                    lastKeyFrame = new FrameDelta([new FrameDeltaItem(reader.Pos - 48, mainKeyframeData,null)]);
+                    lastKeyFrame = new FrameDelta([new FrameDeltaItem(reader.Pos - 48, mainKeyframeData, null)]);
                     _frameTable.Add(lastKeyFrame);
                     //var frameData = new ReadStream(mainKeyframeData, mainKeyframeData.Length, reader.Endianness, annotator: Annotator);
                     //var rawata = frameData.LogHex(frameData.Size);
@@ -362,14 +363,14 @@ namespace ProjectorRays.director.Scores
                 }
 
                 // skip 0 length
-                while (nextByte == 0 && reader.BytesLeft>0) 
+                while (nextByte == 0 && reader.BytesLeft > 0)
                     nextByte = reader.ReadUint16();
                 if (reader.BytesLeft == 0)
                     break;
 
                 var tag = nextByte;
-                var tagEnum = (RayScoreTags.ScoreKeyframeTag?)Enum.ToObject(typeof(RayScoreTags.ScoreKeyframeTag), tag);
-                var tagLength = tagEnum.HasValue ? RayScoreTags.GetDataLength(tagEnum.Value) : 0;
+                var tagEnum = (RayScoreTagsOld.ScoreKeyframeTag?)Enum.ToObject(typeof(RayScoreTagsOld.ScoreKeyframeTag), tag);
+                var tagLength = tagEnum.HasValue ? RayScoreTagsOld.GetDataLength(tagEnum.Value) : 0;
 
                 // Read entire block: tag (2 bytes already read) + tagLength
                 int length = tagLength + 2;
@@ -400,7 +401,7 @@ namespace ProjectorRays.director.Scores
 
             // You can now process `dataBlocks` further or store them as needed
         }
-        
+
 
 
 
@@ -417,7 +418,7 @@ namespace ProjectorRays.director.Scores
             if (enabled.HasFlag(RayKeyframeEnabled.Blend)) length += 1;
             if (enabled.HasFlag(RayKeyframeEnabled.ForeColor)) length += 1;
             if (enabled.HasFlag(RayKeyframeEnabled.BackColor)) length += 1;
-            if (enabled.HasFlag(RayKeyframeEnabled.TweeningEnabled)) 
+            if (enabled.HasFlag(RayKeyframeEnabled.TweeningEnabled))
                 length += 4;
             /*
              * tween enable willl be much more, but we have no test data yet.
@@ -455,8 +456,8 @@ Ease-out : 1 byte?
             _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {SpriteChannelCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
-            var decoder = new RayKeyframeDeltaDecoder(Annotator);
-            
+            var decoder = new RayKeyframeDeltaDecoderOld(Annotator);
+
             for (int fr = 0; fr < SpriteChannelCount; fr++)
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
@@ -468,7 +469,7 @@ Ease-out : 1 byte?
                     annotator: Annotator);
                 var rawata = frameData.LogHex(frameData.Size);
                 _logger.LogInformation("FrameData:" + rawata);
-              
+
             }
         }
 
@@ -496,7 +497,7 @@ Ease-out : 1 byte?
             _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {SpriteChannelCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
-            var decoder = new RayKeyframeDeltaDecoder(Annotator);
+            var decoder = new RayKeyframeDeltaDecoderOld(Annotator);
             for (int fr = 0; fr < SpriteChannelCount; fr++)
             {
                 var fk = new Dictionary<string, int> { ["frame"] = fr };
@@ -527,8 +528,8 @@ Ease-out : 1 byte?
                 }
                 _frameTable.Add(new FrameDelta(items));
             }
-        }  
-        
+        }
+
         private void ReadFrameData444(ReadStream reader)
         {
 
@@ -551,7 +552,7 @@ Ease-out : 1 byte?
             _logger.LogInformation($"DB| Score root primary: header=(actualSize={actualSize}, {c2},frameCount= {SpriteChannelCount}, {c4},spriteSize= {SpriteSize}, {c6}, TotalSpriteCount={TotalSpriteCount})");
 
             int frameStart = reader.Pos;
-            var decoder = new RayKeyframeDeltaDecoder(Annotator);
+            var decoder = new RayKeyframeDeltaDecoderOld(Annotator);
             var frame10And12found = false;
             RaySprite? sprite = null;
             var idx = 0;
@@ -578,7 +579,7 @@ Ease-out : 1 byte?
 
                 //    continue;
                 //}
-                var channelStream = new ReadStream(frameData.Data, frameData.Data.Length, Endianness.BigEndian,annotator: Annotator);
+                var channelStream = new ReadStream(frameData.Data, frameData.Data.Length, Endianness.BigEndian, annotator: Annotator);
                 ushort something = channelStream.ReadUint8("somethingA", fk);
                 //ushort something2 = channelStream.ReadUint8("SomethingB", fk);
                 /// first = 16 128 255 0 0 1
@@ -586,7 +587,7 @@ Ease-out : 1 byte?
                 var flags = (RayKeyframeEnabled)flagByte;
                 var flags2 = (RayKeyframeEnabled)something;
 
-                var spriteNum = (offset2 / SpriteSize) - 6;
+                var spriteNum = offset2 / SpriteSize - 6;
                 if (channelStream.Data.Length < 4) continue;
                 var itemLen2 = channelStream.ReadUint16("deltaLen", fk);
                 //ushort offset3 = channelStream.ReadUint16("offset", fk);
@@ -607,8 +608,8 @@ Ease-out : 1 byte?
                 }
                 else
                 {
-                    
-                   
+
+
 
                     var keyFrame = HandleAnimationKeyframe(channelStream, flags, keys);
                     if (sprite != null && keyFrame != null)
@@ -618,7 +619,7 @@ Ease-out : 1 byte?
 
         }
 
-       
+
 
 
         private void TryLogFixedRawKeyframeSpriteBlock(ReadStream frameData, int frameNum)
@@ -640,10 +641,10 @@ Ease-out : 1 byte?
                 string hexDump = string.Join(" ", buf.Select(b => b.ToString("X2")));
                 _logger.LogInformation($"🔍 Frame {frameNum} raw PeekBytes(48):\n{hexDump}");
 
-                short locH = (short)((buf[0x02] << 8) | buf[0x03]);
-                short locV = (short)((buf[0x00] << 8) | buf[0x01]);
-                short width = (short)((buf[0x04] << 8) | buf[0x05]);
-                short height = (short)((buf[0x06] << 8) | buf[0x07]);
+                short locH = (short)(buf[0x02] << 8 | buf[0x03]);
+                short locV = (short)(buf[0x00] << 8 | buf[0x01]);
+                short width = (short)(buf[0x04] << 8 | buf[0x05]);
+                short height = (short)(buf[0x06] << 8 | buf[0x07]);
 
                 byte blendRaw = buf[0x09];
                 byte ink = buf[0x0A];
@@ -652,12 +653,12 @@ Ease-out : 1 byte?
                 byte foreColor = buf[0x0E];
                 byte backColor = buf[0x0F];
 
-                float rotation = (short)((buf[0x20] << 8) | buf[0x21]) / 100f;
-                float skew = (short)((buf[0x22] << 8) | buf[0x23]) / 100f;
+                float rotation = (short)(buf[0x20] << 8 | buf[0x21]) / 100f;
+                float skew = (short)(buf[0x22] << 8 | buf[0x23]) / 100f;
 
-                ushort memberNum = (ushort)((buf[0x2A] << 8) | buf[0x2B]);
-                ushort castLib = (ushort)((buf[0x2C] << 8) | buf[0x2D]);
-                uint memberId = ((uint)castLib << 16) | memberNum;
+                ushort memberNum = (ushort)(buf[0x2A] << 8 | buf[0x2B]);
+                ushort castLib = (ushort)(buf[0x2C] << 8 | buf[0x2D]);
+                uint memberId = (uint)castLib << 16 | memberNum;
 
                 _logger.LogInformation(
                     $"🟨 Raw Sprite Block in Frame {frameNum}:\n" +
@@ -676,7 +677,7 @@ Ease-out : 1 byte?
         }
 
 
-    
+
         public List<RaySprite> ReadAllFrameSprites2()
         {
             return AllSprites;
@@ -707,9 +708,9 @@ Ease-out : 1 byte?
                     var channelStream = new ReadStream(mainFrame.Data, mainFrame.Data.Length, Endianness.BigEndian,
                         annotator: Annotator);
                     // Read the flag byte and convert it to the KeyframeFlags enum
-                    
 
-                    var spriteNum = (mainFrame.Offset / SpriteSize) - 6;
+
+                    var spriteNum = mainFrame.Offset / SpriteSize - 6;
                     //if (channelStream.Data.Length < 4) continue;
                     //if ((flags & RayKeyframeEnabled.TweeningEnabled) != 0)
                     if (mainFrame.Type == null) // keyframe
@@ -728,17 +729,17 @@ Ease-out : 1 byte?
                     }
                     //else
                     //{
-                        //var keyFrame = RayScoreTags.CreateKeyFrameFromTags(frame);
-                        //if (sprite != null && keyFrame != null)
-                        //    sprite.Keyframes.Add(keyFrame);
+                    //var keyFrame = RayScoreTags.CreateKeyFrameFromTags(frame);
+                    //if (sprite != null && keyFrame != null)
+                    //    sprite.Keyframes.Add(keyFrame);
 
-                        //byte flags1 = channelStream.ReadUint8("Flag1", keys);
-                        //byte flagByte = channelStream.ReadUint8("KeyframeType", keys);
-                        //var flags = (RayKeyframeEnabled)flagByte;
+                    //byte flags1 = channelStream.ReadUint8("Flag1", keys);
+                    //byte flagByte = channelStream.ReadUint8("KeyframeType", keys);
+                    //var flags = (RayKeyframeEnabled)flagByte;
 
-                        //var keyFrame = HandleAnimationKeyframe(channelStream, flags, keys);
-                        //if (sprite != null && keyFrame != null)
-                        //    sprite.Keyframes.Add(keyFrame);
+                    //var keyFrame = HandleAnimationKeyframe(channelStream, flags, keys);
+                    //if (sprite != null && keyFrame != null)
+                    //    sprite.Keyframes.Add(keyFrame);
                     //}
                 }
                 if (spritesInFrame.Count == 0)
@@ -750,14 +751,14 @@ Ease-out : 1 byte?
             return allFrames;
         }
 
-        
 
-        public RayKeyFrame? HandleAnimationKeyframe(ReadStream stream, RayKeyframeEnabled flags, Dictionary<string, int>? keys = null)
+
+        public RayScoreKeyFrame? HandleAnimationKeyframe(ReadStream stream, RayKeyframeEnabled flags, Dictionary<string, int>? keys = null)
         {
             if (stream.Size < 8) return null;
-            RayKeyFrame keyframe = new RayKeyFrame();
+            RayScoreKeyFrame keyframe = new RayScoreKeyFrame();
 
-           
+
             if (flags == RayKeyframeEnabled.None) return null;
 
             // Parse properties based on flag bits
@@ -782,7 +783,7 @@ Ease-out : 1 byte?
             if ((flags & RayKeyframeEnabled.Blend) != 0)
             {
                 byte blendByte = stream.ReadUint8("Blend", keys);
-                keyframe.Blend = (int)((blendByte / 255f) * 100f);
+                keyframe.Blend = (int)(blendByte / 255f * 100f);
             }
 
             if ((flags & RayKeyframeEnabled.ForeColor) != 0)
@@ -792,7 +793,7 @@ Ease-out : 1 byte?
                 keyframe.BackColor = stream.ReadUint8("BackColor", keys);
 
             // Log the parsed keyframe
-            _logger.LogInformation($"Parsed keyframe {(keys !=null ?string.Join(',', keys.Select(s => s.Key+"="+s.Value)):"")}: Flags={flags}; " +
+            _logger.LogInformation($"Parsed keyframe {(keys != null ? string.Join(',', keys.Select(s => s.Key + "=" + s.Value)) : "")}: Flags={flags}; " +
                              $"LocH={keyframe.LocH}, LocV={keyframe.LocV}, " +
                              $"Width={keyframe.Width}, Height={keyframe.Height}, " +
                              $"Rotation={keyframe.Rotation}, Skew={keyframe.Skew}, " +
@@ -803,7 +804,7 @@ Ease-out : 1 byte?
         }
 
 
-       
+
         private IntervalDescriptor? ReadFrameIntervalDescriptor(int index, ReadStream stream)
         {
             if (stream.Size < 44)
@@ -816,14 +817,14 @@ Ease-out : 1 byte?
             desc.Unknown1 = stream.ReadInt32("unk1", k);
 
             // Correctly cast to flag enum and extract bitfield
-            var flags = (SpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
+            var flags = (RaySpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
 
-            desc.FlipH = flags.HasFlag(SpriteFlags.FlipH);
-            desc.FlipV = flags.HasFlag(SpriteFlags.FlipV);
-            desc.Editable = flags.HasFlag(SpriteFlags.Editable);
-            desc.Moveable = flags.HasFlag(SpriteFlags.Moveable);
-            desc.Trails = flags.HasFlag(SpriteFlags.Trails);
-            desc.IsLocked = flags.HasFlag(SpriteFlags.Locked);
+            desc.FlipH = flags.HasFlag(RaySpriteFlags.FlipH);
+            desc.FlipV = flags.HasFlag(RaySpriteFlags.FlipV);
+            desc.Editable = flags.HasFlag(RaySpriteFlags.Editable);
+            desc.Moveable = flags.HasFlag(RaySpriteFlags.Moveable);
+            desc.Trails = flags.HasFlag(RaySpriteFlags.Trails);
+            desc.IsLocked = flags.HasFlag(RaySpriteFlags.Locked);
 
             desc.Channel = stream.ReadInt32("channel", k); // after top channels , so start at 6 if 2 audio channels
             desc.UnknownAlwaysOne = stream.ReadInt16("const1", k); // seems always 1
@@ -868,7 +869,7 @@ Ease-out : 1 byte?
             Type4 = 1 << 4,
             Type5 = 1 << 5,
             Type6 = 1 << 6,
-            Type7 = 1 << 7,      
+            Type7 = 1 << 7,
         }
         // First byte type:
         //If keyframeType indicates a sprite, the frame data might include properties like position(LocH, LocV), size, rotation, skew, color, etc.
@@ -881,22 +882,22 @@ Ease-out : 1 byte?
             // 1 byte for the type  // always 16 it seems
             // 2 bytes for size -> // 0 ,8, 36, 1 , 2 -> this seems strange because we read the flags
 
-            var flags1 = stream.ReadUint8(); 
+            var flags1 = stream.ReadUint8();
             var flags11 = (RayKeyFrameType)(flags1 & 0xFF);
             _logger.LogInformation("Sprite flags=" + flags11.ToString());
             if (!flags11.HasFlag(RayKeyFrameType.Type4) && flags1 != 0)
             {
-                var keyframeType = stream.ReadUint8(); 
+                var keyframeType = stream.ReadUint8();
                 var keyframeSize = stream.ReadUint8();
                 _logger.LogInformation($"something1={keyframeType}, something2={keyframeSize}");
             }
-            
+
             byte inkByte = stream.ReadUint8("ink", keys);
             sprite.Ink = inkByte & 0x7F;
             sprite.ForeColor = stream.ReadUint8("foreColor", keys);
             sprite.BackColor = stream.ReadUint8("backColor", keys);
-            sprite.MemberCastLib = (int)stream.ReadUint16("memberCastLib", keys);
-            sprite.MemberNum = (int)stream.ReadUint16("memberNum", keys);
+            sprite.MemberCastLib = stream.ReadUint16("memberCastLib", keys);
+            sprite.MemberNum = stream.ReadUint16("memberNum", keys);
             stream.Skip(2); // unknown
             sprite.SpritePropertiesOffset = stream.ReadUint16("propOffset", keys); //18,27,30,33,36
             sprite.LocV = stream.ReadInt16("locV", keys);
@@ -1080,10 +1081,10 @@ Ease-out : 1 byte?
                 string hexDump = string.Join(" ", buf.Select(b => b.ToString("X2")));
                 _logger.LogInformation($"🔍 Frame {frameNum} raw PeekBytes(48):\n{hexDump}");
 
-                short locH = (short)((buf[0x02] << 8) | buf[0x03]);
-                short locV = (short)((buf[0x00] << 8) | buf[0x01]);
-                short width = (short)((buf[0x04] << 8) | buf[0x05]);
-                short height = (short)((buf[0x06] << 8) | buf[0x07]);
+                short locH = (short)(buf[0x02] << 8 | buf[0x03]);
+                short locV = (short)(buf[0x00] << 8 | buf[0x01]);
+                short width = (short)(buf[0x04] << 8 | buf[0x05]);
+                short height = (short)(buf[0x06] << 8 | buf[0x07]);
 
                 byte blendRaw = buf[0x09];
                 byte ink = buf[0x0A];
@@ -1092,12 +1093,12 @@ Ease-out : 1 byte?
                 byte foreColor = buf[0x0E];
                 byte backColor = buf[0x0F];
 
-                float rotation = (short)((buf[0x20] << 8) | buf[0x21]) / 100f;
-                float skew = (short)((buf[0x22] << 8) | buf[0x23]) / 100f;
+                float rotation = (short)(buf[0x20] << 8 | buf[0x21]) / 100f;
+                float skew = (short)(buf[0x22] << 8 | buf[0x23]) / 100f;
 
-                ushort memberNum = (ushort)((buf[0x2A] << 8) | buf[0x2B]);
-                ushort castLib = (ushort)((buf[0x2C] << 8) | buf[0x2D]);
-                uint memberId = ((uint)castLib << 16) | memberNum;
+                ushort memberNum = (ushort)(buf[0x2A] << 8 | buf[0x2B]);
+                ushort castLib = (ushort)(buf[0x2C] << 8 | buf[0x2D]);
+                uint memberId = (uint)castLib << 16 | memberNum;
 
                 _logger.LogInformation(
                     $"🟨 Raw Sprite Block in Frame {frameNum}:\n" +
@@ -1447,7 +1448,7 @@ Ease-out : 1 byte?
             keyframe.MemberNum = sprite.MemberNum;
             keyframe.MemberCastLib = sprite.MemberCastLib;
         }
-        public void CalculateFinalKeyFrame(KeyFrameState keyframeState, RayKeyFrame finalKeyframe, RayKeyFrame previousKeyframe)
+        public void CalculateFinalKeyFrame(KeyFrameState keyframeState, RayScoreKeyFrame finalKeyframe, RayScoreKeyFrame previousKeyframe)
         {
             if (previousKeyframe == null)
             {
@@ -1492,11 +1493,11 @@ Ease-out : 1 byte?
                 // Apply changes to each property based on the delta value
                 if (delta == 0x0136)  // Example for LocH delta tag
                 {
-                    keyframe.LocH = previousKeyframe.LocH + (short)delta;  // Apply LocH delta
+                    keyframe.LocH = previousKeyframe.LocH + delta;  // Apply LocH delta
                 }
                 else if (delta == 0x0132)  // Example for LocV delta tag
                 {
-                    keyframe.LocV = previousKeyframe.LocV + (short)delta;  // Apply LocV delta
+                    keyframe.LocV = previousKeyframe.LocV + delta;  // Apply LocV delta
                 }
                 // Repeat for other fields like Width, Height, Rotation, Skew, etc.
             }
@@ -1522,8 +1523,8 @@ Ease-out : 1 byte?
                 if (_position + 4 > _buffer.Length)
                     return false;
 
-                tag = (ushort)((_buffer[_position] << 8) | _buffer[_position + 1]);
-                value = (ushort)((_buffer[_position + 2] << 8) | _buffer[_position + 3]);
+                tag = (ushort)(_buffer[_position] << 8 | _buffer[_position + 1]);
+                value = (ushort)(_buffer[_position + 2] << 8 | _buffer[_position + 3]);
                 _position += 4;
                 return true;
             }
@@ -1542,10 +1543,10 @@ Ease-out : 1 byte?
             // Example: check if first bytes look like reasonable LocV, LocH, Width, Height (int16 pairs)
             byte[] buf = frameData.PeekBytes(MinKeyframeSize);
 
-            short locV = (short)((buf[0] << 8) | buf[1]);
-            short locH = (short)((buf[2] << 8) | buf[3]);
-            short width = (short)((buf[4] << 8) | buf[5]);
-            short height = (short)((buf[6] << 8) | buf[7]);
+            short locV = (short)(buf[0] << 8 | buf[1]);
+            short locH = (short)(buf[2] << 8 | buf[3]);
+            short width = (short)(buf[4] << 8 | buf[5]);
+            short height = (short)(buf[6] << 8 | buf[7]);
 
             // Sanity check ranges (tune as needed)
             if (locV < 0 || locV > 1000) return false;
