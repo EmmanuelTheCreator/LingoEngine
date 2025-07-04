@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using ProjectorRays.Common;
 using ProjectorRays.director.Chunks;
 using ProjectorRays.Director;
-using static ProjectorRays.director.Scores.RaysScoreFrameParser;
+using static ProjectorRays.director.Scores.RaysScoreFrameParserV2;
 
 namespace ProjectorRays.director.Scores;
 
@@ -98,9 +98,15 @@ public class RaysScoreChunk : RaysChunk
         public int MemberCastLib { get; set; }
         public int MemberNum { get; set; }
         public int Duration { get; set; }
+        /// <summary>Absolute frame this keyframe applies to.</summary>
+        public int Frame { get; set; }
         public float ScaleX { get; internal set; }
         public float ScaleY { get; internal set; }
+        public List<UnknownTag> UnknownTags { get; } = new();
     }
+
+    /// <summary>Unknown tag entry encountered during keyframe parsing.</summary>
+    public record UnknownTag(ushort Tag, byte[] Data);
     /// <summary>Descriptor of a sprite on the score timeline.</summary>
     public class RaySprite
     {
@@ -126,6 +132,11 @@ public class RaysScoreChunk : RaysChunk
         public bool FlipH {get; internal set; }
         public bool FlipV {get; internal set; }
         public bool Editable { get; internal set; }
+
+        public byte EaseIn { get; set; }
+        public byte EaseOut { get; set; }
+        public ushort Curvature { get; set; }
+        public byte TweenFlags { get; set; }
 
 
         public List<int> ExtraValues { get; internal set; } = new();
@@ -210,12 +221,8 @@ public class RaysScoreChunk : RaysChunk
 
         int entriesStart = stream.Pos;
         Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
-        var scoreFrameParser = new RaysScoreFrameParser(Dir.Logger, Annotator);
-        scoreFrameParser.ReadAllIntervals(entryCount,stream);
-        scoreFrameParser.ReadFrameData();
-        scoreFrameParser.ReadFrameDescriptors();
-        scoreFrameParser.ReadBehaviors();
-        Sprites = scoreFrameParser.ReadAllFrameSprites();
+        var parser = new RaysScoreFrameParserV2(Dir.Logger, Annotator);
+        Sprites = parser.ParseScore(stream, entryCount);
         return;
 
 
