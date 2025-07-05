@@ -69,7 +69,8 @@ public class RayScoreKeyFrame
     public int MemberNum { get; set; }
     public int Duration { get; set; }
     /// <summary>Absolute frame this keyframe applies to.</summary>
-    public int Frame { get; set; }
+    public int FrameNum { get; set; }
+    public int SpriteNum { get; set; }
     public float ScaleX { get; internal set; }
     public float ScaleY { get; internal set; }
     public List<UnknownTag> UnknownTags { get; } = new();

@@ -56,10 +56,12 @@ internal class RaysScoreFrameParserV2
 
         //ParseBlock(newReader, header.ActualSize - 20, header, ctx);
         ParseBlock(newReader, newReader.Size, header, ctx);
+        LinkKeyFrames(ctx);
 
         return ctx.Sprites;
     }
 
+  
     private void LogFullScoreBytes(ReadStream readerSource)
     {
         var frameBytes1 = readerSource.ReadBytes(readerSource.BytesLeft);
@@ -93,7 +95,7 @@ internal class RaysScoreFrameParserV2
             if (prefix == header.SpriteSize)
             {
                 var sp = ParseSpriteBlock(stream, header, ctx, header.SpriteSize);
-                ctx.SetCurrentSprite(sp.SpriteNumber);
+                ctx.SetCurrentSprite(sp);
                 continue;
             }
 
@@ -114,7 +116,7 @@ internal class RaysScoreFrameParserV2
                     if (tagMain == RayScoreTagsV2.ScoreTagMain.ThisIsASpriteBlock)
                     {
                         var sp = ParseSpriteBlock(stream, header, ctx, header.SpriteSize);
-                        ctx.SetCurrentSprite(sp.SpriteNumber);
+                        ctx.SetCurrentSprite(sp);
                         continue;
                     }
                 }
@@ -128,7 +130,16 @@ internal class RaysScoreFrameParserV2
         }
         ctx.BlockDepth--;
     }
+    //void ValidateNextTag(ReadStream s)
+    //{
+    //    long pos = s.Position;
+    //    ushort tag = s.PeekUint16();
 
+    //    if (tag < 0x0120 || tag > 0x01F6)
+    //    {
+    //        _logger.LogInformation($"[FrameTag] Unexpected tag {tag:X} at 0x{pos:X} — possible misalignment");
+    //    }
+    //}
 
 
     private RaySprite ParseSpriteBlock(ReadStream stream, RayScoreHeader header, RayScoreParseContext ctx, int length = -1)
@@ -139,9 +150,7 @@ internal class RaysScoreFrameParserV2
         int channel = ctx.CurrentSpriteNum + 6;
         RayScoreIntervalDescriptor desc;
         if (ctx.ChannelToDescriptor.TryGetValue(channel, out var known))
-        {
             desc = known;
-        }
         else
         {
             _logger.LogError($"No descriptor found for channel {channel} at frame {ctx.CurrentFrame}. Creating default descriptor.");
@@ -156,7 +165,6 @@ internal class RaysScoreFrameParserV2
         sprite.Behaviors.AddRange(desc.Behaviors);
         sprite.ExtraValues.AddRange(desc.ExtraValues);
         sprite.SpriteNumber = channel;
-        sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, sprite.StartFrame));
         ctx.AddSprite(sprite);  
         return sprite;
     }
@@ -178,12 +186,12 @@ internal class RaysScoreFrameParserV2
                 ctx.SetCurrentSprite(data[0]);
             return;
         }
-
+        
         int? channel = TryDecodeChannel(tag);
         if (channel.HasValue)
         {
             ctx.SetCurrentSprite(channel.Value);
-            var sprite = ctx.GetOrCreateSprite(channel.Value);
+            var sprite = ctx.GetSprite(channel.Value, ctx.CurrentFrame);
             if (data.Length >= 2)
             {
                 ushort flags = BinaryPrimitives.ReadUInt16BigEndian(data);
@@ -200,22 +208,37 @@ internal class RaysScoreFrameParserV2
                 
                 ctx.AdvanceFrame(framesToAdvance);
 
-                if (createKeyframe)
-                    sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, ctx.CurrentFrame));
+                if (createKeyframe && sprite != null)
+                {
+                    var keyFrameNew = RaySpriteFactory.CreateKeyFrame(sprite, ctx.CurrentSpriteNum, ctx.CurrentFrame);
+                    ctx.AddKeyframe(keyFrameNew);
+                    ctx.SetActiveKeyframe(keyFrameNew);
+                    _logger.LogInformation($"New KeyFrame:SpriteNum={ctx.CurrentSpriteNum}:Frame={ctx.CurrentFrame}");
+                }
             }
             return;
         }
-
-        var target = ctx.GetOrCreateSprite(ctx.CurrentSpriteNum + 6);
-        var kf = target.Keyframes.Count > 0 ? target.Keyframes[^1] : RaySpriteFactory.CreateKeyFrame(target, ctx.CurrentFrame);
-        if (target.Keyframes.Count == 0)
-            target.Keyframes.Add(kf);
-
         var known = RayScoreTagsV2.TryParseTag(tag);
-        if (known != null)
-            _reader.ApplyKnownTag(target, kf, known.Value, data, ctx);
-        else
-            kf.UnknownTags.Add(new UnknownTag(tag, data));
+        // todo is it for spite or keyframe?
+        if (known != null && ctx.CurrentSprite != null)
+            _reader.ApplyKnownTag(ctx.CurrentSprite, known.Value, data, ctx);
+
+        // todo : this is wrong
+        //var target = ctx.CurrentSprite;
+        //var keyFrame = target != null? target : RaySpriteFactory.CreateKeyFrame(target,ctx.CurrentSpriteNum, ctx.CurrentFrame);
+        //if (target == null)
+        //    ctx.AddKeyframe(keyFrame);
+
+        if (ctx.CurrentKeyframe != null)
+        {
+            if (known != null)
+                _reader.ApplyKnownTag(ctx.CurrentKeyframe, known.Value, data, ctx);
+            else
+            {
+                ctx.CurrentKeyframe.UnknownTags.Add(new UnknownTag(tag, data));
+                _logger.LogInformation($"Unkown Spritenum={ctx.CurrentSpriteNum} at frame={ctx.CurrentFrame} : 0x{tag:X2}({tag})");
+            }
+        }
     }
 
     /// <summary>
@@ -229,6 +252,20 @@ internal class RaysScoreFrameParserV2
         return null;
     }
 
+    private void LinkKeyFrames(RayScoreParseContext ctx)
+    {
+        foreach (var keyFrame in ctx.Keyframes)
+        {
+            var sprite = ctx.GetSprite(keyFrame.SpriteNum, keyFrame.FrameNum);
+            if (sprite != null)
+                sprite.Keyframes.Add(keyFrame);
+            else
+            {
+                _logger.LogWarning($"Keyframe for sprite {keyFrame.SpriteNum} at frame {keyFrame.FrameNum} not found in context. " +
+                    "This may indicate a parsing error or missing sprite data.");
+            }
+        }
+    }
 
 
 

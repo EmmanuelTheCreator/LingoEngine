@@ -1,6 +1,7 @@
 using ProjectorRays.Common;
 using ProjectorRays.director.Scores.Data;
 using System.IO;
+using System.Threading.Channels;
 using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
@@ -21,13 +22,16 @@ internal class RayScoreParseContext
     public List<RayScoreIntervalDescriptor> Descriptors { get; } = new();
     public Dictionary<int, RayScoreIntervalDescriptor> ChannelToDescriptor { get; } = new();
     public List<List<RaysBehaviourRef>> FrameScripts { get; } = new();
+    public List<RayScoreKeyFrame> Keyframes { get; internal set; } = new();
     //public List<int> IntervalOrder { get; } = new();
 
     public int CurrentFrame { get; private set; }
+    public RaySprite? CurrentSprite { get; private set; }
     public int CurrentSpriteNum { get; private set; }
     public int BlockDepth { get; set; }
     public int UpcomingBlockSize { get; set; }
     public bool IsInAdvanceFrameMode { get; private set; }
+    public RayScoreKeyFrame CurrentKeyframe { get; private set; }
 
     public RayScoreParseContext(RayStreamAnnotatorDecorator annotator,Microsoft.Extensions.Logging.ILogger logger)
     {
@@ -40,17 +44,36 @@ internal class RayScoreParseContext
 
     public void SetCurrentFrame(int frame) => CurrentFrame = frame;
 
-    public void SetCurrentSprite(int channel)
+    public RaySprite SetCurrentSprite(int channel)
     {
-        CurrentSpriteNum = channel - 6;
-        var sprite = Sprites.FirstOrDefault(x => x.SpriteNumber == channel);
+        var sprite = GetSprite(channel, CurrentFrame);
         if (sprite != null)
-            CurrentFrame = sprite.StartFrame;
+            SetCurrentSprite(sprite);
+        return sprite;
+    }
+    public void SetCurrentSprite(RaySprite currentSprite)
+    {
+        CurrentSprite = currentSprite;
+        CurrentSpriteNum = currentSprite.SpriteNumber - 6;
+        CurrentFrame = currentSprite.StartFrame;
       
+    }
+    public void AddKeyframe(RayScoreKeyFrame keyframe) => Keyframes.Add(keyframe);
+    public void SetActiveKeyframe(RayScoreKeyFrame keyframe) => CurrentKeyframe = keyframe;
+    internal RayScoreKeyFrame? GetKeyFrame(int channel, int currentFrame)
+    {
+        // todo : this is incorrect
+        var keyFrame = Keyframes.FirstOrDefault(x => x.SpriteNum == channel && x.FrameNum < currentFrame);
+        return keyFrame;
     }
     public void AddSprite(RaySprite sprite)
     {
           Sprites.Add(sprite);
+    }
+    public RaySprite? GetSprite(int channel, int frame)
+    {
+        var sprite = Sprites.FirstOrDefault(x => x.SpriteNumber == channel && x.StartFrame <= frame && x.EndFrame >= frame);
+        return sprite;
     }
     public RaySprite GetOrCreateSprite(int channel)
     {
@@ -61,15 +84,12 @@ internal class RayScoreParseContext
             CurrentFrame = sprite.StartFrame;
             return sprite;
         }
-
-        
         sprite = new RaySprite
         {
             SpriteNumber = channel,
             StartFrame = CurrentFrame,
             EndFrame = CurrentFrame
         };
-        sprite.Keyframes.Add(RaySpriteFactory.CreateKeyFrame(sprite, CurrentFrame));
         Sprites.Add(sprite);
         return sprite;
     }
@@ -123,5 +143,5 @@ internal class RayScoreParseContext
         FrameScripts.Add(behaviourRefs);
     }
 
- 
+    
 }

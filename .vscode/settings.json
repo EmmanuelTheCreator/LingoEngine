@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "${workspaceFolder}/LingoEngine.sln"
+    "dotnet.defaultSolution": "${workspaceFolder}/LingoEngine.sln",
+    "godotTools.editorPath.godot4": "c:\\Program Files\\Godot\\Godot_v4.5-dev5_windows_arm64.exe"
 }

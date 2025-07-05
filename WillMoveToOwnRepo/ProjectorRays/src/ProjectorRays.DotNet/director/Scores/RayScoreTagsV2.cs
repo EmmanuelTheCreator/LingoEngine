@@ -34,7 +34,9 @@ internal static class RayScoreTagsV2
         FlagsControl = 0x01FC,
         TweenFlags = 0x01F6,
 
-       
+        Unknown012A = 0x012A,
+        Unknown013E = 0x013E,
+        Unknown0142 = 0x0142,
     }
     public enum ScoreTagMain : ushort
     {

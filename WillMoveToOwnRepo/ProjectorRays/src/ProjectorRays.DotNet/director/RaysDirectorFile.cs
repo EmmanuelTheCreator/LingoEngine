@@ -49,10 +49,11 @@ public class RaysDirectorFile : ChunkResolver
     public RaysInitialMapChunk? InitialMap;
     public RaysMemoryMapChunk? MemoryMap;
     public ILogger Logger;
+    public string Name{ get; set; }
     public static uint FOURCC(char a, char b, char c, char d)
         => ((uint)a << 24) | ((uint)b << 16) | ((uint)c << 8) | (uint)d;
 
-    public RaysDirectorFile(ILogger logger) { Logger = logger; }
+    public RaysDirectorFile(ILogger logger, string name = "") { Logger = logger; Name = name; }
 
     /// <summary>
     /// Entry point for loading a Director movie. Depending on the codec this

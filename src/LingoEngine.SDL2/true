@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LingoEngine.SDL2</name>
+    </assembly>
+    <members>
+        <member name="T:LingoEngine.SDL2.Primitives.LingoPixelFormatExtensions">
+            <summary>
+            Helper conversions for SDL pixel data masks.
+            </summary>
+        </member>
+        <member name="M:LingoEngine.SDL2.Primitives.LingoPixelFormatExtensions.GetMasks(LingoEngine.Primitives.LingoPixelFormat,System.UInt32@,System.UInt32@,System.UInt32@,System.UInt32@,System.Int32@)">
+            <summary>Gets color masks and bits per pixel for the given format.</summary>
+        </member>
+        <member name="M:LingoEngine.SDL2.SDLL.SDL.SDL_GetNumTouchDevices">
+            \brief Get the number of registered touch devices.
+        </member>
+        <member name="M:LingoEngine.SDL2.SDLL.SDL.SDL_GetTouchDevice(System.Int32)">
+            \brief Get the touch ID with the given index, or 0 if the index is invalid.
+        </member>
+        <member name="M:LingoEngine.SDL2.SDLL.SDL.SDL_GetNumTouchFingers(System.Int64)">
+            \brief Get the number of active fingers for a given touch device.
+        </member>
+        <member name="M:LingoEngine.SDL2.SDLL.SDL.SDL_GetTouchFinger(System.Int64,System.Int32)">
+            \brief Get the finger object of the given touch, with the given index.
+            Returns pointer to SDL_Finger.
+        </member>
+    </members>
+</doc>

@@ -20,6 +20,7 @@ public class RayStreamAnnotatorDecorator
     private readonly List<RayStreamAnnotation> _annotations = new();
     public IReadOnlyList<RayStreamAnnotation> Annotations => _annotations;
     public long StreamOffsetBase { get; }
+    public string Name { get; private set; }
 
     public RayStreamAnnotatorDecorator(long baseOffset)
     {
@@ -53,5 +54,10 @@ public class RayStreamAnnotatorDecorator
             unknown.Add((current, StreamOffsetBase + totalLength - current));
 
         return unknown;
+    }
+
+    internal void SetName(string name)
+    {
+        Name = name;
     }
 }

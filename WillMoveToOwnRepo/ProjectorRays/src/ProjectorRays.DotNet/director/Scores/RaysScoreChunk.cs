@@ -88,7 +88,7 @@ public class RaysScoreChunk : RaysChunk
         //Dir?.Logger.LogInformation($"headerType={headerType},offsetsOffset={offsetsOffset},entryCount={entryCount},notationBase={notationBase},entrySizeSum={entrySizeSum}");
         int entriesStart = stream.Pos;
         Annotator = new RayStreamAnnotatorDecorator(stream.Offset);
-
+        Annotator.SetName(Dir.Name);
 
         var parser = new RaysScoreFrameParserV2(Dir.Logger, Annotator);
         try

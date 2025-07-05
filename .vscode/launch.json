@@ -2,6 +2,7 @@
     // Requires Godot 4 with the C# tools. Ensure `godot` is in PATH
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "Launch Demo SDL2",
             "type": "coreclr",

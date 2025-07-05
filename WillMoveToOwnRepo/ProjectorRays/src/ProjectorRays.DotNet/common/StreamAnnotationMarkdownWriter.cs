@@ -10,6 +10,11 @@ public static class StreamAnnotationMarkdownWriter
     public static string WriteMarkdown(RayStreamAnnotatorDecorator annotator, byte[] data)
     {
         var sb = new StringBuilder();
+        if (!string.IsNullOrWhiteSpace(annotator.Name))
+        {
+            sb.AppendLine($"# Stream Annotations for: {annotator.Name}");
+            sb.AppendLine("------------------------------------------------");
+        }
         sb.AppendLine("| Offset (hex) | Bytes | ASCII | Description | Keys |");
         sb.AppendLine("|--------------|-------|--------|-------------|------|");
 

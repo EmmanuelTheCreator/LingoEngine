@@ -4,6 +4,7 @@
     using Microsoft.Extensions.Logging;
     using Xunit.Abstractions;
 
+
     public class XunitLogger : ILogger
     {
         private readonly string _categoryName;

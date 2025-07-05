@@ -3,6 +3,7 @@ using ProjectorRays.Director;
 using ProjectorRays.director.Chunks;
 using LingoEngine.IO.Data.DTO;
 using ProjectorRays.director.Scores;
+using ProjectorRays.director.Scores.Data;
 
 namespace LingoEngine.Director.Core.Importer;
 
@@ -153,13 +154,13 @@ internal static class DirectorRaysDtoExtensions
         return dto;
     }
 
-    public static LingoSpriteDTO ToDto(this RaysScoreChunk.RaySprite f)
+    public static LingoSpriteDTO ToDto(this RaySprite f)
         => new LingoSpriteDTO
         {
             Name = $"Sprite{f.SpriteNumber}",
             SpriteNum = f.SpriteNumber,
             MemberNum = f.SpriteNumber,
-            DisplayMember = f.DisplayMember,
+            // todo : DisplayMember = f.DisplayMember,
             SpritePropertiesOffset = f.SpritePropertiesOffset,
             Puppet = false,
             Lock = false,

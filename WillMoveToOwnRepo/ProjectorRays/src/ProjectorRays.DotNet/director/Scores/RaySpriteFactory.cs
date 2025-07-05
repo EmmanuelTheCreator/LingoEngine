@@ -1,42 +1,17 @@
 using ProjectorRays.director.Scores.Data;
-using static ProjectorRays.director.Scores.RaysScoreChunk;
 
 namespace ProjectorRays.director.Scores;
 
 internal static class RaySpriteFactory
 {
-    //internal static RaySprite CreateSpriteFromBlock(RayKeyframeBlock block, RaysScoreReader.IntervalDescriptor desc)
-    //{
-    //    return new RaySprite
-    //    {
-    //        StartFrame = desc.StartFrame,
-    //        EndFrame = desc.EndFrame,
-    //        SpriteNumber = desc.Channel,
-    //        LocH = block.LocH,
-    //        LocV = block.LocV,
-    //        Width = block.Width,
-    //        Height = block.Height,
-    //        Rotation = block.Rotation / 100f,
-    //        Skew = block.Padding2 / 100f,
-    //        Blend = 100 - block.BlendRaw * 100 / 255,
-    //        ForeColor = block.ForeColor,
-    //        BackColor = block.BackColor,
-    //        Ink = block.Padding1,
-    //        FlipH = desc.FlipH,
-    //        FlipV = desc.FlipV,
-    //        Editable = desc.Editable,
-    //        Moveable = desc.Moveable,
-    //        Trails = desc.Trails,
-    //        IsLocked = desc.IsLocked,
 
-    //    };
-    //}
 
-    internal static RayScoreKeyFrame CreateKeyFrame(RaySprite sprite, int frame)
+    internal static RayScoreKeyFrame CreateKeyFrame(RaySprite sprite, int spriteNum, int frame)
     {
         return new RayScoreKeyFrame
         {
-            Frame = frame,
+            FrameNum = frame,
+            SpriteNum = spriteNum,
             LocH = sprite.LocH,
             LocV = sprite.LocV,
             Width = sprite.Width,

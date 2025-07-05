@@ -41,7 +41,7 @@ public class DirectorFileTests
         var path = GetPath(fileName);
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, fileName);
         Assert.True(dir.Read(stream));
     }
 
@@ -52,7 +52,7 @@ public class DirectorFileTests
         var path = GetPath("ImgCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, path);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         bool found = false;
@@ -77,7 +77,7 @@ public class DirectorFileTests
         var path = GetPath("Text_Hallo_fontsize14.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, path);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         string text = string.Empty;
@@ -111,7 +111,7 @@ public class DirectorFileTests
         var path = GetPath("Dir_With_One_Tex_Sprite_Hallo.dir");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, path);
         Assert.True(dir.Read(stream));
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
         string text = string.Empty;
@@ -137,7 +137,7 @@ public class DirectorFileTests
         var path = GetPath("Dir_With_One_Img_Sprite_Hallo.dir");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, path);
         Assert.True(dir.Read(stream));
 
         Assert.NotNull(dir.Score);
@@ -152,7 +152,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, path);
         Assert.True(dir.Read(stream));
 
         const uint CASt = ((uint)'C' << 24) | ((uint)'A' << 16) | ((uint)'S' << 8) | (uint)'t';
@@ -183,7 +183,7 @@ public class DirectorFileTests
         var path = GetPath("TextCast.cst");
         var data = File.ReadAllBytes(path);
         var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
-        var dir = new RaysDirectorFile(_logger);
+        var dir = new RaysDirectorFile(_logger, path);
         Assert.True(dir.Read(stream));
 
         dir.ParseScripts();
