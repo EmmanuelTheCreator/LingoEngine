@@ -14,6 +14,17 @@ KeyFramesTest.dir
  Sprite flags=Type0
  something1=128, something2=16
  10x11:Ink=36:Blend=50:Skew=13,2:Rot=13,1:PropOffset=60:Member=1,2
+
+Channel	Keyframes (frames)
+3	7, 10, 12
+5	1, 5, 12, 19, 30
+| Frame  |   1   |   5   |  10   |  12   |  16   |  20   |  30   |
+|--------|-------|-------|--------|--------|--------|--------|--------|
+| Ch. 3  |       |       | X      | X      |        |        |        |
+|        |       |       | LocH=136 <br> Skew=14.76° | Skew=16.32° |        |        |        |
+| Ch. 5  |   X   |   X   |        | X      | X      | X      | X      |
+|        | Ink=0x91 | Width=32 |        | Skew=17.88° | Skew=19.43° | Skew=21.00° | Skew=0.00° |
+
   
 
  ---------------
@@ -28,24 +39,47 @@ KeyFramesTest.dir
 00 58 00 3F 00 50 00 00 01 00 00 00 00 30 00 00 
 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 
 -----------------------
-[UNKNOWN]
-00 00 00 00 00 08 
-00 02 01 F6 81 00 00 00 08              ; Tag=0x01F6 → ?, Length=8?
+00 00 00 00 00 08                                 ; end previous block
 
-00 02 01 66 01 00              ; Tag=0x0166 → Path?, Length=8?
-00 00 02 00 08 00 02 01 F6 01 00        ; Tag=0x01F6 → ?, Length=8?
-00 1E                                   ; Start of frame delta?
-00 0C 01 EC                             ; Tag=0x01EC → Position?, Length=12?
-00 88 00 55 00 45 00 53                 ; FrameData? (x=88, y=85?, Width/Height?)
-00 1E                                   ; ?
-91 00                                   ; Ink?
-00 00 02 01 FE                          ; Tag=0x01FE → Flags?, Length=2?
-FE 43                                   ; Value (possibly flags or checksum)
-00 02 02 02 0A                          ; Unknown, possibly script or transition
-86 00                                   ; Blend (0x56 = 86 → ~66%?)
-58                                     ; ?
-00 02 01 66                             ; Tag=0x0166 → Path?
-00 00                                   ; End/Null
+[NEW_KEY_FRAME]
+00 02 01 F6                                       ; Tag 01F6 (TweenFlags)
+            81 00                                 ; TweenFlags = 0x0081 → Tweening enabled + BackColor
+
+00 00 00 08                                       ; Likely: control sequence ending previous animation block
+
+00 02 01 66                                       ; Tag 0166 (Channel 7 → Sprite Channel Index = 1)
+            01 00 00 00                           ; Possibly: frame delta start + unused? 
+            02                                    ; Frame advance = 2
+            00 08                                 ; Control byte (or end marker) for this advance?
+
+00 02 01 F6                                       ; Tag 01F6 again (TweenFlags)
+            01 00                                 ; Tweening only (no property specified)
+
+00 1E                                             ; Control or delta marker (possibly redundant)
+
+00 0C 01 EC                                       ; Tag 01EC (FrameRect, 12 bytes)
+            00 88                                 ; LocH = 136
+            00 55                                 ; LocV = 85
+            00 45                                 ; Width = 69
+            00 53                                 ; Height = 83
+            00 1E                                 ; Possibly duration (again = 0x1E = 30)
+            91 00                                 ; Ink = 0x91 (Background Transparent), + padding
+
+00                                                ; emp / padding byte (used for alignment)
+
+00 02 01 FE                                       ; Tag 01FE (Flags)
+            FE 43                                 ; Flags = 0xFE43
+
+00 02 02 02                                       ; Unknown tag (possibly script or transition handler)
+            0A                                    ; Maybe: instruction or jump/step count?
+
+86 00                                             ; Possibly Blend = 134 (~47%) or color/ink/flag byte
+58                                                ; Unknown (possibly transition type, mask, or path flags)
+
+00 02 01 66                                       ; Tag 0166 (Channel 7 again)
+00 00                                             ; emp / padding / end marker
+
+
 ---------------
 00 30 [STARTKEYFRAME]
 01 80 10 24 CB 67 00 01 00 02 00 00 00 3C 00 0B 
@@ -53,92 +87,225 @@ FE 43                                   ; Value (possibly flags or checksum)
 05 1E 00 00 05 28 00 00 00 00 00 00 00 00 00 00 
 -----------------------
 [UNKOWN]
-00 00 00 0A 01 EC 00 8E                   ; Frame header? Tag=0x01EC Start @8E
-00 52 00 4B 00 57 00 42                   ; Possibly: X=82, Y=75, Width=87, Height=66?
-00 04 01 FC 00 00 00 F2                   ; Tag=0x01FC, value=F2
-00 02 02 02 08                            ; Unknown (perhaps script or transition)
-6B 00 3C                                  ; Possible Blend/Ink?
-00 04 01 80 10 A4 98 56                   ; Tag=0x0180 (?), unknown payload
-00 08 01 90 00 20 00 1F 00 96 91 00       ; Tag=0x0190: Width=32, Height=31, Blend=150 (≈41%), Ink=0
-00 00 02 01 9E 05 A7                      ; Tag=0x019E: Rotation=1447 (14.47)
-00 02 01 A2 05 C4                         ; Tag=0x01A2: Skew=1476 (14.76)
+00 00                                             ; emp 0000 
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 8E                                 ; Frame block header → Sprite 3 (internal channel 9), Offset 0x8E
+            00 52                                 ; LocH = 82
+            00 4B                                 ; LocV = 75
+            00 57                                 ; Width = 87
+            00 42                                 ; Height = 66
+00 04 01 FC                                       ; Tag 01FC (Flags/control)
+            00 00 00 F2                           ; Value = 0x000000F2
+            00 02 02 02                           ; advance 3 frames 
+            08                                    ; Advance 8 frames (from frame 7 to 10)
+6B 00                                             ; ctr 6B
+     3C                                           ; unkown
+00 04 01 80                                       ; Tag 0180 (BlockControl)
+            10 A4 98 56                           ; Unknown payload
+00 08 01 90                                       ; Tag 0190 (Composite)
+            00 20                                 ; Width = 32
+            00 1F                                 ; Height = 31
+            00 96                                 ; Blend = 150 (~41%)
+            91                                    ; Ink = 0x91 (Background Transparent)
+            00                                    ; Padding or alignment
+00 00 02 01 9E                                    ; Tag 019E (Rotation)
+            05 A7                                 ; Rotation = 1447 → 14.47°
+00 02 01 A2                                       ; Tag 01A2 (Skew)
+            05 C4                                 ; Skew = 1476 → 14.76°
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 94                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x94
+            00 4F                                 ; LocH = 79
+            00 52                                 ; LocV = 82
+            00 5A                                 ; Width = 90
+            00 63                                 ; Height = 99
+00 02 01 FE                                       ; Tag 01FE (TweenFlags / Flags)
+            03 A1                                 ; Flags = 0x03A1
+00 02 02 02                                       ; Advance frame tag (3 frames?)
+            06                                    ; Advance 6 frames (frame 10 → 16?)
+50 00                                             ; ctr 50
+     38                                           ; unknown (possibly blend, mask, or transition mode)
+00 02 01 82                                       ; Tag 0182 (Colors)
+            65                                    ; ForeColor = 101
+            45                                    ; BackColor = 69
+00 06 01 90                                       ; Tag 0190 (Composite)
+            00 2F                                 ; Width = 47
+            00 2E                                 ; Height = 46
+            00 AD                                 ; Blend = 173 (~32%)
+                                                  ; No Ink byte found here
+00 02 01 9E                                       ; Tag 019E (Rotation)
+            06 31                                 ; Rotation = 1585 → 15.85°
+00 02 01 A2                                       ; Tag 01A2 (Skew)
+            06 60                                 ; Skew = 1632 → 16.32°
 
-00 0A 01 EC 00 94 00 4F 00 52 00 5A 00 63 ; New frame block
-00 02 01 FE 03 A1                         ; Tag=0x01FE (flags?)
-00 02 02 02 06                            ; Unknown
-50 00 38                                  ; Blend?
-00 02 01 82 65 45                         ; Foreground=101, Background=69
-00 06 01 90 00 2F 00 2E 00 AD             ; Width=47, Height=46, Blend=175 (≈31%)
-00 02 01 9E 06 31                         ; Rotation=1585 (15.85)
-00 02 01 A2 06 60                         ; Skew=1632 (16.32)
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 9A                                 ; Frame block header → Sprite 3 (internal channel 9), Offset 0x9A
+            00 4D                                 ; LocH = 77
+            00 58                                 ; LocV = 88
+            00 5D                                 ; Width = 93
+            00 84                                 ; Height = 132
+00 02 01 FE                                       ; Tag 01FE (TweenFlags / Flags)
+            06 51                                 ; Flags = 0x0651
+00 02 02 02                                       ; Advance frame tag (3 frames?)
+            04                                    ; Advance 4 frames (frame 16 → 20)
+35 00                                             ; ctr 35
+     3A                                           ; unknown (could be blend or tween mode)
+00 02 01 82                                       ; Tag 0182 (Colors)
+            32                                    ; ForeColor = 50
+            33                                    ; BackColor = 51
+00 08 01 90                                       ; Tag 0190 (Composite)
+            00 3E                                 ; Width = 62
+            00 3C                                 ; Height = 60
+            00 CC                                 ; Blend = 204 (~20%)
+            11                                    ; Ink = 0x11 (likely Background Transparent)
+            00                                    ; Padding / alignment
+00 02 01 9E                                       ; Tag 019E (Rotation)
+            06 BB                                 ; Rotation = 1723 → 17.23°
+00 02 01 A2                                       ; Tag 01A2 (Skew)
+            06 FC                                 ; Skew = 1788 → 17.88°
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 9F                                 ; Frame block header → Sprite 3 (internal channel 9), Offset 0x9F
+            00 50                                 ; LocH = 80
+            00 5E                                 ; LocV = 94
+            00 61                                 ; Width = 97
+            00 A8                                 ; Height = 168
+00 02 01 FE                                       ; Tag 01FE (TweenFlags / Flags)
+            09 01                                 ; Flags = 0x0901
+00 02 02 02                                       ; Advance frame tag (3 bytes?)
+            1A                                    ; Advance 26 frames
+00 3C                                             ; Possibly blend mode or control value
+00 02 01 82                                       ; Tag 0182 (Colors)
+            82                                    ; ForeColor = 130
+            51                                    ; BackColor = 81
+00 08 01 90                                       ; Tag 0190 (Composite)
+            00 2B                                 ; Width = 43
+            00 29                                 ; Height = 41
+            00 70                                 ; Blend = 112 (~56%)
+            91                                    ; Ink = 0x91
+            00                                    ; Padding / alignment
+00 02 01 9E                                       ; Tag 019E (Rotation)
+            07 45                                 ; Rotation = 1861 → 18.61°
+00 02 01 A2                                       ; Tag 01A2 (Skew)
+            07 97                                 ; Skew = 1943 → 19.43°
 
-00 0A 01 EC 00 9A 00 4D 00 58 00 5D 00 84 ; New frame block
-00 02 01 FE 06 51                         ; Flags?
-00 02 02 02 04                            ; Unknown
-35 00 3A                                  ; Possibly Blend?
-00 02 01 82 32 33                         ; Foreground=50, Background=51
-00 08 01 90 00 3E 00 3C 00 CC 11          ; Width=62, Height=60, Blend=204 (≈20%), Ink?
-00 00 02 01 9E 06 BB                      ; Rotation=1723 (17.23)
-00 02 01 A2 06 FC                         ; Skew=1788 (17.88)
+[NEW_KEY_FRAME]
+00 0C 01 EC 00 9E                                 ; Frame block header → Sprite 3 (internal channel 9), Offset 0x9E
+            00 56                                 ; LocH = 86
+            00 64                                 ; LocV = 100
+            00 64                                 ; Width = 100
+            00 CC                                 ; Height = 204
+11 00                                             ; Ink? (0x11) + padding?
+00 02 01 FE                                       ; Tag 01FE (TweenFlags / Flags)
+            0B B1                                 ; Flags = 0x0BB1
+00 02 02 02                                       ; Advance frame tag
+            00                                    ; Advance 0 frames (?)
+00 00 00 36                                       ; Unknown — possibly size/blend/mask?
+00 02 01 82                                       ; Tag 0182 (Colors)
+            D3                                    ; ForeColor = 211
+            6F                                    ; BackColor = 111
+00 08 01 90                                       ; Tag 0190 (Composite)
+            00 17                                 ; Width = 23
+            00 16                                 ; Height = 22
+            00 19                                 ; Blend = 25 (~90%)
+            11                                    ; Ink = 0x11
+00                                               ; Padding / alignment
+00 02 01 9E                                       ; Tag 019E (Rotation)
+            07 D0                                 ; Rotation = 2000 → 20.00°
+00 02 01 A2                                       ; Tag 01A2 (Skew)
+            08 34                                 ; Skew = 2100 → 21.00°
 
-00 0A 01 EC 00 9F 00 50 00 5E 00 61 00 A8 ; New frame block
-00 02 01 FE 09 01                         ; Flags?
-00 02 02 02 1A                            ; Unknown
-00 3C                                     ; Blend?
+[NEW_KEY_FRAME]
+00 0C 01 EC 00 96                                 ; Frame block header → Sprite 3 (internal channel 9), Offset 0x96
+            00 67                                 ; LocH = 103
+            00 5F                                 ; LocV = 95
+            00 62                                 ; Width = 98
+            00 B2                                 ; Height = 178
+91 00                                             ; Ink = 0x91 (Background Transparent) + padding?
+00 02 01 FE                                       ; Tag 01FE (TweenFlags / Flags)
+            06 4B                                 ; Flags = 0x064B
+00 40                                             ; Possibly transition mask or control byte?
+00 08 01 80                                       ; Tag 0180 (BlockControl)
+            00 00 00 00 00 00 00 00               ; Empty/cleared block control data
+00 0E 01 8A                                       ; Tag 018A (unknown)
+            00 00 00 00 00 00 00 00               ; Payload = 8 bytes, possibly propOffset or zeroed state
+00 00 00 00                                       ; Extra padding
+01 00                                             ; Possibly edit flag / color code
+00 02 01 9E                                       ; Tag 019E (Rotation)
+            00 00                                 ; Rotation = 0.00°
+00 02 01 A2                                       ; Tag 01A2 (Skew)
+            00 00                                 ; Skew = 0.00°
 
-00 02 01 82 82 51                         ; Foreground=130, Background=81
-00 08 01 90 00 2B 00 29 00 70 91 00       ; Width=43, Height=41, Blend=112, Ink?
-00 00 02 01 9E 07 45                      ; Rotation=1861 (18.61)
-00 02 01 A2 07 97                         ; Skew=1943 (19.43)
 
-00 0C 01 EC 00 9E 00 56 00 64 00 64 00 CC ; New frame block, Blend=204 (≈20%)
-11 00 00 02 01 FE 0B B1                   ; Tag 0x01FE
-00 02 02 02 00                            ; Unknown
-00 00 00 36                              ; Possibly blend or size?
-00 02 01 82 D3 6F                         ; Foreground=211, Background=111
-00 08 01 90 00 17 00 16 00 19 11          ; Width=23, Height=22, Blend=25, Ink?
-00 00 02 01 9E 07 D0                      ; Rotation=2000 (20.00)
-00 02 01 A2 08 34                         ; Skew=2100 (21.00)
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 82                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x82
+            00 86                                 ; LocH = 134
+            00 56                                 ; LocV = 86
+            00 5E                                 ; Width = 94
+            00 7F                                 ; Height = 127
+00 04 01 FC                                       ; Tag 01FC (Flags/control)
+            FF FF FB                              ; Value = 0xFFFFFB
+00 02 01 82                                       ; Tag 0182 (Colors)
+            82                                    ; ForeColor = 130
+            51                                    ; BackColor = 81
 
-00 0C 01 EC 00 96 00 67 00 5F 00 62 00 B2 ; New frame block
-91 00 00 02 01 FE 06 4B                  ; Flags?
-00 40 00 08 01 80 00 00 00 00 00 00 00 00 ; Possibly all zero (cleared state)
-00 0E 01 8A 00 00 00 00 00 00 00 00       ; Possibly propOffset?
-00 00 00 00 01 00 00 02 01 9E 00 00       ; Rotation = 0?
-00 02 01 A2 00 00                         ; Skew = 0?
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 78                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x78
+            00 96                                 ; LocH = 150
+            00 52                                 ; LocV = 82
+            00 5D                                 ; Width = 93
+            00 66                                 ; Height = 102
+00 02 01 FE                                       ; Tag 01FE (Flags)
+            F6 1D                                 ; Value = 0xF61D
 
-00 0A 01 EC 00 8C 00 77 00 5B 00 60 00 99 ; Frame with new skew/rotation?
-00 02 01 FE 00 E6                         ; Flags?
-00 1E 00 02 01 36 00 00                   ; Path?
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 6F                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x6F
+            00 A6                                 ; LocH = 166
+            00 4D                                 ; LocV = 77
+            00 5B                                 ; Width = 91
+            00 4C                                 ; Height = 76
+00 02 01 FE                                       ; Tag 01FE (Flags)
+            F0 B8                                 ; Value = 0xF0B8
 
-00 0A 01 EC 00 82 00 86 00 56 00 5E 00 7F ; Frame, high Y value
-00 04 01 FC FF FF FB 82                  ; Tag 0x01FC, Value = 0xFB82
-00 16 00 0A 01 EC 00 78 00 96 00 52 00 5D ; Next frame
-00 66 00 02 01 FE F6 1D                   ; Blend = 0x1D?
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 65                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x65
+            00 B6                                 ; LocH = 182
+            00 48                                 ; LocV = 72
+            00 59                                 ; Width = 89
+            00 33                                 ; Height = 51
+00 02 01 FE                                       ; Tag 01FE (Flags)
+            EB 53                                 ; Value = 0xEB53
 
-00 16 00 0A 01 EC 00 6F 00 A6 00 4D 00 5B ; Frame data
-00 4C 00 02 01 FE F0 B8                   ; Flags / blend = 0xB8
+[NEW_KEY_FRAME]
+00 0A 01 EC 00 5D                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x5D
+            00 C7                                 ; LocH = 199
+            00 44                                 ; LocV = 68
+            00 57                                 ; Width = 87
+            00 19                                 ; Height = 25
+00 02 01 FE                                       ; Tag 01FE (Flags)
+            E5 EE                                 ; Value = 0xE5EE
 
-00 16 00 0A 01 EC 00 65 00 B6 00 48 00 59 ; Next frame
-00 33 00 02 01 FE EB 53                   ; Flags
+[NEW_KEY_FRAME]
+00 0C 01 EC 00 59                                 ; Frame block header → Sprite 3 (channel 9), Offset 0x59
+            00 D9                                 ; LocH = 217
+            00 3F                                 ; LocV = 63
+            00 55                                 ; Width = 85
+00 00 01 00                                       ; Unknown (control bytes?)
+00 02 01 FE                                       ; Tag 01FE (Flags)
+            E0 88                                 ; Value = 0xE088
 
-00 16 00 0A 01 EC 00 5D 00 C7 00 44 00 57 ; Frame data
-00 19 00 02 01 FE E5 EE                   ; Blend = 0xEE
 
-00 18 00 0C 01 EC 00 59 00 D9 00 3F 00 55 ; Frame block
-00 00 01 00 00 02 01 FE E0 88             ; Blend = 0x88
-
-00 10 00 04 01 EC 00 5C 00 E0             ; Partial frame
-00 02 01 F6 81 00 00                      ; Unknown tag
-
-00 0A 00 04 01 EC 00 63 00 E5             ; Frame block
-00 0A 00 04 01 EC 00 6B 00 E7             ; Frame block
-00 0A 00 04 01 EC 00 73 00 E8             ; Frame block
-00 0A 00 04 01 EC 00 7C 00 E9             ; Frame block
-
-00 08 00 02 01 EC 00 84                   ; Final block
+00 10 00 04 01 EC 00 5C 00 E0                     ; Partial frame / continuation?
+00 02 01 F6 81 00 00                              ; Tag 01F6 (TweenFlags: Tweening + BackColor)
+00 0A 00 04 01 EC 00 63 00 E5
+00 0A 00 04 01 EC 00 6B 00 E7
+00 0A 00 04 01 EC 00 73 00 E8
+00 0A 00 04 01 EC 00 7C 00 E9
+00 08 00 02 01 EC 00 84
 00 08 00 02 01 EC 00 8C
 00 08 00 02 01 EC 00 94
+00 08 00 02 01 EC 00 84  
+00 08 00 02 01 EC 00 8C  
+00 08 00 02 01 EC 00 94
+
 
 
 

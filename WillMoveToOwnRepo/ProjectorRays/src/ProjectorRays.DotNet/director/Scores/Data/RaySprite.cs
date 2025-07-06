@@ -65,11 +65,10 @@ public class RaySprite
     public byte EaseIn { get; set; }
     public byte EaseOut { get; set; }
     public ushort Curvature { get; set; }
-    public byte TweenFlags { get; set; }
+    public RayTweenFlags TweenFlags { get; set; }
 
-
-    public List<int> ExtraValues { get; internal set; } = new();
     public List<RaysBehaviourRef> Behaviors { get; internal set; } = new();
     public List<RayScoreKeyFrame> Keyframes { get; internal set; } = new();
     public int LocZ { get; set; }
+    public List<int> ExtraValues { get; internal set; }
 }

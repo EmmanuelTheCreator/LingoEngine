@@ -6,6 +6,8 @@ KeyFrames_Lenear5.dir
  
  Item Desc. 0: Start=5, End=55, Channel=6, U1=0, U2=0, U3=1, U4=15, U5=225, U6=253
 
+keyframes : 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55
+
 [HEADER]
 00 00 01 2E 00 00 00 14 00 00 00 37 00 0D 00 30 
 03 EE 00 96 
@@ -22,30 +24,41 @@ KeyFrames_Lenear5.dir
 
 00 00 00 08 <- rest from the previous block
 [UNKOWN]
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 08 
-00 02 01 36 01 00 00 08 
-00 02 01 36 81 00 00 02 00 02 00 02 00 02 00 00 
------------------------------------------------------------------
-[UNKOWN]
- 00 00 01 2E 00 00 00 14 00 00 00 37 00 0D 00 30 
- 03 EE 00 96 00 08 00 02 01 36 01 00 00 02 00 02 
- 00 02 00 36 
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (AdvanceFrame, Flags=0x81 → Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (AdvanceFrame, Flags=0x01 → REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08         ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+00 02 01 36 01 00 00 08                           ; Tag 0136 (REAL KEYFRAME), End=0x08
+00 02 01 36 81 00 00 02 00 02 00 02 00 08   ; Tag 0136 (Tween Only), FrameSteps=[2,2,2], End=0x08
+
+[TWEEN_CONFIG]
+00 01 2E                                         ; Tag 012E (Tween Setup / Config Block?)
+00 00 00 14                                      ; Param 1 (e.g., Speed? Duration? = 20)
+00 00 00 37                                      ; Param 2 (e.g., EndFrame? = 55)
+00 0D                                            ; Possibly tween flags or curve index
+00 30                                            ; Possibly a tween curve ID or control byte
+03 EE                                            ; Possibly ink or tween mode
+00 96                                            ; Possibly default blend (150)
+00 08                                            ; End of tween config block
+
+00 02 01 36 01 00                                ; Tag 0136 (AdvanceFrame: REAL KEYFRAME flag)
+00 00 02 00 02 00 02                             ; FrameSteps = [2, 2, 2]
+00 36                                            ; Next keyframe size marker (54 bytes)
+
+
  -------------
  00 30 [STARTKEYFRAME]
  01 20 10 00 FF 00 00 01 00 03 00 00 00 06 00 82 

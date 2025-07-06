@@ -70,114 +70,119 @@ Main key frames , Total = 620 bytes, each 16*3 = 48 bytes
 
 Frame 4 , Total = 394 bytes,  First 6 bytes for each is the channel link, every X tags
 
-00 02 01 36 81 00      	
-00 04 01 5C 00 50 00 49 
-00 02 01 66 81 00 
-00 02 01 96 81 00 		
-00 02 01 9E 09 1D 
-00 02 01 C6 81 00 		
-00 02 01 D2 04 57 		
-00 04 01 F4 00 49 91 00 		
-00 02 02 12 CC 10 
-00 02 02 26 81 00 
-00 02 02 56 81 00 
-00 02 02 86 81 00 
-00 02 03 16 01 00 
-00 02 04 B0 10 80 
-00 04 04 C0 00 2E 00 4D 
-00 02 04 C6 81 00 
-00 02 10 20 10 80 	
-00 04 10 30 00 2E 00 4D 
-00 02 10 36 81 00 
-00 02 13 B0 10 80 	
-00 04 13 C0 00 2E 00 4D 
-00 02 13 C6 81 00 
-00 02 1C E0 10 80 
-00 04 1C F0 00 2E 00 4D 			
-00 02 1C F6 81 00 00 4A 			<- Payload 0x4A → Flag bits = 01001010 (Path, Rotation, Blend)
-00 04 01 30 00 49 00 58 			<- Tag 0130, Width=73, Height=88
-00 04 01 5C 00 8D 00 89 			<- Tag 015C, LocH=141, LocV=137
-00 02 01 9E 12 3A 					<- Tag 019E, Rotation = 0x123A = 4666 / 100 = 46.66°
-00 02 01 D2 08 AE 					<- Tag 01D2, Skew = 0x08AE = 2222 / 100 = 22.22
-00 02 01 F4 00 96 					<- Tag 01F4, value = 0x96 = 150 
-00 02 02 12 98 21 					<- Tag 0212, ForeColor = 152, BackColor = 33
-00 04 04 C0 00 49 00 58 			<- Unknown — possibly same width/height again
-00 04 10 30 00 49 00 58 
-00 04 13 C0 00 49 00 58 
-00 04 1C F0 00 49 00 58 
-00 94 
+00 02 01 36 81 00                                   ; Tag 0136 (AdvanceFrame) → Channel 6, Flag 0x81 (Tweening + BackColor?)
+00 04 01 5C 00 50 00 49                             ; Tag 015C (Unknown015C) → Possibly: composite rect? coords? (W=80, H=73)?
+00 02 01 66 81 00                                   ; Tag 0166 (PathPart) → Channel 6, PathID 0x81
+00 02 01 96 81 00                                   ; Tag 0196 (Ink?) → Value 0x81 (could be transparent)
+00 02 01 9E 09 1D                                   ; Tag 019E (Rotation) → 2333 → 23.33°
+00 02 01 C6 81 00                                   ; Tag 01C6 (UnknownC6) → Possibly pointer or flag (value = 0x81)
+00 02 01 D2 04 57                                   ; Tag 01D2 (UnknownD2) → Possibly control word or angle? (0x0457 = 1111)
+00 04 01 F4 00 49 91 00                             ; Tag 01F4 (TweenSpeed/Curvature?) → Possibly BlendSpeed=73, Ink=0x91
+		
+00 02 02 12 CC 10                                   ; Tag 0212 (Unknown) → Possibly transition or tween easing? Value = 0xCC10
+00 02 02 26 81 00                                   ; Tag 0226 (Unknown) → Value = 0x81 (pattern: 81 00)
+00 02 02 56 81 00                                   ; Tag 0256 (Unknown) → Value = 0x81
+00 02 02 86 81 00                                   ; Tag 0286 (Unknown) → Value = 0x81
+00 02 03 16 01 00                                   ; Tag 0316 (Unknown) → Value = 0x01
+00 02 04 B0 10 80                                   ; Tag 04B0 (Unknown) → Value = 0x1080
+00 04 04 C0 00 2E 00 4D                             ; Tag 04C0 (Unknown) → Possibly rect or size: 46 x 77?
+00 02 04 C6 81 00                                   ; Tag 04C6 (Unknown) → Value = 0x81
+00 02 10 20 10 80                                   ; Tag 1020 (Unknown) → Value = 0x1080
+00 04 10 30 00 2E 00 4D                             ; Tag 1030 (Unknown) → Possibly rect or size: 46 x 77?
+00 02 10 36 81 00                                   ; Tag 1036 (Unknown) → Value = 0x81
+00 02 13 B0 10 80                                   ; Tag 13B0 (Unknown) → Value = 0x1080
+00 04 13 C0 00 2E 00 4D                             ; Tag 13C0 (Unknown) → Possibly rect or size: 46 x 77?
+00 02 13 C6 81 00                                   ; Tag 13C6 (Unknown) → Value = 0x81
+00 02 1C E0 10 80                                   ; Tag 1CE0 (Unknown) → Value = 0x1080
+00 04 1C F0 00 2E 00 4D                             ; Tag 1CF0 (Unknown) → Possibly rect or size: 46 x 77?
+			
+00 02 1C F6 81 00 00 4A                             ; Tag 1CF6 (TweenFlags=0x81, Payload=0x4A → Path + Rotation + Blend)
+00 04 01 30 00 49 00 58                             ; Tag 0130 (Size: Width=73, Height=88)
+00 04 01 5C 00 8D 00 89                             ; Tag 015C (Position: LocH=141, LocV=137)
+00 02 01 9E 12 3A                                   ; Tag 019E (Rotation: 0x123A = 4666 = 46.66°)
+00 02 01 D2 08 AE                                   ; Tag 01D2 (Skew: 0x08AE = 2222 = 22.22°)
+00 02 01 F4 00 96                                   ; Tag 01F4 (Blend: 0x96 = 150)
+00 02 02 12 98 21                                   ; Tag 0212 (Colors: ForeColor = 152, BackColor = 33)
+00 04 04 C0 00 49 00 58                             ; Tag 04C0 (Repeat Size: 73 x 88)
+00 04 10 30 00 49 00 58                             ; Tag 1030 (Repeat Size: 73 x 88)
+00 04 13 C0 00 49 00 58                             ; Tag 13C0 (Repeat Size: 73 x 88)
+00 04 1C F0 00 49 00 58                             ; Tag 1CF0 (Repeat Size: 73 x 88)
+00 94                                               ; Control? (could be frame advance or script index)
 
-00 04 01 30 00 64 00 64  						<- Size  		00 64 00 64 = 100 x 100		tag = 01 30
-00 02 01 36 01 00
-00 04 01 5C 00 C9 00 C8 				 		<- position   	00 C9 00 C8 = 200 x 201		tag = 01 5C
-00 02 01 66 01 00
-00 02 01 96 01 00 
-00 02 01 9E 1B 58 								<- rotation		1B 58 		= 70.00			tag = 01 9E
-00 02 01 C6 01 00 
-00 02 01 D2 0D 05 						 		<- Skew			0D 05 		= 33.33			tag = 01 D2
-00 04 01 F4 00 E5 11 00
-00 02 02 12 64 32 								<- Colors		64 32		= 100 & 50		tag = 02 12
-00 02 02 26 01 00 
-00 02 02 40 10 01 
-00 02 02 56 01 00 
-00 02 02 86 01 00 
-00 04 04 C0 00 64 00 64 
-00 02 04 C6 01 00 
-00 04 10 30 00 64 00 64 
-00 02 10 36 01 00 
-00 04 13 C0 00 64 00 64 
-00 02 13 C6 01 00 
-00 04 1C F0 00 64 00 64 
-00 02 1C F6 01 00 00 94  00 04 01 30 00 3C 00 53 
+00 04 01 30 00 64 00 64                             ; Tag 0130 (Size: 100 x 100)
+00 02 01 36 01 00                                   ; Tag 0136 (AdvanceFrame?)
+00 04 01 5C 00 C9 00 C8                             ; Tag 015C (Position: 201 x 200)
+00 02 01 66 01 00                                   ; Tag 0166 (PathPart: Channel/Flags?)
+00 02 01 96 01 00                                   ; Tag 0196 (InkType?)
+00 02 01 9E 1B 58                                   ; Tag 019E (Rotation: 0x1B58 = 7000 = 70.00°)
+00 02 01 C6 01 00                                   ; Tag 01C6 (unknown, commonly control flag)
+00 02 01 D2 0D 05                                   ; Tag 01D2 (Skew: 0x0D05 = 3333 = 33.33°)
+00 04 01 F4 00 E5 11 00                             ; Tag 01F4 (Blend or Control: 0xE5 = 229)
+00 02 02 12 64 32                                   ; Tag 0212 (Colors: ForeColor = 100, BackColor = 50)
+00 02 02 26 01 00                                   ; Tag 0226 (Unknown, often seen in tween blocks)
+00 02 02 40 10 01                                   ; Tag 0240 (Unknown, control?)
+00 02 02 56 01 00                                   ; Tag 0256 (Unknown)
+00 02 02 86 01 00                                   ; Tag 0286 (Unknown)
+00 04 04 C0 00 64 00 64                             ; Tag 04C0 (Repeat Size: 100 x 100)
+00 02 04 C6 01 00                                   ; Tag 04C6 (Unknown flag/ctrl)
+00 04 10 30 00 64 00 64                             ; Tag 1030 (Repeat Size: 100 x 100)
+00 02 10 36 01 00                                   ; Tag 1036 (Unknown flag/ctrl)
+00 04 13 C0 00 64 00 64                             ; Tag 13C0 (Repeat Size: 100 x 100)
+00 02 13 C6 01 00                                   ; Tag 13C6 (Unknown flag/ctrl)
+00 04 1C F0 00 64 00 64                             ; Tag 1CF0 (Repeat Size: 100 x 100)
+00 02 1C F6 01 00 00 94                             ; Tag 1CF6 (TweenFlags=0x01, Payload=0x94 → Blend + BackColor + Position?)
+00 04 01 30 00 3C 00 53                             ; Tag 0130 (Size: Width=60, Height=83)
+
 
 Frame 6 
 -------
-00 02 01 36 81 00 
-00 04 01 5C 00 6E 00 69 
-00 02 01 66 81 00 
-00 02 01 96 81 00   
-00 02 01 9E 30 D4 
-00 02 01 C6 81 00   
-00 02 01 D2 0F 30   
-00 04 01 F4 00 7F 91 00   
-00 02 02 12 96 46 
-00 02 02 26 81 00   
-00 02 02 40 10 00 
-00 02 02 56 81 00 
-00 02 02 86 81 00   
-00 04 04 C0 00 3C 00 53 
-00 02 04 C6 81 00   
-00 04 10 30 00 3C 00 53 
-00 02 10 36 81 00   
-00 04 13 C0 00 3C 00 53 
-00 02 13 C6 81 00   
-00 04 1C F0 00 3C 00 53 
-00 02 1C F6 81 00 00 A6 
-00 02 01 20 10 00 									<- Blend???           90% ????    <- is wrong probably
-00 04 01 30 00 13 00 41     						<- size : 		00 13 00 41 = 65 x 19		tag = 01 30
-00 02 01 36 01 00
-00 04 01 5C 00 14 00 0A    		  					<- Pos : 		00 14 00 0A = 10 x 20		tag = 01 5C
-00 02 01 66 01 00
-00 02 01 96 01 00 
-00 02 01 9E 46 50     								<- rotation		65 50  		= 180.00		tag = 01 9E
-00 02 01 C6 01 00
-00 02 01 D2 11 5C       	  						<- Skew			11 5C 		= 44.44			tag = 01 D2
-00 04 01 F4 00 19 11 00
-00 02 02 12 C8 5A     								<- Colors
-00 02 02 26 01 00
-00 02 02 40 10 09									
-00 02 04 B0 10 00 
-00 04 04 C0 00 13 00 41 
-00 02 04 C6 01 00 
-00 02 10 20 10 00 
-00 04 10 30 00 13 00 41 
-00 02 10 36 01 00 
-00 02 13 B0 10 00 
-00 04 13 C0 00 13 00 41 
-00 02 13 C6 01 00 
-00 02 1C E0 10 00 
-00 04 1C F0 00 13 00 41 
-00 02 1C F6 01 00 
+00 02 01 36 81 00                                   ; Tag 0136 (AdvanceFrame / Flags?)
+00 04 01 5C 00 6E 00 69                             ; Tag 015C (Position: LocH=110, LocV=105)
+00 02 01 66 81 00                                   ; Tag 0166 (PathPart)
+00 02 01 96 81 00                                   ; Tag 0196 (InkType)
+00 02 01 9E 30 D4                                   ; Tag 019E (Rotation: 0x30D4 = 12500 → 125.00°)
+00 02 01 C6 81 00                                   ; Tag 01C6 (Unknown control byte / flag)
+00 02 01 D2 0F 30                                   ; Tag 01D2 (Skew: 0x0F30 = 3888 → 38.88°)
+00 04 01 F4 00 7F 91 00                             ; Tag 01F4 (Blend = 127, + padding 91 00?)
+00 02 02 12 96 46                                   ; Tag 0212 (Colors: Fore=150, Back=70)
+00 02 02 26 81 00                                   ; Tag 0226 (TweenControl?)
+00 02 02 40 10 00                                   ; Tag 0240 (Unknown, often flags or easing?)
+00 02 02 56 81 00                                   ; Tag 0256 (Unknown)
+00 02 02 86 81 00                                   ; Tag 0286 (Unknown)
+00 04 04 C0 00 3C 00 53                             ; Tag 04C0 (Size: 60x83)
+00 02 04 C6 81 00                                   ; Tag 04C6 (Unknown control)
+00 04 10 30 00 3C 00 53                             ; Tag 1030 (Size: 60x83)
+00 02 10 36 81 00                                   ; Tag 1036 (Unknown flag/control)
+00 04 13 C0 00 3C 00 53                             ; Tag 13C0 (Size: 60x83)
+00 02 13 C6 81 00                                   ; Tag 13C6 (Unknown flag/control)
+00 04 1C F0 00 3C 00 53                             ; Tag 1CF0 (Size: 60x83)
+00 02 1C F6 81 00 00 A6                             ; Tag 1CF6 (TweenFlags=0x81, Payload=0xA6 = Blend + BackColor + ???)
+00 02 01 20 10 00                                   ; Tag 0120 (Unknown. Possibly easing? Blend? — likely incorrect usage)
+00 04 01 30 00 13 00 41                             ; Tag 0130 (Size: 19x65)
+00 02 01 36 01 00                                   ; Tag 0136 (AdvanceFrame)
+00 04 01 5C 00 14 00 0A                             ; Tag 015C (Position: LocH=20, LocV=10)
+00 02 01 66 01 00                                   ; Tag 0166 (PathPart)
+00 02 01 96 01 00                                   ; Tag 0196 (InkType)
+00 02 01 9E 46 50                                   ; Tag 019E (Rotation: 0x4650 = 18000 → 180.00°)
+00 02 01 C6 01 00                                   ; Tag 01C6 (Unknown)
+00 02 01 D2 11 5C                                   ; Tag 01D2 (Skew: 0x115C = 4444 → 44.44°)
+00 04 01 F4 00 19 11 00                             ; Tag 01F4 (Blend=25? + control 0x11?)
+00 02 02 12 C8 5A                                   ; Tag 0212 (Colors: Fore=200, Back=90)
+00 02 02 26 01 00                                   ; Tag 0226 (Unknown)
+00 02 02 40 10 09                                   ; Tag 0240 (Unknown, easing/speed?)
+00 02 04 B0 10 00                                   ; Tag 04B0 (Unknown)
+00 04 04 C0 00 13 00 41                             ; Tag 04C0 (Size: 19x65)
+00 02 04 C6 01 00                                   ; Tag 04C6 (Unknown)
+00 02 10 20 10 00                                   ; Tag 1020 (Unknown)
+00 04 10 30 00 13 00 41                             ; Tag 1030 (Size: 19x65)
+00 02 10 36 01 00                                   ; Tag 1036 (Unknown)
+00 02 13 B0 10 00                                   ; Tag 13B0 (Unknown)
+00 04 13 C0 00 13 00 41                             ; Tag 13C0 (Size: 19x65)
+00 02 13 C6 01 00                                   ; Tag 13C6 (Unknown)
+00 02 1C E0 10 00                                   ; Tag 1CE0 (Unknown)
+00 04 1C F0 00 13 00 41                             ; Tag 1CF0 (Size: 19x65)
+00 02 1C F6 01 00                                   ; Tag 1CF6 (TweenFlags = 0x01 → Tweening enabled)
+
 
 
 

@@ -148,7 +148,7 @@ internal class RaysScoreReader
                 rs.ReadUint16("flagsCtrl", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.TweenFlags:
-                sprite.TweenFlags = rs.ReadUint8("tweenFlags", ctx.GetAnnotationKeys());
+                sprite.TweenFlags = ParseTweenFlags(rs.ReadUint8("tweenFlags", ctx.GetAnnotationKeys()));
                 break;
             default:
                 break;
@@ -218,8 +218,13 @@ internal class RaysScoreReader
         var startPos = stream.Pos;
         var sprite = new RaySprite();
         var keys = ctx.GetAnnotationKeys();
-        var flags1 = stream.ReadUint8();
+        //var flags1 = stream.ReadUint8();
+
+        byte flagByte = stream.ReadUint8("tweenFlags", keys);
+        sprite.TweenFlags = ParseTweenFlags(flagByte);
+        
         var something2 = stream.ReadInt16();
+
         //_logger.LogInformation("Sprite flags=" + flags1);
 
         //if ((flags1 & 0xFF) != 0 && (flags1 & 0x10) == 0)
@@ -255,10 +260,25 @@ internal class RaysScoreReader
         var skip = 48 - (stream.Pos - startPos);
         stream.Skip(skip); // We need to read exactly 48 bytes
 
-        _logger.LogInformation($"{sprite.LocH}x{sprite.LocV}:Ink={sprite.Ink}:Blend={sprite.Blend}:Skew={sprite.Skew}:Rot={sprite.Rotation}:PropOffset={sprite.SpritePropertiesOffset}:Member={sprite.MemberCastLib},{sprite.MemberNum}");
+        _logger.LogInformation($"{sprite.LocH}x{sprite.LocV}:Ink={sprite.Ink}:Blend={sprite.Blend}:Skew={sprite.Skew}:Rot={sprite.Rotation}:PropOffset={sprite.SpritePropertiesOffset}:Member={sprite.MemberCastLib},{sprite.MemberNum}:Tween={ sprite.TweenFlags}");
         return sprite;
     }
 
+
+    public RayTweenFlags ParseTweenFlags(byte value)
+    {
+        return new RayTweenFlags
+        {
+            TweeningEnabled = (value & 0x01) != 0,
+            Path = (value & 0x02) != 0,
+            Size = (value & 0x04) != 0,
+            Rotation = (value & 0x08) != 0,
+            Skew = (value & 0x10) != 0,
+            Blend = (value & 0x20) != 0,
+            ForeColor = (value & 0x40) != 0,
+            BackColor = (value & 0x80) != 0
+        };
+    }
 
 
     #region Frame descriptors

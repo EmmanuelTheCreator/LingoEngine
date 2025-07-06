@@ -23,3 +23,4 @@ internal record RayScoreHeader
     public int TotalLength { get; internal set; }
 }
 
+

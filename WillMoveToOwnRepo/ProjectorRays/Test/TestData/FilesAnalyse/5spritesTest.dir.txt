@@ -41,89 +41,102 @@ something1=224, something2=16
 00 09 00 11 00 11 00 B2 11 00 00 00 00 00 00 00 
 04 56 00 00 04 60 00 00 00 00 00 00 00 00 00 00
 ---------------
-00 00 00 08               <- rest from the previous block
-[UNKOWN] 1.
+00 00 00 08                                          <- rest from the previous block
+[NEW_KEY_FRAME_CTRL] 1.
+00 02 01 36                                       ; Tag 0136 (AdvanceFrame → Channel 6)
+            91 00                                 ; AdvanceFlags = 0x0091 → Tweening + BackColor?
+            00 00                                 ; Padding / Unused?
+            00 08                                 ; Control = 0x08 (End of advance block or step)
+00 02 01 66                                       ; Tag 0166 (PathPart → Channel 7)
+            01 00                                 ; Possibly tween flags (or part ID)
+            00 60                                 ; Unknown control byte (path mode? duration?)
+            00 08                                 ; Control = 0x08 (possibly end of block)
+01 20 00 00 00 00 00 00 00 00                     ; Tag 0120 (Tween Ease)
+            00 00                                 ; EaseIn = 0
+            00 00                                 ; EaseOut = 0
+            00 00                                 ; Duration = 0
+            00 00                                 ; Padding / Alignment
+00 0E 01 2A                                       ; Tag 012A (Unknown012A)
+            00 00 00 00 00 00 00 00
+            00 00 00 00                           ; 12 bytes total – meaning unknown
+00 02 01 3E                                       ; Tag 013E (Unknown013E)
+            00 00                                 ; Placeholder / empty / false?
 
+00 02 01 42                                       ; Tag 0142 (Unknown0142)
+            00 00                                 ; Placeholder / empty / false?
 
-00 02 01 36 91 00 00 00 08                  ; Tag 0136 (Path: LocH/LocV)?
-                 
-00 02 01 66 01 00                 ; Tag 0166
-00 60 00 08 
-01 20                   ; Tag 0120
-00 00 00 00 00 00 00 00
-
-00 0E 01 2A                   ; Tag 012A
-00 00 00 00 00 00 00 00 00 00
-00 00 
-00 02 01 3E                   ; Tag 013E
-00 00
-00 02 01 42                   ; Tag 0142
-00 00
  ---------------
 00 30 [STARTKEYFRAME]
 01 50 10 08 C9 65 00 01 00 02 00 00 00 1B 00 0C 
 00 0B 00 11 00 11 00 99 11 00 00 00 00 00 00 00 
 04 BA 00 00 04 C4 00 00 00 00 00 00 00 00 00 00 
  ---------------
- [UNKOWN] 2. 
-00 00 
-00 0E 
-00 02 01 66 91 00 
-00 02 01 96 01 00 
-00 02 00 60 00 08 01 50 00 00 00 00 00 00 00 00 
-00 0E 01 5A 00 00 00 00 00 00 00 00 00 00 00 00 
-01 00 00 02 01 6E 00 00 
-00 02 01 72 00 00 
+[UNKOWN] 2.
+00 00                                                ; emp 0000
+00 0E                                                ; Tag 000E (Unknown control byte — start of tween/control block?)
+00 02 01 66                                          ; Tag 0166 (PathPart → Channel 7)
+            91 00                                    ; BackColor = 145 or TweenFlags (likely tween + color)
+00 02 01 96                                          ; Tag 0196 (Ink)
+            01 00                                    ; Ink = 1 (Copy Ink)
+00 02 00 60                                          ; Malformed or unknown tag (possibly corrupt or reserved)
+00 08 01 50                                          ; Tag 0150 (Transform block / Matrix?)
+            00 00 00 00 00 00 00 00                  ; 8 zeroed bytes — likely identity transform
+00 0E 01 5A                                          ; Tag 015A (Unknown tween/matrix block)
+            00 00 00 00 00 00 00 00
+            00 00 00 00                              ; 12 bytes
+01 00                                                ; Control byte — possibly transition mode or blend curve
+00 02 01 6E                                          ; Tag 016E (EaseIn / Timebase?)
+            00 00
+00 02 01 72                                          ; Tag 0172 (EaseOut / Curve?)
+            00 00
 ---------------
 00 30 [STARTKEYFRAME]
 01 80 10 24 CB 67 00 01 00 02 00 00 00 1E 00 0B 
 00 0A 00 11 00 11 00 7F 11 00 00 00 00 00 00 00 
 05 1E 00 00 05 28 00 00 00 00 00 00 00 00 00 00 
 ---------------
-[UNKOWN] 3. frame 10
-00 00 
-00 28 00 02 01 66 00 
-00 00 04 01 80 10 A4 
-98 56 
-00 08    -> 30 long
-01 90 			Bitmask 4 : Size, Rotation, Skew, Blend, ForeColor/BackColor
-00 20 			Width		32
-00 1F 			Height		31
-00 96 			Blend	=	41%	150
-91 00 			Ink?	= 	
-00 02 
-01 9E 
-05 A7 			Rotation	14.47
-00 02 
-01 A2 			Skew		14.76
-05 C4 
-00 1E 
-00 02 01 82 
-65 				Foregournd 101
-45 				Background 69
-00 06   -> 26 long
-01 90 
-00 2F 			Width		47
-00 2E 			Height		46
-00 AF 			Blend		31%  175
-00 02 01 9E 
-06 31 			Rotation	15.85
-00 02 01 A2 
-06 60 			Skew		16.32
-00 54 
-00 02 01 82 
-32  			Foregournd 50
-33 				Background 51
-00 08	-> 24 long
-01 90 
-00 3E  			Width		62
-00 3C 			Height		60
-00 CC 			Blend		20%  204
-11 00 
-00 02 01 9E 
-06 BB 			Rotation		17.23
-00 02 01 A2 
-06 FC 			Skew	17.88
+[UNKNOWN] 3. frame 10
+00 00                                               ; emp 0000
+00 28                                               ; ctr 0028
+00 02 01 66                                         ; Tag 0166 (PathPart)
+            00 00                                   ; padding or channel marker
+00 04 01 80                                         ; Tag 0180 (BlockControl)
+            10 A4 98 56                             ; payload (unknown meaning)
+00 08 01 90                                         ; Tag 0190 (Composite)
+            00 20                                   ; Width = 32
+            00 1F                                   ; Height = 31
+            00 96                                   ; Blend = 150
+            91                                      ; Ink = 0x91
+            00                                      ; padding
+00 02 01 9E                                         ; Tag 019E (Rotation)
+            05 A7                                   ; 14.47°
+00 02 01 A2                                         ; Tag 01A2 (Skew)
+            05 C4                                   ; 14.76°
+00 1E                                               ; ctr 001E
+00 02 01 82                                         ; Tag 0182 (Colors)
+            65                                      ; ForeColor = 101
+            45                                      ; BackColor = 69
+00 06 01 90                                         ; Tag 0190 (Composite)
+            00 2F                                   ; Width = 47
+            00 2E                                   ; Height = 46
+            00 AF                                   ; Blend = 175
+00 02 01 9E                                         ; Tag 019E (Rotation)
+            06 31                                   ; 15.85°
+00 02 01 A2                                         ; Tag 01A2 (Skew)
+            06 60                                   ; 16.32°
+00 54                                               ; ctr 0054
+00 02 01 82                                         ; Tag 0182 (Colors)
+            32                                      ; ForeColor = 50
+            33                                      ; BackColor = 51
+00 08 01 90                                         ; Tag 0190 (Composite)
+            00 3E                                   ; Width = 62
+            00 3C                                   ; Height = 60
+            00 CC                                   ; Blend = 204
+            11                                      ; Ink = 0x11
+            00
+
+
+
 ---------------
 00 30 [STARTKEYFRAME]
 01 B0 10 01 CB 67 00 01 00 02 00 00 00 21 00 10
@@ -131,40 +144,29 @@ something1=224, something2=16
 05 82 00 00 05 8C 00 00 00 00 00 00 00 00 00 00 
 ---------------
 [UNKOWN] 4.
-00 00 
-00 26 00 02 01 82 
-82                          Foreground = 130
-51                          Background = 81
-00 08 
-01 90 
-00 2B 
-00 29 00 72 91 00 00 02 01 9E 
-07 45 						Rotation = 18.61
-00 02 01 A2 
-07 97 						Skew = 19.43
-00 02 01 C6 
-91 00 00 20 
-00 02 01 82 
-D3                          Foreground = 211
-6F                          Background = 111 
+00 00                                               ; emp 0000
+00 26 00 02 01 82 82 51                             ; Tag 0182 (Colors: Fore=130, Back=81)
+00 08 01 90 00 2B 00 29 00 72 91 00                 ; Tag 0190 (Composite: W=43 H=41 Blend=114 Ink=0x91)
+00 02 01 9E 07 45                                   ; Tag 019E (Rotation=18.61)
+00 02 01 A2 07 97                                   ; Tag 01A2 (Skew=19.43)
+00 02 01 C6 91 00                                   ; Tag 01C6 (unknown control or pointer)
+00 20                                               ; ctr 0002
+00 02 01 82 D3 6F                                   ; Tag 0182 (Colors: Fore=211, Back=111)
+00 08 01 90 00 17 00 16 00 19 11 00                 ; Tag 0190 (Composite: W=23 H=22 Blend=25 Ink=0x11)
+00 02 01 9E 07 D0                                   ; Tag 019E (Rotation=20.00)
+00 02 01 A2 08 34                                   ; Tag 01A2 (Skew=21.00)
+00 8A                                               ; ctr 008A
+00 08 01 80 00 00 00 00 00 00 00 00                 ; Tag 0180 (BlockControl)
+00 0E 01 8A 00 00 00 00 00 00 00 00                 ; Tag 018A (unknown)
+00 00 00 00 00 00                                   ; emp 0000
+00 02 01 9E 00 00                                   ; Tag 019E (Rotation=0)
+00 02 01 A2 00 00                                   ; Tag 01A2 (Skew=0)
+00 08 01 B0 00 00 00 00 00 00 00 00                 ; Tag 01B0 (unknown)
+00 0E 01 BA 00 00 00 00 00 00 00 00                 ; Tag 01BA (unknown)
+00 00 00 00 00 00                                   ; emp 0000
+00 02 01 CE 00 00                                   ; Tag 01CE (unknown)
+00 02 01 D2 00 00                                   ; Tag 01D2 (unknown)
 
-00 08 01 90 00 17 00 16 
-00 19 11 00
-00 02 01 9E 
-07 D0                       Rotation = 20.00
-00 02 01 A2 
-08 34                       Skew = 21.00
-00 8A 
-
-00 08 01 80 00 00 00 00 00 00 00 00 
-00 0E 01 8A 00 00 00 00 00 00 00 00 
-00 00 00 00 00 00 00 02 01 9E 00 00 
-00 02 01 A2 00 00
- 
-00 08 01 B0 00 00 00 00 00 00 00 00 
-00 0E 01 BA 00 00 00 00 00 00 00 00 
-00 00 00 00 00 00 00 02 01 CE 00 00 
-00 02 01 D2 00 00
 ---------------
 00 30 [STARTKEYFRAME] 
 01 E0 10 02 CC 68 00 01 00 02 00 00 00 24 

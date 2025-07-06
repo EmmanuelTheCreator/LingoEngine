@@ -55,43 +55,65 @@ This section documents the **header structure** found at the beginning of each D
 
 ## Control Prefixes (Header Byte Sequences)
 
-| Prefix       | Meaning                                  | Notes                                                                 |
-|--------------|-------------------------------------------|-----------------------------------------------------------------------|
-| `00 02`      | Repeat/advance tag                        | Most common prefix for reusing a previously used tag                 |
-| `00 08`      | End of bytes-'frame'                      | Signals end of a keyframe block or transition to next logical frame |
-| `00 30`      | Read keyframe: full 48 bytes              | Triggers fixed-format sprite block parsing (used in main keyframes) |
-| `00 0A`/`00 0C`| Variable-length frame descriptor         | Seen in complex frames (often followed by tag `01 EC`)              |
-| `00 36`      | Fixed block size = 54 bytes               | Indicates exact size of keyframe payload                             |
+| Byte(s)         | Type         | Meaning                                      |
+|------------------|--------------|----------------------------------------------|
+| `00 02`          | Prefix       | AdvanceFrame or property tag                 |
+| `00 04`          | Prefix       | 4-byte property (e.g. size, pos)             |
+| `00 06`          | Prefix       | 6-byte block (e.g. 0190 composite)           |
+| `00 08`          | EndMarker    | End of logical keyframe/tween block          |
+| `00 0A`          | Ctrl         | Control break or minor tween control         |
+| `00 0C`          | BlockStart   | Often used before FrameRect                  |
+| `00 1E`, `00 20`, `00 26`, `00 28`, `00 94` | Ctrl | Timeline/Frame control jump bytes |
+| `00 30`          | StartFrame   | Marks the beginning of a fixed 48-byte keyframe |
+| `00 36`          | BlockSize    | Indicates next block is 54 bytes             |
+| `00 00`          | Padding      | Empty byte or control trail (NOP)            |
+
+                  |
 
 ---
 
 ## Known Keyframe Tags (Bytes 2–3)
 
-These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the type of operation or sprite property. 
+These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the type of operation or sprite property.
 
-| Tag       | Name           | Byte Size | Meaning                                    | Details                                                             |
-|-----------|----------------|-----------|--------------------------------------------|---------------------------------------------------------------------|
-| `01 30`   | Size           | 4         | Width + Height                             | 2 bytes each                                                        |
-| `01 5C`   | Position       | 4         | LocH + LocV                                | 2 bytes each                                                        |
-| `01 20`   | EaseIn/EaseOut | 2         | Ease-In + Ease-Out                         | First byte = EaseIn, Second = EaseOut, 0–255                        |
-| `01 36`   | AdvanceFrame   | 2         | Moves to next frame                        | Keyframe continuation                                               |
-| `01 66`   | ?              | 2         | Often follows `AdvanceFrame`               | Possibly part of path                                               |
-| `01 96`   | Ink            | 2         | Drawing ink effect                         | Sprite ink constant                                                 |
-| `01 9E`   | Rotation       | 2         | Fixed-point degrees                        | /100.0 precision                                                    |
-| `01 A2`   | Skew           | 2         | Fixed-point skew angle                     | /100.0 precision                                                    |
-| `01 EC`   | FrameRect      | 8         | LocH, LocV, Width, Height                  | Complex keyframe frame rectangle                                    |
-| `01 FE`   | Flags          | 2         | Frame mode flags?                          | Purpose unknown                                                     |
-| `01 FC`   | Flags/Control  | 2         | Possibly puppetSprite or global mode       | Only found in transitions                                           |
-| `01 F4`   | Curvature      | 2         | Tween curvature                            | Single byte: 0–255 = 0–100% approx                                  |
-| `01 90`   | Combo Tag      | 8         | Width, Height, Blend, Ink                  | Composite tag seen in complex frames                                |
-| `01 F6`   | Tween Flags    | 1         | Bitmask flags for tweening properties      | Bit 1=Path, 2=Size, 3=Rotation, 4=Skew, 5=Blend, 6=Foreground 7=Background      |
-| `01 80`   | BlockSize      | -         | Number of following bytes                  | Seen after `Last header byte, the Main block size in header`                                                  |
-| `01 20`   | ?              | -         | Possibly memory offset or data pointer     | Always follows `01 80`                                              |
-| `02 12`   | Colors         | 2         | Foreground + Background                    | 1 byte each                                                         |
-| `02 26`   | ?              | 2         | Possibly palette?                          | Unknown                                                             |
-| `02 56`   | ?              | 2         | Unknown purpose                            | Unknown                                                             |
-| `02 86`   | ?              | 2         | Unknown purpose                            | Unknown                                                             |
-| `02 02`   | ?              | 2         | Possibly transition-related                | Appears in complex transitions                                      |
+| Tag     | Name             | Byte Size | Meaning                                    | Notes |
+|---------|------------------|-----------|--------------------------------------------|-------|
+| `01 30` | Size             | 4         | Width + Height                             | 2 bytes each |
+| `01 5C` | Position         | 4         | LocH + LocV                                | 2 bytes each |
+| `01 20` | Ease             | 2         | EaseIn + EaseOut                           | Byte 1 = EaseIn, Byte 2 = EaseOut |
+| `01 2E` | Speed            | 2         | Movement speed between keyframes           | Seen in tween blocks |
+| `01 36` | AdvanceFrame     | 2–8       | Keyframe or tween control (see below)      | Real = `0x01`, Tween = `0x81` |
+| `01 66` | Channel 7        | 2         | Sprite channel selector                    | Computed from base (see below) |
+| `01 96` | Channel 8 / Ink  | 2         | Ink or channel                             | Used for both ink mode and sprite tag |
+| `01 9E` | Rotation         | 2         | Degrees * 100                              | Fixed-point (e.g. 1234 = 12.34°) |
+| `01 A2` | Skew             | 2         | Skew degrees * 100                         | Fixed-point |
+| `01 C6` | Channel 9 / Ctrl | 2         | Possibly sprite/channel or controller      | Used in channel mapping |
+| `01 D2` | Skew2            | 2         | Alternative skew value                     | Seen together with Skew |
+| `01 EC` | FrameRect        | 8         | LocH, LocV, Width, Height                  | Composite block |
+| `01 F4` | Curvature        | 2–4       | Curvature control or additional tween param| 0–255 (percent) |
+| `01 F6` | TweenFlags       | 1–2       | Bitmask for which properties tween         | See TweenFlags section |
+| `01 FE` | FrameFlags       | 2         | Sprite transition flagset                  | Meaning unclear |
+| `02 02` | TransitionCode   | 1         | Transition type or jump marker             | Seen with FE flags |
+| `02 12` | Colors           | 2         | ForeColor + BackColor                      | Palette indices |
+| `02 26` | Channel 10       | 2         | Sprite channel selector                    | Follows channel formula |
+| `02 40` | Channel Flags?   | 2         | Control channel metadata                   | Seen alongside `02 26` etc |
+| `02 56` | Channel 11       | 2         | Sprite channel selector                    | |
+| `02 86` | Channel 12       | 2         | Sprite channel selector                    | |
+| `03 16` | Channel 13       | 2         | Rare channel selector                      | |
+| `04 B0` | Channel 14       | 2         | Sprite channel or controller               | |
+| `04 C0` | Repeat Size      | 4         | Width + Height again                       | Often mirrors 0130 |
+| `04 C6` | Channel Control  | 2         | Channel reference or control               | Possibly index pointer |
+| `10 20` | Channel Data     | 2         | Per-channel data ref                       | Followed by Size tag |
+| `10 30` | Repeat Size      | 4         | Copy of Width + Height                     | |
+| `10 36` | Channel Link     | 2         | Channel control                            | |
+| `13 B0` | Channel Link     | 2         | Channel reference                          | |
+| `13 C0` | Repeat Size      | 4         | Width + Height again                       | |
+| `13 C6` | Channel Control  | 2         | Unknown                                    | |
+| `1C E0` | Channel Link     | 2         | Control or offset                          | |
+| `1C F0` | Repeat Size      | 4         | Width + Height again                       | |
+| `1C F6` | TweenFlags+      | 2         | Extended tween mask                        | Byte 1 = enable, Byte 2 = mask |
+
+
 
 ---
 
@@ -106,20 +128,20 @@ PS.: Tweening: The tweening are not keyframe based but sprite based!
 
 | Tag     | Total Size | Offset | Field         | Description                            |
 |----------|------------|--------|----------------|----------------------------------------|
-| `0x0130` | 4 bytes    | 0–1    | Width          | Sprite width (pixels)                  |
-|          |            | 2–3    | Height         | Sprite height (pixels)                 |
-| `0x015C` | 4 bytes    | 0–1    | LocH           | Horizontal screen position             |
-|          |            | 2–3    | LocV           | Vertical screen position               |
+| `0x0130` | 4 bytes    | 0 – 1  | Width          | Sprite width (pixels)                  |
+|          |            | 2 – 3  | Height         | Sprite height (pixels)                 |
+| `0x015C` | 4 bytes    | 0 – 1  | LocH           | Horizontal screen position             |
+|          |            | 2 – 3  | LocV           | Vertical screen position               |
 | `0x0182` | 2 bytes    | 0      | ForeColor      | Foreground color (palette index)       |
 |          |            | 1      | BackColor      | Background color (palette index)       |
-| `0x0190` | 6 bytes    | 0–1    | Width          | Sprite width                           |
-|          |            | 2–3    | Height         | Sprite height                          |
-|          |            | 4      | Blend          | Blend percentage (byte, 0–255)         |
+| `0x0190` | 6 bytes    | 0 – 1  | Width          | Sprite width                           |
+|          |            | 2 – 3  | Height         | Sprite height                          |
+|          |            | 4      | Blend          | Blend percentage (byte, 0 – 255)       |
 |          |            | 5      | Ink            | Drawing ink mode (constant index)      |
-| `0x01EC` | 8 bytes    | 0–1    | LocH           | Frame rectangle left                   |
-|          |            | 2–3    | LocV           | Frame rectangle top                    |
-|          |            | 4–5    | Width          | Frame rectangle width                  |
-|          |            | 6–7    | Height         | Frame rectangle height                 |
+| `0x01EC` | 8 bytes    | 0 – 1  | LocH           | Frame rectangle left                   |
+|          |            | 2 – 3  | LocV           | Frame rectangle top                    |
+|          |            | 4 – 5  | Width          | Frame rectangle width                  |
+|          |            | 6 – 7  | Height         | Frame rectangle height                 |
 | `0x0212` | 2 bytes    | 0      | ForeColor      | Foreground color index (1 byte)        |
 |          |            | 1      | BackColor      | Background color index (1 byte)        |
 | `0x01F6` | 1 byte     | 0      | Tween Flags    | Bit flags for tweening fields (see below) |
@@ -138,6 +160,28 @@ When you select a sprite in the Director GUI, the **tweening panel (sliders and 
 - They are grouped **after `0x0180` and `0x0120`**, which together define:
   - **How many bytes follow (block size)**
   - **Which sprite these values are assigned to** (e.g. `0x1080` = sprite 8)
+
+
+### 🧪 TweenFlags Bitmask (Tag 0x01F6 or 0x1CF6)
+
+The tweening flag mask indicates which properties are interpolated between keyframes.
+
+| Bit | Mask   | Meaning        |
+|-----|--------|----------------|
+| 0   | `0x01` | Path (Position) |
+| 1   | `0x02` | Size            |
+| 2   | `0x04` | Rotation        |
+| 3   | `0x08` | Skew            |
+| 4   | `0x10` | Blend           |
+| 5   | `0x20` | ForeColor       |
+| 6   | `0x40` | BackColor       |
+| 7   | `0x80` | Sprite has tweening data (global toggle) |
+
+Example:
+
+- `0x4A` = `01001010` → Tween: Rotation, Blend, Path
+- `0x81` = `10000001` → Tweening + BackColor
+
 
 ### ✅ Example
 
@@ -197,6 +241,17 @@ These are used to direct the upcoming data to the correct sprite channel.
 - `2 bytes`: Tag value (property or sprite channel)
 - `X bytes`: Payload data
 
+## 🔁 AdvanceFrame Flag Byte (0x0136)
+
+| Byte Value | Description                        |
+|------------|------------------------------------|
+| `0x01`     | Real keyframe                      |
+| `0x81`     | Tweening continuation (not a keyframe) |
+| `0x08`     | Block end or zero frame advance?   |
+| `0x02`     | Frame advance of 1 or 2            |
+| `0x81 + 02`| Tween flag + 2 frame advance       |
+
+
 Special handling is required for composite tags (e.g. `01 90`), frame-level headers (e.g. `01 EC`), and control sequences (`00 08`, `00 0A`, etc).
 
 ### Byte 4: Flags if keyframe is real or tweeening
@@ -220,6 +275,11 @@ This table lists all **tags observed to contain multiple sprite properties**, dr
 | **Composite**| `0x0190`| Width, Height, Blend, Ink                     | `0001 1001 0000`            | Frequently used; always 6–7 bytes |
 | **Extended Frame Flags** | `0x01FE` | Mode/transition flags (unclear)     | `0001 1111 1110`            | Found in many frame blocks     |
 | **Block Control** | `0x0180`| Possibly: Size, Channel count, Offsets? | `0001 1000 0000`            | Payload = 6+ bytes, unknown format |
+| **Speed**     | `0x012E` | Movement Speed                         | `0001 0010 1110`            | Seen in global tween block |
+| **Ease**      | `0x0120` | EaseIn (byte 1), EaseOut (byte 2)     | `0001 0010 0000`            | Applies per-sprite |
+| **Curvature** | `0x01F4` | Curvature/velocity control            | 1–2 bytes                  | Applies globally per sprite |
+| **TweenFlags**| `0x01F6` | Tween toggles                         | 1–2 bytes                   | Controls which properties tween |
+
 
 ## 🧪 Bit Flag H
 
