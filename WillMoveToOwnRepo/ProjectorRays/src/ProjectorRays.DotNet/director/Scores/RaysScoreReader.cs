@@ -174,6 +174,7 @@ internal class RaysScoreReader
                 kf.LocV = rs.ReadInt16("locV", ctx.GetAnnotationKeys());
                 break;
             case ScoreTagV2.Colors:
+            case ScoreTagV2.ColorsShort:
                 kf.ForeColor = rs.ReadUint8("foreColor", ctx.GetAnnotationKeys());
                 kf.BackColor = rs.ReadUint8("backColor", ctx.GetAnnotationKeys());
                 break;
