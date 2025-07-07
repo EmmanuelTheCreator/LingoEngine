@@ -80,10 +80,10 @@ These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the typ
 |---------|----------------|-----------|--------------------------------------------|-------|
 | `01 30` | Size           | 4         | Width + Height                             | 2 bytes each |
 | `01 5C` | Position       | 4         | LocH + LocV                                | 2 bytes each |
-| `01 20` | Ease           | 2         | EaseIn + EaseOut                           | Byte 1 = EaseIn, Byte 2 = EaseOut |
+| `01 20` | unknown        | 2         | unknown                                    | unknown |
 | `01 36` | AdvanceFrame   | 2–8       | Real or Tween keyframe switch              | Flag 0x01 = real keyframe, 0x81 = tween only |
-| `01 66` | PathPart       | 2         | Usually after AdvanceFrame                 | Could also imply sprite/channel |
-| `01 96` | Ink            | 2         | Drawing ink mode                           | Value = ink constant |
+| `01 66` | SwapCurrentChannelTo 6       | 2         | change to channel 6                |  |
+| `01 96` | SwapCurrentChannelTo 7            | 2         | change to channel 7           |  |
 | `01 9E` | Rotation       | 2         | Degrees * 100                              | Fixed-point (e.g. 1234 = 12.34°) |
 | `01 A2` | Skew           | 2         | Skew degrees * 100                         | Fixed-point |
 | `01 C6` | ?              | 2         | Possibly sprite ID or controller           | Unknown |
@@ -94,11 +94,11 @@ These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the typ
 | `01 FE` | Flags          | 2         | Frame state or transition flags            | Unconfirmed |
 | `02 02` | TransitionCode | 1         | Likely transition control                  | Seen with 0x01FE |
 | `02 12` | Colors         | 2         | ForeColor + BackColor                      | Palette indices |
-| `02 26` | Channel 10     | 2         | Sprite Channel Tag (channel = 10)          | Calculated offset |
-| `02 56` | Channel 11     | 2         | Sprite Channel Tag                         | Calculated offset |
-| `02 86` | Channel 12     | 2         | Sprite Channel Tag                         | Calculated offset |
-| `03 16` | Channel 13     | 2         | Sprite Channel Tag                         | Rare |
-| `04 B0` | Channel 14     | 2         | Sprite Channel Tag                         | Seen in tween data |
+| `02 26` | SwapCurrentChannelTo 10     | 2         | Sprite Channel Tag (channel = 10)          | |
+| `02 56` | SwapCurrentChannelTo 11     | 2         | Sprite Channel Tag                         | |
+| `02 86` | SwapCurrentChannelTo 12     | 2         | Sprite Channel Tag                         | |
+| `03 16` | SwapCurrentChannelTo 13     | 2         | Sprite Channel Tag                         |  |
+| `04 B0` | SwapCurrentChannelTo 14     | 2         | Sprite Channel Tag                         |  |
 | `04 C0` | Size Repeat    | 4         | Width + Height                             | Often with 0x0130 |
 | `04 C6` | Flag/Link      | 2         | Possibly sprite index                      | Unknown |
 | `10 20` | Channel Data   | 2         | Possibly per-channel value                 | Usually followed by 0x0130 |
@@ -116,7 +116,7 @@ These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the typ
 | `01 8A` | Unknown018A     | 6–8       | Seen in secondary composite blocks       | Often after 0180 |
 | `01 CE` | Unknown01CE     | 2         | Possibly alignment/skew-related          | |
 | `02 40` | Channel Flag?   | 2         | Sprite channel helper?                   | Seen with 02 26 etc |
-| `04 B0` | Channel 14      | 2         | Sprite channel index tag                 | Derived tag |
+| `04 B0` | SwapCurrentChannelTo 14      | 2         | Sprite channel index tag                 | Derived tag |
 
 
 
@@ -124,7 +124,14 @@ These tags appear after the prefix (`00 02`, `00 04`, etc.) and identify the typ
 
 PS.: Tweening: The tweening are not keyframe based but sprite based!
 
-
+### unkown 0x0120
+🟡 0x0120 Might Be One of the Following:
+Possibility	Supporting Evidence
+- A structural block separator	Appears between logical tag groups, possibly segmenting “channels” or “zones”
+- A block type ID or category	May act like a mode switch — similar to 0x1CF6 style flag blocks
+- A data corruption / null padding point	Unlikely here, but worth keeping open if file is malformed
+- A frame state reset marker	Preceded and followed by tag-like data and padding
+- A deprecated opcode	Possibly an old tag type no longer used or interpreted
 
 
 
@@ -212,7 +219,18 @@ Example:
 
 
 
-## Sprite Channel Mapping (Also Tags!)
+
+
+---
+
+## Reading Logic
+
+- `2 bytes`: Payload length (after the tag)
+- `2 bytes`: Tag value (property or sprite channel)
+- `X bytes`: Payload data
+
+
+## Sprite Channel swapping & AdvanceFrame Flag Byte (0x0136 , 0x0166, ...à
 
 Tags can also reference sprite channels by offsetting from `0x0136`.
 
@@ -235,26 +253,24 @@ Examples:
 | `02 26` | 10      |
 | `02 56` | 11      |
 | `02 86` | 12      |
+THIS table is not correct, see last chapter in this document!
 
 These are used to direct the upcoming data to the correct sprite channel.
 
----
+this number are FLAGS!
+###  Director Keyframe Flag Bits 
 
-## Reading Logic
+| **Bit Position** | **Hex Value** | **Binary**   | **Meaning**                                  | **Confirmed?** |
+|------------------|---------------|--------------|----------------------------------------------|----------------|
+| Bit 0            | `0x01`        | `00000001`   | advance 1frame and create Real keyframe      | ✅ Yes        |
+| Bit 1            | `0x02`        | `00000010`   | Unknown                                      | ❌ No         |
+| Bit 2            | `0x04`        | `00000100`   | Unknown                                      | ❌ No         |
+| Bit 3            | `0x08`        | `00001000`   | Unknown                                      | ❌ No         |
+| Bit 4            | `0x10`        | `00010000`   | Unknown                                      | ❌ No         |
+| Bit 5            | `0x20`        | `00100000`   | Flip Horizontal (FlipH)                      | ✅ Yes        |
+| Bit 6            | `0x40`        | `01000000`   | Flip Vertical (FlipV)                        | ✅ Yes        |
+| Bit 7            | `0x80`        | `10000000`   | Tweening continuation flag                   | ✅ Yes        |
 
-- `2 bytes`: Payload length (after the tag)
-- `2 bytes`: Tag value (property or sprite channel)
-- `X bytes`: Payload data
-
-## 🔁 AdvanceFrame Flag Byte (0x0136)
-
-| Byte Value | Description                        |
-|------------|------------------------------------|
-| `0x01`     | Real keyframe                      |
-| `0x81`     | Tweening continuation (not a keyframe) |
-| `0x08`     | Block end or zero frame advance?   |
-| `0x02`     | Frame advance of 1 or 2            |
-| `0x81 + 02`| Tween flag + 2 frame advance       |
 
 
 Special handling is required for composite tags (e.g. `01 90`), frame-level headers (e.g. `01 EC`), and control sequences (`00 08`, `00 0A`, etc).
@@ -264,11 +280,11 @@ for tag 0x0136:
  - 01 → a real keyframe
  - 81 → no new keyframe, just continuation or tween data
  
- Important -> it can be that 01 and 08 are flags togther with an offset in one byte. : 8-th bit can be  the sign flag
-
  Then next byte: 
  00 02 advance one keyframe
 
+
+## Composed tags
 
 This table lists all **tags observed to contain multiple sprite properties**, drawn from real data in `5spritesTest.dir` and `KeyFramesTest.dir`. These are not followed by separate property tags — the values are bundled directly in the payload.
 
@@ -477,3 +493,90 @@ Example:
                               ^^^^^^^^^^^^
                             End-of-frame marker
 ```
+
+
+
+
+
+
+
+
+
+
+# Problems
+
+
+## 🧩 Director Score File Anomalies (Keyframe & Channel Decoding)
+
+### 1. ❓ Unknown Block Inside STARTKEYFRAME List
+
+In `Animation_types.dir`, a non-keyframe block appears **in the middle** of an otherwise aligned 48-byte keyframe sequence:
+
+```
+00 02 03 D6 01 00 00 30 04 B0
+```
+
+- **10 bytes total**
+- Begins like a tag: `00 02 03 D6` → possibly tag `0x03D6`
+- Followed by values: `01 00 00 30 04 B0` — likely control or pointer data
+- Appears at offset where a 48-byte keyframe would be expected
+
+🔎 **Hypothesis**: This may be a jump table, channel pointer redirect, or offset-based redirection that replaces a normal keyframe.
+
+---
+
+### 2. 🟠 Repeated `0x0120` Bytes (Not Tags)
+
+In both files, standalone `01 20` bytes are found:
+- Before keyframe sequences
+- Repeated multiple times
+- Sometimes between blocks
+- Not part of `00 02` or `00 04` tag structure
+
+🧩 **They are not tags.**
+
+#### Examples:
+```
+01 26
+01 20
+01 20
+-- followed by --
+10 00 FF 00 ...
+```
+
+🔎 **Hypothesis**: These may be block alignment markers, padding words, or undocumented structural separators in the score file format.
+
+---
+
+### 3. ⚠️ Missing Channel 10 in File 1
+
+In `Animation_types.dir`, channel 10 (`tag = 0x01F6`) is completely missing:
+
+| Tag     | Internal Channel | Present in File 1 |
+|---------|------------------|--------------------|
+| `0x0136` | 6               | ✅ Yes             |
+| `0x0166` | 7               | ✅ Yes             |
+| `0x0196` | 8               | ✅ Yes             |
+| `0x01C6` | 9               | ✅ Yes             |
+| `0x01F6` | 10              | ❌ **Missing**     |
+| `0x0226` | 11              | ✅ Yes             |
+
+In contrast, in `SpriteLock.dir`, channel 10 **is present**:
+```
+00 02 01 F6 81 00
+```
+
+🔎 **Conclusion**: Channels can be skipped. The decoding logic must allow for:
+- Gaps between sprite channels
+- Possible structural reasons for omission (e.g., unknown blocks acting as replacements)
+
+---
+
+### ✅ Summary & Action Points
+
+- `0x0120` and similar standalone values must be logged but not decoded as tags
+- 10-byte `0x03D6` blocks may explain missing channel data — more examples needed
+- Keyframe parsing must tolerate mid-block interruptions
+- Channel assignment cannot assume contiguous sprite use
+
+🧪 These anomalies suggest the Director score file format includes control, segmentation, or optimization logic not yet fully mapped.

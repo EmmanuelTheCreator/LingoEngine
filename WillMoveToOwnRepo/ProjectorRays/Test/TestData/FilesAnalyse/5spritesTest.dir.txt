@@ -47,15 +47,16 @@ something1=224, something2=16
             91 00                                 ; AdvanceFlags = 0x0091 → Tweening + BackColor?
             00 00                                 ; Padding / Unused?
             00 08                                 ; Control = 0x08 (End of advance block or step)
-00 02 01 66                                       ; Tag 0166 (PathPart → Channel 7)
+00 02 01 66                                       ; Tag 0166 (SwapChannelControl → Channel 7)
             01 00                                 ; Possibly tween flags (or part ID)
             00 60                                 ; Unknown control byte (path mode? duration?)
             00 08                                 ; Control = 0x08 (possibly end of block)
-01 20 00 00 00 00 00 00 00 00                     ; Tag 0120 (Tween Ease)
-            00 00                                 ; EaseIn = 0
-            00 00                                 ; EaseOut = 0
-            00 00                                 ; Duration = 0
-            00 00                                 ; Padding / Alignment
+01 20 
+00 00 00 00 00 00 00 00                    
+            00 00                          
+            00 00                          
+            00 00                          
+            00 00                          
 00 0E 01 2A                                       ; Tag 012A (Unknown012A)
             00 00 00 00 00 00 00 00
             00 00 00 00                           ; 12 bytes total – meaning unknown
@@ -74,7 +75,7 @@ something1=224, something2=16
 [UNKOWN] 2.
 00 00                                                ; emp 0000
 00 0E                                                ; Tag 000E (Unknown control byte — start of tween/control block?)
-00 02 01 66                                          ; Tag 0166 (PathPart → Channel 7)
+00 02 01 66                                          ; Tag 0166 (SwapChannelControl → Channel 7)
             91 00                                    ; BackColor = 145 or TweenFlags (likely tween + color)
 00 02 01 96                                          ; Tag 0196 (Ink)
             01 00                                    ; Ink = 1 (Copy Ink)
@@ -98,7 +99,7 @@ something1=224, something2=16
 [UNKNOWN] 3. frame 10
 00 00                                               ; emp 0000
 00 28                                               ; ctr 0028
-00 02 01 66                                         ; Tag 0166 (PathPart)
+00 02 01 66                                         ; Tag 0166 (SwapChannelControl)
             00 00                                   ; padding or channel marker
 00 04 01 80                                         ; Tag 0180 (BlockControl)
             10 A4 98 56                             ; payload (unknown meaning)
