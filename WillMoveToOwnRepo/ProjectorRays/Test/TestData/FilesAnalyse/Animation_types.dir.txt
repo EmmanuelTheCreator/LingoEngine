@@ -70,33 +70,33 @@ Main key frames , Total = 620 bytes, each 16*3 = 48 bytes
 
 Frame 4 , Total = 394 bytes,  First 6 bytes for each is the channel link, every X tags
 
-00 02 01 36 81 00                                   ; Tag 0136 (AdvanceFrame) → Channel 6, Flag 0x81 (Tweening + BackColor?)
+00 02 01 36 81 00                                   ; Tag 0136  (AdvanceFrame) → Channel 6,
 00 04 01 5C 00 50 00 49                             ; Tag 015C (Unknown015C) → Possibly: composite rect? coords? (W=80, H=73)?
-00 02 01 66 81 00                                   ; Tag 0166 (SwapCurrentChannelTo6) → Channel 6, 0x81 : no keyframe creation
-00 02 01 96 81 00                                   ; Tag 0196 (Ink?) → Value 0x81 (could be transparent)
+00 02 01 66 81 00                                   ; Tag 0166  (SwapCurrentChannelTo6) → Channel 7,
+00 02 01 96 81 00                                   ; Tag 0196  (Ink?) → Channel 8,
 00 02 01 9E 09 1D                                   ; Tag 019E (Rotation) → 2333 → 23.33°
-00 02 01 C6 81 00                                   ; Tag 01C6 (UnknownC6) → Possibly pointer or flag (value = 0x81)
+00 02 01 C6 81 00                                   ; Tag 01C6  (UnknownC6) → Channel 9,
 00 02 01 D2 04 57                                   ; Tag 01D2 (UnknownD2) → Possibly control word or angle? (0x0457 = 1111)
 00 04 01 F4 00 49 91 00                             ; Tag 01F4 (TweenSpeed/Curvature?) → Possibly BlendSpeed=73, Ink=0x91
 		
 00 02 02 12 CC 10                                   ; Tag 0212 (Unknown) → Possibly transition or tween easing? Value = 0xCC10
-00 02 02 26 81 00                                   ; Tag 0226 (Unknown) → Value = 0x81 (pattern: 81 00)
-00 02 02 56 81 00                                   ; Tag 0256 (Unknown) → Value = 0x81
-00 02 02 86 81 00                                   ; Tag 0286 (Unknown) → Value = 0x81
-00 02 03 16 01 00                                   ; Tag 0316 (Unknown) → Value = 0x01
+00 02 02 26 81 00                                   ; Tag 0226  (Unknown) → Channel 11,
+00 02 02 56 81 00                                   ; Tag 0256  (Unknown) → Channel 12,
+00 02 02 86 81 00                                   ; Tag 0286  (Unknown) → Channel 13,
+00 02 03 16 01 00                                   ; Tag 0316  (Unknown) → Channel 16,
 00 02 04 B0 10 80                                   ; Tag 04B0 (Unknown) → Value = 0x1080
 00 04 04 C0 00 2E 00 4D                             ; Tag 04C0 (Unknown) → Possibly rect or size: 46 x 77?
-00 02 04 C6 81 00                                   ; Tag 04C6 (Unknown) → Value = 0x81
+00 02 04 C6 81 00                                   ; Tag 04C6  (Unknown) → Channel 25,
 00 02 10 20 10 80                                   ; Tag 1020 (Unknown) → Value = 0x1080
 00 04 10 30 00 2E 00 4D                             ; Tag 1030 (Unknown) → Possibly rect or size: 46 x 77?
-00 02 10 36 81 00                                   ; Tag 1036 (Unknown) → Value = 0x81
+00 02 10 36 81 00                                   ; Tag 1036  (Unknown) → Channel 86,
 00 02 13 B0 10 80                                   ; Tag 13B0 (Unknown) → Value = 0x1080
 00 04 13 C0 00 2E 00 4D                             ; Tag 13C0 (Unknown) → Possibly rect or size: 46 x 77?
-00 02 13 C6 81 00                                   ; Tag 13C6 (Unknown) → Value = 0x81
+00 02 13 C6 81 00                                   ; Tag 13C6  (Unknown) → Channel 105,
 00 02 1C E0 10 80                                   ; Tag 1CE0 (Unknown) → Value = 0x1080
 00 04 1C F0 00 2E 00 4D                             ; Tag 1CF0 (Unknown) → Possibly rect or size: 46 x 77?
 			
-00 02 1C F6 81 00 00 4A                             ; Tag 1CF6 (TweenFlags=0x81, Payload=0x4A → Path + Rotation + Blend)
+00 02 1C F6 81 00 00 4A                             ; Tag 1CF6  (TweenFlags=0x81, Payload=0x4A → Channel 154,
 00 04 01 30 00 49 00 58                             ; Tag 0130 (Size: Width=73, Height=88)
 00 04 01 5C 00 8D 00 89                             ; Tag 015C (Position: LocH=141, LocV=137)
 00 02 01 9E 12 3A                                   ; Tag 019E (Rotation: 0x123A = 4666 = 46.66°)
@@ -130,7 +130,7 @@ Frame 4 , Total = 394 bytes,  First 6 bytes for each is the channel link, every 
 00 04 13 C0 00 64 00 64                             ; Tag 13C0 (Repeat Size: 100 x 100)
 00 02 13 C6 01 00                                   ; Tag 13C6 (Unknown flag/ctrl)
 00 04 1C F0 00 64 00 64                             ; Tag 1CF0 (Repeat Size: 100 x 100)
-00 02 1C F6 01 00 00 94                             ; Tag 1CF6 (TweenFlags=0x01, Payload=0x94 → Blend + BackColor + Position?)
+00 02 1C F6 01 00 00 94                             ; Tag 1CF6  (TweenFlags=0x01, Payload=0x94 → Channel 154,
 00 04 01 30 00 3C 00 53                             ; Tag 0130 (Size: Width=60, Height=83)
 
 
@@ -181,7 +181,9 @@ Frame 6
 00 02 13 C6 01 00                                   ; Tag 13C6 (Unknown)
 00 02 1C E0 10 00                                   ; Tag 1CE0 (Unknown)
 00 04 1C F0 00 13 00 41                             ; Tag 1CF0 (Size: 19x65)
-00 02 1C F6 01 00                                   ; Tag 1CF6 (TweenFlags = 0x01 → Tweening enabled)
+00 02 1C F6 01 00                                   ; Tag 1CF6  (TweenFlags = 0x01 → Channel 154,
+
+
 
 
 
