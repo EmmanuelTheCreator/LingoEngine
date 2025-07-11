@@ -1,11 +1,22 @@
 from typing import List, Dict
-from ..common.stream import ReadStream, Endianness, BufferView
+
+from ..common.stream import BufferView, Endianness, ReadStream
 from ..common.json_writer import JSONWriter
 from .chunks.rays_chunk import RaysChunk, ChunkType
 from .chunks.rays_cast_chunk import RaysCastChunk
+from .chunks.rays_cast_member_chunk import RaysCastMemberChunk
+from .chunks.rays_cast_list_chunk import RaysCastListChunk
+from .chunks.rays_config_chunk import RaysConfigChunk
+from .chunks.rays_initial_map_chunk import RaysInitialMapChunk
+from .chunks.rays_key_table_chunk import RaysKeyTableChunk
+from .chunks.rays_memory_map_chunk import RaysMemoryMapChunk
+from .chunks.rays_script_chunk import RaysScriptChunk
+from .chunks.rays_script_context_chunk import RaysScriptContextChunk
+from .chunks.rays_script_names_chunk import RaysScriptNamesChunk
+from .chunks.rays_xmed_chunk import RaysXmedChunk
 from .scores import RaysScoreChunk
 from .rays_subchunk import KeyTableEntry
-from .ray_guid import RayGuid
+from .ray_guid import RayGuid, LingoGuidConstants
 
 class ChunkInfo:
     def __init__(self):
@@ -23,19 +34,248 @@ class RaysDirectorFile:
         self.casts: List[RaysCastChunk] = []
         self.score: RaysScoreChunk | None = None
         self.chunk_info_map: Dict[int, ChunkInfo] = {}
+        self.chunk_ids_by_fourcc: Dict[int, List[int]] = {}
+        self.deserialized_chunks: Dict[int, RaysChunk] = {}
         self.stream: ReadStream | None = None
+        self.key_table: RaysKeyTableChunk | None = None
+        self.config: RaysConfigChunk | None = None
+        self.initial_map: RaysInitialMapChunk | None = None
+        self.memory_map: RaysMemoryMapChunk | None = None
+        self.version: int = 0
+        self.codec: int = 0
+        self.dot_syntax: bool = False
+        self.afterburned: bool = False
+        self.fver_version_string: str = ""
 
     @staticmethod
     def FOURCC(a: str, b: str, c: str, d: str) -> int:
         return (ord(a) << 24) | (ord(b) << 16) | (ord(c) << 8) | ord(d)
 
-    def read(self, stream: ReadStream) -> bool:
-        self.stream = stream
-        stream.endianness = Endianness.BIG
-        self.endianness = stream.endianness
-        return True
-
     def write_json(self, writer: JSONWriter):
         writer.start_object()
         writer.write_key('name'); writer.write_val(self.name)
         writer.end_object()
+
+    # ------------------------------------------------------------------
+    # Basic helpers ported from the C# implementation
+    # ------------------------------------------------------------------
+
+    def chunk_exists(self, fourcc: int, chunk_id: int) -> bool:
+        info = self.chunk_info_map.get(chunk_id)
+        return info is not None and info.fourcc == fourcc
+
+    def _add_chunk_info(self, info: ChunkInfo) -> None:
+        self.chunk_info_map[info.id] = info
+        self.chunk_ids_by_fourcc.setdefault(info.fourcc, []).append(info.id)
+
+    def _get_first_chunk_info(self, fourcc: int) -> ChunkInfo | None:
+        ids = self.chunk_ids_by_fourcc.get(fourcc)
+        if ids:
+            return self.chunk_info_map.get(ids[0])
+        return None
+
+    def get_chunk(self, fourcc: int, chunk_id: int) -> RaysChunk:
+        if chunk_id in self.deserialized_chunks:
+            return self.deserialized_chunks[chunk_id]
+        view = self._get_chunk_data(fourcc, chunk_id)
+        chunk = self._make_chunk(fourcc, view)
+        self.deserialized_chunks[chunk_id] = chunk
+        return chunk
+
+    def _get_chunk_data(self, fourcc: int, chunk_id: int) -> BufferView:
+        if self.stream is None:
+            raise IOError("No stream loaded")
+        info = self.chunk_info_map.get(chunk_id)
+        if info is None:
+            raise IOError(f"Could not find chunk {chunk_id}")
+        if info.fourcc != fourcc:
+            raise IOError(
+                f"Expected chunk {chunk_id} to be {fourcc:x} but is {info.fourcc:x}")
+        self.stream.seek(info.offset)
+        data = self.stream.read_bytes(info.length)
+        return BufferView(data, 0, len(data))
+
+    def _make_chunk(self, fourcc: int, view: BufferView) -> RaysChunk:
+        mapping = {
+            self.FOURCC('i', 'm', 'a', 'p'): RaysInitialMapChunk,
+            self.FOURCC('m', 'm', 'a', 'p'): RaysMemoryMapChunk,
+            self.FOURCC('C', 'A', 'S', '*'): RaysCastChunk,
+            self.FOURCC('C', 'A', 'S', 't'): RaysCastMemberChunk,
+            self.FOURCC('K', 'E', 'Y', '*'): RaysKeyTableChunk,
+            self.FOURCC('L', 'c', 't', 'x'): RaysScriptContextChunk,
+            self.FOURCC('L', 'c', 't', 'X'): RaysScriptContextChunk,
+            self.FOURCC('L', 'n', 'a', 'm'): RaysScriptNamesChunk,
+            self.FOURCC('L', 's', 'c', 'r'): RaysScriptChunk,
+            self.FOURCC('V', 'W', 'C', 'F'): RaysConfigChunk,
+            self.FOURCC('D', 'R', 'C', 'F'): RaysConfigChunk,
+            self.FOURCC('M', 'C', 's', 'L'): RaysCastListChunk,
+            self.FOURCC('V', 'W', 'S', 'C'): RaysScoreChunk,
+            self.FOURCC('X', 'M', 'E', 'D'): RaysXmedChunk,
+        }
+        cls = mapping.get(fourcc)
+        if cls is None:
+            chunk = RaysChunk(self, ChunkType(fourcc))
+        else:
+            chunk = cls(self)
+        rs = ReadStream(view, self.endianness)
+        chunk.read(rs)
+        return chunk
+
+# ------------------------------------------------------------------
+# Additional logic ported from the C# implementation
+# ------------------------------------------------------------------
+
+    def _read_chunk(self, fourcc: int, length: int | None = None) -> RaysChunk:
+        view = self._read_chunk_data(fourcc, length)
+        return self._make_chunk(fourcc, view)
+
+    def _read_chunk_data(self, fourcc: int, length: int | None) -> BufferView:
+        if self.stream is None:
+            raise IOError("No stream loaded")
+        offset = self.stream.pos
+        valid_fourcc = self.stream.read_uint32()
+        valid_len = self.stream.read_uint32()
+        if length is None:
+            length = valid_len
+        if valid_fourcc != fourcc or valid_len != length:
+            raise IOError(
+                f"At offset {offset} expected {fourcc:x} len {length} "
+                f"but got {valid_fourcc:x} len {valid_len}")
+        data = self.stream.read_bytes(length)
+        return BufferView(data, 0, length)
+
+    def _read_memory_map(self) -> None:
+        self.initial_map = self._read_chunk(self.FOURCC('i', 'm', 'a', 'p'))
+        self.deserialized_chunks[1] = self.initial_map
+        if self.stream is None:
+            raise IOError("No stream loaded")
+        self.stream.seek(self.initial_map.mmap_offset)
+        self.memory_map = self._read_chunk(self.FOURCC('m', 'm', 'a', 'p'))
+        self.deserialized_chunks[2] = self.memory_map
+        for i, entry in enumerate(self.memory_map.map_array):
+            if entry.fourcc in (self.FOURCC('f', 'r', 'e', 'e'),
+                                self.FOURCC('j', 'u', 'n', 'k')):
+                continue
+            info = ChunkInfo()
+            info.id = i
+            info.fourcc = entry.fourcc
+            info.length = entry.length
+            info.uncompressed_len = entry.length
+            info.offset = entry.offset
+            info.compression_id = LingoGuidConstants.NULL_COMPRESSION_GUID
+            self._add_chunk_info(info)
+
+    def _read_key_table(self) -> bool:
+        info = self._get_first_chunk_info(self.FOURCC('K', 'E', 'Y', '*'))
+        if info is None:
+            return False
+        self.key_table = self.get_chunk(info.fourcc, info.id)
+        return True
+
+    def _read_config(self) -> bool:
+        info = (self._get_first_chunk_info(self.FOURCC('D', 'R', 'C', 'F')) or
+                self._get_first_chunk_info(self.FOURCC('V', 'W', 'C', 'F')))
+        if info is None:
+            return False
+        self.config = self.get_chunk(info.fourcc, info.id)
+        from .rays_utilities import RaysUtilities
+        self.version = RaysUtilities.human_version(self.config.director_version)
+        self.dot_syntax = self.version >= 700
+        return True
+
+    def _read_casts(self) -> bool:
+        internal_cast = True
+        if self.version >= 500:
+            info = self._get_first_chunk_info(self.FOURCC('M', 'C', 's', 'L'))
+            if info is not None:
+                cast_list = self.get_chunk(info.fourcc, info.id)
+                for entry in cast_list.entries:
+                    section_id = -1
+                    for key_entry in self.key_table.entries:
+                        if (key_entry.cast_id == entry.id and
+                                key_entry.fourcc == self.FOURCC('C', 'A', 'S', '*')):
+                            section_id = key_entry.section_id
+                            break
+                    if section_id > 0:
+                        cast = self.get_chunk(self.FOURCC('C', 'A', 'S', '*'), section_id)
+                        cast.populate(entry.name, entry.id, entry.min_member)
+                        self.casts.append(cast)
+                return True
+            else:
+                internal_cast = False
+        info = self._get_first_chunk_info(self.FOURCC('C', 'A', 'S', '*'))
+        if info is not None and info.fourcc == self.FOURCC('C', 'A', 'S', '*'):
+            cast = self.get_chunk(self.FOURCC('C', 'A', 'S', '*'), info.id)
+            cast.populate('Internal' if internal_cast else 'External', 1024,
+                          self.config.min_member)
+            self.casts.append(cast)
+        return True
+
+    def _read_score(self) -> None:
+        info = self._get_first_chunk_info(self.FOURCC('V', 'W', 'S', 'C'))
+        if info is not None:
+            self.score = self.get_chunk(info.fourcc, info.id)
+
+    def read(self, stream: ReadStream) -> bool:
+        self.stream = stream
+        stream.endianness = Endianness.BIG
+        meta_fourcc = stream.read_uint32()
+        if meta_fourcc == self.FOURCC('X', 'F', 'I', 'R'):
+            stream.endianness = Endianness.LITTLE
+        self.endianness = stream.endianness
+        stream.read_uint32()  # meta length
+        self.codec = stream.read_uint32()
+        if self.codec in (self.FOURCC('M', 'V', '9', '3'), self.FOURCC('M', 'C', '9', '5')):
+            self._read_memory_map()
+        elif self.codec in (self.FOURCC('F', 'G', 'D', 'M'), self.FOURCC('F', 'G', 'D', 'C')):
+            self.afterburned = True
+            # Afterburner map parsing not implemented
+            return False
+        else:
+            return False
+        if not self._read_key_table():
+            return False
+        if not self._read_config():
+            return False
+        if not self._read_casts():
+            return False
+        self._read_score()
+        return True
+
+    def get_script(self, script_id: int) -> RaysScriptChunk | None:
+        if not self.chunk_exists(self.FOURCC('L', 's', 'c', 'r'), script_id):
+            return None
+        return self.get_chunk(self.FOURCC('L', 's', 'c', 'r'), script_id)
+
+    def get_script_names(self, names_id: int) -> RaysScriptNamesChunk | None:
+        if not self.chunk_exists(self.FOURCC('L', 'n', 'a', 'm'), names_id):
+            return None
+        return self.get_chunk(self.FOURCC('L', 'n', 'a', 'm'), names_id)
+
+    def parse_scripts(self) -> None:
+        for cast in self.casts:
+            ctx = getattr(cast, 'lctx', None)
+            if ctx and hasattr(ctx, 'context'):
+                parse = getattr(ctx.context, 'parse_scripts', None)
+                if callable(parse):
+                    parse()
+
+    def restore_script_text(self) -> None:
+        for cast in self.casts:
+            ctx = getattr(cast, 'lctx', None)
+            if ctx is None or not hasattr(ctx, 'context'):
+                continue
+            scripts = getattr(ctx.context, 'scripts', None)
+            if not scripts:
+                continue
+            for sid, script in scripts.items():
+                if not self.chunk_exists(self.FOURCC('L', 's', 'c', 'r'), sid):
+                    continue
+                script_chunk = self.get_chunk(self.FOURCC('L', 's', 'c', 'r'), sid)
+                member = getattr(script_chunk, 'member', None)
+                if member and hasattr(script, 'script_text'):
+                    text = script.script_text('\n', self.dot_syntax)
+                    set_text = getattr(member, 'set_script_text', None)
+                    if callable(set_text):
+                        set_text(text)
+

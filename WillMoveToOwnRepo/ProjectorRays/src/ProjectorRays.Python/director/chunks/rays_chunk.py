@@ -1,5 +1,6 @@
 from enum import Enum
 from ...common.json_writer import JSONWriter
+from ..common.stream import ReadStream
 
 class ChunkType(Enum):
     CastChunk = 'CastChunk'
@@ -22,9 +23,13 @@ class RaysChunk:
         self.dir = dir
         self.chunk_type = chunk_type
         self.writable = False
+        self.data: bytes = b""
 
-    def read(self, stream):
-        raise NotImplementedError
+    def read(self, stream: ReadStream):
+        """Default reader that consumes all remaining bytes."""
+        remaining = len(stream.data) - stream.pos
+        if remaining > 0:
+            self.data = stream.read_bytes(remaining)
 
     def write_json(self, writer: JSONWriter):
         writer.start_object()

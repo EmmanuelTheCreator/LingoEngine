@@ -16,23 +16,21 @@ namespace LingoEngine.SDL2.Gfx
         public LingoColor BackgroundColor { get; set; }
         public LingoColor BorderColor { get; set; }
         public float BorderWidth { get; set; }
+        private readonly List<ILingoFrameworkGfxLayoutNode> _children = new();
         public object FrameworkNode => this;
 
-        LingoColor? ILingoFrameworkGfxPanel.BackgroundColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        LingoColor? ILingoFrameworkGfxPanel.BorderColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        LingoColor? ILingoFrameworkGfxPanel.BackgroundColor { get => BackgroundColor; set => BackgroundColor = value ?? BackgroundColor; }
+        LingoColor? ILingoFrameworkGfxPanel.BorderColor { get => BorderColor; set => BorderColor = value ?? BorderColor; }
 
-        public void AddItem(ILingoFrameworkGfxLayoutNode child) { }
+        public void AddItem(ILingoFrameworkGfxLayoutNode child) => _children.Add(child);
 
         public void Dispose() { }
 
-        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems()
-        {
-            throw new NotImplementedException();
-        }
+        public IEnumerable<ILingoFrameworkGfxLayoutNode> GetItems() => _children;
 
         public void RemoveItem(ILingoFrameworkGfxLayoutNode child)
         {
-            throw new NotImplementedException();
+            _children.Remove(child);
         }
     }
 }

@@ -33,7 +33,8 @@ namespace LingoEngine.SDL2.Gfx
         public event Action? ValueChanged;
         public object FrameworkNode => this;
 
-        public int FontSize { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private int _fontSize;
+        public int FontSize { get => _fontSize; set => _fontSize = value; }
 
         public void Dispose() { }
     }

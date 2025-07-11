@@ -26,7 +26,8 @@ class RaysCastMember:
         self.type = member_type
 
     def read(self, stream: ReadStream):
-        pass
+        """Consume any remaining data for this member."""
+        stream.skip(len(stream.data) - stream.pos)
 
     def write_json(self, writer: JSONWriter):
         writer.start_object()
