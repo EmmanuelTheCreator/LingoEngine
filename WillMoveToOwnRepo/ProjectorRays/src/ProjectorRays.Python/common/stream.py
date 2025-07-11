@@ -54,3 +54,48 @@ class ReadStream:
 
     def read_string(self, length):
         return self.read_bytes(length).decode('utf-8')
+
+    # ---- Added helpers to mirror the C# implementation ----
+
+    def seek(self, pos):
+        self.pos = max(0, pos)
+
+    def skip(self, n):
+        self.pos = min(len(self.data), self.pos + n)
+
+    def read_int8(self):
+        return struct.unpack(self.endianness.value + 'b', self.read_bytes(1))[0]
+
+    def read_int16(self):
+        return struct.unpack(self.endianness.value + 'h', self.read_bytes(2))[0]
+
+    def read_int32(self):
+        return struct.unpack(self.endianness.value + 'i', self.read_bytes(4))[0]
+
+    def read_float32(self):
+        return struct.unpack(self.endianness.value + 'f', self.read_bytes(4))[0]
+
+    def read_double(self):
+        return struct.unpack(self.endianness.value + 'd', self.read_bytes(8))[0]
+
+    def read_cstring(self):
+        start = self.pos
+        while self.pos < len(self.data) and self.data[self.pos] != 0:
+            self.pos += 1
+        result = self.data[start:self.pos].decode('utf-8')
+        if self.pos < len(self.data):
+            self.pos += 1
+        return result
+
+    def read_pascal_string(self):
+        length = self.read_uint8()
+        return self.read_string(length)
+
+    def read_var_int(self):
+        val = 0
+        while True:
+            b = self.read_uint8()
+            val = (val << 7) | (b & 0x7F)
+            if b & 0x80 == 0:
+                break
+        return val
