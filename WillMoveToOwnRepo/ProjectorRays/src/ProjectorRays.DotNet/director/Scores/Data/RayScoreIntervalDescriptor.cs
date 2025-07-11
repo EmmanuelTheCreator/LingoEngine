@@ -10,7 +10,8 @@ internal class RayScoreIntervalDescriptor
     public int Unknown2 { get; internal set; }
     public int SpriteNumber { get; internal set; }
     public int UnknownAlwaysOne { get; internal set; }
-    public int UnknownNearConstant15_0 { get; internal set; }
+    public int UnkownA { get; internal set; }
+    public int UnkownB { get; internal set; }
     public int UnknownE1 { get; internal set; }
     public int UnknownFD { get; internal set; }
     public int Unknown7 { get; internal set; }

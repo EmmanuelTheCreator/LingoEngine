@@ -7,7 +7,8 @@ class RayScoreIntervalDescriptor:
         self.unknown2 = 0
         self.sprite_number = 0
         self.unknown_always_one = 0
-        self.unknown_near_constant15_0 = 0
+        self.unkown_a = 0
+        self.unkown_b = 0
         self.unknown_e1 = 0
         self.unknown_fd = 0
         self.unknown7 = 0
