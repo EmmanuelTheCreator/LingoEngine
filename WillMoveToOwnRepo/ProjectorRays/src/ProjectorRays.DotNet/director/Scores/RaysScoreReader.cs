@@ -293,9 +293,10 @@ internal class RaysScoreReader
         desc.StartFrame = stream.ReadInt32("startFrame", k);
         desc.EndFrame = stream.ReadInt32("endFrame", k);
         desc.Unknown1 = stream.ReadInt32("unk1", k);
+        desc.Unknown2 = stream.ReadInt16("unk2", k);
 
         // Correctly cast to flag enum and extract bitfield
-        var flags = (RaySpriteFlags)stream.ReadInt32("spriteFlagsBitfield", k);
+        var flags = (RaySpriteFlags)stream.ReadInt16("spriteFlagsBitfield", k);
 
         desc.FlipH = flags.HasFlag(RaySpriteFlags.FlipH);
         desc.FlipV = flags.HasFlag(RaySpriteFlags.FlipV);
@@ -307,14 +308,15 @@ internal class RaysScoreReader
 
         desc.Channel = stream.ReadInt32("channel", k);
         desc.UnknownAlwaysOne = stream.ReadInt16("const1", k);
-        desc.UnknownNearConstant15_0 = stream.ReadInt32("const15", k);
+        desc.UnkownA = stream.ReadInt16("unkownA", k);
+        desc.UnkownB = stream.ReadInt16("unkownB", k);
         desc.UnknownE1 = stream.ReadUint8("e1", k);
         desc.UnknownFD = stream.ReadUint8("fd", k);
         desc.Unknown7 = stream.ReadInt16("unk7", k);
         desc.Unknown8 = stream.ReadInt32("unk8", k);
         while (stream.Pos + 4 <= stream.Size)
             desc.ExtraValues.Add(stream.ReadInt32("extra", k));
-        _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, Flip={desc.FlipH},{desc.FlipV},🔒={desc.IsLocked},Trails={desc.Trails},Editable={desc.Editable},Moveable={desc.Moveable} , U3={desc.UnknownAlwaysOne}, U4={desc.UnknownNearConstant15_0}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
+        _logger.LogInformation($"Item Desc. {index}: Start={desc.StartFrame}, End={desc.EndFrame}, Channel={desc.Channel}, U1={desc.Unknown1}, Flip={desc.FlipH},{desc.FlipV},🔒={desc.IsLocked},Trails={desc.Trails},Editable={desc.Editable},Moveable={desc.Moveable} , U3={desc.UnknownAlwaysOne}, U4A={desc.UnkownA}, U4B={desc.UnkownB}, U5={desc.UnknownE1}, U6={desc.UnknownFD}");
         return desc;
     }
     internal void ReadFrameDescriptors(RayScoreParseContext ctx)
