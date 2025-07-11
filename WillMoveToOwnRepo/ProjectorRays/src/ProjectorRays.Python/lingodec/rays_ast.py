@@ -39,7 +39,13 @@ class Datum:
 
 class AstNode:
     def write_script_text(self, code: RaysCodeWriter) -> None:
-        pass
+        """Write a textual representation of this node to ``code``.
+
+        Base nodes have no default rendering; subclasses should override this
+        method to output their specific syntax.
+        """
+        # Intentionally empty -- concrete nodes implement their own logic.
+        return
 
 
 @dataclass
