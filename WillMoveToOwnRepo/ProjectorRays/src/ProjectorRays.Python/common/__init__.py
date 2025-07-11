@@ -2,6 +2,7 @@ from .json_writer import JSONWriter
 from .stream import BufferView, ReadStream, Endianness
 from .util import RaysUtil
 from .rays_code_writer import RaysCodeWriter
+from .rays_log import RaysLog
 
 __all__ = [
     'JSONWriter',
@@ -10,4 +11,5 @@ __all__ = [
     'Endianness',
     'RaysUtil',
     'RaysCodeWriter',
+    'RaysLog',
 ]
