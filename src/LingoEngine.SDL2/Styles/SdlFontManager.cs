@@ -21,14 +21,13 @@ internal class SdlFontManager : ILingoFontManager
         => _loadedFonts.TryGetValue(name, out var f) ? f as T : null;
     public object GetTyped(string name) => _loadedFonts[name];
 
-    private object? _defaultFont;
-    public T? GetDefaultFont<T>() where T : class
+    public T GetDefaultFont<T>() where T : class
     {
-        return _defaultFont as T;
+        throw new NotImplementedException();
     }
 
     public void SetDefaultFont<T>(T font) where T : class
     {
-        _defaultFont = font;
+        throw new NotImplementedException();
     }
 }

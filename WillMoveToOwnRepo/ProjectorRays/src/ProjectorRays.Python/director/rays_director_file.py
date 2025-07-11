@@ -14,6 +14,7 @@ from .chunks.rays_script_chunk import RaysScriptChunk
 from .chunks.rays_script_context_chunk import RaysScriptContextChunk
 from .chunks.rays_script_names_chunk import RaysScriptNamesChunk
 from .chunks.rays_xmed_chunk import RaysXmedChunk
+from .rays_font_map import RaysFontMap
 from .scores import RaysScoreChunk
 from .rays_subchunk import KeyTableEntry
 from .ray_guid import RayGuid, LingoGuidConstants
@@ -36,6 +37,8 @@ class RaysDirectorFile:
         self.chunk_info_map: Dict[int, ChunkInfo] = {}
         self.chunk_ids_by_fourcc: Dict[int, List[int]] = {}
         self.deserialized_chunks: Dict[int, RaysChunk] = {}
+        self._cached_chunk_bufs: Dict[int, bytes] = {}
+        self._cached_chunk_views: Dict[int, BufferView] = {}
         self.stream: ReadStream | None = None
         self.key_table: RaysKeyTableChunk | None = None
         self.config: RaysConfigChunk | None = None
@@ -45,6 +48,8 @@ class RaysDirectorFile:
         self.codec: int = 0
         self.dot_syntax: bool = False
         self.afterburned: bool = False
+        self._ils_body_offset: int = 0
+        self._ils_buf: bytes = b""
         self.fver_version_string: str = ""
 
     @staticmethod
@@ -91,9 +96,26 @@ class RaysDirectorFile:
         if info.fourcc != fourcc:
             raise IOError(
                 f"Expected chunk {chunk_id} to be {fourcc:x} but is {info.fourcc:x}")
-        self.stream.seek(info.offset)
-        data = self.stream.read_bytes(info.length)
-        return BufferView(data, 0, len(data))
+        import zlib
+        if self.afterburned:
+            self.stream.seek(info.offset + self._ils_body_offset)
+            if info.length == 0 and info.uncompressed_len == 0:
+                return BufferView()
+            if self._compression_implemented(info.compression_id):
+                comp = self.stream.read_bytes(info.length)
+                if info.compression_id == LingoGuidConstants.ZLIB_COMPRESSION_GUID:
+                    data = zlib.decompress(comp)
+                else:
+                    data = comp
+                return BufferView(data, 0, len(data))
+            if info.compression_id == LingoGuidConstants.FONTMAP_COMPRESSION_GUID:
+                return RaysFontMap.get_font_map(self.version)
+            data = self.stream.read_bytes(info.length)
+            return BufferView(data, 0, len(data))
+        else:
+            self.stream.seek(info.offset)
+            data = self._read_chunk_data(fourcc, info.length)
+            return data
 
     def _make_chunk(self, fourcc: int, view: BufferView) -> RaysChunk:
         mapping = {
@@ -165,6 +187,83 @@ class RaysDirectorFile:
             info.compression_id = LingoGuidConstants.NULL_COMPRESSION_GUID
             self._add_chunk_info(info)
 
+    def _read_afterburner_map(self) -> bool:
+        import zlib
+        s = self.stream
+        if s is None:
+            raise IOError("No stream loaded")
+        if s.read_uint32() != self.FOURCC('F', 'v', 'e', 'r'):
+            return False
+        fver_len = s.read_var_int()
+        start = s.pos
+        fver_version = s.read_var_int()
+        if fver_version >= 0x401:
+            s.read_var_int(); s.read_var_int()
+        if fver_version >= 0x501:
+            length = s.read_uint8()
+            self.fver_version_string = s.read_string(length)
+        end = s.pos
+        if end - start != fver_len:
+            s.seek(start + fver_len)
+
+        if s.read_uint32() != self.FOURCC('F', 'c', 'd', 'r'):
+            return False
+        fcdr_len = s.read_var_int()
+        fcdr_buf = zlib.decompress(s.read_bytes(fcdr_len))
+        fcdr = ReadStream(fcdr_buf, self.endianness)
+        comp_count = fcdr.read_uint16()
+        comp_ids = []
+        for _ in range(comp_count):
+            cid = RayGuid()
+            cid.read(fcdr)
+            comp_ids.append(cid)
+        for _ in range(comp_count):
+            fcdr.read_cstring()
+
+        if s.read_uint32() != self.FOURCC('A', 'B', 'M', 'P'):
+            return False
+        abmp_len = s.read_var_int()
+        abmp_end = s.pos + abmp_len
+        abmp_comp_type = s.read_var_int()
+        abmp_uncomp_len = s.read_var_int()
+        abmp_buf = zlib.decompress(s.read_bytes(abmp_end - s.pos))
+        abmp = ReadStream(abmp_buf, self.endianness)
+        abmp.read_var_int()
+        abmp.read_var_int()
+        res_count = abmp.read_var_int()
+        for _ in range(res_count):
+            res_id = abmp.read_var_int()
+            offset = abmp.read_var_int()
+            comp_size = abmp.read_var_int()
+            uncomp_size = abmp.read_var_int()
+            comp_type = abmp.read_var_int()
+            tag = abmp.read_uint32()
+
+            info = ChunkInfo()
+            info.id = res_id
+            info.fourcc = tag
+            info.length = comp_size
+            info.uncompressed_len = uncomp_size
+            info.offset = offset
+            info.compression_id = comp_ids[comp_type]
+            self._add_chunk_info(info)
+
+        if 2 not in self.chunk_info_map:
+            return False
+        if s.read_uint32() != self.FOURCC('F', 'G', 'E', 'I'):
+            return False
+        ils_info = self.chunk_info_map[2]
+        s.read_var_int()
+        self._ils_body_offset = s.pos
+        self._ils_buf = zlib.decompress(s.read_bytes(ils_info.length))
+        ils_stream = ReadStream(self._ils_buf, self.endianness)
+        while not ils_stream.eof():
+            res_id = ils_stream.read_var_int()
+            info = self.chunk_info_map[res_id]
+            data = ils_stream.read_bytes(info.length)
+            self._cached_chunk_views[res_id] = BufferView(data, 0, len(data))
+        return True
+
     def _read_key_table(self) -> bool:
         info = self._get_first_chunk_info(self.FOURCC('K', 'E', 'Y', '*'))
         if info is None:
@@ -229,8 +328,8 @@ class RaysDirectorFile:
             self._read_memory_map()
         elif self.codec in (self.FOURCC('F', 'G', 'D', 'M'), self.FOURCC('F', 'G', 'D', 'C')):
             self.afterburned = True
-            # Afterburner map parsing not implemented
-            return False
+            if not self._read_afterburner_map():
+                return False
         else:
             return False
         if not self._read_key_table():
@@ -278,4 +377,17 @@ class RaysDirectorFile:
                     set_text = getattr(member, 'set_script_text', None)
                     if callable(set_text):
                         set_text(text)
+
+    @staticmethod
+    def _compression_implemented(guid: RayGuid) -> bool:
+        return (guid == LingoGuidConstants.ZLIB_COMPRESSION_GUID or
+                guid == LingoGuidConstants.SND_COMPRESSION_GUID)
+
+    @staticmethod
+    def _is_always_big_endian(fourcc: int) -> bool:
+        return fourcc in (
+            RaysDirectorFile.FOURCC('C', 'A', 'S', '*'),
+            RaysDirectorFile.FOURCC('C', 'A', 'S', 't'),
+            RaysDirectorFile.FOURCC('M', 'C', 's', 'L'),
+        )
 
