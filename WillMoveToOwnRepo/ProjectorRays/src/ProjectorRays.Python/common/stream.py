@@ -36,21 +36,23 @@ class ReadStream:
     def eof(self):
         return self.pos >= len(self.data)
 
-    def read_bytes(self, n):
-        if self.pos + n > len(self.data):
-            raise EOFError('Read past end of stream')
-        b = self.data[self.pos:self.pos+n]
-        self.pos += n
-        return b
+    def read_bytes(self, count):
+        result = self.data[self.pos:self.pos + count]
+        self.pos += count
+        return result
 
     def read_uint8(self):
         return self.read_bytes(1)[0]
 
     def read_uint16(self):
-        return struct.unpack(self.endianness.value + 'H', self.read_bytes(2))[0]
+        data = self.read_bytes(2)
+        fmt = '<H' if self.endianness == Endianness.LITTLE else '>H'
+        return struct.unpack(fmt, data)[0]
 
     def read_uint32(self):
-        return struct.unpack(self.endianness.value + 'I', self.read_bytes(4))[0]
+        data = self.read_bytes(4)
+        fmt = '<I' if self.endianness == Endianness.LITTLE else '>I'
+        return struct.unpack(fmt, data)[0]
 
     def read_string(self, length):
         return self.read_bytes(length).decode('utf-8')
