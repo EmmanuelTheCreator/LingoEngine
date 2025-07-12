@@ -1,6 +1,6 @@
 from enum import Enum
 from ...common.json_writer import JSONWriter
-from ..common.stream import ReadStream
+from ...common.stream import ReadStream
 
 class ChunkType(Enum):
     CastChunk = 'CastChunk'

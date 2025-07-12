@@ -1,5 +1,5 @@
 from ..chunks.rays_chunk import RaysChunk, ChunkType
-from ..common.stream import ReadStream, Endianness
+from ...common.stream import ReadStream, Endianness
 from .data import RaySprite, RayScoreHeader, RayScoreIntervalDescriptor, RayScoreKeyFrame, RayTweenFlags
 from . import ray_score_tags_v2 as tags
 from .ray_sprite_factory import RaySpriteFactory
@@ -64,7 +64,7 @@ class RaysScoreReader:
     # ------------------------------------------------------------------
 
     def read_all_intervals(self, entry_count: int, stream: ReadStream, ctx):
-        from ..common.stream import BufferView
+        from ...common.stream import BufferView
         s = ReadStream(BufferView(stream.data, 0, len(stream.data)), stream.endianness, stream.pos)
         offsets = [s.read_int32() for _ in range(entry_count + 1)]
         entries_start = s.pos
@@ -78,7 +78,7 @@ class RaysScoreReader:
             size = offsets[2] - offsets[1]
             absolute_start2 = entries_start + offsets[1]
             order_view = BufferView(stream.data, absolute_start2, offsets[2] - offsets[1])
-            os = ReadStream(order_view, Endianness.BIG)
+            os = ReadStream(order_view, Endianness.BigEndian)
             if len(os.data) >= 4:
                 count = os.read_int32()
                 for i in range(count):
@@ -149,14 +149,14 @@ class RaysScoreReader:
     def read_frame_descriptors(self, ctx):
         ctx.reset_frame_descriptors()
         for ind, buf in enumerate(ctx.frame_interval_descriptor_buffers):
-            ps = ReadStream(buf, Endianness.BIG)
+            ps = ReadStream(buf, Endianness.BigEndian)
             descriptor = self.read_frame_interval_descriptor(ind, ps)
             if descriptor is not None:
                 ctx.add_frame_descriptor(descriptor)
 
     def read_behaviors(self, ctx):
         for ind, buf in enumerate(ctx.behavior_script_buffers):
-            ps = ReadStream(buf, Endianness.BIG)
+            ps = ReadStream(buf, Endianness.BigEndian)
             behaviour_refs = self.read_behaviors_block(ind, ps)
             if ind < len(ctx.descriptors):
                 ctx.descriptors[ind].behaviors.extend(behaviour_refs)
@@ -172,7 +172,7 @@ class RaysScoreReader:
             behaviours.append(RaysBehaviourRef(cl, cm))
         return behaviours
     def apply_known_tag_sprite(self, sprite: RaySprite, tag: tags.ScoreTagV2, data: bytes):
-        rs = ReadStream(data, Endianness.BIG)
+        rs = ReadStream(data, Endianness.BigEndian)
         if tag == tags.ScoreTagV2.Ease:
             sprite.ease_in = rs.read_uint8()
             sprite.ease_out = rs.read_uint8()
@@ -182,7 +182,7 @@ class RaysScoreReader:
             sprite.tween_flags = self.parse_tween_flags(rs.read_uint8())
 
     def apply_known_tag_keyframe(self, kf: RayScoreKeyFrame, tag: tags.ScoreTagV2, data: bytes):
-        rs = ReadStream(data, Endianness.BIG)
+        rs = ReadStream(data, Endianness.BigEndian)
         if tag == tags.ScoreTagV2.Size:
             kf.width = rs.read_int16()
             kf.height = rs.read_int16()

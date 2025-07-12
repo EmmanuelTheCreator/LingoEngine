@@ -1,6 +1,6 @@
 from ..chunks.rays_chunk import RaysChunk, ChunkType
-from ..common.json_writer import JSONWriter
-from ..common.stream import ReadStream
+from ...common.json_writer import JSONWriter
+from ...common.stream import ReadStream
 from .rays_score_frame_parser_v2 import RaysScoreFrameParserV2
 
 class RaysScoreChunk(RaysChunk):

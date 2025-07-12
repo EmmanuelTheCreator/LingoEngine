@@ -1,4 +1,4 @@
-from ..common.stream import ReadStream, Endianness, BufferView
+from ...common.stream import ReadStream, Endianness, BufferView
 from .ray_score_parse_context import RayScoreParseContext
 from .rays_score_reader import RaysScoreReader
 from .ray_sprite_factory import RaySpriteFactory
@@ -11,13 +11,13 @@ class RaysScoreFrameParserV2:
         self.reader = RaysScoreReader(logger)
 
     def parse_score(self, stream: ReadStream):
-        stream.endianness = Endianness.BIG
+        stream.endianness = Endianness.BigEndian
         ctx = RayScoreParseContext(self.logger)
         header = self.reader.read_main_header(stream)
         self.reader.read_all_intervals(header.entry_count, stream, ctx)
         if ctx.frame_data_buffer_view is None:
             return []
-        new_reader = ReadStream(ctx.frame_data_buffer_view, Endianness.BIG)
+        new_reader = ReadStream(ctx.frame_data_buffer_view, Endianness.BigEndian)
         self.reader.read_header(new_reader, header)
         self.reader.read_frame_descriptors(ctx)
         self.reader.read_behaviors(ctx)
