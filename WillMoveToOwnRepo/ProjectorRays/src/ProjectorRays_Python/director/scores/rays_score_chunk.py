@@ -1,5 +1,5 @@
 from ..chunks.rays_chunk import RaysChunk, ChunkType
-from ...common.json_writer import JSONWriter
+from ...common.rays_json_writer import RaysJSONWriter
 from ...common.stream import ReadStream
 from .rays_score_frame_parser_v2 import RaysScoreFrameParserV2
 
@@ -12,7 +12,7 @@ class RaysScoreChunk(RaysChunk):
         parser = RaysScoreFrameParserV2()
         self.sprites = parser.parse_score(stream)
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         """Serialize sprite interval data to JSON."""
 
         writer.start_object()

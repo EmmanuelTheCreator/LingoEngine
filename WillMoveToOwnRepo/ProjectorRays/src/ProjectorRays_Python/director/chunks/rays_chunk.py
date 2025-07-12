@@ -1,5 +1,5 @@
 from enum import Enum
-from ...common.json_writer import JSONWriter
+from ...common.rays_json_writer import RaysJSONWriter
 from ...common.stream import ReadStream
 
 class ChunkType(Enum):
@@ -31,7 +31,7 @@ class RaysChunk:
         if remaining > 0:
             self.data = stream.read_bytes(remaining)
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('chunkType')
         writer.write_val(self.chunk_type.value if isinstance(self.chunk_type, ChunkType) else self.chunk_type)

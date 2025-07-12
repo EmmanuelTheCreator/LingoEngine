@@ -9,12 +9,23 @@ class RaysKeyTableChunk(RaysListChunk):
         self.entries = []
 
     def read(self, stream: ReadStream):
-        super().read(stream)
-        for view in self.items:
-            rs = ReadStream(view, self.item_endianness)
+        stream.set_endianness(self.dir.endianness if self.dir else stream.endianness)
+        self.entry_size = stream.read_uint16()
+        stream.skip(2)
+        self.count = stream.read_uint32()
+        self.used = stream.read_uint32()
+        for _ in range(self.used):
             entry = KeyTableEntry()
-            entry.read(rs)
+            entry.read(stream)
             self.entries.append(entry)
+        if self.dir:
+            self.dir._logger.info(
+                "KeyTableChunk: EntrySize=%d, Count=%d, Used=%d, ParsedEntries=%d",
+                self.entry_size,
+                self.count,
+                self.used,
+                len(self.entries),
+            )
 
     def write_json(self, writer):
         writer.start_object()

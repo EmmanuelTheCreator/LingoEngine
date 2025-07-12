@@ -1,5 +1,5 @@
 from enum import Enum
-from ..common.json_writer import JSONWriter
+from ..common.rays_json_writer import RaysJSONWriter
 from ..common.stream import ReadStream
 
 class RaysMemberType(Enum):
@@ -29,7 +29,7 @@ class RaysCastMember:
         """Consume any remaining data for this member."""
         stream.skip(len(stream.data) - stream.pos)
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('type'); writer.write_val(self.type.name)
         writer.end_object()
@@ -47,7 +47,7 @@ class RaysScriptMember(RaysCastMember):
     def read(self, stream: ReadStream):
         self.script_type = RaysScriptType(stream.read_uint16())
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('scriptType'); writer.write_val(self.script_type.value)
         writer.end_object()
