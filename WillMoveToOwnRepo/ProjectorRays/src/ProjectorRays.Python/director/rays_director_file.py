@@ -418,3 +418,36 @@ def parse_memory_map_chunk(data: bytes, mmap_offset: int):
 
     return entries
 
+
+def parse_key_table_chunk(data: bytes, key_offset: int, little_endian: bool = True):
+    """Helper used by prototypes to inspect KEY* chunks."""
+    base = key_offset + 8  # Skip 4 byte chunk ID and size
+    fmt_prefix = '<' if little_endian else '>'
+
+    entry_size = struct.unpack_from(fmt_prefix + 'H', data, base)[0]
+    # skip 2 bytes unused
+    count_max = struct.unpack_from(fmt_prefix + 'I', data, base + 4)[0]
+    count_used = struct.unpack_from(fmt_prefix + 'I', data, base + 8)[0]
+
+    print(
+        f"KeyTableChunk: EntrySize={entry_size}, Count={count_max}, "
+        f"Used={count_used}, ParsedEntries={count_used}"
+    )
+
+    entries = []
+    pos = base + 12
+    for _ in range(count_used):
+        fourcc = struct.unpack_from(fmt_prefix + 'I', data, pos)[0]
+        member_id = struct.unpack_from(fmt_prefix + 'H', data, pos + 4)[0]
+        member_type = struct.unpack_from(fmt_prefix + 'H', data, pos + 6)[0]
+        cast_lib = struct.unpack_from(fmt_prefix + 'I', data, pos + 8)[0]
+        entries.append((fourcc, member_id, member_type, cast_lib))
+        pos += entry_size
+
+    for i, (member_id, member_type, cast_lib) in enumerate(
+        [(e[1], e[2], e[3]) for e in entries]
+    ):
+        print(f"  Entry {i}: ID={member_id}, Type={member_type}, CastLib={cast_lib}")
+
+    return entries
+
