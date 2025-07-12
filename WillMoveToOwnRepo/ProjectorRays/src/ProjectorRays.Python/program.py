@@ -1,6 +1,14 @@
-"""Simple command line interface for ProjectorRays.Python."""
+"""Simple command line interface for ``ProjectorRays.Python``."""
 
+from __future__ import annotations
+
+import os
 import sys
+
+if __package__ is None or __package__ == "":
+    # Allow running the script directly without installing the package
+    sys.path.append(os.path.dirname(__file__))
+
 from .common.json_writer import JSONWriter
 from .common.stream import ReadStream, Endianness
 from .director.rays_director_file import RaysDirectorFile
