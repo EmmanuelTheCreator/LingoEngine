@@ -34,7 +34,7 @@ class RaysDirectorFile:
     def __init__(self, name: str = "", logger=None):
         self.name = name
         self._logger = logger or logging.getLogger(__name__)
-        self.endianness = Endianness.BIG
+        self.endianness = Endianness.BigEndian
         self.casts: List[RaysCastChunk] = []
         self.score: RaysScoreChunk | None = None
         self.chunk_info_map: Dict[int, ChunkInfo] = {}
@@ -172,6 +172,9 @@ class RaysDirectorFile:
     def _read_memory_map(self) -> None:
         self.initial_map = self._read_chunk(self.FOURCC('i', 'm', 'a', 'p'))
         self.deserialized_chunks[1] = self.initial_map
+        self._logger.info(
+            "InitialMapChunk: MmapOffset=%d", self.initial_map.mmap_offset
+        )
         if self.stream is None:
             raise IOError("No stream loaded")
         self.stream.seek(self.initial_map.mmap_offset)
@@ -208,11 +211,17 @@ class RaysDirectorFile:
             flags = entry['flags']
             chunk_id = entry['chunk_id']
 
+            fourcc_hex = f"{fourcc_int:08X}"
             self._logger.info(
-                f"MemoryMap: FourCC={fourcc_int}, Offset={offset}, Size={size}, Flags={flags}"
+                "MemoryMap: FourCC=%s (\"%s\"), Offset=%d, Size=%d, Flags=%d",
+                tag,
+                fourcc_hex,
+                offset,
+                size,
+                flags,
             )
             self._logger.info(
-                f"Registering chunk {tag} with ID {chunk_id}"
+                "Registering chunk %s with ID %d", tag, chunk_id
             )
 
     def _read_afterburner_map(self) -> bool:
@@ -297,6 +306,12 @@ class RaysDirectorFile:
         if info is None:
             return False
         self.key_table = self.get_chunk(info.fourcc, info.id)
+        self._logger.info(
+            "KeyTableChunk: EntrySize=%d, Count=%d, Used=%d",
+            getattr(self.key_table, 'entry_size', len(self.key_table.entries) if hasattr(self.key_table, 'entries') else 0),
+            len(getattr(self.key_table, 'entries', [])),
+            len(getattr(self.key_table, 'entries', [])),
+        )
         return True
 
     def _read_config(self) -> bool:
@@ -308,6 +323,9 @@ class RaysDirectorFile:
         from .rays_utilities import RaysUtilities
         self.version = RaysUtilities.human_version(self.config.director_version)
         self.dot_syntax = self.version >= 700
+        self._logger.info(
+            "ConfigChunk: DirectorVersion=%d", self.config.director_version
+        )
         return True
 
     def _read_casts(self) -> bool:
@@ -345,11 +363,14 @@ class RaysDirectorFile:
 
     def read(self, stream: ReadStream) -> bool:
         self.stream = stream
-        stream.endianness = Endianness.BIG
-        meta_fourcc = stream.read_uint32()
-        if meta_fourcc == self.FOURCC('X', 'F', 'I', 'R'):
-            stream.endianness = Endianness.LITTLE
-        self.endianness = stream.endianness
+        magic = stream.read_uint32_raw()
+        if magic == 0x52494658:  # 'RIFX'
+            self.endianness = Endianness.BigEndian
+        elif magic == 0x58464952:  # 'XFIR'
+            self.endianness = Endianness.LittleEndian
+        else:
+            raise ValueError(f"Unknown file format magic: 0x{magic:08X}")
+        stream.set_endianness(self.endianness)
         stream.read_uint32()  # meta length
         self.codec = stream.read_uint32()
         if self.codec in (self.FOURCC('M', 'V', '9', '3'), self.FOURCC('M', 'C', '9', '5')):

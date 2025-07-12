@@ -23,7 +23,7 @@ class TextStyleRun:
 class XmedChunkParser:
     @staticmethod
     def parse(view: BufferView) -> List[TextStyleRun]:
-        rs = ReadStream(view, Endianness.LITTLE)
+        rs = ReadStream(view, Endianness.LittleEndian)
         if rs.read_string(4) != "DEMX":
             raise ValueError("Invalid XMED chunk header")
         rs.pos = 128

@@ -71,7 +71,7 @@ class RayScoreParseContext:
     # ------------------------------------------------------------------
 
     def set_frame_data_buffer_view(self, data: bytes, absolute_start: int, size: int):
-        from ..common.stream import BufferView
+        from ...common.stream import BufferView
         self.frame_data_buffer_view = BufferView(data, absolute_start, size)
 
     def get_annotation_keys(self):

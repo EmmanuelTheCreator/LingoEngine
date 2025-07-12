@@ -8,7 +8,7 @@ class RaysListChunk(RaysChunk):
         self.offset_table_len = 0
         self.offset_table = []
         self.items_len = 0
-        self.item_endianness = Endianness.BIG
+        self.item_endianness = Endianness.BigEndian
         self.items = []
 
     def read(self, stream: ReadStream):

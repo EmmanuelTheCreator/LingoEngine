@@ -2,8 +2,8 @@ import struct
 from enum import Enum
 
 class Endianness(Enum):
-    BIG = '>'
-    LITTLE = '<'
+    BigEndian = '>'
+    LittleEndian = '<'
 
 class BufferView:
     def __init__(self, data=b"", offset=0, size=None):
@@ -25,7 +25,7 @@ class BufferView:
         return '\n'.join(lines)
 
 class ReadStream:
-    def __init__(self, data, endianness=Endianness.BIG, pos=0):
+    def __init__(self, data, endianness=Endianness.BigEndian, pos=0):
         if isinstance(data, BufferView):
             self.data = data.bytes
         else:
@@ -33,26 +33,40 @@ class ReadStream:
         self.pos = pos
         self.endianness = endianness
 
+    def set_endianness(self, endianness: Endianness):
+        self.endianness = endianness
+
+    def _read(self, count: int) -> bytes:
+        data = self.data[self.pos:self.pos + count]
+        self.pos += count
+        return data
+
     def eof(self):
         return self.pos >= len(self.data)
 
     def read_bytes(self, count):
-        result = self.data[self.pos:self.pos + count]
-        self.pos += count
-        return result
+        return self._read(count)
 
     def read_uint8(self):
         return self.read_bytes(1)[0]
 
     def read_uint16(self):
-        data = self.read_bytes(2)
-        fmt = '<H' if self.endianness == Endianness.LITTLE else '>H'
-        return struct.unpack(fmt, data)[0]
+        data = self._read(2)
+        return int.from_bytes(
+            data,
+            byteorder='little' if self.endianness == Endianness.LittleEndian else 'big'
+        )
 
     def read_uint32(self):
-        data = self.read_bytes(4)
-        fmt = '<I' if self.endianness == Endianness.LITTLE else '>I'
-        return struct.unpack(fmt, data)[0]
+        data = self._read(4)
+        return int.from_bytes(
+            data,
+            byteorder='little' if self.endianness == Endianness.LittleEndian else 'big'
+        )
+
+    def read_uint32_raw(self):
+        data = self._read(4)
+        return int.from_bytes(data, byteorder='big')
 
     def read_string(self, length):
         return self.read_bytes(length).decode('utf-8')
@@ -66,19 +80,19 @@ class ReadStream:
         self.pos = min(len(self.data), self.pos + n)
 
     def read_int8(self):
-        return struct.unpack(self.endianness.value + 'b', self.read_bytes(1))[0]
+        return struct.unpack(self.endianness.value + 'b', self._read(1))[0]
 
     def read_int16(self):
-        return struct.unpack(self.endianness.value + 'h', self.read_bytes(2))[0]
+        return struct.unpack(self.endianness.value + 'h', self._read(2))[0]
 
     def read_int32(self):
-        return struct.unpack(self.endianness.value + 'i', self.read_bytes(4))[0]
+        return struct.unpack(self.endianness.value + 'i', self._read(4))[0]
 
     def read_float32(self):
-        return struct.unpack(self.endianness.value + 'f', self.read_bytes(4))[0]
+        return struct.unpack(self.endianness.value + 'f', self._read(4))[0]
 
     def read_double(self):
-        return struct.unpack(self.endianness.value + 'd', self.read_bytes(8))[0]
+        return struct.unpack(self.endianness.value + 'd', self._read(8))[0]
 
     def read_cstring(self):
         start = self.pos
