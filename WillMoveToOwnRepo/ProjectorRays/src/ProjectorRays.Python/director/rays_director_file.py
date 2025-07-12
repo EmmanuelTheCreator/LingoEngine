@@ -391,3 +391,30 @@ class RaysDirectorFile:
             RaysDirectorFile.FOURCC('M', 'C', 's', 'L'),
         )
 
+
+def parse_memory_map_chunk(data: bytes, mmap_offset: int):
+    """Lightweight helper used by early prototypes to inspect memory maps."""
+    base = mmap_offset + 8  # Skip 4 byte chunk ID and size
+
+    header_len = struct.unpack_from("<H", data, base)[0]
+    entry_len = struct.unpack_from("<H", data, base + 2)[0]
+    count_max = struct.unpack_from("<I", data, base + 4)[0]
+    count_used = struct.unpack_from("<I", data, base + 8)[0]
+
+    print(
+        f"MemoryMapChunk: Entries={count_used}, "
+        f"HeaderLen={header_len}, EntryLen={entry_len}, CountMax={count_max}"
+    )
+
+    entries = []
+    entry_base = base + header_len
+    for i in range(count_used):
+        entry_data = data[entry_base + i * entry_len : entry_base + (i + 1) * entry_len]
+        tag = entry_data[0:4].decode("ascii", errors="replace")
+        offset = int.from_bytes(entry_data[4:8], "little")
+        size = int.from_bytes(entry_data[8:12], "little")
+        entries.append((tag, offset, size))
+        print(f"Registering chunk {repr(tag)} with ID {i}")
+
+    return entries
+
