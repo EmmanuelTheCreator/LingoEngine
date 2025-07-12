@@ -3,7 +3,7 @@ import logging
 import struct
 
 from ..common.stream import BufferView, Endianness, ReadStream
-from ..common.json_writer import JSONWriter
+from ..common.rays_json_writer import RaysJSONWriter
 from .chunks.rays_chunk import RaysChunk, ChunkType
 from .chunks.rays_cast_chunk import RaysCastChunk
 from .chunks.rays_cast_member_chunk import RaysCastMemberChunk
@@ -59,7 +59,7 @@ class RaysDirectorFile:
     def FOURCC(a: str, b: str, c: str, d: str) -> int:
         return (ord(a) << 24) | (ord(b) << 16) | (ord(c) << 8) | ord(d)
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('name'); writer.write_val(self.name)
         writer.end_object()
@@ -172,9 +172,6 @@ class RaysDirectorFile:
     def _read_memory_map(self) -> None:
         self.initial_map = self._read_chunk(self.FOURCC('i', 'm', 'a', 'p'))
         self.deserialized_chunks[1] = self.initial_map
-        self._logger.info(
-            "InitialMapChunk: MmapOffset=%d", self.initial_map.mmap_offset
-        )
         if self.stream is None:
             raise IOError("No stream loaded")
         self.stream.seek(self.initial_map.mmap_offset)
@@ -306,12 +303,6 @@ class RaysDirectorFile:
         if info is None:
             return False
         self.key_table = self.get_chunk(info.fourcc, info.id)
-        self._logger.info(
-            "KeyTableChunk: EntrySize=%d, Count=%d, Used=%d",
-            getattr(self.key_table, 'entry_size', len(self.key_table.entries) if hasattr(self.key_table, 'entries') else 0),
-            len(getattr(self.key_table, 'entries', [])),
-            len(getattr(self.key_table, 'entries', [])),
-        )
         return True
 
     def _read_config(self) -> bool:
@@ -323,9 +314,6 @@ class RaysDirectorFile:
         from .rays_utilities import RaysUtilities
         self.version = RaysUtilities.human_version(self.config.director_version)
         self.dot_syntax = self.version >= 700
-        self._logger.info(
-            "ConfigChunk: DirectorVersion=%d", self.config.director_version
-        )
         return True
 
     def _read_casts(self) -> bool:
@@ -371,6 +359,7 @@ class RaysDirectorFile:
         else:
             raise ValueError(f"Unknown file format magic: 0x{magic:08X}")
         stream.set_endianness(self.endianness)
+        self._logger.info("File endianness: %s", self.endianness.name)
         stream.read_uint32()  # meta length
         self.codec = stream.read_uint32()
         if self.codec in (self.FOURCC('M', 'V', '9', '3'), self.FOURCC('M', 'C', '9', '5')):

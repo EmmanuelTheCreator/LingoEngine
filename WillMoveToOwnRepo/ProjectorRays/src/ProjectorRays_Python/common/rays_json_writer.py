@@ -1,6 +1,6 @@
 import json
 
-class JSONWriter:
+class RaysJSONWriter:
     def __init__(self):
         self._stack = []
         self._root = None

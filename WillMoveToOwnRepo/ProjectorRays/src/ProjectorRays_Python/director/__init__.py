@@ -1,3 +1,4 @@
+from . import scores as _scores
 from .scores import *
 from .rays_director_file import RaysDirectorFile
 from .rays_cast_member import RaysCastMember, RaysScriptMember, RaysMemberType
@@ -22,4 +23,4 @@ __all__ = [
     'RleTemp',
     'Sound',
     'chunks'
-] + __all__
+] + _scores.__all__

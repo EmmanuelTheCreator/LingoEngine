@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from ..common.stream import ReadStream
-from ..common.json_writer import JSONWriter
+from ..common.rays_json_writer import RaysJSONWriter
 
 @dataclass
 class CastListEntry:
@@ -11,7 +11,7 @@ class CastListEntry:
     max_member: int = 0
     id: int = 0
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('name'); writer.write_val(self.name)
         writer.write_key('filePath'); writer.write_val(self.file_path)
@@ -38,7 +38,7 @@ class MemoryMapEntry:
         self.unknown0 = stream.read_uint16()
         self.next = stream.read_uint32()
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('fourCC'); writer.write_val(self.fourcc)
         writer.write_key('len'); writer.write_val(self.length)
@@ -61,7 +61,7 @@ class KeyTableEntry:
         self.section_id = stream.read_uint16()
         self.cast_id = stream.read_uint32()
 
-    def write_json(self, writer: JSONWriter):
+    def write_json(self, writer: RaysJSONWriter):
         writer.start_object()
         writer.write_key('fourCC'); writer.write_val(self.fourcc)
         writer.write_key('resourceID'); writer.write_val(self.resource_id)

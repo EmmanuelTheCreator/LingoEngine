@@ -53,8 +53,11 @@ class RaysCastMemberTextRead:
         self.text_parts: List[str] = []
 
     @staticmethod
-    def from_xmed_chunk(view: BufferView) -> 'RaysCastMemberTextRead':
+    def from_xmed_chunk(view: BufferView, logger=None) -> 'RaysCastMemberTextRead':
         result = RaysCastMemberTextRead()
+        if logger is not None:
+            hex_dump = view.log_hex(view.size)
+            logger.info("XMED all : %s", hex_dump.replace('\n', ' '))
         result.styles = XmedChunkParser.parse(view)
         result.text = ''.join(r.text for r in result.styles)
         return result

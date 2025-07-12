@@ -6,6 +6,12 @@ from . import ray_score_tags_v2 as tags
 from .data import RayScoreIntervalDescriptor, UnknownTag
 
 class RaysScoreFrameParserV2:
+    """Parser for VWSC score chunks."""
+
+    # When ``True`` the parser continues with the block parser and keyframe
+    # linker. Disabled by default to allow partial parsing of unknown data.
+    enable_full_parsing: bool = False
+
     def __init__(self, logger=None):
         self.logger = logger
         self.reader = RaysScoreReader(logger)
@@ -28,8 +34,16 @@ class RaysScoreFrameParserV2:
                 header.highest_frame,
                 header.channel_count,
             )
-        self.parse_block(new_reader, len(new_reader.data), header, ctx)
-        self.link_keyframes(ctx)
+        if self.enable_full_parsing:
+            self.parse_block(new_reader, len(new_reader.data), header, ctx)
+            self.link_keyframes(ctx)
+        else:
+            if self.logger:
+                remaining = len(new_reader.data) - new_reader.pos
+                if remaining > 0:
+                    buf_view = BufferView(new_reader.data[new_reader.pos:])
+                    self.logger.info("Still to process\n%s", buf_view.log_hex(remaining))
+
         return ctx.sprites
 
     # ------------------------------------------------------------------
