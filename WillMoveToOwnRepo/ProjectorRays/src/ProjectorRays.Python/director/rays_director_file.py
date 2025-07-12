@@ -1,4 +1,6 @@
 from typing import List, Dict
+import logging
+import struct
 
 from ..common.stream import BufferView, Endianness, ReadStream
 from ..common.json_writer import JSONWriter
@@ -29,8 +31,9 @@ class ChunkInfo:
         self.compression_id = RayGuid()
 
 class RaysDirectorFile:
-    def __init__(self, name: str = ""):
+    def __init__(self, name: str = "", logger=None):
         self.name = name
+        self._logger = logger or logging.getLogger(__name__)
         self.endianness = Endianness.BIG
         self.casts: List[RaysCastChunk] = []
         self.score: RaysScoreChunk | None = None
@@ -174,10 +177,20 @@ class RaysDirectorFile:
         self.stream.seek(self.initial_map.mmap_offset)
         self.memory_map = self._read_chunk(self.FOURCC('m', 'm', 'a', 'p'))
         self.deserialized_chunks[2] = self.memory_map
+        memory_map_entries = []
         for i, entry in enumerate(self.memory_map.map_array):
             if entry.fourcc in (self.FOURCC('f', 'r', 'e', 'e'),
                                 self.FOURCC('j', 'u', 'n', 'k')):
                 continue
+            tag = struct.pack(">I", entry.fourcc).decode('ascii', errors='replace')
+            memory_map_entries.append({
+                'fourcc': entry.fourcc,
+                'tag': tag,
+                'offset': entry.offset,
+                'size': entry.length,
+                'flags': entry.flags,
+                'chunk_id': i,
+            })
             info = ChunkInfo()
             info.id = i
             info.fourcc = entry.fourcc
@@ -186,6 +199,21 @@ class RaysDirectorFile:
             info.offset = entry.offset
             info.compression_id = LingoGuidConstants.NULL_COMPRESSION_GUID
             self._add_chunk_info(info)
+
+        for entry in memory_map_entries:
+            fourcc_int = entry['fourcc']
+            tag = entry['tag']
+            offset = entry['offset']
+            size = entry['size']
+            flags = entry['flags']
+            chunk_id = entry['chunk_id']
+
+            self._logger.info(
+                f"MemoryMap: FourCC={fourcc_int}, Offset={offset}, Size={size}, Flags={flags}"
+            )
+            self._logger.info(
+                f"Registering chunk {tag} with ID {chunk_id}"
+            )
 
     def _read_afterburner_map(self) -> bool:
         import zlib
