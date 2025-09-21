@@ -9,11 +9,17 @@ using BlingoEngine.Texts;
 #pragma warning disable IDE1006 // Naming Styles
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
+    /// <summary>
+    /// Callback contract used to notify parent scripts when overlay text finishes its animation.
+    /// </summary>
     public interface IOverScreenTextParent
     {
         void TextFinished(OverScreenTextScript text);
     }
     // Converted from 6_OverScreenText.ls
+    /// <summary>
+    /// Animates the translucent overlay text that slides onto the screen.
+    /// </summary>
     public class OverScreenTextScript : BlingoParentScript, IHasStepFrameEvent
     {
         private readonly GlobalVars _global;
@@ -26,6 +32,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public int LocV { get; set; } = 100;
         public IOverScreenTextParent? Parent { get; set; }
 
+        /// <summary>
+        /// Creates the overlay, assigns the target members and starts the animation immediately.
+        /// </summary>
         public OverScreenTextScript(IBlingoMovieEnvironment env, GlobalVars global, int duration, string text, IOverScreenTextParent parent) : base(env)
         {
             Duration = duration;
@@ -55,6 +64,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         
 
+        /// <summary>
+        /// Handles the scroll-up animation and blend fade-out.
+        /// </summary>
         public void StepFrame()
         {
             myCounter += 1;
@@ -75,12 +87,15 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             if (blend < 0) blend = 0;
             Sprite(myNum).Blend = (int)blend;
             Sprite(myNum2).Blend = (int)blend;
-           
+
         }
 
+        /// <summary>
+        /// Releases puppet control so the overlay sprites can be reused by future notifications.
+        /// </summary>
         public void Destroy()
         {
-            if (_Movie.ActorList.GetPos(this) > 0) 
+            if (_Movie.ActorList.GetPos(this) > 0)
                 _Movie.ActorList.Remove(this);
             Sprite(myNum).Puppet = false;
             Sprite(myNum2).Puppet = false;

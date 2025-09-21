@@ -10,6 +10,9 @@ using BlingoEngine.Movies.Events;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 20_StartData_get.ls
+    /// <summary>
+    /// Simulates fetching start-level configuration from the original backend.
+    /// </summary>
     public class StartDataGetScript : BlingoParentScript, IHasStepFrameEvent
     {
         private string myURL = string.Empty;
@@ -25,8 +28,14 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             myParent = parent;
         }
 
+        /// <summary>
+        /// Sets the remote script address.
+        /// </summary>
         public void SetURL(string scriptURL) => myURL = scriptURL;
 
+        /// <summary>
+        /// Begins downloading the JSON configuration.
+        /// </summary>
         public void Download()
         {
             myErr = string.Empty;
@@ -37,6 +46,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _Movie.ActorList.Add(this);
         }
 
+        /// <summary>
+        /// Polls the mock request and notifies the optional parent when finished.
+        /// </summary>
         public void StepFrame()
         {
             // TODO: check network status via myNetID
@@ -49,10 +61,22 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _Movie.ActorList.Remove(this);
         }
 
+        /// <summary>
+        /// Returns the downloaded raw data.
+        /// </summary>
         public string GetData() => myData;
+        /// <summary>
+        /// Returns the last error message.
+        /// </summary>
         public string GetErr() => myErr;
+        /// <summary>
+        /// Indicates whether the mock download is complete.
+        /// </summary>
         public bool IsDone() => myDone;
 
+        /// <summary>
+        /// Removes the actor from the movie so it no longer polls.
+        /// </summary>
         public void Destroy()
         {
             _Movie.ActorList.Remove(this);

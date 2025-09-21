@@ -26,13 +26,22 @@ using System.Threading.Tasks;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core;
 
+/// <summary>
+/// Registers all TetriGrounds services, content and movie wiring so the demo can be bootstrapped in any host.
+/// </summary>
 public class TetriGroundsProjectFactory : IBlingoProjectFactory
 {
+    /// <summary>
+    /// Name used throughout the project when referring to the root movie.
+    /// </summary>
     public const string MovieName = "TetriGrounds";
     private BlingoProjectSettings _settings;
     private IBlingoMovie? _movie;
     private BlingoPlayer? _blingoPlayer;
 
+    /// <summary>
+    /// Configures dependency injection and project-level options, mimicking the original Director project setup.
+    /// </summary>
     public void Setup(IBlingoEngineRegistration config)
     {
         config
@@ -70,6 +79,9 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
 
 
 
+    /// <summary>
+    /// Loads all required cast libraries and keeps a reference to the player for later movie initialization.
+    /// </summary>
     public async Task LoadCastLibsAsync(IBlingoCastLibsContainer castlibContainer, BlingoPlayer blingoPlayer)
     {
 
@@ -103,18 +115,29 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         blingoPlayer.CastLib("Sounds").GetMember<BlingoMemberSound>("S_Nature")!.Loop = true;
         InitMembers(blingoPlayer);
     }
+
+    /// <summary>
+    /// Creates the initial movie instance that will be shown when the engine starts.
+    /// </summary>
     public Task<IBlingoMovie?> LoadStartupMovieAsync(IBlingoServiceProvider serviceProvider, BlingoPlayer blingoPlayer)
     {
         _movie = LoadMovie(blingoPlayer);
 
         return Task.FromResult<IBlingoMovie?>(_movie);
     }
+
+    /// <summary>
+    /// Runs the startup movie and optionally auto-plays it, matching the behaviour of the classic projector.
+    /// </summary>
     public void Run(IBlingoMovie movie, bool autoPlayMovie)
     {
         if (autoPlayMovie)
             movie.Play();
     }
 
+    /// <summary>
+    /// Builds the TetriGrounds movie, registers score labels and kicks off sprite initialization.
+    /// </summary>
     public IBlingoMovie LoadMovie(IBlingoPlayer blingoPlayer)
     {
         _movie = blingoPlayer.NewMovie(MovieName);
@@ -124,6 +147,10 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         InitSprites();
         return _movie;
     }
+
+    /// <summary>
+    /// Adds score labels to the timeline so navigating frames in the Director UI remains intuitive.
+    /// </summary>
     private void AddLabels()
     {
         if (_movie == null) return;
@@ -131,6 +158,10 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         _movie.SetScoreLabel(60, "Game");
         _movie.SetScoreLabel(75, "FilmLoop Test");
     }
+
+    /// <summary>
+    /// Initializes static member properties that were previously stored as document metadata.
+    /// </summary>
     public void InitMembers(BlingoPlayer player)
     {
         //var textColor = AColor.FromHex("#999966");
@@ -138,6 +169,10 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         //text!.Color = textColor;
         CreateBirdFilmLoop(player);
     }
+
+    /// <summary>
+    /// Recreates the meticulously hand-positioned sprite setup from the original movie.
+    /// </summary>
     public void InitSprites()
     {
         if (_movie == null) return;
@@ -272,6 +307,9 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
 
 
 
+    /// <summary>
+    /// Builds the looping bird animation that flutters across the intro sequence.
+    /// </summary>
     private void CreateBirdFilmLoop(IBlingoPlayer blingoPlayer)
     {
         var dataCastlib = blingoPlayer.CastLib("Data")!;
@@ -290,6 +328,9 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         birdAnim.AddSprite(dataCastlib.Member["mouse0000"]!, 1, 11, 11);
     }
 
+    /// <summary>
+    /// Quick helper used while porting film loops from Director; remains here for debugging.
+    /// </summary>
     private void TestFilmLoops()
     {
         _movie!.AddSprite(5, 3, 299, 50, 150, c =>
@@ -312,6 +353,9 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         _movie.AddFrameBehavior<StayOnFrameFrameScript>(20);
     }
 
+    /// <summary>
+    /// Diagnostic helper that validates text updates and colour changes at runtime.
+    /// </summary>
     private void TestTextChanging()
     {
         var castData = _movie!.CastLib["Data"];
@@ -323,6 +367,9 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
         _movie!.AddFrameBehavior<TestTetrigroundsBehavior>(5);
     }
 
+    /// <summary>
+    /// Manual experiment that explores puppet-sprite behaviour when porting from Director.
+    /// </summary>
     private void TestPuppetSprite()
     {
         _movie!.AddSprite(5, 2, 64, 519, 343).SetMember("B_Play").AddBehavior<ButtonStartGameBehavior>(); // Button play

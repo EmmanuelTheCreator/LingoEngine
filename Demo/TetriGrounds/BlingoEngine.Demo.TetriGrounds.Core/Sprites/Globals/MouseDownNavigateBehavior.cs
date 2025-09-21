@@ -11,6 +11,9 @@ using BlingoEngine.Sprites;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
 {
+    /// <summary>
+    /// Navigates to the next frame when the sprite receives a mouse down event.
+    /// </summary>
     public class MouseDownNavigateBehavior : BlingoSpriteBehavior, IHasMouseDownEvent
     {
         public int FrameOffsetOnClick = 1;
@@ -23,6 +26,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
             _Movie.GoTo(_Movie.CurrentFrame + FrameOffsetOnClick);
         }
     }
+    /// <summary>
+    /// Navigates after a delay, optionally staying on the current frame before advancing.
+    /// </summary>
     public class MouseDownNavigateWithStayBehavior : BlingoSpriteBehavior, IHasMouseDownEvent, IHasExitFrameEvent, IBlingoPropertyDescriptionList
     {
         private int i;
@@ -41,10 +47,12 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
         public string? GetBehaviorTooltip() => "Navigate to the next frame on mouse down, and stay on the current frame for a number of ticks before navigating again.";
         public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
 
+        /// <inheritdoc />
         public void MouseDown(BlingoMouseEvent mouse)
         {
             _Movie.GoTo(_Movie.CurrentFrame + FrameOffsetOnClick);
         }
+        /// <inheritdoc />
         public void ExitFrame()
         {
             i++;

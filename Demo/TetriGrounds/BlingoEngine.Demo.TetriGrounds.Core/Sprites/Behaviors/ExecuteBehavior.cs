@@ -13,11 +13,17 @@ using BlingoEngine.Sprites.Events;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
+    /// <summary>
+    /// Allows behaviours to receive generic string-based messages.
+    /// </summary>
     public interface IHasBlingoMessage : IBlingoSpriteBehavior
     {
         void HandleMessage(string myFunction, params object[]? parameters );
     }
     // Converted from 22_B_Execute.ls
+    /// <summary>
+    /// Provides button-like behaviour that can call functions on other sprites.
+    /// </summary>
     public class ExecuteBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasMouseEnterEvent, IHasMouseLeaveEvent, IHasMouseDownEvent, IBlingoPropertyDescriptionList, IHasBlingoMessage
     {
         public string myFunction = "";
@@ -37,6 +43,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _globalVars = globalVars;
         }
 
+        /// <inheritdoc />
         public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
         {
             return new BehaviorPropertyDescriptionList()
@@ -56,6 +63,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
         public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
 
+        /// <summary>
+        /// Initialises the behaviour when it becomes active.
+        /// </summary>
         public void BeginSprite()
         {
             myLock = false;
@@ -65,6 +75,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Handles rollover visuals and optional cursor feedback.
+        /// </summary>
         public void MouseEnter(BlingoMouseEvent mouse)
         {
             if (!myLock)
@@ -87,6 +100,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Restores the default visuals when the mouse leaves the sprite.
+        /// </summary>
         public void MouseLeave(BlingoMouseEvent mouse)
         {
             if (!myLock)
@@ -106,6 +122,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Executes the configured function when the sprite is clicked.
+        /// </summary>
         public void MouseDown(BlingoMouseEvent mouse)
         {
             if (!myLock && myEnableMouseClick)
@@ -115,12 +134,19 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Prevents further hover or click processing.
+        /// </summary>
         public void Lock() => myLock = true;
+        /// <summary>
+        /// Re-enables hover and click processing.
+        /// </summary>
         public void UnLock() => myLock = false;
 
+        /// <inheritdoc />
         public void HandleMessage(string myFunction, params object[]? parameters)
         {
-            
+
         }
     }
 }

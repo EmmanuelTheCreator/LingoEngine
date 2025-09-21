@@ -12,6 +12,9 @@ using System.Xml.Linq;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
+    /// <summary>
+    /// Controls the on-screen keyboard used to capture new high-score names.
+    /// </summary>
     internal class EnterHighScoreBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
     {
         private readonly GlobalVars _global;
@@ -27,6 +30,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _global = global;
         }
 
+        /// <summary>
+        /// Captures references to the text members used by the pop-up and hides them until needed.
+        /// </summary>
         public void BeginSprite()
         {
             _inputText = Member<IBlingoMemberTextBase>("T_InputText")!;
@@ -35,6 +41,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             foreach (var sn in _spriteNums)
                 Sprite(sn).Visibility = false;
         }
+        /// <summary>
+        /// Ensures the keyboard instance is disposed when the sprite is removed.
+        /// </summary>
         public void EndSprite()
         {
             if (_keyboard != null)
@@ -43,8 +52,14 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
                 _keyboard = null!;
             }
         }
+        /// <summary>
+        /// Returns the last name entered by the player.
+        /// </summary>
         public string GetName() => _name;
 
+        /// <summary>
+        /// Displays the keyboard and wires event handlers for user input.
+        /// </summary>
         public void Show(Action<string> onNameEntered)
         {
             _onNameEntered = onNameEntered;
@@ -65,6 +80,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
                 Sprite(sn).Visibility = true;
         }
 
+        /// <summary>
+        /// Triggers when the virtual keyboard's enter key is pressed.
+        /// </summary>
         private void EnterPressed()
         {
             if (_keyboard == null) return;
@@ -74,6 +92,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _onNameEntered?.Invoke(_name);
         }
 
+        /// <summary>
+        /// Cleans up event handlers when the keyboard is dismissed.
+        /// </summary>
         private void Closed()
         {
             if (_keyboard == null) return;
@@ -86,6 +107,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
                 Sprite(sn).Visibility = false;
         }
 
+        /// <summary>
+        /// Updates the text member as the player types.
+        /// </summary>
         private void KeySelected(string chara)
         {
             if (_inputText == null || _keyboard == null) return;
@@ -94,7 +118,10 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             //_keyboard.UpdateStyle();
         }
 
-        internal void SetSpriteNums(IEnumerable<int> spritenums) => _spriteNums = spritenums;  
+        /// <summary>
+        /// Sets which sprites should be shown or hidden when the high-score prompt is active.
+        /// </summary>
+        internal void SetSpriteNums(IEnumerable<int> spritenums) => _spriteNums = spritenums;
     }
 }
 

@@ -12,6 +12,9 @@ using System.Reflection.Emit;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 8_PlayerBlock.ls (simplified)
+    /// <summary>
+    /// Controls the active tetromino, handling keyboard input, collision checks and spawning new pieces.
+    /// </summary>
     public class PlayerBlockScript : BlingoParentScript, IHasStepFrameEvent
     {
         private readonly IBlingoMovieEnvironment env;
@@ -44,6 +47,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         private bool myStopKeyAction;
         private int myLastKey;
 
+        /// <summary>
+        /// Prepares the controller with references to supporting services and seeds the random piece list.
+        /// </summary>
         public PlayerBlockScript(IBlingoMovieEnvironment env, GlobalVars global, GfxScript gfx, BlocksScript blocks, ScoreManagerScript score, int width, int height) : base(env)
         {
             this.env = env;
@@ -96,6 +102,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             if (mySlowDown <= 1) mySlowDown = 1;
         }
 
+        /// <summary>
+        /// Entry point for keyboard events coming from <see cref="BgScriptBehavior"/>.
+        /// </summary>
         public void Keyyed(int val)
         {
             if (myPause) return;
@@ -104,6 +113,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             MoveBlock(val);
         }
 
+        /// <summary>
+        /// Toggles the pause overlay while keeping the game state intact.
+        /// </summary>
         public void PauseGame()
         {
             if (myPause)
@@ -117,6 +129,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
                 myPause = true;
             }
         }
+        /// <summary>
+        /// Ensures the pause overlay is hidden, usually when starting a fresh game.
+        /// </summary>
         internal void HidePause()
         {
             Sprite(35).Blend = 0;
@@ -160,7 +175,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         }
 
         /// <summary>
-        /// Hard drop
+        /// Hard drop: moves the active block down until a collision is detected.
         /// </summary>
         public void LetBlockFall()
         {
@@ -173,6 +188,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Advances the block based on input repeat rate and gravity.
+        /// </summary>
         public void StepFrame()
         {
             if (myPause) return;
@@ -248,6 +266,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Handles the game-over sequence by showing UI, restoring sounds and resetting globals.
+        /// </summary>
         private void GameTerminated()
         {
             
@@ -375,6 +396,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
         // ----------------------------------------
+        /// <summary>
+        /// Creates the sub-sprites that make up the active tetromino and positions them correctly.
+        /// </summary>
         public void CreateBlock()
         {
             myBlockType = myNextBlockType;
@@ -395,6 +419,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             UpdateNextBlock();
         }
 
+        /// <summary>
+        /// Randomises and renders the next piece preview.
+        /// </summary>
         private void UpdateNextBlock()
         {
             DestroyNextBlock();
@@ -414,6 +441,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Removes the preview sprites so the list can be reused for the next selection.
+        /// </summary>
         private void DestroyNextBlock()
         {
             foreach (var d in MyNextBlocks)
@@ -423,8 +453,14 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             MyNextBlocks.Clear();
         }
 
+        /// <summary>
+        /// Reports the current pause state so other behaviours can check it before toggling.
+        /// </summary>
         public bool GetPause() => myPause;
 
+        /// <summary>
+        /// Releases the sprites that compose the active block.
+        /// </summary>
         private void DestroyBlock()
         {
             foreach (var d in MySubBlocks)
@@ -434,6 +470,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             MySubBlocks.Clear();
         }
 
+        /// <summary>
+        /// Registers a tetromino configuration, mirroring the arrays from the original scripts.
+        /// </summary>
         private void AddTypeBlock(int[,] coords, bool rotate)
         {
             var list = new List<(int x, int y)>();
@@ -442,6 +481,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             myTypeBlocks.Add(new object[] { list, rotate });
         }
 
+        /// <summary>
+        /// Cleans up resources so the playfield can be torn down safely.
+        /// </summary>
         public void Destroy()
         {
             DestroyNextBlock();

@@ -8,6 +8,9 @@ using BlingoEngine.Movies;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 3_SpriteManager.ls
+    /// <summary>
+    /// Provides pooled sprite allocation similar to the original Director parent script.
+    /// </summary>
     public class SpriteManager : BlingoParentScript
     {
         private int pNum;
@@ -17,6 +20,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public SpriteManager(IBlingoMovieEnvironment env) : base(env) { }
 
+        /// <summary>
+        /// Sets the initial sprite index and clears any cached state.
+        /// </summary>
         public void Init(int beginningSprite)
         {
             pNum = beginningSprite;
@@ -25,6 +31,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             pGame = null;
         }
         private int MaxSpriteNum = 900;
+        /// <summary>
+        /// Allocates a sprite number, reusing destroyed entries when possible.
+        /// </summary>
         public int Sadd()
         {
             if (pDestroyList.Count == 0) // are there destroyed sprites
@@ -79,10 +88,19 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _Movie.PuppetSprite(sprNum, false);
         }
 
+        /// <summary>
+        /// Returns the list of active sprite numbers.
+        /// </summary>
         public IReadOnlyList<int> GetSpriteNums() => pSpriteNums;
 
+        /// <summary>
+        /// Returns 1 if the sprite is currently managed by the pool; mimics the original Lingo behaviour.
+        /// </summary>
         public int CheckSprite(int num) => pSpriteNums.Contains(num) ? 1 : 0;
 
+        /// <summary>
+        /// Frees all managed sprites and clears lookup lists.
+        /// </summary>
         public void Destroy()
         {
             foreach (var i in pDestroyList.ToArray())

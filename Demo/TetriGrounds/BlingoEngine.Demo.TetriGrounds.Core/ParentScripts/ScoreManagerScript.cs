@@ -11,6 +11,9 @@ using BlingoEngine.Texts;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 5_ScoreManager.ls
+    /// <summary>
+    /// Handles scoring, combo calculation, level progression and high score persistence.
+    /// </summary>
     public class ScoreManagerScript : BlingoParentScript, IOverScreenTextParent
     {
         private readonly BlingoMemberText _memberScore;
@@ -32,6 +35,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public bool IsNewHighScore { get; private set; }
 
+        /// <summary>
+        /// Loads the initial state from cast members and prepares score UI for gameplay.
+        /// </summary>
         public ScoreManagerScript(IBlingoMovieEnvironment env, GlobalVars global, ScoresRepository scoresRepository) : base(env)
         {
             _global = global;
@@ -52,6 +58,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             Refresh();
         }
 
+        /// <summary>
+        /// Applies deferred scoring actions such as cleared lines and combo bonuses.
+        /// </summary>
         public void Refresh()
         {
             var linesThisTurn = myNumberLinesRemoved;
@@ -90,46 +99,76 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _memberTData.Text = $"Level {myLevel}";
         }
 
+        /// <summary>
+        /// Awards points for clearing a single line.
+        /// </summary>
         public void LineRemoved1() => myPlayerScore += 80 * myLevel;
+        /// <summary>
+        /// Awards points and plays a sound when two lines are cleared.
+        /// </summary>
         public void LineRemoved2()
         {
             _Player.SoundPlayRowsDeleted(2);
             NewText("2 Lines Removed!!"); myPlayerScore += 120 * myLevel;
         }
+        /// <summary>
+        /// Awards points and plays a sound when three lines are cleared.
+        /// </summary>
         public void LineRemoved3()
         {
             _Player.SoundPlayRowsDeleted(3);
             NewText("3 Lines Removed!!"); myPlayerScore += 180 * myLevel;
         }
+        /// <summary>
+        /// Awards points and plays a sound when four lines are cleared.
+        /// </summary>
         public void LineRemoved4()
         {
             _Player.SoundPlayRowsDeleted(4);
             NewText("Wooow, 4 Lines Removed!!"); myPlayerScore += 320 * myLevel;
         }
 
+        /// <summary>
+        /// Tracks the number of hard dropped blocks to adjust level progression speed.
+        /// </summary>
         public void AddDropedBlock(bool hardDrop) => myBlocksDroped += hardDrop ? 4 : 0;
+        /// <summary>
+        /// Marks that a line was removed so <see cref="Refresh"/> can process the score increment.
+        /// </summary>
         public void LineRemoved()
         {
             myNumberLinesRemoved += 1;
             myNumberLinesTot += 1;
         }
+        /// <summary>
+        /// Called when the current block locks in place, awarding a small amount of points.
+        /// </summary>
         public void BlockFrozen()
         {
             myPlayerScore += 4;
             Refresh();
         }
+        /// <summary>
+        /// Updates the on-screen score text and records whether a new high score was achieved.
+        /// </summary>
         public void UpdateGfxScore()
         {
             _memberScore.Text = myPlayerScore.ToString();
             IsNewHighScore = myPlayerScore > _scoresRepository.LowestScore;
         }
 
+        /// <summary>
+        /// Returns true once when a level up occurs, allowing the caller to react.
+        /// </summary>
         public bool GetLevelUp()
         {
             var t = myLevelUp;
             myLevelUp = false;
             return t;
         }
+        /// <summary>
+        /// Finalises the run, optionally prompting for the player's name if a new high score was achieved.
+        /// </summary>
         public void GameFinished()
         {
             NewText("You're Terminated....");
@@ -145,21 +184,36 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Returns the current level reached by the player.
+        /// </summary>
         public int GetLevel() => myLevel;
+        /// <summary>
+        /// Returns the accumulated score.
+        /// </summary>
         public int GetScore() => myPlayerScore;
         // -----------------------------
+        /// <summary>
+        /// Spawns a temporary overlay text message to celebrate milestones.
+        /// </summary>
         public void NewText(string text)
         {
             var o = new OverScreenTextScript(_env, _global, 130, text, this);
             myOverScreenText.Add(o);
         }
 
+        /// <summary>
+        /// Removes an overlay text once its animation has completed.
+        /// </summary>
         public void TextFinished(OverScreenTextScript obj)
         {
             myOverScreenText.Remove(obj);
             obj.Destroy();
         }
 
+        /// <summary>
+        /// Destroys all overlay texts, usually when tearing down the gameplay scene.
+        /// </summary>
         public void DestroyOverScreenTxt()
         {
             foreach (var o in myOverScreenText.ToArray())
@@ -169,6 +223,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             myOverScreenText.Clear();
         }
         // -----------------------------
+        /// <summary>
+        /// Cleans up managed overlay texts.
+        /// </summary>
         public void Destroy() => DestroyOverScreenTxt();
         // -----------------------------
 

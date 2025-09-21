@@ -11,7 +11,10 @@ using static BlingoEngine.Demo.TetriGrounds.Core.TetrigroundsRootJson;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
-    public class ScoresRepository 
+    /// <summary>
+    /// Handles reading and writing the local high score store for TetriGrounds.
+    /// </summary>
+    public class ScoresRepository
     {
         private BlingoMemberText? _scoresNames;
         private BlingoMemberText? _scoresList;
@@ -25,12 +28,18 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public int MaxScoresToStore { get; private set; } = 100;
         public int MaxScoresVisual { get; private set; } = 15;
 
-        public ScoresRepository(IBlingoMovieEnvironment env, GlobalVars global, IAbstResourceManager resourceManager) 
+        /// <summary>
+        /// Keeps references to the global state and resource manager for persistence.
+        /// </summary>
+        public ScoresRepository(IBlingoMovieEnvironment env, GlobalVars global, IAbstResourceManager resourceManager)
         {
             _global = global;
             _resourceManager = resourceManager;
         }
 
+        /// <summary>
+        /// Loads the saved scores from storage and updates the in-memory representation.
+        /// </summary>
         public void LoadHighScores(IBlingoMovie movie)
         {
             _scoresNames = movie.GetMember<BlingoMemberText>("T_InternetScoresNames")!;
@@ -45,9 +54,12 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             LowestScore = _global.Scores.Scores.Select(x => x.Score).Min();
         }
 
+        /// <summary>
+        /// Writes the top scores into the appropriate text members.
+        /// </summary>
         private void RenderScores(ScoresContent scoresContent)
         {
-            if (_scoresNames == null || _scoresList == null) return;    
+            if (_scoresNames == null || _scoresList == null) return;
             var sbNames = new System.Text.StringBuilder();
             foreach (var score in scoresContent.Scores.Take(MaxScoresVisual))
                 sbNames.AppendLine($"{score.PlayerName}");
@@ -58,6 +70,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _scoresList.Text = sbScores.ToString().TrimEnd();
         }
 
+        /// <summary>
+        /// Persists the current high score list to storage.
+        /// </summary>
         public void SaveHighScores()
         {
             var jsonContent = new TetrigroundsRootJson
@@ -67,6 +82,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _resourceManager.StorageWrite("HighScores", jsonContent);
         }
 
+        /// <summary>
+        /// Adds a new score entry, keeps only the top <see cref="MaxScoresToStore"/> entries and saves the result.
+        /// </summary>
         internal void StoreScore(string name, int myPlayerScore, int myLevel, DateTime started, TimeSpan elapsed)
         {
             var myScores = _global.Scores;

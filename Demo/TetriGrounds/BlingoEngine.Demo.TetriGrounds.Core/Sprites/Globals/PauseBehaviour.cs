@@ -12,6 +12,9 @@ using BlingoEngine.Sprites.Events;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
 {
 
+    /// <summary>
+    /// Legacy pause overlay behaviour kept for completeness of the original scripts.
+    /// </summary>
     public partial class PauseBehaviour : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent
     {
         private readonly GlobalVars global;
@@ -21,6 +24,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
             this.global = global;
         }
 
+        /// <summary>
+        /// Hides the pause sprite when the behaviour starts.
+        /// </summary>
         public void BeginSprite()
         {
             Me.Visibility = false;
@@ -28,6 +34,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
         }
 
 
+        /// <summary>
+        /// Placeholder for the original pause hotkey logic.
+        /// </summary>
         public void ExitFrame()
         {
             //if ((Input.IsKeyPressed(Key.P) || Input.IsKeyPressed(Key.P)) && global.P == 0)

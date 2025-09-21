@@ -6,6 +6,9 @@ using BlingoEngine.Core;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
+    /// <summary>
+    /// Convenience extension methods that wrap the various sound cues used throughout the game.
+    /// </summary>
     internal static class TetriGroundSounds
     {
         private static Random _random = new();
@@ -18,6 +21,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public static void SoundPlayShhh1(this IBlingoPlayer player) => player.Sound.PuppetSound(3, "S_Shhh1");
         public static void SoundPlayTerminated(this IBlingoPlayer player) => player.Sound.PuppetSound(4, "S_Terminated");
         public static void SoundPlayDied(this IBlingoPlayer player) => player.Sound.PuppetSound(2, "S_Died");
+        /// <summary>
+        /// Starts looping the ambient background sound at a reduced volume.
+        /// </summary>
         public static void SoundPlayNature(this IBlingoPlayer player)
         {
             player.Sound.Channel(1)!.Volume = 40;
@@ -27,6 +33,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public static void SoundStopNature(this IBlingoPlayer player) => player.Sound.Channel(1)!.Stop();
 
 
+        /// <summary>
+        /// Plays one of the celebratory sound effects that match the number of cleared rows.
+        /// </summary>
         public static void SoundPlayRowsDeleted(this IBlingoPlayer player, int rows)
         {
             if (rows < 2) return;
@@ -35,6 +44,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             player.Sound.PuppetSound(2, sound);
         }
 
+        /// <summary>
+        /// Plays a randomised block drop sound, picking a higher pitched variant as the stack rises.
+        /// </summary>
         public static void SoundPlayBlockDown(this IBlingoPlayer player,int rowsPercentLeft)
         {
             //Console.WriteLine($"rowsLeft {rowsLeft}");

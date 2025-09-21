@@ -11,6 +11,9 @@ using BlingoEngine.Texts;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
+    /// <summary>
+    /// Diagnostic behaviour used during the port to ensure text updates work correctly.
+    /// </summary>
     internal class TestTetrigroundsBehavior : BlingoSpriteBehavior, IHasExitFrameEvent, IHasBeginSpriteEvent
     {
         private readonly GlobalVars _global;
@@ -22,11 +25,17 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         {
             _global = global;
         }
+        /// <summary>
+        /// Caches the reference to the data text member we tweak for testing.
+        /// </summary>
         public void BeginSprite()
         {
             _member = Member<IBlingoMemberTextBase>("T_data");
         }
 
+        /// <summary>
+        /// Periodically updates the text member and loops on the same frame.
+        /// </summary>
         public void ExitFrame()
         {
             _counter++;

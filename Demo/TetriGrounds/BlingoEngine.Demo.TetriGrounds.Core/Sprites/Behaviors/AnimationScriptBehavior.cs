@@ -11,11 +11,17 @@ using BlingoEngine.Sprites.Events;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
+    /// <summary>
+    /// Implemented by behaviours that can provide initial counter values for linked animations.
+    /// </summary>
     public interface IHasCounterStartData : IBlingoSpriteBehavior
     {
         int GetCounterStartData(string data);
     }
     // Converted from 15_AnimationScript.ls
+    /// <summary>
+    /// Drives a frame-by-frame animation by iterating through member numbers.
+    /// </summary>
     public class AnimationScriptBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasStepFrameEvent, IHasEndSpriteEvent, IBlingoPropertyDescriptionList
     {
         public int myEndMembernum = 10;
@@ -33,6 +39,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
         public AnimationScriptBehavior(IBlingoMovieEnvironment env) : base(env) {}
 
+        /// <inheritdoc />
         public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
         {
             return new BehaviorPropertyDescriptionList()
@@ -53,6 +60,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
 
 
+        /// <summary>
+        /// Loads the starting frame and queues the behaviour on the actor list.
+        /// </summary>
         public void BeginSprite()
         {
             if (myValue == -1 || myValue < myStartMembernum || myValue > myEndMembernum)
@@ -68,6 +78,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             StartAnim();
         }
 
+        /// <summary>
+        /// Advances the animation when the configured slowdown permits it.
+        /// </summary>
         public void StepFrame()
         {
             if (myAnimate)
@@ -97,6 +110,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Preloads the required members and starts the looping animation.
+        /// </summary>
         public void StartAnim()
         {
             for (var i = myStartMembernum; i <= myEndMembernum; i++)
@@ -117,6 +133,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             myWaiter = 0;
         }
 
+        /// <summary>
+        /// Removes the behaviour from the actor list when the sprite is deactivated.
+        /// </summary>
         public void EndSprite()
         {
             if (_Movie.ActorList.GetPos(this) > 0)

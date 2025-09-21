@@ -17,6 +17,9 @@ using BlingoEngine.Texts;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 12_B_FontRollOver.ls
+    /// <summary>
+    /// Changes text colour on hover and sends messages when clicked, replicating the Lingo font rollover.
+    /// </summary>
     public class FontRollOverBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasMouseDownEvent, IHasMouseWithinEvent, IHasMouseExitEvent, IBlingoPropertyDescriptionList
     {
         public AColor myColor = new AColor(0, 0, 0);
@@ -31,6 +34,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         public FontRollOverBehavior(IBlingoMovieEnvironment env) : base(env) {}
 
 
+        /// <inheritdoc />
         public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
         {
             return new BehaviorPropertyDescriptionList()
@@ -50,6 +54,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
         public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => Sprite(spriteNum).Member is IBlingoMemberTextBase;
 
+        /// <summary>
+        /// Applies the initial colour based on whether the button starts locked.
+        /// </summary>
         public void BeginSprite()
         {
             var textMember = Sprite(Me.SpriteNum).Member as IBlingoMemberTextBase;
@@ -64,6 +71,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Sends the configured message if the text is not locked.
+        /// </summary>
         public void MouseDown(BlingoMouseEvent mouse)
         {
             if (!myLock)
@@ -73,6 +83,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Highlights the text colour and shows a pointing cursor.
+        /// </summary>
         public void MouseWithin(BlingoMouseEvent mouse)
         {
             var textMember = Sprite(Me.SpriteNum).Member as IBlingoMemberTextBase;
@@ -87,6 +100,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Restores the default colour when the mouse leaves the text.
+        /// </summary>
         public void MouseExit(BlingoMouseEvent mouse)
         {
             var textMember = Sprite(Me.SpriteNum).Member as IBlingoMemberTextBase;
@@ -98,6 +114,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Locks the button, switching to the locked colour.
+        /// </summary>
         public void Lock()
         {
             myLock = true;
@@ -106,6 +125,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             textMember.Color = myColorLock;
         }
 
+        /// <summary>
+        /// Unlocks the button, restoring the normal colour.
+        /// </summary>
         public void Unlock()
         {
             myLock = false;

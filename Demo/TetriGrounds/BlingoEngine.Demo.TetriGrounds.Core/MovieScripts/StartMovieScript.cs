@@ -9,15 +9,24 @@ using BlingoEngine.Movies.Events;
 namespace BlingoEngine.Demo.TetriGrounds.Core.MovieScripts
 {
     // Converted from 4_StarMovie.ls
+    /// <summary>
+    /// Handles start/stop events for the root movie. This mirrors the Lingo "StartMovie" behaviour.
+    /// </summary>
     public class StartMovieScript : BlingoMovieScript, IHasStartMovieEvent, IHasStopMovieEvent
     {
         private readonly GlobalVars _global;
 
+        /// <summary>
+        /// Stores the <see cref="GlobalVars"/> reference used by the various parent scripts.
+        /// </summary>
         public StartMovieScript(IBlingoMovieEnvironment env, GlobalVars global) : base(env)
         {
             _global = global;
         }
 
+        /// <summary>
+        /// Ensures long-lived helpers exist and fades in the looping ambient soundtrack.
+        /// </summary>
         public void StartMovie()
         {
             if (_global.SpriteManager == null)
@@ -33,15 +42,21 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.MovieScripts
             _Player.SoundPlayNature();
         }
 
+        /// <summary>
+        /// Reverts the movie to the pre-start state so the user can replay it without restarting the engine.
+        /// </summary>
         public void StopMovie()
         {
             _global.SpriteManager?.Destroy();
             _global.MousePointer?.Destroy();
             _global.SpriteManager = null;
             _global.MousePointer = null;
-            _Movie.ActorList.Clear();   
+            _Movie.ActorList.Clear();
         }
 
+        /// <summary>
+        /// Utility ported from Lingo that sanitises player names before writing them into text members.
+        /// </summary>
         public string ReplaceSpaces(string str, int leng)
         {
             string thisField = str;

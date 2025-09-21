@@ -8,6 +8,9 @@ using BlingoEngine.Movies;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 19_ClassSubscibe.ls
+    /// <summary>
+    /// Lightweight publish/subscribe helper mirroring the Lingo behaviour used for score callbacks.
+    /// </summary>
     public class ClassSubscribeScript : BlingoParentScript
     {
         private readonly List<object> mySubscribers = new();
@@ -15,6 +18,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public ClassSubscribeScript(IBlingoMovieEnvironment env) : base(env) { }
 
+        /// <summary>
+        /// Adds a subscriber and associates a callback that should be invoked when messages are dispatched.
+        /// </summary>
         public int Subscribe(object obj, Action<object?> function)
         {
             if (mySubscribers.Contains(obj))
@@ -24,14 +30,23 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             return mySubscribers.Count; // 1-based like Lingo
         }
 
+        /// <summary>
+        /// Returns the list of subscribers. Mainly used by debugging helpers.
+        /// </summary>
         public IReadOnlyList<object> SubscribersGetAll() => mySubscribers;
 
+        /// <summary>
+        /// Retrieves a single subscriber by the original 1-based identifier.
+        /// </summary>
         public object? SubscribersGetById(int val)
         {
             if (val < 1 || val > mySubscribers.Count) return null;
             return mySubscribers[val - 1];
         }
 
+        /// <summary>
+        /// Invokes all registered callbacks with the provided data object.
+        /// </summary>
         public void ExecuteAllSubscribed(object? data)
         {
             for (int i = 0; i < mySubscribers.Count; i++)
@@ -42,6 +57,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Removes every subscriber and clears associated data.
+        /// </summary>
         public void SubscribersDestroy()
         {
             mySubscribers.Clear();

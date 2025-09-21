@@ -15,6 +15,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 2_Bg Script.ls
+    /// <summary>
+    /// Central coordinator for the gameplay scene. It bridges inputs, player state and score management.
+    /// </summary>
     public class BgScriptBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent, IHasEndSpriteEvent
     {
         private PlayerBlockScript? myPlayerBlock;
@@ -25,46 +28,64 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         private readonly ScoresRepository _scoresRepository;
         private int myWidth;
         private int myHeight;
+        /// <summary>
+        /// Stores references to the global state and repository used across the game.
+        /// </summary>
         public BgScriptBehavior(IBlingoMovieEnvironment env, GlobalVars global, ScoresRepository scoresRepository) : base(env)
         {
             _global = global;
             _scoresRepository = scoresRepository;
         }
 
+        /// <summary>
+        /// Called when the sprite activates; ensures the player block is ready and plays a gong.
+        /// </summary>
         public void BeginSprite()
         {
             if (myPlayerBlock != null)
                 myPlayerBlock.HidePause();
             _Player.SoundPlayGong();
-            
+
         }
 
         public void ExitFrame()
         {
         }
 
+        /// <summary>
+        /// Debug helper that prints messages using the verbose language DSL.
+        /// </summary>
         public void ActionKey(object val)
         {
             // debug output
             this.Put(val).ToLog();
         }
 
+        /// <summary>
+        /// Forwards key presses to the player block so it can react.
+        /// </summary>
         public void KeyAction(int val, int val2)
         {
             if (myPlayerBlock == null) return;
             myPlayerBlock.Keyyed(val);
         }
 
+        /// <summary>
+        /// Toggles the pause state in the player controller.
+        /// </summary>
         public void PauseGame() => myPlayerBlock?.PauseGame();
 
+        /// <summary>
+        /// Starts a new game or restarts the current one when possible.
+        /// </summary>
         public void NewGame()
         {
             if (myPlayerBlock != null)
             {
                 var _pause = myPlayerBlock.GetPause();
-                if(_pause==false) { 
-                    TeminateGame(); 
-                    StartNewGame(); 
+                if(_pause==false) {
+                    TeminateGame();
+                    StartNewGame();
                 }
             }
             else
@@ -74,11 +95,17 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Ensures all temporary state is cleared when the sprite leaves the stage.
+        /// </summary>
         public void EndSprite()
         {
             TeminateGame();
         }
 
+        /// <summary>
+        /// Performs all the setup required to start an interactive TetriGrounds session.
+        /// </summary>
         public void StartNewGame()
         {
             _global.GameIsRunning = true;
@@ -96,6 +123,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             myPlayerBlock.CreateBlock();
         }
 
+        /// <summary>
+        /// Tears down the active game so the scene can return to the menu safely.
+        /// </summary>
         public void TeminateGame()
         {
             _global.GameIsRunning = false;
@@ -109,6 +139,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             myScoreManager = null;
         }
 
+        /// <summary>
+        /// Performs a hard drop when the space bar is pressed.
+        /// </summary>
         public void SpaceBar() => myPlayerBlock?.LetBlockFall();
 
        

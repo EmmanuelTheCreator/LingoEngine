@@ -12,17 +12,29 @@ using BlingoEngine.Sprites;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 13_B_NewGame.ls
+    /// <summary>
+    /// Simple behaviour that jumps to the game score label once the intro finishes.
+    /// </summary>
     public class NewGameBehavior : BlingoSpriteBehavior, IHasMouseUpEvent, IHasMouseWithinEvent, IHasMouseLeaveEvent
     {
         public NewGameBehavior(IBlingoMovieEnvironment env) : base(env) {}
 
+        /// <summary>
+        /// Clicking the sprite navigates to the first frame of the game.
+        /// </summary>
         public void MouseUp(BlingoMouseEvent mouse)
         {
             Cursor = -1;
             _Movie.GoTo("Game");
         }
 
+        /// <summary>
+        /// Highlights the cursor to indicate the sprite is interactive.
+        /// </summary>
         public void MouseWithin(BlingoMouseEvent mouse) => Cursor = 280;
+        /// <summary>
+        /// Restores the default cursor when the mouse leaves.
+        /// </summary>
         public void MouseLeave(BlingoMouseEvent mouse) => Cursor = -1;
     }
 }
