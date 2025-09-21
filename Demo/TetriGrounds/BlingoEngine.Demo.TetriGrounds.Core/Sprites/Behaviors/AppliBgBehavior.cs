@@ -15,6 +15,9 @@ using System.ComponentModel;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 16_AppliBg.ls
+    /// <summary>
+    /// Legacy behaviour responsible for coordinating menu data and on-screen text messages.
+    /// </summary>
     public class AppliBgBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent, IHasEndSpriteEvent, IOverScreenTextParent, IHasCounterStartData
     {
         private int _pos;
@@ -27,11 +30,17 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         private readonly GlobalVars _globalVars;
         private List<OverScreenTextScript>? myOverScreenText;
 
+        /// <summary>
+        /// Stores the shared global state reference.
+        /// </summary>
         public AppliBgBehavior(IBlingoMovieEnvironment env, GlobalVars globalVars) : base(env)
         {
             _globalVars = globalVars;
         }
 
+        /// <summary>
+        /// Called when the behaviour starts; would normally trigger remote data requests.
+        /// </summary>
         public void BeginSprite()
         {
             Member<IBlingoMemberTextBase>("PlayerName")!.Text = WebName.ToString();
@@ -47,6 +56,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         }
 
 
+        /// <summary>
+        /// Handles the completion of the start-data download.
+        /// </summary>
         public void DataLoaded(string data, object obj)
         {
             this.Put(data).ToLog();
@@ -63,6 +75,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         }
 
 
+        /// <summary>
+        /// Updates cached start-level information before posting it back to the server.
+        /// </summary>
         public void SendData(string _type, int? data)
         {
             if (data == null)
@@ -82,6 +97,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
 
 
+        /// <summary>
+        /// Keeps the movie on the current frame until remote data has been retrieved.
+        /// </summary>
         public void ExitFrame()
         {
             if (myCheckStartData)
@@ -93,6 +111,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Displays a message once the game is finished and would normally refresh highscores.
+        /// </summary>
         public void GameFinished(int _score)
         {
             RefeshHighScores();
@@ -106,6 +127,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         }
 
 
+        /// <summary>
+        /// Handles the simulated response from the high score upload.
+        /// </summary>
         public void ReturnFromSaveScore(string data)
         {
             if (data.Contains("Highscore"))  // new highscore
@@ -114,20 +138,32 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
                 RefeshHighScores();
             }
         }
+        /// <summary>
+        /// Placeholder for showing personal high scores.
+        /// </summary>
         public void PersonalHighscores()
         {
             //myHsDown.SetShowType(2);
             //myHsDown.OutputScores();
         }
+        /// <summary>
+        /// Placeholder for showing global high scores.
+        /// </summary>
         public void ShowGeneralScores()
         {
             //myHsDown.SetShowType(1);
             //myHsDown.OutputScores();
         }
-        public void RefeshHighScores() 
+        /// <summary>
+        /// Placeholder for refreshing the high score table from the server.
+        /// </summary>
+        public void RefeshHighScores()
         { 
             //myHsDown.downloadScores();
         }
+        /// <summary>
+        /// Displays a temporary overlay text message.
+        /// </summary>
         public void NewText(string _text)
         {
             if (myOverScreenText == null)
@@ -138,6 +174,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
 
 
+        /// <inheritdoc />
         public void TextFinished(OverScreenTextScript obj)
         {
             if (myOverScreenText == null) return;
@@ -147,6 +184,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         }
 
 
+        /// <summary>
+        /// Destroys all overlay text instances managed by this behaviour.
+        /// </summary>
         public void DestroyoverscreenTxt()
         {
             if (myOverScreenText == null) return;
@@ -156,6 +196,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             myOverScreenText = [];
         }
 
+        /// <inheritdoc />
         public int GetCounterStartData(string _type)
         {
             if (_type == "StartLevel")
@@ -169,6 +210,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             return 0;
         }
 
+        /// <summary>
+        /// Cleans up when the behaviour is removed.
+        /// </summary>
         public void EndSprite()
         {
            // myHsDown.Destroy();

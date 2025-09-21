@@ -9,16 +9,25 @@ using BlingoEngine.Movies;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 7_Gfx.ls
+    /// <summary>
+    /// Responsible for translating grid coordinates into sprite positions.
+    /// </summary>
     public class GfxScript : BlingoParentScript
     {
         private int myStartX;
         private int myStartY;
+        /// <summary>
+        /// Prepares the coordinate origin used to align the playfield with the background art.
+        /// </summary>
         public GfxScript(IBlingoMovieEnvironment env) : base(env)
         {
             myStartX = 250;
             myStartY = 45;
         }
 
+        /// <summary>
+        /// Moves a sprite to the requested logical position, applying the origin offset.
+        /// </summary>
         public void PositionBlock(int sprNum, int x, int y)
         {
             if (sprNum == 0) return;
@@ -29,6 +38,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             spr.LocV = yy;
         }
 
+        /// <summary>
+        /// Placeholder kept for parity with the original script.
+        /// </summary>
         public void Destroy() { }
     }
 }

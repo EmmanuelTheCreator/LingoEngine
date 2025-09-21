@@ -10,6 +10,9 @@ using BlingoEngine.Sprites.Events;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
 {
+    /// <summary>
+    /// Experimental behaviour kept from the original scripts; loads a background member when starting.
+    /// </summary>
     public class StartGameBehavior : BlingoSpriteBehavior, IHasExitFrameEvent, IHasBeginSpriteEvent
     {
         private GlobalVars _global;
@@ -19,11 +22,17 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
             _global = global;
         }
 
+        /// <summary>
+        /// Resolves the background member used by the behaviour.
+        /// </summary>
         public void BeginSprite()
         {
             _memberBg = Member<BlingoMemberBitmap>("MyBG");
         }
 
+        /// <summary>
+        /// Placeholder for future functionality.
+        /// </summary>
         public void ExitFrame()
         {
 

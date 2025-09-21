@@ -8,13 +8,23 @@ using BlingoEngine.VerboseLanguage;
 namespace BlingoEngine.Demo.TetriGrounds.Core
 {
     // its not a requirement, but just for fun, using the verbose language to setup the members
+    /// <summary>
+    /// Helper that mirrors the original Lingo setup script by configuring member dimensions via the verbose language API.
+    /// </summary>
     public class TetriGroundsMembersSetup : BlingoVerboseMethods
     {
+        /// <summary>
+        /// Creates a new setup helper that targets the supplied player instance.
+        /// </summary>
         public TetriGroundsMembersSetup(IBlingoPlayer blingoPlayer)
             :base(blingoPlayer)
         {
-            
+
         }
+
+        /// <summary>
+        /// Applies the same width tweaks that the 2005 project performed inside the Director IDE.
+        /// </summary>
         public void InitMembers()
         {
             var castData = _player.CastLib("Data");
@@ -23,6 +33,8 @@ namespace BlingoEngine.Demo.TetriGrounds.Core
             Set(The().WidthMember.Of.Member("T_data")).To(191);
             Set(The().WidthMember.Of.Member(56,2)).To(473); // text memberLoading
 
+            // The statements below mirror the old hand-authored values. Keeping them grouped
+            // together makes it easier to compare against the CSV imports when troubleshooting.
             // Lingo : put round into field "round"
             // var round = 20;
             // Put(round).Into.Field("round");

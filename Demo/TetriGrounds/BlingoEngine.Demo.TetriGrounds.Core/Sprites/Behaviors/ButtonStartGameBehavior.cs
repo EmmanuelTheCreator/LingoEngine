@@ -11,6 +11,9 @@ using BlingoEngine.Demo.TetriGrounds.Core.ParentScripts;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
+    /// <summary>
+    /// Handles button presses on the main menu to start a new TetriGrounds game.
+    /// </summary>
     internal class ButtonStartGameBehavior : BlingoSpriteBehavior, IHasMouseDownEvent, IHasKeyDownEvent
     {
         private readonly GlobalVars _global;
@@ -20,16 +23,22 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _global = global;
         }
 
+        /// <summary>
+        /// Clicking the start button triggers the same new game logic as pressing Enter.
+        /// </summary>
         public void MouseDown(BlingoMouseEvent mouse)
         {
             StartNewGame();
         }
+        /// <summary>
+        /// Allows keyboard navigation in menus to start the game via Enter.
+        /// </summary>
         public void KeyDown(BlingoKeyEvent key)
         {
             //var code = key.Key;
             //Console.WriteLine($"Key Down: {code}: {key.KeyCode} ");
             if (key.Key == "Enter")
-                StartNewGame(); 
+                StartNewGame();
         }
 
         private void StartNewGame()

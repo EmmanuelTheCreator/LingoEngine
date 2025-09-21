@@ -12,6 +12,9 @@ using BlingoEngine.Movies.Events;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 28_MousePointer.ls
+    /// <summary>
+    /// Recreates the animated custom mouse pointer from the Director project.
+    /// </summary>
     public class MousePointer : BlingoParentScript, IHasStepFrameEvent
     {
         private int myNum;
@@ -21,10 +24,13 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         private int myStartMember;
         private int myNumberMembers;
         private int myDir;
-        private List<IBlingoMember> myMembers = new();   
+        private List<IBlingoMember> myMembers = new();
 
         public MousePointer(IBlingoMovieEnvironment env) : base(env) { }
 
+        /// <summary>
+        /// Assigns the sprite number that will display the mouse and preloads its animation frames.
+        /// </summary>
         public void Init(int num)
         {
             myNum = num;
@@ -39,6 +45,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             ShowMouse();
         }
 
+        /// <summary>
+        /// Called every frame to keep the pointer aligned with the hardware cursor.
+        /// </summary>
         public void StepFrame() => Refresh();
 
         private void Refresh()
@@ -78,6 +87,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Makes the custom cursor visible and hides the OS cursor.
+        /// </summary>
         public void ShowMouse()
         {
             _Movie.PuppetSprite(myNum, true);
@@ -87,6 +99,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             Sprite(myNum).Visibility = true;
             _Mouse.SetCursor(AbstUI.Primitives.AMouseCursor.Hidden);
         }
+        /// <summary>
+        /// Hides the custom cursor and restores the native pointer.
+        /// </summary>
         public void HideMouse()
         {
             //_Movie.PuppetSprite(myNum, false);
@@ -97,6 +112,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public void Mouse_Over() { }
         public void Mouse_Restore() { }
 
+        /// <summary>
+        /// Removes the pointer from the actor list. The sprite manager will reclaim the sprite separately.
+        /// </summary>
         public void Destroy()
         {
             _Movie.ActorList.Remove(this);

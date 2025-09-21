@@ -17,6 +17,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 1_Game stop.ls
     // Handles keyboard input for two players and forwards actions to another sprite
+    /// <summary>
+    /// Handles keyboard input for two players and forwards actions to the background controller.
+    /// </summary>
     public class GameStopBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent, IHasMouseEnterEvent, IHasKeyDownEvent
     {
         // key codes for players
@@ -28,11 +31,17 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         private int myTargetSprite;
         private readonly GlobalVars _global;
 
+        /// <summary>
+        /// Stores the global state reference so we can respect the game running flag.
+        /// </summary>
         public GameStopBehavior(IBlingoMovieEnvironment env, GlobalVars global) : base(env)
         {
             _global = global;
         }
 
+        /// <summary>
+        /// Reads the keyboard mapping from the parameters text member.
+        /// </summary>
         public void BeginSprite()
         {
             var parameters = Member<IBlingoMemberTextBase>("parameters")!;
@@ -64,6 +73,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
 
 
+        /// <summary>
+        /// Handles pause and hard drop keys while respecting the game running flag.
+        /// </summary>
         public void KeyDown(BlingoKeyEvent key)
         {
             if (!_global.GameIsRunning) return;
@@ -76,6 +88,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             //Cursor = 200;
         }
 
+        /// <summary>
+        /// Polls the keyboard state each frame and forwards actions to the background behaviour.
+        /// </summary>
         public void ExitFrame()
         {
             int keyy1;

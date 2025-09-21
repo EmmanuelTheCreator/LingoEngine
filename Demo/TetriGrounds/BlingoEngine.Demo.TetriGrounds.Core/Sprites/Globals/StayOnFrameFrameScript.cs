@@ -8,12 +8,18 @@ using BlingoEngine.Sprites;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
 {
+    /// <summary>
+    /// Forces the movie to remain on the current frame each tick.
+    /// </summary>
     internal class StayOnFrameFrameScript : BlingoSpriteBehavior, IHasEnterFrameEvent
     {
         public StayOnFrameFrameScript(IBlingoMovieEnvironment env) : base(env)
         {
         }
 
+        /// <summary>
+        /// Jumps back to the current frame, preventing progression.
+        /// </summary>
         public void EnterFrame()
         {
             _Movie.GoTo(_Movie.CurrentFrame);

@@ -11,6 +11,9 @@ using System.Collections.Generic;
 namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 {
     // Converted from 17_score_get.ls
+    /// <summary>
+    /// Placeholder implementation for downloading high scores from the legacy server.
+    /// </summary>
     public class ScoreGetScript : BlingoParentScript, IHasStepFrameEvent
     {
         private string myURL = string.Empty;
@@ -22,8 +25,14 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         public ScoreGetScript(IBlingoMovieEnvironment env) : base(env) { }
 
+        /// <summary>
+        /// Specifies the remote endpoint used to retrieve the leaderboard.
+        /// </summary>
         public void SetURL(string scriptURL) => myURL = scriptURL;
 
+        /// <summary>
+        /// Starts an asynchronous download of the leaderboard.
+        /// </summary>
         public void DownloadScores()
         {
             myErr = string.Empty;
@@ -34,6 +43,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _Movie.ActorList.Add(this);
         }
 
+        /// <summary>
+        /// Polls the mocked network handle to know when the download completes.
+        /// </summary>
         public void StepFrame()
         {
             // TODO: check network status via myNetID
@@ -42,6 +54,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _Movie.ActorList.Remove(this);
         }
 
+        /// <summary>
+        /// Writes the retrieved scores into the corresponding text members.
+        /// </summary>
         public void OutputScores()
         {
             if (myScores == null) return;
@@ -69,6 +84,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
         }
 
+        /// <summary>
+        /// Returns the lowest score within the personal table, or zero if not available.
+        /// </summary>
         public int GetLowestPersonalScore()
         {
             if (myScores == null || myScores.Count < 2 || myScores[1].Count < 10)
@@ -76,11 +94,26 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             return int.TryParse(myScores[1][myScores[1].Count - 1], out var v) ? v : 0;
         }
 
+        /// <summary>
+        /// Selects which leaderboard (global vs personal) should be displayed.
+        /// </summary>
         public void SetShowType(int val) => myShowType = val;
+        /// <summary>
+        /// Returns the cached high score list for further processing.
+        /// </summary>
         public List<List<string>>? GetHighScoreList() => myScores;
+        /// <summary>
+        /// Returns the last encountered error message.
+        /// </summary>
         public string GetErr() => myErr;
+        /// <summary>
+        /// Indicates whether the download operation has completed.
+        /// </summary>
         public bool IsDone() => myDone;
 
+        /// <summary>
+        /// Stops polling the movie and clears any subscriber state.
+        /// </summary>
         public void Destroy()
         {
             _Movie.ActorList.Remove(this);

@@ -16,6 +16,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
    
 
     // Converted from 23_TextCounter.ls
+    /// <summary>
+    /// Simple numeric counter that updates a text member and can be controlled via messages.
+    /// </summary>
     public class TextCounterBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasExitFrameEvent, IBlingoPropertyDescriptionList, IHasBlingoMessage
     {
         public int myMax { get; set; } = 10;
@@ -47,6 +50,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 
         public TextCounterBehavior(IBlingoMovieEnvironment env) : base(env){}
 
+        /// <inheritdoc />
         public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
         {
             return new BehaviorPropertyDescriptionList()
@@ -68,6 +72,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
 
 
+        /// <summary>
+        /// Initialises the counter value and updates the display.
+        /// </summary>
         public void BeginSprite()
         {
             _textMember = Me.Member as BlingoMemberText;
@@ -84,6 +91,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             myWaiter = myWaitbeforeExecute;
         }
 
+        /// <summary>
+        /// Handles delayed execution messages once the wait time has elapsed.
+        /// </summary>
         public void ExitFrame()
         {
             if (myDataSpriteNum <= 0) return;
@@ -95,6 +105,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Increments the counter when it has not reached the maximum.
+        /// </summary>
         public void Addd()
         {
             if (myValue < myMax)
@@ -104,6 +117,9 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             }
         }
 
+        /// <summary>
+        /// Decrements the counter when above the minimum.
+        /// </summary>
         public void Deletee()
         {
             if (myValue > myMin)
@@ -120,6 +136,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             myWaiter = 0;
         }
 
+        /// <inheritdoc />
         public void HandleMessage(string myFunction, params object[]? parameters)
         {
             switch (myFunction)

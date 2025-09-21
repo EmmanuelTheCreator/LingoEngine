@@ -9,6 +9,9 @@ using BlingoEngine.Sprites;
 
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
 {
+    /// <summary>
+    /// Keeps the movie on the current frame for a given number of ticks before advancing.
+    /// </summary>
     public class WaiterFrameScript : BlingoSpriteBehavior, IHasExitFrameEvent, IBlingoPropertyDescriptionList
     {
         private int i;
@@ -25,6 +28,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Globals
         public string? GetBehaviorTooltip() => "Stay on the current frame for a number of ticks before navigating again.";
         public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
 
+        /// <inheritdoc />
         public void ExitFrame()
         {
             i++;

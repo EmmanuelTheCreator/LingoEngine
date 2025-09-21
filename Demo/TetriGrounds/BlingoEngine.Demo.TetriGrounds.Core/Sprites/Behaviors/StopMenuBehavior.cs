@@ -10,6 +10,9 @@ using BlingoEngine.Sprites;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 11_Stop Menu.ls
+    /// <summary>
+    /// Keeps the movie stuck on the current frame, mimicking the original stop-menu behaviour.
+    /// </summary>
     public class StopMenuBehavior : BlingoSpriteBehavior, IHasExitFrameEvent
     {
         public StopMenuBehavior(IBlingoMovieEnvironment env) : base(env){}

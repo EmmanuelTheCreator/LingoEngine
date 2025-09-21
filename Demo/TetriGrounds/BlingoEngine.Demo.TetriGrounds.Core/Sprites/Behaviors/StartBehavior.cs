@@ -10,9 +10,15 @@ using BlingoEngine.Sprites;
 namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
 {
     // Converted from 14_start.ls
+    /// <summary>
+    /// Immediately navigates to the main game frame when the intro sprite finishes.
+    /// </summary>
     public class StartBehavior : BlingoSpriteBehavior, IHasExitFrameEvent
     {
         public StartBehavior(IBlingoMovieEnvironment env) : base(env){}
+        /// <summary>
+        /// Single-frame behaviour that skips ahead to the gameplay score label.
+        /// </summary>
         public void ExitFrame() => _Movie.GoTo("Game");
     }
 }
