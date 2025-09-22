@@ -192,6 +192,12 @@ namespace BlingoEngine.Sprites
             return animator.GetKeyframes();
         }
 
+        public BlingoKeyFrameSetting? GetKeyFrameForFrame(int frame)
+        {
+            var animator = GetActorsOfType<BlingoSpriteAnimator>().FirstOrDefault();
+            return animator?.GetKeyFrameForFrame(frame);
+        }
+
         public void MoveKeyFrame(int from, int to)
         {
             var animator = GetActorsOfType<BlingoSpriteAnimator>().FirstOrDefault();

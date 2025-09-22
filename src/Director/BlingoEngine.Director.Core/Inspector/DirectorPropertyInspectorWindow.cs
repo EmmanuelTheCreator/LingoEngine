@@ -15,6 +15,7 @@ using BlingoEngine.Director.Core.Events;
 using BlingoEngine.Director.Core.Icons;
 using BlingoEngine.Director.Core.Inspector.Commands;
 using BlingoEngine.Director.Core.Sprites;
+using BlingoEngine.Director.Core.Sprites.Commands;
 using BlingoEngine.Director.Core.Stages;
 using BlingoEngine.Director.Core.Styles;
 using BlingoEngine.Director.Core.Tools;
@@ -33,11 +34,14 @@ using BlingoEngine.Tempos;
 using BlingoEngine.Texts;
 using BlingoEngine.Transitions;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel;
 
 namespace BlingoEngine.Director.Core.Inspector
 {
-    public class DirectorPropertyInspectorWindow : DirectorWindow<IDirFrameworkPropertyInspectorWindow>, IHasSpriteSelectedEvent, IHasMemberSelectedEvent,
+    public partial class DirectorPropertyInspectorWindow : DirectorWindow<IDirFrameworkPropertyInspectorWindow>, IHasSpriteSelectedEvent, IHasMemberSelectedEvent,
         IAbstCommandHandler<OpenBehaviorPopupCommand>
     {
         public enum PropetyTabNames
@@ -290,140 +294,20 @@ namespace BlingoEngine.Director.Core.Inspector
 
 
 
-        #region Sprite Tab
-        private void AddSpriteTab(BlingoSprite sprite)
-        {
-            CreateBehaviorPanel();
-            var wrapContainer = AddTab(PropetyTabNames.Sprite);
-            var containerIcons = _factory.CreateWrapPanel(AOrientation.Horizontal, "SpriteDetailIcons");
-            var container = _factory.CreatePanel("SpriteDetailPanel");
-            container.BackgroundColor = DirectorColors.BG_WhiteMenus;
-
-            containerIcons.Margin = new AMargin(5, 5, 5, 5);
-            var composer0 = containerIcons.Compose()
-                .AddStateButton("SpriteLock", sprite, _iconManager.Get(DirectorIcon.Lock), c => c.Lock)
-                ;
-            if (sprite is BlingoSprite2D sprite2D0)
-                composer0
-                    .AddStateButton("SpriteFlipH", sprite2D0, _iconManager.Get(DirectorIcon.FlipHorizontal), c => c.FlipH, "")
-                    .AddStateButton("SpriteFlipV", sprite2D0, _iconManager.Get(DirectorIcon.FlipVertical), c => c.FlipV)
-                    ;
-            composer0.Finalize();
-
-            var composer = container.Compose(_factory.ComponentFactory)
-                   .Columns(4)
-                   .AddTextInput("SpriteName", "Name:", sprite, s => s.Name, inputSpan: 3)
-                   .Columns(8);
-            if (sprite is BlingoSprite2D sprite2D)
-                composer
-                       .AddNumericInputFloat("SpriteLocH", "X:", sprite2D, s => s.LocH)
-                       .AddNumericInputFloat("SpriteLocV", "Y:", sprite2D, s => s.LocV)
-                       .AddNumericInputFloat("SpriteLocZ", "Z:", sprite2D, s => s.LocZ, inputSpan: 3)
-                       .AddNumericInputFloat("SpriteLeft", "L:", sprite2D, s => s.Left)
-                       .AddNumericInputFloat("SpriteTop", "T:", sprite2D, s => s.Top)
-                       .AddNumericInputFloat("SpriteRight", "R:", sprite2D, s => s.Right)
-                       .AddNumericInputFloat("SpriteBottom", "B:", sprite2D, s => s.Bottom)
-                       .AddNumericInputFloat("SpriteWidth", "W:", sprite2D, s => s.Width)
-                       .AddNumericInputFloat("SpriteHeight", "H:", sprite2D, s => s.Height, inputSpan: 5)
-                       .AddEnumInput<BlingoSprite2D, BlingoInkType>("SpriteInk", "Ink:", sprite2D, s => s.Ink, inputSpan: 6)
-                       .AddNumericInputFloat("SpriteBlend", "%", sprite2D, s => s.Blend, showLabel: false)
-                       ;
-            composer
-                   .AddNumericInputInt("SpriteBeginFrame", "StartFrame:", sprite, s => s.BeginFrame, labelSpan: 3)
-                   .AddNumericInputInt("SpriteEndFrame", "End:", sprite, s => s.EndFrame, inputSpan: 1, labelSpan: 3)
-                   ;
-            _behaviorList.ClearItems();
-            _behaviors.Clear();
-            if (sprite is BlingoSprite2D sprite2D1)
-            {
-                composer
-                   .AddNumericInputFloat("SpriteRotation", "Rotation:", sprite2D1, s => s.Rotation, labelSpan: 3)
-                   .AddNumericInputFloat("SpriteSkew", "Skew:", sprite2D1, s => s.Skew, inputSpan: 1, labelSpan: 3)
-                   .AddColorPicker("SpriteForeColor", "Foreground:", sprite2D1, s => s.ForeColor, inputSpan: 1, labelSpan: 3)
-                   .AddColorPicker("SpriteBackColor", "Background:", sprite2D1, s => s.BackColor, inputSpan: 1, labelSpan: 3)
-
-                ;
-                var index = 0;
-                _behaviors = sprite2D1.Behaviors.ToDictionary(b =>
-                {
-                    index++;
-                    return $"{index}.{b.Name} {(b.ScriptMember != null ? $"{b.ScriptMember.CastLibNum},{b.ScriptMember.NumberInCast}" : "")}";
-                });
-            }
-            if (sprite is BlingoFrameScriptSprite frameScript && frameScript.Behavior != null)
-                _behaviors.Add("1." + frameScript.Behavior.Name + $"{(frameScript.Member != null ? $"{frameScript.Member.CastLibNum},{frameScript.Member.NumberInCast}" : "")}", frameScript.Behavior);
-
-            foreach (var item in _behaviors)
-                _behaviorList.AddItem(item.Key, item.Value.Name);
-
-
-            composer.Finalize();
-            wrapContainer
-                .AddItem(containerIcons)
-                .AddHLine("SpriteSplitterIconHLine", _lastWidh - 10, 5)
-                .AddItem(container)
-                .AddHLine("SpriteSplitterIconHLine", _lastWidh - 10, 5)
-                .AddItem(_behaviorPanel)
-                ;
-        }
-
-        private void CreateBehaviorPanel()
-        {
-            _behaviorPanel = _factory.CreateWrapPanel(AOrientation.Vertical, "InspectorBehaviors");
-
-            _behaviorList = _factory.CreateItemList("BehaviorList", x =>
-            {
-                if (x != null && _behaviors.TryGetValue(x, out var behavior))
-                    _commandManager.Handle(new OpenBehaviorPopupCommand(behavior));
-            });
-            _behaviorList.Height = 45;
-            _behaviorList.Width = _lastWidh - 15;
-            _behaviorList.Margin = new AMargin(5, 0, 0, 0);
-            _behaviorPanel.AddItem(_behaviorList);
-
-        }
-
-
-        public IAbstWindowDialogReference? BuildBehaviorPopup(BlingoSpriteBehavior behavior)
-            => _descriptionManager.BuildBehaviorPopup(behavior, () =>
-            {
-                _behaviorList.SelectedIndex = -1;
-            });
-
-        public void ShowBehaviorPopup(IAbstWindowDialogReference window)
-        {
-            _behaviorWindow?.Dialog?.Dispose();
-            _behaviorWindow = window;
-            //window.PopupCentered();
-        }
-
-        public bool CanExecute(OpenBehaviorPopupCommand command) => true;
-
-        public bool Handle(OpenBehaviorPopupCommand command)
-        {
-            var win = BuildBehaviorPopup(command.Behavior);
-            if (win == null) return true;
-            ShowBehaviorPopup(win);
-            return true;
-        }
-
-        #endregion
-
-
-
         #region Memeber/Bitmap
 
         private void AddMemberTab(IBlingoMember member)
         {
             var wrapContainer = AddTab(PropetyTabNames.Member);
             var container = _factory.CreatePanel("MemberDetailPanel");
+            var memberAdapter = new MemberCommandAdapter(this, member);
             wrapContainer
                 .AddItem(container)
                 ;
 
             container.Compose(_factory.ComponentFactory)
                    .Columns(4)
-                   .AddTextInput("MemberName", "Name:", member, s => s.Name, inputSpan: 3)
+                   .AddTextInput("MemberName", "Name:", memberAdapter, s => s.Name, inputSpan: 3)
                    .Columns(4)
                    .AddLabel("MemberSize", "Size: ", 2)
                    .AddLabel("MemberSizeV", CommonExtensions.BytesToShortString(member.Size), 2)
@@ -432,9 +316,9 @@ namespace BlingoEngine.Director.Core.Inspector
                    .AddLabel("MemberModifyDate", "Modified: ", 2)
                    .AddLabel("MemberModifyDateV", member.ModifiedDate.ToString("dd/MM/yyyy HH:mm"), 2)
                    .Columns(4)
-                   .AddTextInput("MemberFileName", "FileName:", member, s => s.FileName, inputSpan: 3)
+                   .AddTextInput("MemberFileName", "FileName:", memberAdapter, s => s.FileName, inputSpan: 3)
                    .Columns(4)
-                   .AddTextInput("MemberComments", "Comments:", member, s => s.Comments, inputSpan: 3)
+                   .AddTextInput("MemberComments", "Comments:", memberAdapter, s => s.Comments, inputSpan: 3)
                    .Finalize()
                    ;
         }
@@ -442,6 +326,7 @@ namespace BlingoEngine.Director.Core.Inspector
         {
             var wrapContainer = AddTab(PropetyTabNames.Bitmap);
             var container = _factory.CreatePanel("MemberDetailPanel");
+            var bitmapAdapter = new BitmapMemberCommandAdapter(this, member);
             wrapContainer
                 .AddItem(container)
                 ;
@@ -450,12 +335,12 @@ namespace BlingoEngine.Director.Core.Inspector
                    .Columns(4)
                    .AddLabel("BitmapSize", "Dimensions: ", 2)
                    .AddLabel("BitmapSizeV", member.Width + " x " + member.Height, 2)
-                   .AddCheckBox("BitmapHighLight", "Hightlight: ", member, x => x.Hilite, 2, true, 2)
+                   .AddCheckBox("BitmapHighLight", "Hightlight: ", bitmapAdapter, x => x.Hilite, 2, true, 2)
                    //.AddLabel("BitmapBitDepth", "BitDepth: ", 2)
                    //.AddLabel("BitmapBitDepthV", member.ColorDepth,2)
                    .Columns(8)
-                   .AddNumericInputFloat("BitmapRegPointX", "RegPoint X:", member, s => s.RegPoint.X, inputSpan: 1, labelSpan: 3)
-                   .AddNumericInputFloat("BitmapRegPointY", "Y:", member, s => s.RegPoint.Y, inputSpan: 4, labelSpan: 1)
+                   .AddNumericInputFloat("BitmapRegPointX", "RegPoint X:", bitmapAdapter, s => s.RegPointX, inputSpan: 1, labelSpan: 3)
+                   .AddNumericInputFloat("BitmapRegPointY", "Y:", bitmapAdapter, s => s.RegPointY, inputSpan: 4, labelSpan: 1)
                    .Finalize()
                    ;
         }
@@ -471,6 +356,7 @@ namespace BlingoEngine.Director.Core.Inspector
             var soundChannel = _player.Sound.Channel(1);
             if (soundChannel == null) return;
             var wrap = AddTab(PropetyTabNames.Sound);
+            var soundAdapter = new SoundMemberCommandAdapter(this, member);
             var btnPanel = _factory.CreateWrapPanel(AOrientation.Horizontal, "SoundButtons");
             var playBtn = _factory.CreateButton("SoundPlay", "Play");
             var stopBtn = _factory.CreateButton("SoundStop", "Stop");
@@ -485,7 +371,7 @@ namespace BlingoEngine.Director.Core.Inspector
             string duration = TimeSpan.FromSeconds(member.Length).ToString(@"hh\:mm\:ss\.fff");
             panel.Compose(_factory.ComponentFactory)
                 .Columns(4)
-                .AddCheckBox("SoundLoop", "Loop:", member, m => m.Loop, 1, true, 3)
+                .AddCheckBox("SoundLoop", "Loop:", soundAdapter, m => m.Loop, 1, true, 3)
                 .AddLabel("SoundDuration", "Duration: ", 2)
                 .AddLabel("SoundDurationV", duration, 2)
                 .AddLabel("SoundSampleRate", "Sample rate: ", 2)
@@ -634,11 +520,12 @@ namespace BlingoEngine.Director.Core.Inspector
             var rowChannels = _factory.CreatePanel("TextRow");
             rowChannels.BackgroundColor = DirectorColors.BG_WhiteMenus;
             rowChannels.Margin = new AMargin(5, 5, 0, 0);
+            var textAdapter = new TextMemberCommandAdapter(this, textMember);
             rowChannels.Compose(_factory.ComponentFactory)
                    .NextRow()
                    .Columns(8)
-                   .AddNumericInputFloat("TextWidth", "W:", textMember, s => s.Width)
-                   .AddNumericInputFloat("TextHeight", "H:", textMember, s => s.Height, inputSpan: 5)
+                   .AddNumericInputFloat("TextWidth", "W:", textAdapter, s => s.Width)
+                   .AddNumericInputFloat("TextHeight", "H:", textAdapter, s => s.Height, inputSpan: 5)
 
                    .NextRow()
                    .Columns(2)
@@ -660,15 +547,16 @@ namespace BlingoEngine.Director.Core.Inspector
             var wrap = AddTab(PropetyTabNames.Shape);
             var rowChannels = _factory.CreatePanel("ShapeRow");
             rowChannels.Margin = new AMargin(5, 5, 0, 0);
+            var shapeAdapter = new ShapeMemberCommandAdapter(this, member);
             var composer = rowChannels.Compose(_factory.ComponentFactory)
                    .NextRow()
                    .Columns(8)
-                   .AddEnumInput<BlingoMemberShape, BlingoShapeType>("ShapeType", "Shape:", member, s => s.ShapeTypeInt, inputSpan: 6, labelSpan: 2)
-                   .AddCheckBox("ShapeClosed", "Filled:", member, s => s.Filled, inputSpan: 1, true)
+                   .AddEnumInput<ShapeMemberCommandAdapter, BlingoShapeType>("ShapeType", "Shape:", shapeAdapter, s => s.ShapeType, inputSpan: 6, labelSpan: 2)
+                   .AddCheckBox("ShapeClosed", "Filled:", shapeAdapter, s => s.Filled, inputSpan: 1, true)
 
                    .NextRow()
-                   .AddNumericInputInt("ShapeWidth", "W:", member, s => s.Width)
-                   .AddNumericInputInt("ShapeHeight", "H:", member, s => s.Height, inputSpan: 5)
+                   .AddNumericInputInt("ShapeWidth", "W:", shapeAdapter, s => s.Width)
+                   .AddNumericInputInt("ShapeHeight", "H:", shapeAdapter, s => s.Height, inputSpan: 5)
                    ;
             if (member.ShapeType == BlingoShapeType.Rectangle || member.ShapeType == BlingoShapeType.Oval)
             {
@@ -685,6 +573,179 @@ namespace BlingoEngine.Director.Core.Inspector
                    .Finalize();
             ;
             wrap.AddItem(rowChannels);
+        }
+
+        #endregion
+
+
+        #region Member Command Adapters
+
+        private abstract class MemberCommandAdapterBase<TMember> : PropertyCommandAdapterBase<TMember>
+            where TMember : IBlingoMember
+        {
+            protected MemberCommandAdapterBase(DirectorPropertyInspectorWindow window, TMember member)
+                : base(window, member)
+            {
+            }
+
+            protected TMember Member => Target;
+
+            protected override void DispatchChanges(TMember target, IReadOnlyList<APropertyValue> changes)
+                => Window.DispatchMemberCommand(target, changes);
+        }
+
+        private sealed class MemberCommandAdapter : MemberCommandAdapterBase<IBlingoMember>
+        {
+            public MemberCommandAdapter(DirectorPropertyInspectorWindow window, IBlingoMember member)
+                : base(window, member)
+            {
+            }
+
+            public string Name
+            {
+                get => Member.Name;
+                set
+                {
+                    var sanitized = value ?? string.Empty;
+                    DispatchIfChanged(nameof(BlingoMember.Name), Member.Name, sanitized);
+                }
+            }
+
+            public string FileName
+            {
+                get => Member.FileName;
+                set
+                {
+                    var sanitized = value ?? string.Empty;
+                    DispatchIfChanged(nameof(BlingoMember.FileName), Member.FileName, sanitized);
+                }
+            }
+
+            public string Comments
+            {
+                get => Member.Comments;
+                set
+                {
+                    var sanitized = value ?? string.Empty;
+                    DispatchIfChanged(nameof(BlingoMember.Comments), Member.Comments, sanitized);
+                }
+            }
+        }
+
+        private sealed class BitmapMemberCommandAdapter : MemberCommandAdapterBase<BlingoMemberBitmap>
+        {
+            public BitmapMemberCommandAdapter(DirectorPropertyInspectorWindow window, BlingoMemberBitmap member)
+                : base(window, member)
+            {
+            }
+
+            public bool Hilite
+            {
+                get => Member.Hilite;
+                set => DispatchIfChanged(nameof(BlingoMember.Hilite), Member.Hilite, value);
+            }
+
+            public float RegPointX
+            {
+                get => Member.RegPoint.X;
+                set
+                {
+                    if (Math.Abs(Member.RegPoint.X - value) <= float.Epsilon)
+                        return;
+                    var newPoint = new APoint(value, Member.RegPoint.Y);
+                    Dispatch(new APropertyValue(nameof(BlingoMember.RegPoint), newPoint));
+                }
+            }
+
+            public float RegPointY
+            {
+                get => Member.RegPoint.Y;
+                set
+                {
+                    if (Math.Abs(Member.RegPoint.Y - value) <= float.Epsilon)
+                        return;
+                    var newPoint = new APoint(Member.RegPoint.X, value);
+                    Dispatch(new APropertyValue(nameof(BlingoMember.RegPoint), newPoint));
+                }
+            }
+        }
+
+        private sealed class SoundMemberCommandAdapter : MemberCommandAdapterBase<BlingoMemberSound>
+        {
+            public SoundMemberCommandAdapter(DirectorPropertyInspectorWindow window, BlingoMemberSound member)
+                : base(window, member)
+            {
+            }
+
+            public bool Loop
+            {
+                get => Member.Loop;
+                set => DispatchIfChanged(nameof(BlingoMemberSound.Loop), Member.Loop, value);
+            }
+        }
+
+        private sealed class TextMemberCommandAdapter : MemberCommandAdapterBase<IBlingoMemberTextBase>
+        {
+            public TextMemberCommandAdapter(DirectorPropertyInspectorWindow window, IBlingoMemberTextBase member)
+                : base(window, member)
+            {
+            }
+
+            public float Width
+            {
+                get => Member.Width;
+                set
+                {
+                    int newValue = (int)MathF.Round(value);
+                    if (Member.Width == newValue)
+                        return;
+                    Dispatch(new APropertyValue(nameof(BlingoMember.Width), newValue));
+                }
+            }
+
+            public float Height
+            {
+                get => Member.Height;
+                set
+                {
+                    int newValue = (int)MathF.Round(value);
+                    if (Member.Height == newValue)
+                        return;
+                    Dispatch(new APropertyValue(nameof(BlingoMember.Height), newValue));
+                }
+            }
+        }
+
+        private sealed class ShapeMemberCommandAdapter : MemberCommandAdapterBase<BlingoMemberShape>
+        {
+            public ShapeMemberCommandAdapter(DirectorPropertyInspectorWindow window, BlingoMemberShape member)
+                : base(window, member)
+            {
+            }
+
+            public int ShapeType
+            {
+                get => Member.ShapeTypeInt;
+                set => DispatchIfChanged(nameof(BlingoMemberShape.ShapeTypeInt), Member.ShapeTypeInt, value);
+            }
+
+            public bool Filled
+            {
+                get => Member.Filled;
+                set => DispatchIfChanged(nameof(BlingoMemberShape.Filled), Member.Filled, value);
+            }
+
+            public int Width
+            {
+                get => Member.Width;
+                set => DispatchIfChanged(nameof(BlingoMember.Width), Member.Width, value);
+            }
+
+            public int Height
+            {
+                get => Member.Height;
+                set => DispatchIfChanged(nameof(BlingoMember.Height), Member.Height, value);
+            }
         }
 
         #endregion

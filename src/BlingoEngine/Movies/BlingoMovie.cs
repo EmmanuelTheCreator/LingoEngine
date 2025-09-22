@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Linq;
 using AbstUI.Components;
 
 namespace BlingoEngine.Movies
@@ -98,6 +99,55 @@ namespace BlingoEngine.Movies
         public IBlingoFrameScriptSpriteManager FrameScripts => _frameScriptManager;
         public BlingoSprite2DManager Sprite2DManager => _sprite2DManager;
         public IBlingoFrameLabelManager FrameLabels => _frameLabelManager;
+
+        public BlingoSpriteManager? GetSpriteManager(BlingoSpriteType spriteType) => spriteType switch
+        {
+            BlingoSpriteType.Sprite2D => _sprite2DManager,
+            BlingoSpriteType.Tempo => _tempoManager,
+            BlingoSpriteType.ColorPalette => _paletteManager,
+            BlingoSpriteType.FrameScript => _frameScriptManager,
+            BlingoSpriteType.Transition => _transitionManager,
+            BlingoSpriteType.Sound => _audioManager,
+            _ => null,
+        };
+
+        public BlingoSprite? GetSprite(BlingoSpriteRef spriteRef)
+        {
+            if (spriteRef.SpriteType != BlingoSpriteType.Unknown)
+            {
+                var manager = GetSpriteManager(spriteRef.SpriteType);
+                return manager?.GetSprite(spriteRef);
+            }
+
+            var resolved = _sprite2DManager.GetSprite(spriteRef);
+            if (resolved != null)
+                return resolved;
+
+            foreach (var manager in _spriteManagers)
+            {
+                resolved = manager.GetSprite(spriteRef);
+                if (resolved != null)
+                    return resolved;
+            }
+
+            return null;
+        }
+
+        public IBlingoMember? GetMember(BlingoMemberRef memberRef)
+        {
+            var member = CastLib.GetMember(memberRef.MemberNum, memberRef.CastLibNum);
+            if (member == null)
+                return null;
+
+            if (memberRef.MemberType != BlingoMemberType.Unknown && member.Type != memberRef.MemberType)
+                return null;
+
+            return member;
+        }
+
+        public T? GetMember<T>(BlingoMemberRef memberRef)
+            where T : class, IBlingoMember
+            => GetMember(memberRef) as T;
 
         public string Name { get; set; }
 

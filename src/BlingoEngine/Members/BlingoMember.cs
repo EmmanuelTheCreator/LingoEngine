@@ -266,6 +266,8 @@ namespace BlingoEngine.Members
             get => _hilite;
             private set => SetProperty(ref _hilite, value);
         }
+
+        public void SetHilite(bool value) => Hilite = value;
         /// <inheritdoc/>
         public int CastLibNum { get; private set; }
         /// <inheritdoc/>
