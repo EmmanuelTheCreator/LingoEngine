@@ -1,7 +1,11 @@
+using System;
+using System.Buffers.Binary;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using BlingoEngine.IO.Data.DTO;
+using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Bitmaps;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
@@ -222,9 +226,25 @@ public class BlLegacyFileWriterTests
             0x02
         };
 
+        const string memberName = "shape member";
         var container = BlLegacyShapeLibraryBuilder.BuildSingleMemberShapeLibrary(
-            "shape member",
+            memberName,
             shapeRecord);
+
+        var castResource = container.Files.Single(file => file.FileName == "CASt_0003.bin");
+        var header = castResource.Bytes.AsSpan();
+        var nameByteCount = Encoding.UTF8.GetByteCount(memberName);
+        var expectedInfoLength = (uint)(1 + nameByteCount);
+        BinaryPrimitives.ReadUInt32BigEndian(header.Slice(0, 4)).Should().Be((uint)BlLegacyCastMemberType.Shape);
+        BinaryPrimitives.ReadUInt32BigEndian(header.Slice(4, 4)).Should().Be(expectedInfoLength);
+        BinaryPrimitives.ReadUInt32BigEndian(header.Slice(8, 4)).Should().Be((uint)shapeRecord.Length);
+
+        var info = header.Slice(12, (int)expectedInfoLength);
+        info[0].Should().Be((byte)nameByteCount);
+        Encoding.UTF8.GetString(info.Slice(1)).Should().Be(memberName);
+
+        var encodedShape = header.Slice(12 + (int)expectedInfoLength, shapeRecord.Length);
+        encodedShape.ToArray().Should().Equal(shapeRecord);
 
         var writer = new BlCstFileWriter();
         using var stream = new MemoryStream();
@@ -237,6 +257,7 @@ public class BlLegacyFileWriterTests
         var shapes = context.ReadShapes();
         shapes.Should().ContainSingle();
         var shape = shapes[0];
+        shape.Format.Should().Be(BlLegacyShapeFormatKind.Director4To10UnsignedColors);
         shape.Bytes.Should().Equal(shapeRecord);
     }
 

@@ -90,14 +90,31 @@ internal sealed class BlLegacyShapeReader
     {
         var span = payload.AsSpan();
 
-        if (TryParseModern(span, isBigEndian, out var offset, out var length) &&
+        int offset;
+        int length;
+
+        if (TryParseModern(span, isBigEndian: true, out offset, out length) &&
             TryExtractShapeRecord(span.Slice(offset, length), isBigEndian, out bytes))
         {
             format = BlLegacyShapeFormatKind.Director4To10UnsignedColors;
             return true;
         }
 
-        if (TryParseTransitional(span, isBigEndian, out offset, out length) &&
+        if (TryParseModern(span, isBigEndian: false, out offset, out length) &&
+            TryExtractShapeRecord(span.Slice(offset, length), isBigEndian, out bytes))
+        {
+            format = BlLegacyShapeFormatKind.Director4To10UnsignedColors;
+            return true;
+        }
+
+        if (TryParseTransitional(span, isBigEndian: true, out offset, out length) &&
+            TryExtractShapeRecord(span.Slice(offset, length), isBigEndian, out bytes))
+        {
+            format = BlLegacyShapeFormatKind.Director4To10UnsignedColors;
+            return true;
+        }
+
+        if (TryParseTransitional(span, isBigEndian: false, out offset, out length) &&
             TryExtractShapeRecord(span.Slice(offset, length), isBigEndian, out bytes))
         {
             format = BlLegacyShapeFormatKind.Director4To10UnsignedColors;

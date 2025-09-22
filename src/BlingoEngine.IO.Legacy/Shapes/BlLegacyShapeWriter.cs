@@ -204,7 +204,7 @@ public static class BlLegacyShapeLibraryBuilder
             Bytes = BlLegacyCastLibraryBuilderHelpers.BuildCastTable(CastMemberResourceId)
         });
 
-        var castPayload = BuildCastPayload(shapeRecord, infoBytes);
+        var castPayload = BuildCastPayload(memberName, shapeRecord, infoBytes);
 
         container.Files.Add(new DirFileResourceDTO
         {
@@ -215,14 +215,14 @@ public static class BlLegacyShapeLibraryBuilder
         return container;
     }
 
-    private static byte[] BuildCastPayload(ReadOnlySpan<byte> shapeRecord, byte[]? infoBytes)
+    private static byte[] BuildCastPayload(string? memberName, ReadOnlySpan<byte> shapeRecord, byte[]? infoBytes)
     {
-        var info = infoBytes ?? Array.Empty<byte>();
+        var info = infoBytes ?? BlLegacyCastLibraryBuilderHelpers.BuildNameInfoBytes(memberName);
         var payload = new byte[12 + info.Length + shapeRecord.Length];
 
-        BinaryPrimitives.WriteUInt32LittleEndian(payload.AsSpan(0, 4), (uint)BlLegacyCastMemberType.Shape);
-        BinaryPrimitives.WriteUInt32LittleEndian(payload.AsSpan(4, 4), (uint)info.Length);
-        BinaryPrimitives.WriteUInt32LittleEndian(payload.AsSpan(8, 4), (uint)shapeRecord.Length);
+        BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(0, 4), (uint)BlLegacyCastMemberType.Shape);
+        BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(4, 4), (uint)info.Length);
+        BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(8, 4), (uint)shapeRecord.Length);
 
         if (info.Length > 0)
         {
