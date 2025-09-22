@@ -15,7 +15,6 @@ namespace AbstUI.SDL2.Components.Buttons
     {
         private ISdlFontLoadedByUser? _font;
         private nint _texture;
-        private nint _iconPtr;
         private string _renderedText = string.Empty;
         private int _texW;
         private int _texH;
@@ -31,7 +30,7 @@ namespace AbstUI.SDL2.Components.Buttons
         private AColor _backgroundColor = AbstDefaultColors.Button_Bg_Normal;
         private AColor _backgroundHoverColor = AbstDefaultColors.Button_Bg_Hover;
         private AColor _backgroundPressedColor = AbstDefaultColors.Button_Bg_Pressed;
-        private IAbstTexture2D? _iconTexture;
+        private SdlTexture2D? _iconTexture;
         private IAbstUITextureUserSubscription? _iconTextureSub;
         private bool _isHover;
         private IAbstTexture2D? _iconTextureOnOri;
@@ -108,8 +107,8 @@ namespace AbstUI.SDL2.Components.Buttons
         public AbstSdlButton(AbstSdlComponentFactory factory) : base(factory)
         {
             _fontManager = factory.FontManagerTyped;
-            Width = 80;
-            Height = 18;
+            Width = 20;
+            Height = 20;
         }
         private void EnsureResources(AbstSDLRenderContext ctx)
         {
@@ -155,20 +154,20 @@ namespace AbstUI.SDL2.Components.Buttons
                     ty = baseline - SDL_ttf.TTF_FontAscent(_font.FontHandle);
                 }
 
-                if (_iconPtr != nint.Zero && !string.IsNullOrEmpty(Text))
+                if (_iconTexture != null && !string.IsNullOrEmpty(Text))
                 {
-                    SDL.SDL_QueryTexture(_iconPtr, out _, out _, out int iw, out int ih);
+                    SDL.SDL_QueryTexture(_iconTexture.Handle, out _, out _, out int iw, out int ih);
                     int totalW = iw + 4 + tw;
                     int startX = (w - totalW) / 2;
                     SDL.SDL_Rect idst = new SDL.SDL_Rect { x = startX, y = (h - ih) / 2, w = iw, h = ih };
-                    SDL.SDL_RenderCopy(context.Renderer, _iconPtr, nint.Zero, ref idst);
+                    SDL.SDL_RenderCopy(context.Renderer, _iconTexture.Handle, nint.Zero, ref idst);
                     tx = startX + iw + 4;
                 }
-                else if (_iconPtr != nint.Zero)
+                else if (_iconTexture != null)
                 {
-                    SDL.SDL_QueryTexture(_iconPtr, out _, out _, out int iw, out int ih);
+                    SDL.SDL_QueryTexture(_iconTexture.Handle, out _, out _, out int iw, out int ih);
                     SDL.SDL_Rect idst = new SDL.SDL_Rect { x = (w - iw) / 2, y = (h - ih) / 2, w = iw, h = ih };
-                    SDL.SDL_RenderCopy(context.Renderer, _iconPtr, nint.Zero, ref idst);
+                    SDL.SDL_RenderCopy(context.Renderer, _iconTexture.Handle, nint.Zero, ref idst);
                 }
                 else if (!string.IsNullOrEmpty(Text))
                 {

@@ -90,6 +90,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     }
 
     public bool IsOpen => Visibility;
+    public int TitleBarHeight => Borderless?0: _titleBarHeight;
 
     public bool IsActiveWindow => _abstWindow.IsActivated;
 
@@ -237,50 +238,56 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
 
         // Render children
         _xOffset = (int)X;
-        _yOffset = (int)(_titleBarHeight + Y);
+        _yOffset = (int)((Borderless? 0: _titleBarHeight) + Y);
         // render children first to a texture
         //Console.WriteLine($"WIN off=({(int)X},{(int)Y}) content={Content?.Name}");
         var tex = (nint)base.Render(context);
 
-        SDL.SDL_SetRenderTarget(context.Renderer, tex);
 
-        // Title bg
-        SDL.SDL_SetRenderDrawColor(context.Renderer, BackgroundTitleColor.R, BackgroundTitleColor.G, BackgroundTitleColor.B, BackgroundTitleColor.A);
-        var bar = new SDL.SDL_Rect { x = 0, y = 0, w = w, h = _titleBarHeight };
-        SDL.SDL_RenderFillRect(context.Renderer, ref bar);
-
-        if (!string.IsNullOrEmpty(_title))
+        if (!Borderless)
         {
-            SDL.SDL_Color col = new SDL.SDL_Color { r = 0, g = 0, b = 0, a = 255 };
-            nint surf = SDL_ttf.TTF_RenderUTF8_Blended(_font!.FontHandle, _title, col);
-            if (surf != nint.Zero)
+            SDL.SDL_SetRenderTarget(context.Renderer, tex);
+
+
+            // Title bg
+            SDL.SDL_SetRenderDrawColor(context.Renderer, BackgroundTitleColor.R, BackgroundTitleColor.G, BackgroundTitleColor.B, BackgroundTitleColor.A);
+            var bar = new SDL.SDL_Rect { x = 0, y = 0, w = w, h = _titleBarHeight };
+            SDL.SDL_RenderFillRect(context.Renderer, ref bar);
+
+            if (!string.IsNullOrEmpty(_title))
             {
-                var s = Marshal.PtrToStructure<SDL.SDL_Surface>(surf);
-                nint t = SDL.SDL_CreateTextureFromSurface(context.Renderer, surf);
-                SDL.SDL_FreeSurface(surf);
-                var dst = new SDL.SDL_Rect
+                SDL.SDL_Color col = new SDL.SDL_Color { r = 0, g = 0, b = 0, a = 255 };
+                nint surf = SDL_ttf.TTF_RenderUTF8_Blended(_font!.FontHandle, _title, col);
+                if (surf != nint.Zero)
                 {
-                    x = 4,
-                    y = (_titleBarHeight - s.h) / 2,
-                    w = s.w,
-                    h = s.h
-                };
-                SDL.SDL_RenderCopy(context.Renderer, t, nint.Zero, ref dst);
-                SDL.SDL_DestroyTexture(t);
+                    var s = Marshal.PtrToStructure<SDL.SDL_Surface>(surf);
+                    nint t = SDL.SDL_CreateTextureFromSurface(context.Renderer, surf);
+                    SDL.SDL_FreeSurface(surf);
+                    var dst = new SDL.SDL_Rect
+                    {
+                        x = 4,
+                        y = (_titleBarHeight - s.h) / 2,
+                        w = s.w,
+                        h = s.h
+                    };
+                    SDL.SDL_RenderCopy(context.Renderer, t, nint.Zero, ref dst);
+                    SDL.SDL_DestroyTexture(t);
+                }
             }
+
+
+            int btnSize = _titleBarHeight - 4;
+            _closeRect = new SDL.SDL_Rect { x = w - btnSize - 2, y = 2, w = btnSize, h = btnSize };
+            SDL.SDL_SetRenderDrawColor(context.Renderer, 180, 0, 0, 255);
+            SDL.SDL_RenderFillRect(context.Renderer, ref _closeRect);
+            SDL.SDL_SetRenderDrawColor(context.Renderer, 255, 255, 255, 255);
+            SDL.SDL_RenderDrawLine(context.Renderer, _closeRect.x + 3, _closeRect.y + 3,
+                _closeRect.x + _closeRect.w - 3, _closeRect.y + _closeRect.h - 3);
+            SDL.SDL_RenderDrawLine(context.Renderer, _closeRect.x + _closeRect.w - 3, _closeRect.y + 3,
+                _closeRect.x + 3, _closeRect.y + _closeRect.h - 3);
+
+            SDL.SDL_SetRenderTarget(context.Renderer, prev);
         }
-
-        int btnSize = _titleBarHeight - 4;
-        _closeRect = new SDL.SDL_Rect { x = w - btnSize - 2, y = 2, w = btnSize, h = btnSize };
-        SDL.SDL_SetRenderDrawColor(context.Renderer, 180, 0, 0, 255);
-        SDL.SDL_RenderFillRect(context.Renderer, ref _closeRect);
-        SDL.SDL_SetRenderDrawColor(context.Renderer, 255, 255, 255, 255);
-        SDL.SDL_RenderDrawLine(context.Renderer, _closeRect.x + 3, _closeRect.y + 3,
-            _closeRect.x + _closeRect.w - 3, _closeRect.y + _closeRect.h - 3);
-        SDL.SDL_RenderDrawLine(context.Renderer, _closeRect.x + _closeRect.w - 3, _closeRect.y + 3,
-            _closeRect.x + 3, _closeRect.y + _closeRect.h - 3);
-
-        SDL.SDL_SetRenderTarget(context.Renderer, prev);
 
         return tex;
     }
@@ -419,6 +426,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
 
     private void OnGlobalMouseMove(AbstMouseEvent e)
     {
+        if (Borderless) return;
         if (_dragging)
             UpdateWindowPosition((int)e.MouseH, (int)e.MouseV);
 
@@ -428,6 +436,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
 
     private void OnGlobalMouseUp(AbstMouseEvent e)
     {
+        if (Borderless) return;
         if (!_dragging && !_resizing)
             return;
 
@@ -447,65 +456,69 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     {
         if (!Visibility)
             return;
-
-        switch (e.Event.type)
-        {
-            case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
-                int lx = e.Event.button.x - (int)X;
-                int ly = e.Event.button.y - (int)Y;
-                //Console.WriteLine($"Window {WindowCode} mouse down at {lx},{ly}");
-                _componentFactory.GetRequiredService<IAbstWindowManager>().SetActiveWindow(WindowCode);
-
-                if (lx >= _closeRect.x && lx <= _closeRect.x + _closeRect.w &&
-                    ly >= _closeRect.y && ly <= _closeRect.y + _closeRect.h)
-                {
-                    CloseWindow();
-                    e.StopPropagation = true;
-                    return;
-                }
-
-                if (IsInResizeHandle(lx, ly))
-                {
-                    BeginResize(e.Event.button.x, e.Event.button.y);
-                    e.StopPropagation = true;
-                    return;
-                }
-
-                if (ly <= _titleBarHeight)
-                {
-                    _dragging = true;
-                    _dragOffsetX = lx;
-                    _dragOffsetY = ly;
-                    e.StopPropagation = true;
-                }
-                break;
-
-            case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
-                if (_resizing)
-                {
-                    _resizing = false;
-                    ResetCursor();
-                }
-                _dragging = false;
-                break;
-
-            case SDL.SDL_EventType.SDL_MOUSEMOTION:
+        if (Borderless)
+            ContainerHelpers.HandleChildEvents(_children, e, X - Margin.Left, Y - Margin.Top );
+        else 
+        { 
+            switch (e.Event.type)
             {
-                int motionLx = e.Event.motion.x - (int)X;
-                int motionLy = e.Event.motion.y - (int)Y;
-                UpdateCursor(IsInResizeHandle(motionLx, motionLy));
+                case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
+                    int lx = e.Event.button.x - (int)X;
+                    int ly = e.Event.button.y - (int)Y;
+                    //Console.WriteLine($"Window {WindowCode} mouse down at {lx},{ly}");
+                    _componentFactory.GetRequiredService<IAbstWindowManager>().SetActiveWindow(WindowCode);
 
-                if (_dragging)
-                {
-                    UpdateWindowPosition(e.Event.motion.x, e.Event.motion.y);
-                    e.StopPropagation = true;
-                }
-                else if (_resizing)
-                {
-                    UpdateResize(e.Event.motion.x, e.Event.motion.y);
-                    e.StopPropagation = true;
-                }
-                break;
+                    if (lx >= _closeRect.x && lx <= _closeRect.x + _closeRect.w &&
+                        ly >= _closeRect.y && ly <= _closeRect.y + _closeRect.h)
+                    {
+                        CloseWindow();
+                        e.StopPropagation = true;
+                        return;
+                    }
+
+                    if (IsInResizeHandle(lx, ly))
+                    {
+                        BeginResize(e.Event.button.x, e.Event.button.y);
+                        e.StopPropagation = true;
+                        return;
+                    }
+
+                    if (ly <= _titleBarHeight)
+                    {
+                        _dragging = true;
+                        _dragOffsetX = lx;
+                        _dragOffsetY = ly;
+                        e.StopPropagation = true;
+                    }
+                    break;
+
+                case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
+                    if (_resizing)
+                    {
+                        _resizing = false;
+                        ResetCursor();
+                    }
+                    _dragging = false;
+                    break;
+
+                case SDL.SDL_EventType.SDL_MOUSEMOTION:
+                    {
+                        int motionLx = e.Event.motion.x - (int)X;
+                        int motionLy = e.Event.motion.y - (int)Y;
+                        UpdateCursor(IsInResizeHandle(motionLx, motionLy));
+
+                        if (_dragging)
+                        {
+                            UpdateWindowPosition(e.Event.motion.x, e.Event.motion.y);
+                            e.StopPropagation = true;
+                        }
+                        else if (_resizing)
+                        {
+                            UpdateResize(e.Event.motion.x, e.Event.motion.y);
+                            e.StopPropagation = true;
+                        }
+                        break;
+                    }
             }
         }
         if (!e.StopPropagation)

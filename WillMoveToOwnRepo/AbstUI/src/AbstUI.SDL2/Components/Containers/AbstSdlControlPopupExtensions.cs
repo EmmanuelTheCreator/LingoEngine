@@ -20,9 +20,9 @@ internal static class AbstSdlControlPopupExtensions
             //    x -= (int)sv.ScrollHorizontal;
             //    //y -= (int)(sv.ScrollVertical/10); // + current.Y;
             //}
-            if (current.Component is AbstSdlWindow)
+            if (current.Component is AbstSdlWindow wndw)
             {
-                y += AbstSdlWindow._titleBarHeight;
+                y += wndw.TitleBarHeight;
             }
             current = current.VisualParent;
         }

@@ -40,11 +40,12 @@ internal partial class DirSDLMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWind
         DirectorMainMenu directorMainMenu, IBlingoFrameworkFactory factory)
         :base((AbstSdlComponentFactory)services.GetRequiredService<IAbstComponentFactory>())
     {
+        ComponentContext.AlwaysOnTop = true;
         _directorMainMenu = directorMainMenu;
         _directorMainMenu.Init(this);
-
         _menuBar = directorMainMenu.MenuBar.Framework<AbstSdlWrapPanel>();
         _iconBar = directorMainMenu.IconBar.Framework<AbstSdlWrapPanel>();
+        Borderless = true;
         //CreateBgColor();
 
         //AddChild(_bgColorPanel);
@@ -52,12 +53,17 @@ internal partial class DirSDLMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWind
         //AddChild(_iconBar);
         _root = factory.CreatePanel("MenuBarRoot");
         _root.Width = _menuBar.Width + _iconBar.Width + _iconBar.X;
-        _root.Height = 24;
+        _root.Height = 50;
+        Title = "Main menu";
         Width = _root.Width;
         Height = _root.Height;
+        _directorMainMenu.Width = (int)Width;
+        _directorMainMenu.Height = (int)Height;
         _root.BackgroundColor = DirectorColors.BG_TopMenu;
         _root.AddItem(directorMainMenu.MenuBar, _menuBar.X, _menuBar.Y);
         _root.AddItem(directorMainMenu.IconBar, _iconBar.X, _iconBar.Y);
+        //_root.Compose(Factory).NextRow().Finalize();
+        //_root.Compose(Factory).NextRow().AddButton("hallo", "Halo", () => { }).AddLabel("rzer", "tedft").Finalize();
         //directorMainMenu.CallOnAllTopMenus(btn =>
         //{
         //    AddChild(btn.Framework<AbstGodotMenu>());
