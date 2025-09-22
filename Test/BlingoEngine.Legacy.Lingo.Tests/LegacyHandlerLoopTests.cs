@@ -15,7 +15,22 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("while (cond)", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        while (cond)
+        {
+
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -29,8 +44,22 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("do", code);
-        Assert.Contains("} while (!(done));", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        do
+        {
+
+        } while (!(done));
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -44,7 +73,22 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("foreach (var item in list)", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        foreach (var item in list)
+        {
+
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -58,6 +102,21 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("for (int i = 1; i <= count; i++)", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        for (int i = 1; i <= count; i++)
+        {
+
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 }

@@ -12,17 +12,33 @@ public sealed class BlLegacyClassGeneratorTests
     public void BehaviorScript_IncludesEnvironmentConstructor()
     {
         var code = _generator.GenerateClass("MyBehavior", string.Empty, BlLingoScriptKind.Behavior);
-        Assert.Contains("public class MyBehaviorBehavior : BlingoSpriteBehavior", code);
-        Assert.Contains("public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }", code);
+        const string expected = """
+public class MyBehaviorBehavior : BlingoSpriteBehavior
+{
+    public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
     public void ParentScript_IncludesGlobalFieldAndConstructor()
     {
         var code = _generator.GenerateClass("MyParent", string.Empty, BlLingoScriptKind.Parent);
-        Assert.Contains("private readonly GlobalVars _global;", code);
-        Assert.Contains("public MyParentParent(IBlingoMovieEnvironment env, GlobalVars global) : base(env)", code);
-        Assert.Contains("_global = global;", code);
+        const string expected = """
+public class MyParentParent : BlingoParentScript
+{
+    private readonly GlobalVars _global;
+
+    public MyParentParent(IBlingoMovieEnvironment env, GlobalVars global) : base(env)
+    {
+        _global = global;
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -30,10 +46,25 @@ public sealed class BlLegacyClassGeneratorTests
     {
         const string source = "on getPropertyDescriptionList\nend";
         var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
-        Assert.Contains(
-            "public class MyBehaviorBehavior : BlingoSpriteBehavior, IBlingoPropertyDescriptionList",
-            code);
-        Assert.Contains("public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()", code);
+        const string expected = """
+public class MyBehaviorBehavior : BlingoSpriteBehavior, IBlingoPropertyDescriptionList
+{
+    public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
+
+    public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
+    {
+        return null;
+    }
+
+    public string? GetBehaviorDescription() => null;
+
+    public string? GetBehaviorTooltip() => null;
+
+    public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -41,7 +72,17 @@ public sealed class BlLegacyClassGeneratorTests
     {
         const string source = "on beginSprite me\nend";
         var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
-        Assert.Contains("IHasBeginSpriteEvent", code);
+        const string expected = """
+public class MyBehaviorBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
+{
+    public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void BeginSprite()
+    {
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -57,7 +98,14 @@ public sealed class BlLegacyClassGeneratorTests
 
         var generator = new BlLegacyClassGenerator(options);
         var code = generator.GenerateClass("MyBehavior", string.Empty, BlLingoScriptKind.Behavior);
-        Assert.Contains("public class MyBehaviorBeh : BlingoSpriteBehavior", code);
+        const string expected = """
+public class MyBehaviorBeh : BlingoSpriteBehavior
+{
+    public MyBehaviorBeh(IBlingoMovieEnvironment env) : base(env) { }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -65,10 +113,19 @@ public sealed class BlLegacyClassGeneratorTests
     {
         const string source = "on mouseUp me, btn\n  put 1 into value\nend";
         var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
+        const string expected = """
+public class MyBehaviorBehavior : BlingoSpriteBehavior, IHasMouseUpEvent
+{
+    public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void MouseUp(object? btn)
+    {
 
-        Assert.Contains("public void MouseUp(object? btn)", code);
-        Assert.DoesNotContain("object? me", code);
-        Assert.Contains("value = 1;", code);
+        value = 1;
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
 }

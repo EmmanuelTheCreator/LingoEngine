@@ -14,7 +14,19 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("Sprite(2).SetMember(\"Name\");", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        Sprite(2).SetMember("Name");
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -27,7 +39,19 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("Sprite(3).SetMember(\"Title\", \"CastLib\");", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        Sprite(3).SetMember("Title", "CastLib");
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -40,6 +64,18 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("Sprite(4).SetMember(\"Marker\");", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        Sprite(4).SetMember("Marker");
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 }

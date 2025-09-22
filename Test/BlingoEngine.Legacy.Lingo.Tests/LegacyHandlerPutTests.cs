@@ -14,7 +14,19 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("answer = 42;", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        answer = 42;
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -27,7 +39,19 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("PutTextIntoField(\"Greeting\", \"Hi\");", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        PutTextIntoField("Greeting", "Hi");
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -40,7 +64,19 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("Sprite(3).LocH = 100;", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        Sprite(3).LocH = 100;
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -53,6 +89,18 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("myList.SetAt(2, 7);", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+
+        myList.SetAt(2, 7);
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 }
