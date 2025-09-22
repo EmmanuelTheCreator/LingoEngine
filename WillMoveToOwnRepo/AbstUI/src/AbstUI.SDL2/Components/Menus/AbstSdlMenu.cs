@@ -24,6 +24,8 @@ namespace AbstUI.SDL2.Components.Menus
         private int _texW;
         private int _texH;
         private int _hoverIndex = -1;
+        private bool _suppressNextRelease;
+        private bool _dragSelecting;
 
         private const int ItemHeight = 18;
 
@@ -62,8 +64,11 @@ namespace AbstUI.SDL2.Components.Menus
         {
             if (button is AbstSdlButton sdlBtn)
             {
-                X = sdlBtn.X;
-                Y = sdlBtn.Y + sdlBtn.Height;
+                var buttonPos = GetAbsolutePosition(sdlBtn.ComponentContext);
+                var parentCtx = ComponentContext.VisualParent ?? ComponentContext;
+                var parentPos = GetAbsolutePosition(parentCtx);
+                X = buttonPos.X - parentPos.X;
+                Y = buttonPos.Y - parentPos.Y + sdlBtn.Height;
             }
         }
 
@@ -73,6 +78,8 @@ namespace AbstUI.SDL2.Components.Menus
             Factory.RootContext.ComponentContainer.Activate(ComponentContext);
             _isDirty = true;
             ComponentContext.QueueRedraw(this);
+            _suppressNextRelease = true;
+            _dragSelecting = false;
         }
 
         public void HandleEvent(AbstSDLEvent e)
@@ -100,13 +107,29 @@ namespace AbstUI.SDL2.Components.Menus
                             _isDirty = true;
                             ComponentContext.QueueRedraw(this);
                         }
+                        _dragSelecting = (ev.motion.state & SDL.SDL_BUTTON_LMASK) != 0;
                         break;
                     }
+                case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
+                    if (ev.button.button == SDL.SDL_BUTTON_LEFT)
+                    {
+                        _dragSelecting = true;
+                        _suppressNextRelease = false;
+                    }
+                    break;
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                     if (ev.button.button == SDL.SDL_BUTTON_LEFT)
                     {
+                        if (_suppressNextRelease && !_dragSelecting)
+                        {
+                            _suppressNextRelease = false;
+                            _dragSelecting = false;
+                            break;
+                        }
+                        _suppressNextRelease = false;
                         int localY = ev.button.y - (int)Y;
                         int idx = localY / ItemHeight;
+                        _dragSelecting = false;
                         if (idx >= 0 && idx < _items.Count)
                         {
                             var item = _items[idx];
@@ -126,6 +149,20 @@ namespace AbstUI.SDL2.Components.Menus
         {
             if (_font == null)
                 _font = _fontManager.GetDefaultFont<IAbstSdlFont>().Get(this, 12);
+        }
+
+        private static (float X, float Y) GetAbsolutePosition(AbstSDLComponentContext context)
+        {
+            float x = context.X;
+            float y = context.Y;
+            var parent = context.VisualParent;
+            while (parent != null)
+            {
+                x += parent.X;
+                y += parent.Y;
+                parent = parent.VisualParent;
+            }
+            return (x, y);
         }
 
         public override AbstSDLRenderResult Render(AbstSDLRenderContext context)
