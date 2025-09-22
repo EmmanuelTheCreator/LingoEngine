@@ -7,7 +7,6 @@ using AbstUI.Primitives;
 using AbstUI.Windowing;
 using BlingoEngine.Director.Core.Icons;
 using BlingoEngine.Director.Core.Inspector.Commands;
-using BlingoEngine.Director.Core.Members.Commands;
 using BlingoEngine.Director.Core.Sprites;
 using BlingoEngine.Director.Core.Sprites.Commands;
 using BlingoEngine.Director.Core.Styles;
@@ -104,14 +103,6 @@ public partial class DirectorPropertyInspectorWindow
             return;
 
         _commandManager.Handle(new BlingoUpdateSpritePropertiesCommand(BlingoSpriteRef.FromSprite(sprite), changes));
-    }
-
-    private void DispatchMemberCommand(IBlingoMember member, IReadOnlyList<APropertyValue> changes)
-    {
-        if (changes == null || changes.Count == 0)
-            return;
-
-        _commandManager.Handle(new BlingoUpdateMemberPropertiesCommand(BlingoMemberRef.FromMember(member), changes));
     }
 
     private abstract class PropertyCommandAdapterBase<TTarget>
