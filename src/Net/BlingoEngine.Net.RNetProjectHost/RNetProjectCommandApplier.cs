@@ -99,7 +99,7 @@ internal sealed class RNetProjectCommandApplier : IDisposable
             return;
         }
 
-        var spriteType = ConvertSpriteType(command.SpriteType);
+        var spriteType = command.SpriteType.ConvertTo<BlingoSpriteType>();
         var spriteRef = new BlingoSpriteRef(command.SpriteNum, command.BeginFrame, spriteType);
         var sprite = movie.GetSprite(spriteRef);
         if (sprite is null && spriteType != BlingoSpriteType.Unknown)
@@ -117,7 +117,7 @@ internal sealed class RNetProjectCommandApplier : IDisposable
             return;
         }
 
-        if (!TryCreateSpritePropertyChange(sprite, command.Prop, command.Value, out var change))
+        if (!RNetPropertyValueConverter.TryCreatePropertyValue(sprite, command.Prop, command.Value, out var change))
         {
             _logger.LogWarning(
                 "Failed to convert sprite property {Property} with value '{Value}'.",
@@ -132,7 +132,7 @@ internal sealed class RNetProjectCommandApplier : IDisposable
 
     private void ApplyMemberProperty(SetMemberPropCmd command)
     {
-        var memberType = ConvertMemberType(command.MemberType);
+        var memberType = command.MemberType.ConvertTo<BlingoMemberType>();
         var memberRef = new BlingoMemberRef(command.CastLibNum, command.MemberNum, memberType);
         var member = _player.GetMember(memberRef);
         if (member is null && memberType != BlingoMemberType.Unknown)
@@ -164,16 +164,6 @@ internal sealed class RNetProjectCommandApplier : IDisposable
         _commandManager.Handle(new BlingoUpdateMemberPropertiesCommand(resolved, new[] { change }));
     }
 
-    private static BlingoMemberType ConvertMemberType(RNetMemberTypeDto memberType)
-        => Enum.TryParse<BlingoMemberType>(memberType.ToString(), out var resolved)
-            ? resolved
-            : BlingoMemberType.Unknown;
-
-    private static BlingoSpriteType ConvertSpriteType(RNetSpriteTypeDto spriteType)
-        => Enum.TryParse<BlingoSpriteType>(spriteType.ToString(), out var resolved)
-            ? resolved
-            : BlingoSpriteType.Unknown;
-
     private void ApplyCastProperty(SetCastPropCmd command)
     {
         var castRef = new BlingoCastRef(command.CastLibNum);
@@ -187,7 +177,7 @@ internal sealed class RNetProjectCommandApplier : IDisposable
             return;
         }
 
-        if (!TryCreateCastPropertyChange(cast, command.Prop, command.Value, out var change))
+        if (!RNetPropertyValueConverter.TryCreatePropertyValue(cast, command.Prop, command.Value, out var change))
         {
             _logger.LogWarning(
                 "Failed to convert cast property {Property} with value '{Value}'.",
@@ -197,13 +187,6 @@ internal sealed class RNetProjectCommandApplier : IDisposable
         }
 
         _commandManager.Handle(new BlingoUpdateCastPropertiesCommand(BlingoCastRef.FromCast(cast), new[] { change }));
-    }
-
-    private static bool TryCreateSpritePropertyChange(BlingoSprite sprite, string property, string value, out APropertyValue change)
-    {
-        change = default;
-
-        return RNetPropertyValueConverter.TryCreatePropertyValue(sprite, property, value, out change);
     }
 
     private static bool TryCreateMemberPropertyChange(IBlingoMember member, string property, string value, out APropertyValue change)
@@ -233,12 +216,5 @@ internal sealed class RNetProjectCommandApplier : IDisposable
         }
 
         return RNetPropertyValueConverter.TryCreatePropertyValue(member, property, value, out change);
-    }
-
-    private static bool TryCreateCastPropertyChange(BlingoCast cast, string property, string value, out APropertyValue change)
-    {
-        change = default;
-
-        return RNetPropertyValueConverter.TryCreatePropertyValue(cast, property, value, out change);
     }
 }

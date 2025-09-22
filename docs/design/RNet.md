@@ -104,7 +104,7 @@ This relay is optional; the standard `RNetProjectServer` already exposes `/direc
 
 *Interactive console tool for development and diagnostics.*
 
-- `RNetTerminalConnection` centralizes connection management, background streaming tasks, heartbeat timers, and outgoing command queues. It exposes `QueueGoToFrameCommand`, `QueueSpritePropertyChange`, and `QueueMemberPropertyChange` (with explicit `RNetSpriteTypeDto`/`RNetMemberTypeDto` values) so the UI can stay thin. (see [RNetTerminalConnection.cs](../../src/Net/BlingoEngine.Net.RNetTerminal/RNetTerminalConnection.cs#L21-L146))
+- `RNetTerminalConnection` centralizes connection management, background streaming tasks, heartbeat timers, and outgoing command queues. It exposes `QueueGoToFrameCommand`, `QueueSpritePropertyChange`, and `QueueMemberPropertyChange` (accepting `RNetSpriteTypeDto`/`BlingoMemberTypeDTO`) so the UI can stay thin. (see [RNetTerminalConnection.cs](../../src/Net/BlingoEngine.Net.RNetTerminal/RNetTerminalConnection.cs#L21-L146))
 - The terminal respects both HTTP and pipe transports through `RNetTerminalTransport` and builds the correct URI automatically, keeping the rest of the UI agnostic to the transport mechanics. (see [RNetTerminalConnection.cs](../../src/Net/BlingoEngine.Net.RNetTerminal/RNetTerminalConnection.cs#L13-L162))
 - `TerminalDataStore` (not shown) coordinates sprite/member state, ensuring that in remote mode UI edits are deferred until the host confirms them, while `BlingoRNetTerminal` wires everything into the `Terminal.Gui` front end.
 
