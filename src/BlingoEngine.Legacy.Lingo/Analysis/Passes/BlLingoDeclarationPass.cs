@@ -33,10 +33,6 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
             {
                 index = CollectSeparatedIdentifiers(tokens, index + 1, symbols.DeclareGlobal);
             }
-            else if (keyword.Equals("local", StringComparison.OrdinalIgnoreCase))
-            {
-                index = CollectSeparatedIdentifiers(tokens, index + 1, symbols.DeclareLocal);
-            }
             else if (keyword.Equals("property", StringComparison.OrdinalIgnoreCase))
             {
                 index = CollectSeparatedIdentifiers(tokens, index + 1, symbols.DeclareProperty);

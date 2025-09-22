@@ -32,20 +32,22 @@ public sealed class BlLingoClassLinkPass : BlLingoAnalysisPass
         {
             foreach (var symbol in pending)
             {
-                if (symbol.ResolvedTypeName is not null)
+                if (!symbol.HasUnresolvedTypeCodes)
                 {
                     continue;
                 }
 
-                var typeCode = symbol.TypeCode;
-                if (typeCode is null)
+                foreach (var typeCode in symbol.TypeCodes)
                 {
-                    continue;
-                }
+                    if (symbol.HasResolvedTypeName(typeCode))
+                    {
+                        continue;
+                    }
 
-                if (known.Contains(typeCode))
-                {
-                    symbol.SetResolvedTypeName(typeCode);
+                    if (known.Contains(typeCode))
+                    {
+                        symbol.SetResolvedTypeName(typeCode);
+                    }
                 }
             }
         }

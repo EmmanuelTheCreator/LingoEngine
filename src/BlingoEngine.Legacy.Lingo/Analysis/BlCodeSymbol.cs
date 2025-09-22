@@ -11,8 +11,10 @@ namespace BlingoEngine.Legacy.Lingo.Analysis;
 public sealed class BlCodeSymbol
 {
     private readonly List<BlSyntaxToken> _declarations = new();
-    private string? _resolvedTypeName;
-    private string? _typeCode;
+    private readonly List<string> _resolvedTypeNames = new();
+    private readonly HashSet<string> _resolvedTypeNameSet = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<string> _typeCodes = new();
+    private readonly HashSet<string> _typeCodeSet = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Initializes a new <see cref="BlCodeSymbol"/> with the supplied kind and name.
@@ -49,14 +51,53 @@ public sealed class BlCodeSymbol
     public IReadOnlyList<BlSyntaxToken> Declarations => _declarations;
 
     /// <summary>
-    /// Gets the raw type code assigned to the symbol, if any.
+    /// Gets the raw type code most recently assigned to the symbol, if any.
     /// </summary>
-    public string? TypeCode => _typeCode;
+    public string? TypeCode => _typeCodes.Count > 0 ? _typeCodes[^1] : null;
 
     /// <summary>
-    /// Gets the resolved type name recorded for the symbol, if known.
+    /// Gets the collection of type codes recorded for the symbol.
     /// </summary>
-    public string? ResolvedTypeName => _resolvedTypeName;
+    public IReadOnlyList<string> TypeCodes => _typeCodes;
+
+    /// <summary>
+    /// Gets the most recent resolved type name recorded for the symbol, if known.
+    /// </summary>
+    public string? ResolvedTypeName => _resolvedTypeNames.Count > 0 ? _resolvedTypeNames[^1] : null;
+
+    /// <summary>
+    /// Gets the collection of resolved type names recorded for the symbol.
+    /// </summary>
+    public IReadOnlyList<string> ResolvedTypeNames => _resolvedTypeNames;
+
+    /// <summary>
+    /// Gets a value indicating whether any recorded type codes have not been resolved yet.
+    /// </summary>
+    public bool HasUnresolvedTypeCodes
+    {
+        get
+        {
+            if (_typeCodes.Count == 0)
+            {
+                return false;
+            }
+
+            if (_resolvedTypeNames.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (var typeCode in _typeCodes)
+            {
+                if (!_resolvedTypeNameSet.Contains(typeCode))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
 
     /// <summary>
     /// Adds a token that declared the symbol, preserving source locations for diagnostics.
@@ -69,12 +110,22 @@ public sealed class BlCodeSymbol
     }
 
     /// <summary>
-    /// Records the textual type code assigned to the symbol in the source, normalizing whitespace.
+    /// Records the textual type code assigned to the symbol in the source, normalizing whitespace and
+    /// retaining each distinct value so dynamic typing scenarios are preserved.
     /// </summary>
     /// <param name="typeCode">The type code extracted from the script.</param>
     public void SetTypeCode(string? typeCode)
     {
-        _typeCode = Normalize(typeCode);
+        var normalized = Normalize(typeCode);
+        if (normalized is null)
+        {
+            return;
+        }
+
+        if (_typeCodeSet.Add(normalized))
+        {
+            _typeCodes.Add(normalized);
+        }
     }
 
     /// <summary>
@@ -83,7 +134,27 @@ public sealed class BlCodeSymbol
     /// <param name="typeName">The resolved type name.</param>
     public void SetResolvedTypeName(string? typeName)
     {
-        _resolvedTypeName = Normalize(typeName);
+        var normalized = Normalize(typeName);
+        if (normalized is null)
+        {
+            return;
+        }
+
+        if (_resolvedTypeNameSet.Add(normalized))
+        {
+            _resolvedTypeNames.Add(normalized);
+        }
+    }
+
+    /// <summary>
+    /// Determines whether a resolved type name has already been recorded for the supplied identifier.
+    /// </summary>
+    /// <param name="typeName">The resolved type to check.</param>
+    /// <returns><see langword="true"/> when the type name has been recorded; otherwise, <see langword="false"/>.</returns>
+    public bool HasResolvedTypeName(string typeName)
+    {
+        ArgumentNullException.ThrowIfNull(typeName);
+        return _resolvedTypeNameSet.Contains(typeName);
     }
 
     /// <summary>

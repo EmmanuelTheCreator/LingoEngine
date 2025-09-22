@@ -112,7 +112,7 @@ public sealed class BlLingoTypeLinkPass : BlLingoAnalysisPass
 
     private static void AddPending(BlCodeSymbol symbol, ICollection<BlCodeSymbol> pending)
     {
-        if (symbol.TypeCode is null || symbol.ResolvedTypeName is null)
+        if (symbol.TypeCodes.Count == 0 || symbol.ResolvedTypeNames.Count == 0 || symbol.HasUnresolvedTypeCodes)
         {
             pending.Add(symbol);
         }

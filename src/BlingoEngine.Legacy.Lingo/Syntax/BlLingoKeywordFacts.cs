@@ -27,7 +27,6 @@ internal static class BlLingoKeywordFacts
             "if",
             "in",
             "into",
-            "local",
             "me",
             "movie",
             "next",
