@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Linq;
 using AbstUI.Components.Inputs;
 using AbstUI.Primitives;
 using AbstUI.SDL2.Components.Base;
@@ -19,6 +20,8 @@ internal class AbstSdlInputNumber<TValue> : AbstSdlComponent, IAbstFrameworkInpu
 #endif
 {
     private readonly AbstSdlInputText _textInput;
+    private bool _textDirty;
+    private bool _suppressNotifications;
 
 
 
@@ -31,12 +34,12 @@ internal class AbstSdlInputNumber<TValue> : AbstSdlComponent, IAbstFrameworkInpu
         set
         {
             var v = Clamp(value);
-            if (!_value.Equals(v))
-            {
-                _value = v;
-                _textInput.Text = v.ToString() ??string.Empty;
-                ValueChanged?.Invoke();
-            }
+            if (_value.Equals(v))
+                return;
+
+            _value = v;
+            SetTextWithoutNotification(v.ToString() ?? string.Empty);
+            _textDirty = false;
         }
     }
 
@@ -48,6 +51,7 @@ internal class AbstSdlInputNumber<TValue> : AbstSdlComponent, IAbstFrameworkInpu
     public ANumberType NumberType { get; set; } = ANumberType.Float;
     public AMargin Margin { get; set; } = AMargin.Zero;
     public event Action? ValueChanged;
+    public event Action? OnCommit;
     public object FrameworkNode => this;
 
     public int FontSize
@@ -86,25 +90,85 @@ internal class AbstSdlInputNumber<TValue> : AbstSdlComponent, IAbstFrameworkInpu
         if (v > Max) v = Max;
         return v;
     }
+
+    private void SetTextWithoutNotification(string text)
+    {
+        try
+        {
+            _suppressNotifications = true;
+            _textInput.Text = text;
+        }
+        finally
+        {
+            _suppressNotifications = false;
+        }
+    }
     public AbstSdlInputNumber(AbstSdlComponentFactory factory) : base(factory)
     {
         _textInput = new AbstSdlInputText(factory, false);
-        _textInput.ValueChanged += OnTextChanged;
+        _textInput.ValueChanged += HandleTextValueChanged;
+        _textInput.OnCommit += HandleTextCommit;
         _textInput.TextValidate = str => str.All(s => char.IsDigit(s) || s == '-' || s == '+' || s == '.' || s == 'e' || s == 'E');
         Width = 50;
         Height = 20;
     }
-    private void OnTextChanged()
+    private void HandleTextValueChanged()
     {
-        if (TValue.TryParse(_textInput.Text, null, out var v))
+        if (_suppressNotifications)
+            return;
+
+        _textDirty = true;
+
+        var text = _textInput.Text;
+        if (TValue.TryParse(text, null, out var v))
         {
             v = Clamp(v);
             if (!_value.Equals(v))
             {
                 _value = v;
                 ValueChanged?.Invoke();
+                return;
             }
         }
+
+        ValueChanged?.Invoke();
+    }
+
+    private void HandleTextCommit()
+    {
+        if (_suppressNotifications)
+            return;
+
+        if (!_textDirty)
+        {
+            OnCommit?.Invoke();
+            return;
+        }
+
+        _textDirty = false;
+
+        var text = _textInput.Text;
+        if (!TValue.TryParse(text, null, out var v))
+        {
+            SetTextWithoutNotification(_value.ToString() ?? string.Empty);
+            OnCommit?.Invoke();
+            return;
+        }
+
+        v = Clamp(v);
+        if (!_value.Equals(v))
+        {
+            _value = v;
+            ValueChanged?.Invoke();
+        }
+
+        var canonical = _value.ToString() ?? string.Empty;
+        if (!string.Equals(text, canonical, StringComparison.Ordinal))
+        {
+            SetTextWithoutNotification(canonical);
+        }
+
+        OnCommit?.Invoke();
     }
     public virtual bool CanHandleEvent(AbstSDLEvent e)
     {
@@ -159,6 +223,8 @@ internal class AbstSdlInputNumber<TValue> : AbstSdlComponent, IAbstFrameworkInpu
 
     public override void Dispose()
     {
+        _textInput.ValueChanged -= HandleTextValueChanged;
+        _textInput.OnCommit -= HandleTextCommit;
         base.Dispose();
         _textInput.Dispose();
     }

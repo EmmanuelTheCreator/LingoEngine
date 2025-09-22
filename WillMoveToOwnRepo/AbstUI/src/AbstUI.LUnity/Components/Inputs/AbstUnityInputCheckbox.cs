@@ -51,8 +51,10 @@ internal class AbstUnityInputCheckbox : AbstUnityComponent, IAbstFrameworkInputC
             _checked = value;
             _toggle.isOn = value;
             ValueChanged?.Invoke();
+            OnCommit?.Invoke();
         }
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 }

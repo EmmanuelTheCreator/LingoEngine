@@ -23,6 +23,10 @@ namespace AbstUI.LGodot.Components.Inputs
         private string? _font;
         private AMargin _margin = AMargin.Zero;
         private event Action? _onValueChanged;
+        private event Action? _onCommit;
+        private bool _suppressTextChangeNotification;
+        private bool _textDirty;
+        private bool _submitOnNextTextChange;
 
         private float _wantedWidth = 10;
         private float _wantedHeight = 10;
@@ -94,8 +98,18 @@ namespace AbstUI.LGodot.Components.Inputs
             set
             {
                 _text = value;
-                if (_lineEdit != null) _lineEdit.Text = value;
-                if (_textEdit != null) _textEdit.Text = value;
+                _textDirty = false;
+                _submitOnNextTextChange = false;
+                _suppressTextChangeNotification = true;
+                try
+                {
+                    if (_lineEdit != null) _lineEdit.Text = value;
+                    if (_textEdit != null) _textEdit.Text = value;
+                }
+                finally
+                {
+                    _suppressTextChangeNotification = false;
+                }
             }
         }
         public int ZIndex
@@ -259,6 +273,7 @@ namespace AbstUI.LGodot.Components.Inputs
             if (_lineEdit != null)
             {
                 _lineEdit.TextChanged -= OnLineEditTextChanged;
+                _lineEdit.TextSubmitted -= OnLineEditTextSubmitted;
                 _lineEdit.FocusExited -= OnTextEdit_FocusExited;
             }
             if (_textEdit != null)
@@ -266,6 +281,7 @@ namespace AbstUI.LGodot.Components.Inputs
                 _textEdit.TextChanged -= OnTextEditTextChanged;
                 _textEdit.CaretChanged -= _textEdit_CaretChanged;
                 _textEdit.FocusExited -= OnTextEdit_FocusExited;
+                _textEdit.GuiInput -= OnTextEditGuiInput;
             }
             if (_control != null)
                 _control.Ready -= ControlReady;
@@ -291,6 +307,7 @@ namespace AbstUI.LGodot.Components.Inputs
             if (_lineEdit != null)
             {
                 _lineEdit.TextChanged += OnLineEditTextChanged;
+                _lineEdit.TextSubmitted += OnLineEditTextSubmitted;
                 _lineEdit.FocusExited += OnTextEdit_FocusExited;
             }
             if (_textEdit != null)
@@ -298,6 +315,7 @@ namespace AbstUI.LGodot.Components.Inputs
                 _textEdit.TextChanged += OnTextEditTextChanged;
                 _textEdit.CaretChanged += _textEdit_CaretChanged;
                 _textEdit.FocusExited += OnTextEdit_FocusExited;
+                _textEdit.GuiInput += OnTextEditGuiInput;
             }
 
             _control.Ready += ControlReady;
@@ -310,6 +328,7 @@ namespace AbstUI.LGodot.Components.Inputs
             if (_lineEdit != null)
             {
                 _lineEdit.TextChanged -= OnLineEditTextChanged;
+                _lineEdit.TextSubmitted -= OnLineEditTextSubmitted;
                 _lineEdit.FocusExited -= OnTextEdit_FocusExited;
             }
             if (_textEdit != null)
@@ -317,14 +336,16 @@ namespace AbstUI.LGodot.Components.Inputs
                 _textEdit.TextChanged -= OnTextEditTextChanged;
                 _textEdit.CaretChanged -= _textEdit_CaretChanged;
                 _textEdit.FocusExited -= OnTextEdit_FocusExited;
+                _textEdit.GuiInput -= OnTextEditGuiInput;
             }
 
             _control.QueueFree();
         }
         private void OnTextEdit_FocusExited()
         {
-            var selection = GetCaretPosition();
-            var hasSelection = HasSelection;
+            _ = GetCaretPosition();
+            _ = HasSelection;
+            CommitPendingChanges();
         }
 
         private void ControlReady()
@@ -334,9 +355,22 @@ namespace AbstUI.LGodot.Components.Inputs
         }
         private void OnLineEditTextChanged(string _)
         {
-            _text = _lineEdit?.Text ?? string.Empty;
+            if (_lineEdit == null)
+                return;
+
+            _text = _lineEdit.Text ?? string.Empty;
+
+            if (_suppressTextChangeNotification)
+                return;
+
+            _textDirty = true;
             _onValueChanged?.Invoke();
             _onChange?.Invoke(Text);
+        }
+
+        private void OnLineEditTextSubmitted(string _)
+        {
+            CommitPendingChanges();
         }
         private void _textEdit_CaretChanged()
         {
@@ -347,9 +381,51 @@ namespace AbstUI.LGodot.Components.Inputs
         }
         private void OnTextEditTextChanged()
         {
-            _text = _textEdit?.Text ?? string.Empty;
+            if (_textEdit == null)
+                return;
+
+            _text = _textEdit.Text ?? string.Empty;
+
+            if (_suppressTextChangeNotification)
+                return;
+
+            _textDirty = true;
+
             _onValueChanged?.Invoke();
             _onChange?.Invoke(Text);
+
+            if (_submitOnNextTextChange)
+            {
+                CommitPendingChanges();
+            }
+        }
+
+        private void OnTextEditGuiInput(InputEvent @event)
+        {
+            if (@event is not InputEventKey keyEvent)
+                return;
+
+            if (!keyEvent.Pressed || keyEvent.Echo)
+                return;
+
+            if (keyEvent.Keycode != Key.Enter && keyEvent.Keycode != Key.KpEnter)
+                return;
+
+            _submitOnNextTextChange = true;
+        }
+
+        private void CommitPendingChanges()
+        {
+            if (!_textDirty)
+            {
+                _submitOnNextTextChange = false;
+                return;
+            }
+
+            _textDirty = false;
+            _submitOnNextTextChange = false;
+
+            _onCommit?.Invoke();
         }
 
         private (int line, int column) GetLineColumn(int index)
@@ -414,8 +490,6 @@ namespace AbstUI.LGodot.Components.Inputs
                 _textEdit.Deselect();
                 OnCaretChanged?.Invoke(startLine, startCol);
             }
-            _onValueChanged?.Invoke();
-            _onChange?.Invoke(Text);
         }
 
         public void SetCaretPosition(int line, int column)
@@ -484,8 +558,6 @@ namespace AbstUI.LGodot.Components.Inputs
                 _textEdit.Deselect();
                 OnCaretChanged?.Invoke(nLine, nCol);
             }
-            _onValueChanged?.Invoke();
-            _onChange?.Invoke(Text);
         }
 
         event Action? IAbstFrameworkNodeInput.ValueChanged
@@ -494,7 +566,13 @@ namespace AbstUI.LGodot.Components.Inputs
             remove => _onValueChanged -= value;
         }
 
-       
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
+        }
+
+
     }
 }
 

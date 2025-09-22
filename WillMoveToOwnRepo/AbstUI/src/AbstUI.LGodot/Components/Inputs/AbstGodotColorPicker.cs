@@ -16,6 +16,7 @@ namespace AbstUI.LGodot.Components
         private AMargin _margin = AMargin.Zero;
         private readonly Action<AColor>? _onChange;
         private event Action? _onValueChanged;
+        private event Action? _onCommit;
 
         public AbstGodotColorPicker(AbstColorPicker picker, Action<AColor>? onChange)
         {
@@ -29,6 +30,7 @@ namespace AbstUI.LGodot.Components
         private void ColorChangedHandler(Color color)
         {
             _onValueChanged?.Invoke();
+            _onCommit?.Invoke();
             _onChange?.Invoke(color.ToAbstColor());
         }
 
@@ -63,6 +65,12 @@ namespace AbstUI.LGodot.Components
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;
+        }
+
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
         }
 
         public object FrameworkNode => this;

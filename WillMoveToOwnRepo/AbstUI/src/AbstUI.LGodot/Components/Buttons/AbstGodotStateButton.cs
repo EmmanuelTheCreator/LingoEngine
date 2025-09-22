@@ -24,6 +24,7 @@ namespace AbstUI.LGodot.Components
         private readonly StyleBoxFlat _styleDisabled = new StyleBoxFlat();
         private Action<bool>? _onChange;
         private event Action? _onValueChanged;
+        private event Action? _onCommit;
 
         public AbstGodotStateButton(AbstStateButton button, Action<bool>? onChange)
         {
@@ -108,6 +109,7 @@ namespace AbstUI.LGodot.Components
                 UpdateStateIcon();
                 _onValueChanged?.Invoke();
                 _onChange?.Invoke(IsOn);
+                _onCommit?.Invoke();
                 UpdateStyle();
             }
         }
@@ -118,6 +120,12 @@ namespace AbstUI.LGodot.Components
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;
+        }
+
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
         }
 
         public new void Dispose()

@@ -16,12 +16,12 @@ namespace AbstUI.LGodot.Components
         private Action<bool>? _onChange;
 
         private event Action? _onValueChanged;
+        private event Action? _onCommit;
         public AbstGodotInputCheckbox(AbstInputCheckbox input, Action<bool>? onChange)
         {
             _onChange = onChange;
             input.Init(this);
-            Toggled += _ => _onValueChanged?.Invoke();
-            if (_onChange != null) Toggled += _ => _onChange(Checked);
+            Toggled += OnToggled;
         }
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -57,12 +57,24 @@ namespace AbstUI.LGodot.Components
             remove => _onValueChanged -= value;
         }
 
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
+        }
+
         public new void Dispose()
         {
-            if (_onChange != null) Toggled -= _ => _onChange(Checked);
-            Toggled -= _ => _onValueChanged?.Invoke();
+            Toggled -= OnToggled;
             QueueFree();
             base.Dispose();
+        }
+
+        private void OnToggled(bool pressed)
+        {
+            _onValueChanged?.Invoke();
+            _onCommit?.Invoke();
+            _onChange?.Invoke(pressed);
         }
     }
 }

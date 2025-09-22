@@ -1,4 +1,7 @@
+using System;
+using System.Globalization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using System.Numerics;
 using AbstUI.Primitives;
 
@@ -14,6 +17,10 @@ public partial class AbstBlazorInputNumber<TValue>
 
     [Parameter]
     public AbstBlazorInputNumberComponent<TValue> Component { get; set; } = default!;
+
+    private string _inputValue = string.Empty;
+    private bool _valueDirty;
+    private bool _skipDirtyReset;
 
     protected override void OnInitialized()
     {
@@ -36,14 +43,40 @@ public partial class AbstBlazorInputNumber<TValue>
         Height = _component.Height;
         Margin = _component.Margin;
         Enabled = _component.Enabled;
+        if (_skipDirtyReset)
+        {
+            _skipDirtyReset = false;
+        }
+        else
+        {
+            _inputValue = FormatValue(_component.Value);
+            _valueDirty = false;
+        }
     }
 
     private void HandleInput(ChangeEventArgs e)
     {
-        if (TValue.TryParse(e.Value?.ToString(), null, out var result))
+        _inputValue = e.Value?.ToString() ?? string.Empty;
+        _valueDirty = true;
+        _skipDirtyReset = true;
+        _component.MarkDirty();
+    }
+
+    private void HandleChange(ChangeEventArgs e)
+    {
+        _inputValue = e.Value?.ToString() ?? string.Empty;
+        _valueDirty = true;
+        _skipDirtyReset = true;
+        _component.MarkDirty();
+        CommitPendingValue();
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (string.Equals(e.Key, "Enter", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(e.Key, "NumpadEnter", StringComparison.OrdinalIgnoreCase))
         {
-            _component.Value = result;
-            _component.RaiseValueChanged();
+            CommitPendingValue();
         }
     }
 
@@ -62,4 +95,33 @@ public partial class AbstBlazorInputNumber<TValue>
         ComponentContainer.Unregister(_component);
         base.Dispose();
     }
+
+    private void CommitPendingValue()
+    {
+        if (!_valueDirty)
+            return;
+
+        if (!TValue.TryParse(_inputValue, CultureInfo.InvariantCulture, out var parsed))
+        {
+            _inputValue = FormatValue(_component.Value);
+            _valueDirty = false;
+            RequestRender();
+            _component.RaiseCommit();
+            return;
+        }
+
+        var clamped = TValue.Clamp(parsed, _component.Min, _component.Max);
+        if (!_component.Value.Equals(clamped))
+        {
+            _component.Value = clamped;
+            _component.MarkDirty();
+        }
+
+        _inputValue = FormatValue(_component.Value);
+        _valueDirty = false;
+        RequestRender();
+        _component.RaiseCommit();
+    }
+
+    private static string FormatValue(TValue value) => value.ToString(null, CultureInfo.InvariantCulture);
 }

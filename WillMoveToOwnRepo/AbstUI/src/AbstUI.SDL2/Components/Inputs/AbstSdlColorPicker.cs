@@ -34,11 +34,13 @@ namespace AbstUI.SDL2.Components.Inputs
                 {
                     _color = value;
                     ValueChanged?.Invoke();
+                    OnCommit?.Invoke();
                 }
             }
         }
 
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public object FrameworkNode => this;
 
         public bool HasFocus => _focused;

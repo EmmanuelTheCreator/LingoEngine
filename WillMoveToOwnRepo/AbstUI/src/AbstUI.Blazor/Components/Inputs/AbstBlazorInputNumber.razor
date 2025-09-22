@@ -1,3 +1,3 @@
 @typeparam TValue where TValue : System.Numerics.INumber<TValue>
 @inherits AbstBlazorBaseInput
-<input type="number" value="@_component.Value" min="@_component.Min" max="@_component.Max" @oninput="HandleInput" disabled="@(_component.Enabled ? null : true)" style="@BuildStyle()" />
+<input type="number" value="@_inputValue" min="@_component.Min" max="@_component.Max" @oninput="HandleInput" @onchange="HandleChange" @onkeydown="HandleKeyDown" disabled="@(_component.Enabled ? null : true)" style="@BuildStyle()" />

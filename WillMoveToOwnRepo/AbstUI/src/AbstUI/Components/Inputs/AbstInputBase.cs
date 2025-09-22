@@ -19,6 +19,15 @@ namespace AbstUI.Components.Inputs
             remove { _framework.ValueChanged -= value; }
         }
 
+        /// <summary>
+        /// Event raised when the user commits the current edits (press enter or focus lost).
+        /// </summary>
+        public event Action? OnCommit
+        {
+            add { _framework.OnCommit += value; }
+            remove { _framework.OnCommit -= value; }
+        }
+
         protected override void OnSetStyle(AbstComponentStyle componentStyle)
         {
             base.OnSetStyle(componentStyle);

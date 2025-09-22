@@ -21,6 +21,11 @@ public class AbstBlazorInputCheckboxComponent : AbstBlazorComponentModelBase, IA
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 
-    public void RaiseValueChanged() => ValueChanged?.Invoke();
+    public void RaiseValueChanged()
+    {
+        ValueChanged?.Invoke();
+        OnCommit?.Invoke();
+    }
 }

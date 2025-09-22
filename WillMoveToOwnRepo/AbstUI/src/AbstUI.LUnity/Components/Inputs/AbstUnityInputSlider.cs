@@ -50,6 +50,7 @@ internal class AbstUnityInputSlider<TValue> : AbstUnityComponent, IAbstFramework
         {
             _value = typed;
             ValueChanged?.Invoke();
+            OnCommit?.Invoke();
         }
     }
 
@@ -114,5 +115,6 @@ internal class AbstUnityInputSlider<TValue> : AbstUnityComponent, IAbstFramework
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 }
 

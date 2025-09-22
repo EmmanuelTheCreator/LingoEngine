@@ -32,8 +32,10 @@ public class RmlUiInputText : IAbstFrameworkInputText, IHasTextBackgroundBorderC
     private AColor _borderColor = AbstDefaultColors.InputBorderColor;
     private bool _isMultiLine;
     private event Action? _valueChanged;
+    private event Action? _onCommit;
     private int _caretIndex;
     private int _selectionStartIndex = -1;
+    private bool _textDirty;
 
     public RmlUiInputText(ElementDocument document, bool multiLine)
     {
@@ -85,7 +87,11 @@ public class RmlUiInputText : IAbstFrameworkInputText, IHasTextBackgroundBorderC
         if (_input != null) _input.SetValue(_text);
         else _textarea?.SetInnerRml(_text);
 
-        _element.AddEventListener("change", _ => _valueChanged?.Invoke());
+        _textDirty = false;
+
+        _element.AddEventListener("input", _ => OnElementInput());
+        _element.AddEventListener("change", _ => CommitPendingChanges());
+        _element.AddEventListener("keydown", OnElementKeyDown);
     }
 
     public object FrameworkNode => _element;
@@ -175,13 +181,13 @@ public class RmlUiInputText : IAbstFrameworkInputText, IHasTextBackgroundBorderC
 
     public string Text
     {
-        get => _input != null ? _input.GetValue() : _textarea?.GetInnerRml() ?? string.Empty;
+        get => _text;
         set
         {
-            _text = value;
-            if (_input != null) _input.SetValue(value);
-            else _textarea?.SetInnerRml(value);
-            _valueChanged?.Invoke();
+            _text = value ?? string.Empty;
+            if (_input != null) _input.SetValue(_text);
+            else _textarea?.SetInnerRml(_text);
+            _textDirty = false;
         }
     }
 
@@ -267,9 +273,10 @@ public class RmlUiInputText : IAbstFrameworkInputText, IHasTextBackgroundBorderC
         if (_input != null) _input.SetValue(_text); else _textarea?.SetInnerRml(_text);
         _caretIndex = start;
         _selectionStartIndex = -1;
-        _valueChanged?.Invoke();
+        _textDirty = true;
         var (line, column) = GetLineColumn(start);
         OnCaretChanged?.Invoke(line, column);
+        _valueChanged?.Invoke();
     }
 
     public void SetCaretPosition(int line, int column)
@@ -300,15 +307,22 @@ public class RmlUiInputText : IAbstFrameworkInputText, IHasTextBackgroundBorderC
         _text = _text.Insert(_caretIndex, text);
         if (_input != null) _input.SetValue(_text); else _textarea?.SetInnerRml(_text);
         _caretIndex += text.Length;
-        _valueChanged?.Invoke();
+        _textDirty = true;
         var (line, column) = GetLineColumn(_caretIndex);
         OnCaretChanged?.Invoke(line, column);
+        _valueChanged?.Invoke();
     }
 
     public event Action? ValueChanged
     {
         add => _valueChanged += value;
         remove => _valueChanged -= value;
+    }
+
+    public event Action? OnCommit
+    {
+        add => _onCommit += value;
+        remove => _onCommit -= value;
     }
 
     public event Action<int, int>? OnCaretChanged;
@@ -343,6 +357,42 @@ public class RmlUiInputText : IAbstFrameworkInputText, IHasTextBackgroundBorderC
             index++;
         }
         return Math.Clamp(index + column, 0, _text.Length);
+    }
+
+    private void OnElementInput()
+    {
+        _text = GetElementText();
+        _textDirty = true;
+        _valueChanged?.Invoke();
+    }
+
+    private void OnElementKeyDown(Event evt)
+    {
+        var key = evt.GetParameter<string>("key_identifier", string.Empty);
+        if (string.Equals(key, "enter", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(key, "numpadenter", StringComparison.OrdinalIgnoreCase))
+        {
+            CommitPendingChanges();
+        }
+    }
+
+    private void CommitPendingChanges()
+    {
+        if (!_textDirty)
+            return;
+
+        _text = GetElementText();
+        _textDirty = false;
+        _onCommit?.Invoke();
+    }
+
+    private string GetElementText()
+    {
+        if (_input != null)
+            return _input.GetValue() ?? string.Empty;
+        if (_textarea != null)
+            return _textarea.GetInnerRml() ?? string.Empty;
+        return string.Empty;
     }
 
     public void Dispose() { }

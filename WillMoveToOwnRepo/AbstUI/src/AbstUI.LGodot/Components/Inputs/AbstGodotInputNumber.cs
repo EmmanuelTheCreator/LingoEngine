@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Godot;
 using AbstUI.Components;
 using AbstUI.Primitives;
@@ -25,15 +27,19 @@ namespace AbstUI.LGodot.Components
         private float _wantedWidth = 10;
         private float _wantedHeight = 10;
         private TValue _value = default!;
+        private bool _textDirty;
+        private bool _suppressTextChangeNotification;
 
-        private event Action _onValueChanged;
+        private event Action? _valueChanged;
+        private event Action? _onCommit;
+        private Func<string, (bool IsValid, TValue Value)>? _valueParser;
 
         public AbstGodotInputNumber(AbstInputNumber<TValue> input, IAbstFontManager fontManager, Action<TValue>? onChange)
         {
             _onChange = onChange;
             _fontManager = fontManager;
             Func<string, (bool IsValid, TValue Value)> valueParse;
-            // Switch case to set Min and Max based on type  
+            // Switch case to set Min and Max based on type
             switch (Type.GetTypeCode(typeof(TValue)))
             {
                 case TypeCode.Int32:
@@ -55,22 +61,13 @@ namespace AbstUI.LGodot.Components
                     throw new NotSupportedException($"Type {typeof(TValue)} is not supported.");
             }
 
+            _valueParser = valueParse;
 
             input.Init(this);
-            _onValueChanged = () =>
-            {
-                var parsedValue = valueParse(Text);
-                if (!parsedValue.IsValid)
-                {
-                    if (_value != null)
-                        Value = _value;
-                    return;
-                }
-                if (_value == parsedValue.Value) return;
-                _value = parsedValue.Value;
-                _onChange?.Invoke(Value);
-            };
-            TextChanged += _ => _onValueChanged.Invoke();
+
+            TextChanged += OnTextChanged;
+            TextSubmitted += OnTextSubmitted;
+            FocusExited += OnFocusExited;
             CustomMinimumSize = new Vector2(2, 2);
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
             SizeFlagsVertical = SizeFlags.ShrinkBegin;
@@ -121,12 +118,25 @@ namespace AbstUI.LGodot.Components
        
         public TValue Value
         {
-            get => _value; set
+            get => _value;
+            set
             {
-                _value = value;
-                if (_value > Max) _value = Max;
-                if (_value < Min) _value = Min;
-                Text = _value.ToString();
+                var clamped = ClampValue(value);
+                if (EqualityComparer<TValue>.Default.Equals(_value, clamped))
+                    return;
+
+                _value = clamped;
+                try
+                {
+                    _suppressTextChangeNotification = true;
+                    Text = _value.ToString();
+                }
+                finally
+                {
+                    _suppressTextChangeNotification = false;
+                }
+
+                _textDirty = false;
             }
         }
         public TValue Min { get; set; }
@@ -139,6 +149,13 @@ namespace AbstUI.LGodot.Components
             {
                 _numberType = value;
             }
+        }
+
+        private TValue ClampValue(TValue value)
+        {
+            if (value > Max) value = Max;
+            if (value < Min) value = Min;
+            return value;
         }
 
         private string? _font;
@@ -235,15 +252,108 @@ namespace AbstUI.LGodot.Components
 
         event Action? IAbstFrameworkNodeInput.ValueChanged
         {
-            add => _onValueChanged += value;
-            remove => _onValueChanged -= value;
+            add => _valueChanged += value;
+            remove => _valueChanged -= value;
+        }
+
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
         }
         public object FrameworkNode => this;
         public new void Dispose()
         {
-            TextChanged -= _ => _onValueChanged.Invoke();
+            TextChanged -= OnTextChanged;
+            TextSubmitted -= OnTextSubmitted;
+            FocusExited -= OnFocusExited;
             QueueFree();
             base.Dispose();
+        }
+
+        private void SetTextWithoutNotification(string text)
+        {
+            try
+            {
+                _suppressTextChangeNotification = true;
+                Text = text ?? string.Empty;
+            }
+            finally
+            {
+                _suppressTextChangeNotification = false;
+            }
+        }
+
+        private void OnTextChanged(string _)
+        {
+            if (_suppressTextChangeNotification)
+                return;
+
+            _textDirty = true;
+
+            if (_valueParser != null)
+            {
+                var parsedValue = _valueParser(Text);
+                if (parsedValue.IsValid)
+                {
+                    var clampedValue = ClampValue(parsedValue.Value);
+                    if (!EqualityComparer<TValue>.Default.Equals(_value, clampedValue))
+                    {
+                        _value = clampedValue;
+                        _onChange?.Invoke(_value);
+                    }
+                }
+            }
+
+            _valueChanged?.Invoke();
+        }
+
+        private void OnTextSubmitted(string _)
+        {
+            SubmitPendingValue();
+        }
+
+        private void OnFocusExited()
+        {
+            SubmitPendingValue();
+        }
+
+        private void SubmitPendingValue()
+        {
+            if (!_textDirty)
+                return;
+
+            _textDirty = false;
+
+            if (_valueParser == null)
+            {
+                _onCommit?.Invoke();
+                return;
+            }
+
+            var parsedValue = _valueParser(Text);
+            if (!parsedValue.IsValid)
+            {
+                SetTextWithoutNotification(_value.ToString());
+                _onCommit?.Invoke();
+                return;
+            }
+
+            var clampedValue = ClampValue(parsedValue.Value);
+            if (!EqualityComparer<TValue>.Default.Equals(_value, clampedValue))
+            {
+                _value = clampedValue;
+                _onChange?.Invoke(_value);
+                _valueChanged?.Invoke();
+            }
+
+            var canonical = _value.ToString();
+            if (!string.Equals(Text, canonical, StringComparison.Ordinal))
+            {
+                SetTextWithoutNotification(canonical);
+            }
+
+            _onCommit?.Invoke();
         }
     }
 }

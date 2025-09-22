@@ -54,6 +54,7 @@ namespace AbstUI.SDL2.Components.Inputs
                 }
                 ComponentContext.QueueRedraw(this);
                 ValueChanged?.Invoke();
+                OnCommit?.Invoke();
             }
         }
 
@@ -61,6 +62,7 @@ namespace AbstUI.SDL2.Components.Inputs
         public string? SelectedValue { get; set; }
 
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public object FrameworkNode => this;
 
         public virtual void AddItem(string key, string value)

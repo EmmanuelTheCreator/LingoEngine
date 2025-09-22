@@ -46,6 +46,7 @@ namespace AbstUI.SDL2.Components.Buttons
 
         public AMargin Margin { get; set; } = AMargin.Zero;
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public object FrameworkNode => this;
 
         public AColor BorderColor
@@ -141,6 +142,7 @@ namespace AbstUI.SDL2.Components.Buttons
                     _isOn = value;
                     RequestRedraw();
                     ValueChanged?.Invoke();
+                    OnCommit?.Invoke();
                 }
             }
         }
@@ -282,6 +284,7 @@ namespace AbstUI.SDL2.Components.Buttons
                     if (_pressed && ev.button.button == SDL.SDL_BUTTON_LEFT)
                     {
                         ValueChanged?.Invoke();
+                        OnCommit?.Invoke();
                         _pressed = false;
                         e.StopPropagation = true;
                         RequestRedraw();

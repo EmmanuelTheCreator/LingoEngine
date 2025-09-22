@@ -16,6 +16,7 @@ namespace AbstUI.LGodot.Components
         private readonly System.Action<TValue>? _onChange;
         private AMargin _margin = AMargin.Zero;
         private event System.Action? _onValueChanged;
+        private event System.Action? _onCommit;
 
         public AbstGodotInputSlider(AbstInputSlider<TValue> slider, AOrientation orientation, System.Action<TValue>? onChange)
         {
@@ -34,6 +35,7 @@ namespace AbstUI.LGodot.Components
         private void OnSliderValueChanged(double v)
         {
             _onValueChanged?.Invoke();
+            _onCommit?.Invoke();
             _onChange?.Invoke((TValue)Convert.ChangeType(v, typeof(TValue)));
         }
 
@@ -74,6 +76,12 @@ namespace AbstUI.LGodot.Components
         {
             add => _onValueChanged += value;
             remove => _onValueChanged -= value;
+        }
+
+        event System.Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
         }
 
         public TValue Value { get => (TValue)Convert.ChangeType(_slider.Value, typeof(TValue)); set => _slider.Value = Convert.ToDouble(value); }

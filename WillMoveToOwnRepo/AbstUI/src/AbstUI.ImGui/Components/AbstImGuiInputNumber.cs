@@ -11,19 +11,23 @@ namespace AbstUI.ImGui.Components
     {
         public AbstImGuiInputNumber(AbstImGuiComponentFactory factory) : base(factory)
         {
+            _pendingValue = _value;
         }
         public bool Enabled { get; set; } = true;
         private float _value;
+        private float _pendingValue;
+        private bool _valueDirty;
         public float Value
         {
             get => _value;
             set
             {
-                if (_value != value)
-                {
-                    _value = value;
-                    ValueChanged?.Invoke();
-                }
+                var clamped = Math.Clamp(value, Min, Max);
+                if (Math.Abs(_value - clamped) < float.Epsilon)
+                    return;
+                _value = clamped;
+                _pendingValue = _value;
+                _valueDirty = false;
             }
         }
         public float Min { get; set; }
@@ -31,6 +35,7 @@ namespace AbstUI.ImGui.Components
         public ANumberType NumberType { get; set; } = ANumberType.Float;
         public AMargin Margin { get; set; } = AMargin.Zero;
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public object FrameworkNode => this;
 
         public int FontSize { get; set; } = 12;
@@ -51,20 +56,37 @@ namespace AbstUI.ImGui.Components
 
             if (NumberType == ANumberType.Integer)
             {
-                int val = (int)_value;
-                if (global::ImGuiNET.ImGui.InputInt("##num", ref val))
+                int val = _valueDirty ? (int)_pendingValue : (int)_value;
+                if (global::ImGuiNET.ImGui.InputInt("##num", ref val, 1, 100, ImGuiInputTextFlags.EnterReturnsTrue))
                 {
                     val = Math.Clamp(val, (int)Min, (int)Max);
-                    Value = val;
+                    _pendingValue = val;
+                    _valueDirty = true;
+                    ValueChanged?.Invoke();
                 }
             }
             else
             {
-                float val = _value;
-                if (global::ImGuiNET.ImGui.InputFloat("##num", ref val))
+                float val = _valueDirty ? _pendingValue : _value;
+                if (global::ImGuiNET.ImGui.InputFloat("##num", ref val, 0f, 0f, "%.3f", ImGuiInputTextFlags.EnterReturnsTrue))
                 {
                     val = Math.Clamp(val, Min, Max);
-                    Value = val;
+                    _pendingValue = val;
+                    _valueDirty = true;
+                    ValueChanged?.Invoke();
+                }
+            }
+
+            if (global::ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
+            {
+                CommitPendingValue();
+            }
+
+            if (global::ImGuiNET.ImGui.IsItemActive() && _valueDirty)
+            {
+                if (global::ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Enter) || global::ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.KeypadEnter))
+                {
+                    CommitPendingValue();
                 }
             }
 
@@ -76,5 +98,36 @@ namespace AbstUI.ImGui.Components
         }
 
         public override void Dispose() => base.Dispose();
+
+        private void CommitPendingValue()
+        {
+            if (!_valueDirty)
+                return;
+
+            float newValue = _pendingValue;
+
+            if (NumberType == ANumberType.Integer)
+            {
+                newValue = Math.Clamp(newValue, Min, Max);
+                newValue = (float)Math.Round(newValue);
+            }
+            else
+            {
+                newValue = Math.Clamp(newValue, Min, Max);
+            }
+
+            _valueDirty = false;
+            if (Math.Abs(_value - newValue) < float.Epsilon)
+            {
+                _pendingValue = _value;
+                OnCommit?.Invoke();
+                return;
+            }
+
+            _value = newValue;
+            _pendingValue = _value;
+            ValueChanged?.Invoke();
+            OnCommit?.Invoke();
+        }
     }
 }

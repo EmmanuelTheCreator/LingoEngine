@@ -44,10 +44,8 @@ namespace AbstUI.Components.Containers
         public static AbstInputText SetInputTextAt<T>(this AbstPanel container, T element, string name, float x, float y, int width, Expression<Func<T,string?>> property, int maxLength = 0)
         {
             Action<T, string?> setter = property.CompileSetter();
-            var control = container.Factory.CreateInputText(name, maxLength,x =>
-            {
-                setter(element, x);
-            });
+            var control = container.Factory.CreateInputText(name, maxLength);
+            control.OnCommit += () => setter(element, control.Text);
             control.Text = property.CompileGetter()(element)?.ToString() ?? string.Empty;
             control.Width = width;
             container.AddItem(control, x, y);
@@ -56,7 +54,8 @@ namespace AbstUI.Components.Containers
         public static AbstInputNumber<float> SetInputNumberAt<T>(this AbstPanel container, T element, string name, float x, float y, int width, Expression<Func<T,float>> property, float? min = null, float? max = null)
         {
             Action<T, float> setter = property.CompileSetter();
-            var control = container.Factory.CreateInputNumberFloat(name, min, max, x => setter(element, x));
+            var control = container.Factory.CreateInputNumberFloat(name, min, max);
+            control.OnCommit += () => setter(element, control.Value);
             control.Value = property.CompileGetter()(element);
             control.Width = width;
             container.AddItem(control, x, y);
@@ -65,7 +64,8 @@ namespace AbstUI.Components.Containers
         public static AbstInputNumber<int> SetInputNumberAt<T>(this AbstPanel container, T element, string name, float x, float y, int width, Expression<Func<T,int>> property, int? min = null, int? max = null)
         {
             Action<T, int> setter = property.CompileSetter();
-            var control = container.Factory.CreateInputNumberInt(name, min, max, x => setter(element, x));
+            var control = container.Factory.CreateInputNumberInt(name, min, max);
+            control.OnCommit += () => setter(element, control.Value);
             control.Value = property.CompileGetter()(element);
             control.Width = width;
             container.AddItem(control, x, y);

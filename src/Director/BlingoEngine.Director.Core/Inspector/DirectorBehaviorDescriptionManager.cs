@@ -181,7 +181,7 @@ namespace BlingoEngine.Director.Core.Inspector
             var input = _factory.CreateInputText($"PropInput_{key}");
             input.Width = 70;
             input.Text = propValue?.ToString() ?? string.Empty;
-            input.ValueChanged += () => properties[key] = input.Text;
+            input.OnCommit += () => properties[key] = input.Text;
             return input;
         }
 
@@ -196,9 +196,9 @@ namespace BlingoEngine.Director.Core.Inspector
             //    input.Value = f;
             //else if (propValue != null && float.TryParse(propValue.ToString(), out var fv))
             //    input.Value = fv;
-            input.ValueChanged += () => properties[key] = (int)input.Value;
+            input.OnCommit += () => properties[key] = (int)input.Value;
             return input;
-        } 
+        }
         private AbstInputNumber<float> CreateFloat(BehaviorPropertiesContainer properties, string key, object? propValue)
         {
             var input = _factory.CreateInputNumberFloat($"PropInput_{key}");
@@ -210,7 +210,7 @@ namespace BlingoEngine.Director.Core.Inspector
                 input.Value = f;
             else if (propValue != null && float.TryParse(propValue.ToString(), out var fv))
                 input.Value = fv;
-            input.ValueChanged +=
+            input.OnCommit +=
                 () =>
                 {
                     properties[key] = input.Value;
@@ -295,7 +295,7 @@ namespace BlingoEngine.Director.Core.Inspector
                     var text = factory.CreateInputText(prop.Name + "Text");
                     text.Text = val?.ToString() ?? string.Empty;
                     if (prop.CanWrite)
-                        text.ValueChanged += () =>
+                        text.OnCommit += () =>
                         {
                             try
                             {

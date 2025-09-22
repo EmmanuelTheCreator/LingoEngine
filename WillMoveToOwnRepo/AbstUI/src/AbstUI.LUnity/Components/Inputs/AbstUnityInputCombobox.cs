@@ -93,6 +93,7 @@ internal class AbstUnityInputCombobox : AbstUnityComponent, IAbstFrameworkInputC
     public AColor ItemPressedBorderColor { get; set; } = AbstDefaultColors.InputBorderColor;
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 
 
     #endregion
@@ -134,6 +135,7 @@ internal class AbstUnityInputCombobox : AbstUnityComponent, IAbstFrameworkInputC
         }
 
         ValueChanged?.Invoke();
+        OnCommit?.Invoke();
     }
     public void AddItem(string key, string value)
     {

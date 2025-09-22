@@ -11,10 +11,19 @@ public class AbstBlazorInputNumberComponent<TValue> : AbstBlazorComponentModelBa
     where TValue : INumber<TValue>
 {
     private TValue _value = TValue.Zero;
+    private bool _valueDirty;
     public TValue Value
     {
         get => _value;
-        set { if (!_value.Equals(value)) { _value = value; RaiseChanged(); } }
+        set
+        {
+            if (!_value.Equals(value))
+            {
+                _value = value;
+                _valueDirty = false;
+                RaiseChanged();
+            }
+        }
     }
 
     private TValue _min = TValue.Zero;
@@ -74,5 +83,20 @@ public class AbstBlazorInputNumberComponent<TValue> : AbstBlazorComponentModelBa
     }
 
     public event Action? ValueChanged;
-    public void RaiseValueChanged() => ValueChanged?.Invoke();
+    public event Action? OnCommit;
+
+    public void RaiseCommit()
+    {
+        if (!_valueDirty)
+            return;
+
+        _valueDirty = false;
+        OnCommit?.Invoke();
+    }
+
+    internal void MarkDirty()
+    {
+        _valueDirty = true;
+        ValueChanged?.Invoke();
+    }
 }

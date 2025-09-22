@@ -45,8 +45,10 @@ internal class AbstUnityColorPicker : AbstUnityComponent, IAbstFrameworkColorPic
             _color = value;
             _image.color = value.ToUnityColor();
             ValueChanged?.Invoke();
+            OnCommit?.Invoke();
         }
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 }

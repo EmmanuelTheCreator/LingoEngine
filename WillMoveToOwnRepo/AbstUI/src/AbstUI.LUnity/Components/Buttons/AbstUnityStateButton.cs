@@ -20,13 +20,14 @@ internal class AbstUnityStateButton : AbstUnityComponent, IAbstFrameworkStateBut
     private IAbstTexture2D? _textureOn;
     private IAbstTexture2D? _textureOff;
     private event Action? _valueChanged;
+    private event Action? _onCommit;
 
     public AbstUnityStateButton() : base(CreateGameObject(out var toggle, out var image, out var text))
     {
         _toggle = toggle;
         _image = image;
         _textComponent = text;
-        _toggle.onValueChanged.AddListener(_ => _valueChanged?.Invoke());
+        _toggle.onValueChanged.AddListener(OnToggleValueChanged);
     }
 
     private static GameObject CreateGameObject(out Toggle toggle, out Image image, out Text text)
@@ -92,9 +93,22 @@ internal class AbstUnityStateButton : AbstUnityComponent, IAbstFrameworkStateBut
         remove => _valueChanged -= value;
     }
 
+    public event Action? OnCommit
+    {
+        add => _onCommit += value;
+        remove => _onCommit -= value;
+    }
+
     private void UpdateImage()
     {
         var tex = IsOn ? _textureOn : _textureOff;
         _image.sprite = tex is UnityTexture2D ut ? ut.ToSprite() : null;
+    }
+
+    private void OnToggleValueChanged(bool _)
+    {
+        _valueChanged?.Invoke();
+        _onCommit?.Invoke();
+        UpdateImage();
     }
 }

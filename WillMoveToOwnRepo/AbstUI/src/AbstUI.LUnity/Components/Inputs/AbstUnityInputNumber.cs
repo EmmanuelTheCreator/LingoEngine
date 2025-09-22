@@ -27,6 +27,8 @@ internal class AbstUnityInputNumber<TValue> : AbstUnityComponent, IAbstFramework
     private AColor _textColor = new(0, 0, 0);
     private AColor _backgroundColor = AbstDefaultColors.Input_Bg;
     private AColor _borderColor = AbstDefaultColors.InputBorderColor;
+    private bool _suppressValueChanged;
+    private bool _textDirty;
 
 
     #region Properties
@@ -47,14 +49,7 @@ internal class AbstUnityInputNumber<TValue> : AbstUnityComponent, IAbstFramework
             if (EqualityComparer<TValue>.Default.Equals(_value, v))
                 return;
             _value = v;
-            var text = v.ToString(null, CultureInfo.InvariantCulture);
-            if (_currentText != text)
-            {
-                _currentText = text;
-                _inputField.text = text;
-                _textComponent.text = text;
-            }
-            ValueChanged?.Invoke();
+            SetTextInternal(v.ToString(null, CultureInfo.InvariantCulture), markDirty: false);
         }
     }
 
@@ -104,6 +99,7 @@ internal class AbstUnityInputNumber<TValue> : AbstUnityComponent, IAbstFramework
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 
     #endregion
 
@@ -113,6 +109,7 @@ internal class AbstUnityInputNumber<TValue> : AbstUnityComponent, IAbstFramework
         _textComponent = text;
         _image = image;
         _inputField.onValueChanged.AddListener(OnValueChanged);
+        _inputField.onEndEdit.AddListener(OnEndEdit);
         _image.color = _backgroundColor.ToUnityColor();
     }
 
@@ -130,24 +127,74 @@ internal class AbstUnityInputNumber<TValue> : AbstUnityComponent, IAbstFramework
 
     private void OnValueChanged(string value)
     {
+        if (_suppressValueChanged)
+            return;
+
         if (_currentText == value)
             return;
+
         _currentText = value;
-        if (TValue.TryParse(value, CultureInfo.InvariantCulture, out var parsed))
+        _textComponent.text = value;
+        _textDirty = true;
+        ValueChanged?.Invoke();
+    }
+
+    private void OnEndEdit(string value)
+    {
+        if (_suppressValueChanged)
+            return;
+
+        _currentText = value;
+        CommitPendingValue();
+    }
+
+    private void CommitPendingValue()
+    {
+        if (!_textDirty)
+            return;
+
+        _textDirty = false;
+
+        if (!TValue.TryParse(_currentText, CultureInfo.InvariantCulture, out var parsed))
         {
-            parsed = TValue.Clamp(parsed, Min, Max);
-            if (!EqualityComparer<TValue>.Default.Equals(_value, parsed))
-            {
-                _value = parsed;
-                ValueChanged?.Invoke();
-            }
-            var text = _value.ToString(null, CultureInfo.InvariantCulture);
-            if (_currentText != text)
-            {
-                _currentText = text;
-                _inputField.text = text;
-                _textComponent.text = text;
-            }
+            SetTextInternal(_value.ToString(null, CultureInfo.InvariantCulture), markDirty: false);
+            OnCommit?.Invoke();
+            return;
+        }
+
+        parsed = TValue.Clamp(parsed, Min, Max);
+        if (!EqualityComparer<TValue>.Default.Equals(_value, parsed))
+        {
+            _value = parsed;
+            ValueChanged?.Invoke();
+        }
+
+        SetTextInternal(_value.ToString(null, CultureInfo.InvariantCulture), markDirty: false);
+        OnCommit?.Invoke();
+    }
+
+    private void SetTextInternal(string text, bool markDirty)
+    {
+        _currentText = text;
+        _suppressValueChanged = true;
+        try
+        {
+            _inputField.text = text;
+            _textComponent.text = text;
+        }
+        finally
+        {
+            _suppressValueChanged = false;
+        }
+
+        if (markDirty)
+        {
+            _textDirty = true;
+            ValueChanged?.Invoke();
+        }
+        else
+        {
+            _textDirty = false;
         }
     }
 

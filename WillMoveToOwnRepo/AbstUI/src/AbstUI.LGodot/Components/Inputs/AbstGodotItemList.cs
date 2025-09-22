@@ -17,6 +17,7 @@ namespace AbstUI.LGodot.Components
         private AMargin _margin = AMargin.Zero;
         private Action<string?>? _onChange;
         private event Action? _onValueChanged;
+        private event Action? _onCommit;
         private ItemSelectedEventHandler? _onItemSelected;
 
         public float X { get => Position.X; set => Position = new Vector2(value, Position.Y); }
@@ -47,12 +48,7 @@ namespace AbstUI.LGodot.Components
         {
             _onChange = onChange;
             list.Init(this);
-            _onItemSelected = idx =>
-            {
-                _onValueChanged?.Invoke();
-                if (idx >= 0 && idx < _items.Count)
-                    _onChange?.Invoke(_items[(int)idx].Key);
-            };
+            _onItemSelected = OnItemSelected;
             ItemSelected += _onItemSelected;
             SizeFlagsHorizontal = SizeFlags.ExpandFill;
             SizeFlagsVertical = SizeFlags.ExpandFill;
@@ -187,11 +183,28 @@ namespace AbstUI.LGodot.Components
             remove => _onValueChanged -= value;
         }
 
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
+        }
+
         public new void Dispose()
         {
             if (_onItemSelected != null) ItemSelected -= _onItemSelected;
             QueueFree();
             base.Dispose();
+        }
+
+        private void OnItemSelected(long index)
+        {
+            _onValueChanged?.Invoke();
+            _onCommit?.Invoke();
+
+            if (index >= 0 && index < _items.Count)
+            {
+                _onChange?.Invoke(_items[(int)index].Key);
+            }
         }
     }
 }

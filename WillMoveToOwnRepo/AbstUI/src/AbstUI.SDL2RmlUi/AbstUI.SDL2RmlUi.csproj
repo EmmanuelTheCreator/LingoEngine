@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="RmlUi.NET" Version="1.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
