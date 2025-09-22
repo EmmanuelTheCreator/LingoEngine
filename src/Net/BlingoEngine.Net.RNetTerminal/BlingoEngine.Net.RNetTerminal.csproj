@@ -26,7 +26,6 @@
     <ProjectReference Include="..\\BlingoEngine.Net.RNetPipeClient\\BlingoEngine.Net.RNetPipeClient.csproj" />
     <ProjectReference Include="..\\BlingoEngine.Net.RNetProjectClient\\BlingoEngine.Net.RNetProjectClient.csproj" />
     <ProjectReference Include="..\\BlingoEngine.Net.RNetContracts\\BlingoEngine.Net.RNetContracts.csproj" />
-    <ProjectReference Include="..\\BlingoEngine.Net.RNetHost.Common\\BlingoEngine.Net.RNetHost.Common.csproj" />
     <ProjectReference Include="..\\..\\BlingoEngine.IO.Data\\BlingoEngine.IO.Data.csproj" />
   </ItemGroup>
 </Project>

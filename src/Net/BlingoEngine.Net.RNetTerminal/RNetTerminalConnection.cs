@@ -4,7 +4,6 @@ using BlingoEngine.Net.RNetClient.Common;
 using BlingoEngine.Net.RNetContracts;
 using BlingoEngine.Net.RNetProjectClient;
 using BlingoEngine.Net.RNetTerminal.Datas;
-using BlingoEngine.Net.RNetHost.Common;
 using System;
 using System.Globalization;
 using System.Net.WebSockets;
@@ -143,7 +142,7 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
             return;
         }
 
-        var dtoType = memberType.ConvertTo<RNetMemberTypeDto>();
+        var dtoType = memberType.ToRNet();
         FireAndForget(() => client.SendCommandAsync(new SetMemberPropCmd(castLibNum, memberNum, dtoType, propertyName, value)));
     }
 

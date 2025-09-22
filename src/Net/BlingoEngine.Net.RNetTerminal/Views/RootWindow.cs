@@ -1,6 +1,5 @@
 ﻿using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.Net.RNetContracts;
-using BlingoEngine.Net.RNetHost.Common;
 using BlingoEngine.Net.RNetTerminal.Datas;
 using BlingoEngine.Net.RNetTerminal;
 using BlingoEngine.Net.RNetTerminal.Dialogs;
@@ -213,7 +212,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 else if (target == PropertyTarget.Member && _propertyInspector?.CurrentMember != null)
                 {
                     var member = _propertyInspector.CurrentMember;
-                    var memberType = member.Type.ConvertTo<RNetMemberTypeDto>();
+                    var memberType = member.Type.ToRNet();
                     _ = sendCommandAsync(new SetMemberPropCmd(member.CastLibNum, member.NumberInCast, memberType, n, v), null);
                 }
             };
