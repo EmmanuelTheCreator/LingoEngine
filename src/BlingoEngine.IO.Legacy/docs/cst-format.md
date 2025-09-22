@@ -59,18 +59,64 @@ Director 4 introduces explicit `CASt` chunks with a short header:
 | Cast data payload | `cast data size` − consumed bytes | Bytes passed to the cast-specific parser. |
 | Cast info payload | `cast info size` bytes | Optional metadata strings or timestamps. |
 
-### Director 5–10 (`CASt` header)
+### Director 5–10.1 (`CASt` header)
 
-Later versions expand the header and reorder the fields:
+Later versions expand the header and reorder the fields. Director 10 and the final Director 10.1 maintenance release reuse this layout unchanged, so the same parsing rules cover all modern classic exports:
 
 | Field | Length | Notes |
 | --- | --- | --- |
-| Cast type | 4 bytes | Four-character tag stored in big endian. |
+| Cast type | 4 bytes | Big-endian 32-bit member-type identifier. Values map to the classic type table summarised in [Cast member types](#cast-member-types). |
 | Cast info size | 4 bytes | Big-endian length of the metadata block that immediately follows. |
 | Cast data size | 4 bytes | Big-endian length of the cast-data section stored after the info block. |
 | Cast info payload | `cast info size` bytes | Optional metadata strings or timestamps. |
 | Cast data payload | `cast data size` bytes | Bytes forwarded to the cast-specific parser. |
 
+Classic authoring tools usually store the cast-member name at the start of the info payload using a
+Pascal-style string: the first byte encodes the number of UTF-8 characters that follow. Additional
+metadata, such as authoring timestamps or flags, may appear after the name depending on the Director
+release.
+
 ### Loading process
 
 Regardless of the version, the loader wraps the cast-data payload in a memory stream, instantiates the matching cast member class, and attaches any linked resources recorded in the `KEY*` table. This allows higher-level systems to fetch sprites, scripts, and media by cast member number without re-reading the tables.
+
+### Cast member types
+
+Director stores the cast-member classification as a big-endian 32-bit word at the start of the modern `CASt` header. The values below match the enumeration in `BlLegacyCastMemberType`. Later Shockwave releases introduced additional codes; until those layouts are documented the loader reports them as `Unknown` while still exposing the raw payload bytes.
+
+| Value | Type | Notes |
+| --- | --- | --- |
+| `0` | Null | Placeholder slot; older movies use this for empty cast entries. |
+| `1` | Bitmap | Raster member backed by `BITD`, `DIB `, or authoring metadata. See [Legacy Bitmap Loading](./LegacyBitmapLoading.md). |
+| `2` | Film loop | Timeline snippets that replay a sequence of sprites. |
+| `3` | Text | Static text members documented in [Legacy Text and Field Members](./LegacyTextFieldMembers.md). |
+| `4` | Palette | Colour table resources referenced by bitmap members. |
+| `5` | Picture | QuickDraw `PICT` drawings or embedded images exposed as pictures. |
+| `6` | Sound | Audio members that resolve to `ediM`, `sndS`, or classic `SND ` payloads. See [Legacy Sound Loading](./LegacySoundLoading.md). |
+| `7` | Button | Interactive sprites that bind scripts and button states. |
+| `8` | Shape | QuickDraw shape records described in [LegacyShapeRecords](./LegacyShapeRecords.md). |
+| `9` | Movie | Linked movie assets (commonly QuickTime clips). |
+| `10` | Digital video | Digital video members that wrap platform-specific codecs. |
+| `11` | Script | Lingo scripts; see [Legacy Script Cast Members](./LegacyScriptMembers.md). |
+| `12` | RTE field | Rich-text edit fields introduced in later Director releases. |
+| `13` | Font | Embedded font resources registered in the cast. |
+| `14` | Xtra | Third-party Xtras and internal extensions. |
+| `15` | Field | Editable text fields documented in [Legacy Text and Field Members](./LegacyTextFieldMembers.md). |
+
+#### Bitmap cast members
+
+Bitmap entries reserve their cast-data length for zero bytes because the actual raster payloads live
+in sibling resources linked through the `KEY*` table. Director 5–10 exports commonly attach
+combinations of `BITD`, `DIB `, `PICT`, `ALFA`, `Thum`, and modern `ediM` metadata streams to describe
+the surface, colour depth, and optional thumbnails. The Pascal-style name described above remains in
+the info block so cataloguing tools can display the member without reading any media chunks. See
+[Legacy Bitmap Loading](./LegacyBitmapLoading.md) for byte-level layouts.
+
+#### Sound cast members
+
+Sound members follow the same pattern: the info payload stores the Pascal-style name and optional
+authoring metadata, while the audio bytes remain in dedicated media resources referenced from the
+`KEY*` table. Classic movies point at `sndS` or `SND ` payloads, whereas Director 7+ authoring tools
+prefer `ediM` containers for MP3 and streaming media. The cast-data length therefore stays at zero
+because the loader pulls audio directly from the linked resource. Refer to [Legacy Sound
+Loading](./LegacySoundLoading.md) for per-format parsing rules.
