@@ -348,7 +348,7 @@ namespace BlingoEngine.Setup
             LoadFonts(_blingoServiceProvider);
             _buildActions.ForEach(b => b(_blingoServiceProvider));
             _blingoServiceProvider.GetRequiredService<IAbstCommandManager>()
-                 .Register<BlingoPlayer, RewindMovieCommand>()
+                 .Register<BlingoPlayer, MovieRewindCommand>()
                  .Register<BlingoPlayer, PlayMovieCommand>()
                  .Register<BlingoPlayer, StepFrameCommand>()
 

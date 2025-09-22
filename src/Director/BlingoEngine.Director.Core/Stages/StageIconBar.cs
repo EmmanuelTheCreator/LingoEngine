@@ -55,7 +55,7 @@ public class StageIconBar : IDisposable
         _rewindButton = factory.CreateButton("RewindButton", "|<");
         _rewindButton.Width = 20;
         _rewindButton.Height = iconBarHeight;
-        _rewindButton.Pressed += () => commandManager.Handle(new RewindMovieCommand());
+        _rewindButton.Pressed += () => commandManager.Handle(new MovieRewindCommand());
         container.AddItem(_rewindButton);
 
         _playButton = factory.CreateButton("PlayButton", "Play");
