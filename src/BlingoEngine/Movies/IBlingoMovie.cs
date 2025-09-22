@@ -85,6 +85,12 @@ namespace BlingoEngine.Movies
         void Halt();
 
         /// <summary>
+        /// Rewinds the movie to the first frame and stops playback.
+        /// Lingo: rewind
+        /// </summary>
+        void Rewind();
+
+        /// <summary>
         /// Starts or resumes playback.
         /// Lingo: play
         /// </summary>

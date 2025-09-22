@@ -475,6 +475,31 @@ namespace BlingoEngine.Movies
         {
             OnStop();
         }
+
+        public void Rewind()
+        {
+            RemoveAllPuppetSprites();
+
+            if (FrameCount == 0)
+            {
+                Halt();
+                return;
+            }
+
+            _nextFrame = 1;
+            AdvanceFrame();
+            Halt();
+        }
+
+        private void RemoveAllPuppetSprites()
+        {
+            for (int channelIndex = 0; channelIndex < _sprite2DManager.MaxSpriteChannelCount; channelIndex++)
+            {
+                var channel = _sprite2DManager.Channel(channelIndex);
+                if (channel.Puppet)
+                    channel.Puppet = false;
+            }
+        }
         public void NextFrame()
         {
             if (_isPlaying)

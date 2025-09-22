@@ -24,7 +24,7 @@ namespace BlingoEngine.Core
 
 
     public class BlingoPlayer : IBlingoPlayer, IDisposable,
-        IAbstCommandHandler<RewindMovieCommand>,
+        IAbstCommandHandler<MovieRewindCommand>,
         IAbstCommandHandler<PlayMovieCommand>,
         IAbstCommandHandler<StepFrameCommand>
     {
@@ -280,12 +280,12 @@ namespace BlingoEngine.Core
 
 
         #region Commands
-        public bool CanExecute(RewindMovieCommand command) => ActiveMovie is BlingoMovie;
+        public bool CanExecute(MovieRewindCommand command) => ActiveMovie is BlingoMovie;
 
-        public bool Handle(RewindMovieCommand command)
+        public bool Handle(MovieRewindCommand command)
         {
             if (ActiveMovie is BlingoMovie movie)
-                movie.GoTo(1);
+                movie.Rewind();
             return true;
         }
 
