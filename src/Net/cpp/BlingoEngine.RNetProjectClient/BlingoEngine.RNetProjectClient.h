@@ -177,21 +177,74 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(LingoProjectJsonDto, json);
 
 // Debug command hierarchy -----------------------------------------------------
 
+enum class RNetMemberTypeDto
+{
+    Unknown,
+    Animgif,
+    Ole,
+    Bitmap,
+    Palette,
+    Button,
+    Picture,
+    Cursor,
+    QuickTimeMedia,
+    DigitalVideo,
+    RealMedia,
+    DVD,
+    Script,
+    Empty,
+    Shape,
+    Field,
+    Shockwave3D,
+    FilmLoop,
+    Sound,
+    Flash,
+    Swa,
+    Flashcomponent,
+    Text,
+    Font,
+    Transition,
+    Havok,
+    VectorShape,
+    Movie,
+    WindowsMedia
+};
+
+enum class RNetSpriteTypeDto
+{
+    Unknown,
+    Sprite2D,
+    Tempo,
+    ColorPalette,
+    FrameScript,
+    Transition,
+    Sound,
+};
+
 struct SetSpritePropCmd {
     int SpriteNum;
     int BeginFrame;
+    RNetSpriteTypeDto SpriteType;
     std::string Prop;
     std::string Value;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SetSpritePropCmd, SpriteNum, BeginFrame, Prop, Value);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SetSpritePropCmd, SpriteNum, BeginFrame, SpriteType, Prop, Value);
 
 struct SetMemberPropCmd {
     int CastLibNum;
     int MemberNum;
+    RNetMemberTypeDto MemberType;
     std::string Prop;
     std::string Value;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SetMemberPropCmd, CastLibNum, MemberNum, Prop, Value);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SetMemberPropCmd, CastLibNum, MemberNum, MemberType, Prop, Value);
+
+struct SetCastPropCmd {
+    int CastLibNum;
+    std::string Prop;
+    std::string Value;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SetCastPropCmd, CastLibNum, Prop, Value);
 
 struct GoToFrameCmd {
     int Frame;
@@ -207,7 +260,7 @@ inline void to_json(nlohmann::json& j, const ResumeCmd&) { j = nlohmann::json::o
 inline void from_json(const nlohmann::json&, ResumeCmd&) {}
 
 struct RNetCommand {
-    std::variant<SetSpritePropCmd, SetMemberPropCmd, GoToFrameCmd, PauseCmd, ResumeCmd> Command;
+    std::variant<SetSpritePropCmd, SetMemberPropCmd, SetCastPropCmd, GoToFrameCmd, PauseCmd, ResumeCmd> Command;
 };
 inline void to_json(nlohmann::json& j, const RNetCommand& cmd)
 {

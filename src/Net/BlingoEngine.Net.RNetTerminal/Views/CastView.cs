@@ -124,7 +124,7 @@ internal sealed class CastView : View
         table.Columns.Add("Name");
         table.Columns.Add("Number", typeof(int));
         table.Columns.Add("Type");
-        table.Columns.Add("Comment");
+        table.Columns.Add("Comments");
         table.Columns.Add(" ");
         foreach (var member in members)
         {

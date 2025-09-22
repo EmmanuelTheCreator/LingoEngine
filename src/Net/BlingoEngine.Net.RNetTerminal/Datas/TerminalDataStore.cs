@@ -2,10 +2,12 @@
 using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.IO.Data.DTO.Sprites;
 using BlingoEngine.Net.RNetContracts;
+using BlingoEngine.Net.RNetTerminal;
 using BlingoEngine.Net.RNetTerminal.TestData;
 using BlingoEngine.Net.RNetTerminal.Views;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace BlingoEngine.Net.RNetTerminal.Datas;
@@ -61,6 +63,11 @@ public sealed class TerminalDataStore
 
     public Blingo2DSpriteDTO? FindSprite(SpriteRef sprite)
         => _sprites.FirstOrDefault(s => s.SpriteNum == sprite.SpriteNum && s.BeginFrame == sprite.BeginFrame);
+
+    public RNetSpriteTypeDto GetSpriteType(SpriteRef sprite)
+        => FindSprite(sprite) is { } sprite2D
+            ? sprite2D.ToRNet()
+            : RNetSpriteTypeDto.Unknown;
 
     public BlingoMemberDTO? FindMember(int castLibNum, int numberInCast)
         => _casts.Values.SelectMany(c => c)
@@ -202,11 +209,20 @@ public sealed class TerminalDataStore
                 case "LocV" when float.TryParse(value, out var locV):
                     sprite.LocV = locV;
                     break;
+                case "LocZ" when int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var locZ):
+                    sprite.LocZ = locZ;
+                    break;
                 case "Width" when float.TryParse(value, out var width):
                     sprite.Width = width;
                     break;
                 case "Height" when float.TryParse(value, out var height):
                     sprite.Height = height;
+                    break;
+                case "BeginFrame" when int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var begin):
+                    sprite.BeginFrame = begin;
+                    break;
+                case "EndFrame" when int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var end):
+                    sprite.EndFrame = end;
                     break;
             }
 
@@ -219,7 +235,7 @@ public sealed class TerminalDataStore
                 case "Name":
                     member.Name = value;
                     break;
-                case "Comment":
+                case "Comments":
                     member.Comments = value;
                     break;
             }

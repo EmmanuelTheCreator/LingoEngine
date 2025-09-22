@@ -5,23 +5,20 @@ using AbstUI.Commands;
 using AbstUI.Primitives;
 using BlingoEngine.Animations;
 using BlingoEngine.Core;
-using BlingoEngine.Director.Core.Sprites;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 
-namespace BlingoEngine.Director.Core.Sprites.Commands;
+namespace BlingoEngine.Sprites.Commands;
 
 public class BlingoSpriteCommandHandler :
     IAbstCommandHandler<BlingoUpdateSpritePropertiesCommand>
 {
-    private readonly DirSpritesManager _spritesManager;
     private readonly BlingoPlayer _player;
-    private readonly IHistoryManager _historyManager;
+    private readonly IHistoryManager? _historyManager;
     private BlingoSprite? _cachedSprite;
 
-    public BlingoSpriteCommandHandler(DirSpritesManager spritesManager, BlingoPlayer player, IHistoryManager historyManager)
+    public BlingoSpriteCommandHandler(BlingoPlayer player, IHistoryManager? historyManager = null)
     {
-        _spritesManager = spritesManager;
         _player = player;
         _historyManager = historyManager;
     }
@@ -72,8 +69,7 @@ public class BlingoSpriteCommandHandler :
             RevertMutations(updates);
             animationUpdate?.Revert();
             UpdateStageIfNeeded(sprite, requiresStageRefresh);
-            _spritesManager.ChannelChanged(sprite.SpriteNumWithChannel);
-            _spritesManager.Mediator.RaiseSpriteSelected(sprite);
+            OnAfterMutation(sprite, requiresStageRefresh);
         }
 
         void Redo()
@@ -81,14 +77,24 @@ public class BlingoSpriteCommandHandler :
             ApplyMutations(updates);
             animationUpdate?.Apply();
             UpdateStageIfNeeded(sprite, requiresStageRefresh);
-            _spritesManager.ChannelChanged(sprite.SpriteNumWithChannel);
-            _spritesManager.Mediator.RaiseSpriteSelected(sprite);
+            OnAfterMutation(sprite, requiresStageRefresh);
         }
 
-        _historyManager.Push(Undo, Redo);
-        _spritesManager.ChannelChanged(sprite.SpriteNumWithChannel);
-        _spritesManager.Mediator.RaiseSpriteSelected(sprite);
+        TrackHistory(Undo, Redo);
+        OnAfterMutation(sprite, requiresStageRefresh);
         return true;
+    }
+
+    protected virtual void OnAfterMutation(BlingoSprite sprite, bool requiresStageRefresh)
+    {
+    }
+
+    private void TrackHistory(Action undo, Action redo)
+    {
+        if (_historyManager == null)
+            return;
+
+        _historyManager.Push(undo, redo);
     }
 
     private sealed record CollectedChange(APropertyValue Request, BlingoSpritePropertyMutation Mutation);

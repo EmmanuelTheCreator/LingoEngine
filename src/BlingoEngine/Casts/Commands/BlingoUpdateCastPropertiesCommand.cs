@@ -4,7 +4,7 @@ using System.Linq;
 using AbstUI.Primitives;
 using BlingoEngine.Casts;
 
-namespace BlingoEngine.Director.Core.Casts.Commands;
+namespace BlingoEngine.Casts.Commands;
 
 public sealed record BlingoUpdateCastPropertiesCommand : BlingoCastBaseCommand
 {
