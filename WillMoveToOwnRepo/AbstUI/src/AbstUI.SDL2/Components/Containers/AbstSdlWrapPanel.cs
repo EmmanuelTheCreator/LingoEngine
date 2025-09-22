@@ -1,3 +1,4 @@
+using System;
 using AbstUI.Components;
 using AbstUI.Components.Containers;
 using AbstUI.FrameworkCommunication;
@@ -15,6 +16,11 @@ namespace AbstUI.SDL2.Components.Containers
         private int _texW;
         private int _texH;
         private AOrientation _orientation;
+        private bool _explicitWidth;
+        private bool _explicitHeight;
+        private bool _applyingMeasuredSize;
+        private float _resolvedWidth;
+        private float _resolvedHeight;
         public AOrientation Orientation
         {
             get => _orientation;
@@ -38,13 +44,43 @@ namespace AbstUI.SDL2.Components.Containers
         public override float Width
         {
             get => base.Width;
-            set { if (Math.Abs(base.Width - value) > 0.01f) { base.Width = value; _layoutDirty = true; ComponentContext.QueueRedraw(this); } }
+            set
+            {
+                if (Math.Abs(base.Width - value) <= 0.01f)
+                    return;
+
+                if (_applyingMeasuredSize)
+                {
+                    base.Width = value;
+                    return;
+                }
+
+                _explicitWidth = value > 0;
+                base.Width = value;
+                _layoutDirty = true;
+                ComponentContext.QueueRedraw(this);
+            }
         }
 
         public override float Height
         {
             get => base.Height;
-            set { if (Math.Abs(base.Height - value) > 0.01f) { base.Height = value; _layoutDirty = true; ComponentContext.QueueRedraw(this); } }
+            set
+            {
+                if (Math.Abs(base.Height - value) <= 0.01f)
+                    return;
+
+                if (_applyingMeasuredSize)
+                {
+                    base.Height = value;
+                    return;
+                }
+
+                _explicitHeight = value > 0;
+                base.Height = value;
+                _layoutDirty = true;
+                ComponentContext.QueueRedraw(this);
+            }
         }
 
        
@@ -151,8 +187,8 @@ namespace AbstUI.SDL2.Components.Containers
         {
             if (!_layoutDirty  && !ComponentContext.RequireToRedraw) return;
             
-            float availW = Math.Max(0, Width - Margin.Left - Margin.Right);
-            float availH = Math.Max(0, Height - Margin.Top - Margin.Bottom);
+            float availW = _explicitWidth ? Math.Max(0, Width - Margin.Left - Margin.Right) : 0f;
+            float availH = _explicitHeight ? Math.Max(0, Height - Margin.Top - Margin.Bottom) : 0f;
 
             float startX = Margin.Left;
             float startY = Margin.Top;
@@ -213,11 +249,42 @@ namespace AbstUI.SDL2.Components.Containers
                 child.IsDirty = false;
             }
 
-            // Report desired size to parent (scroll containers use this)
-            ComponentContext.TargetWidth = (int)Math.Ceiling(contentW + Margin.Left + Margin.Right);
-            ComponentContext.TargetHeight = (int)Math.Ceiling(contentH + Margin.Top + Margin.Bottom);
+            float measuredWidth = contentW + Margin.Left + Margin.Right;
+            float measuredHeight = contentH + Margin.Top + Margin.Bottom;
+
+            ApplyMeasuredSize(measuredWidth, measuredHeight);
 
             _layoutDirty = false;
+        }
+
+        private void ApplyMeasuredSize(float measuredWidth, float measuredHeight)
+        {
+            measuredWidth = Math.Max(0, measuredWidth);
+            measuredHeight = Math.Max(0, measuredHeight);
+
+            _applyingMeasuredSize = true;
+            try
+            {
+                if (!_explicitWidth)
+                {
+                    base.Width = measuredWidth;
+                }
+
+                if (!_explicitHeight)
+                {
+                    base.Height = measuredHeight;
+                }
+            }
+            finally
+            {
+                _applyingMeasuredSize = false;
+            }
+
+            _resolvedWidth = _explicitWidth ? base.Width : measuredWidth;
+            _resolvedHeight = _explicitHeight ? base.Height : measuredHeight;
+
+            ComponentContext.TargetWidth = Math.Max(1, (int)Math.Ceiling(_resolvedWidth));
+            ComponentContext.TargetHeight = Math.Max(1, (int)Math.Ceiling(_resolvedHeight));
         }
 
 
@@ -229,8 +296,13 @@ namespace AbstUI.SDL2.Components.Containers
             if (!Visibility)
                 return nint.Zero;
 
-            int w = (int)Width;
-            int h = (int)Height;
+            RecalculateLayout();
+
+            int resolvedW = _resolvedWidth > 0 ? (int)Math.Ceiling(_resolvedWidth) : Math.Max(ComponentContext.TargetWidth, (int)Math.Ceiling(Width));
+            int resolvedH = _resolvedHeight > 0 ? (int)Math.Ceiling(_resolvedHeight) : Math.Max(ComponentContext.TargetHeight, (int)Math.Ceiling(Height));
+            int w = Math.Max(1, resolvedW);
+            int h = Math.Max(1, resolvedH);
+
             if (_texture == nint.Zero || w != _texW || h != _texH)
             {
                 if (_texture != nint.Zero)
@@ -243,7 +315,8 @@ namespace AbstUI.SDL2.Components.Containers
                 _texH = h;
             }
 
-            RecalculateLayout();
+            ComponentContext.TargetWidth = w;
+            ComponentContext.TargetHeight = h;
 
             var prevTarget = SDL.SDL_GetRenderTarget(context.Renderer);
             SDL.SDL_SetRenderTarget(context.Renderer, _texture);
@@ -261,21 +334,10 @@ namespace AbstUI.SDL2.Components.Containers
                 ctx.X = (int)(child.X + Margin.Left);
                 ctx.Y = (int)(child.Y + Margin.Top);
 
-                // (no Offset push here)
-                //Console.WriteLine($"WRAP_PANEL BLIT {comp.Name} at {comp.X},{comp.Y} into {Name} at {X},{Y}  off=({ctx.OffsetX},{ctx.OffsetY}) {child.Node.Name}");
                 comp.ComponentContext.RenderToTexture(context);
 
                 ctx.X = oldX; ctx.Y = oldY;
             }
-
-
-
-
-            // also make sure our target size is set so parent blits us correctly
-            ComponentContext.TargetWidth = (int)Width;
-            ComponentContext.TargetHeight = (int)Height;
-
-
 
             SDL.SDL_SetRenderTarget(context.Renderer, prevTarget);
             return _texture;

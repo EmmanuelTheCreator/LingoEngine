@@ -1,3 +1,4 @@
+using System;
 using AbstUI.Components;
 using AbstUI.Components.Containers;
 using AbstUI.SDL2.Components.Base;
@@ -50,7 +51,7 @@ namespace AbstUI.SDL2.Components.Containers
             {
                 if (child.FrameworkNode is not AbstSdlComponent comp)
                     continue;
-                
+
                 var ctx = comp.ComponentContext;
                 var oldOffX = ctx.OffsetX;
                 var oldOffY = ctx.OffsetY;
@@ -63,8 +64,15 @@ namespace AbstUI.SDL2.Components.Containers
                 ctx.OffsetX = oldOffX;
                 ctx.OffsetY = oldOffY;
 
-                maxX = MathF.Max(maxX, comp.X + comp.Width);
-                maxY = MathF.Max(maxY, comp.Y + comp.Height);
+                int childWidth = comp.ComponentContext.TargetWidth != 0
+                    ? comp.ComponentContext.TargetWidth
+                    : (int)Math.Ceiling(comp.Width);
+                int childHeight = comp.ComponentContext.TargetHeight != 0
+                    ? comp.ComponentContext.TargetHeight
+                    : (int)Math.Ceiling(comp.Height);
+
+                maxX = MathF.Max(maxX, comp.X + childWidth);
+                maxY = MathF.Max(maxY, comp.Y + childHeight);
             }
 
             ContentWidth = maxX;
