@@ -482,6 +482,12 @@ namespace BlingoEngine.Director.Core.UI
             _redoItem.Enabled = _historyManager.CanRedo;
         }
 
+        protected override void OnInit(IAbstFrameworkWindow frameworkWindow)
+        {
+            base.OnInit(frameworkWindow);
+            CallOnAllTopMenus(menu => Framework.RegisterTopMenu(menu));
+        }
+
 
 
         protected override void OnDispose()

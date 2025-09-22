@@ -1,13 +1,19 @@
-﻿using AbstUI.Commands;
+using System;
+using AbstUI.Commands;
 using AbstUI.Components;
+using AbstUI.Components.Buttons;
 using AbstUI.Components.Containers;
+using AbstUI.Components.Menus;
 using AbstUI.FrameworkCommunication;
 using AbstUI.Inputs;
 using AbstUI.SDL2.Components;
+using AbstUI.SDL2.Components.Buttons;
 using AbstUI.SDL2.Components.Containers;
+using AbstUI.SDL2.Styles;
 using AbstUI.SDL2.Windowing;
 using AbstUI.Tools;
 using AbstUI.Windowing;
+using AbstUI.Primitives;
 using BlingoEngine.Core;
 using BlingoEngine.Director.Core.Projects;
 using BlingoEngine.Director.Core.Styles;
@@ -62,6 +68,7 @@ internal partial class DirSDLMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWind
         _root.BackgroundColor = DirectorColors.BG_TopMenu;
         _root.AddItem(directorMainMenu.MenuBar, _menuBar.X, _menuBar.Y);
         _root.AddItem(directorMainMenu.IconBar, _iconBar.X, _iconBar.Y);
+        StyleTopMenuButtons();
         //_root.Compose(Factory).NextRow().Finalize();
         //_root.Compose(Factory).NextRow().AddButton("hallo", "Halo", () => { }).AddLabel("rzer", "tedft").Finalize();
         //directorMainMenu.CallOnAllTopMenus(btn =>
@@ -83,6 +90,36 @@ internal partial class DirSDLMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWind
     {
         base.Init(instance);
         Content = _root.FrameworkObj;
+    }
+
+    public void RegisterTopMenu(AbstMenu menu)
+    {
+        _root.AddItem(menu);
+    }
+
+    private void StyleTopMenuButtons()
+    {
+        var baseColor = DirectorColors.BG_TopMenu;
+        var hoverColor = baseColor.Lighten(0.1f);
+        var fontManager = _componentFactory.FontManagerTyped;
+
+        _directorMainMenu.CallOnAllTopMenuButtons(btn =>
+        {
+            btn.Margin = AMargin.Zero;
+            btn.BackgroundColor = baseColor;
+            btn.BackgroundHoverColor = hoverColor;
+            btn.BorderColor = AColor.Transparent();
+            if (btn.FrameworkObj is IHasButtonBorderStates borderStates)
+            {
+                borderStates.SetUniformBorderColor(AColor.Transparent());
+            }
+            btn.TextColor = DirectorColors.TextColorLabels;
+
+            var text = btn.Text ?? string.Empty;
+            var textWidth = fontManager.MeasureTextWidth(text, SdlFontManager.DefaultFontName, 12);
+            const float horizontalPadding = 12f;
+            btn.Width = MathF.Ceiling(textWidth + horizontalPadding);
+        });
     }
 
     //private static void StyleIconButton(Button btn)
