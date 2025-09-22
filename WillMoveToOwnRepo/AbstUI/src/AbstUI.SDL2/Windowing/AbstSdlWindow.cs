@@ -27,7 +27,17 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     private bool _dragging;
     private int _dragOffsetX;
     private int _dragOffsetY;
+    private bool _resizing;
+    private int _resizeStartMouseX;
+    private int _resizeStartMouseY;
+    private int _resizeStartWidth;
+    private int _resizeStartHeight;
+    private bool _cursorInResizeArea;
+    private readonly IAbstMouse<AbstMouseEvent>? _globalMouse;
+    private IAbstMouseSubscription? _globalMouseMoveSubscription;
+    private IAbstMouseSubscription? _globalMouseUpSubscription;
     internal const int _titleBarHeight = 24;
+    private const int _resizeHandleSize = 16;
 
 
 
@@ -112,6 +122,13 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
         Visibility = false;
         BackgroundColor = AColors.White;
         BackgroundTitleColor = AColors.LightGray;
+
+        _globalMouse = _componentFactory.GetRequiredService<IAbstGlobalMouse>() as IAbstMouse<AbstMouseEvent>;
+        if (_globalMouse != null)
+        {
+            _globalMouseMoveSubscription = _globalMouse.OnMouseMove(OnGlobalMouseMove);
+            _globalMouseUpSubscription = _globalMouse.OnMouseUp(OnGlobalMouseUp);
+        }
     }
 
     public virtual void Init(IAbstWindow instance)
@@ -157,11 +174,16 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     private void UpateSizeFromAbstWindow()
     {
         Width = ((IAbstWindow)_abstWindow).Width;
-        Height = ((IAbstWindow)_abstWindow).Height;
+        var titleOffset = Borderless ? 0 : _titleBarHeight;
+        Height = ((IAbstWindow)_abstWindow).Height + titleOffset;
     }
 
     public virtual void CloseWindow()
     {
+        if (_resizing || _cursorInResizeArea)
+            ResetCursor();
+        _resizing = false;
+        _dragging = false;
         Visibility = false;
         _componentFactory.RootContext.ComponentContainer.Deactivate(ComponentContext);
         _abstWindow.RaiseWindowStateChanged(false);
@@ -184,12 +206,18 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     public virtual APoint GetPosition() => new APoint(X, Y);
 
 
-    public virtual APoint GetSize() => new APoint(Width, Height);
+    public virtual APoint GetSize()
+    {
+        var totalHeight = Height;
+        var contentHeight = Borderless ? totalHeight : Math.Max(0, totalHeight - _titleBarHeight);
+        return new APoint(Width, contentHeight);
+    }
 
     public virtual void SetSize(int width, int height)
     {
         Width = width;
-        Height = height;
+        var titleOffset = Borderless ? 0 : _titleBarHeight;
+        Height = height + titleOffset;
         _abstWindow.ResizingContentFromFW(false, width, height);
     }
 
@@ -257,6 +285,164 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
         return tex;
     }
 
+    private int GetTotalWidth()
+    {
+        var storedWidth = (int)MathF.Round(Width);
+        if (_abstWindow == null)
+            return storedWidth;
+
+        var abstWindow = (IAbstWindow)_abstWindow;
+        return Math.Max(storedWidth, abstWindow.Width);
+    }
+
+    private int GetTotalHeight()
+    {
+        var storedHeight = (int)MathF.Round(Height);
+        if (_abstWindow == null)
+            return storedHeight;
+
+        var abstWindow = (IAbstWindow)_abstWindow;
+        var titleOffset = Borderless ? 0 : _titleBarHeight;
+        return Math.Max(storedHeight, abstWindow.Height + titleOffset);
+    }
+
+    private int GetMinimumTotalHeight()
+    {
+        if (_abstWindow == null)
+            return Borderless ? 0 : _titleBarHeight;
+
+        var abstWindow = (IAbstWindow)_abstWindow;
+        var titleOffset = Borderless ? 0 : _titleBarHeight;
+        return abstWindow.MinimumHeight + titleOffset;
+    }
+
+    private bool IsInResizeHandle(int localX, int localY)
+    {
+        var totalWidth = GetTotalWidth();
+        var totalHeight = GetTotalHeight();
+        return localX >= totalWidth - _resizeHandleSize && localY >= totalHeight - _resizeHandleSize;
+    }
+
+    private void BeginResize(int mouseX, int mouseY)
+    {
+        _resizing = true;
+        _resizeStartMouseX = mouseX;
+        _resizeStartMouseY = mouseY;
+        _resizeStartWidth = GetTotalWidth();
+        _resizeStartHeight = GetTotalHeight();
+        SetResizeCursor();
+    }
+
+    private void UpdateResize(int mouseX, int mouseY)
+    {
+        if (!_resizing)
+            return;
+
+        var deltaX = mouseX - _resizeStartMouseX;
+        var deltaY = mouseY - _resizeStartMouseY;
+        var targetWidth = _resizeStartWidth + deltaX;
+        var targetHeight = _resizeStartHeight + deltaY;
+
+        ApplyResize(targetWidth, targetHeight);
+    }
+
+    private void ApplyResize(int targetWidth, int targetHeight)
+    {
+        if (_abstWindow == null)
+            return;
+
+        var abstWindow = (IAbstWindow)_abstWindow;
+        var minWidth = abstWindow.MinimumWidth;
+        var minTotalHeight = GetMinimumTotalHeight();
+
+        if (targetWidth < minWidth)
+            targetWidth = minWidth;
+        if (targetHeight < minTotalHeight)
+            targetHeight = minTotalHeight;
+
+        var titleOffset = Borderless ? 0 : _titleBarHeight;
+        var contentHeight = targetHeight - titleOffset;
+        if (contentHeight < abstWindow.MinimumHeight)
+        {
+            contentHeight = abstWindow.MinimumHeight;
+            targetHeight = contentHeight + titleOffset;
+        }
+
+        _abstWindow.ResizingContentFromFW(false, targetWidth, contentHeight);
+
+        Width = abstWindow.Width;
+        Height = abstWindow.Height + titleOffset;
+        ComponentContext.QueueRedraw(this);
+    }
+
+    private void UpdateWindowPosition(int mouseX, int mouseY)
+    {
+        X = mouseX - _dragOffsetX;
+        Y = mouseY - _dragOffsetY;
+        _abstWindow.SetPositionFromFW((int)X, (int)Y);
+    }
+
+    private void UpdateCursor(bool overResizeHandle)
+    {
+        if (_globalMouse == null || _resizing)
+            return;
+
+        if (overResizeHandle && !_cursorInResizeArea)
+        {
+            _cursorInResizeArea = true;
+            _globalMouse.SetCursor(AMouseCursor.SizeNWSE);
+        }
+        else if (!overResizeHandle && _cursorInResizeArea)
+        {
+            _cursorInResizeArea = false;
+            _globalMouse.SetCursor(AMouseCursor.Arrow);
+        }
+    }
+
+    private void SetResizeCursor()
+    {
+        if (_globalMouse == null)
+            return;
+
+        _cursorInResizeArea = true;
+        _globalMouse.SetCursor(AMouseCursor.SizeNWSE);
+    }
+
+    private void ResetCursor()
+    {
+        if (_globalMouse == null)
+            return;
+
+        _cursorInResizeArea = false;
+        _globalMouse.SetCursor(AMouseCursor.Arrow);
+    }
+
+    private void OnGlobalMouseMove(AbstMouseEvent e)
+    {
+        if (_dragging)
+            UpdateWindowPosition((int)e.MouseH, (int)e.MouseV);
+
+        if (_resizing)
+            UpdateResize((int)e.MouseH, (int)e.MouseV);
+    }
+
+    private void OnGlobalMouseUp(AbstMouseEvent e)
+    {
+        if (!_dragging && !_resizing)
+            return;
+
+        _dragging = false;
+        if (_resizing)
+        {
+            _resizing = false;
+            ResetCursor();
+        }
+        else if (!_cursorInResizeArea)
+        {
+            ResetCursor();
+        }
+    }
+
     public override void HandleEvent(AbstSDLEvent e)
     {
         if (!Visibility)
@@ -278,6 +464,13 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
                     return;
                 }
 
+                if (IsInResizeHandle(lx, ly))
+                {
+                    BeginResize(e.Event.button.x, e.Event.button.y);
+                    e.StopPropagation = true;
+                    return;
+                }
+
                 if (ly <= _titleBarHeight)
                 {
                     _dragging = true;
@@ -288,18 +481,32 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
                 break;
 
             case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
+                if (_resizing)
+                {
+                    _resizing = false;
+                    ResetCursor();
+                }
                 _dragging = false;
                 break;
 
             case SDL.SDL_EventType.SDL_MOUSEMOTION:
+            {
+                int motionLx = e.Event.motion.x - (int)X;
+                int motionLy = e.Event.motion.y - (int)Y;
+                UpdateCursor(IsInResizeHandle(motionLx, motionLy));
+
                 if (_dragging)
                 {
-                    X = e.Event.motion.x - _dragOffsetX;
-                    Y = e.Event.motion.y - _dragOffsetY;
-                    _abstWindow.SetPositionFromFW((int)X, (int)Y);
+                    UpdateWindowPosition(e.Event.motion.x, e.Event.motion.y);
+                    e.StopPropagation = true;
+                }
+                else if (_resizing)
+                {
+                    UpdateResize(e.Event.motion.x, e.Event.motion.y);
                     e.StopPropagation = true;
                 }
                 break;
+            }
         }
         if (!e.StopPropagation)
         {
@@ -321,6 +528,8 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     public override void Dispose()
     {
         _font?.Release();
+        _globalMouseMoveSubscription?.Release();
+        _globalMouseUpSubscription?.Release();
         base.Dispose();
     }
 }
