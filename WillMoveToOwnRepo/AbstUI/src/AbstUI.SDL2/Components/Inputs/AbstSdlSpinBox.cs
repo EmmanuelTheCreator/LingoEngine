@@ -18,6 +18,7 @@ internal class AbstSdlSpinBox : AbstSdlComponent, IAbstFrameworkSpinBox, IFramew
     public AMargin Margin { get; set; } = AMargin.Zero;
     public object FrameworkNode => this;
     public event Action? ValueChanged;
+    public event Action? OnCommit;
     public bool Enabled { get; set; } = true;
     public AColor ButtonColor { get; set; } = AbstDefaultColors.InputAccentColor;
     public AColor ButtonBorderColor { get; set; } = AbstDefaultColors.InputBorderColor;
@@ -52,6 +53,7 @@ internal class AbstSdlSpinBox : AbstSdlComponent, IAbstFrameworkSpinBox, IFramew
         _number = new AbstSdlInputNumber<float>(factory);
         _number.ComponentContext.SetParents(ComponentContext);
         _number.ValueChanged += () => ValueChanged?.Invoke();
+        _number.OnCommit += () => OnCommit?.Invoke();
         Width = 50;
         Height = 20;
     }
@@ -89,6 +91,7 @@ internal class AbstSdlSpinBox : AbstSdlComponent, IAbstFrameworkSpinBox, IFramew
             {
                 var dir = e.ComponentTop > Height / 2 ? -1 : 1;
                 Value += Step * dir;
+                OnCommit?.Invoke();
                 e.StopPropagation = true;
                 ComponentContext.QueueRedraw(this);
                 return;

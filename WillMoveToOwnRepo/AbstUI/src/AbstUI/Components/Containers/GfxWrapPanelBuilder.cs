@@ -98,7 +98,8 @@ namespace AbstUI.Components.Containers
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();
 
-            var input = _factory.CreateInputText(name, 0, value => setter(target, value));
+            var input = _factory.CreateInputText(name);
+            input.OnCommit += () => setter(target, input.Text);
             input.Text = getter(target) ?? string.Empty;
             input.Width = width;
             _panel.AddItem(input);
@@ -112,18 +113,20 @@ namespace AbstUI.Components.Containers
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();
 
-            var input = _factory.CreateInputNumberFloat(name, min, max, value => setter(target, value));
+            var input = _factory.CreateInputNumberFloat(name, min, max);
+            input.OnCommit += () => setter(target, input.Value);
             input.Value = getter(target);
             input.Width = width;
             _panel.AddItem(input);
             return this;
-        } 
+        }
         public GfxWrapPanelBuilder AddNumericInputInt<T>(string name, T target, Expression<Func<T, int>> property, int width = 40, int? min = null, int? max = null)
         {
             var setter = property.CompileSetter();
             var getter = property.CompileGetter();
 
-            var input = _factory.CreateInputNumberInt(name, min, max, value => setter(target, value));
+            var input = _factory.CreateInputNumberInt(name, min, max);
+            input.OnCommit += () => setter(target, input.Value);
             input.Value = getter(target);
             input.Width = width;
             _panel.AddItem(input);

@@ -32,6 +32,7 @@ namespace AbstUI.LGodot.Components
         private AColor _itemPressedBackgroundColor = AbstDefaultColors.InputAccentColor;
         private AColor _itemPressedBorderColor = AbstDefaultColors.InputBorderColor;
         private event Action? _onValueChanged;
+        private event Action? _onCommit;
         public object FrameworkNode => this;
         public IReadOnlyList<KeyValuePair<string, string>> Items => _items;
 
@@ -155,9 +156,8 @@ namespace AbstUI.LGodot.Components
         public AbstGodotInputCombobox(AbstInputCombobox input, IAbstFontManager blingoFontManager, Action<string?>? onChange)
         {
             input.Init(this);
-            ItemSelected += idx => _onValueChanged?.Invoke();
             _onChange = onChange;
-            if (_onChange != null) ItemSelected += _ => _onChange(SelectedKey);
+            ItemSelected += OnItemSelected;
 
         }
         private void UpdatePopupStyle()
@@ -209,12 +209,28 @@ namespace AbstUI.LGodot.Components
             remove => _onValueChanged -= value;
         }
 
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
+        }
+
         public new void Dispose()
         {
-            if (_onChange != null) ItemSelected -= _ => _onChange(SelectedKey);
-            ItemSelected -= idx => _onValueChanged?.Invoke();
+            ItemSelected -= OnItemSelected;
             QueueFree();
             base.Dispose();
+        }
+
+        private void OnItemSelected(long index)
+        {
+            _onValueChanged?.Invoke();
+            _onCommit?.Invoke();
+
+            if (index >= 0 && index < _items.Count)
+            {
+                _onChange?.Invoke(_items[(int)index].Key);
+            }
         }
     }
 }

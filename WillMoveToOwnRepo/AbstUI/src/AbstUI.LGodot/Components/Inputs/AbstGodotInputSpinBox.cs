@@ -15,13 +15,13 @@ namespace AbstUI.LGodot.Components
         private AColor _textColor = AbstDefaultColors.InputTextColor;
         private AColor _backgroundColor = AbstDefaultColors.Input_Bg;
         private AColor _borderColor = AbstDefaultColors.InputBorderColor;
+        private event Action? _onCommit;
 
         public AbstGodotSpinBox(AbstInputSpinBox spin, IAbstFontManager blingoFontManager, Action<float>? onChange)
         {
             _onChange = onChange;
             spin.Init(this);
-            ValueChanged += _ => _onValueChanged?.Invoke();
-            if (_onChange != null) ValueChanged += _ => _onChange(Value);
+            ValueChanged += OnValueChanged;
         }
         private event Action? _onValueChanged;
 
@@ -75,6 +75,12 @@ namespace AbstUI.LGodot.Components
             remove => _onValueChanged -= value;
         }
 
+        event Action? IAbstFrameworkNodeInput.OnCommit
+        {
+            add => _onCommit += value;
+            remove => _onCommit -= value;
+        }
+
         public AColor TextColor
         {
             get => _textColor;
@@ -107,10 +113,16 @@ namespace AbstUI.LGodot.Components
 
         public new void Dispose()
         {
-            ValueChanged -= _ => _onValueChanged?.Invoke();
-            if (_onChange != null) ValueChanged -= _ => _onChange(Value);
+            ValueChanged -= OnValueChanged;
             QueueFree();
             base.Dispose();
+        }
+
+        private void OnValueChanged(double _)
+        {
+            _onValueChanged?.Invoke();
+            _onCommit?.Invoke();
+            _onChange?.Invoke(Value);
         }
     }
 }

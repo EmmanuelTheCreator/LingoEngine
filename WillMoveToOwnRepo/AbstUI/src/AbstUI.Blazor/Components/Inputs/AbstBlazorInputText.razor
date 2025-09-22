@@ -1,9 +1,9 @@
 @inherits AbstBlazorComponentBase
 @if (_component.IsMultiLine)
 {
-    <textarea value="@_component.Text" @oninput="HandleInput" maxlength="@_component.MaxLength" disabled="@(_component.Enabled ? null : true)" style="@BuildStyle()"></textarea>
+    <textarea value="@_inputValue" @oninput="HandleInput" @onchange="HandleChange" @onkeydown="HandleKeyDown" maxlength="@_component.MaxLength" disabled="@(_component.Enabled ? null : true)" style="@BuildStyle()"></textarea>
 }
 else
 {
-    <input value="@_component.Text" @oninput="HandleInput" maxlength="@_component.MaxLength" disabled="@(_component.Enabled ? null : true)" style="@BuildStyle()" />
+    <input value="@_inputValue" @oninput="HandleInput" @onchange="HandleChange" @onkeydown="HandleKeyDown" maxlength="@_component.MaxLength" disabled="@(_component.Enabled ? null : true)" style="@BuildStyle()" />
 }

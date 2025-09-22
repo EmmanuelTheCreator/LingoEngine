@@ -11,10 +11,19 @@ public class AbstBlazorInputTextComponent : AbstBlazorComponentModelBase, IAbstF
     private string _text = string.Empty;
     private int _caretIndex;
     private int _selectionStartIndex = -1;
+    private bool _textDirty;
     public string Text
     {
         get => _text;
-        set { if (_text != value) { _text = value; RaiseChanged(); } }
+        set
+        {
+            if (_text != value)
+            {
+                _text = value;
+                _textDirty = false;
+                RaiseChanged();
+            }
+        }
     }
 
     private int _maxLength;
@@ -77,7 +86,7 @@ public class AbstBlazorInputTextComponent : AbstBlazorComponentModelBase, IAbstF
         _caretIndex = start;
         _selectionStartIndex = -1;
         RaiseChanged();
-        RaiseValueChanged();
+        MarkDirty();
         var (line, column) = GetLineColumn(start);
         OnCaretChanged?.Invoke(line, column);
     }
@@ -110,7 +119,7 @@ public class AbstBlazorInputTextComponent : AbstBlazorComponentModelBase, IAbstF
         _text = _text.Insert(_caretIndex, text);
         _caretIndex += text.Length;
         RaiseChanged();
-        RaiseValueChanged();
+        MarkDirty();
         var (line, column) = GetLineColumn(_caretIndex);
         OnCaretChanged?.Invoke(line, column);
     }
@@ -123,7 +132,22 @@ public class AbstBlazorInputTextComponent : AbstBlazorComponentModelBase, IAbstF
     }
 
     public event Action? ValueChanged;
-    public void RaiseValueChanged() => ValueChanged?.Invoke();
+    public event Action? OnCommit;
+
+    public void RaiseCommit()
+    {
+        if (!_textDirty)
+            return;
+
+        _textDirty = false;
+        OnCommit?.Invoke();
+    }
+
+    internal void MarkDirty()
+    {
+        _textDirty = true;
+        ValueChanged?.Invoke();
+    }
 
     public event Action<int, int>? OnCaretChanged;
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace AbstUI.Components.Inputs
 {
     /// <summary>
@@ -7,7 +9,11 @@ namespace AbstUI.Components.Inputs
     {
         /// <summary>Whether the control is enabled.</summary>
         bool Enabled { get; set; }
-        /// <summary>Raised when the value of the input changes.</summary>
+
+        /// <summary>Raised whenever the input text/value changes.</summary>
         event Action? ValueChanged;
+
+        /// <summary>Raised when an edit is committed (enter pressed or focus lost).</summary>
+        event Action? OnCommit;
     }
 }

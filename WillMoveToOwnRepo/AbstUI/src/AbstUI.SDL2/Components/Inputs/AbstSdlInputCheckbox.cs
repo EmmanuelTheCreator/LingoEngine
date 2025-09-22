@@ -35,6 +35,7 @@ namespace AbstUI.SDL2.Components.Inputs
                 {
                     _checked = value;
                     ValueChanged?.Invoke();
+                    OnCommit?.Invoke();
                 }
             }
         }
@@ -43,6 +44,7 @@ namespace AbstUI.SDL2.Components.Inputs
         public AColor BackgroundColor { get; set; } = AbstDefaultColors.Input_Bg;
         public AColor CheckColor { get; set; } = AbstDefaultColors.InputAccentColor;
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public object FrameworkNode => this;
         public AbstSdlInputCheckbox(AbstSdlComponentFactory factory) : base(factory)
         {

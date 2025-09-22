@@ -16,11 +16,18 @@ public abstract class AbstBlazorBaseInput : AbstBlazorComponentBase, IAbstFramew
     public int ZIndex { get; set; }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 
     protected void ValueChangedInvoke()
     {
         if (_isDisposed) return;
         ValueChanged?.Invoke();
+    }
+
+    protected void CommitInvoke()
+    {
+        if (_isDisposed) return;
+        OnCommit?.Invoke();
     }
 
     public override void Dispose()

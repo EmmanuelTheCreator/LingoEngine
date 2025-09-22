@@ -22,6 +22,8 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
     private AColor _textColor = new(0, 0, 0);
     private AColor _backgroundColor = AbstDefaultColors.Input_Bg;
     private AColor _borderColor = AbstDefaultColors.InputBorderColor;
+    private bool _suppressValueChanged;
+    private bool _textDirty;
 
     public AbstUnityInputText() : base(CreateGameObject(out var input, out var text, out var image))
     {
@@ -29,6 +31,7 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
         _textComponent = text;
         _image = image;
         _inputField.onValueChanged.AddListener(OnValueChanged);
+        _inputField.onEndEdit.AddListener(OnEndEdit);
         _image.color = _backgroundColor.ToUnityColor();
     }
 
@@ -46,12 +49,28 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
 
     private void OnValueChanged(string value)
     {
-        if (_text == value) return;
+        if (_suppressValueChanged)
+            return;
+
+        if (_text == value)
+            return;
+
         _text = value;
         _textComponent.text = value;
-        ValueChanged?.Invoke();
+        _textDirty = true;
         var (line, column) = GetLineColumn(_inputField.caretPosition);
         OnCaretChanged?.Invoke(line, column);
+        ValueChanged?.Invoke();
+    }
+
+    private void OnEndEdit(string value)
+    {
+        if (_suppressValueChanged)
+            return;
+
+        _text = value;
+        _textComponent.text = value;
+        CommitPendingChanges();
     }
 
     public bool Enabled
@@ -65,11 +84,9 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
         get => _text;
         set
         {
-            if (_text == value) return;
-            _text = value;
-            _inputField.text = value;
-            _textComponent.text = value;
-            ValueChanged?.Invoke();
+            var newValue = value ?? string.Empty;
+            if (_text == newValue) return;
+            SetTextInternal(newValue, markDirty: false);
         }
     }
 
@@ -122,7 +139,7 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
         if (!HasSelection) return;
         int start = Math.Min(_inputField.selectionAnchorPosition, _inputField.selectionFocusPosition);
         int end = Math.Max(_inputField.selectionAnchorPosition, _inputField.selectionFocusPosition);
-        Text = _text.Remove(start, end - start);
+        SetTextInternal(_text.Remove(start, end - start), markDirty: true);
         var (line, column) = GetLineColumn(start);
         SetCaretPosition(line, column);
     }
@@ -156,7 +173,7 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
         if (HasSelection)
             DeleteSelection();
         int pos = _inputField.caretPosition;
-        Text = _text.Insert(pos, text);
+        SetTextInternal(_text.Insert(pos, text), markDirty: true);
         var (line, column) = GetLineColumn(pos + text.Length);
         SetCaretPosition(line, column);
     }
@@ -194,5 +211,41 @@ internal class AbstUnityInputText : AbstUnityComponent, IAbstFrameworkInputText,
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
     public event Action<int, int>? OnCaretChanged;
+
+    private void SetTextInternal(string value, bool markDirty)
+    {
+        _text = value;
+        _suppressValueChanged = true;
+        try
+        {
+            _inputField.text = value;
+            _textComponent.text = value;
+        }
+        finally
+        {
+            _suppressValueChanged = false;
+        }
+
+        if (markDirty)
+        {
+            _textDirty = true;
+            ValueChanged?.Invoke();
+        }
+        else
+        {
+            _textDirty = false;
+        }
+    }
+
+    private void CommitPendingChanges()
+    {
+        if (!_textDirty)
+            return;
+
+        _textDirty = false;
+        ValueChanged?.Invoke();
+        OnCommit?.Invoke();
+    }
 }

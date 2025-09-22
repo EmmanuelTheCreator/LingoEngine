@@ -44,5 +44,10 @@ public class AbstBlazorInputSliderComponent<TValue> : AbstBlazorComponentModelBa
     }
 
     public event Action? ValueChanged;
-    public void RaiseValueChanged() => ValueChanged?.Invoke();
+    public event Action? OnCommit;
+    public void RaiseValueChanged()
+    {
+        ValueChanged?.Invoke();
+        OnCommit?.Invoke();
+    }
 }

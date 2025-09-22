@@ -33,7 +33,11 @@ internal class AbstUnityItemList : AbstUnityComponent, IAbstFrameworkItemList, I
     public AbstUnityItemList() : base(CreateGameObject(out var dropdown))
     {
         _dropdown = dropdown;
-        _dropdown.onValueChanged.AddListener(_ => ValueChanged?.Invoke());
+        _dropdown.onValueChanged.AddListener(_ =>
+        {
+            ValueChanged?.Invoke();
+            OnCommit?.Invoke();
+        });
     }
 
     private static GameObject CreateGameObject(out Dropdown dropdown)
@@ -92,6 +96,7 @@ internal class AbstUnityItemList : AbstUnityComponent, IAbstFrameworkItemList, I
     }
 
     public event Action? ValueChanged;
+    public event Action? OnCommit;
 
     public string? ItemFont
     {

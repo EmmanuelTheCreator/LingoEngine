@@ -25,6 +25,7 @@ namespace AbstUI.SDL2.Components.Inputs
         private AColor _renderedKnobBorderColor;
         private bool _dragging;
         private bool _isHover;
+        private bool _pendingCommit;
 
         public object FrameworkNode => this;
         public TValue Value
@@ -46,6 +47,7 @@ namespace AbstUI.SDL2.Components.Inputs
         public AColor KnobColor { get; set; } = AbstDefaultColors.InputAccentColor;
         public AColor KnobBorderColor { get; set; } = AbstDefaultColors.InputBorderColor;
         public event Action? ValueChanged;
+        public event Action? OnCommit;
 
 
 
@@ -73,6 +75,11 @@ namespace AbstUI.SDL2.Components.Inputs
                     break;
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONUP when ev.button.button == SDL.SDL_BUTTON_LEFT:
                     _dragging = false;
+                    if (_pendingCommit)
+                    {
+                        _pendingCommit = false;
+                        OnCommit?.Invoke();
+                    }
                     break;
                 case SDL.SDL_EventType.SDL_MOUSEMOTION:
                     _isHover = e.IsInside;
@@ -95,7 +102,12 @@ namespace AbstUI.SDL2.Components.Inputs
             float val = min + t * (max - min);
             if (step > 0)
                 val = min + MathF.Round((val - min) / step) * step;
+            var before = _value;
             Value = (TValue)Convert.ChangeType(val, typeof(TValue));
+            if (!Equals(before, _value))
+            {
+                _pendingCommit = true;
+            }
             ComponentContext.QueueRedraw(this);
         }
 

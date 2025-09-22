@@ -11,6 +11,7 @@ namespace AbstUI.ImGui.Components
     {
         private int _caretIndex;
         private int _selectionStartIndex = -1;
+        private bool _textDirty;
 
         public AbstImGuiInputText(AbstImGuiComponentFactory factory, bool multiLine) : base(factory)
         {
@@ -22,11 +23,11 @@ namespace AbstUI.ImGui.Components
             get => _text;
             set
             {
-                if (_text != value)
-                {
-                    _text = value;
-                    ValueChanged?.Invoke();
-                }
+                var newValue = value ?? string.Empty;
+                if (_text == newValue)
+                    return;
+                _text = newValue;
+                _textDirty = false;
             }
         }
         public int MaxLength { get; set; }
@@ -50,9 +51,10 @@ namespace AbstUI.ImGui.Components
             _text = _text.Remove(start, end - start);
             _caretIndex = start;
             _selectionStartIndex = -1;
-            ValueChanged?.Invoke();
+            _textDirty = true;
             var (line, column) = GetLineColumn(start);
             OnCaretChanged?.Invoke(line, column);
+            ValueChanged?.Invoke();
         }
 
         public void SetCaretPosition(int line, int column)
@@ -82,9 +84,10 @@ namespace AbstUI.ImGui.Components
                 DeleteSelection();
             _text = _text.Insert(_caretIndex, text);
             _caretIndex += text.Length;
-            ValueChanged?.Invoke();
+            _textDirty = true;
             var (line, column) = GetLineColumn(_caretIndex);
             OnCaretChanged?.Invoke(line, column);
+            ValueChanged?.Invoke();
         }
 
         private (int line, int column) GetLineColumn(int index)
@@ -120,6 +123,7 @@ namespace AbstUI.ImGui.Components
         }
 
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public event Action<int, int>? OnCaretChanged;
 
         public override AbstImGuiRenderResult Render(AbstImGuiRenderContext context)
@@ -138,13 +142,34 @@ namespace AbstUI.ImGui.Components
             if (!Enabled) global::ImGuiNET.ImGui.BeginDisabled();
 
             uint cap = MaxLength > 0 ? (uint)MaxLength : 1024u;
-            if (global::ImGuiNET.ImGui.InputText("##text", ref _text, cap))
+            ImGuiInputTextFlags flags = ImGuiInputTextFlags.None;
+            if (!IsMultiLine)
+            {
+                flags |= ImGuiInputTextFlags.EnterReturnsTrue;
+            }
+
+            bool textEdited = global::ImGuiNET.ImGui.InputText("##text", ref _text, cap, flags);
+            if (textEdited)
             {
                 _caretIndex = _text.Length;
                 _selectionStartIndex = -1;
-                ValueChanged?.Invoke();
+                _textDirty = true;
                 var (line, column) = GetLineColumn(_caretIndex);
                 OnCaretChanged?.Invoke(line, column);
+                ValueChanged?.Invoke();
+            }
+
+            if (global::ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
+            {
+                CommitPendingChanges();
+            }
+
+            if (global::ImGuiNET.ImGui.IsItemActive() && _textDirty)
+            {
+                if (global::ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Enter) || global::ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.KeypadEnter))
+                {
+                    CommitPendingChanges();
+                }
             }
 
             if (!Enabled) global::ImGuiNET.ImGui.EndDisabled();
@@ -155,5 +180,14 @@ namespace AbstUI.ImGui.Components
 
 
         public override void Dispose() => base.Dispose();
+
+        private void CommitPendingChanges()
+        {
+            if (!_textDirty)
+                return;
+
+            _textDirty = false;
+            OnCommit?.Invoke();
+        }
     }
 }

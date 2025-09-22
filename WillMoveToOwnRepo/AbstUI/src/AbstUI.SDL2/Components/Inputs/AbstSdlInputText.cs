@@ -27,6 +27,7 @@ namespace AbstUI.SDL2.Components.Inputs
         private int _scrollX;
         private int _scrollY;
         private int _selectionStart = -1;
+        private bool _textDirty;
 
         public bool HasSelection => _selectionStart != -1 && _selectionStart != _caretIndex;
 
@@ -42,13 +43,14 @@ namespace AbstUI.SDL2.Components.Inputs
             get => _text;
             set
             {
-                if (_text == value) return;
-                _text = value ?? string.Empty;
+                var newValue = value ?? string.Empty;
+                if (_text == newValue) return;
+                _text = newValue;
                 _codepoints.Clear();
                 foreach (var r in _text.EnumerateRunes()) _codepoints.Add(r.Value);
                 _caretIndex = _codepoints.Count;
                 _selectionStart = -1;
-                ValueChanged?.Invoke();
+                _textDirty = false;
                 AdjustScroll();
                 ComponentContext.QueueRedraw(this);
             }
@@ -70,6 +72,7 @@ namespace AbstUI.SDL2.Components.Inputs
 
 
         public event Action? ValueChanged;
+        public event Action? OnCommit;
         public AbstSdlInputText(AbstSdlComponentFactory factory, bool multiLine) : base(factory)
         {
             _multiLine = multiLine;
@@ -274,8 +277,7 @@ namespace AbstUI.SDL2.Components.Inputs
                             }
                         }
                     }
-                    _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                    ValueChanged?.Invoke();
+                    UpdateTextFromCodepoints();
                     AdjustScroll();
                     e.StopPropagation = true;
                     break;
@@ -305,16 +307,13 @@ namespace AbstUI.SDL2.Components.Inputs
                 if (HasSelection)
                 {
                     DeleteSelection();
-                    _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                    ValueChanged?.Invoke();
                     AdjustScroll();
                 }
                 else if (_caretIndex > 0)
                 {
                     _codepoints.RemoveAt(_caretIndex - 1);
                     _caretIndex--;
-                    _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                    ValueChanged?.Invoke();
+                    UpdateTextFromCodepoints();
                     AdjustScroll();
                 }
                 e.StopPropagation = true;
@@ -324,15 +323,12 @@ namespace AbstUI.SDL2.Components.Inputs
                 if (HasSelection)
                 {
                     DeleteSelection();
-                    _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                    ValueChanged?.Invoke();
                     AdjustScroll();
                 }
                 else if (_caretIndex < _codepoints.Count)
                 {
                     _codepoints.RemoveAt(_caretIndex);
-                    _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                    ValueChanged?.Invoke();
+                    UpdateTextFromCodepoints();
                     AdjustScroll();
                 }
                 e.StopPropagation = true;
@@ -393,18 +389,21 @@ namespace AbstUI.SDL2.Components.Inputs
                 AdjustScroll();
                 e.StopPropagation = true;
             }
-            else if ((key == SDL.SDL_Keycode.SDLK_RETURN || key == SDL.SDL_Keycode.SDLK_KP_ENTER) && _multiLine && !alt)
+            else if (key == SDL.SDL_Keycode.SDLK_RETURN || key == SDL.SDL_Keycode.SDLK_KP_ENTER)
             {
-                if (HasSelection)
-                    DeleteSelection();
-                if (MaxLength <= 0 || _codepoints.Count < MaxLength)
+                if (_multiLine && !alt)
                 {
-                    _codepoints.Insert(_caretIndex, '\n');
-                    _caretIndex++;
-                    _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                    ValueChanged?.Invoke();
-                    AdjustScroll();
+                    if (HasSelection)
+                        DeleteSelection();
+                    if (MaxLength <= 0 || _codepoints.Count < MaxLength)
+                    {
+                        _codepoints.Insert(_caretIndex, '\n');
+                        _caretIndex++;
+                        UpdateTextFromCodepoints();
+                        AdjustScroll();
+                    }
                 }
+                CommitPendingChanges();
                 e.StopPropagation = true;
             }
             else if (key == SDL.SDL_Keycode.SDLK_UP && _multiLine)
@@ -453,8 +452,7 @@ namespace AbstUI.SDL2.Components.Inputs
                             _codepoints.Insert(_caretIndex, r.Value);
                             _caretIndex++;
                         }
-                        _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
-                        ValueChanged?.Invoke();
+                        UpdateTextFromCodepoints();
                         AdjustScroll();
                     }
                 }
@@ -511,6 +509,7 @@ namespace AbstUI.SDL2.Components.Inputs
             _codepoints.RemoveRange(start, end - start);
             _caretIndex = start;
             _selectionStart = -1;
+            UpdateTextFromCodepoints();
             var (line, column) = GetLineColumn(_caretIndex);
             OnCaretChanged?.Invoke(line, column);
         }
@@ -703,11 +702,19 @@ namespace AbstUI.SDL2.Components.Inputs
         }
         public void SetFocus(bool focus)
         {
+            if (_focused == focus)
+                return;
+
             _focused = focus;
             if (focus)
+            {
                 _blinkStart = SDL.SDL_GetTicks();
+            }
             else
+            {
                 _selectionStart = -1;
+                CommitPendingChanges();
+            }
             ComponentContext.QueueRedraw(this);
         }
 
@@ -744,11 +751,30 @@ namespace AbstUI.SDL2.Components.Inputs
                 _codepoints.Insert(_caretIndex, rune.Value);
                 _caretIndex++;
             }
-            ValueChanged?.Invoke();
+            UpdateTextFromCodepoints();
             AdjustScroll();
             ComponentContext.QueueRedraw(this);
             var (line, column) = GetLineColumn(_caretIndex);
             OnCaretChanged?.Invoke(line, column);
+        }
+
+        private void UpdateTextFromCodepoints(bool markDirty = true)
+        {
+            _text = string.Concat(_codepoints.ConvertAll(cp => char.ConvertFromUtf32(cp)));
+            if (markDirty)
+            {
+                _textDirty = true;
+                ValueChanged?.Invoke();
+            }
+        }
+
+        private void CommitPendingChanges()
+        {
+            if (!_textDirty)
+                return;
+
+            _textDirty = false;
+            OnCommit?.Invoke();
         }
 
 
