@@ -116,6 +116,7 @@ namespace BlingoEngine.Core
         IBlingoCastLibsContainer CastLibs { get; }
         IBlingoMember? GetMember(BlingoMemberRef memberRef);
         T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember;
+        IBlingoCast? GetCast(BlingoCastRef castRef);
         /// <summary>
         /// Specifies a handler hook (function) to override the default alert display behavior.
         /// Lingo: the alertHook
@@ -177,6 +178,7 @@ namespace BlingoEngine.Core
         Task<IBlingoPlayer> LoadCastLibFromCsvAsync(string castlibName, string pathAndFilenameToCsv, bool isInternal = false);
         IBlingoPlayer AddCastLib(string name, bool isInternal = false, Action<IBlingoCast>? configure = null);
         IBlingoMovie NewMovie(string movieName, bool andActivate = true);
+        IBlingoMovie? GetMovie(BlingoMovieRef movieRef);
         Task<IBlingoMovie> LoadMovieAsync(IBlingoMovieBuilder builder);
 
         void RunDelayed(Action action, int milliseconds, CancellationTokenSource? cts = null);

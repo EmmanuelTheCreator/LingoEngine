@@ -36,6 +36,7 @@ namespace BlingoEngine.Core
         private readonly BlingoGlobalVars _globals;
         private Action<BlingoMovie> _actionOnNewMovie;
         private Dictionary<string, BlingoMovieEnvironment> _moviesByName = new();
+        private readonly Dictionary<int, BlingoMovieEnvironment> _moviesByNumber = new();
         private List<BlingoMovieEnvironment> _movies = new();
         private List<CancellationTokenSource> _delayedActionsCts = new();
 
@@ -164,9 +165,19 @@ namespace BlingoEngine.Core
         }
         public IBlingoCast CastLib(int number) => _castLibsContainer[number];
         public IBlingoCast CastLib(string name) => _castLibsContainer[name];
+        public IBlingoCast? GetCast(BlingoCastRef castRef) => _castLibsContainer.GetCast(castRef);
         public IBlingoMember? GetMember(BlingoMemberRef memberRef) => _castLibsContainer.GetMember(memberRef);
         public T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember
             => _castLibsContainer.GetMember<T>(memberRef);
+        public IBlingoMovie? GetMovie(BlingoMovieRef movieRef)
+        {
+            if (movieRef.MovieNumber <= 0)
+                return null;
+
+            return _moviesByNumber.TryGetValue(movieRef.MovieNumber, out var environment)
+                ? environment.Movie
+                : null;
+        }
         public IBlingoMovie NewMovie(string name, bool andActivate = true)
         {
             // Create the default cast
@@ -185,12 +196,14 @@ namespace BlingoEngine.Core
                 var movieEnvironment = m.GetEnvironment();
                 _movies.Remove(movieEnvironment);
                 _moviesByName.Remove(m.Name);
+                _moviesByNumber.Remove(m.Number);
             }, _globals);
             var movieTyped = (BlingoMovie)movieEnv.Movie;
 
             // Add him
             _movies.Add(movieEnv);
             _moviesByName.Add(name, movieEnv);
+            _moviesByNumber[movieTyped.Number] = movieEnv;
 
             Factory.AddMovie(_stage, movieTyped);
 

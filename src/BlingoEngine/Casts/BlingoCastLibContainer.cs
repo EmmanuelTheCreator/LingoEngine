@@ -19,6 +19,7 @@ namespace BlingoEngine.Casts
         IBlingoMembersContainer Member { get; }
         IBlingoMember? GetMember(BlingoMemberRef memberRef);
         T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember;
+        IBlingoCast? GetCast(BlingoCastRef castRef);
         IBlingoMember? GetMember(int number, int? castLibNum = null);
         IBlingoMember? GetMember(string name, int? castLibNum = null);
         T? GetMember<T>(int number, int? castLibNum = null) where T : IBlingoMember;
@@ -61,6 +62,20 @@ namespace BlingoEngine.Casts
         public IBlingoCast this[string name] => _castsByName[name.ToLower()];
         public string GetCastName(int number) => _casts[number - 1].Name;
         public IBlingoCast GetCast(int number) => _casts[number - 1];
+
+        public IBlingoCast? GetCast(BlingoCastRef castRef)
+        {
+            if (castRef.CastLibNum <= 0)
+                return null;
+
+            foreach (var cast in _casts)
+            {
+                if (cast.Number == castRef.CastLibNum)
+                    return cast;
+            }
+
+            return null;
+        }
 
         public IBlingoCast AddCast(string name, bool isInternal = false)
         {

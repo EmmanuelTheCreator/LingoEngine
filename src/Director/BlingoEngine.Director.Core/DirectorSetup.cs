@@ -5,6 +5,7 @@ using BlingoEngine.Director.Core.Bitmaps;
 using BlingoEngine.Director.Core.Bitmaps.Commands;
 using BlingoEngine.Director.Core.Casts;
 using BlingoEngine.Director.Core.Casts.Commands;
+using BlingoEngine.Director.Core.Movies.Commands;
 using BlingoEngine.Director.Core.Compilers;
 using BlingoEngine.Director.Core.Compilers.Commands;
 using BlingoEngine.Director.Core.FileSystems;
@@ -107,6 +108,8 @@ namespace BlingoEngine.Director.Core
                     .AddTransient<BlingoCodeImporterPopupHandler>()
                     .AddTransient<BlingoSpriteCommandHandler>()
                     .AddTransient<BlingoMemberCommandHandler>()
+                    .AddTransient<BlingoMovieCommandHandler>()
+                    .AddTransient<BlingoCastCommandHandler>()
 
                 );
             engineRegistration.AddBuildAction(
@@ -144,6 +147,8 @@ namespace BlingoEngine.Director.Core
                         .Register<DirSpritesManager, RemoveSpriteCommand>()
                         .Register<BlingoSpriteCommandHandler, BlingoUpdateSpritePropertiesCommand>()
                         .Register<BlingoMemberCommandHandler, BlingoUpdateMemberPropertiesCommand>()
+                        .Register<BlingoMovieCommandHandler, BlingoUpdateMoviePropertiesCommand>()
+                        .Register<BlingoCastCommandHandler, BlingoUpdateCastPropertiesCommand>()
                         .Register<DirectorBitmapEditWindow, PainterToolSelectCommand>()
                         .Register<DirectorBitmapEditWindow, PainterDrawPixelCommand>()
                         .Register<DirectorBitmapEditWindow, PainterFillCommand>()
