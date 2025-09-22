@@ -46,6 +46,11 @@ public enum BlBinaryOperatorKind
     Concatenate,
 
     /// <summary>
+    /// Represents the string concatenation with space operator (<c>&amp;&amp;</c>).
+    /// </summary>
+    ConcatenateWithSpace,
+
+    /// <summary>
     /// Represents the equality comparison operator (<c>=</c>).
     /// </summary>
     Equal,
@@ -76,7 +81,7 @@ public enum BlBinaryOperatorKind
     GreaterThanOrEqual,
 
     /// <summary>
-    /// Represents the logical conjunction operator (<c>and</c> or <c>&amp;&amp;</c>).
+    /// Represents the logical conjunction operator (<c>and</c>).
     /// </summary>
     LogicalAnd,
 

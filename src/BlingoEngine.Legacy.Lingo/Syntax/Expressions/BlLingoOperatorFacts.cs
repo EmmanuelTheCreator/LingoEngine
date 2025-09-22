@@ -32,7 +32,7 @@ public static class BlLingoOperatorFacts
         ["+"] = new BinaryOperatorInfo(BlBinaryOperatorKind.Add, 5, false),
         ["-"] = new BinaryOperatorInfo(BlBinaryOperatorKind.Subtract, 5, false),
         ["&"] = new BinaryOperatorInfo(BlBinaryOperatorKind.Concatenate, 4, false),
-        ["&&"] = new BinaryOperatorInfo(BlBinaryOperatorKind.LogicalAnd, 2, false),
+        ["&&"] = new BinaryOperatorInfo(BlBinaryOperatorKind.ConcatenateWithSpace, 4, false),
         ["="] = new BinaryOperatorInfo(BlBinaryOperatorKind.Equal, 3, false),
         ["<>"] = new BinaryOperatorInfo(BlBinaryOperatorKind.NotEqual, 3, false),
         ["<"] = new BinaryOperatorInfo(BlBinaryOperatorKind.LessThan, 3, false),

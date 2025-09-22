@@ -89,4 +89,44 @@ public sealed class BlLingoExpressionParserTests
         innerPower.Left.Should().BeOfType<BlLiteralExpression>().Which.LiteralToken.ValueText.Should().Be("3");
         innerPower.Right.Should().BeOfType<BlLiteralExpression>().Which.LiteralToken.ValueText.Should().Be("2");
     }
+
+    [Fact]
+    public void ParseExpression_RecognizesStringConcatenation()
+    {
+        const string source = "\"hello\" & \"world\"";
+
+        var tokens = _tokenizer.Tokenize(source);
+        var expression = _parser.ParseExpression(tokens);
+
+        var concatenation = expression.Should().BeOfType<BlBinaryExpression>().Subject;
+        concatenation.OperatorKind.Should().Be(BlBinaryOperatorKind.Concatenate);
+
+        var leftLiteral = concatenation.Left.Should().BeOfType<BlLiteralExpression>().Subject;
+        leftLiteral.Kind.Should().Be(BlExpressionKind.StringLiteral);
+        leftLiteral.LiteralToken.ValueText.Should().Be("hello");
+
+        var rightLiteral = concatenation.Right.Should().BeOfType<BlLiteralExpression>().Subject;
+        rightLiteral.Kind.Should().Be(BlExpressionKind.StringLiteral);
+        rightLiteral.LiteralToken.ValueText.Should().Be("world");
+    }
+
+    [Fact]
+    public void ParseExpression_RecognizesStringConcatenationWithSpace()
+    {
+        const string source = "\"hello\" && \"world\"";
+
+        var tokens = _tokenizer.Tokenize(source);
+        var expression = _parser.ParseExpression(tokens);
+
+        var concatenation = expression.Should().BeOfType<BlBinaryExpression>().Subject;
+        concatenation.OperatorKind.Should().Be(BlBinaryOperatorKind.ConcatenateWithSpace);
+
+        var leftLiteral = concatenation.Left.Should().BeOfType<BlLiteralExpression>().Subject;
+        leftLiteral.Kind.Should().Be(BlExpressionKind.StringLiteral);
+        leftLiteral.LiteralToken.ValueText.Should().Be("hello");
+
+        var rightLiteral = concatenation.Right.Should().BeOfType<BlLiteralExpression>().Subject;
+        rightLiteral.Kind.Should().Be(BlExpressionKind.StringLiteral);
+        rightLiteral.LiteralToken.ValueText.Should().Be("world");
+    }
 }
