@@ -20,7 +20,6 @@ internal static class BlLingoKeywordFacts
             "else",
             "end",
             "exit",
-            "factory",
             "for",
             "from",
             "global",

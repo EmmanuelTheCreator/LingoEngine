@@ -14,24 +14,55 @@ public sealed class BlLingoHandlerSymbolTable
     /// </summary>
     public const string ImplicitHandlerName = "(implicit handler)";
 
+    private readonly BlLingoHandlerClassification _classification;
     private readonly Dictionary<string, BlCodeSymbol> _locals = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, BlCodeSymbol> _parameters = new(StringComparer.OrdinalIgnoreCase);
 
-    internal BlLingoHandlerSymbolTable(string name, BlSyntaxToken? declarationToken)
+    internal BlLingoHandlerSymbolTable(string originalName, BlLingoHandlerClassification classification, BlSyntaxToken? declarationToken)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(originalName);
 
-        Symbol = new BlCodeSymbol(BlCodeSymbolKind.Handler, name);
+        _classification = classification;
+        OriginalName = originalName;
+        Symbol = new BlCodeSymbol(BlCodeSymbolKind.Handler, classification.CanonicalName);
         if (declarationToken is not null)
         {
             Symbol.AddDeclaration(declarationToken);
         }
+
+        HandlerKind = classification.Kind;
+        ImpliedScriptKind = classification.RequiresLeadingMeParameter ? BlLingoScriptKind.Unknown : classification.ImpliedScriptKind;
     }
 
     /// <summary>
     /// Gets the symbol representing the handler itself.
     /// </summary>
     public BlCodeSymbol Symbol { get; }
+
+    /// <summary>
+    /// Gets the raw name used to declare the handler in the script.
+    /// </summary>
+    public string OriginalName { get; }
+
+    /// <summary>
+    /// Gets the high-level category assigned to the handler.
+    /// </summary>
+    public BlLingoHandlerKind HandlerKind { get; }
+
+    /// <summary>
+    /// Gets the script kind implied by this handler, if any.
+    /// </summary>
+    public BlLingoScriptKind ImpliedScriptKind { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the handler declares <c>me</c> as its first parameter.
+    /// </summary>
+    public bool HasLeadingMeParameter { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the handler requires <c>me</c> as the first parameter to imply its script kind.
+    /// </summary>
+    public bool RequiresLeadingMeParameter => _classification.RequiresLeadingMeParameter;
 
     /// <summary>
     /// Gets the table of parameters that belong to the handler.
@@ -54,6 +85,19 @@ public sealed class BlLingoHandlerSymbolTable
     /// </summary>
     /// <param name="identifier">The token that introduced the local variable.</param>
     internal BlCodeSymbol DeclareLocal(BlSyntaxToken identifier) => DeclareSymbol(_locals, identifier, BlCodeSymbolKind.LocalVariable);
+
+    /// <summary>
+    /// Records whether the handler declared <c>me</c> as its leading parameter and updates the implied script kind accordingly.
+    /// </summary>
+    /// <param name="hasMe">Indicates whether the first parameter token was <c>me</c>.</param>
+    internal void SetLeadingParameterInfo(bool hasMe)
+    {
+        HasLeadingMeParameter = hasMe;
+        if (_classification.RequiresLeadingMeParameter)
+        {
+            ImpliedScriptKind = hasMe ? _classification.ImpliedScriptKind : BlLingoScriptKind.Unknown;
+        }
+    }
 
     private static BlCodeSymbol DeclareSymbol(Dictionary<string, BlCodeSymbol> table, BlSyntaxToken token, BlCodeSymbolKind kind)
     {

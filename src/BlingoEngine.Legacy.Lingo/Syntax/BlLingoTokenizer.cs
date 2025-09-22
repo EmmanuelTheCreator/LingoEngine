@@ -30,15 +30,7 @@ public sealed class BlLingoTokenizer
             "<=",
             ">=",
             "<>",
-            "==",
-            "!=",
-            "+=",
-            "-=",
-            "*=",
-            "/=",
-            "^=",
             "&&",
-            "||",
         };
 
         private static readonly HashSet<char> s_operatorStarts = new()
@@ -52,9 +44,6 @@ public sealed class BlLingoTokenizer
             '<',
             '>',
             '&',
-            '|',
-            '!',
-            '%',
         };
 
         private readonly string _text;

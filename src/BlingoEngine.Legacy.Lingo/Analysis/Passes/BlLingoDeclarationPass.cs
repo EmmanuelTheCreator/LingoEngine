@@ -45,7 +45,7 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
             {
                 index = CollectHandler(tokens, index, symbols);
             }
-            else if (keyword.Equals("script", StringComparison.OrdinalIgnoreCase) || keyword.Equals("factory", StringComparison.OrdinalIgnoreCase))
+            else if (keyword.Equals("script", StringComparison.OrdinalIgnoreCase))
             {
                 index = CollectClassDeclaration(tokens, index + 1, symbols);
             }
@@ -116,8 +116,11 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
         }
 
         symbols.EndHandler();
-        symbols.BeginHandler(handlerToken);
+        var handler = symbols.BeginHandler(handlerToken);
         lastIndex = nameIndex;
+
+        var sawParameter = false;
+        var firstIsMe = false;
 
         for (var index = nameIndex + 1; index < tokens.Count; index++)
         {
@@ -130,6 +133,11 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
             if (IsParameterToken(current))
             {
                 symbols.DeclareParameter(current);
+                if (!sawParameter)
+                {
+                    sawParameter = true;
+                    firstIsMe = string.Equals(current.ValueText, "me", StringComparison.OrdinalIgnoreCase);
+                }
                 lastIndex = index;
                 continue;
             }
@@ -142,6 +150,9 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
 
             break;
         }
+
+        handler.SetLeadingParameterInfo(sawParameter && firstIsMe);
+        symbols.CurrentClass.ApplyScriptKind(handler.ImpliedScriptKind);
 
         return lastIndex;
     }
@@ -162,7 +173,7 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
     }
 
     /// <summary>
-    /// Parses a class or factory declaration that follows a <c>script</c> keyword.
+    /// Parses a class declaration that follows a <c>script</c> keyword.
     /// </summary>
     private static int CollectClassDeclaration(IReadOnlyList<BlSyntaxToken> tokens, int startIndex, BlLingoSymbolTable symbols)
     {

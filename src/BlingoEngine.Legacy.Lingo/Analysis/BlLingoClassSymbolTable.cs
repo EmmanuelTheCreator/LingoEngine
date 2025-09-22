@@ -28,6 +28,7 @@ public sealed class BlLingoClassSymbolTable
         }
 
         IsMovieScript = isMovieScript;
+        ScriptKind = isMovieScript ? BlLingoScriptKind.Movie : BlLingoScriptKind.Behavior;
     }
 
     /// <summary>
@@ -39,6 +40,11 @@ public sealed class BlLingoClassSymbolTable
     /// Gets a value indicating whether this scope represents the implicit movie script rather than an explicit class.
     /// </summary>
     public bool IsMovieScript { get; }
+
+    /// <summary>
+    /// Gets the detected script kind for this scope.
+    /// </summary>
+    public BlLingoScriptKind ScriptKind { get; private set; }
 
     /// <summary>
     /// Gets the properties declared within this class or script.
@@ -67,15 +73,42 @@ public sealed class BlLingoClassSymbolTable
 
         if (!_handlers.TryGetValue(name, out var handler))
         {
-            handler = new BlLingoHandlerSymbolTable(name, declarationToken);
+            var classification = string.Equals(name, BlLingoHandlerSymbolTable.ImplicitHandlerName, StringComparison.Ordinal)
+                ? new BlLingoHandlerClassification(name, BlLingoHandlerKind.Custom, BlLingoScriptKind.Unknown)
+                : BlLingoHandlerFacts.GetClassification(name);
+            handler = new BlLingoHandlerSymbolTable(name, classification, declarationToken);
             _handlers.Add(name, handler);
+            ApplyScriptKind(handler.ImpliedScriptKind);
         }
         else if (declarationToken is not null)
         {
             handler.Symbol.AddDeclaration(declarationToken);
+            ApplyScriptKind(handler.ImpliedScriptKind);
         }
 
         return handler;
+    }
+
+    /// <summary>
+    /// Updates the detected script kind if the supplied candidate is more specific.
+    /// </summary>
+    /// <param name="candidate">The candidate script kind.</param>
+    internal void ApplyScriptKind(BlLingoScriptKind candidate)
+    {
+        if (candidate == BlLingoScriptKind.Unknown)
+        {
+            return;
+        }
+
+        if (candidate == ScriptKind)
+        {
+            return;
+        }
+
+        if (GetPriority(candidate) > GetPriority(ScriptKind))
+        {
+            ScriptKind = candidate;
+        }
     }
 
     private static BlCodeSymbol DeclareSymbol(Dictionary<string, BlCodeSymbol> table, BlSyntaxToken token, BlCodeSymbolKind kind)
@@ -92,5 +125,17 @@ public sealed class BlLingoClassSymbolTable
 
         symbol.AddDeclaration(token);
         return symbol;
+    }
+
+    private static int GetPriority(BlLingoScriptKind kind)
+    {
+        return kind switch
+        {
+            BlLingoScriptKind.Unknown => 0,
+            BlLingoScriptKind.Behavior => 1,
+            BlLingoScriptKind.Movie => 2,
+            BlLingoScriptKind.Parent => 3,
+            _ => 0,
+        };
     }
 }

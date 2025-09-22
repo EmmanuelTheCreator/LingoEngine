@@ -138,8 +138,7 @@ public sealed class BlLingoTypeLinkPass : BlLingoAnalysisPass
 
     private static bool IsClassKeyword(string keyword)
     {
-        return keyword.Equals("script", StringComparison.OrdinalIgnoreCase) ||
-               keyword.Equals("factory", StringComparison.OrdinalIgnoreCase);
+        return keyword.Equals("script", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryGetClassName(IReadOnlyList<BlSyntaxToken> tokens, int index, out string name)
