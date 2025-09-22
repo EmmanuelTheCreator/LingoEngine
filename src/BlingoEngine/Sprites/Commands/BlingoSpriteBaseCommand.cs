@@ -1,6 +1,6 @@
 using AbstUI.Commands;
 using BlingoEngine.Sprites;
 
-namespace BlingoEngine.Director.Core.Sprites.Commands;
+namespace BlingoEngine.Sprites.Commands;
 
 public abstract record BlingoSpriteBaseCommand(BlingoSpriteRef SpriteReference) : IAbstCommand;

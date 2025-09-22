@@ -1,4 +1,5 @@
 ﻿using BlingoEngine.IO.Data.DTO;
+using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.Net.RNetClient.Common;
 using BlingoEngine.Net.RNetContracts;
 using BlingoEngine.Net.RNetProjectClient;
@@ -129,10 +130,11 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
             return;
         }
 
-        FireAndForget(() => client.SendCommandAsync(new SetSpritePropCmd(sprite.SpriteNum, sprite.BeginFrame, propertyName, value)));
+        var spriteType = _store.GetSpriteType(sprite);
+        FireAndForget(() => client.SendCommandAsync(new SetSpritePropCmd(sprite.SpriteNum, sprite.BeginFrame, spriteType, propertyName, value)));
     }
 
-    public void QueueMemberPropertyChange(int castLibNum, int memberNum, string propertyName, string value)
+    public void QueueMemberPropertyChange(int castLibNum, int memberNum, BlingoMemberTypeDTO memberType, string propertyName, string value)
     {
         var client = _client;
         if (client is null || !client.IsConnected)
@@ -140,7 +142,8 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
             return;
         }
 
-        FireAndForget(() => client.SendCommandAsync(new SetMemberPropCmd(castLibNum, memberNum, propertyName, value)));
+        var dtoType = memberType.ToRNet();
+        FireAndForget(() => client.SendCommandAsync(new SetMemberPropCmd(castLibNum, memberNum, dtoType, propertyName, value)));
     }
 
     public async ValueTask DisposeAsync()
@@ -318,11 +321,12 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
 
         LogMessage?.Invoke($"spriteMove {sprite.SpriteNum}:{sprite.BeginFrame}->{newBegin}-{newEnd}");
 
+        var spriteType = _store.GetSpriteType(sprite);
         var beginValue = newBegin.ToString(CultureInfo.InvariantCulture);
         var endValue = newEnd.ToString(CultureInfo.InvariantCulture);
 
-        FireAndForget(() => client.SendCommandAsync(new SetSpritePropCmd(sprite.SpriteNum, sprite.BeginFrame, "StartFrame", beginValue)));
-        FireAndForget(() => client.SendCommandAsync(new SetSpritePropCmd(sprite.SpriteNum, sprite.BeginFrame, "EndFrame", endValue)));
+        FireAndForget(() => client.SendCommandAsync(new SetSpritePropCmd(sprite.SpriteNum, sprite.BeginFrame, spriteType, "BeginFrame", beginValue)));
+        FireAndForget(() => client.SendCommandAsync(new SetSpritePropCmd(sprite.SpriteNum, sprite.BeginFrame, spriteType, "EndFrame", endValue)));
     }
 
     private void FireAndForget(Func<Task> work)

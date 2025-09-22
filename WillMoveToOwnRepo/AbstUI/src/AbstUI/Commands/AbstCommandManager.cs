@@ -11,25 +11,27 @@ public sealed class AbstCommandManager : IAbstCommandManager
 
     public AbstCommandManager(IServiceProvider provider) => _provider = provider;
 
-    public IAbstCommandManager Register<THandler, TCommand>()
+    public IAbstCommandManager Register<THandler, TCommand>(bool replace = false)
         where THandler : IAbstCommandHandler<TCommand>
         where TCommand : IAbstCommand
-        => Register(typeof(THandler));
+        => Register(typeof(THandler), replace);
 
-    public IAbstCommandManager Register(Type handlerType)
+    public IAbstCommandManager Register(Type handlerType, bool replace = false)
     {
         foreach (var iface in handlerType.GetInterfaces()
                      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAbstCommandHandler<>)))
         {
             var cmdType = iface.GetGenericArguments()[0];
-            if (_handlers.TryGetValue(cmdType, out var handlers))
+            if (!_handlers.TryGetValue(cmdType, out var handlers) || replace)
             {
-                if (handlers.Contains(handlerType))
-                    return this; // Already registered
+                _handlers[cmdType] = new List<Type> { handlerType };
+                continue;
+            }
+
+            if (!handlers.Contains(handlerType))
+            {
                 handlers.Add(handlerType);
             }
-            else
-                _handlers[cmdType] = new List<Type> { handlerType };
         }
         return this;
     }

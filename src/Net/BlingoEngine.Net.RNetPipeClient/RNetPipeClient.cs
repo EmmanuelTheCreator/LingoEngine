@@ -80,6 +80,7 @@ public sealed class RNetPipeClient : IBlingoRNetPipeClient
         {
             [nameof(SetSpritePropCmd)] = typeof(SetSpritePropCmd),
             [nameof(SetMemberPropCmd)] = typeof(SetMemberPropCmd),
+            [nameof(SetCastPropCmd)] = typeof(SetCastPropCmd),
             [nameof(GoToFrameCmd)] = typeof(GoToFrameCmd),
             [nameof(PauseCmd)] = typeof(PauseCmd),
             [nameof(ResumeCmd)] = typeof(ResumeCmd)

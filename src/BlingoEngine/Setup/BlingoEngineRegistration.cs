@@ -4,6 +4,7 @@ using AbstUI.Primitives;
 using AbstUI.Styles;
 using AbstUI.Windowing;
 using BlingoEngine.Casts;
+using BlingoEngine.Casts.Commands;
 using BlingoEngine.Core;
 using BlingoEngine.Director.Core.Scripts;
 using BlingoEngine.Events;
@@ -12,6 +13,8 @@ using BlingoEngine.Movies;
 using BlingoEngine.Movies.Commands;
 using BlingoEngine.Projects;
 using BlingoEngine.Sprites;
+using BlingoEngine.Sprites.Commands;
+using BlingoEngine.Members.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Xml.Linq;
@@ -356,6 +359,9 @@ namespace BlingoEngine.Setup
                  .Register<BlingoFrameLabelManager, SetFrameLabelCommand>()
                  .Register<BlingoFrameLabelManager, AddFrameLabelCommand>()
                  .Register<BlingoFrameLabelManager, UpdateFrameLabelCommand>()
+                 .Register<BlingoSpriteCommandHandler, BlingoUpdateSpritePropertiesCommand>()
+                 .Register<BlingoMemberCommandHandler, BlingoUpdateMemberPropertiesCommand>()
+                 .Register<BlingoCastCommandHandler, BlingoUpdateCastPropertiesCommand>()
                  ;
         }
 

@@ -4,7 +4,7 @@ using System.Linq;
 using AbstUI.Primitives;
 using BlingoEngine.Members;
 
-namespace BlingoEngine.Director.Core.Members.Commands;
+namespace BlingoEngine.Members.Commands;
 
 public sealed record BlingoUpdateMemberPropertiesCommand : BlingoMemberBaseCommand
 {

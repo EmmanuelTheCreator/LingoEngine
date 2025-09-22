@@ -4,6 +4,7 @@ using AbstUI.Primitives;
 using BlingoEngine.Casts;
 using BlingoEngine.Director.Core.Casts.Commands;
 using BlingoEngine.Director.Core.Styles;
+using BlingoEngine.Casts.Commands;
 
 namespace BlingoEngine.Director.Core.Inspector;
 
