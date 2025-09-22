@@ -5,6 +5,7 @@ using BlingoEngine.Casts;
 using BlingoEngine.Events;
 using BlingoEngine.FrameworkCommunication;
 using BlingoEngine.Inputs;
+using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Commands;
 using BlingoEngine.Sounds;
@@ -163,6 +164,9 @@ namespace BlingoEngine.Core
         }
         public IBlingoCast CastLib(int number) => _castLibsContainer[number];
         public IBlingoCast CastLib(string name) => _castLibsContainer[name];
+        public IBlingoMember? GetMember(BlingoMemberRef memberRef) => _castLibsContainer.GetMember(memberRef);
+        public T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember
+            => _castLibsContainer.GetMember<T>(memberRef);
         public IBlingoMovie NewMovie(string name, bool andActivate = true)
         {
             // Create the default cast

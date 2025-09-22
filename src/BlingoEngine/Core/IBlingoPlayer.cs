@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using BlingoEngine.Casts;
+using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Sounds;
 using BlingoEngine.Stages;
@@ -113,6 +114,8 @@ namespace BlingoEngine.Core
         /// </summary>
         Version ProductVersion { get; set; }
         IBlingoCastLibsContainer CastLibs { get; }
+        IBlingoMember? GetMember(BlingoMemberRef memberRef);
+        T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember;
         /// <summary>
         /// Specifies a handler hook (function) to override the default alert display behavior.
         /// Lingo: the alertHook

@@ -17,6 +17,8 @@ namespace BlingoEngine.Casts
         /// Seacch in all members
         /// </summary>
         IBlingoMembersContainer Member { get; }
+        IBlingoMember? GetMember(BlingoMemberRef memberRef);
+        T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember;
         IBlingoMember? GetMember(int number, int? castLibNum = null);
         IBlingoMember? GetMember(string name, int? castLibNum = null);
         T? GetMember<T>(int number, int? castLibNum = null) where T : IBlingoMember;
@@ -94,6 +96,24 @@ namespace BlingoEngine.Casts
         }
 
         public int GetNextMemberNumber(int castNumber, int numberInCast) => _allMembersContainer.GetNextNumber(castNumber, numberInCast);
+        public IBlingoMember? GetMember(BlingoMemberRef memberRef)
+        {
+            if (memberRef.MemberNum <= 0)
+                return null;
+
+            var member = GetMember(memberRef.MemberNum, memberRef.CastLibNum > 0 ? memberRef.CastLibNum : null);
+            if (member == null)
+                return null;
+
+            if (memberRef.MemberType != BlingoMemberType.Unknown && member.Type != memberRef.MemberType)
+                return null;
+
+            return member;
+        }
+
+        public T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember
+            => GetMember(memberRef) as T;
+
         public T? GetMember<T>(int number, int? castLibNum = null) where T : IBlingoMember
             => !castLibNum.HasValue
              ? _allMembersContainer.Member<T>(number)

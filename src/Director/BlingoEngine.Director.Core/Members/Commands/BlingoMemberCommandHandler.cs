@@ -33,19 +33,19 @@ public sealed class BlingoMemberCommandHandler : IAbstCommandHandler<BlingoUpdat
         if (command == null || command.Changes.Count == 0)
             return false;
 
-        if (_player.ActiveMovie is not BlingoMovie movie)
+        if (_player.ActiveMovie is not BlingoMovie)
             return false;
 
-        _cachedMember = movie.GetMember(command.MemberReference);
+        _cachedMember = _player.GetMember(command.MemberReference);
         return _cachedMember != null;
     }
 
     public bool Handle(BlingoUpdateMemberPropertiesCommand command)
     {
-        if (_player.ActiveMovie is not BlingoMovie movie)
+        if (_player.ActiveMovie is not BlingoMovie)
             return false;
 
-        var member = _cachedMember ?? movie.GetMember(command.MemberReference);
+        var member = _cachedMember ?? _player.GetMember(command.MemberReference);
         _cachedMember = null;
 
         if (member == null)

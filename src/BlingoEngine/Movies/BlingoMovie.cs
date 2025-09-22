@@ -133,22 +133,6 @@ namespace BlingoEngine.Movies
             return null;
         }
 
-        public IBlingoMember? GetMember(BlingoMemberRef memberRef)
-        {
-            var member = CastLib.GetMember(memberRef.MemberNum, memberRef.CastLibNum);
-            if (member == null)
-                return null;
-
-            if (memberRef.MemberType != BlingoMemberType.Unknown && member.Type != memberRef.MemberType)
-                return null;
-
-            return member;
-        }
-
-        public T? GetMember<T>(BlingoMemberRef memberRef)
-            where T : class, IBlingoMember
-            => GetMember(memberRef) as T;
-
         public string Name { get; set; }
 
         public int Number { get; private set; }
