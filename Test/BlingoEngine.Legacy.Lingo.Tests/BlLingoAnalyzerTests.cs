@@ -76,7 +76,7 @@ end
     public void Analyzer_DetectsParentScript()
     {
         const string script = """
-script "Spawner"
+-- script "Spawner"
 property spriteNum
 
 on new me, aSpriteNum

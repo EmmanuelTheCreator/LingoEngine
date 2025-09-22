@@ -20,9 +20,11 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
 
         var tokens = context.Tokens;
         var symbols = context.Symbols;
+        var commentDeclaredClasses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         for (var index = 0; index < tokens.Count; index++)
         {
             var token = tokens[index];
+            DeclareClassFromCommentTrivia(token.LeadingTrivia, symbols, commentDeclaredClasses);
             if (token.Kind != BlSyntaxKind.KeywordToken)
             {
                 continue;
@@ -195,6 +197,78 @@ public sealed class BlLingoDeclarationPass : BlLingoAnalysisPass
         }
 
         return startIndex - 1;
+    }
+
+    private static void DeclareClassFromCommentTrivia(
+        IReadOnlyList<BlSyntaxTrivia> trivia,
+        BlLingoSymbolTable symbols,
+        HashSet<string> declaredClasses)
+    {
+        if (trivia is null || trivia.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var item in trivia)
+        {
+            if (item.Kind != BlSyntaxKind.CommentTrivia)
+            {
+                continue;
+            }
+
+            var name = TryExtractClassName(item.ValueText);
+            if (string.IsNullOrEmpty(name))
+            {
+                continue;
+            }
+
+            if (declaredClasses.Add(name))
+            {
+                symbols.DeclareClass(name);
+            }
+        }
+    }
+
+    private static string? TryExtractClassName(string? commentText)
+    {
+        if (string.IsNullOrWhiteSpace(commentText))
+        {
+            return null;
+        }
+
+        const string Prefix = "script";
+        if (!commentText.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var remainder = commentText[Prefix.Length..].TrimStart();
+        if (string.IsNullOrEmpty(remainder))
+        {
+            return null;
+        }
+
+        if (remainder[0] == '"')
+        {
+            if (remainder.Length < 2)
+            {
+                return null;
+            }
+
+            var endQuote = remainder.IndexOf('"', 1);
+            if (endQuote <= 1)
+            {
+                return null;
+            }
+
+            var quoted = remainder.Substring(1, endQuote - 1).Trim();
+            return string.IsNullOrWhiteSpace(quoted) ? null : quoted;
+        }
+
+        var terminatorIndex = remainder.IndexOfAny(new[] { ' ', '\t' });
+        var name = terminatorIndex >= 0 ? remainder[..terminatorIndex] : remainder;
+        name = name.Trim();
+        return string.IsNullOrWhiteSpace(name) ? null : name;
     }
 
     /// <summary>
