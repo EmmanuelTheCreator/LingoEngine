@@ -1,4 +1,5 @@
 using AbstUI.Components;
+using AbstUI.Components.Buttons;
 using AbstUI.Primitives;
 using AbstUI.SDL2.Bitmaps;
 using RmlUiNet;
@@ -20,6 +21,10 @@ public class RmlUiButton : IAbstFrameworkButton, IDisposable
     private event Action? _pressed;
     private Element? _iconElement;
     private IAbstTexture2D? _iconTexture;
+    private string _text = string.Empty;
+    private string? _iconDataUrl;
+    private int _iconWidth;
+    private int _iconHeight;
 
     public RmlUiButton(ElementDocument document, nint renderer)
     {
@@ -83,8 +88,18 @@ public class RmlUiButton : IAbstFrameworkButton, IDisposable
 
     public string Text
     {
-        get => _element.GetInnerRml();
-        set => _element.SetInnerRml(value);
+        get
+        {
+            _text = _element.GetInnerRml();
+            return _text;
+        }
+        set
+        {
+            _text = value ?? string.Empty;
+            _element.SetInnerRml(_text);
+            UpdateIconElement();
+            UpdateContentLayout();
+        }
     }
 
     public bool Enabled
@@ -103,23 +118,9 @@ public class RmlUiButton : IAbstFrameworkButton, IDisposable
         set
         {
             _iconTexture = value;
-
-            // Remove previous icon element if present
-            if (_iconElement != null)
-            {
-                _element.RemoveChild(_iconElement);
-                _iconElement = null;
-            }
-
-            // Only SDL2 textures are supported for now
-            if (value is SdlTexture2D tex)
-            {
-                var base64 = tex.ToPngBase64(_renderer);
-                _iconElement = _element.AppendChildTag("img");
-                _iconElement.SetAttribute("src", $"data:image/png;base64,{base64}");
-                _iconElement.SetAttribute("width", tex.Width.ToString());
-                _iconElement.SetAttribute("height", tex.Height.ToString());
-            }
+            UpdateIconSource(value);
+            UpdateIconElement();
+            UpdateContentLayout();
         }
     }
 
@@ -130,4 +131,47 @@ public class RmlUiButton : IAbstFrameworkButton, IDisposable
     }
 
     public void Dispose() { }
+
+    private void UpdateIconSource(IAbstTexture2D? texture)
+    {
+        if (texture is SdlTexture2D tex)
+        {
+            _iconDataUrl = $"data:image/png;base64,{tex.ToPngBase64(_renderer)}";
+            _iconWidth = tex.Width;
+            _iconHeight = tex.Height;
+        }
+        else
+        {
+            _iconDataUrl = null;
+            _iconWidth = 0;
+            _iconHeight = 0;
+        }
+    }
+
+    private void UpdateIconElement()
+    {
+        if (_iconElement != null)
+        {
+            if (_iconElement.GetParentNode() == _element)
+                _element.RemoveChild(_iconElement);
+            _iconElement = null;
+        }
+
+        if (_iconDataUrl != null)
+        {
+            _iconElement = _element.AppendChildTag("img");
+            _iconElement.SetAttribute("src", _iconDataUrl);
+            if (_iconWidth > 0)
+                _iconElement.SetAttribute("width", _iconWidth.ToString());
+            if (_iconHeight > 0)
+                _iconElement.SetAttribute("height", _iconHeight.ToString());
+        }
+    }
+
+    private void UpdateContentLayout()
+    {
+        bool hasIcon = _iconElement != null && _iconElement.GetParentNode() == _element;
+        bool hasText = !string.IsNullOrWhiteSpace(_text);
+        _element.SetProperty("text-align", hasIcon && !hasText ? "center" : "left");
+    }
 }

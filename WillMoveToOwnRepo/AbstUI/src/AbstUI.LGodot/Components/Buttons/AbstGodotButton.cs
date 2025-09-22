@@ -64,7 +64,15 @@ namespace AbstUI.LGodot.Components
             }
         }
 
-        public new string Text { get => base.Text; set => base.Text = value; }
+        public new string Text
+        {
+            get => base.Text;
+            set
+            {
+                base.Text = value ?? string.Empty;
+                UpdateIconLayout();
+            }
+        }
         public bool Enabled { get => !Disabled; set => Disabled = !value; }
         public AColor BorderColor { get => _borderColor; set { _borderColor = value; UpdateStyle(); } }
         public AColor BackgroundColor { get => _backgroundColor; set { _backgroundColor = value; UpdateStyle(); } }
@@ -82,8 +90,11 @@ namespace AbstUI.LGodot.Components
             set
             {
                 _texture = value;
-                if (_texture != null && _texture is AbstGodotTexture2D tex)
+                if (value is AbstGodotTexture2D tex)
                     Icon = tex.Texture;
+                else
+                    Icon = null;
+                UpdateIconLayout();
             }
         }
 
@@ -125,6 +136,14 @@ namespace AbstUI.LGodot.Components
             style.ContentMarginTop = style.ContentMarginBottom = 0;
             style.BorderWidthBottom = style.BorderWidthRight = style.BorderWidthLeft = style.BorderWidthTop = 0;
             style.SetBorderWidthAll(0);
+        }
+
+        private void UpdateIconLayout()
+        {
+            if (Icon != null && string.IsNullOrWhiteSpace(Text))
+                IconAlignment = HorizontalAlignment.Center;
+            else
+                IconAlignment = HorizontalAlignment.Left;
         }
 
     }
