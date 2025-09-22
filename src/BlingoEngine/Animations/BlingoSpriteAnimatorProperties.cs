@@ -59,6 +59,50 @@ namespace BlingoEngine.Animations
         }
 
         public IReadOnlyCollection<BlingoKeyFrameSetting>? GetKeyFrames() => _settings.Values;
+
+        /// <summary>
+        /// Returns the keyframe that should drive the supplied <paramref name="frame"/>.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>If an exact keyframe exists, it is returned.</description>
+        /// </item>
+        /// <item>
+        /// <description>If the frame falls between two keyframes, the one on the left (the previous keyframe) is returned.</description>
+        /// </item>
+        /// <item>
+        /// <description>If the frame precedes the first keyframe, the first keyframe is returned, and if it exceeds the last, the last keyframe is returned.</description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <param name="frame">The frame to locate a keyframe for.</param>
+        /// <returns>The keyframe setting that controls the requested frame, or <c>null</c> when there are no keyframes.</returns>
+        public BlingoKeyFrameSetting? GetKeyFrameForFrame(int frame)
+        {
+            if (_settings.Count == 0)
+                return null;
+
+            if (_settings.TryGetValue(frame, out var exact))
+                return exact;
+
+            int? candidate = null;
+            foreach (var key in _settings.Keys)
+            {
+                if (key <= frame && (candidate == null || key > candidate.Value))
+                    candidate = key;
+            }
+
+            if (candidate.HasValue)
+                return _settings[candidate.Value];
+
+            int? first = null;
+            foreach (var key in _settings.Keys)
+            {
+                if (first == null || key < first.Value)
+                    first = key;
+            }
+
+            return first.HasValue ? _settings[first.Value] : null;
+        }
         public void MoveKeyFrame(int from, int to)
         {
             if (from == to)

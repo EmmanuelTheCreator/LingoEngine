@@ -47,6 +47,7 @@ namespace BlingoEngine.Sprites
 
 
         IReadOnlyCollection<BlingoKeyFrameSetting>? GetKeyframes();
+        BlingoKeyFrameSetting? GetKeyFrameForFrame(int frame);
         void MoveKeyFrame(int from, int to);
         bool DeleteKeyFrame(int frame);
 

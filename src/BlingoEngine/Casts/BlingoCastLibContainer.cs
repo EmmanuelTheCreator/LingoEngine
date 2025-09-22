@@ -17,6 +17,9 @@ namespace BlingoEngine.Casts
         /// Seacch in all members
         /// </summary>
         IBlingoMembersContainer Member { get; }
+        IBlingoMember? GetMember(BlingoMemberRef memberRef);
+        T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember;
+        IBlingoCast? GetCast(BlingoCastRef castRef);
         IBlingoMember? GetMember(int number, int? castLibNum = null);
         IBlingoMember? GetMember(string name, int? castLibNum = null);
         T? GetMember<T>(int number, int? castLibNum = null) where T : IBlingoMember;
@@ -60,6 +63,20 @@ namespace BlingoEngine.Casts
         public string GetCastName(int number) => _casts[number - 1].Name;
         public IBlingoCast GetCast(int number) => _casts[number - 1];
 
+        public IBlingoCast? GetCast(BlingoCastRef castRef)
+        {
+            if (castRef.CastLibNum <= 0)
+                return null;
+
+            foreach (var cast in _casts)
+            {
+                if (cast.Number == castRef.CastLibNum)
+                    return cast;
+            }
+
+            return null;
+        }
+
         public IBlingoCast AddCast(string name, bool isInternal = false)
         {
             var nameL = name.ToLower();
@@ -94,6 +111,24 @@ namespace BlingoEngine.Casts
         }
 
         public int GetNextMemberNumber(int castNumber, int numberInCast) => _allMembersContainer.GetNextNumber(castNumber, numberInCast);
+        public IBlingoMember? GetMember(BlingoMemberRef memberRef)
+        {
+            if (memberRef.MemberNum <= 0)
+                return null;
+
+            var member = GetMember(memberRef.MemberNum, memberRef.CastLibNum > 0 ? memberRef.CastLibNum : null);
+            if (member == null)
+                return null;
+
+            if (memberRef.MemberType != BlingoMemberType.Unknown && member.Type != memberRef.MemberType)
+                return null;
+
+            return member;
+        }
+
+        public T? GetMember<T>(BlingoMemberRef memberRef) where T : class, IBlingoMember
+            => GetMember(memberRef) as T;
+
         public T? GetMember<T>(int number, int? castLibNum = null) where T : IBlingoMember
             => !castLibNum.HasValue
              ? _allMembersContainer.Member<T>(number)

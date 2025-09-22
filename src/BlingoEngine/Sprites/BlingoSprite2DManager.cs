@@ -1,4 +1,6 @@
-﻿using BlingoEngine.Inputs;
+﻿using System;
+using AbstUI.Primitives;
+using BlingoEngine.Inputs;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 
@@ -17,6 +19,179 @@ namespace BlingoEngine.Sprites
         {
             _blingoMouse = mouse;
         }
+
+        public override BlingoSpritePropertyMutation? RetrievePropertyMutation(BlingoSprite sprite, APropertyValue change)
+        {
+            var baseResult = base.RetrievePropertyMutation(sprite, change);
+            if (baseResult != null)
+                return baseResult;
+
+            if (sprite is not BlingoSprite2D sprite2D)
+                return null;
+
+            switch (change.PropertyName)
+            {
+                case nameof(BlingoSprite2D.FlipH) when change.Value is bool newFlipH && sprite2D.FlipH != newFlipH:
+                {
+                    bool oldValue = sprite2D.FlipH;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.FlipH = newFlipH,
+                        () => sprite2D.FlipH = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: false,
+                        NewValue: newFlipH,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.FlipV) when change.Value is bool newFlipV && sprite2D.FlipV != newFlipV:
+                {
+                    bool oldValue = sprite2D.FlipV;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.FlipV = newFlipV,
+                        () => sprite2D.FlipV = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: false,
+                        NewValue: newFlipV,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.LocH) when change.TryGetFloat(out var newLocH) && !AreClose(sprite2D.LocH, newLocH):
+                {
+                    float oldValue = sprite2D.LocH;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.LocH = newLocH,
+                        () => sprite2D.LocH = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newLocH,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.LocV) when change.TryGetFloat(out var newLocV) && !AreClose(sprite2D.LocV, newLocV):
+                {
+                    float oldValue = sprite2D.LocV;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.LocV = newLocV,
+                        () => sprite2D.LocV = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newLocV,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.LocZ) when change.TryGetInt(out var newLocZ) && sprite2D.LocZ != newLocZ:
+                {
+                    int oldValue = sprite2D.LocZ;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.LocZ = newLocZ,
+                        () => sprite2D.LocZ = oldValue,
+                        RequiresStageRefresh: false,
+                        IsAnimationProperty: false,
+                        NewValue: newLocZ,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.Width) when change.TryGetFloat(out var newWidth) && !AreClose(sprite2D.Width, newWidth):
+                {
+                    float oldValue = sprite2D.Width;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.Width = newWidth,
+                        () => sprite2D.Width = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newWidth,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.Height) when change.TryGetFloat(out var newHeight) && !AreClose(sprite2D.Height, newHeight):
+                {
+                    float oldValue = sprite2D.Height;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.Height = newHeight,
+                        () => sprite2D.Height = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newHeight,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.Ink) when change.TryGetInt(out var newInk) && sprite2D.Ink != newInk:
+                {
+                    int oldValue = sprite2D.Ink;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.Ink = newInk,
+                        () => sprite2D.Ink = oldValue,
+                        RequiresStageRefresh: false,
+                        IsAnimationProperty: false,
+                        NewValue: newInk,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.Blend) when change.TryGetFloat(out var newBlend) && !AreClose(sprite2D.Blend, newBlend):
+                {
+                    float oldValue = sprite2D.Blend;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.Blend = newBlend,
+                        () => sprite2D.Blend = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newBlend,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.Rotation) when change.TryGetFloat(out var newRotation) && !AreClose(sprite2D.Rotation, newRotation):
+                {
+                    float oldValue = sprite2D.Rotation;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.Rotation = newRotation,
+                        () => sprite2D.Rotation = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newRotation,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.Skew) when change.TryGetFloat(out var newSkew) && !AreClose(sprite2D.Skew, newSkew):
+                {
+                    float oldValue = sprite2D.Skew;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.Skew = newSkew,
+                        () => sprite2D.Skew = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newSkew,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.ForeColor) when change.Value is AColor newForeColor && !sprite2D.ForeColor.Equals(newForeColor):
+                {
+                    var oldValue = sprite2D.ForeColor;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.ForeColor = newForeColor,
+                        () => sprite2D.ForeColor = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newForeColor,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite2D.BackColor) when change.Value is AColor newBackColor && !sprite2D.BackColor.Equals(newBackColor):
+                {
+                    var oldValue = sprite2D.BackColor;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite2D.BackColor = newBackColor,
+                        () => sprite2D.BackColor = oldValue,
+                        RequiresStageRefresh: true,
+                        IsAnimationProperty: true,
+                        NewValue: newBackColor,
+                        OriginalValue: oldValue);
+                }
+            }
+
+            return null;
+        }
+
+        private static bool AreClose(float left, float right) => Math.Abs(left - right) <= 0.0001f;
 
         public BlingoSprite2D Add(int num, int begin, int end, Action<BlingoSprite2D>? configure = null)
          => AddSprite(num, c =>

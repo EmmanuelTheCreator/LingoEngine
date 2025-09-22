@@ -41,6 +41,7 @@ namespace BlingoEngine.Animations
         }
 
         internal IReadOnlyCollection<BlingoKeyFrameSetting>? GetKeyframes() => _properties.GetKeyFrames();
+        internal BlingoKeyFrameSetting? GetKeyFrameForFrame(int frame) => _properties.GetKeyFrameForFrame(frame);
         internal void MoveKeyFrame(int from, int to) => _properties.MoveKeyFrame(from, to);
         internal bool DeleteKeyFrame(int frame) => _properties.DeleteKeyFrame(frame);
         public void AddKeyFrame(BlingoKeyFrameSetting setting) => _properties.AddKeyFrame(setting);

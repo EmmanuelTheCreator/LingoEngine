@@ -5,6 +5,7 @@ using BlingoEngine.Director.Core.Bitmaps;
 using BlingoEngine.Director.Core.Bitmaps.Commands;
 using BlingoEngine.Director.Core.Casts;
 using BlingoEngine.Director.Core.Casts.Commands;
+using BlingoEngine.Director.Core.Movies.Commands;
 using BlingoEngine.Director.Core.Compilers;
 using BlingoEngine.Director.Core.Compilers.Commands;
 using BlingoEngine.Director.Core.FileSystems;
@@ -12,12 +13,14 @@ using BlingoEngine.Director.Core.Importer;
 using BlingoEngine.Director.Core.Importer.Commands;
 using BlingoEngine.Director.Core.Inspector;
 using BlingoEngine.Director.Core.Inspector.Commands;
+using BlingoEngine.Director.Core.Members.Commands;
 using BlingoEngine.Director.Core.Projects;
 using BlingoEngine.Director.Core.Projects.Commands;
 using BlingoEngine.Director.Core.Scores;
 using BlingoEngine.Director.Core.Scripts;
 using BlingoEngine.Director.Core.Scripts.Commands;
 using BlingoEngine.Director.Core.Sprites;
+using BlingoEngine.Director.Core.Sprites.Commands;
 using BlingoEngine.Director.Core.Sprites.Behaviors;
 using BlingoEngine.Director.Core.Behaviors;
 using BlingoEngine.Director.Core.Stages;
@@ -103,6 +106,10 @@ namespace BlingoEngine.Director.Core
                     .AddTransient<BlingoCSharpConverterPopupHandler>()
                     .AddTransient<BlingoCodeImporterPopup>()
                     .AddTransient<BlingoCodeImporterPopupHandler>()
+                    .AddTransient<BlingoSpriteCommandHandler>()
+                    .AddTransient<BlingoMemberCommandHandler>()
+                    .AddTransient<BlingoMovieCommandHandler>()
+                    .AddTransient<BlingoCastCommandHandler>()
 
                 );
             engineRegistration.AddBuildAction(
@@ -138,6 +145,10 @@ namespace BlingoEngine.Director.Core
                         .Register<DirSpritesManager, ChangeSpriteRangeCommand>()
                         .Register<DirSpritesManager, AddSpriteCommand>()
                         .Register<DirSpritesManager, RemoveSpriteCommand>()
+                        .Register<BlingoSpriteCommandHandler, BlingoUpdateSpritePropertiesCommand>()
+                        .Register<BlingoMemberCommandHandler, BlingoUpdateMemberPropertiesCommand>()
+                        .Register<BlingoMovieCommandHandler, BlingoUpdateMoviePropertiesCommand>()
+                        .Register<BlingoCastCommandHandler, BlingoUpdateCastPropertiesCommand>()
                         .Register<DirectorBitmapEditWindow, PainterToolSelectCommand>()
                         .Register<DirectorBitmapEditWindow, PainterDrawPixelCommand>()
                         .Register<DirectorBitmapEditWindow, PainterFillCommand>()

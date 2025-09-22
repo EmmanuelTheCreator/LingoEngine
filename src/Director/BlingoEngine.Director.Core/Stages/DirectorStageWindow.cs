@@ -52,7 +52,7 @@ namespace BlingoEngine.Director.Core.Stages
             Title = "Stage";
         }
 
-        private void Player_ActiveMovieChanged(Movies.IBlingoMovie? obj)
+        private void Player_ActiveMovieChanged(IBlingoMovie? obj)
         {
              _currentMovie = obj;
         }

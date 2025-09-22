@@ -1,4 +1,6 @@
-﻿using BlingoEngine.Members;
+﻿using System;
+using AbstUI.Primitives;
+using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using System.Collections.Generic;
 
@@ -16,6 +18,8 @@ namespace BlingoEngine.Sprites
         int SpriteNumChannelOffset { get; }
         void MoveSprite(int number, int newFrame);
         void MuteChannel(int channel, bool state);
+        BlingoSpritePropertyMutation? RetrievePropertyMutation(BlingoSprite sprite, APropertyValue change);
+        BlingoSprite? GetSprite(BlingoSpriteRef spriteRef);
     }
     /// <summary>
     /// Lingo Sprite Manager interface.
@@ -60,6 +64,63 @@ namespace BlingoEngine.Sprites
 
         public abstract void MoveSprite(int number, int newFrame);
         public abstract void MuteChannel(int channel, bool state);
+        public abstract BlingoSprite? GetSprite(BlingoSpriteRef spriteRef);
+
+        public virtual BlingoSpritePropertyMutation? RetrievePropertyMutation(BlingoSprite sprite, APropertyValue change)
+        {
+            switch (change.PropertyName)
+            {
+                case nameof(BlingoSprite.Lock) when change.Value is bool newLock && sprite.Lock != newLock:
+                {
+                    bool oldValue = sprite.Lock;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite.Lock = newLock,
+                        () => sprite.Lock = oldValue,
+                        RequiresStageRefresh: false,
+                        IsAnimationProperty: false,
+                        NewValue: newLock,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite.Name) when change.Value is string newName && sprite.Name != newName:
+                {
+                    string oldValue = sprite.Name;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite.Name = newName,
+                        () => sprite.Name = oldValue,
+                        RequiresStageRefresh: false,
+                        IsAnimationProperty: false,
+                        NewValue: newName,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite.BeginFrame) when change.TryGetInt(out var newBegin) && sprite.BeginFrame != newBegin:
+                {
+                    int oldValue = sprite.BeginFrame;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite.BeginFrame = newBegin,
+                        () => sprite.BeginFrame = oldValue,
+                        RequiresStageRefresh: false,
+                        IsAnimationProperty: false,
+                        NewValue: newBegin,
+                        OriginalValue: oldValue);
+                }
+
+                case nameof(BlingoSprite.EndFrame) when change.TryGetInt(out var newEnd) && sprite.EndFrame != newEnd:
+                {
+                    int oldValue = sprite.EndFrame;
+                    return new BlingoSpritePropertyMutation(
+                        () => sprite.EndFrame = newEnd,
+                        () => sprite.EndFrame = oldValue,
+                        RequiresStageRefresh: false,
+                        IsAnimationProperty: false,
+                        NewValue: newEnd,
+                        OriginalValue: oldValue);
+                }
+            }
+
+            return null;
+        }
 
         internal abstract void UpdateActiveSprites(int currentFrame, int lastFrame);
         internal abstract void BeginSprites();
@@ -132,6 +193,25 @@ namespace BlingoEngine.Sprites
         public IEnumerable<TSprite> GetAllSprites() => _allTimeSprites.ToArray();
         public IEnumerable<TSprite> GetAllSpritesByChannel(int spriteNum) => _allTimeSprites.Where(x => x.SpriteNum == spriteNum).ToArray();
         public IEnumerable<TSprite> GetAllSpritesBySpriteNumAndChannel(int spriteNumAndChannel) => _allTimeSprites.Where(x => x.SpriteNumWithChannel == spriteNumAndChannel).ToArray();
+
+        public override BlingoSprite? GetSprite(BlingoSpriteRef spriteRef) => FindSprite(spriteRef);
+
+        protected virtual TSprite? FindSprite(BlingoSpriteRef spriteRef)
+        {
+            TSprite? fallback = null;
+            foreach (var sprite in _allTimeSprites)
+            {
+                if (sprite.SpriteNumWithChannel != spriteRef.SpriteNum)
+                    continue;
+
+                if (sprite.BeginFrame == spriteRef.BeginFrame)
+                    return sprite;
+
+                fallback ??= sprite;
+            }
+
+            return fallback;
+        }
 
         internal TSprite AddSprite(string name, Action<TSprite>? configure = null)
         {
