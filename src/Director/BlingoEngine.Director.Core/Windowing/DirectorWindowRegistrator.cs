@@ -30,6 +30,7 @@ namespace BlingoEngine.Director.Core.Windowing
                 .AddSingletonWindow<DirectorTextEditWindowV2>(DirectorMenuCodes.TextEditWindow, s => s.CreateShortCut(DirectorMenuCodes.TextEditWindow, "Ctrl+T", sc => new ExecuteShortCutCommand(sc)))
                 .AddSingletonWindow<DirectorBitmapEditWindow>(DirectorMenuCodes.PictureEditWindow, s => s.CreateShortCut(DirectorMenuCodes.PictureEditWindow, "Ctrl+5", sc => new ExecuteShortCutCommand(sc)))
                 .AddSingletonWindow<DirectorImportExportWindow>(DirectorMenuCodes.ImportExportWindow)
+                //.AddSingletonWindow<DirectorImportExportWindow>(DirectorMenuCodes.MainMenu)
                 // .Register<DirectorMainMenu>(DirectorMenuCodes.MainMenu)
                 ;
 

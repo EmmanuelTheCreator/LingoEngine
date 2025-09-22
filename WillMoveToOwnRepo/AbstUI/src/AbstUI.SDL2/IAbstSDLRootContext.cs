@@ -1,4 +1,5 @@
 ﻿using AbstUI.Inputs;
+using AbstUI.SDL2.Core;
 
 namespace AbstUI.SDL2
 {
@@ -6,5 +7,6 @@ namespace AbstUI.SDL2
     {
         IAbstGlobalMouse GlobalMouse { get; set; }
         IAbstGlobalKey GlobalKey { get; set; }
+        AbstSDLComponentContainer ComponentContainer { get; }
     }
 }

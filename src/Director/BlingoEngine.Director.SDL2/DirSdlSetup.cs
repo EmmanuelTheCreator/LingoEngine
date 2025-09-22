@@ -1,25 +1,26 @@
-﻿using BlingoEngine.SDL2;
+﻿using AbstUI.SDL2;
 using BlingoEngine.Core;
 using BlingoEngine.Director.Core;
-using BlingoEngine.Director.Core.Icons;
-using BlingoEngine.Director.Core.Casts;
 using BlingoEngine.Director.Core.Behaviors;
+using BlingoEngine.Director.Core.Casts;
+using BlingoEngine.Director.Core.Icons;
 using BlingoEngine.Director.Core.Inspector;
 using BlingoEngine.Director.Core.Projects;
+using BlingoEngine.Director.Core.Scores;
 using BlingoEngine.Director.Core.Stages;
-using AbstUI.SDL2;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using BlingoEngine.Director.SDL2.Casts;
+using BlingoEngine.Director.LGodot;
 using BlingoEngine.Director.SDL2.Behaviors;
+using BlingoEngine.Director.SDL2.Casts;
 using BlingoEngine.Director.SDL2.Icons;
 using BlingoEngine.Director.SDL2.Inspector;
-using BlingoEngine.Director.SDL2.UI;
-using BlingoEngine.Director.SDL2.Stages;
 using BlingoEngine.Director.SDL2.Scores;
-using BlingoEngine.Director.Core.Scores;
+using BlingoEngine.Director.SDL2.Stages;
+using BlingoEngine.Director.SDL2.UI;
 using BlingoEngine.Projects;
+using BlingoEngine.SDL2;
 using BlingoEngine.Setup;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.Director.SDL2
 {
@@ -41,6 +42,7 @@ namespace BlingoEngine.Director.SDL2
                .ServicesMain(s =>
                {
                    s
+                        .AddSingleton<DirSDLMainMenu>()
                         .AddTransient<IDirFrameworkCastWindow>(p => p.GetRequiredService<DirSdlCastWindow>())
                         .AddTransient<IDirFrameworkStageWindow>(p => p.GetRequiredService<DirSdlStageWindow>())
                         .AddTransient<IDirFrameworkScoreWindow>(p => p.GetRequiredService<DirSdlScoreWindow>())
@@ -60,7 +62,7 @@ namespace BlingoEngine.Director.SDL2
                })
                .AddBuildAction(p =>
                {
-                   new BlingoSdlDirectorRoot(p.GetRequiredService<BlingoPlayer>(), p, p.GetRequiredService<BlingoProjectSettings>());
+                   new BlingoSdlDirectorRoot(p.GetRequiredService<IAbstSDLRootContext>(),p.GetRequiredService<BlingoPlayer>(), p, p.GetRequiredService<BlingoProjectSettings>());
                });
             return reg;
         }

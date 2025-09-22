@@ -17,7 +17,7 @@ namespace BlingoEngine.Casts
         /// The name of the cast library.
         /// Lingo: the name of castLib
         /// </summary>
-        string Name { get; }
+        string Name { get; set; }
         /// <summary>
         /// eturns or sets the filename of a cast library. Read-only for internal cast
         /// libraries, read/write for external cast libraries.

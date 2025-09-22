@@ -22,7 +22,7 @@ internal static class AbstSdlControlPopupExtensions
             //}
             if (current.Component is AbstSdlWindow)
             {
-                y += AbstSdlWindow.TitleBarHeight;
+                y += AbstSdlWindow._titleBarHeight;
             }
             current = current.VisualParent;
         }

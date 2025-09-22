@@ -345,12 +345,20 @@ namespace AbstUI.SDL2.Components
 
         public AbstHorizontalLineSeparator CreateHorizontalLineSeparator(string name)
         {
-            throw new NotImplementedException();
+            var sep = new AbstHorizontalLineSeparator();
+            var impl = new AbstSDLHorizontalLineSeparator(this ,sep);
+            InitComponent(sep);
+            sep.Name = name;
+            return sep;
         }
 
         public AbstVerticalLineSeparator CreateVerticalLineSeparator(string name)
         {
-            throw new NotImplementedException();
+            var sep = new AbstVerticalLineSeparator();
+            var impl = new AbstSDLVerticalLineSeparator(this, sep);
+            InitComponent(sep);
+            sep.Name = name;
+            return sep;
         }
 
 

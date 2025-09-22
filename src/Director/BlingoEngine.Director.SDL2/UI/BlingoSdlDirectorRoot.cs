@@ -1,44 +1,39 @@
-﻿using AbstUI.Windowing;
+﻿using AbstUI.SDL2;
+using AbstUI.Windowing;
 using BlingoEngine.Core;
-using BlingoEngine.Director.Core.UI;
-using BlingoEngine.Director.SDL2.Casts;
-using BlingoEngine.Director.SDL2.Inspector;
-using BlingoEngine.Director.SDL2.Scores;
-using BlingoEngine.Director.SDL2.Stages;
+using BlingoEngine.Director.LGodot;
 using BlingoEngine.Projects;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace BlingoEngine.Director.SDL2.UI
 {
     public class BlingoSdlDirectorRoot : IDisposable
     {
-        private readonly DirSdlCastWindow _castWindow;
-        private readonly DirSdlStageWindow _stageWindow;
+        private DirSDLMainMenu _dirMainMenu;
 
-        private readonly DirSdlScoreWindow _scoreWindow;
-
-        private readonly DirSdlPropertyInspectorWindow _inspectorWindow;
-
-
-        public BlingoSdlDirectorRoot(BlingoPlayer player, IServiceProvider services, BlingoProjectSettings settings)
+        public BlingoSdlDirectorRoot(IAbstSDLRootContext rootContext, BlingoPlayer player, IServiceProvider serviceProvider, BlingoProjectSettings settings)
         {
-            var windowManager= services.GetRequiredService<IAbstWindowManager>();
+            var windowManager= serviceProvider.GetRequiredService<IAbstWindowManager>();
 
-            windowManager.OpenWindow(DirectorMenuCodes.PropertyInspector);
-            windowManager.OpenWindow(DirectorMenuCodes.CastWindow);
-            windowManager.OpenWindow(DirectorMenuCodes.ScoreWindow);
-            windowManager.OpenWindow(DirectorMenuCodes.StageWindow);
+            _dirMainMenu = serviceProvider.GetRequiredService<DirSDLMainMenu>();
+            //_dirMainMenu = serviceProvider.GetRequiredService<DirectorMainMenu>();
+            _dirMainMenu.Init(_dirMainMenu.MainMenu);
+            _dirMainMenu.OpenWindow();
+            //rootContext.ComponentContainer.AddChild(_dirMainMenu);
+
+            //godotWindowManager.RootNode.AddChild(_dirGodotMainMenu);
+
+            //windowManager.OpenWindow(DirectorMenuCodes.PropertyInspector);
+            //windowManager.OpenWindow(DirectorMenuCodes.CastWindow);
+            //windowManager.OpenWindow(DirectorMenuCodes.ScoreWindow);
+            //windowManager.OpenWindow(DirectorMenuCodes.StageWindow);
             //windowManager.OpenWindow(DirectorMenuCodes.ToolsWindow);
-            windowManager.OpenWindow(DirectorMenuCodes.MainMenu);
+            //windowManager.OpenWindow(DirectorMenuCodes.MainMenu);
         }
 
         public void Dispose()
         {
-            _castWindow.Dispose();
-            _stageWindow.Dispose();
-
-            _scoreWindow.Dispose();
-            _inspectorWindow.Dispose();
 
         }
     }

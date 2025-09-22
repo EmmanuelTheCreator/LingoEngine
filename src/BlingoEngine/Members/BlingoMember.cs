@@ -135,7 +135,7 @@ namespace BlingoEngine.Members
         /// The filename associated with an external linked cast member (if any).
         /// Lingo: the fileName of member
         /// </summary>
-        string FileName { get; }
+        string FileName { get; set; }
 
         /// <summary>
         /// The type of the cast member (e.g., bitmap, sound, script).

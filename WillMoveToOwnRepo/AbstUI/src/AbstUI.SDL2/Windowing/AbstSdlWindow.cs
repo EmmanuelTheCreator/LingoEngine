@@ -27,7 +27,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     private bool _dragging;
     private int _dragOffsetX;
     private int _dragOffsetY;
-    internal const int TitleBarHeight = 24;
+    internal const int _titleBarHeight = 24;
 
 
 
@@ -70,6 +70,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
     }
 
     public string WindowCode => _abstWindow.WindowCode;
+    public IAbstWindowInternal AWindow => _abstWindow;
 
     public AColor BackgroundTitleColor { get; set; } 
     public new AColor BackgroundColor
@@ -118,15 +119,15 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
         if (instance == _abstWindow) return;
         _abstWindow = (IAbstWindowInternal)instance;
         _abstWindow.Init(this);
-        instance.WindowTitleHeight = TitleBarHeight;
+        instance.WindowTitleHeight = _titleBarHeight;
         //OnResize(true, (int)Width, (int)Height);
     }
 
     // TODO :  Resize SDL window.
     private void Resize(bool firstResize, int width, int height)
     {
-        OnResize(firstResize, width, height - TitleBarHeight);
-        _abstWindow.ResizingContentFromFW(false, width, height - TitleBarHeight);
+        OnResize(firstResize, width, height - _titleBarHeight);
+        _abstWindow.ResizingContentFromFW(false, width, height - _titleBarHeight);
         // updates sizes because it could be resized to minimum size
         UpateSizeFromAbstWindow();
         ComponentContext.QueueRedraw(this);
@@ -208,7 +209,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
 
         // Render children
         _xOffset = (int)X;
-        _yOffset = (int)(TitleBarHeight + Y);
+        _yOffset = (int)(_titleBarHeight + Y);
         // render children first to a texture
         //Console.WriteLine($"WIN off=({(int)X},{(int)Y}) content={Content?.Name}");
         var tex = (nint)base.Render(context);
@@ -217,7 +218,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
 
         // Title bg
         SDL.SDL_SetRenderDrawColor(context.Renderer, BackgroundTitleColor.R, BackgroundTitleColor.G, BackgroundTitleColor.B, BackgroundTitleColor.A);
-        var bar = new SDL.SDL_Rect { x = 0, y = 0, w = w, h = TitleBarHeight };
+        var bar = new SDL.SDL_Rect { x = 0, y = 0, w = w, h = _titleBarHeight };
         SDL.SDL_RenderFillRect(context.Renderer, ref bar);
 
         if (!string.IsNullOrEmpty(_title))
@@ -232,7 +233,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
                 var dst = new SDL.SDL_Rect
                 {
                     x = 4,
-                    y = (TitleBarHeight - s.h) / 2,
+                    y = (_titleBarHeight - s.h) / 2,
                     w = s.w,
                     h = s.h
                 };
@@ -241,7 +242,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
             }
         }
 
-        int btnSize = TitleBarHeight - 4;
+        int btnSize = _titleBarHeight - 4;
         _closeRect = new SDL.SDL_Rect { x = w - btnSize - 2, y = 2, w = btnSize, h = btnSize };
         SDL.SDL_SetRenderDrawColor(context.Renderer, 180, 0, 0, 255);
         SDL.SDL_RenderFillRect(context.Renderer, ref _closeRect);
@@ -277,7 +278,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
                     return;
                 }
 
-                if (ly <= TitleBarHeight)
+                if (ly <= _titleBarHeight)
                 {
                     _dragging = true;
                     _dragOffsetX = lx;
@@ -310,7 +311,7 @@ public class AbstSdlWindow : AbstSdlPanel, IAbstFrameworkWindow, IHandleSdlEvent
 
             }
 #endif
-            ContainerHelpers.HandleChildEvents(_children, e, X-Margin.Left, Y - Margin.Top+TitleBarHeight);
+            ContainerHelpers.HandleChildEvents(_children, e, X-Margin.Left, Y - Margin.Top+_titleBarHeight);
             //_xOffset = -(int)X;
             //_yOffset = -(int)(Y + TitleBarHeight);
             //base.HandleEvent(e);

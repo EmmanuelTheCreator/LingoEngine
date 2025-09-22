@@ -16,7 +16,6 @@ internal class DummyTextMember : IBlingoMemberTextBase, IBlingoMemberTextBaseInt
     // fields
     private readonly IBlingoCast _cast;
     private readonly DummyFrameworkMember _framework = new();
-    private string _fileName = string.Empty;
 
     // properties
     public IBlingoFrameworkMember FrameworkObj => _framework;
@@ -33,7 +32,7 @@ internal class DummyTextMember : IBlingoMemberTextBase, IBlingoMemberTextBaseInt
     public int Height { get; set; }
     public long Size { get; set; }
     public string Comments { get; set; } = string.Empty;
-    public string FileName => _fileName;
+    public string FileName { get; set; }
     public BlingoMemberType Type { get; set; } = BlingoMemberType.Text;
     public string CastName => string.Empty;
     public IBlingoCast Cast => _cast;

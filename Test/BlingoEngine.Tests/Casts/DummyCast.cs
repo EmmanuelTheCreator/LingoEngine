@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using AbstUI.Primitives;
+﻿using AbstUI.Primitives;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
 using BlingoEngine.Members;
@@ -14,7 +12,7 @@ internal class DummyCast : IBlingoCast
     private IBlingoMember? _lastAddedMember;
 
     // properties
-    public string Name => "Dummy";
+    public string Name { get; set; } = "Dummy";
     public string FileName { get; set; } = string.Empty;
     public int Number => 1;
     public PreLoadModeType PreLoadMode { get; set; }

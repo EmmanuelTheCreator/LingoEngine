@@ -3,22 +3,16 @@ using AbstUI.Components;
 using AbstUI.Components.Containers;
 using AbstUI.FrameworkCommunication;
 using AbstUI.Inputs;
-using AbstUI.Primitives;
 using AbstUI.SDL2.Components;
 using AbstUI.SDL2.Components.Containers;
 using AbstUI.SDL2.Windowing;
 using AbstUI.Tools;
 using AbstUI.Windowing;
-using BlingoEngine.Casts;
 using BlingoEngine.Core;
-using BlingoEngine.Director.Core.Casts.Commands;
 using BlingoEngine.Director.Core.Projects;
 using BlingoEngine.Director.Core.Styles;
-using BlingoEngine.Director.Core.Texts;
 using BlingoEngine.Director.Core.UI;
 using BlingoEngine.FrameworkCommunication;
-using BlingoEngine.Members;
-using BlingoEngine.Movies;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BlingoEngine.Director.LGodot;
@@ -26,23 +20,17 @@ namespace BlingoEngine.Director.LGodot;
 /// <summary>
 /// Godot wrapper for <see cref="DirectorMainMenu"/>.
 /// </summary>
-internal partial class DirGodotMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWindow, IFrameworkFor<DirectorMainMenu>
+internal partial class DirSDLMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWindow, IFrameworkFor<DirectorMainMenu>
 {
     private readonly AbstSdlWrapPanel _menuBar;
     private readonly AbstSdlWrapPanel _iconBar;
     private readonly DirectorMainMenu _directorMainMenu;
-    private readonly IAbstWindowManager _windowManager;
-    private readonly IAbstCommandManager _commandManager;
-    private readonly BlingoPlayer _player;
     private readonly AbstPanel _root;
 
     IAbstMouse IAbstFrameworkWindow.Mouse => _directorMainMenu.Mouse;
 
-  
-    string IAbstFrameworkNode.Name { get ; set; }
-   
-
-    public DirGodotMainMenu(
+    public DirectorMainMenu MainMenu => _directorMainMenu;
+    public DirSDLMainMenu(
         DirectorProjectManager projectManager, IServiceProvider services,
         BlingoPlayer player,
         IAbstShortCutManager shortCutManager,
@@ -53,9 +41,6 @@ internal partial class DirGodotMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWi
         :base((AbstSdlComponentFactory)services.GetRequiredService<IAbstComponentFactory>())
     {
         _directorMainMenu = directorMainMenu;
-        _windowManager = windowManager;
-        _commandManager = commandManager;
-        _player = player;
         _directorMainMenu.Init(this);
 
         _menuBar = directorMainMenu.MenuBar.Framework<AbstSdlWrapPanel>();
@@ -66,6 +51,10 @@ internal partial class DirGodotMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWi
         //AddChild(_menuBar);
         //AddChild(_iconBar);
         _root = factory.CreatePanel("MenuBarRoot");
+        _root.Width = _menuBar.Width + _iconBar.Width + _iconBar.X;
+        _root.Height = 24;
+        Width = _root.Width;
+        Height = _root.Height;
         _root.BackgroundColor = DirectorColors.BG_TopMenu;
         _root.AddItem(directorMainMenu.MenuBar, _menuBar.X, _menuBar.Y);
         _root.AddItem(directorMainMenu.IconBar, _iconBar.X, _iconBar.Y);
@@ -166,6 +155,7 @@ internal partial class DirGodotMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWi
     public override void OpenWindow()
     {
         // not allowed
+        base.OpenWindow();
     }
     public override void CloseWindow()
     {
