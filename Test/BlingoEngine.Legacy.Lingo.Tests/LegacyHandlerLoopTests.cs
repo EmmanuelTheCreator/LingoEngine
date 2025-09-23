@@ -21,10 +21,8 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         while (cond)
         {
-
         }
     }
 }
@@ -50,10 +48,8 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         do
         {
-
         } while (!(done));
     }
 }
@@ -79,10 +75,8 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         foreach (var item in list)
         {
-
         }
     }
 }
@@ -108,10 +102,8 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         for (int i = 1; i <= count; i++)
         {
-
         }
     }
 }

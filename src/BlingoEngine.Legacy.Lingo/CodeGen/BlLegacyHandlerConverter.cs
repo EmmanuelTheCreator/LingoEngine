@@ -12,11 +12,13 @@ namespace BlingoEngine.Legacy.Lingo.CodeGen;
 public sealed class BlLegacyHandlerConverter
 {
     private readonly IReadOnlyList<BlSyntaxToken> _tokens;
+    private readonly BlLegacyClassGeneratorOptions _options;
 
-    public BlLegacyHandlerConverter(string source, IReadOnlyList<BlSyntaxToken> tokens)
+    public BlLegacyHandlerConverter(string source, IReadOnlyList<BlSyntaxToken> tokens, BlLegacyClassGeneratorOptions options)
     {
         _ = source;
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
+        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     /// <summary>
@@ -33,7 +35,7 @@ public sealed class BlLegacyHandlerConverter
             return;
         }
 
-        var emitter = new BlLegacyHandlerBodyEmitter(writer, body.Tokens, body.EndLeadingTrivia);
+        var emitter = new BlLegacyHandlerBodyEmitter(writer, body.Tokens, body.EndLeadingTrivia, _options);
         emitter.Emit();
     }
 

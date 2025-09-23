@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using BlingoEngine.Legacy.Lingo.Analysis;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.CodeGen;
@@ -38,15 +40,47 @@ public sealed class SendSpriteVisitor : IHandlerTokenVisitor
         if (channelTokens.Count == 1 && tokens[1].Kind == BlSyntaxKind.NumberToken &&
             int.TryParse(tokens[1].ValueText, out var channelNumber))
         {
-            typeName = $"B{channelNumber}";
-            parameterName = $"b{channelNumber}";
+            var scriptName = $"B{channelNumber}";
+            var composed = context.ComposeClassName(scriptName, BlLingoScriptKind.Behavior);
+            if (!string.IsNullOrEmpty(composed))
+            {
+                typeName = composed;
+                var sanitized = BlCSharpName.SanitizeIdentifier(composed);
+                parameterName = string.IsNullOrEmpty(sanitized)
+                    ? $"b{channelNumber}"
+                    : sanitized.ToLowerInvariant();
+            }
+            else
+            {
+                parameterName = $"b{channelNumber}";
+            }
         }
         else
         {
             parameterName = "sprite";
         }
 
-        var lambdaCall = $"{parameterName}.{handlerName}()";
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(tokens, commaIndex + 2, tokens.Count - (commaIndex + 2));
+        List<string>? arguments = null;
+        if (argumentTokens.Count > 0)
+        {
+            var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+            foreach (var segment in segments)
+            {
+                var expression = context.ConvertExpression(segment);
+                if (expression.Length == 0)
+                {
+                    continue;
+                }
+
+                arguments ??= new List<string>(segments.Count);
+                arguments.Add(expression);
+            }
+        }
+
+        var lambdaCall = arguments is { Count: > 0 }
+            ? $"{parameterName}.{handlerName}({string.Join(", ", arguments)})"
+            : $"{parameterName}.{handlerName}()";
         if (typeName is null)
         {
             context.Writer.WriteLine($"SendSprite({channelExpression}, {parameterName} => {lambdaCall});");

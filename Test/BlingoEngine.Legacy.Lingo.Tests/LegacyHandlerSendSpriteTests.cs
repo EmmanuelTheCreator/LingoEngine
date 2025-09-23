@@ -2,25 +2,25 @@ using Xunit;
 
 namespace BlingoEngine.Legacy.Lingo.Tests;
 
-public sealed class LegacyHandlerActorListTests : LegacyHandlerTestBase
+public sealed class LegacyHandlerSendSpriteTests : LegacyHandlerTestBase
 {
     [Fact]
-    public void ActorListAppend_AddsToMovieList()
+    public void SendSpriteWithoutArguments_UsesBehaviorType()
     {
         const string source = """
-on test
-  the actorList.append(me)
+on beginSprite
+  sendSprite 2, #doIt
 end
 """;
 
         var code = GenerateBehavior(source);
         const string expected = """
-public class TestScriptBehavior : BlingoSpriteBehavior
+public class TestScriptBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
 {
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
-    public void Test()
+    public void BeginSprite()
     {
-        _Movie.ActorList.Add(this);
+        SendSprite<B2Behavior>(2, b2behavior => b2behavior.doIt());
     }
 }
 """;
@@ -29,22 +29,22 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     }
 
     [Fact]
-    public void ActorListDeleteOne_RemovesFromMovieList()
+    public void SendSpriteWithArgument_PropagatesValue()
     {
         const string source = """
-on test
-  the actorList.deleteOne(me)
+on beginSprite
+  sendSprite 2, #doIt, 42
 end
 """;
 
         var code = GenerateBehavior(source);
         const string expected = """
-public class TestScriptBehavior : BlingoSpriteBehavior
+public class TestScriptBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
 {
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
-    public void Test()
+    public void BeginSprite()
     {
-        _Movie.ActorList.Remove(this);
+        SendSprite<B2Behavior>(2, b2behavior => b2behavior.doIt(42));
     }
 }
 """;

@@ -20,7 +20,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         Sprite(2).SetMember("Name");
     }
 }
@@ -45,7 +44,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         Sprite(3).SetMember("Title", "CastLib");
     }
 }
@@ -70,7 +68,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         Sprite(4).SetMember("Marker");
     }
 }

@@ -24,18 +24,13 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         if (a != b)
         {
-
             value = 1;
-
         }
         else
         {
-
             value = 0;
-
         }
     }
 }
@@ -66,24 +61,17 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         if (a > 10)
         {
-
             value = 1;
-
         }
         else if (a <5)
         {
-
             value = 2;
-
         }
         else
         {
-
             value = 3;
-
         }
     }
 }
@@ -115,24 +103,16 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         switch (state)
         {
-
             case 1:
-
                 value = 1;
-
                 case 2:
                 break;
-
                 value = 2;
-
                 default:
                 break;
-
                 value = null;
-
                 break;
         }
     }

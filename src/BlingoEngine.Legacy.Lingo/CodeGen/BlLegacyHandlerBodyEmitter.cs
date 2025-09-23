@@ -9,14 +9,16 @@ public sealed class BlLegacyHandlerBodyEmitter
     private readonly BlCSharpCodeWriter _writer;
     private readonly IReadOnlyList<BlSyntaxToken> _tokens;
     private readonly IReadOnlyList<BlSyntaxTrivia> _endTrivia;
+    private readonly BlLegacyClassGeneratorOptions _options;
     private readonly HandlerBlockManager _blocks;
     private readonly IReadOnlyList<IHandlerTokenVisitor> _visitors;
 
     public BlLegacyHandlerBodyEmitter(
         BlCSharpCodeWriter writer,
         IReadOnlyList<BlSyntaxToken> tokens,
-        IReadOnlyList<BlSyntaxTrivia> endTrivia)
-        : this(writer, tokens, endTrivia, null)
+        IReadOnlyList<BlSyntaxTrivia> endTrivia,
+        BlLegacyClassGeneratorOptions options)
+        : this(writer, tokens, endTrivia, options, null)
     {
     }
 
@@ -24,11 +26,13 @@ public sealed class BlLegacyHandlerBodyEmitter
         BlCSharpCodeWriter writer,
         IReadOnlyList<BlSyntaxToken> tokens,
         IReadOnlyList<BlSyntaxTrivia> endTrivia,
+        BlLegacyClassGeneratorOptions options,
         IReadOnlyList<IHandlerTokenVisitor>? visitors)
     {
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
         _endTrivia = endTrivia ?? Array.Empty<BlSyntaxTrivia>();
+        _options = options ?? throw new ArgumentNullException(nameof(options));
         _blocks = new HandlerBlockManager(_writer);
         _visitors = visitors ?? CreateDefaultVisitors();
     }
@@ -67,7 +71,7 @@ public sealed class BlLegacyHandlerBodyEmitter
             return;
         }
 
-        var context = new HandlerTokenEmitContext(_writer, tokens, _blocks);
+        var context = new HandlerTokenEmitContext(_writer, tokens, _blocks, _options);
         foreach (var visitor in _visitors)
         {
             if (visitor.TryHandle(context))

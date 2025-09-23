@@ -20,7 +20,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         answer = 42;
     }
 }
@@ -45,7 +44,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         PutTextIntoField("Greeting", "Hi");
     }
 }
@@ -70,7 +68,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         Sprite(3).LocH = 100;
     }
 }
@@ -95,7 +92,6 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-
         myList.SetAt(2, 7);
     }
 }
