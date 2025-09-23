@@ -28,7 +28,10 @@ public sealed class RNetPipeServer : IRNetPipeServer
     private readonly IRNetConfiguration _config;
     private readonly ILogger<RNetPipeServer> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNameCaseInsensitive = true
+    };
     private readonly ConcurrentDictionary<string, Type> _commandTypes;
     private CancellationTokenSource? _cts;
     private Task? _listenerTask;
