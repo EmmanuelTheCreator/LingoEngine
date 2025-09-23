@@ -22,7 +22,10 @@ public interface IBlingoRNetPipeClient : IBlingoRNetClient { }
 /// <inheritdoc />
 public sealed class RNetPipeClient : IBlingoRNetPipeClient
 {
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNameCaseInsensitive = true
+    };
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private readonly Dictionary<string, Func<string, bool>> _inboundHandlers;
     private readonly Dictionary<string, Type> _commandTypes;
@@ -348,7 +351,9 @@ public sealed class RNetPipeClient : IBlingoRNetPipeClient
             throw new ArgumentNullException(nameof(cmd));
         }
 
-        return SendAsync(cmd.GetType().Name, cmd, ct);
+        var type = cmd.GetType();
+        var json = JsonSerializer.Serialize(cmd, type, _jsonOptions);
+        return SendRawAsync(type.Name, json, ct);
     }
 
     /// <inheritdoc />
