@@ -1,12 +1,20 @@
+using System.Collections.Generic;
+using BlingoEngine.Legacy.Lingo.CodeGen;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
-namespace BlingoEngine.Legacy.Lingo.CodeGen;
+namespace BlingoEngine.Legacy.Lingo.Analysis.Blocks;
 
-public sealed class SpriteMemberAssignmentVisitor : IHandlerTokenVisitor
+internal sealed class SpriteMemberAssignmentBlockClassifier : IHandlerBlockClassifier
 {
-    public bool TryHandle(HandlerTokenEmitContext context)
+    public static SpriteMemberAssignmentBlockClassifier Instance { get; } = new();
+
+    private SpriteMemberAssignmentBlockClassifier()
     {
-        var tokens = context.Tokens;
+    }
+
+    public bool TryCreate(IReadOnlyList<BlSyntaxToken> tokens, BlLingoSymbolTable symbols, out BlLingoHandlerCodeBlock block)
+    {
+        block = null!;
         if (tokens.Count == 0 || !BlLegacyHandlerTokenUtilities.IsIdentifier(tokens[0], "sprite"))
         {
             return false;
@@ -30,8 +38,7 @@ public sealed class SpriteMemberAssignmentVisitor : IHandlerTokenVisitor
             return false;
         }
 
-        if (tokens[closeIndex + 3].Kind != BlSyntaxKind.OperatorToken ||
-            tokens[closeIndex + 3].ValueText != "=")
+        if (tokens[closeIndex + 3].Kind != BlSyntaxKind.OperatorToken || tokens[closeIndex + 3].ValueText != "=")
         {
             return false;
         }
@@ -43,8 +50,7 @@ public sealed class SpriteMemberAssignmentVisitor : IHandlerTokenVisitor
             return false;
         }
 
-        if (valueIndex + 1 >= tokens.Count ||
-            tokens[valueIndex + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        if (valueIndex + 1 >= tokens.Count || tokens[valueIndex + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
         {
             return false;
         }
@@ -57,9 +63,17 @@ public sealed class SpriteMemberAssignmentVisitor : IHandlerTokenVisitor
 
         var indexTokens = BlLegacyHandlerTokenUtilities.SliceTokens(tokens, openIndex + 1, closeIndex - (openIndex + 1));
         var memberTokens = BlLegacyHandlerTokenUtilities.SliceTokens(tokens, valueIndex + 2, valueClose - (valueIndex + 2));
-        var indexExpression = context.ConvertExpression(indexTokens);
-        var memberExpression = context.ConvertExpression(memberTokens);
-        context.Writer.WriteLine($"Sprite({indexExpression}).SetMember({memberExpression});");
+        var indexExpression = BlLegacyExpressionConverter.Convert(indexTokens);
+        var memberExpression = BlLegacyExpressionConverter.Convert(memberTokens);
+
+        block = new BlLingoHandlerCodeBlock(
+            BlLingoHandlerCodeBlockKind.Put,
+            tokens,
+            new BlLingoPutBlockData(
+                BlLingoPutAssignmentKind.SpriteMember,
+                memberExpression,
+                SpriteIndexExpression: indexExpression,
+                SpriteMemberArguments: memberExpression));
         return true;
     }
 }

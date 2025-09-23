@@ -14,7 +14,18 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("_Movie.ActorList.Add(this);", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        _Movie.ActorList.Add(this);
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -27,6 +38,17 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("_Movie.ActorList.Remove(this);", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        _Movie.ActorList.Remove(this);
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 }

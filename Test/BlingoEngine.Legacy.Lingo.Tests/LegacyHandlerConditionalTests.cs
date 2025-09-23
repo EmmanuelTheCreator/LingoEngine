@@ -18,9 +18,25 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("if (a != b)", code);
-        Assert.Contains("value = 1;", code);
-        Assert.Contains("value = 0;", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        if (a != b)
+        {
+            value = 1;
+        }
+        else
+        {
+            value = 0;
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -39,9 +55,29 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("if (a > 10)", code);
-        Assert.Contains("else if (a <5)", code);
-        Assert.Contains("value = 3;", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        if (a > 10)
+        {
+            value = 1;
+        }
+        else if (a <5)
+        {
+            value = 2;
+        }
+        else
+        {
+            value = 3;
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 
     [Fact]
@@ -61,10 +97,28 @@ end
 """;
 
         var code = GenerateBehavior(source);
-        Assert.Contains("switch (state)", code);
-        Assert.Contains("case 1:", code);
-        Assert.Contains("case 2:", code);
-        Assert.Contains("default:", code);
-        Assert.Contains("value = null;", code);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        switch (state)
+        {
+            case 1:
+                value = 1;
+                break;
+            case 2:
+                value = 2;
+                break;
+            default:
+                value = null;
+                break;
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
     }
 }

@@ -24,17 +24,19 @@ public sealed class HandlerLine
         var result = new List<HandlerLine>();
         var currentTokens = new List<BlSyntaxToken>();
         var lastWasBlank = false;
+        var lineBreakPending = false;
 
         foreach (var token in tokens)
         {
-            ProcessTrivia(token.LeadingTrivia, result, currentTokens, ref lastWasBlank);
+            ProcessTrivia(token.LeadingTrivia, result, currentTokens, ref lastWasBlank, ref lineBreakPending);
             currentTokens.Add(token);
             lastWasBlank = false;
-            ProcessTrivia(token.TrailingTrivia, result, currentTokens, ref lastWasBlank);
+            lineBreakPending = false;
+            ProcessTrivia(token.TrailingTrivia, result, currentTokens, ref lastWasBlank, ref lineBreakPending);
         }
 
-        ProcessTrivia(endTrivia, result, currentTokens, ref lastWasBlank);
-        AddTokenLine(result, currentTokens, ref lastWasBlank);
+        ProcessTrivia(endTrivia, result, currentTokens, ref lastWasBlank, ref lineBreakPending);
+        AddTokenLine(result, currentTokens, ref lastWasBlank, ref lineBreakPending);
 
         for (var index = result.Count - 1; index >= 0; index--)
         {
@@ -55,7 +57,8 @@ public sealed class HandlerLine
         IReadOnlyList<BlSyntaxTrivia> trivia,
         List<HandlerLine> result,
         List<BlSyntaxToken> currentTokens,
-        ref bool lastWasBlank)
+        ref bool lastWasBlank,
+        ref bool lineBreakPending)
     {
         if (trivia is null)
         {
@@ -66,15 +69,23 @@ public sealed class HandlerLine
         {
             if (item.Kind == BlSyntaxKind.CommentTrivia)
             {
-                AddTokenLine(result, currentTokens, ref lastWasBlank);
+                AddTokenLine(result, currentTokens, ref lastWasBlank, ref lineBreakPending);
                 AddCommentLine(result, ExtractCommentText(item), ref lastWasBlank);
+                lineBreakPending = false;
                 continue;
             }
 
             if (item.Kind == BlSyntaxKind.NewLineTrivia)
             {
-                AddTokenLine(result, currentTokens, ref lastWasBlank);
-                AddBlankLine(result, ref lastWasBlank);
+                var hadPendingBreak = lineBreakPending;
+                AddTokenLine(result, currentTokens, ref lastWasBlank, ref lineBreakPending);
+
+                if (hadPendingBreak)
+                {
+                    AddBlankLine(result, ref lastWasBlank);
+                }
+
+                lineBreakPending = true;
             }
         }
     }
@@ -82,7 +93,8 @@ public sealed class HandlerLine
     private static void AddTokenLine(
         List<HandlerLine> result,
         List<BlSyntaxToken> currentTokens,
-        ref bool lastWasBlank)
+        ref bool lastWasBlank,
+        ref bool lineBreakPending)
     {
         if (currentTokens.Count == 0)
         {
@@ -92,11 +104,12 @@ public sealed class HandlerLine
         result.Add(new HandlerLine(HandlerLineKind.Tokens, currentTokens.ToArray(), null));
         currentTokens.Clear();
         lastWasBlank = false;
+        lineBreakPending = false;
     }
 
     private static void AddBlankLine(List<HandlerLine> result, ref bool lastWasBlank)
     {
-        if (lastWasBlank)
+        if (lastWasBlank || result.Count == 0)
         {
             return;
         }

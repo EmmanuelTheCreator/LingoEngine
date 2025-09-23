@@ -74,7 +74,7 @@ public sealed class BlLegacyClassGenerator
         var interfaces = CollectInterfaces(classScope);
 
         var writer = new BlCSharpCodeWriter();
-        var handlerConverter = new BlLegacyHandlerConverter(source, tokens);
+        var handlerConverter = new BlLegacyHandlerConverter(source, tokens, _options, analysis);
         var interfaceSuffix = interfaces.Count > 0 ? ", " + string.Join(", ", interfaces) : string.Empty;
 
         writer.WriteLine($"public class {className} : {baseType}{interfaceSuffix}");
@@ -236,6 +236,13 @@ public sealed class BlLegacyClassGenerator
         handlers.Sort(static (left, right) => string.Compare(left.Symbol.Name, right.Symbol.Name, StringComparison.Ordinal));
 
         var first = true;
+        var resolvedReturnTypes = new Dictionary<BlLingoHandlerSymbolTable, string>();
+        foreach (var handler in handlers)
+        {
+            var type = DetermineHandlerReturnType(classScope, handler, handlerConverter);
+            resolvedReturnTypes[handler] = type;
+        }
+
         foreach (var handler in handlers)
         {
             if (!first)
@@ -244,7 +251,8 @@ public sealed class BlLegacyClassGenerator
             }
 
             first = false;
-            WriteHandler(writer, handler, handlerConverter);
+            var returnType = resolvedReturnTypes.TryGetValue(handler, out var resolved) ? resolved : "void";
+            WriteHandler(writer, classScope, handler, handlerConverter, returnType);
         }
     }
 
@@ -283,8 +291,10 @@ public sealed class BlLegacyClassGenerator
 
     private static void WriteHandler(
         BlCSharpCodeWriter writer,
+        BlLingoClassSymbolTable classScope,
         BlLingoHandlerSymbolTable handler,
-        BlLegacyHandlerConverter handlerConverter)
+        BlLegacyHandlerConverter handlerConverter,
+        string returnType)
     {
         var methodName = BlCSharpName.SanitizeIdentifier(handler.Symbol.Name);
         if (string.IsNullOrEmpty(methodName))
@@ -292,7 +302,7 @@ public sealed class BlLegacyClassGenerator
             methodName = "Handler";
         }
 
-        writer.Write($"public void {methodName}(");
+        writer.Write($"public {returnType} {methodName}(");
         var parameters = ComposeHandlerParameters(handler);
         writer.WriteSeparated(parameters, static (w, parameter) => w.Write(parameter));
         writer.WriteLine(")");
@@ -301,6 +311,45 @@ public sealed class BlLegacyClassGenerator
         handlerConverter.WriteHandlerBody(writer, handler);
         writer.Unindent();
         writer.WriteLine("}");
+    }
+
+    private static string DetermineHandlerReturnType(
+        BlLingoClassSymbolTable classScope,
+        BlLingoHandlerSymbolTable handler,
+        BlLegacyHandlerConverter handlerConverter)
+    {
+        var directInference = handlerConverter.InferReturnType(handler);
+        if (!string.IsNullOrWhiteSpace(directInference))
+        {
+            return directInference!;
+        }
+
+        var inferred = handlerConverter.GetReturnType(handler);
+        if (!string.IsNullOrWhiteSpace(inferred))
+        {
+            return inferred!;
+        }
+
+        var handlerName = handler?.Symbol?.Name;
+        if (string.IsNullOrEmpty(handlerName))
+        {
+            handlerName = handler?.OriginalName;
+        }
+
+        var scriptName = classScope?.Symbol?.Name;
+        var scriptKind = classScope?.ScriptKind ?? BlLingoScriptKind.Unknown;
+        var resolved = BlLegacyHandlerReturnTypeRegistry.Resolve(scriptKind, scriptName, handlerName ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(resolved))
+        {
+            return resolved!;
+        }
+
+        if (handler is not null && handlerConverter.HasReturnValue(handler))
+        {
+            return "object?";
+        }
+
+        return "void";
     }
 
     private static List<string> ComposeHandlerParameters(BlLingoHandlerSymbolTable handler)
