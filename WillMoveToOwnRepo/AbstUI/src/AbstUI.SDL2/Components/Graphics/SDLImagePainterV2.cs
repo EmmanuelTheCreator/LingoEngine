@@ -1,3 +1,4 @@
+using AbstUI.Bitmaps;
 using AbstUI.Components.Graphics;
 using AbstUI.Primitives;
 using AbstUI.SDL2.Bitmaps;
@@ -96,6 +97,14 @@ public class SDLImagePainterV2 : AbstImagePainter<nint>
     protected override void UseTexture(nint texture)
     {
         _texture = texture;
+    }
+
+    protected override AbstBaseTexture2D<nint>? CreateTilePixelsHost((int X, int Y) coordinates, nint texture, int width, int height)
+    {
+        if (texture == nint.Zero)
+            return null;
+
+        return new SdlTexture2D(texture, width, height, $"{Name}_Tile_{coordinates.X}_{coordinates.Y}", Renderer);
     }
 
     public override void SetPixel(APoint point, AColor color)
