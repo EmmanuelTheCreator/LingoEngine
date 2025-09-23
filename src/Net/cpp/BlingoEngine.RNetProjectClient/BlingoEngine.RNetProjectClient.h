@@ -251,6 +251,10 @@ struct GoToFrameCmd {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GoToFrameCmd, Frame);
 
+struct RewindCmd {};
+inline void to_json(nlohmann::json& j, const RewindCmd&) { j = nlohmann::json::object(); }
+inline void from_json(const nlohmann::json&, RewindCmd&) {}
+
 struct PauseCmd {};
 inline void to_json(nlohmann::json& j, const PauseCmd&) { j = nlohmann::json::object(); }
 inline void from_json(const nlohmann::json&, PauseCmd&) {}
@@ -260,7 +264,7 @@ inline void to_json(nlohmann::json& j, const ResumeCmd&) { j = nlohmann::json::o
 inline void from_json(const nlohmann::json&, ResumeCmd&) {}
 
 struct RNetCommand {
-    std::variant<SetSpritePropCmd, SetMemberPropCmd, SetCastPropCmd, GoToFrameCmd, PauseCmd, ResumeCmd> Command;
+    std::variant<SetSpritePropCmd, SetMemberPropCmd, SetCastPropCmd, GoToFrameCmd, RewindCmd, PauseCmd, ResumeCmd> Command;
 };
 inline void to_json(nlohmann::json& j, const RNetCommand& cmd)
 {

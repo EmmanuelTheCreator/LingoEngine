@@ -36,6 +36,12 @@ namespace BlingoEngine.Net.RNetTerminal.Views
         private PropertyInspector _propInsp;
         private MenuItemv2 _stageBtn;
         private MenuItemv2 _castBtn;
+        private Button? _rewindButton;
+        private Button? _playPauseButton;
+        private bool _isMoviePlaying;
+        private Func<RNetCommand, CancellationToken?, Task>? _sendCommandAsync;
+        private int _lastRequestedFrame = -1;
+        private bool _suppressNextFrameCommand;
 
         private int _port => BlingoRNetTerminal.Port;
         public RootWindow()
@@ -47,6 +53,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
         public void BuildUi(Func<RNetCommand, CancellationToken?, Task> sendCommandAsync, Func<Task> toggleConnectionAsync, Action<int> setPort)
         {
             _setPort = setPort;
+            _sendCommandAsync = sendCommandAsync;
             var top = new Window
             {
                 BorderStyle = LineStyle.None,
@@ -78,6 +85,18 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             _connectionStatusLabel.SetScheme(RNetTerminalStyle.MenuScheme);
 
             top.Add(_connectionStatusLabel);
+
+            _rewindButton = RUI.NewButton("Rewind", false, OnRewindClicked);
+            _rewindButton.X = Pos.Left(_connectionStatusLabel!) - 18;
+            _rewindButton.Y = 0;
+            _rewindButton.SetScheme(RNetTerminalStyle.MenuScheme);
+            top.Add(_rewindButton);
+
+            _playPauseButton = RUI.NewButton("Play", false, OnPlayPauseClicked);
+            _playPauseButton.X = Pos.Right(_rewindButton) + 1;
+            _playPauseButton.Y = 0;
+            _playPauseButton.SetScheme(RNetTerminalStyle.MenuScheme);
+            top.Add(_playPauseButton);
 
             var tv = new TileView
             {
@@ -126,10 +145,15 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             RNetTerminalStyle.SetStatusBar(_infoItem);
             top.Add(_infoItem);
 
+            var store = TerminalDataStore.Instance;
+            store.MovieStateChanged += OnMovieStateChanged;
+            OnMovieStateChanged(store.MovieState);
+
             UpdateConnectionStatus(BlingoNetConnectionState.Disconnected);
             Log("Starting...");
             Application.Run(top);
             top.Dispose();
+            store.MovieStateChanged -= OnMovieStateChanged;
         }
 
         private MenuItemv2 NewMenuItemv2(string text, string helperText, Action action)
@@ -148,11 +172,16 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 Width = Dim.Fill(),
                 Height = Dim.Fill()
             };
-            scoreView.PlayFromHere += f => Log($"Play from {f}");
+            scoreView.PlayFromHere += f =>
+            {
+                Log($"Play from {f}");
+                QueueGoToFrame(f, force: true);
+            };
             scoreView.InfoChanged += (f, ch, sp, mem) =>
             {
                 UpdateInfo(f, ch, sp, mem);
                 TerminalDataStore.Instance.SetFrame(f);
+                QueueGoToFrame(f, force: true);
             };
             return scoreView;
         }
@@ -243,10 +272,11 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             _leftTopZone.ContentView!.Remove(_cast);
             _leftTopZone.ContentView!.Add(_stage);
             _score.SetFocus();
+            _suppressNextFrameCommand = true;
             _score.TriggerInfo();
             _leftTopZone.Title = _stage.Visible ? "Stage" : "Cast";
             _stage.Draw();
-          
+
         }
 
         private void SwitchToCastMode()
@@ -261,6 +291,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             _leftTopZone.ContentView!.Remove(_stage);
             _leftTopZone.ContentView!.Add(_cast);
             _cast.SetFocus();
+            _suppressNextFrameCommand = true;
             _score.TriggerInfo();
             _leftTopZone.Title = _stage.Visible ? "Stage" : "Cast";
         }
@@ -285,7 +316,108 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             _score?.SetFocus();
         }
 
-      
+        private void OnMovieStateChanged(MovieStateDto state)
+        {
+            _isMoviePlaying = state.IsPlaying;
+            _lastRequestedFrame = state.Frame;
+            UpdatePlayPauseButton();
+        }
+
+        private void UpdatePlayPauseButton()
+        {
+            if (_playPauseButton == null)
+            {
+                return;
+            }
+
+            _playPauseButton.Text = _isMoviePlaying ? "Stop" : "Play";
+            _playPauseButton.SetNeedsDraw();
+        }
+
+        private void QueueGoToFrame(int frame, bool force = false)
+        {
+            var store = TerminalDataStore.Instance;
+            if (_suppressNextFrameCommand)
+            {
+                _suppressNextFrameCommand = false;
+                return;
+            }
+            if (!force && !store.ApplyLocalChanges && _lastRequestedFrame == frame)
+            {
+                return;
+            }
+
+            _lastRequestedFrame = frame;
+
+            if (!store.ApplyLocalChanges)
+            {
+                SendMovieCommand(new GoToFrameCmd(frame));
+            }
+        }
+
+        private void SendMovieCommand(RNetCommand command)
+        {
+            var sender = _sendCommandAsync;
+            if (sender == null)
+            {
+                return;
+            }
+
+            var task = sender(command, null);
+            if (!task.IsCompletedSuccessfully)
+            {
+                _ = task.ContinueWith(t =>
+                {
+                    if (t.Exception is { } ex)
+                    {
+                        Log($"Command error: {ex.GetBaseException().Message}");
+                    }
+                }, TaskScheduler.Default);
+            }
+        }
+
+        private void OnRewindClicked()
+        {
+            const int firstFrame = 1;
+            var store = TerminalDataStore.Instance;
+            store.SetFrame(firstFrame);
+
+            if (store.ApplyLocalChanges)
+            {
+                ToggleLocalPlayback(false);
+                return;
+            }
+
+            SendMovieCommand(new RewindCmd());
+        }
+
+        private void OnPlayPauseClicked()
+        {
+            var store = TerminalDataStore.Instance;
+            if (store.ApplyLocalChanges)
+            {
+                ToggleLocalPlayback(!_isMoviePlaying);
+                return;
+            }
+
+            if (_isMoviePlaying)
+            {
+                SendMovieCommand(new PauseCmd());
+            }
+            else
+            {
+                SendMovieCommand(new ResumeCmd());
+            }
+        }
+
+        private void ToggleLocalPlayback(bool playing)
+        {
+            var store = TerminalDataStore.Instance;
+            var state = store.MovieState with { IsPlaying = playing };
+            store.UpdateMovieState(state);
+        }
+
+
 
         private void SetPort()
         {

@@ -135,6 +135,7 @@ public sealed class BlingoRNetTerminal : System.IAsyncDisposable
 
     private void OnConnectionStateChanged(BlingoNetConnectionState state)
     {
+        _connected = state == BlingoNetConnectionState.Connected;
         _rootWindow.UpdateConnectionStatus(state);
         UpdateLocalChangeMode();
     }
@@ -146,7 +147,11 @@ public sealed class BlingoRNetTerminal : System.IAsyncDisposable
         _rootWindow.UpdateIsRemove(remote);
         
     }
-    private void OnPlayFrameReceived(int frame) => _rootWindow.SetPlayFrame(frame);
+    private void OnPlayFrameReceived(int frame)
+    {
+        TerminalDataStore.Instance.SetFrame(frame + 1, updateMovieState: false);
+        _rootWindow.SetPlayFrame(frame);
+    }
     #endregion
 
  
