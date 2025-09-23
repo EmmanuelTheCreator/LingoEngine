@@ -11,6 +11,7 @@ public sealed class LegacyHandlerMovieCallTests
     {
         const string movieSource = """
 on myMovieHandler
+  return 42
 end
 """;
         const string behaviorSource = """
@@ -43,8 +44,9 @@ public class M1MovieScript : BlingoMovieScript
     {
         _global = global;
     }
-    public void MyMovieHandler()
+    public int MyMovieHandler()
     {
+        return 42;
     }
 }
 """;
@@ -91,7 +93,7 @@ public class M1MovieScript : BlingoMovieScript
     {
         _global = global;
     }
-    public void MyMovieHandler()
+    public int MyMovieHandler()
     {
         return 42;
     }

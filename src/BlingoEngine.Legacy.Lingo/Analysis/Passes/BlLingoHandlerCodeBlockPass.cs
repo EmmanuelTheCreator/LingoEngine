@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using BlingoEngine.Legacy.Lingo.CodeGen;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
@@ -12,6 +11,7 @@ namespace BlingoEngine.Legacy.Lingo.Analysis.Passes;
 public sealed class BlLingoHandlerCodeBlockPass : BlLingoAnalysisPass
 {
     public const string HandlerCodeBlocksKey = "Legacy.HandlerCodeBlocks";
+    public const string HandlerReturnTypesKey = "Legacy.HandlerReturnTypes";
 
     public BlLingoHandlerCodeBlockPass()
         : base("HandlerCodeBlocks")
@@ -59,7 +59,8 @@ public sealed class BlLingoHandlerCodeBlockPass : BlLingoAnalysisPass
 
         RegisterReturnTypes(returnTypes, owners);
 
-        context.SetData(HandlerCodeBlocksKey, map);
+        context.SetData<IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>>(HandlerCodeBlocksKey, map);
+        context.SetData<IReadOnlyDictionary<BlLingoHandlerSymbolTable, string?>>(HandlerReturnTypesKey, returnTypes);
     }
 
     private static IEnumerable<BlLingoClassSymbolTable> EnumerateClasses(BlLingoSymbolTable symbols)
@@ -410,189 +411,16 @@ public sealed class BlLingoHandlerCodeBlockPass : BlLingoAnalysisPass
         string? inferred = null;
         foreach (var block in blocks)
         {
-            string? candidate = null;
-            if (block.Kind == BlLingoHandlerCodeBlockKind.Expression && block.Data is BlLingoExpressionBlockData expressionData)
-            {
-                candidate = InferTypeFromReturnExpression(expressionData.Expression);
-            }
-            else if (block.Kind == BlLingoHandlerCodeBlockKind.Put && block.Data is BlLingoPutBlockData putData)
-            {
-                candidate = InferTypeFromPut(putData);
-            }
-
+            var candidate = BlLegacyReturnTypeHelper.InferBlockResult(block);
             if (string.IsNullOrEmpty(candidate))
             {
                 continue;
             }
 
-            inferred = MergeTypes(inferred, candidate);
+            inferred = BlLegacyReturnTypeHelper.Merge(inferred, candidate);
         }
 
         return inferred;
-    }
-
-    private static string? InferTypeFromReturnExpression(string? expression)
-    {
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            return null;
-        }
-
-        var trimmed = expression.Trim();
-        if (!trimmed.StartsWith("return", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        var value = trimmed.Length > 6 ? trimmed[6..].Trim() : string.Empty;
-        if (string.IsNullOrEmpty(value))
-        {
-            return null;
-        }
-
-        return InferLiteralType(value);
-    }
-
-    private static string? InferTypeFromPut(BlLingoPutBlockData data)
-    {
-        if (data.Kind != BlLingoPutAssignmentKind.Direct)
-        {
-            return null;
-        }
-
-        if (!IsResultTarget(data.TargetExpression))
-        {
-            return null;
-        }
-
-        return InferLiteralType(data.ValueExpression);
-    }
-
-    private static bool IsResultTarget(string? target)
-    {
-        return !string.IsNullOrEmpty(target) && target.Equals("result", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string? MergeTypes(string? existing, string candidate)
-    {
-        if (string.IsNullOrEmpty(candidate))
-        {
-            return existing;
-        }
-
-        if (string.IsNullOrEmpty(existing))
-        {
-            return candidate;
-        }
-
-        if (string.Equals(existing, candidate, StringComparison.Ordinal))
-        {
-            return existing;
-        }
-
-        if (string.Equals(existing, "object?", StringComparison.Ordinal) ||
-            string.Equals(candidate, "object?", StringComparison.Ordinal))
-        {
-            return "object?";
-        }
-
-        if ((string.Equals(existing, "int", StringComparison.Ordinal) && string.Equals(candidate, "double", StringComparison.Ordinal)) ||
-            (string.Equals(existing, "double", StringComparison.Ordinal) && string.Equals(candidate, "int", StringComparison.Ordinal)))
-        {
-            return "double";
-        }
-
-        return "object?";
-    }
-
-    private static string? InferLiteralType(string expression)
-    {
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            return null;
-        }
-
-        var trimmed = TrimOuterParentheses(expression.Trim());
-        if (trimmed.EndsWith(";", StringComparison.Ordinal))
-        {
-            trimmed = trimmed.TrimEnd(';').Trim();
-        }
-        if (trimmed.Length == 0)
-        {
-            return null;
-        }
-
-        if (trimmed.Equals("true", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("false", StringComparison.OrdinalIgnoreCase))
-        {
-            return "bool";
-        }
-
-        if (trimmed.Equals("null", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("void", StringComparison.OrdinalIgnoreCase))
-        {
-            return "object?";
-        }
-
-        if ((trimmed.StartsWith("\"", StringComparison.Ordinal) && trimmed.EndsWith("\"", StringComparison.Ordinal)) ||
-            (trimmed.StartsWith("'", StringComparison.Ordinal) && trimmed.EndsWith("'", StringComparison.Ordinal)))
-        {
-            return "string";
-        }
-
-        if (trimmed.StartsWith("#", StringComparison.Ordinal))
-        {
-            return "object?";
-        }
-
-        if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
-        {
-            return "int";
-        }
-
-        if (double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
-        {
-            return "double";
-        }
-
-        return null;
-    }
-
-    private static string TrimOuterParentheses(string expression)
-    {
-        var result = expression;
-        while (result.Length >= 2 && result[0] == '(' && result[^1] == ')')
-        {
-            if (!AreParenthesesBalanced(result))
-            {
-                break;
-            }
-
-            result = result[1..^1].Trim();
-        }
-
-        return result;
-    }
-
-    private static bool AreParenthesesBalanced(string expression)
-    {
-        var depth = 0;
-        for (var index = 0; index < expression.Length; index++)
-        {
-            var character = expression[index];
-            if (character == '(')
-            {
-                depth++;
-            }
-            else if (character == ')')
-            {
-                depth--;
-                if (depth < 0)
-                {
-                    return false;
-                }
-            }
-        }
-
-        return depth == 0;
     }
 
     private sealed class HandlerBody

@@ -90,33 +90,12 @@ internal static class BlLegacyHandlerReturnTypeRegistry
     {
         if (table.TryGetValue(key, out var existing))
         {
-            table[key] = MergeTypes(existing, candidate);
+            var merged = BlLegacyReturnTypeHelper.Merge(existing, candidate);
+            table[key] = merged ?? existing;
             return;
         }
 
         table[key] = candidate;
-    }
-
-    private static string MergeTypes(string existing, string candidate)
-    {
-        if (string.Equals(existing, candidate, StringComparison.Ordinal))
-        {
-            return existing;
-        }
-
-        if (string.Equals(existing, "object?", StringComparison.Ordinal) ||
-            string.Equals(candidate, "object?", StringComparison.Ordinal))
-        {
-            return "object?";
-        }
-
-        if ((string.Equals(existing, "int", StringComparison.Ordinal) && string.Equals(candidate, "double", StringComparison.Ordinal)) ||
-            (string.Equals(existing, "double", StringComparison.Ordinal) && string.Equals(candidate, "int", StringComparison.Ordinal)))
-        {
-            return "double";
-        }
-
-        return "object?";
     }
 
     private static string ComposeScriptKey(string scriptName, string handlerName)

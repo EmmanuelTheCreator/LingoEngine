@@ -149,7 +149,7 @@ public class B1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
 public class B2Behavior : BlingoSpriteBehavior
 {
     public B2Behavior(IBlingoMovieEnvironment env) : base(env) { }
-    public void GetValue()
+    public int GetValue()
     {
         return 5;
     }
