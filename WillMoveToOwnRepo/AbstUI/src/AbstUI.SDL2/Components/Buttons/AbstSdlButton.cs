@@ -146,7 +146,8 @@ namespace AbstUI.SDL2.Components.Buttons
                 SDL.SDL_RenderClear(context.Renderer);
 
                 int tw = 0, th = 0, tx = 0, ty = 0;
-                if (!string.IsNullOrEmpty(Text))
+                bool hasText = !string.IsNullOrWhiteSpace(Text);
+                if (hasText)
                 {
                     SDL_ttf.TTF_SizeUTF8(_font!.FontHandle, Text, out tw, out th);
                     int baseline = (h - (SDL_ttf.TTF_FontAscent(_font.FontHandle) - SDL_ttf.TTF_FontDescent(_font.FontHandle))) / 2
@@ -154,7 +155,7 @@ namespace AbstUI.SDL2.Components.Buttons
                     ty = baseline - SDL_ttf.TTF_FontAscent(_font.FontHandle);
                 }
 
-                if (_iconTexture != null && !string.IsNullOrEmpty(Text))
+                if (_iconTexture != null && hasText)
                 {
                     SDL.SDL_QueryTexture(_iconTexture.Handle, out _, out _, out int iw, out int ih);
                     int totalW = iw + 4 + tw;
@@ -169,12 +170,12 @@ namespace AbstUI.SDL2.Components.Buttons
                     SDL.SDL_Rect idst = new SDL.SDL_Rect { x = (w - iw) / 2, y = (h - ih) / 2, w = iw, h = ih };
                     SDL.SDL_RenderCopy(context.Renderer, _iconTexture.Handle, nint.Zero, ref idst);
                 }
-                else if (!string.IsNullOrEmpty(Text))
+                else if (hasText)
                 {
                     tx = (w - tw) / 2;
                 }
 
-                if (!string.IsNullOrEmpty(Text))
+                if (hasText)
                 {
                     nint textSurf = SDL_ttf.TTF_RenderUTF8_Blended(_font!.FontHandle, Text, TextColor.ToSDLColor());
                     nint textTex = SDL.SDL_CreateTextureFromSurface(context.Renderer, textSurf);

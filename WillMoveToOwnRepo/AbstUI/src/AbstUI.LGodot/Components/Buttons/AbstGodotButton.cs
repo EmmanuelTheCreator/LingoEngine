@@ -20,6 +20,8 @@ namespace AbstUI.LGodot.Components
         private readonly StyleBoxFlat _styleHover = new StyleBoxFlat();
         private readonly StyleBoxFlat _stylePressed = new StyleBoxFlat();
         private readonly StyleBoxFlat _styleDisabled = new StyleBoxFlat();
+        private Texture2D? _lastIcon;
+        private bool _lastHasText;
 
         private AColor _borderColor = AbstDefaultColors.Button_Border_Normal;
         private AColor _backgroundColor = AbstDefaultColors.Button_Bg_Normal;
@@ -64,7 +66,15 @@ namespace AbstUI.LGodot.Components
             }
         }
 
-        public new string Text { get => base.Text; set => base.Text = value; }
+        public new string Text
+        {
+            get => base.Text;
+            set
+            {
+                base.Text = value ?? string.Empty;
+                UpdateIconLayout(forceUpdate: true);
+            }
+        }
         public bool Enabled { get => !Disabled; set => Disabled = !value; }
         public AColor BorderColor { get => _borderColor; set { _borderColor = value; UpdateStyle(); } }
         public AColor BackgroundColor { get => _backgroundColor; set { _backgroundColor = value; UpdateStyle(); } }
@@ -82,8 +92,11 @@ namespace AbstUI.LGodot.Components
             set
             {
                 _texture = value;
-                if (_texture != null && _texture is AbstGodotTexture2D tex)
+                if (value is AbstGodotTexture2D tex)
                     Icon = tex.Texture;
+                else
+                    Icon = null;
+                UpdateIconLayout(forceUpdate: true);
             }
         }
 
@@ -91,6 +104,23 @@ namespace AbstUI.LGodot.Components
         {
             QueueFree();
             base.Dispose();
+        }
+
+        public override void _Ready()
+        {
+            base._Ready();
+            SetProcess(true);
+            UpdateIconLayout(forceUpdate: true);
+        }
+
+        public override void _Process(double delta)
+        {
+            base._Process(delta);
+
+            if (_lastIcon != Icon || _lastHasText != !string.IsNullOrWhiteSpace(base.Text))
+            {
+                UpdateIconLayout();
+            }
         }
 
         private void UpdateStyle()
@@ -125,6 +155,18 @@ namespace AbstUI.LGodot.Components
             style.ContentMarginTop = style.ContentMarginBottom = 0;
             style.BorderWidthBottom = style.BorderWidthRight = style.BorderWidthLeft = style.BorderWidthTop = 0;
             style.SetBorderWidthAll(0);
+        }
+
+        private void UpdateIconLayout(bool forceUpdate = false)
+        {
+            bool hasText = !string.IsNullOrWhiteSpace(base.Text);
+
+            if (forceUpdate || _lastIcon != Icon || _lastHasText != hasText)
+            {
+                IconAlignment = hasText ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+                _lastIcon = Icon;
+                _lastHasText = hasText;
+            }
         }
 
     }
