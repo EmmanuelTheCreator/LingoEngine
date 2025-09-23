@@ -4,7 +4,7 @@ using BlingoEngine.Legacy.Lingo.Analysis;
 
 namespace BlingoEngine.Legacy.Lingo.CodeGen;
 
-public sealed class BlLegacyHandlerBodyEmitter
+public sealed class BlLegacyHandlerBodyEmitter : IBlLegacyHandlerBlockDataVisitor
 {
     private readonly BlCSharpCodeWriter _writer;
     private readonly IReadOnlyList<BlLingoHandlerCodeBlock> _blocks;
@@ -46,94 +46,41 @@ public sealed class BlLegacyHandlerBodyEmitter
         {
             case BlLingoHandlerCodeBlockKind.Blank:
                 _writer.WriteLine();
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.Comment:
                 WriteComment(block.CommentText);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.End:
                 _blockManager.CloseBlock();
-                break;
-            case BlLingoHandlerCodeBlockKind.If:
-                EmitIf(block);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.Else:
                 EmitElse();
-                break;
-            case BlLingoHandlerCodeBlockKind.ElseIf:
-                EmitElseIf(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.RepeatWithRange:
-                EmitRepeatWithRange(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.RepeatWithEach:
-                EmitRepeatWithEach(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.RepeatWhile:
-                EmitRepeatWhile(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.RepeatUntil:
-                EmitRepeatUntil(block);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.RepeatForever:
                 _writer.WriteLine("while (true)");
                 _blockManager.OpenBlock(BlockKind.Loop);
-                break;
-            case BlLingoHandlerCodeBlockKind.Case:
-                EmitCase(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.CaseWhen:
-                EmitCaseWhen(block);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.CaseOtherwise:
                 _blockManager.BeginSwitchSection();
                 _writer.WriteLine("default:");
                 _blockManager.BeginSwitchSectionBody();
-                break;
-            case BlLingoHandlerCodeBlockKind.Put:
-                EmitPut(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.ActorListAppend:
-                EmitActorListAppend(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.ActorListRemove:
-                EmitActorListRemove(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.SendSprite:
-                EmitSendSprite(block);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.ExitRepeat:
                 _writer.WriteLine("break;");
-                break;
-            case BlLingoHandlerCodeBlockKind.ExitRepeatIf:
-                EmitExitRepeatIf(block);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.NextRepeat:
                 _writer.WriteLine("continue;");
-                break;
-            case BlLingoHandlerCodeBlockKind.NextRepeatIf:
-                EmitNextRepeatIf(block);
-                break;
+                return;
             case BlLingoHandlerCodeBlockKind.Return:
                 _writer.WriteLine("return;");
-                break;
-            case BlLingoHandlerCodeBlockKind.MovieCall:
-                EmitMovieCall(block);
-                break;
-            case BlLingoHandlerCodeBlockKind.Expression:
-                EmitExpression(block);
-                break;
-            default:
-                break;
+                return;
         }
+
+        block.Data?.Visit(this);
     }
 
-    private void EmitIf(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoIfBlockData data)
     {
-        if (block.Data is not BlLingoIfBlockData data)
-        {
-            return;
-        }
-
         _writer.WriteLine($"if ({data.Condition})");
         _blockManager.OpenBlock(BlockKind.If);
     }
@@ -145,94 +92,54 @@ public sealed class BlLegacyHandlerBodyEmitter
         _blockManager.OpenBlock(BlockKind.If, reopenExisting: true);
     }
 
-    private void EmitElseIf(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoElseIfBlockData data)
     {
-        if (block.Data is not BlLingoElseIfBlockData data)
-        {
-            return;
-        }
-
         _blockManager.CloseBlock(leaveOnStack: true);
         _writer.WriteLine($"else if ({data.Condition})");
         _blockManager.OpenBlock(BlockKind.If, reopenExisting: true);
     }
 
-    private void EmitRepeatWithRange(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoRepeatWithRangeBlockData data)
     {
-        if (block.Data is not BlLingoRepeatWithRangeBlockData data)
-        {
-            return;
-        }
-
         var variable = EnsureCounterName(data.VariableName);
         _writer.WriteLine($"for (int {variable} = {data.StartExpression}; {variable} <= {data.EndExpression}; {variable}++)");
         _blockManager.OpenBlock(BlockKind.Loop);
     }
 
-    private void EmitRepeatWithEach(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoRepeatWithEachBlockData data)
     {
-        if (block.Data is not BlLingoRepeatWithEachBlockData data)
-        {
-            return;
-        }
-
         var variable = string.IsNullOrEmpty(data.VariableName) ? "item" : data.VariableName;
         _writer.WriteLine($"foreach (var {variable} in {data.SourceExpression})");
         _blockManager.OpenBlock(BlockKind.Loop);
     }
 
-    private void EmitRepeatWhile(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoRepeatWhileBlockData data)
     {
-        if (block.Data is not BlLingoRepeatWhileBlockData data)
-        {
-            return;
-        }
-
         _writer.WriteLine($"while ({data.Condition})");
         _blockManager.OpenBlock(BlockKind.Loop);
     }
 
-    private void EmitRepeatUntil(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoRepeatUntilBlockData data)
     {
-        if (block.Data is not BlLingoRepeatUntilBlockData data)
-        {
-            return;
-        }
-
         _writer.WriteLine("do");
         _blockManager.OpenBlock(BlockKind.RepeatUntil, data.Condition);
     }
 
-    private void EmitCase(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoCaseBlockData data)
     {
-        if (block.Data is not BlLingoCaseBlockData data)
-        {
-            return;
-        }
-
         _writer.WriteLine($"switch ({data.Expression})");
         _blockManager.OpenBlock(BlockKind.Switch);
     }
 
-    private void EmitCaseWhen(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoCaseWhenBlockData data)
     {
-        if (block.Data is not BlLingoCaseWhenBlockData data)
-        {
-            return;
-        }
-
         _blockManager.BeginSwitchSection();
         _writer.WriteLine($"case {data.Expression}:");
         _blockManager.BeginSwitchSectionBody();
     }
 
-    private void EmitPut(BlLingoHandlerCodeBlock block)
+    public void Visit(BlLingoPutBlockData data)
     {
-        if (block.Data is not BlLingoPutBlockData data)
-        {
-            return;
-        }
-
         switch (data.Kind)
         {
             case BlLingoPutAssignmentKind.Direct:
@@ -253,6 +160,60 @@ public sealed class BlLegacyHandlerBodyEmitter
         }
     }
 
+    public void Visit(BlLingoActorListMutationBlockData data)
+    {
+        var method = data.IsRemoval ? "Remove" : "Add";
+        _writer.WriteLine($"_Movie.ActorList.{method}({data.ArgumentExpression});");
+    }
+
+    public void Visit(BlLingoSendSpriteBlockData data)
+    {
+        var call = ComposeLambdaInvocation(data.HandlerName, data.ParameterName, data.Arguments);
+        var typeSuffix = ComposeBehaviorType(data.TargetScriptName, BlLingoScriptKind.Behavior, data.ParameterName, data.HandlerName);
+        var invocation = ComposeSendSpriteInvocation(data, typeSuffix, call);
+
+        if (data.UsesResult && !string.IsNullOrEmpty(data.ResultTargetExpression))
+        {
+            _writer.WriteLine($"{data.ResultTargetExpression} = {invocation};");
+        }
+        else
+        {
+            _writer.WriteLine(invocation + ";");
+        }
+    }
+
+    public void Visit(BlLingoExitRepeatIfBlockData data)
+    {
+        var action = data.UseContinue ? "continue" : "break";
+        _writer.WriteLine($"if ({data.Condition}) {action};");
+    }
+
+    public void Visit(BlLingoMovieCallBlockData data)
+    {
+        var call = ComposeLambdaInvocation(data.HandlerName, data.ParameterName ?? "movie", data.Arguments);
+        var typeSuffix = ComposeBehaviorType(data.TargetScriptName, BlLingoScriptKind.Movie, data.ParameterName ?? "movie", data.HandlerName);
+        var invocation = ComposeMovieScriptInvocation(data, typeSuffix, call);
+
+        if (data.UsesResult && !string.IsNullOrEmpty(data.ResultTargetExpression))
+        {
+            _writer.WriteLine($"{data.ResultTargetExpression} = {invocation};");
+        }
+        else
+        {
+            _writer.WriteLine(invocation + ";");
+        }
+    }
+
+    public void Visit(BlLingoExpressionBlockData data)
+    {
+        if (string.IsNullOrEmpty(data.Expression))
+        {
+            return;
+        }
+
+        _writer.WriteLine(data.Expression + ";");
+    }
+
     private void EmitFieldAssignment(BlLingoPutBlockData data)
     {
         var fieldName = data.FieldName ?? string.Empty;
@@ -268,103 +229,6 @@ public sealed class BlLegacyHandlerBodyEmitter
     {
         var args = data.SpriteMemberArguments ?? data.ValueExpression;
         _writer.WriteLine($"Sprite({data.SpriteIndexExpression}).SetMember({args});");
-    }
-
-    private void EmitActorListAppend(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoActorListMutationBlockData data)
-        {
-            return;
-        }
-
-        _writer.WriteLine($"_Movie.ActorList.Add({data.ArgumentExpression});");
-    }
-
-    private void EmitActorListRemove(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoActorListMutationBlockData data)
-        {
-            return;
-        }
-
-        _writer.WriteLine($"_Movie.ActorList.Remove({data.ArgumentExpression});");
-    }
-
-    private void EmitSendSprite(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoSendSpriteBlockData data)
-        {
-            return;
-        }
-
-        var call = ComposeLambdaInvocation(data.HandlerName, data.ParameterName, data.Arguments);
-        var typeSuffix = ComposeBehaviorType(data.TargetScriptName, BlLingoScriptKind.Behavior, data.ParameterName, data.HandlerName);
-        var invocation = ComposeSendSpriteInvocation(data, typeSuffix, call);
-
-        if (data.UsesResult && !string.IsNullOrEmpty(data.ResultTargetExpression))
-        {
-            _writer.WriteLine($"{data.ResultTargetExpression} = {invocation};");
-        }
-        else
-        {
-            _writer.WriteLine(invocation + ";");
-        }
-    }
-
-    private void EmitExitRepeatIf(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoExitRepeatIfBlockData data)
-        {
-            return;
-        }
-
-        _writer.WriteLine($"if ({data.Condition}) break;");
-    }
-
-    private void EmitNextRepeatIf(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoExitRepeatIfBlockData data)
-        {
-            return;
-        }
-
-        _writer.WriteLine($"if ({data.Condition}) continue;");
-    }
-
-    private void EmitMovieCall(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoMovieCallBlockData data)
-        {
-            return;
-        }
-
-        var call = ComposeLambdaInvocation(data.HandlerName, data.ParameterName ?? "movie", data.Arguments);
-        var typeSuffix = ComposeBehaviorType(data.TargetScriptName, BlLingoScriptKind.Movie, data.ParameterName ?? "movie", data.HandlerName);
-        var invocation = ComposeMovieScriptInvocation(data, typeSuffix, call);
-
-        if (data.UsesResult && !string.IsNullOrEmpty(data.ResultTargetExpression))
-        {
-            _writer.WriteLine($"{data.ResultTargetExpression} = {invocation};");
-        }
-        else
-        {
-            _writer.WriteLine(invocation + ";");
-        }
-    }
-
-    private void EmitExpression(BlLingoHandlerCodeBlock block)
-    {
-        if (block.Data is not BlLingoExpressionBlockData data)
-        {
-            return;
-        }
-
-        if (string.IsNullOrEmpty(data.Expression))
-        {
-            return;
-        }
-
-        _writer.WriteLine(data.Expression + ";");
     }
 
     private void WriteComment(string? text)

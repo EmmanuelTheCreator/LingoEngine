@@ -77,7 +77,7 @@ public class P1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
     public P1Behavior(IBlingoMovieEnvironment env) : base(env) { }
     public void BeginSprite()
     {
-        result = CallMovieScript<MyMovieMovieScript, object?>(movie => movie.myMovieHandler());
+        result = CallMovieScript<MyMovieMovieScript, int>(movie => movie.myMovieHandler());
     }
 }
 """;

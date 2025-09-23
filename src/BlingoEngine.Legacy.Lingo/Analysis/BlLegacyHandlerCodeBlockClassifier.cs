@@ -474,7 +474,7 @@ internal static class BlLegacyHandlerCodeBlockClassifier
         block = new BlLingoHandlerCodeBlock(
             BlLingoHandlerCodeBlockKind.ActorListRemove,
             tokens,
-            new BlLingoActorListMutationBlockData(argument));
+            new BlLingoActorListMutationBlockData(argument, IsRemoval: true));
         return true;
     }
 
@@ -690,7 +690,7 @@ internal static class BlLegacyHandlerCodeBlockClassifier
                 block = new BlLingoHandlerCodeBlock(
                     BlLingoHandlerCodeBlockKind.NextRepeatIf,
                     tokens,
-                    new BlLingoExitRepeatIfBlockData(condition));
+                    new BlLingoExitRepeatIfBlockData(condition, UseContinue: true));
                 return true;
             }
 

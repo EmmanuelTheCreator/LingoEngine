@@ -11,21 +11,46 @@ public enum BlLingoPutAssignmentKind
     ListElement,
 }
 
-public sealed record BlLingoIfBlockData(string Condition);
+public sealed record BlLingoIfBlockData(string Condition) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoElseIfBlockData(string Condition);
+public sealed record BlLingoElseIfBlockData(string Condition) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoRepeatWithRangeBlockData(string VariableName, string StartExpression, string EndExpression);
+public sealed record BlLingoRepeatWithRangeBlockData(string VariableName, string StartExpression, string EndExpression)
+    : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoRepeatWithEachBlockData(string VariableName, string SourceExpression);
+public sealed record BlLingoRepeatWithEachBlockData(string VariableName, string SourceExpression) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoRepeatWhileBlockData(string Condition);
+public sealed record BlLingoRepeatWhileBlockData(string Condition) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoRepeatUntilBlockData(string Condition);
+public sealed record BlLingoRepeatUntilBlockData(string Condition) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoCaseBlockData(string Expression);
+public sealed record BlLingoCaseBlockData(string Expression) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoCaseWhenBlockData(string Expression);
+public sealed record BlLingoCaseWhenBlockData(string Expression) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
 public sealed record BlLingoPutBlockData(
     BlLingoPutAssignmentKind Kind,
@@ -36,9 +61,15 @@ public sealed record BlLingoPutBlockData(
     string? SpritePropertyName = null,
     string? SpriteMemberArguments = null,
     string? ListExpression = null,
-    string? ListIndexExpression = null);
+    string? ListIndexExpression = null) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoActorListMutationBlockData(string ArgumentExpression);
+public sealed record BlLingoActorListMutationBlockData(string ArgumentExpression, bool IsRemoval = false) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
 public sealed record BlLingoSendSpriteBlockData(
     string ChannelExpression,
@@ -48,9 +79,15 @@ public sealed record BlLingoSendSpriteBlockData(
     IReadOnlyList<string> Arguments,
     bool UsesResult,
     string? ResultTargetExpression = null,
-    string? ResultTypeName = null);
+    string? ResultTypeName = null) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoExitRepeatIfBlockData(string Condition);
+public sealed record BlLingoExitRepeatIfBlockData(string Condition, bool UseContinue = false) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
 public sealed record BlLingoMovieCallBlockData(
     string HandlerName,
@@ -59,6 +96,12 @@ public sealed record BlLingoMovieCallBlockData(
     IReadOnlyList<string> Arguments,
     string? ParameterName = null,
     string? ResultTargetExpression = null,
-    string? ResultTypeName = null);
+    string? ResultTypeName = null) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}
 
-public sealed record BlLingoExpressionBlockData(string Expression);
+public sealed record BlLingoExpressionBlockData(string Expression) : IBlBlockDataVisitor
+{
+    public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
+}

@@ -12,7 +12,7 @@ public sealed class BlLingoHandlerCodeBlock
     public BlLingoHandlerCodeBlock(
         BlLingoHandlerCodeBlockKind kind,
         IReadOnlyList<BlSyntaxToken> tokens,
-        object? data = null,
+        IBlBlockDataVisitor? data = null,
         string? commentText = null)
     {
         Kind = kind;
@@ -34,7 +34,7 @@ public sealed class BlLingoHandlerCodeBlock
     /// <summary>
     /// Gets optional metadata attached to the block.
     /// </summary>
-    public object? Data { get; }
+    public IBlBlockDataVisitor? Data { get; }
 
     /// <summary>
     /// Gets the comment text when the block represents a comment.

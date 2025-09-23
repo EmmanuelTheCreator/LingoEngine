@@ -20,8 +20,8 @@ end
 """;
 
         var generator = new BlLegacyClassGenerator();
-        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
         var calleeCode = generator.GenerateClass("B2", calleeSource, BlLingoScriptKind.Behavior);
+        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
 
         const string expectedCaller = """
 public class B1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
@@ -62,8 +62,8 @@ end
 """;
 
         var generator = new BlLegacyClassGenerator();
-        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
         var calleeCode = generator.GenerateClass("B2", calleeSource, BlLingoScriptKind.Behavior);
+        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
 
         const string expectedCaller = """
 public class B1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
@@ -131,8 +131,8 @@ end
 """;
 
         var generator = new BlLegacyClassGenerator();
-        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
         var calleeCode = generator.GenerateClass("B2", calleeSource, BlLingoScriptKind.Behavior);
+        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
 
         const string expectedCaller = """
 public class B1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
@@ -140,7 +140,7 @@ public class B1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
     public B1Behavior(IBlingoMovieEnvironment env) : base(env) { }
     public void BeginSprite()
     {
-        result = SendSprite<B2Behavior, object?>(2, b2behavior => b2behavior.getValue());
+        result = SendSprite<B2Behavior, int>(2, b2behavior => b2behavior.getValue());
     }
 }
 """;
