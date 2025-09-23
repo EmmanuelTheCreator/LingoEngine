@@ -22,6 +22,8 @@ namespace AbstUI.LGodot.Components
         private readonly StyleBoxFlat _styleHover = new StyleBoxFlat();
         private readonly StyleBoxFlat _stylePressed = new StyleBoxFlat();
         private readonly StyleBoxFlat _styleDisabled = new StyleBoxFlat();
+        private Texture2D? _lastIcon;
+        private bool _lastHasText;
         private Action<bool>? _onChange;
         private event Action? _onValueChanged;
         private event Action? _onCommit;
@@ -79,7 +81,15 @@ namespace AbstUI.LGodot.Components
             }
         }
 
-        public new string Text { get => base.Text; set => base.Text = value; }
+        public new string Text
+        {
+            get => base.Text;
+            set
+            {
+                base.Text = value ?? string.Empty;
+                UpdateIconLayout(forceUpdate: true);
+            }
+        }
         public IAbstTexture2D? TextureOn
         {
             get => _texture;
@@ -136,6 +146,23 @@ namespace AbstUI.LGodot.Components
             base.Dispose();
         }
 
+        public override void _Ready()
+        {
+            base._Ready();
+            SetProcess(true);
+            UpdateIconLayout(forceUpdate: true);
+        }
+
+        public override void _Process(double delta)
+        {
+            base._Process(delta);
+
+            if (_lastIcon != Icon || _lastHasText != !string.IsNullOrWhiteSpace(base.Text))
+            {
+                UpdateIconLayout();
+            }
+        }
+
         private void UpdateStateIcon()
         {
             if (_texture != null && _texture is AbstGodotTexture2D tex)
@@ -143,6 +170,7 @@ namespace AbstUI.LGodot.Components
             if (!IsOn && _textureOff != null && _textureOff is AbstGodotTexture2D texOff)
                 Icon = texOff.Texture;
 
+            UpdateIconLayout(forceUpdate: true);
         }
         private void UpdateStyle()
         {
@@ -189,6 +217,18 @@ namespace AbstUI.LGodot.Components
         public AColor BackgroundHoverColor { get => _backgroundHoverColor; set { _backgroundHoverColor = value; UpdateStyle(); } }
         public AColor BackgroundPressedColor { get => _backgroundPressedColor; set { _backgroundPressedColor = value; UpdateStyle(); } }
         public AColor TextColor { get => _textColor; set { _textColor = value; UpdateStyle(); } }
+
+        private void UpdateIconLayout(bool forceUpdate = false)
+        {
+            bool hasText = !string.IsNullOrWhiteSpace(base.Text);
+
+            if (forceUpdate || _lastIcon != Icon || _lastHasText != hasText)
+            {
+                IconAlignment = hasText ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+                _lastIcon = Icon;
+                _lastHasText = hasText;
+            }
+        }
 
     }
 }
