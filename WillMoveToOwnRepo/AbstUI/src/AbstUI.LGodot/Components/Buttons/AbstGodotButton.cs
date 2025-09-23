@@ -20,6 +20,8 @@ namespace AbstUI.LGodot.Components
         private readonly StyleBoxFlat _styleHover = new StyleBoxFlat();
         private readonly StyleBoxFlat _stylePressed = new StyleBoxFlat();
         private readonly StyleBoxFlat _styleDisabled = new StyleBoxFlat();
+        private Texture2D? _lastIcon;
+        private bool _lastHasText;
 
         private AColor _borderColor = AbstDefaultColors.Button_Border_Normal;
         private AColor _backgroundColor = AbstDefaultColors.Button_Bg_Normal;
@@ -94,7 +96,7 @@ namespace AbstUI.LGodot.Components
                     Icon = tex.Texture;
                 else
                     Icon = null;
-                UpdateIconLayout();
+                UpdateIconLayout(forceUpdate: true);
             }
         }
 
@@ -102,6 +104,23 @@ namespace AbstUI.LGodot.Components
         {
             QueueFree();
             base.Dispose();
+        }
+
+        public override void _Ready()
+        {
+            base._Ready();
+            SetProcess(true);
+            UpdateIconLayout(forceUpdate: true);
+        }
+
+        public override void _Process(double delta)
+        {
+            base._Process(delta);
+
+            if (_lastIcon != Icon || _lastHasText != !string.IsNullOrWhiteSpace(base.Text))
+            {
+                UpdateIconLayout();
+            }
         }
 
         private void UpdateStyle()
@@ -138,12 +157,18 @@ namespace AbstUI.LGodot.Components
             style.SetBorderWidthAll(0);
         }
 
-        private void UpdateIconLayout()
+
+        private void UpdateIconLayout(bool forceUpdate = false)
         {
-            if (Icon != null && string.IsNullOrWhiteSpace(Text))
-                IconAlignment = HorizontalAlignment.Center;
-            else
-                IconAlignment = HorizontalAlignment.Left;
+            bool hasText = !string.IsNullOrWhiteSpace(base.Text);
+
+            if (forceUpdate || _lastIcon != Icon || _lastHasText != hasText)
+            {
+                IconAlignment = hasText ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+                _lastIcon = Icon;
+                _lastHasText = hasText;
+            }
+
         }
 
     }
