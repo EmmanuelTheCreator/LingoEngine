@@ -5,12 +5,14 @@ using AbstUI.Primitives;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
 using BlingoEngine.Casts.Commands;
-using BlingoEngine.Members.Commands;
-using BlingoEngine.Sprites.Commands;
 using BlingoEngine.Members;
+using BlingoEngine.Members.Commands;
+using BlingoEngine.Movies;
+using BlingoEngine.Movies.Commands;
+using BlingoEngine.Sprites;
+using BlingoEngine.Sprites.Commands;
 using BlingoEngine.Net.RNetContracts;
 using BlingoEngine.Net.RNetHost.Common;
-using BlingoEngine.Sprites;
 using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.Net.RNetProjectHost;
@@ -85,10 +87,84 @@ internal sealed class RNetProjectCommandApplier : IDisposable
             case SetCastPropCmd castCmd:
                 ApplyCastProperty(castCmd);
                 break;
+            case GoToFrameCmd goToFrameCmd:
+                ApplyGoToFrame(goToFrameCmd);
+                break;
+            case RewindCmd:
+                ApplyRewind();
+                break;
+            case PauseCmd:
+                ApplyPause();
+                break;
+            case ResumeCmd:
+                ApplyResume();
+                break;
             default:
                 _logger.LogDebug("Ignoring unsupported RNet command {CommandType}.", command.GetType().Name);
                 break;
         }
+    }
+
+    private void ApplyGoToFrame(GoToFrameCmd command)
+    {
+        if (_player.ActiveMovie is not IBlingoMovie movie)
+        {
+            _logger.LogWarning("Received go-to-frame command but no active movie is loaded.");
+            return;
+        }
+
+        var target = Math.Clamp(command.Frame, 1, movie.FrameCount);
+        if (movie.IsPlaying)
+        {
+            movie.GoTo(target);
+        }
+        else
+        {
+            movie.GoToAndStop(target);
+        }
+    }
+
+    private void ApplyRewind()
+    {
+        if (_player.ActiveMovie is null)
+        {
+            _logger.LogWarning("Received rewind command but no active movie is loaded.");
+            return;
+        }
+
+        _commandManager.Handle(new MovieRewindCommand());
+    }
+
+    private void ApplyPause()
+    {
+        if (_player.ActiveMovie is not IBlingoMovie movie)
+        {
+            _logger.LogWarning("Received pause command but no active movie is loaded.");
+            return;
+        }
+
+        if (!movie.IsPlaying)
+        {
+            return;
+        }
+
+        _commandManager.Handle(new PlayMovieCommand());
+    }
+
+    private void ApplyResume()
+    {
+        if (_player.ActiveMovie is not IBlingoMovie movie)
+        {
+            _logger.LogWarning("Received resume command but no active movie is loaded.");
+            return;
+        }
+
+        if (movie.IsPlaying)
+        {
+            return;
+        }
+
+        _commandManager.Handle(new PlayMovieCommand());
     }
 
     private void ApplySpriteProperty(SetSpritePropCmd command)

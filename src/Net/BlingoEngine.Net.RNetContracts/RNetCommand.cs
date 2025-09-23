@@ -81,6 +81,9 @@ public sealed record SetCastPropCmd(int CastLibNum, string Prop, string Value) :
 /// <param name="Frame">Target frame number.</param>
 public sealed record GoToFrameCmd(int Frame) : RNetCommand;
 
+/// <summary>Rewinds playback to the first frame.</summary>
+public sealed record RewindCmd() : RNetCommand;
+
 /// <summary>Pauses playback.</summary>
 public sealed record PauseCmd() : RNetCommand;
 

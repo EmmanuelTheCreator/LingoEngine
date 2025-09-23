@@ -48,6 +48,7 @@ public sealed class RNetPipeServer : IRNetPipeServer
             [nameof(SetMemberPropCmd)] = typeof(SetMemberPropCmd),
             [nameof(SetCastPropCmd)] = typeof(SetCastPropCmd),
             [nameof(GoToFrameCmd)] = typeof(GoToFrameCmd),
+            [nameof(RewindCmd)] = typeof(RewindCmd),
             [nameof(PauseCmd)] = typeof(PauseCmd),
             [nameof(ResumeCmd)] = typeof(ResumeCmd)
         };

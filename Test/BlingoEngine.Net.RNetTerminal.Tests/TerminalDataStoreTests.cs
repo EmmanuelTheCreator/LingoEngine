@@ -210,5 +210,65 @@ public class TerminalDataStoreTests
             store.LoadTestData();
         }
     }
+
+    [Fact]
+    public void SetFrame_UpdatesMovieStateFrameAndRaisesEvent()
+    {
+        var store = TerminalDataStore.Instance;
+        store.LoadTestData();
+
+        MovieStateDto? observed = null;
+        void Handler(MovieStateDto state) => observed = state;
+
+        store.MovieStateChanged += Handler;
+
+        try
+        {
+            var targetFrame = store.MovieState.Frame + 5;
+            store.SetFrame(targetFrame);
+
+            store.MovieState.Frame.Should().Be(targetFrame);
+            store.GetFrame().Should().Be(targetFrame);
+            observed.Should().NotBeNull();
+            observed!.Frame.Should().Be(targetFrame);
+        }
+        finally
+        {
+            store.MovieStateChanged -= Handler;
+            store.LoadTestData();
+        }
+    }
+
+    [Fact]
+    public void ApplyMovieProperty_UpdatesMovieState()
+    {
+        var store = TerminalDataStore.Instance;
+        store.LoadTestData();
+
+        var initialTempo = store.MovieState.Tempo;
+        var newTempo = initialTempo + 10;
+        MovieStateDto? observed = null;
+
+        void Handler(MovieStateDto state) => observed = state;
+
+        store.MovieStateChanged += Handler;
+
+        try
+        {
+            store.ApplyMovieProperty(new RNetMoviePropertyDto("Tempo", newTempo.ToString(CultureInfo.InvariantCulture)));
+            store.ApplyMovieProperty(new RNetMoviePropertyDto("IsPlaying", "true"));
+            store.ApplyMovieProperty(new RNetMoviePropertyDto("CurrentFrame", "12"));
+
+            store.MovieState.Tempo.Should().Be(newTempo);
+            store.MovieState.IsPlaying.Should().BeTrue();
+            store.MovieState.Frame.Should().Be(12);
+            observed.Should().NotBeNull();
+        }
+        finally
+        {
+            store.MovieStateChanged -= Handler;
+            store.LoadTestData();
+        }
+    }
 }
 

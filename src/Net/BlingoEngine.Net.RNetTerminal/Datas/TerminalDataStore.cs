@@ -48,6 +48,7 @@ public sealed class TerminalDataStore
     public event Action<int>? FrameChanged;
     public event Action<SpriteRef?>? SelectedSpriteChanged;
     public event Action<SpriteRef, int, int>? SpriteMoveRequested;
+    public event Action<MovieStateDto>? MovieStateChanged;
 
     public IReadOnlyList<Blingo2DSpriteDTO> GetSprites() => _sprites;
 
@@ -79,13 +80,18 @@ public sealed class TerminalDataStore
 
     public int GetFrame() => _currentFrame;
 
-    public void SetFrame(int frame)
+    public void SetFrame(int frame, bool updateMovieState = true)
     {
         if (_currentFrame == frame)
         {
             return;
         }
         _currentFrame = frame;
+        if (updateMovieState && MovieState.Frame != frame)
+        {
+            MovieState = MovieState with { Frame = frame };
+            MovieStateChanged?.Invoke(MovieState);
+        }
         FrameChanged?.Invoke(frame);
     }
 
@@ -244,6 +250,52 @@ public sealed class TerminalDataStore
         }
     }
 
+    public void UpdateMovieState(MovieStateDto state)
+    {
+        var previous = MovieState;
+        if (previous == state)
+        {
+            return;
+        }
+
+        MovieState = state;
+
+        if (previous.Frame != state.Frame)
+        {
+            SetFrame(state.Frame, updateMovieState: false);
+        }
+
+        MovieStateChanged?.Invoke(MovieState);
+    }
+
+    public void ApplyMovieProperty(RNetMoviePropertyDto property)
+    {
+        var state = MovieState;
+        var updated = state;
+        var changed = false;
+
+        switch (property.Prop)
+        {
+            case "CurrentFrame" when int.TryParse(property.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var frame):
+                updated = updated with { Frame = frame };
+                changed = true;
+                break;
+            case "Tempo" when int.TryParse(property.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var tempo):
+                updated = updated with { Tempo = tempo };
+                changed = true;
+                break;
+            case "IsPlaying" when bool.TryParse(property.Value, out var playing):
+                updated = updated with { IsPlaying = playing };
+                changed = true;
+                break;
+        }
+
+        if (changed)
+        {
+            UpdateMovieState(updated);
+        }
+    }
+
     public void ApplySpriteDelta(SpriteDeltaDto delta)
     {
         var spriteRef = new SpriteRef(delta.SpriteNum, delta.BeginFrame);
@@ -314,7 +366,7 @@ public sealed class TerminalDataStore
     public void LoadTestData()
     {
         _pendingSpriteOriginalBegins.Clear();
-        MovieState = TestMovieBuilder.BuildMovieState();
+        UpdateMovieState(TestMovieBuilder.BuildMovieState());
         _sprites.Clear();
         _sprites.AddRange(TestMovieBuilder.BuildSprites());
         _tempoSprites.Clear();
@@ -358,7 +410,7 @@ public sealed class TerminalDataStore
         }
         FrameCount = movie.FrameCount;
         SpriteChannelCount = movie.MaxSpriteChannelCount;
-        MovieState = new MovieStateDto(0, movie.Tempo, false);
+        UpdateMovieState(new MovieStateDto(0, movie.Tempo, false));
         SpritesChanged?.Invoke();
         CastsChanged?.Invoke();
         SelectSprite(null);

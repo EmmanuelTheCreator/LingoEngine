@@ -32,6 +32,7 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
     private Task? _frameTask;
     private Task? _deltaTask;
     private Task? _memberTask;
+    private Task? _movieTask;
 
     public event Action<BlingoNetConnectionState>? ConnectionStateChanged;
     public event Action<int>? PlayFrameReceived;
@@ -94,7 +95,8 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
         await WaitForTaskAsync(_frameTask).ConfigureAwait(false);
         await WaitForTaskAsync(_deltaTask).ConfigureAwait(false);
         await WaitForTaskAsync(_memberTask).ConfigureAwait(false);
-        _frameTask = _deltaTask = _memberTask = null;
+        await WaitForTaskAsync(_movieTask).ConfigureAwait(false);
+        _frameTask = _deltaTask = _memberTask = _movieTask = null;
 
         _cts?.Dispose();
         _cts = null;
@@ -200,6 +202,7 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
         _frameTask = Task.Run(() => ReceiveFramesAsync(client, token), token);
         _deltaTask = Task.Run(() => ReceiveDeltasAsync(client, token), token);
         _memberTask = Task.Run(() => ReceiveMemberPropertiesAsync(client, token), token);
+        _movieTask = Task.Run(() => ReceiveMoviePropertiesAsync(client, token), token);
     }
 
     private void StartHeartbeat()
@@ -239,7 +242,12 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
         {
             var projectJson = await client.GetCurrentProjectAsync().ConfigureAwait(false);
             var project = DeserializeProject(projectJson.json);
-            Dispatch(() => _store.LoadFromProject(project));
+            var movieState = await client.GetMovieSnapshotAsync().ConfigureAwait(false);
+            Dispatch(() =>
+            {
+                _store.LoadFromProject(project);
+                _store.UpdateMovieState(movieState);
+            });
         }
         catch (Exception ex)
         {
@@ -308,6 +316,22 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
         catch (Exception ex)
         {
             LogMessage?.Invoke("Member property stream error: " + ex.Message);
+        }
+    }
+
+    private async Task ReceiveMoviePropertiesAsync(IBlingoRNetClient client, CancellationToken ct)
+    {
+        try
+        {
+            await foreach (var prop in client.StreamMoviePropertiesAsync(ct).ConfigureAwait(false))
+                Dispatch(() => _store.ApplyMovieProperty(prop));
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            LogMessage?.Invoke("Movie property stream error: " + ex.Message);
         }
     }
 
