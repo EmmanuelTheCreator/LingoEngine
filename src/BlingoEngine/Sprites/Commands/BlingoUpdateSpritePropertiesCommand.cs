@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using AbstUI.Primitives;
 using BlingoEngine.Sprites;
 
-namespace BlingoEngine.Director.Core.Sprites.Commands;
+namespace BlingoEngine.Sprites.Commands;
 
 public sealed record BlingoUpdateSpritePropertiesCommand : BlingoSpriteBaseCommand
 {

@@ -5,22 +5,19 @@ using AbstUI.Commands;
 using AbstUI.Primitives;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
-using BlingoEngine.Director.Core.Tools;
 
-namespace BlingoEngine.Director.Core.Casts.Commands;
+namespace BlingoEngine.Casts.Commands;
 
-public sealed class BlingoCastCommandHandler : IAbstCommandHandler<BlingoUpdateCastPropertiesCommand>
+public class BlingoCastCommandHandler : IAbstCommandHandler<BlingoUpdateCastPropertiesCommand>
 {
     private readonly BlingoPlayer _player;
-    private readonly IHistoryManager _historyManager;
-    private readonly IDirectorEventMediator _mediator;
+    private readonly IHistoryManager? _historyManager;
     private BlingoCast? _cachedCast;
 
-    public BlingoCastCommandHandler(BlingoPlayer player, IHistoryManager historyManager, IDirectorEventMediator mediator)
+    public BlingoCastCommandHandler(BlingoPlayer player, IHistoryManager? historyManager = null)
     {
         _player = player;
         _historyManager = historyManager;
-        _mediator = mediator;
     }
 
     public bool CanExecute(BlingoUpdateCastPropertiesCommand command)
@@ -45,27 +42,34 @@ public sealed class BlingoCastCommandHandler : IAbstCommandHandler<BlingoUpdateC
             return true;
 
         ApplyMutations(updates);
-        Notify();
+        NotifyCastChanged();
 
         void Undo()
         {
             RevertMutations(updates);
-            Notify();
+            NotifyCastChanged();
         }
 
         void Redo()
         {
             ApplyMutations(updates);
-            Notify();
+            NotifyCastChanged();
         }
 
-        _historyManager.Push(Undo, Redo);
+        TrackHistory(Undo, Redo);
         return true;
     }
 
-    private void Notify()
+    protected virtual void NotifyCastChanged()
     {
-        _mediator.Raise(DirectorEventType.CastPropertiesChanged);
+    }
+
+    private void TrackHistory(Action undo, Action redo)
+    {
+        if (_historyManager == null)
+            return;
+
+        _historyManager.Push(undo, redo);
     }
 
     private static List<CollectedChange> CollectChanges(BlingoCast cast, IReadOnlyList<APropertyValue> changes)

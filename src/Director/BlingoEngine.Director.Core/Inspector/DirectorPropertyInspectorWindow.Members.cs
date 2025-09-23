@@ -9,6 +9,7 @@ using BlingoEngine.Members;
 using BlingoEngine.Shapes;
 using BlingoEngine.Sounds;
 using BlingoEngine.Texts;
+using BlingoEngine.Members.Commands;
 
 namespace BlingoEngine.Director.Core.Inspector;
 

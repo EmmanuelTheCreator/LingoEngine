@@ -1,6 +1,7 @@
 ﻿using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.Net.RNetContracts;
 using BlingoEngine.Net.RNetTerminal.Datas;
+using BlingoEngine.Net.RNetTerminal;
 using BlingoEngine.Net.RNetTerminal.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -204,13 +205,15 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                     var sel = store.GetSelectedSprite();
                     if (sel.HasValue)
                     {
-                        _ = sendCommandAsync(new SetSpritePropCmd(sel.Value.SpriteNum, sel.Value.BeginFrame, n, v), null);
+                        var spriteType = store.GetSpriteType(sel.Value);
+                        _ = sendCommandAsync(new SetSpritePropCmd(sel.Value.SpriteNum, sel.Value.BeginFrame, spriteType, n, v), null);
                     }
                 }
                 else if (target == PropertyTarget.Member && _propertyInspector?.CurrentMember != null)
                 {
                     var member = _propertyInspector.CurrentMember;
-                    _ = sendCommandAsync(new SetMemberPropCmd(member.CastLibNum, member.NumberInCast, n, v), null);
+                    var memberType = member.Type.ToRNet();
+                    _ = sendCommandAsync(new SetMemberPropCmd(member.CastLibNum, member.NumberInCast, memberType, n, v), null);
                 }
             };
             return _propertyInspector;

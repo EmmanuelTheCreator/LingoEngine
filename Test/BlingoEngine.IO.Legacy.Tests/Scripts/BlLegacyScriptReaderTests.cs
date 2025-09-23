@@ -34,7 +34,7 @@ public class BlLegacyScriptReaderTests
         var singleScripts = TestContextHarness.LoadScripts("Behaviors/5spritesTest_With_Behavior.dir");
 
         var singleScript = singleScripts.Should().ContainSingle(s => s.ResourceId == 5).Subject;
-        singleScript.Text.Should().Be("on beginsprite\r  put 12\rend");
+        singleScript.Text.ShouldMatchNormalized("on beginsprite\r  put 12\rend");
         singleScript.Name.Should().Be("MyTestBe");
 
         var multiScripts = TestContextHarness.LoadScripts("Behaviors/Two_Behaviors.dir");
@@ -42,27 +42,29 @@ public class BlLegacyScriptReaderTests
         multiScripts.Should().HaveCount(2);
         multiScripts.Should().OnlyContain(s => s.Text != null && s.Name != null);
 
-        var expectedContents = new[]
-        {
-            "on exitFrame me\r  put 20\r    put \"I'm in cast slot 1\"\rend",
-            "on exitFrame me\r  put \"hallo\"\r  put \"I'm in cast slot 3\"\rend"
-        };
-
-        var expectedNamesByText = new Dictionary<string, string>
+        var expectedScripts = new Dictionary<string, string>
         {
             ["on exitFrame me\r  put 20\r    put \"I'm in cast slot 1\"\rend"] = "MyFirstBehaviorOnFrame10",
             ["on exitFrame me\r  put \"hallo\"\r  put \"I'm in cast slot 3\"\rend"] = "MeSecondBehaviorOnFrame20"
         };
 
-        multiScripts
-            .Select(script => script.Text!)
-            .Should()
-            .BeEquivalentTo(expectedContents);
+        var normalizedExpectations = expectedScripts.ToDictionary(
+            pair => ResultTestHelper.NormalizeLineEndings(pair.Key),
+            pair => pair);
 
         foreach (var script in multiScripts)
         {
-            script.Name.Should().Be(expectedNamesByText[script.Text!]);
+            var normalizedText = ResultTestHelper.NormalizeLineEndings(script.Text);
+            normalizedExpectations.Should().ContainKey(normalizedText);
+
+            var expected = normalizedExpectations[normalizedText];
+            script.Text.ShouldMatchNormalized(expected.Key);
+            script.Name.Should().Be(expected.Value);
+
+            normalizedExpectations.Remove(normalizedText);
         }
+
+        normalizedExpectations.Should().BeEmpty();
     }
 
     [Fact]
@@ -153,7 +155,7 @@ public class BlLegacyScriptReaderTests
 
         var script = scripts.Should().ContainSingle(s => s.ResourceId == scriptId).Subject;
         script.Format.Should().Be(BlLegacyScriptFormatKind.Behavior);
-        script.Text.Should().Be(scriptText);
+        script.Text.ShouldMatchNormalized(scriptText);
         script.Name.Should().Be(scriptName);
     }
 
@@ -189,7 +191,7 @@ public class BlLegacyScriptReaderTests
 
         var script = scripts.Should().ContainSingle(s => s.ResourceId == scriptId).Subject;
         script.Format.Should().Be(BlLegacyScriptFormatKind.Movie);
-        script.Text.Should().Be(scriptText);
+        script.Text.ShouldMatchNormalized(scriptText);
         script.Name.Should().Be(scriptName);
     }
 

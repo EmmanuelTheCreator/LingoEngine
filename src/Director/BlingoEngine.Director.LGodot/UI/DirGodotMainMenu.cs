@@ -1,5 +1,6 @@
 ﻿using AbstUI.Commands;
 using AbstUI.Components;
+using AbstUI.Components.Menus;
 using AbstUI.FrameworkCommunication;
 using AbstUI.Inputs;
 using AbstUI.LGodot.Components;
@@ -85,11 +86,6 @@ internal partial class DirGodotMainMenu : Control , IDirFrameworkMainMenuWindow,
         _menuBar.Position = new Vector2(10, 1);
         _iconBar.Position = new Vector2(400, 1);
 
-        directorMainMenu.CallOnAllTopMenus(btn =>
-        {
-            AddChild(btn.Framework<AbstGodotMenu>());
-        });
-
         StyleTopMenu(directorMainMenu);
         foreach (var childItem in _iconBar.GetChild(0).GetChildren())
         {
@@ -102,7 +98,12 @@ internal partial class DirGodotMainMenu : Control , IDirFrameworkMainMenuWindow,
     }
     public void Init(IAbstWindow instance)
     {
-        
+
+    }
+
+    public void RegisterTopMenu(AbstMenu menu)
+    {
+        AddChild(menu.Framework<AbstGodotMenu>());
     }
 
     private static void StyleIconButton(Button btn)

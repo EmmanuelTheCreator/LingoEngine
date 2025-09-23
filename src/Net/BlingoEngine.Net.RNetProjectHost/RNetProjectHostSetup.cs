@@ -25,11 +25,15 @@ public static class BlingoRNetProjectHostSetup
             .AddSingleton<IRNetProjectServer, RNetProjectServer>()
             .AddSingleton<IRNetPublisherEngineBridge, RNetProjectPublisher>()
             .AddSingleton<IRNetProjectBus, RNetProjectBus>()
+            .AddSingleton<RNetProjectCommandApplier>()
             );
 
         reg.AddPostBuildAction(p =>
         {
             var config = p.GetRequiredService<IRNetConfiguration>();
+
+            // Ensure the command applier is instantiated so it can subscribe to server events.
+            p.GetRequiredService<RNetProjectCommandApplier>();
 
             if (config.AutoStartRNetHostOnStartup || autoStart)
             {

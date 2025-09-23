@@ -11,7 +11,7 @@ using AbstUI.FrameworkCommunication;
 
 namespace AbstUI.SDL2.Components.Buttons
 {
-    internal class AbstSdlButton : AbstSdlComponent, IAbstFrameworkButton, IFrameworkFor<AbstButton>, IHandleSdlEvent, ISdlFocusable, IDisposable
+    internal class AbstSdlButton : AbstSdlComponent, IAbstFrameworkButton, IFrameworkFor<AbstButton>, IHandleSdlEvent, ISdlFocusable, IDisposable, IHasButtonBorderStates
     {
         private ISdlFontLoadedByUser? _font;
         private nint _texture;
@@ -271,6 +271,14 @@ namespace AbstUI.SDL2.Components.Buttons
             _iconTextureSub?.Release();
             _font?.Release();
             base.Dispose();
+        }
+
+        public void SetBorderStateColors(AColor normal, AColor hover, AColor pressed)
+        {
+            _borderColor = normal;
+            _borderHoverColor = hover;
+            _borderPressedColor = pressed;
+            RequestRedraw();
         }
     }
 }

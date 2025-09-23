@@ -72,7 +72,7 @@ namespace AbstUI.LGodot.Components
             set
             {
                 base.Text = value ?? string.Empty;
-                UpdateIconLayout(forceUpdate: true);
+                UpdateIconLayout();
             }
         }
         public bool Enabled { get => !Disabled; set => Disabled = !value; }
@@ -157,6 +157,7 @@ namespace AbstUI.LGodot.Components
             style.SetBorderWidthAll(0);
         }
 
+
         private void UpdateIconLayout(bool forceUpdate = false)
         {
             bool hasText = !string.IsNullOrWhiteSpace(base.Text);
@@ -167,6 +168,7 @@ namespace AbstUI.LGodot.Components
                 _lastIcon = Icon;
                 _lastHasText = hasText;
             }
+
         }
 
     }

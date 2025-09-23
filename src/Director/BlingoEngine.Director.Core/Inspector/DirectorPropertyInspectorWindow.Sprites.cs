@@ -14,6 +14,7 @@ using BlingoEngine.Primitives;
 using BlingoEngine.Scripts;
 using BlingoEngine.Members;
 using BlingoEngine.Sprites;
+using BlingoEngine.Sprites.Commands;
 
 namespace BlingoEngine.Director.Core.Inspector;
 

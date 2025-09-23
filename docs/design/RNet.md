@@ -30,7 +30,7 @@ The pipe transport mirrors the same shape but swaps the SignalR hub for a duplex
 *Defines the shared language spoken by all RNet components.*
 
 - DTOs describing frames, sprite deltas, film loops, transitions, tempo changes, sound events, text styles, and more live under this project. (see [StageFrameDto.cs](../../src/Net/BlingoEngine.Net.RNetContracts/StageFrameDto.cs#L1-L12), [SpriteDeltaDto.cs](../../src/Net/BlingoEngine.Net.RNetContracts/SpriteDeltaDto.cs#L1-L33))
-- `RNetCommand` and its derived records (`SetSpritePropCmd`, `SetMemberPropCmd`, `GoToFrameCmd`, `PauseCmd`, `ResumeCmd`) capture the write-side surface area for tooling commands. (see [RNetCommand.cs](../../src/Net/BlingoEngine.Net.RNetContracts/RNetCommand.cs#L1-L30))
+- `RNetCommand` and its derived records (`SetSpritePropCmd`, `SetMemberPropCmd`, `SetCastPropCmd`, `GoToFrameCmd`, `PauseCmd`, `ResumeCmd`) capture the write-side surface area for tooling commands alongside the `RNetMemberTypeDto` and `RNetSpriteTypeDto` enums used for member and sprite mutations. (see [RNetCommand.cs](../../src/Net/BlingoEngine.Net.RNetContracts/RNetCommand.cs#L1-L76))
 - `IRNetConfiguration` and `RNetConfiguration` provide a simple options object (port, autostart flag, client name) shared by both HTTP and pipe hosts/clients. (see [IRNetConfiguration.cs](../../src/Net/BlingoEngine.Net.RNetContracts/IRNetConfiguration.cs#L1-L12), [RNetConfiguration.cs](../../src/Net/BlingoEngine.Net.RNetContracts/RNetConfiguration.cs#L1-L13))
 - `IRNetPublisher` defines the methods a publisher must expose for the engine to push updates into the transport-agnostic bus. (see [IRNetPublisher.cs](../../src/Net/BlingoEngine.Net.RNetContracts/IRNetPublisher.cs#L1-L59))
 
@@ -104,7 +104,7 @@ This relay is optional; the standard `RNetProjectServer` already exposes `/direc
 
 *Interactive console tool for development and diagnostics.*
 
-- `RNetTerminalConnection` centralizes connection management, background streaming tasks, heartbeat timers, and outgoing command queues. It exposes `QueueGoToFrameCommand`, `QueueSpritePropertyChange`, and `QueueMemberPropertyChange` so the UI can stay thin. (see [RNetTerminalConnection.cs](../../src/Net/BlingoEngine.Net.RNetTerminal/RNetTerminalConnection.cs#L21-L140))
+- `RNetTerminalConnection` centralizes connection management, background streaming tasks, heartbeat timers, and outgoing command queues. It exposes `QueueGoToFrameCommand`, `QueueSpritePropertyChange`, and `QueueMemberPropertyChange` (accepting `RNetSpriteTypeDto`/`BlingoMemberTypeDTO`) so the UI can stay thin. (see [RNetTerminalConnection.cs](../../src/Net/BlingoEngine.Net.RNetTerminal/RNetTerminalConnection.cs#L21-L146))
 - The terminal respects both HTTP and pipe transports through `RNetTerminalTransport` and builds the correct URI automatically, keeping the rest of the UI agnostic to the transport mechanics. (see [RNetTerminalConnection.cs](../../src/Net/BlingoEngine.Net.RNetTerminal/RNetTerminalConnection.cs#L13-L162))
 - `TerminalDataStore` (not shown) coordinates sprite/member state, ensuring that in remote mode UI edits are deferred until the host confirms them, while `BlingoRNetTerminal` wires everything into the `Terminal.Gui` front end.
 
