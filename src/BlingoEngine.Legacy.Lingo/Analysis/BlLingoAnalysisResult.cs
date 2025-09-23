@@ -33,4 +33,25 @@ public sealed class BlLingoAnalysisResult
     /// Gets custom data exposed by the executed passes.
     /// </summary>
     public IReadOnlyDictionary<string, object?> Data { get; }
+
+    /// <summary>
+    /// Attempts to retrieve a strongly typed value that was published during analysis.
+    /// </summary>
+    /// <typeparam name="T">The expected value type.</typeparam>
+    /// <param name="key">The logical name of the stored value.</param>
+    /// <param name="value">When this method returns, contains the retrieved value if found.</param>
+    /// <returns><see langword="true"/> when the value exists and is of the expected type; otherwise <see langword="false"/>.</returns>
+    public bool TryGetData<T>(string key, out T? value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        if (Data.TryGetValue(key, out var stored) && stored is T typed)
+        {
+            value = typed;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
 }

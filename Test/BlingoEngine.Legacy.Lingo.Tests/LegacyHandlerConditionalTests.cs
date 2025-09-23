@@ -107,11 +107,11 @@ public class TestScriptBehavior : BlingoSpriteBehavior
         {
             case 1:
                 value = 1;
-                case 2:
                 break;
+            case 2:
                 value = 2;
-                default:
                 break;
+            default:
                 value = null;
                 break;
         }

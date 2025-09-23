@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BlingoEngine.Legacy.Lingo.Analysis;
+using BlingoEngine.Legacy.Lingo.Analysis.Passes;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.CodeGen;
@@ -13,12 +14,29 @@ public sealed class BlLegacyHandlerConverter
 {
     private readonly IReadOnlyList<BlSyntaxToken> _tokens;
     private readonly BlLegacyClassGeneratorOptions _options;
+    private readonly BlLingoAnalysisResult _analysis;
+    private readonly IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>> _handlerBlocks;
 
-    public BlLegacyHandlerConverter(string source, IReadOnlyList<BlSyntaxToken> tokens, BlLegacyClassGeneratorOptions options)
+    public BlLegacyHandlerConverter(
+        string source,
+        IReadOnlyList<BlSyntaxToken> tokens,
+        BlLegacyClassGeneratorOptions options,
+        BlLingoAnalysisResult analysis)
     {
         _ = source;
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _analysis = analysis ?? throw new ArgumentNullException(nameof(analysis));
+
+        IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>> blocks =
+            new Dictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>();
+
+        if (analysis.TryGetData(BlLingoHandlerCodeBlockPass.HandlerCodeBlocksKey, out IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? extracted) && extracted is not null)
+        {
+            blocks = extracted;
+        }
+
+        _handlerBlocks = blocks;
     }
 
     /// <summary>
@@ -29,14 +47,22 @@ public sealed class BlLegacyHandlerConverter
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentNullException.ThrowIfNull(handler);
 
+        if (_handlerBlocks.TryGetValue(handler, out var blocks))
+        {
+            var emitter = new BlLegacyHandlerBodyEmitter(writer, blocks, _options, _analysis);
+            emitter.Emit();
+            return;
+        }
+
         var body = ExtractHandlerBody(handler);
         if (body.Tokens.Count == 0 && body.EndLeadingTrivia.Count == 0)
         {
             return;
         }
 
-        var emitter = new BlLegacyHandlerBodyEmitter(writer, body.Tokens, body.EndLeadingTrivia, _options);
-        emitter.Emit();
+        var fallbackBlocks = BlLingoHandlerFallbackBuilder.Build(body.Tokens, body.EndLeadingTrivia, _analysis.Symbols);
+        var fallbackEmitter = new BlLegacyHandlerBodyEmitter(writer, fallbackBlocks, _options, _analysis);
+        fallbackEmitter.Emit();
     }
 
     private HandlerBody ExtractHandlerBody(BlLingoHandlerSymbolTable handler)
@@ -157,10 +183,18 @@ public sealed class BlLegacyHandlerConverter
         return false;
     }
 
-    private readonly record struct HandlerBody(
-        IReadOnlyList<BlSyntaxToken> Tokens,
-        IReadOnlyList<BlSyntaxTrivia> EndLeadingTrivia)
+    private sealed class HandlerBody
     {
         public static HandlerBody Empty { get; } = new(Array.Empty<BlSyntaxToken>(), Array.Empty<BlSyntaxTrivia>());
+
+        public HandlerBody(IReadOnlyList<BlSyntaxToken> tokens, IReadOnlyList<BlSyntaxTrivia> endLeadingTrivia)
+        {
+            Tokens = tokens ?? Array.Empty<BlSyntaxToken>();
+            EndLeadingTrivia = endLeadingTrivia ?? Array.Empty<BlSyntaxTrivia>();
+        }
+
+        public IReadOnlyList<BlSyntaxToken> Tokens { get; }
+
+        public IReadOnlyList<BlSyntaxTrivia> EndLeadingTrivia { get; }
     }
 }

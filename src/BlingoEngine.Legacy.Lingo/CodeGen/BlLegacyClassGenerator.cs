@@ -74,7 +74,7 @@ public sealed class BlLegacyClassGenerator
         var interfaces = CollectInterfaces(classScope);
 
         var writer = new BlCSharpCodeWriter();
-        var handlerConverter = new BlLegacyHandlerConverter(source, tokens, _options);
+        var handlerConverter = new BlLegacyHandlerConverter(source, tokens, _options, analysis);
         var interfaceSuffix = interfaces.Count > 0 ? ", " + string.Join(", ", interfaces) : string.Empty;
 
         writer.WriteLine($"public class {className} : {baseType}{interfaceSuffix}");

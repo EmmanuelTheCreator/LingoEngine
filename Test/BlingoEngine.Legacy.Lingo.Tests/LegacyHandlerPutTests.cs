@@ -44,7 +44,7 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-        PutTextIntoField("Greeting", "Hi");
+        TryMember<IBlingoMemberField>("Greeting", field => field.Text = "Hi");
     }
 }
 """;

@@ -87,7 +87,7 @@ public sealed class HandlerBlockManager
         _writer.Unindent();
     }
 
-    public void StartSwitchSection()
+    public void BeginSwitchSection()
     {
         if (!IsCurrent(BlockKind.Switch))
         {
@@ -96,7 +96,22 @@ public sealed class HandlerBlockManager
 
         CloseActiveCase();
         var frame = _frames.Peek();
-        _writer.Indent();
         frame.CaseOpen = true;
+    }
+
+    public void BeginSwitchSectionBody()
+    {
+        if (!IsCurrent(BlockKind.Switch))
+        {
+            return;
+        }
+
+        var frame = _frames.Peek();
+        if (!frame.CaseOpen)
+        {
+            return;
+        }
+
+        _writer.Indent();
     }
 }
