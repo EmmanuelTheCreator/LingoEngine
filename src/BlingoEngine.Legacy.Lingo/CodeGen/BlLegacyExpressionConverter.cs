@@ -13,6 +13,115 @@ public sealed class BlLegacyExpressionConverter
     private int _index;
     private bool _afterDot;
 
+    private readonly struct MemberPropertyMapping
+    {
+        public MemberPropertyMapping(string genericType, string propertyName)
+        {
+            GenericType = genericType;
+            PropertyName = propertyName;
+        }
+
+        public string GenericType { get; }
+
+        public string PropertyName { get; }
+    }
+
+    private static readonly Dictionary<string, MemberPropertyMapping> s_memberPropertyMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["text"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Text"),
+        ["line"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Line"),
+        ["word"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Word"),
+        ["char"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Char"),
+        ["editable"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Editable"),
+        ["wordwrap"] = new MemberPropertyMapping("IBlingoMemberTextBase", "WordWrap"),
+        ["scrolltop"] = new MemberPropertyMapping("IBlingoMemberTextBase", "ScrollTop"),
+        ["textfont"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Font"),
+        ["font"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Font"),
+        ["textsize"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontSize"),
+        ["fontsize"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontSize"),
+        ["textstyle"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontStyle"),
+        ["fontstyle"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontStyle"),
+        ["textcolor"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Color"),
+        ["color"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Color"),
+        ["bold"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Bold"),
+        ["italic"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Italic"),
+        ["underline"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Underline"),
+        ["alignment"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Alignment"),
+        ["margin"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Margin"),
+        ["loop"] = new MemberPropertyMapping("BlingoMemberSound", "Loop"),
+        ["stereo"] = new MemberPropertyMapping("BlingoMemberSound", "Stereo"),
+        ["length"] = new MemberPropertyMapping("BlingoMemberSound", "Length"),
+        ["linked"] = new MemberPropertyMapping("BlingoMemberSound", "IsLinked"),
+        ["islinked"] = new MemberPropertyMapping("BlingoMemberSound", "IsLinked"),
+        ["linkedfilepath"] = new MemberPropertyMapping("BlingoMemberSound", "LinkedFilePath"),
+        ["isexternal"] = new MemberPropertyMapping("BlingoMemberSound", "IsExternal"),
+        ["imagedata"] = new MemberPropertyMapping("BlingoMemberBitmap", "ImageData"),
+        ["isloaded"] = new MemberPropertyMapping("BlingoMemberBitmap", "IsLoaded"),
+        ["format"] = new MemberPropertyMapping("BlingoMemberBitmap", "Format"),
+        ["vertexlist"] = new MemberPropertyMapping("BlingoMemberShape", "VertexList"),
+        ["shapetype"] = new MemberPropertyMapping("BlingoMemberShape", "ShapeType"),
+        ["shapetypeint"] = new MemberPropertyMapping("BlingoMemberShape", "ShapeTypeInt"),
+        ["fillcolor"] = new MemberPropertyMapping("BlingoMemberShape", "FillColor"),
+        ["endcolor"] = new MemberPropertyMapping("BlingoMemberShape", "EndColor"),
+        ["strokecolor"] = new MemberPropertyMapping("BlingoMemberShape", "StrokeColor"),
+        ["strokewidth"] = new MemberPropertyMapping("BlingoMemberShape", "StrokeWidth"),
+        ["closed"] = new MemberPropertyMapping("BlingoMemberShape", "Closed"),
+        ["antialias"] = new MemberPropertyMapping("BlingoMemberShape", "AntiAlias"),
+        ["filled"] = new MemberPropertyMapping("BlingoMemberShape", "Filled"),
+        ["duration"] = new MemberPropertyMapping("BlingoMemberMedia", "Duration"),
+        ["currenttime"] = new MemberPropertyMapping("BlingoMemberMedia", "CurrentTime"),
+        ["mediastatus"] = new MemberPropertyMapping("BlingoMemberMedia", "MediaStatus"),
+        ["scripttype"] = new MemberPropertyMapping("BlingoMemberScript", "ScriptType"),
+        ["behaviortypename"] = new MemberPropertyMapping("BlingoMemberScript", "BehaviorTypeName"),
+    };
+
+    private static readonly Dictionary<string, string> s_thePropertyMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["mouseh"] = "_Mouse.MouseH",
+        ["mousev"] = "_Mouse.MouseV",
+        ["actorlist"] = "_Movie.ActorList",
+        ["timeoutlist"] = "_Movie.TimeOutList",
+        ["frame"] = "_Movie.Frame",
+        ["currentframe"] = "_Movie.CurrentFrame",
+        ["framecount"] = "_Movie.FrameCount",
+        ["tempo"] = "_Movie.Tempo",
+        ["isplaying"] = "_Movie.IsPlaying",
+        ["timer"] = "_Movie.Timer",
+        ["spritetotalcount"] = "_Movie.SpriteTotalCount",
+        ["spritemaxnumber"] = "_Movie.SpriteMaxNumber",
+        ["lastchannel"] = "_Movie.LastChannel",
+        ["lastframe"] = "_Movie.LastFrame",
+        ["markerlist"] = "_Movie.MarkerList",
+        ["maxspritechannelcount"] = "_Movie.MaxSpriteChannelCount",
+        ["about"] = "_Movie.About",
+        ["copyright"] = "_Movie.Copyright",
+        ["username"] = "_Movie.UserName",
+        ["companyname"] = "_Movie.CompanyName",
+        ["number of score"] = "_Movie.Number",
+        ["castlib"] = "_Movie.CastLib",
+        ["movie"] = "_Movie",
+        ["player"] = "_Player",
+        ["activecastlib"] = "_Player.ActiveCastLib",
+        ["activemovie"] = "_Player.ActiveMovie",
+        ["sound"] = "_Player.Sound",
+        ["mediarequiresasyncpreload"] = "_Player.MediaRequiresAsyncPreload",
+        ["currentspritenum"] = "_Player.CurrentSpriteNum",
+        ["netpreset"] = "_Player.NetPreset",
+        ["activewindow"] = "_Player.ActiveWindow",
+        ["safeplayer"] = "_Player.SafePlayer",
+        ["organizationname"] = "_Player.OrganizationName",
+        ["applicationname"] = "_Player.ApplicationName",
+        ["applicationpath"] = "_Player.ApplicationPath",
+        ["productname"] = "_Player.ProductName",
+        ["lastclick"] = "_Player.LastClick",
+        ["lastevent"] = "_Player.LastEvent",
+        ["lastkey"] = "_Player.LastKey",
+        ["productversion"] = "_Player.ProductVersion",
+        ["castlibs"] = "_Player.CastLibs",
+        ["alerthook"] = "_Player.AlertHook",
+        ["stage"] = "_Player.Stage",
+    };
+
     public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens)
     {
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
@@ -34,7 +143,7 @@ public sealed class BlLegacyExpressionConverter
         {
             if (TryHandleVoidPredicate() ||
                 TryHandleScriptInstantiation() ||
-                TryHandleMemberTextAccess() ||
+                TryHandleMemberTypedAccess() ||
                 TryHandleListLiteral() ||
                 TryHandleTheKeywords())
             {
@@ -167,7 +276,7 @@ public sealed class BlLegacyExpressionConverter
         return true;
     }
 
-    private bool TryHandleMemberTextAccess()
+    private bool TryHandleMemberTypedAccess()
     {
         if (_index >= _tokens.Count ||
             !string.Equals(_tokens[_index].ValueText, "member", StringComparison.OrdinalIgnoreCase))
@@ -187,8 +296,18 @@ public sealed class BlLegacyExpressionConverter
         }
 
         if (argsClose + 2 >= _tokens.Count ||
-            _tokens[argsClose + 1].Kind != BlSyntaxKind.PeriodToken ||
-            !string.Equals(_tokens[argsClose + 2].ValueText, "text", StringComparison.OrdinalIgnoreCase))
+            _tokens[argsClose + 1].Kind != BlSyntaxKind.PeriodToken)
+        {
+            return false;
+        }
+
+        var propertyToken = _tokens[argsClose + 2];
+        if (propertyToken.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_memberPropertyMap.TryGetValue(propertyToken.ValueText, out var mapping))
         {
             return false;
         }
@@ -196,7 +315,7 @@ public sealed class BlLegacyExpressionConverter
         var argsTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 2, argsClose - (_index + 2));
         var arguments = ConvertArguments(argsTokens);
 
-        AppendRaw("Member<BlingoMemberText>");
+        AppendRaw($"Member<{mapping.GenericType}>");
         AppendRaw("(");
         if (!string.IsNullOrEmpty(arguments))
         {
@@ -205,7 +324,7 @@ public sealed class BlLegacyExpressionConverter
 
         AppendRaw(")");
         AppendRaw(".");
-        AppendRaw("Text");
+        AppendRaw(mapping.PropertyName);
 
         _index = argsClose + 3;
         _afterDot = false;
@@ -217,6 +336,19 @@ public sealed class BlLegacyExpressionConverter
         if (_index >= _tokens.Count || _tokens[_index].Kind != BlSyntaxKind.LeftBracketToken)
         {
             return false;
+        }
+
+        if (_parts.Count > 0)
+        {
+            var previous = _parts[^1];
+            if (!string.IsNullOrEmpty(previous))
+            {
+                var lastChar = previous[^1];
+                if (char.IsLetterOrDigit(lastChar) || lastChar == ')' || lastChar == ']')
+                {
+                    return false;
+                }
+            }
         }
 
         var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(_tokens, _index, BlSyntaxKind.LeftBracketToken, BlSyntaxKind.RightBracketToken);
@@ -262,24 +394,42 @@ public sealed class BlLegacyExpressionConverter
             return false;
         }
 
-        var next = _tokens[_index + 1];
-        if (string.Equals(next.ValueText, "mouseH", StringComparison.OrdinalIgnoreCase))
+        var lookahead = 1;
+        var builder = new StringBuilder();
+
+        while (_index + lookahead < _tokens.Count)
         {
-            AppendRaw("_Mouse.MouseH");
-            _index += 2;
-            _afterDot = false;
-            return true;
+            var candidate = _tokens[_index + lookahead];
+            if (candidate.Kind is BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.Append(' ');
+                }
+
+                builder.Append(candidate.ValueText);
+                lookahead++;
+                continue;
+            }
+
+            break;
         }
 
-        if (string.Equals(next.ValueText, "actorList", StringComparison.OrdinalIgnoreCase))
+        if (builder.Length == 0)
         {
-            AppendRaw("_Movie.ActorList");
-            _index += 2;
-            _afterDot = false;
-            return true;
+            return false;
         }
 
-        return false;
+        var propertyKey = builder.ToString();
+        if (!s_thePropertyMap.TryGetValue(propertyKey, out var mapped))
+        {
+            return false;
+        }
+
+        AppendRaw(mapped);
+        _index += lookahead;
+        _afterDot = false;
+        return true;
     }
 
     private void AppendIdentifier(string text)
@@ -294,6 +444,13 @@ public sealed class BlLegacyExpressionConverter
         if (string.Equals(text, "void", StringComparison.OrdinalIgnoreCase))
         {
             AppendRaw("null");
+            _afterDot = false;
+            return;
+        }
+
+        if (string.Equals(text, "member", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("Member");
             _afterDot = false;
             return;
         }

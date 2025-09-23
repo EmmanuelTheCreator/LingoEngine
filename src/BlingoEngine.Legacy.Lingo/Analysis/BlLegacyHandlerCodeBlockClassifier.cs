@@ -11,7 +11,7 @@ internal static class BlLegacyHandlerCodeBlockClassifier
     private static readonly IHandlerBlockClassifier[] s_classifiers =
     {
         EndBlockClassifier.Instance,
-        ElseBlockClassifier.Instance,
+        ConditionalBlockClassifier.Instance,
         RepeatBlockClassifier.Instance,
         CaseBlockClassifier.Instance,
         SendSpriteBlockClassifier.Instance,
@@ -19,7 +19,6 @@ internal static class BlLegacyHandlerCodeBlockClassifier
         PutBlockClassifier.Instance,
         SpriteMemberAssignmentBlockClassifier.Instance,
         ActorListBlockClassifier.Instance,
-        IfBlockClassifier.Instance,
         ExitNextBlockClassifier.Instance,
         ExpressionBlockClassifier.Instance,
     };
