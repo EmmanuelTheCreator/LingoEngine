@@ -30,6 +30,7 @@ internal static class BlLegacyHandlerCodeBlockClassifier
     {
         var result = new List<BlLingoHandlerCodeBlock>();
         var lines = HandlerLine.Split(tokens, endTrivia);
+        var inlineStack = new Stack<bool>();
         foreach (var line in lines)
         {
             switch (line.Kind)
@@ -43,7 +44,18 @@ internal static class BlLegacyHandlerCodeBlockClassifier
                 case HandlerLineKind.Tokens:
                     if (line.Tokens is { Count: > 0 })
                     {
-                        result.Add(ClassifyTokens(line.Tokens, symbols));
+                        var block = ClassifyTokens(line.Tokens, symbols);
+                        result.Add(block);
+                        if (line.BeginsInlineConditional && block.Kind == BlLingoHandlerCodeBlockKind.If)
+                        {
+                            inlineStack.Push(true);
+                        }
+
+                        if (line.EndsInlineConditional && inlineStack.Count > 0)
+                        {
+                            inlineStack.Pop();
+                            result.Add(new BlLingoHandlerCodeBlock(BlLingoHandlerCodeBlockKind.End, Array.Empty<BlSyntaxToken>()));
+                        }
                     }
                     else
                     {

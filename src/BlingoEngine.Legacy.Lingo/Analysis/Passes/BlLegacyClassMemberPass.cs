@@ -255,7 +255,7 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
             return;
         }
 
-        var typeName = NormalizeTypeName(BlLegacyReturnTypeHelper.InferLiteral(data.ValueExpression));
+        var typeName = DeterminePropertyType(data.ValueExpression);
         if (typeName.Length == 0)
         {
             return;
@@ -284,7 +284,7 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
         }
 
         var expression = BlLegacyExpressionConverter.Convert(valueTokens);
-        var typeName = NormalizeTypeName(BlLegacyReturnTypeHelper.InferLiteral(expression));
+        var typeName = DeterminePropertyType(expression);
         if (typeName.Length == 0)
         {
             return;
@@ -354,6 +354,47 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
         }
 
         return "object";
+    }
+
+    private static string DeterminePropertyType(string? expression)
+    {
+        var typeName = NormalizeTypeName(BlLegacyReturnTypeHelper.InferLiteral(expression));
+        if (!string.IsNullOrEmpty(typeName))
+        {
+            return typeName;
+        }
+
+        if (IsStringMemberAccess(expression))
+        {
+            return "string";
+        }
+
+        return string.Empty;
+    }
+
+    private static bool IsStringMemberAccess(string? expression)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return false;
+        }
+
+        var trimmed = expression.Trim();
+        if (!trimmed.StartsWith("Member<", StringComparison.Ordinal) &&
+            !trimmed.StartsWith("Member(", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return ContainsSegment(trimmed, ".Line") ||
+            ContainsSegment(trimmed, ".Word") ||
+            ContainsSegment(trimmed, ".Text") ||
+            ContainsSegment(trimmed, ".Char");
+    }
+
+    private static bool ContainsSegment(string expression, string segment)
+    {
+        return expression.IndexOf(segment, StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private static bool TryExtractAssignment(

@@ -90,6 +90,30 @@ public class MyParentParent : BlingoParentScript
     }
 
     [Fact]
+    public void Properties_InferTypesFromMemberAccess()
+    {
+        const string source = """
+property key1
+property key2
+property key3
+on beginSprite
+  key1 = member("parameters").line[21]
+  key2 = member("parameters").line[21].word[2]
+  key3 = value(member("parameters").line[21].word[2])
+end
+""";
+
+        var code = _generator.GenerateClass("KeyReader", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("public string key1 { get; set; }", code);
+        Assert.Contains("public string key2 { get; set; }", code);
+        Assert.Contains("public int key3 { get; set; }", code);
+        Assert.Contains(
+            "key3 = Convert.ToInt32(Member<IBlingoMemberTextBase>(\"parameters\").Line[21].Word[2]);",
+            code);
+    }
+
+    [Fact]
     public void Handlers_AppearInSourceOrder()
     {
         const string source = "on startMovie\nend\n" +

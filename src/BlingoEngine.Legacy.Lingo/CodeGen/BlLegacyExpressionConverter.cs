@@ -143,6 +143,8 @@ public sealed class BlLegacyExpressionConverter
         {
             if (TryHandleVoidPredicate() ||
                 TryHandleScriptInstantiation() ||
+                TryHandleValueFunction() ||
+                TryHandleAlertCommand() ||
                 TryHandleMemberTypedAccess() ||
                 TryHandleListLiteral() ||
                 TryHandleTheKeywords())
@@ -272,6 +274,78 @@ public sealed class BlLegacyExpressionConverter
 
         AppendRaw(")");
         _index = argsClose + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleValueFunction()
+    {
+        if (_index >= _tokens.Count ||
+            !string.Equals(_tokens[_index].ValueText, "value", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var argument = Convert(argumentTokens);
+
+        AppendRaw("Convert.ToInt32");
+        AppendRaw("(");
+        if (!string.IsNullOrEmpty(argument))
+        {
+            AppendRaw(argument);
+        }
+
+        AppendRaw(")");
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleAlertCommand()
+    {
+        if (_index >= _tokens.Count ||
+            !string.Equals(_tokens[_index].ValueText, "alert", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        _index++;
+        var argumentTokens = new List<BlSyntaxToken>();
+        while (_index < _tokens.Count)
+        {
+            argumentTokens.Add(_tokens[_index]);
+            _index++;
+        }
+
+        var argument = Convert(argumentTokens);
+        AppendRaw("_Player.Alert");
+        AppendRaw("(");
+        if (!string.IsNullOrEmpty(argument))
+        {
+            AppendRaw(argument);
+        }
+
+        AppendRaw(")");
         _afterDot = false;
         return true;
     }
@@ -458,6 +532,13 @@ public sealed class BlLegacyExpressionConverter
         if (string.Equals(text, "sprite", StringComparison.OrdinalIgnoreCase))
         {
             AppendRaw("Sprite");
+            _afterDot = false;
+            return;
+        }
+
+        if (string.Equals(text, "keypressed", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("_Key.KeyPressed");
             _afterDot = false;
             return;
         }
