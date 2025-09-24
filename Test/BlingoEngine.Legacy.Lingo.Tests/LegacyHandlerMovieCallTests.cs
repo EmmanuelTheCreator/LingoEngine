@@ -38,12 +38,7 @@ public class P1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
         const string expectedMovie = """
 public class M1MovieScript : BlingoMovieScript
 {
-    private readonly GlobalVars _global;
-
-    public M1MovieScript(IBlingoMovieEnvironment env, GlobalVars global) : base(env)
-    {
-        _global = global;
-    }
+    public M1MovieScript(IBlingoMovieEnvironment env) : base(env) { }
     public int MyMovieHandler()
     {
         return 42;
@@ -87,12 +82,7 @@ public class P1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
         const string expectedMovie = """
 public class M1MovieScript : BlingoMovieScript
 {
-    private readonly GlobalVars _global;
-
-    public M1MovieScript(IBlingoMovieEnvironment env, GlobalVars global) : base(env)
-    {
-        _global = global;
-    }
+    public M1MovieScript(IBlingoMovieEnvironment env) : base(env) { }
     public int MyMovieHandler()
     {
         return 42;
@@ -136,12 +126,7 @@ public class P1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
         const string expectedMovie = """
 public class M1MovieScript : BlingoMovieScript
 {
-    private readonly GlobalVars _global;
-
-    public M1MovieScript(IBlingoMovieEnvironment env, GlobalVars global) : base(env)
-    {
-        _global = global;
-    }
+    public M1MovieScript(IBlingoMovieEnvironment env) : base(env) { }
     public int MyMovieHandler()
     {
         return 42;

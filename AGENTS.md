@@ -97,3 +97,6 @@ These instructions apply to the entire repository.
 - The solution file is `BlingoEngine.sln`. But avoid using it, its big.
 - Keep cross-platform compatibility in mind when making changes.
 
+## Generated Code
+- Do **not** modify files under any `Generated/` directory. These files are produced for UI verification and should remain unchanged.
+

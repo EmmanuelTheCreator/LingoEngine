@@ -30,6 +30,7 @@ public sealed class BlLingoAnalyzer
         analyzer.AddPass(new BlLingoTypeLinkPass());
         analyzer.AddPass(new BlLingoClassLinkPass());
         analyzer.AddPass(new BlLingoHandlerCodeBlockPass());
+        analyzer.AddPass(new BlLegacyClassMemberPass());
         return analyzer;
     }
 
