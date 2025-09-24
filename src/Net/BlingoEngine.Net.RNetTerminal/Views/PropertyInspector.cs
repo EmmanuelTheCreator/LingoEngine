@@ -69,11 +69,11 @@ internal sealed class PropertyInspector : View
     public PropertyInspector()
     {
         CanFocus = true;
-        Text = "Properties";
+        //Text = "Properties";
 
         _selectionLabel = new Label
         {
-            X = 1,
+            X = 0,
             Y = 0,
             Width = Dim.Fill() - 1,
             Height = 1
@@ -92,12 +92,13 @@ internal sealed class PropertyInspector : View
 
         _contentContainer = new View
         {
-            X = 1,
+            X = 0,
             Y = 1,
-            Width = Dim.Fill() - 1,
-            Height = Dim.Fill() - 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
             ContentSizeTracksViewport = false
         };
+        _contentContainer.BorderStyle = LineStyle.None;
         var verticalScrollBar = _contentContainer.VerticalScrollBar;
         if (verticalScrollBar != null)
         {
@@ -412,17 +413,17 @@ internal sealed class PropertyInspector : View
         _contentContainer.SetContentSize(new System.Drawing.Size(width, height));
 
         var verticalScrollBar = _contentContainer.VerticalScrollBar;
-        if (verticalScrollBar != null)
-        {
-            var viewportHeight = visibleHeight > 0 ? visibleHeight : height;
-            verticalScrollBar.VisibleContentSize = viewportHeight;
-            verticalScrollBar.ScrollableContentSize = height;
-            var maxPosition = Math.Max(0, height - viewportHeight);
-            if (verticalScrollBar.Position > maxPosition)
-            {
-                verticalScrollBar.Position = maxPosition;
-            }
-        }
+        //if (verticalScrollBar != null)
+        //{
+        //    var viewportHeight = visibleHeight > 0 ? visibleHeight : height;
+        //    verticalScrollBar.VisibleContentSize = viewportHeight;
+        //    verticalScrollBar.ScrollableContentSize = height;
+        //    var maxPosition = Math.Max(0, height - viewportHeight);
+        //    if (verticalScrollBar.Position > maxPosition)
+        //    {
+        //        verticalScrollBar.Position = maxPosition;
+        //    }
+        //}
 
         _contentContainer.SetNeedsDraw();
     }
@@ -617,15 +618,18 @@ internal sealed class PropertyInspector : View
 
     private PropertySection BuildSection(string title, TableView tableView, DataTable data)
     {
-        var tableHeight = Math.Max(1, data.Rows.Count);
+        var tableHeight = Math.Max(1, data.Rows.Count+1);
         tableView.Height = tableHeight;
         tableView.Width = Dim.Fill();
 
         var container = new View
         {
-            Width = Dim.Fill(),
+            Width = Dim.Fill()-1,
             Height = tableHeight + 2
         };
+        container.BorderStyle = LineStyle.None;
+        container.HorizontalScrollBar.Enabled = false;
+        container.VerticalScrollBar.Enabled = false;
 
         var separator = new LineView(Orientation.Horizontal)
         {
@@ -713,7 +717,7 @@ internal sealed class PropertyInspector : View
         {
             Width = Dim.Fill(),
             Table = new DataTableSource(datas),
-            FullRowSelect = true
+            FullRowSelect = true,
         };
         RNetTerminalStyle.SetForTableView(tableView);
         tableView.Style.AlwaysShowHeaders = false;
@@ -723,6 +727,14 @@ internal sealed class PropertyInspector : View
         tableView.Style.ShowVerticalHeaderLines = false;
         tableView.Style.ShowVerticalCellLines = false;
         tableView.MultiSelect = false;
+        tableView.HorizontalScrollBar.Enabled = false;
+        tableView.VerticalScrollBar.Enabled = false;
+        tableView.HorizontalScrollBar.Visible = false;
+        tableView.VerticalScrollBar.Visible = false;
+        tableView.VerticalScrollBar.MouseBindings.Clear();
+        tableView.HorizontalScrollBar.MouseBindings.Clear();
+        tableView.HorizontalScrollBar.WantMousePositionReports = false;
+        tableView.ContentSizeTracksViewport = true;
         //tableView.SelectedColumn = 1;
         //tableView.SelectedCellChanged += (_, _) => tableView.SelectedColumn = 1;
         //tableView.KeyDown += (_, e) =>
@@ -732,6 +744,7 @@ internal sealed class PropertyInspector : View
         //        e.Handled = true;
         //    }
         //};
+        tableView.CanFocus = true;
         tableView.Style.ColumnStyles.Add(0, new ColumnStyle { Alignment = Alignment.Start });
         tableView.Style.ColumnStyles.Add(1, new ColumnStyle { Alignment = Alignment.End });
         return tableView;
