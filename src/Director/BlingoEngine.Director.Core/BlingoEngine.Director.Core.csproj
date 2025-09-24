@@ -35,7 +35,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\WillMoveToOwnRepo\ProjectorRays\src\ProjectorRays.DotNet\ProjectorRays.DotNet.csproj" />
     <ProjectReference Include="..\..\BlingoEngine.IO\BlingoEngine.IO.csproj" />
     <ProjectReference Include="..\..\BlingoEngine.IO.Legacy\BlingoEngine.IO.Legacy.csproj" />
     <ProjectReference Include="..\..\BlingoEngine\BlingoEngine.csproj" />

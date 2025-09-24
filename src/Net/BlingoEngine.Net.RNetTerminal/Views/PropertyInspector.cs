@@ -46,6 +46,7 @@ internal sealed class PropertyInspector : View
     private Blingo2DSpriteDTO? _sprite;
     private BlingoMemberDTO? _member;
     private string _lastTab = "Sprite";
+    private string _selectionText = ""; 
 
     public BlingoMemberDTO? CurrentMember => _member;
 
@@ -60,18 +61,16 @@ internal sealed class PropertyInspector : View
         _tabs = new TabView
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill()
+            Height = Dim.Fill(),
         };
+        if (_tabs.Border != null)
+            _tabs.Border.Thickness = new Thickness(0);
         var tabsMargin = _tabs.Margin;
         if (tabsMargin != null)
-        {
-            tabsMargin.Thickness = new Thickness(0);
-        }
+            tabsMargin.Thickness = new Thickness(-1, 0, -1, -1);
         var tabsPadding = _tabs.Padding;
         if (tabsPadding != null)
-        {
             tabsPadding.Thickness = new Thickness(0);
-        }
         _tabs.SelectedTabChanged += (_, e) =>
         {
             if (e.NewTab != null)
@@ -247,14 +246,25 @@ internal sealed class PropertyInspector : View
         var store = TerminalDataStore.Instance;
         var sprite = sel.HasValue ? store.FindSprite(sel.Value) : null;
         ShowSprite(sprite);
+        BlingoMemberDTO? member = null;
+        var memberText = ""; 
         if (sprite != null)
         {
+            member = store.FindMember(sprite.Member!.CastLibNum, sprite.Member.MemberNum);
+            if (member != null)
+                memberText = member.Name + " ("+ member.CastLibNum + "." + member.NumberInCast + ")";
             ShowMember(store.FindMember(sprite.Member!.CastLibNum, sprite.Member.MemberNum));
         }
         else
         {
             ShowMember(null);
         }
+        _selectionText = (sprite != null ? "Sprite " + sprite.SpriteNum + ": " : "") + memberText;
+    }
+    private void DrawSelectionHeader()
+    {
+        Move(2, 2);
+        AddStr(_selectionText);
     }
 
     public void ShowSprite(Blingo2DSpriteDTO? sprite)
@@ -489,8 +499,14 @@ internal sealed class PropertyInspector : View
         _tabs.SetNeedsDraw();
     }
 
-   
-
+ 
+    protected override bool OnDrawingContent()
+    {
+        // not working yet
+        var ok = base.OnDrawingContent();
+        DrawSelectionHeader();
+        return ok;
+    }
 
 
 

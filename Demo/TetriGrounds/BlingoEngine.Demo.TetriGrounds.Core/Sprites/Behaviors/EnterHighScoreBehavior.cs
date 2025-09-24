@@ -38,8 +38,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _inputText = Member<IBlingoMemberTextBase>("T_InputText")!;
             _popupTitle = Member<IBlingoMemberTextBase>("T_PopupTitle")!;
             _inputText.Text = "";
-            foreach (var sn in _spriteNums)
-                Sprite(sn).Visibility = false;
+            EnsureHidden();
         }
         /// <summary>
         /// Ensures the keyboard instance is disposed when the sprite is removed.
@@ -77,7 +76,21 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _inputText.Text = "";
             _popupTitle.Text = "New highscore! Type your name:";
             foreach (var sn in _spriteNums)
-                Sprite(sn).Visibility = true;
+            {
+                var s = Sprite(sn);
+                s.Visibility = true;
+                s.Blend = 100;
+            }
+        }
+        public void EnsureHidden()
+        {
+            foreach (var sn in _spriteNums)
+            {
+                var s = Sprite(sn);
+                s.Visibility = false;
+                s.Blend = 0;
+            }
+                
         }
 
         /// <summary>
@@ -90,6 +103,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _global.PlayerName = _keyboard.Text;
             _keyboard.Close();
             _onNameEntered?.Invoke(_name);
+
         }
 
         /// <summary>
@@ -103,8 +117,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             _keyboard.Closed -= Closed;
             _keyboard.EnterPressed -= EnterPressed;
             _keyboard = null;
-            foreach (var sn in _spriteNums)
-                Sprite(sn).Visibility = false;
+            EnsureHidden();
         }
 
         /// <summary>

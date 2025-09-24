@@ -76,7 +76,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                     NewMenuItemv2("_Quit", string.Empty, () => Application.RequestStop())
                 }),
                 new MenuBarItemv2("_Show", CreateShowMenuItems()),
-                new MenuBarItemv2("_Help", Array.Empty<MenuItemv2>())
+               // new MenuBarItemv2("_Help", Array.Empty<MenuItemv2>())
             });
             _stageBtn = NewMenuItemv2("_Stage", string.Empty, () => SwitchToStageMode());
             _castBtn = NewMenuItemv2("_Cast", string.Empty, () => SwitchToCastMode());
@@ -144,7 +144,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             var rightMargin = tv2.Margin;
             if (rightMargin != null)
             {
-                rightMargin.Thickness = new Thickness(0);
+                rightMargin.Thickness = new Thickness(-1,-1,0,-1);
             }
             var rightPadding = tv2.Padding;
             if (rightPadding != null)
@@ -157,7 +157,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
 
             tv.LineStyle = LineStyle.Single;
             tv2.LineStyle = LineStyle.Single;
-            tv2.Tiles.ElementAt(0).Title = "Property Inspector";
+            //tv2.Tiles.ElementAt(0).Title = "Property Inspector";
             tv2.Tiles.ElementAt(0).ContentView!.Add(_propInsp);
             tv2.Tiles.ElementAt(1).Title = "Log";
             tv2.Tiles.ElementAt(1).ContentView!.Add(logs);
