@@ -1,0 +1,26 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="BlingoPacMan"
+run/main_scene="uid://buwi1sr5gkbae"
+config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
+boot_splash/show_image=false
+
+[dotnet]
+
+project/assembly_name="Blingo.PacMan.Godot"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+2d/snap/snap_2d_transforms_to_pixel=true

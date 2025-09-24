@@ -7,7 +7,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core
     /// <summary>
     /// Defines the minimal contract for game state orchestration that the TetriGrounds demo expects.
     /// </summary>
-    public interface IArkCore
+    public interface ITetriGroundsCore
     {
         /// <summary>
         /// Resets any transient state created while the game was running. The original Lingo project
@@ -19,7 +19,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core
     /// <summary>
     /// Default implementation that currently acts as a placeholder while the original behaviour is ported.
     /// </summary>
-    internal class TetriGroundsCore : IArkCore
+    internal class TetriGroundsCore : ITetriGroundsCore
     {
         private readonly GlobalVars _global;
 
