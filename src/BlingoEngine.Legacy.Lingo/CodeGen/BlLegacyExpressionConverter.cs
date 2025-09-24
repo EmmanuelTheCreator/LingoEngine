@@ -145,6 +145,7 @@ public sealed class BlLegacyExpressionConverter
                 TryHandleScriptInstantiation() ||
                 TryHandleValueFunction() ||
                 TryHandleAlertCommand() ||
+                TryHandleGoToCurrentFrame() ||
                 TryHandleMemberTypedAccess() ||
                 TryHandleListLiteral() ||
                 TryHandleTheKeywords())
@@ -346,6 +347,42 @@ public sealed class BlLegacyExpressionConverter
         }
 
         AppendRaw(")");
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleGoToCurrentFrame()
+    {
+        if (_index >= _tokens.Count || !IsIdentifier(_tokens[_index], "go"))
+        {
+            return false;
+        }
+
+        var lookahead = 1;
+        if (_index + lookahead >= _tokens.Count || !IsIdentifier(_tokens[_index + lookahead], "to"))
+        {
+            return false;
+        }
+
+        lookahead++;
+        if (_index + lookahead < _tokens.Count && IsIdentifier(_tokens[_index + lookahead], "the"))
+        {
+            lookahead++;
+        }
+
+        if (_index + lookahead >= _tokens.Count || !IsIdentifier(_tokens[_index + lookahead], "frame"))
+        {
+            return false;
+        }
+
+        lookahead++;
+        if (_index + lookahead < _tokens.Count && !ContainsNewLine(_tokens[_index + lookahead].LeadingTrivia))
+        {
+            return false;
+        }
+
+        AppendRaw("_Movie.GoTo(_Movie.CurrentFrame)");
+        _index += lookahead;
         _afterDot = false;
         return true;
     }
@@ -699,6 +736,30 @@ public sealed class BlLegacyExpressionConverter
         }
 
         return true;
+    }
+
+    private static bool IsIdentifier(BlSyntaxToken token, string value)
+    {
+        return token.Kind is BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken &&
+            string.Equals(token.ValueText, value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ContainsNewLine(IReadOnlyList<BlSyntaxTrivia> trivia)
+    {
+        if (trivia is null)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < trivia.Count; index++)
+        {
+            if (trivia[index].Kind == BlSyntaxKind.NewLineTrivia)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string ResolveClassName(IReadOnlyList<BlSyntaxToken> tokens)
