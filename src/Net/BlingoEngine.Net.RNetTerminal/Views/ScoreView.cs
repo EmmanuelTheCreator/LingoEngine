@@ -58,6 +58,9 @@ internal sealed class ScoreView : View
     private int _dragOffset;
     private int _dragOriginalStart;
     private int _dragLength;
+    private bool _showFirstBehavior;
+    private bool _showMemberName;
+    private bool _showSpriteName = true;
 
     public Rectangle Bounds => Viewport;
     public Point ContentOffset {
@@ -103,6 +106,51 @@ internal sealed class ScoreView : View
     public event System.Action<int, int, SpriteRef?, BlingoMemberRefDTO?>? InfoChanged;
 
     public void RequestRedraw() => SetNeedsDraw();
+
+    public bool ShowFirstBehavior
+    {
+        get => _showFirstBehavior;
+        set
+        {
+            if (_showFirstBehavior == value)
+            {
+                return;
+            }
+
+            _showFirstBehavior = value;
+            SetNeedsDraw();
+        }
+    }
+
+    public bool ShowMemberName
+    {
+        get => _showMemberName;
+        set
+        {
+            if (_showMemberName == value)
+            {
+                return;
+            }
+
+            _showMemberName = value;
+            SetNeedsDraw();
+        }
+    }
+
+    public bool ShowSpriteName
+    {
+        get => _showSpriteName;
+        set
+        {
+            if (_showSpriteName == value)
+            {
+                return;
+            }
+
+            _showSpriteName = value;
+            SetNeedsDraw();
+        }
+    }
     public void ReloadData()
     {
 
@@ -235,6 +283,24 @@ internal sealed class ScoreView : View
                     return true;
                 case Terminal.Gui.Drivers.KeyCode.CursorRight:
                     MoveCursor(step, 0);
+                    return true;
+                case Terminal.Gui.Drivers.KeyCode.PageUp:
+                    MoveCursor(0, -System.Math.Max(1, GetVisibleChannelCount()));
+                    return true;
+                case Terminal.Gui.Drivers.KeyCode.PageDown:
+                    MoveCursor(0, System.Math.Max(1, GetVisibleChannelCount()));
+                    return true;
+                case Terminal.Gui.Drivers.KeyCode.Home:
+                    if (FrameCount > 0)
+                    {
+                        MoveCursor(-_cursorFrame, 0);
+                    }
+                    return true;
+                case Terminal.Gui.Drivers.KeyCode.End:
+                    if (FrameCount > 0)
+                    {
+                        MoveCursor(FrameCount - 1 - _cursorFrame, 0);
+                    }
                     return true;
                 case Terminal.Gui.Drivers.KeyCode.Enter:
                     ShowActionMenu();
@@ -413,10 +479,8 @@ internal sealed class ScoreView : View
 
     private void ClampContentOffset(ref Point offset)
     {
-        var scrollBarWidth = VerticalScrollBar.Visible ? 1 : 0;
-        var scrollBarHeight = VerticalScrollBar.Visible ? 1 : 0;
-        var visibleFrames = System.Math.Max(0, Bounds.Width - _labelWidth - scrollBarWidth);
-        var visibleChannels = System.Math.Max(0, Bounds.Height - 1 - scrollBarHeight);
+        var visibleFrames = System.Math.Max(0, GetVisibleFrameCount());
+        var visibleChannels = System.Math.Max(0, GetVisibleChannelCount());
         var maxX = System.Math.Max(0, FrameCount - visibleFrames);
         var maxY = System.Math.Max(0, TotalChannels - visibleChannels);
         offset.X = System.Math.Clamp(offset.X, 0, maxX);
@@ -433,6 +497,18 @@ internal sealed class ScoreView : View
     private Point GetOffset() => new(ContentOffset.X, ContentOffset.Y);
 
     private void SetOffset(Point offset)  => ContentOffset = new Point(offset.X, offset.Y);
+
+    private int GetVisibleFrameCount()
+    {
+        var scrollBarWidth = VerticalScrollBar.Visible ? 1 : 0;
+        return System.Math.Max(0, Bounds.Width - _labelWidth - scrollBarWidth);
+    }
+
+    private int GetVisibleChannelCount()
+    {
+        var scrollBarHeight = HorizontalScrollBar.Visible ? 1 : 0;
+        return System.Math.Max(0, Bounds.Height - 1 - scrollBarHeight);
+    }
 
     private void MoveCursor(int dx, int dy)
     {
@@ -452,10 +528,8 @@ internal sealed class ScoreView : View
 
     private void EnsureVisible()
     {
-        var scrollBarWidth = VerticalScrollBar.Visible ? 1 : 0;
-        var scrollBarHeight = VerticalScrollBar.Visible ? 1 : 0;
-        var visibleFrames = System.Math.Max(0, Bounds.Width - _labelWidth - scrollBarWidth);
-        var visibleChannels = System.Math.Max(0, Bounds.Height - 1 - scrollBarHeight);
+        var visibleFrames = System.Math.Max(0, GetVisibleFrameCount());
+        var visibleChannels = System.Math.Max(0, GetVisibleChannelCount());
         var offset = GetOffset();
         if (_cursorFrame < offset.X)
         {
@@ -507,8 +581,8 @@ internal sealed class ScoreView : View
 
         
         SetColorsSchemaNormal();
-        var visibleFrames = System.Math.Max(0, w - _labelWidth);
-        var visibleChannels = System.Math.Max(0, h );
+        var visibleFrames = System.Math.Max(0, GetVisibleFrameCount());
+        var visibleChannels = System.Math.Max(0, GetVisibleChannelCount());
         var posOffset = GetOffset();
         var offsetX = posOffset.X;
         var offsetY = posOffset.Y;
@@ -567,6 +641,7 @@ internal sealed class ScoreView : View
             }
         }
 
+        var store = TerminalDataStore.Instance;
         foreach (var sprite in _sprites)
         {
             var channelIdx = sprite.Channel - 1 + SpecialChannels.Length;
@@ -588,17 +663,27 @@ internal sealed class ScoreView : View
                 Move(_labelWidth + f - offsetX, y);
                 AddRune(' ');
             }
-            var member = TerminalDataStore.Instance.FindMember(sprite.CastLib, sprite.MemberNum);
-            if (member != null && member.Type == BlingoMemberTypeDTO.Text)
+            var member = store.FindMember(sprite.CastLib, sprite.MemberNum);
+            var label = GetSpriteLabel(sprite, member);
+            if (!string.IsNullOrEmpty(label))
             {
-                var maxChars = System.Math.Max(1, (int)(sprite.Width / _stageWidth * (end - start + 1)));
-                var text = member.Name;
-                var len = System.Math.Min(text.Length, System.Math.Min(maxChars, end - start + 1));
-                SetAttribute(new Attribute(ColorName16.Black, bg));
-                for (var i = 0; i < len; i++)
+                var available = System.Math.Max(0, end - start + 1);
+                if (available > 0)
                 {
-                    Move(_labelWidth + start + i - offsetX, y);
-                    AddRune(text[i]);
+                    var maxChars = available;
+                    if (_stageWidth > 0 && sprite.Width > 0)
+                    {
+                        var estimated = (int)System.Math.Max(1, sprite.Width / _stageWidth * available);
+                        maxChars = System.Math.Min(estimated, available);
+                    }
+
+                    var len = System.Math.Min(label.Length, maxChars);
+                    SetAttribute(new Attribute(ColorName16.Black, bg));
+                    for (var i = 0; i < len; i++)
+                    {
+                        Move(_labelWidth + start + i - offsetX, y);
+                        AddRune(label[i]);
+                    }
                 }
             }
             SetAttribute(new Attribute(ColorName16.Black, bg));
@@ -921,6 +1006,46 @@ internal sealed class ScoreView : View
     public void TriggerInfo() => NotifyInfoChanged();
 
     public event System.Action<int>? PlayFromHere;
+
+    private string? GetSpriteLabel(SpriteBlock sprite, BlingoMemberDTO? member)
+    {
+        var parts = new List<string>();
+        var seen = new HashSet<string>(System.StringComparer.Ordinal);
+
+        if (_showFirstBehavior)
+        {
+            var behaviorName = sprite.Sprite.Behaviors.FirstOrDefault()?.Name;
+            if (!string.IsNullOrWhiteSpace(behaviorName) && seen.Add(behaviorName))
+            {
+                parts.Add(behaviorName);
+            }
+        }
+
+        if (_showMemberName && member != null)
+        {
+            var memberName = member.Name;
+            if (!string.IsNullOrWhiteSpace(memberName) && seen.Add(memberName))
+            {
+                parts.Add(memberName);
+            }
+        }
+
+        if (_showSpriteName)
+        {
+            var spriteName = sprite.Sprite.Name;
+            if (!string.IsNullOrWhiteSpace(spriteName) && seen.Add(spriteName))
+            {
+                parts.Add(spriteName);
+            }
+        }
+
+        if (parts.Count == 0)
+        {
+            return null;
+        }
+
+        return string.Join(" • ", parts);
+    }
 
     private sealed class SpecialSpriteBlock
     {

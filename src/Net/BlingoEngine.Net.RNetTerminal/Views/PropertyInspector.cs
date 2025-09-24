@@ -227,6 +227,23 @@ internal sealed class PropertyInspector : View
                 ShowMember(m);
             }
         };
+        store.SpriteChanged += sprite =>
+        {
+            var current = _sprite;
+            if (current == null)
+            {
+                return;
+            }
+
+            if (sprite.SpriteNum == current.SpriteNum && sprite.BeginFrame == current.BeginFrame)
+            {
+                ShowSprite(sprite);
+                if (sprite.Member != null)
+                {
+                    ShowMember(store.FindMember(sprite.Member.CastLibNum, sprite.Member.MemberNum));
+                }
+            }
+        };
     }
   
 
