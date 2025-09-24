@@ -44,6 +44,8 @@ public class PacManProjectFactory : IBlingoProjectFactory
                 .ServicesBlingo(s => s
                     .AddSingleton<IPacManCore, PacManCore>()
                     .AddSingleton<IBonusesModel, BonusesModel>()
+                    .AddSingleton<IGameModelRepository, GameModelRepository>()
+                    .AddSingleton<IGameModel, GameModel>()
                     )
                 ;
     }
