@@ -81,9 +81,7 @@ internal sealed class ScoreView : View
         {
             Normal = new Attribute(ColorName16.White, ColorName16.DarkGray)
         });
-        //ContentSize = new Size(FrameCount + _labelWidth, TotalChannels + 1);
-        Width = FrameCount + _labelWidth;
-        Height = TotalChannels + 1;
+        SetContentSize(new Size(FrameCount + _labelWidth, TotalChannels + 1));
         HorizontalScrollBar.Visible = true;
         VerticalScrollBar.Visible = true;
         var store = TerminalDataStore.Instance;
@@ -108,8 +106,6 @@ internal sealed class ScoreView : View
 
         var store = TerminalDataStore.Instance;
         _stageWidth = store.StageWidth;
-        Width = FrameCount + _labelWidth;
-        Height = TotalChannels + 1;
         _sprites.Clear();
         _sprites.AddRange(store.GetSprites()
             .Select(s => new SpriteBlock(s, s.SpriteNum, s.BeginFrame, s.EndFrame, s.SpriteNum, s.Member != null? s.Member.CastLibNum: 0, s.Member != null? s.Member.MemberNum:0, s.Width)));
@@ -156,9 +152,7 @@ internal sealed class ScoreView : View
                 : sound.Name;
             AddSpecialSprite(idx, sound.BeginFrame, sound.EndFrame, label ?? string.Empty, ColorName16.Yellow);
         }
-        //ContentSize = new Size(FrameCount + _labelWidth, TotalChannels + 1);
-        Width = FrameCount + _labelWidth;
-        Height = TotalChannels + 1;
+        SetContentSize(new Size(FrameCount + _labelWidth, TotalChannels + 1));
         SetNeedsDraw();
     }
 
@@ -300,6 +294,22 @@ internal sealed class ScoreView : View
 
                     _dragCandidate = null;
                 }
+            }
+
+            var isFrameBar = inContent && me.Position.Y == 0;
+            if (isFrameBar && me.Flags.HasFlag(MouseFlags.Button1Clicked))
+            {
+                if (frame >= 0 && frame < FrameCount)
+                {
+                    _cursorFrame = frame;
+                    EnsureVisible();
+                    SetNeedsDraw();
+                    NotifyInfoChanged();
+                    PlayFromHere?.Invoke(_cursorFrame + 1);
+                }
+                SetFocus();
+                ClampContentOffset();
+                return true;
             }
 
             if (inContent && me.Flags.HasFlag(MouseFlags.Button1Clicked))
