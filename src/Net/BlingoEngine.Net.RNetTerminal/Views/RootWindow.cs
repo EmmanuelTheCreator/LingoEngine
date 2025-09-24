@@ -106,11 +106,41 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 Orientation = Orientation.Vertical,
                 BorderStyle = LineStyle.None
             };
+            var tvMargin = tv.Margin;
+            if (tvMargin != null)
+            {
+                tvMargin.Thickness = new Thickness(0);
+            }
+            var tvPadding = tv.Padding;
+            if (tvPadding != null)
+            {
+                tvPadding.Thickness = new Thickness(0);
+            }
             RNetTerminalStyle.SetTileViewSchema(tv);
             tv.Border!.Width = 0;
             tv.Border.Visible = false;
             tv.TrySplitTile(0, 2, out var tvLeft);
             tv.TrySplitTile(1, 2, out var tv2);
+            var leftMargin = tvLeft.Margin;
+            if (leftMargin != null)
+            {
+                leftMargin.Thickness = new Thickness(0);
+            }
+            var leftPadding = tvLeft.Padding;
+            if (leftPadding != null)
+            {
+                leftPadding.Thickness = new Thickness(0);
+            }
+            var rightMargin = tv2.Margin;
+            if (rightMargin != null)
+            {
+                rightMargin.Thickness = new Thickness(0);
+            }
+            var rightPadding = tv2.Padding;
+            if (rightPadding != null)
+            {
+                rightPadding.Thickness = new Thickness(0);
+            }
 
             _score = BuildScoreWindow();
             _stage = BuildStageWindow();
@@ -175,6 +205,23 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             {
                 Log($"Play from {f}");
                 QueueGoToFrame(f, force: true);
+                if (!_isMoviePlaying)
+                {
+                    var store = TerminalDataStore.Instance;
+                    if (store.ApplyLocalChanges)
+                    {
+                        ToggleLocalPlayback(true);
+                    }
+                    else
+                    {
+                        SendMovieCommand(new ResumeCmd());
+                        var state = store.MovieState;
+                        if (!state.IsPlaying || state.Frame != f)
+                        {
+                            store.UpdateMovieState(state with { Frame = f, IsPlaying = true });
+                        }
+                    }
+                }
             };
             scoreView.InfoChanged += (f, ch, sp, mem) =>
             {
@@ -397,6 +444,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             }
 
             SendMovieCommand(new RewindCmd());
+            ToggleLocalPlayback(false);
         }
 
         private void OnPlayPauseClicked()
