@@ -90,6 +90,27 @@ public class MyParentParent : BlingoParentScript
     }
 
     [Fact]
+    public void Constructor_IncludesNewHandlerParameters()
+    {
+        const string source = "on new me, _Gfx, ChosenType\nend";
+        var code = _generator.GenerateClass("MyParent", source, BlLingoScriptKind.Parent);
+
+        Assert.Contains(
+            "public MyParentParent(IBlingoMovieEnvironment env, object _Gfx, object ChosenType) : base(env) { }",
+            code);
+        Assert.Contains("public void New(object _Gfx, object ChosenType)", code);
+    }
+
+    [Fact]
+    public void ExitFrameWithMeParameter_UsesCurrentFrame()
+    {
+        const string source = "on exitFrame me\n  go to the frame\nend";
+        var code = _generator.GenerateClass("Stopper", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("_Movie.GoTo(_Movie.CurrentFrame);", code);
+    }
+
+    [Fact]
     public void Properties_InferTypesFromMemberAccess()
     {
         const string source = """
