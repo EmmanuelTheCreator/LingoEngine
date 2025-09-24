@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BlingoEngine.Movies;
+using BlingoEngine.Movies.Events;
 
 namespace Blingo.PacMan.Core;
 
@@ -9,7 +10,7 @@ namespace Blingo.PacMan.Core;
 /// class keeps the overall structure – mode transitions, frightened timers and score progression –
 /// while adapting the movement logic to the <see cref="BlPacManCharacter"/> abstraction.
 /// </summary>
-internal class GhostCharacter : BlPacManCharacter
+internal class GhostCharacter : BlPacManCharacter, IHasExitFrameEvent
 {
     private const float DeadSpeed = 130f;
 
@@ -41,6 +42,7 @@ internal class GhostCharacter : BlPacManCharacter
     private float _spawnX;
     private float _spawnY;
     private bool _spawnCaptured;
+    private bool _deadPrepareEnter;
     private bool _housePrepareExit;
     private bool _turnBack;
     private bool _eatEvent;
@@ -119,6 +121,10 @@ internal class GhostCharacter : BlPacManCharacter
         {
             OnExitMode();
         }
+        else if (CurrentMode == GhostMode.Dead)
+        {
+            HandleDeadMovement(direction);
+        }
         else if (CurrentMode == GhostMode.House)
         {
             HandleHouseMovement();
@@ -129,6 +135,11 @@ internal class GhostCharacter : BlPacManCharacter
         }
 
         CheckCollisionWithPacMan();
+    }
+
+    public void ExitFrame()
+    {
+        Move();
     }
 
     public void SetMode(GhostMode? mode)
@@ -218,6 +229,7 @@ internal class GhostCharacter : BlPacManCharacter
         switch (mode)
         {
             case GhostMode.Dead:
+                _deadPrepareEnter = false;
                 SetAnimation($"score{Score}");
                 Update();
                 break;
@@ -272,6 +284,66 @@ internal class GhostCharacter : BlPacManCharacter
             GhostMode.House => Equals(GetTile(), _houseExitTile?.GetUp()),
             _ => _globalMode is GhostMode global && CurrentMode != global,
         };
+    }
+
+    private void HandleDeadMovement(PacManDirection direction)
+    {
+        var tile = GetTile();
+        if (tile is null)
+        {
+            base.Move(direction);
+            return;
+        }
+
+        var deadTarget = _deadTarget;
+        if (!_deadPrepareEnter && deadTarget is not null && ReferenceEquals(tile, deadTarget))
+        {
+            _deadPrepareEnter = true;
+        }
+
+        if (_deadPrepareEnter)
+        {
+            var endX = _deadEndX;
+            var endY = _deadEndY;
+
+            var tileWidth = Map.TileWidth;
+            if (Y < endY && deadTarget is not null && tileWidth > 0)
+            {
+                endX = deadTarget.CenterX - tileWidth / 2f;
+            }
+
+            if (Math.Abs(X - endX) > float.Epsilon)
+            {
+                var dir = X < endX ? PacManDirection.Right : PacManDirection.Left;
+                ForceDirection(dir);
+            }
+            else if (Y < endY)
+            {
+                ForceDirection(PacManDirection.Down);
+            }
+
+            var step = GetStepSize();
+
+            switch (Direction)
+            {
+                case PacManDirection.Down:
+                    Y += MathF.Min(step, endY - Y);
+                    break;
+                case PacManDirection.Right:
+                    X += MathF.Min(step, endX - X);
+                    break;
+                case PacManDirection.Left:
+                    X -= MathF.Min(step, X - endX);
+                    break;
+            }
+
+            SetNextAnimation();
+            Update();
+        }
+        else
+        {
+            base.Move(direction);
+        }
     }
 
     private void HandleHouseMovement()
