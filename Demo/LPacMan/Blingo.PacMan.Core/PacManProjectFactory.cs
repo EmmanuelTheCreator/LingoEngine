@@ -1,12 +1,16 @@
-﻿using BlingoEngine.Casts;
-using BlingoEngine.Core;
+﻿using System;
+using System.IO;
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Sprites.Behaviors;
+using BlingoEngine.Bitmaps;
+using BlingoEngine.Casts;
+using BlingoEngine.Core;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Projects;
 using BlingoEngine.Setup;
+using BlingoEngine.Sounds;
 using BlingoEngine.Sprites;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -141,7 +145,69 @@ public class PacManProjectFactory : IBlingoProjectFactory
     /// </summary>
     public void InitMembers(BlingoPlayer player)
     {
-      
+        if (player is null)
+        {
+            throw new ArgumentNullException(nameof(player));
+        }
+
+        var dataCast = player.CastLib("Data");
+        if (dataCast is null)
+        {
+            return;
+        }
+
+        // The original Director project stored registration points on each bitmap so the
+        // timeline coordinates line up with the hand-authored stage layout. We no longer
+        // have that metadata, so we preload each sheet and explicitly assign the anchors
+        // that the JavaScript remake expected. Large background images use a top-left
+        // registration point because the Lingo score positioned them by absolute offsets,
+        // while character sheets keep a centred registration point so sub-rect selections
+        // remain anchored in the middle of the sprite.
+        void ConfigureBitmap(string memberName, Func<BlingoMemberBitmap, APoint> regPointFactory)
+        {
+            var member = dataCast.GetMember<BlingoMemberBitmap>(memberName);
+            if (member is null)
+            {
+                return;
+            }
+
+            member.Preload();
+            member.RegPoint = regPointFactory(member);
+        }
+
+        var backgroundMembers = new[] { "start", "maze", "maze-1", "maze-2", "maze-3", "maze-4" };
+        foreach (var name in backgroundMembers)
+        {
+            // Background bitmaps were positioned via raw offsets in Director, so we keep
+            // the registration point at the top-left corner. This mirrors the coordinate
+            // system from the score where the first pixel sits at (0,0).
+            ConfigureBitmap(name, _ => new APoint(0f, 0f));
+        }
+
+        var centredSheets = new[] { "characters", "misc", "mspacman", "pills", "sprites" };
+        foreach (var name in centredSheets)
+        {
+            // Sprite sheets were trimmed in the original authoring tool with the reg point
+            // centred on each frame. We mimic that behaviour by centring the registration
+            // point on the full sheet. Individual sprite source rectangles stay aligned
+            // around their mid-points which matches the JavaScript remake's math.
+            ConfigureBitmap(name, m => new APoint(m.Width / 2f, m.Height / 2f));
+        }
+
+        var soundsCast = player.CastLib("Sounds");
+        if (soundsCast is null)
+        {
+            return;
+        }
+
+        // The original score looped the backing track on channel 1 so the attract screen
+        // ambience keeps running. Matching that behaviour here prevents the music from
+        // stopping after the first play-through.
+        var backgroundSound = soundsCast.GetMember<BlingoMemberSound>("S_back");
+        if (backgroundSound is not null)
+        {
+            backgroundSound.Loop = true;
+        }
     }
 
     /// <summary>
