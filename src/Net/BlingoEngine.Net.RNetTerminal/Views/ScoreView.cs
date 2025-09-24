@@ -112,6 +112,7 @@ internal sealed class ScoreView : View
         get => _showFirstBehavior;
         set
         {
+
             if (value)
             {
                 if (_showFirstBehavior && !_showMemberName && !_showSpriteName)
@@ -139,6 +140,7 @@ internal sealed class ScoreView : View
                 _showFirstBehavior = false;
                 SetNeedsDraw();
             }
+
         }
     }
 
@@ -147,6 +149,7 @@ internal sealed class ScoreView : View
         get => _showMemberName;
         set
         {
+
             if (value)
             {
                 if (_showMemberName && !_showFirstBehavior && !_showSpriteName)
@@ -174,6 +177,7 @@ internal sealed class ScoreView : View
                 _showMemberName = false;
                 SetNeedsDraw();
             }
+
         }
     }
 
@@ -182,6 +186,7 @@ internal sealed class ScoreView : View
         get => _showSpriteName;
         set
         {
+
             if (value)
             {
                 if (_showSpriteName && !_showFirstBehavior && !_showMemberName)
