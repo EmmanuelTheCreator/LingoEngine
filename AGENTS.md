@@ -33,6 +33,7 @@ These instructions apply to the entire repository.
 - Do not remove existing comments from code.
 - When writing new classes, place members in the order: fields, then properties, then constructors.
 - Avoid adding business logic or default implementations inside interfaces to preserve .NET Framework 4.8 compatibility.
+- When introducing new reusable test utilities or fakes, place their implementations under the test project's `/Fakes/` directory so future tests can consume them.
 
 ## Project Structure
 
