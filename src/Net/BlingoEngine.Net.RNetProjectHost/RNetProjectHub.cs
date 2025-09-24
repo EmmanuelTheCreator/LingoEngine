@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using BlingoEngine.Core;
 using BlingoEngine.Net.RNetContracts;
 using BlingoEngine.IO;
@@ -18,6 +20,22 @@ public sealed class BlingoRNetProjectHub : Hub
     private readonly IBlingoPlayer _player;
     private readonly ILogger<BlingoRNetProjectHub> _logger;
     private static readonly ConcurrentDictionary<string, DateTime> _heartbeats = new();
+
+    private static readonly JsonSerializerOptions _commandSerializerOptions = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    private static readonly IReadOnlyDictionary<string, Type> _commandTypes = new Dictionary<string, Type>(StringComparer.Ordinal)
+    {
+        [nameof(SetSpritePropCmd)] = typeof(SetSpritePropCmd),
+        [nameof(SetMemberPropCmd)] = typeof(SetMemberPropCmd),
+        [nameof(SetCastPropCmd)] = typeof(SetCastPropCmd),
+        [nameof(GoToFrameCmd)] = typeof(GoToFrameCmd),
+        [nameof(RewindCmd)] = typeof(RewindCmd),
+        [nameof(PauseCmd)] = typeof(PauseCmd),
+        [nameof(ResumeCmd)] = typeof(ResumeCmd)
+    };
 
     /// <summary>Initializes a new instance of the <see cref="BlingoRNetProjectHub"/> class.</summary>
     public BlingoRNetProjectHub(IRNetProjectBus bus, IBlingoPlayer player, ILogger<BlingoRNetProjectHub> logger)
@@ -42,9 +60,43 @@ public sealed class BlingoRNetProjectHub : Hub
     /// <summary>
     /// Receives a command from a client.
     /// </summary>
-    public Task SendCommand(RNetCommand cmd)
+    public Task SendCommand(JsonElement payload)
     {
-        _bus.Commands.Writer.TryWrite(cmd);
+        if (!payload.TryGetProperty("type", out var typeProperty) || typeProperty.ValueKind != JsonValueKind.String)
+        {
+            throw new HubException("Command payload missing type discriminator.");
+        }
+
+        var typeName = typeProperty.GetString();
+        if (string.IsNullOrWhiteSpace(typeName) || !_commandTypes.TryGetValue(typeName, out var commandType))
+        {
+            throw new HubException($"Unknown command type '{typeName}'.");
+        }
+
+        if (!payload.TryGetProperty("payload", out var payloadProperty))
+        {
+            throw new HubException("Command payload missing payload body.");
+        }
+
+        try
+        {
+            if (payloadProperty.Deserialize(commandType, _commandSerializerOptions) is not IRNetCommand cmd)
+            {
+                throw new HubException($"Command payload could not be deserialized as '{typeName}'.");
+            }
+
+            _bus.Commands.Writer.TryWrite(cmd);
+        }
+        catch (HubException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to deserialize command payload for type {Type}", typeName);
+            throw new HubException($"Command payload could not be deserialized as '{typeName}'.", ex);
+        }
+
         return Task.CompletedTask;
     }
 
