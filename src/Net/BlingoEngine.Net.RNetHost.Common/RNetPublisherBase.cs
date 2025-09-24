@@ -414,6 +414,7 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
                 _spriteQueue.TryRemove(key, out _);
             }
         }
+
     }
 
     private void TryFlushSpriteDelta((int SpriteNum, int BeginFrame) key)
@@ -466,6 +467,7 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
         {
             _stageQueue.TryRemove(key, out _);
         }
+
     }
 }
 
