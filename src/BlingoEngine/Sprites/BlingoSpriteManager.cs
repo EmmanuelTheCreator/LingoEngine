@@ -390,6 +390,10 @@ namespace BlingoEngine.Sprites
         }
 
 
+        /// <summary>
+        /// Raises <c>beginSprite</c> for sprites entering the current frame before
+        /// <c>stepFrame</c>/<c>prepareFrame</c>/<c>enterFrame</c> handlers are dispatched.
+        /// </summary>
         internal override void BeginSprites()
         {
             foreach (var sprite in _enteredSprites)
@@ -397,6 +401,9 @@ namespace BlingoEngine.Sprites
         }
         protected virtual void OnBeginSprite(TSprite sprite) => sprite.DoBeginSprite();
 
+        /// <summary>
+        /// Runs after <c>exitFrame</c> so sprites can clean up during their <c>endSprite</c> handlers.
+        /// </summary>
         internal override void EndSprites()
         {
             foreach (var sprite in _exitedSprites)

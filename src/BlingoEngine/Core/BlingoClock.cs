@@ -6,6 +6,7 @@
     public interface IBlingoClockListener
     {
         void OnTick();
+        void OnIdle(float deltaTime);
     }
     /// <summary>
     /// Lingo Clock interface.
@@ -38,12 +39,28 @@
             _accumulatedTime += deltaTime;
             float frameTime = 1f / FrameRate;
 
+            int framesDispatched = 0;
             while (_accumulatedTime >= frameTime)
             {
                 foreach (var l in _listeners) l.OnTick();
                 EngineTickCount++;
-
+                framesDispatched++;
                 _accumulatedTime -= frameTime;
+            }
+
+            if (framesDispatched == 0)
+            {
+                if (deltaTime > 0f)
+                {
+                    foreach (var listener in _listeners)
+                        listener.OnIdle(deltaTime);
+                }
+            }
+            else if (_accumulatedTime > 0f)
+            {
+                var idleDelta = _accumulatedTime;
+                foreach (var listener in _listeners)
+                    listener.OnIdle(idleDelta);
             }
         }
 

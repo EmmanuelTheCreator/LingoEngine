@@ -156,6 +156,10 @@ namespace BlingoEngine.Sprites
 
 
 
+        /// <summary>
+        /// Invoked when <c>beginSprite</c> fires, before any <c>stepFrame</c>,
+        /// <c>prepareFrame</c> or <c>enterFrame</c> handlers run.
+        /// </summary>
         internal virtual void DoBeginSprite()
         {
             if (InitialState != null)
@@ -173,8 +177,12 @@ namespace BlingoEngine.Sprites
 
             BeginSprite();
         }
+        /// <summary>Override to respond to the sprite's <c>beginSprite</c> event.</summary>
         protected virtual void BeginSprite() { }
 
+        /// <summary>
+        /// Invoked after <c>exitFrame</c> once the sprite is about to leave the stage.
+        /// </summary>
         internal virtual void DoEndSprite()
         {
 
@@ -186,6 +194,7 @@ namespace BlingoEngine.Sprites
             }
             EndSprite();
         }
+        /// <summary>Override to respond to the sprite's <c>endSprite</c> event.</summary>
         protected virtual void EndSprite() { }
         public virtual string GetFullName() => $"{SpriteNum}.{Name}";
 
