@@ -65,8 +65,10 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
         /// </summary>
         public void BeginSprite()
         {
+            if (!Sprite(myDataSpriteNum).HasSprite()) return;
             if (myValue == -1 || myValue < myStartMembernum || myValue > myEndMembernum)
             {
+                
                 myValue = SendSprite<IHasCounterStartData,int>(myDataSpriteNum, s => s.GetCounterStartData(myDataName));
                 if (myValue <= 0) myValue = 0;
                 if (myValue < myStartMembernum || myValue> myEndMembernum)

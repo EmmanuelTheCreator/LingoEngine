@@ -179,8 +179,8 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             scoreView.InfoChanged += (f, ch, sp, mem) =>
             {
                 UpdateInfo(f, ch, sp, mem);
-                TerminalDataStore.Instance.SetFrame(f);
-                QueueGoToFrame(f, force: true);
+                //TerminalDataStore.Instance.SetFrame(f);
+                //QueueGoToFrame(f, force: true);
             };
             return scoreView;
         }

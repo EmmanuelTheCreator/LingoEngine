@@ -53,12 +53,14 @@ namespace BlingoEngine.LGodot.Movies
                 TransparentBg = false,
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
                 RenderTargetClearMode = SubViewport.ClearMode.Always,
+                
             };
 
             _bg = new ColorRect
             {
                 Color = Colors.Black,
-                Size = new Vector2(300, 300)
+                Size = new Vector2(300, 300),
+                CustomMinimumSize = new Vector2(300, 300)
             };
             _stageSVC = new SubViewportContainer { Stretch = true, Name = "StageView" };
             AddChild(_stageSVC);
@@ -106,15 +108,18 @@ namespace BlingoEngine.LGodot.Movies
             _blingoStage = blingoInstance;
             _player = blingoPlayer;
             _bg.Color = blingoInstance.BackgroundColor.ToGodotColor();
+            var size = new Vector2I((int)_blingoStage.Width, (int)_blingoStage.Height);
+            _stageSV.Size = size;
             UpdateSize();
         }
 
         public void UpdateSize()
         {
-            _stageSV.Size = new Vector2I((int)_blingoStage.Width, (int)_blingoStage.Height);
-            _stageSVC.CustomMinimumSize = new Vector2(_blingoStage.Width, _blingoStage.Height);
-            _bg.Size = new Vector2(_blingoStage.Width, _blingoStage.Height);
-            _bg.CustomMinimumSize = new Vector2(_blingoStage.Width, _blingoStage.Height);
+            var size = new Vector2I((int)_blingoStage.Width, (int)_blingoStage.Height);
+            
+            _stageSVC.CustomMinimumSize = size;
+            _bg.Size = size;
+            _bg.CustomMinimumSize = size;
             var center = new Vector2(BlingoStage.Width / 2f, BlingoStage.Height / 2f);
             _transitionStartSprite.Position = center;
             _transitionSprite.Position = center;
@@ -128,6 +133,7 @@ namespace BlingoEngine.LGodot.Movies
             {
                 _spriteLayer.AddChild(node);
             }
+            UpdateSize();
         }
 
         internal void HideMovie(BlingoGodotMovie blingoGodotMovie)
