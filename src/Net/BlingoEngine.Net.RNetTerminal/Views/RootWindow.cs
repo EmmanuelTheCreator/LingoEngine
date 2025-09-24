@@ -20,9 +20,8 @@ namespace BlingoEngine.Net.RNetTerminal.Views
     {
        
         private readonly List<string> _logs = new();
-       
-        private ListView? _logList = new ListView();
-        private View? _logWindow;
+
+        private TextView? _logTextView;
         private PropertyInspector? _propertyInspector;
         private Label? _connectionStatusLabel;
         private Label? _infoItem;
@@ -248,14 +247,23 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             return _propertyInspector;
         }
         private View CreateLog()
-{
+        {
 
-            _logWindow = new View { X =0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
-            _logWindow.HorizontalScrollBar.Visible = true;
-            _logWindow.VerticalScrollBar.Visible = true;
-            _logList = RUI.NewListView(_logs, 0,0, Dim.Fill(), Dim.Fill());
-            _logWindow.Add(_logList);
-            return _logWindow;
+            _logTextView = new TextView
+            {
+                X = 0,
+                Y = 0,
+                Width = Dim.Fill(),
+                Height = Dim.Fill(),
+                ReadOnly = true,
+                Multiline = true,
+                WordWrap = true
+            };
+            _logTextView.VerticalScrollBar.AutoShow = true;
+            _logTextView.VerticalScrollBar.Visible = true;
+            _logTextView.HorizontalScrollBar.AutoShow = false;
+            _logTextView.HorizontalScrollBar.Visible = false;
+            return _logTextView;
         }
 
       
@@ -439,10 +447,10 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 if (_logs.Count > 100)
                     _logs.RemoveAt(0);
                 
-                if (_logList != null)
+                if (_logTextView != null)
                 {
-                    _logList.SetSource(new System.Collections.ObjectModel.ObservableCollection<string>(_logs));
-                    _logList.MoveEnd();
+                    _logTextView.Text = string.Join(Environment.NewLine, _logs);
+                    _logTextView.MoveEnd();
                 }
             }
 
