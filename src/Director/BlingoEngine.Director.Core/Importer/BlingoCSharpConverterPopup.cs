@@ -2,7 +2,7 @@
 using AbstUI.Primitives;
 using AbstUI.Commands;
 using BlingoEngine.FrameworkCommunication;
-using BlingoEngine.Lingo.Core;
+using BlingoEngine.Legacy.Lingo;
 using TextCopy;
 using AbstUI.Windowing;
 using AbstUI.Components.Containers;
@@ -130,10 +130,7 @@ public class BlingoCSharpConverterPopup
                 var converter = new BlingoToCSharpConverter();
                 vm.CSharp = converter.Convert(vm.Lingo);
                 _csharpHighlighter.SetText(vm.CSharp);
-                vm.Errors = string.Join("\n", converter.Errors.Select(e =>
-                    string.IsNullOrEmpty(e.File)
-                        ? $"Line {e.LineNumber}: {e.LineText} - {e.Error}"
-                        : $"{e.File}:{e.LineNumber}: {e.LineText} - {e.Error}"));
+                vm.Errors = converter.GetCurrentErrorsAndFlush();
                 errorInput.Text = vm.Errors;
             }, c => { c.Width = 150; c.Height = 30; });
 
