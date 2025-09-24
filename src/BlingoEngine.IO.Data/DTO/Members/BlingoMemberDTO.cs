@@ -1,5 +1,17 @@
-﻿namespace BlingoEngine.IO.Data.DTO.Members;
+using System.Text.Json.Serialization;
+using BlingoEngine.IO.Data.DTO.FilmLoops;
+using BlingoEngine.IO.Data.DTO.Sprites;
 
+namespace BlingoEngine.IO.Data.DTO.Members;
+
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(BlingoMemberBitmapDTO), nameof(BlingoMemberBitmapDTO))]
+[JsonDerivedType(typeof(BlingoMemberFieldDTO), nameof(BlingoMemberFieldDTO))]
+[JsonDerivedType(typeof(BlingoMemberShapeDTO), nameof(BlingoMemberShapeDTO))]
+[JsonDerivedType(typeof(BlingoMemberSoundDTO), nameof(BlingoMemberSoundDTO))]
+[JsonDerivedType(typeof(BlingoMemberTextDTO), nameof(BlingoMemberTextDTO))]
+[JsonDerivedType(typeof(BlingoMemberFilmLoopDTO), nameof(BlingoMemberFilmLoopDTO))]
+[JsonDerivedType(typeof(BlingoSpriteBehaviorDTO), nameof(BlingoSpriteBehaviorDTO))]
 public class BlingoMemberDTO
 {
     public string Name { get; set; } = string.Empty;
@@ -14,4 +26,3 @@ public class BlingoMemberDTO
     public string FileName { get; set; } = string.Empty;
     public int PurgePriority { get; set; }
 }
-
