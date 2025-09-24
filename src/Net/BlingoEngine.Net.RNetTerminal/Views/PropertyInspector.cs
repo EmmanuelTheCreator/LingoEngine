@@ -90,10 +90,6 @@ internal sealed class PropertyInspector : View
             new PropertySpec("LocH", typeof(int)),
             new PropertySpec("LocV", typeof(int)),
             new PropertySpec("LocZ", typeof(int)),
-            new PropertySpec("Left", typeof(int)),
-            new PropertySpec("Top", typeof(int)),
-            new PropertySpec("Right", typeof(int)),
-            new PropertySpec("Bottom", typeof(int)),
             new PropertySpec("Width", typeof(int)),
             new PropertySpec("Height", typeof(int)),
             new PropertySpec("Ink", typeof(int)),
@@ -104,7 +100,6 @@ internal sealed class PropertyInspector : View
             new PropertySpec("Skew", typeof(float)),
             new PropertySpec("ForeColor", typeof(Color)),
             new PropertySpec("BackColor", typeof(Color)),
-            new PropertySpec("Behaviors", typeof(string))
         });
         var tabSpriteTuple = CreateTab("Sprite", _spriteSpecs, PropertyTarget.Sprite);
         _spriteTab = tabSpriteTuple.Tab;

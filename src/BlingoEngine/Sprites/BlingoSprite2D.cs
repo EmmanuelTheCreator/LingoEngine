@@ -66,9 +66,11 @@ namespace BlingoEngine.Sprites
             get => Member?.NumberInCast ?? 0;
             set
             {
+                if(MemberNum == value) return;
                 if (Member != null)
                     //Member = Member.GetMemberInCastByOffset(value);
                     Member = Member.Cast.Member[value];
+                OnPropertyChanged();
             }
         }
         /// <summary>Channel default cast member.</summary>
@@ -77,24 +79,34 @@ namespace BlingoEngine.Sprites
         public int SpritePropertiesOffset { get; set; }
 
         private int _ink;
+        private AColor _foreColor = AColors.Black;
+        private AColor _backColor = AColors.White;
+
         public BlingoInkType InkType { get => (BlingoInkType)_ink; set => Ink = (int)value; }
         public int Ink
         {
             get => _ink;
             set
             {
+                if(_ink == value) return;
                 _ink = value;
                 if (_frameworkSprite != null)
                     _frameworkSprite.Ink = value;
+                OnPropertyChanged();
             }
         }
         public bool Visibility
         {
-            get => _frameworkSprite.Visibility; set
+            get => _frameworkSprite.Visibility; 
+            set
             {
                 if (SpriteChannel != null)
+                {
+                    if (SpriteChannel.Visibility == value) return;
                     SpriteChannel.Visibility = value;
+                }
                 _frameworkSprite.Visibility = value;
+                OnPropertyChanged();
             }
         }
         public bool Hilite { get; set; }
@@ -106,32 +118,93 @@ namespace BlingoEngine.Sprites
             get => _blend;
             set
             {
+                if(_blend == value) return;
                 _blend = value;
                 ApplyBlend();
+                OnPropertyChanged();
             }
         }
-        public float LocH { get => _frameworkSprite.X; set => _frameworkSprite.X = value; }
-        public float LocV { get => _frameworkSprite.Y; set => _frameworkSprite.Y = value; }
+        public float LocH
+        {
+            get => _frameworkSprite.X;
+            set
+            {
+                if(_frameworkSprite.X == value) return;
+                _frameworkSprite.X = value;
+                OnPropertyChanged();
+            }
+        }
+        public float LocV
+        {
+            get => _frameworkSprite.Y;
+            set
+            {
+                if(_frameworkSprite.Y == value) return;
+                _frameworkSprite.Y = value;
+                OnPropertyChanged();
+            }
+        }
         public int LocZ
         {
             get => _frameworkSprite.ZIndex;
             set
             {
-                
+                if (_frameworkSprite.ZIndex == value) return;
                 _frameworkSprite.ZIndex = value;
+                OnPropertyChanged();
             }
         }
         public APoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
-        public float Rotation { get => _frameworkSprite.Rotation; set => _frameworkSprite.Rotation = value; }
-        public float Skew { get => _frameworkSprite.Skew; set => _frameworkSprite.Skew = value; }
-        public bool FlipH { get => _flipH; set { _flipH = value; _frameworkSprite.FlipH = value; } }
-        public bool FlipV { get => _flipV; set { _flipV = value; _frameworkSprite.FlipV = value; } }
+        public float Rotation
+        {
+            get => _frameworkSprite.Rotation;
+            set
+            {
+                if(_frameworkSprite.Rotation == value) return;
+                _frameworkSprite.Rotation = value;
+                OnPropertyChanged();
+            }
+        }
+        public float Skew
+        {
+            get => _frameworkSprite.Skew;
+            set
+            {
+                if(_frameworkSprite.Skew == value) return;
+                _frameworkSprite.Skew = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool FlipH { get => _flipH; 
+            set {
+                if(_flipH == value) return;
+                _flipH = value;
+                _frameworkSprite.FlipH = value;
+                OnPropertyChanged();
+            } }
+        public bool FlipV { get => _flipV; 
+            set 
+            { 
+                if(_flipV == value) return;
+                _flipV = value; 
+                _frameworkSprite.FlipV = value; 
+                OnPropertyChanged();
+            } }
         public float Top { get => Rect.Top; set { var o = GetRegPointOffset(); LocV = value + o.Y + Height / 2f; } }
         public float Bottom { get => Rect.Bottom; set => Top = value - Height; }
         public float Left { get => Rect.Left; set { var o = GetRegPointOffset(); LocH = value + o.X + Width / 2f; } }
         public float Right { get => Rect.Right; set => Left = value - Width; }
-        public int Cursor { get => _cursor; set => _cursor = value; }
+        public int Cursor
+        {
+            get => _cursor;
+            set
+            {
+                if(_cursor == value) return;
+                _cursor = value;
+                OnPropertyChanged();
+            }
+        }
         public int Constraint { get => _constraint; set => _constraint = value; }
         public bool DirectToStage
         {
@@ -144,12 +217,31 @@ namespace BlingoEngine.Sprites
                 // so keep the engine Z index untouched.
                 _frameworkSprite.DirectToStage = value;
                 ApplyBlend();
+                OnPropertyChanged();
             }
         }
 
         public APoint RegPoint { get; set; }
-        public AColor ForeColor { get; set; } = AColors.Black;
-        public AColor BackColor { get; set; } = AColors.White;
+        public AColor ForeColor
+        {
+            get => _foreColor;
+            set
+            {
+                if(_foreColor == value) return;
+                _foreColor = value;
+                OnPropertyChanged();
+            }
+        }
+        public AColor BackColor
+        {
+            get => _backColor;
+            set
+            {
+                if(_backColor == value) return;
+                _backColor = value;
+                OnPropertyChanged();
+            }
+        }
         public List<string> ScriptInstanceList { get; private set; } = new();
 
 
@@ -196,7 +288,11 @@ namespace BlingoEngine.Sprites
             set
             {
                 if (_frameworkSprite is IBlingoFrameworkSpriteVideo video)
+                {
+                    if (video.CurrentTime == value) return;
                     video.CurrentTime = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -516,7 +612,7 @@ When a movie stops, events occur in the following order:
 
             _frameworkSprite.MemberChanged();
 
-
+            OnPropertyChanged();
         }
         #endregion
 
