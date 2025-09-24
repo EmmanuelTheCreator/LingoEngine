@@ -138,6 +138,25 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
+    /// Restores the attract screen by mirroring the JavaScript controller's reset routine.
+    /// It resets the level, clears transient counters and rebuilds the current map so the
+    /// next frame tick behaves like a fresh boot.
+    /// </summary>
+    public void ResetToAttract()
+    {
+        if (!_initialized)
+        {
+            _Movie.GoTo(PacManProjectFactory.IntroLabel);
+            return;
+        }
+
+        _model.Level = 1;
+        ResetInternalState(resetScore: true);
+        MakeLevel();
+        _Movie.GoTo(PacManProjectFactory.IntroLabel);
+    }
+
+    /// <summary>
     /// Equivalent of the JavaScript <c>makeLevel</c> routine. It reads the level settings from
     /// the model and re-initialises counters used by the gameplay loop. Actual sprite spawning
     /// will be implemented as the remaining actors are ported.

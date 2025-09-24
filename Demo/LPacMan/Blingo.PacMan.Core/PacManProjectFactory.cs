@@ -19,6 +19,8 @@ public class PacManProjectFactory : IBlingoProjectFactory
     /// Name used throughout the project when referring to the root movie.
     /// </summary>
     public const string MovieName = "Blingo PacMan";
+    public const string IntroLabel = "Intro";
+    public const string GameLabel = "Game";
     private BlingoProjectSettings? _settings;
     private IBlingoMovie? _movie;
     private BlingoPlayer? _blingoPlayer;
@@ -132,8 +134,8 @@ public class PacManProjectFactory : IBlingoProjectFactory
     private void AddLabels()
     {
         if (_movie == null) return;
-        _movie.SetScoreLabel(2, "Intro");
-        _movie.SetScoreLabel(60, "Game");
+        _movie.SetScoreLabel(2, IntroLabel);
+        _movie.SetScoreLabel(60, GameLabel);
     }
 
     /// <summary>
