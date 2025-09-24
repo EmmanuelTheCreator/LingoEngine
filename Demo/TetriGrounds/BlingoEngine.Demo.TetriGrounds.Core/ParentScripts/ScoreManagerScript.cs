@@ -50,7 +50,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _memberScore = Member<BlingoMemberText>("T_Score")!;
             _memberTData = Member<BlingoMemberText>("T_data")!;
             myLevel = txt != null && int.TryParse(txt.Text, out var lvl) ? lvl : 1;
-            myLevelUpNeededScore = 200 * (myLevel + 1);
+            myLevelUpNeededScore = 100 * (myLevel + 1);
 
             UpdateGfxScore();
             NewText("Go!");
