@@ -71,7 +71,7 @@ public class TetriGroundsProjectFactory : IBlingoProjectFactory
                 // .AddParentScript<BlockParentScript>() -> Parent script
                 )
                 .ServicesBlingo(s => s
-                    .AddSingleton<IArkCore, TetriGroundsCore>()
+                    .AddSingleton<ITetriGroundsCore, TetriGroundsCore>()
                     .AddSingleton<ScoresRepository>()
                     )
                 ;

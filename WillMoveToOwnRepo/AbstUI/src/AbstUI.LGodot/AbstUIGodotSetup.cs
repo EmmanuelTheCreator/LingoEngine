@@ -26,6 +26,7 @@ namespace AbstUI.LGodot
                 .AddSingleton<GodotComponentFactory>()
                 .AddTransient<IAbstComponentFactory>(p => p.GetRequiredService<GodotComponentFactory>())
                 .AddTransient<IAbstFrameworkDialog, AbstGodotDialog>()
+                .AddTransient<AbstGodotDialog>(p => (AbstGodotDialog)p.GetRequiredService<IAbstFrameworkDialog>())
 
                 .AddSingleton<IAbstGlobalMouse, GlobalGodotAbstMouse>()
                 .AddSingleton<IAbstGlobalKey, GlobalAbstKey>()
@@ -62,7 +63,8 @@ namespace AbstUI.LGodot
                 ;
 
             var windowManager = services.GetRequiredService<IAbstGodotWindowManager>();// we need to resolve the framework window manager to link him
-
+            services.GetRequiredService<IAbstGlobalKey>(); 
+            services.GetRequiredService<IAbstGlobalMouse>(); 
             return services;
         }
     }

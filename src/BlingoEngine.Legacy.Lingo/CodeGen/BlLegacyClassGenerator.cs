@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BlingoEngine.Legacy.Lingo.Analysis;
+using BlingoEngine.Legacy.Lingo.Analysis.Passes;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.CodeGen;
@@ -82,37 +83,30 @@ public sealed class BlLegacyClassGenerator
 
         using (writer.IndentScope())
         {
-            var needsGlobal = scriptKind is BlLingoScriptKind.Parent or BlLingoScriptKind.Movie;
+            var memberInfo = ResolveClassMemberInfo(classScope, analysis);
+            var needsGlobal = memberInfo.HasGlobalDeclarations &&
+                scriptKind is BlLingoScriptKind.Parent or BlLingoScriptKind.Movie;
+
+            WritePropertyDeclarations(writer, memberInfo.Properties);
+            if (memberInfo.Properties.Count > 0)
+            {
+                writer.WriteLine();
+            }
+
             if (needsGlobal)
             {
                 writer.WriteLine("private readonly GlobalVars _global;");
                 writer.WriteLine();
             }
 
-            writer.Write($"public {className}(IBlingoMovieEnvironment env");
-            if (needsGlobal)
-            {
-                writer.Write(", GlobalVars global");
-                writer.WriteLine(") : base(env)");
-                writer.WriteLine("{");
-                using (writer.IndentScope())
-                {
-                    writer.WriteLine("_global = global;");
-                }
-
-                writer.WriteLine("}");
-            }
-            else
-            {
-                writer.WriteLine(") : base(env) { }");
-            }
+            WriteConstructor(writer, className, classScope, needsGlobal);
 
             if (interfaces.Contains("IBlingoPropertyDescriptionList"))
             {
                 WritePropertyDescriptionListStubs(writer);
             }
 
-            WriteHandlers(writer, classScope, handlerConverter);
+            WriteHandlers(writer, classScope, handlerConverter, memberInfo.HandlerOrder);
         }
 
         writer.WriteLine("}");
@@ -128,6 +122,22 @@ public sealed class BlLegacyClassGenerator
         }
 
         return analysis.Symbols.MovieScript;
+    }
+
+    private static BlLegacyClassMemberInfo ResolveClassMemberInfo(
+        BlLingoClassSymbolTable classScope,
+        BlLingoAnalysisResult analysis)
+    {
+        if (analysis.TryGetData<IReadOnlyDictionary<BlLingoClassSymbolTable, BlLegacyClassMemberInfo>>(BlLegacyClassMemberPass.ClassMemberInfoKey, out var map) &&
+            map is not null &&
+            classScope is not null &&
+            map.TryGetValue(classScope, out var info) &&
+            info is not null)
+        {
+            return info;
+        }
+
+        return BlLegacyClassMemberInfo.Empty;
     }
 
     private static BlLingoScriptKind DetermineScriptKind(BlLingoScriptKind declaredKind, BlLingoClassSymbolTable classScope)
@@ -188,6 +198,62 @@ public sealed class BlLegacyClassGenerator
         };
     }
 
+    private static void WriteConstructor(
+        BlCSharpCodeWriter writer,
+        string className,
+        BlLingoClassSymbolTable classScope,
+        bool needsGlobal)
+    {
+        writer.Write($"public {className}(IBlingoMovieEnvironment env");
+        var reservedNames = needsGlobal
+            ? new[] { "env", "global" }
+            : new[] { "env" };
+        var constructorParameters = ComposeConstructorParameters(classScope, reservedNames);
+
+        if (needsGlobal)
+        {
+            writer.Write(", GlobalVars global");
+        }
+
+        foreach (var parameter in constructorParameters)
+        {
+            writer.Write(", ");
+            writer.Write(parameter.Type);
+            writer.Write(' ');
+            writer.Write(parameter.Name);
+        }
+
+        if (needsGlobal)
+        {
+            writer.WriteLine(") : base(env)");
+            writer.WriteLine("{");
+            using (writer.IndentScope())
+            {
+                writer.WriteLine("_global = global;");
+            }
+
+            writer.WriteLine("}");
+        }
+        else
+        {
+            writer.WriteLine(") : base(env) { }");
+        }
+    }
+
+    private static void WritePropertyDeclarations(BlCSharpCodeWriter writer, IReadOnlyList<BlLegacyPropertyInfo> properties)
+    {
+        if (properties is null || properties.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var property in properties)
+        {
+            var commentSuffix = string.IsNullOrWhiteSpace(property.Comment) ? string.Empty : " // " + property.Comment;
+            writer.WriteLine($"public {property.Type} {property.Name} {{ get; set; }}{commentSuffix}");
+        }
+    }
+
     private static void WritePropertyDescriptionListStubs(BlCSharpCodeWriter writer)
     {
         writer.WriteLine();
@@ -210,17 +276,42 @@ public sealed class BlLegacyClassGenerator
     private static void WriteHandlers(
         BlCSharpCodeWriter writer,
         BlLingoClassSymbolTable classScope,
-        BlLegacyHandlerConverter handlerConverter)
+        BlLegacyHandlerConverter handlerConverter,
+        IReadOnlyList<BlLingoHandlerSymbolTable> orderedHandlers)
     {
         if (classScope is null || classScope.Handlers.Count == 0)
         {
             return;
         }
 
-        var handlers = new List<BlLingoHandlerSymbolTable>();
+        var classHandlers = new HashSet<BlLingoHandlerSymbolTable>();
         foreach (var handler in classScope.Handlers.Values)
         {
-            if (ShouldSkipHandler(handler))
+            if (handler is not null)
+            {
+                classHandlers.Add(handler);
+            }
+        }
+
+        var handlers = new List<BlLingoHandlerSymbolTable>();
+        var seen = new HashSet<BlLingoHandlerSymbolTable>();
+
+        if (orderedHandlers is not null)
+        {
+            foreach (var handler in orderedHandlers)
+            {
+                if (handler is null || !classHandlers.Contains(handler) || BlLegacyHandlerFilters.ShouldSkipHandler(handler) || !seen.Add(handler))
+                {
+                    continue;
+                }
+
+                handlers.Add(handler);
+            }
+        }
+
+        foreach (var handler in classScope.Handlers.Values)
+        {
+            if (handler is null || BlLegacyHandlerFilters.ShouldSkipHandler(handler) || !seen.Add(handler))
             {
                 continue;
             }
@@ -233,9 +324,6 @@ public sealed class BlLegacyClassGenerator
             return;
         }
 
-        handlers.Sort(static (left, right) => string.Compare(left.Symbol.Name, right.Symbol.Name, StringComparison.Ordinal));
-
-        var first = true;
         var resolvedReturnTypes = new Dictionary<BlLingoHandlerSymbolTable, string>();
         foreach (var handler in handlers)
         {
@@ -243,6 +331,7 @@ public sealed class BlLegacyClassGenerator
             resolvedReturnTypes[handler] = type;
         }
 
+        var first = true;
         foreach (var handler in handlers)
         {
             if (!first)
@@ -254,39 +343,6 @@ public sealed class BlLegacyClassGenerator
             var returnType = resolvedReturnTypes.TryGetValue(handler, out var resolved) ? resolved : "void";
             WriteHandler(writer, classScope, handler, handlerConverter, returnType);
         }
-    }
-
-    private static bool ShouldSkipHandler(BlLingoHandlerSymbolTable handler)
-    {
-        if (handler is null)
-        {
-            return true;
-        }
-
-        if (string.Equals(handler.OriginalName, BlLingoHandlerSymbolTable.ImplicitHandlerName, StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        if (IsPropertyDescriptionHandler(handler.OriginalName) || IsPropertyDescriptionHandler(handler.Symbol.Name))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsPropertyDescriptionHandler(string? name)
-    {
-        if (string.IsNullOrEmpty(name))
-        {
-            return false;
-        }
-
-        return name.Equals("getPropertyDescriptionList", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("getBehaviorDescription", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("getBehaviorTooltip", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("isOKToAttach", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void WriteHandler(
@@ -352,10 +408,56 @@ public sealed class BlLegacyClassGenerator
         return "void";
     }
 
+    private readonly record struct ParameterDefinition(string Type, string Name);
+
+    private static List<ParameterDefinition> ComposeConstructorParameters(
+        BlLingoClassSymbolTable classScope,
+        IEnumerable<string> reservedNames)
+    {
+        if (classScope is null ||
+            !classScope.Handlers.TryGetValue("new", out var newHandler) ||
+            newHandler is null ||
+            BlLegacyHandlerFilters.ShouldSkipHandler(newHandler))
+        {
+            return new List<ParameterDefinition>();
+        }
+
+        return ComposeHandlerParameterDefinitions(newHandler, reservedNames);
+    }
+
     private static List<string> ComposeHandlerParameters(BlLingoHandlerSymbolTable handler)
     {
-        var parameters = new List<string>();
+        var definitions = ComposeHandlerParameterDefinitions(handler, reservedNames: null);
+        var parameters = new List<string>(definitions.Count);
+        foreach (var definition in definitions)
+        {
+            parameters.Add($"{definition.Type} {definition.Name}");
+        }
+
+        return parameters;
+    }
+
+    private static List<ParameterDefinition> ComposeHandlerParameterDefinitions(
+        BlLingoHandlerSymbolTable handler,
+        IEnumerable<string>? reservedNames)
+    {
+        var definitions = new List<ParameterDefinition>();
+        if (handler is null)
+        {
+            return definitions;
+        }
+
         var usedNames = new HashSet<string>(StringComparer.Ordinal);
+        if (reservedNames is not null)
+        {
+            foreach (var reserved in reservedNames)
+            {
+                if (!string.IsNullOrEmpty(reserved))
+                {
+                    usedNames.Add(reserved);
+                }
+            }
+        }
 
         foreach (var symbol in handler.Parameters.Values)
         {
@@ -379,9 +481,39 @@ public sealed class BlLegacyClassGenerator
                 suffix++;
             }
 
-            parameters.Add($"object? {candidate}");
+            var typeName = ResolveParameterType(symbol);
+            definitions.Add(new ParameterDefinition(typeName, candidate));
         }
 
-        return parameters;
+        return definitions;
     }
+
+    private static string ResolveParameterType(BlCodeSymbol symbol)
+    {
+        if (symbol is null)
+        {
+            return "object";
+        }
+
+        var resolved = symbol.ResolvedTypeName;
+        if (string.IsNullOrWhiteSpace(resolved))
+        {
+            return "object";
+        }
+
+        var normalized = NormalizeParameterType(resolved);
+        return string.IsNullOrEmpty(normalized) ? "object" : normalized;
+    }
+
+    private static string NormalizeParameterType(string typeName)
+    {
+        var normalized = typeName.Trim();
+        if (string.Equals(normalized, "object?", StringComparison.Ordinal))
+        {
+            return "object";
+        }
+
+        return normalized;
+    }
+
 }

@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BlingoEngine.IO.Data.DTO.Members;
+﻿using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.IO.Data.DTO.Sprites;
 using BlingoEngine.Net.RNetTerminal.Datas;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
@@ -108,9 +109,9 @@ internal sealed class StageView : View
                 sw = 1;
                 sh = 1;
             }
-            if (member.Type == BlingoMemberTypeDTO.Text)
+            if (member is BlingoMemberTextDTO textMember)
             {
-                var text = member.Name;
+                var text = !string.IsNullOrWhiteSpace(textMember.MarkDownText)? RetrieveTextOnly(textMember.MarkDownText) : member.Name;
                 var count = System.Math.Min(sw, text.Length);
                 for (var i = 0; i < count; i++)
                 {
@@ -171,6 +172,7 @@ internal sealed class StageView : View
         {
             var w = bounds.Width;
             var h = bounds.Height;
+            var mouse = me.Position;
             foreach (var sprite in _sprites
                          .Where(s => s.BeginFrame <= _frame && _frame <= s.EndFrame)
                          .OrderByDescending(s => s.LocZ))
@@ -184,7 +186,7 @@ internal sealed class StageView : View
                     sw = 1;
                     sh = 1;
                 }
-                if (me.ScreenPosition.X >= x && me.ScreenPosition.X < x + sw && me.ScreenPosition.Y >= y && me.ScreenPosition.Y < y + sh)
+                if (mouse.X >= x && mouse.X < x + sw && mouse.Y >= y && mouse.Y < y + sh)
                 {
                     var sel = new SpriteRef(sprite.SpriteNum, sprite.BeginFrame);
                     TerminalDataStore.Instance.SelectSprite(sel);
@@ -195,6 +197,44 @@ internal sealed class StageView : View
             return true;
         }
         return base.OnMouseEvent(me);
+    }
+
+    public static string RetrieveTextOnly(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown))
+            return string.Empty;
+
+        var text = markdown;
+
+        // 1. Remove custom {{...}} tags
+        text = Regex.Replace(text, @"\{\{.*?\}\}", string.Empty, RegexOptions.Singleline);
+
+        // 2. Remove images ![alt](url)
+        text = Regex.Replace(text, @"!\[.*?\]\(.*?\)", string.Empty);
+
+        // 3. Replace links [text](url) → keep only "text"
+        text = Regex.Replace(text, @"\[(.*?)\]\(.*?\)", "$1");
+
+        // 4. Remove headings (#, ##, ###) → keep only text
+        text = Regex.Replace(text, @"^\s{0,3}#{1,6}\s*", string.Empty, RegexOptions.Multiline);
+
+        // 5. Remove bold **text** → keep only "text"
+        text = Regex.Replace(text, @"\*\*(.*?)\*\*", "$1");
+
+        // 6. Remove italic *text* → keep only "text"
+        text = Regex.Replace(text, @"\*(.*?)\*", "$1");
+
+        // 7. Remove underline __text__ → keep only "text"
+        text = Regex.Replace(text, @"__(.*?)__", "$1");
+
+        // 8. Collapse multiple spaces (but keep newlines)
+        text = Regex.Replace(text, @"[^\S\r\n]+", " ");
+
+        // 9. Collapse 3+ newlines into 2 (keep paragraph separation)
+        text = Regex.Replace(text, @"(\r?\n){3,}", "\n\n");
+
+
+        return text.Trim();
     }
 }
 

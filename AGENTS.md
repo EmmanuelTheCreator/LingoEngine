@@ -33,6 +33,7 @@ These instructions apply to the entire repository.
 - Do not remove existing comments from code.
 - When writing new classes, place members in the order: fields, then properties, then constructors.
 - Avoid adding business logic or default implementations inside interfaces to preserve .NET Framework 4.8 compatibility.
+- When introducing new reusable test utilities or fakes, place their implementations under the test project's `/Fakes/` directory so future tests can consume them.
 
 ## Project Structure
 
@@ -95,4 +96,7 @@ These instructions apply to the entire repository.
 ## Notes for Agents
 - The solution file is `BlingoEngine.sln`. But avoid using it, its big.
 - Keep cross-platform compatibility in mind when making changes.
+
+## Generated Code
+- Do **not** modify files under any `Generated/` directory. These files are produced for UI verification and should remain unchanged.
 

@@ -31,7 +31,7 @@ public partial class RootNodeTetriGrounds : Node2D
             ProjectSettings.SetSetting("display/window/size/initial_position_type", "3");
             ProjectSettings.SetSetting("display/window/stretch/mode", "canvas_items");
             ProjectSettings.SetSetting("display/window/stretch/aspect", "keep");
-            DisplayServer.WindowSetSize(new Vector2I(730, 546));
+            DisplayServer.WindowSetSize(new Vector2I(730, 500));
 #endif
             //DisplayServer.WindowSetPosition((DisplayServer.ScreenGetSize() - DisplayServer.WindowGetSize()) / 2);
 

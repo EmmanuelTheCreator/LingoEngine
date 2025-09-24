@@ -14,6 +14,7 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Attribute = Terminal.Gui.Drawing.Attribute;
 
 namespace BlingoEngine.Net.RNetTerminal.Views;
 
@@ -25,27 +26,39 @@ public enum PropertyTarget
 
 internal sealed class PropertyInspector : View
 {
-    private readonly TabView _tabs;
+    private static readonly Scheme SectionTitleScheme = new()
+    {
+        Normal = new Attribute(Color.Black, Color.White),
+        Focus = new Attribute(Color.Black, Color.White),
+        HotNormal = new Attribute(Color.Black, Color.White),
+        HotFocus = new Attribute(Color.Black, Color.White)
+    };
+
+    private readonly View _contentContainer;
+    private readonly Label _selectionLabel;
+    private readonly LineView _verticalSeparator;
+    private readonly List<PropertySection> _sections = new();
+    private readonly List<PropertySection> _visibleSections = new();
     private readonly DataTable _memberTable = new();
     private readonly List<PropertySpec> _memberSpecs = new();
     private readonly TableView _memberTableView;
     private readonly DataTable _spriteTable = new();
     private readonly List<PropertySpec> _spriteSpecs = new();
     private readonly TableView _spriteTableView;
-    private readonly Tab _memberTab;
-    private readonly Tab _spriteTab;
-    private readonly Tab _bitmapTab;
-    private readonly Tab _soundTab;
-    private readonly Tab _movieTab;
-    private readonly Tab _castTab;
-    private readonly Tab _textTab;
-    private readonly Tab _shapeTab;
-    private readonly Tab _guidesTab;
-    private readonly Tab _behaviorTab;
-    private readonly Tab _filmLoopTab;
+    private readonly PropertySection _memberSection;
+    private readonly PropertySection _spriteSection;
+    private readonly PropertySection _bitmapSection;
+    private readonly PropertySection _soundSection;
+    private readonly PropertySection _movieSection;
+    private readonly PropertySection _castSection;
+    private readonly PropertySection _textSection;
+    private readonly PropertySection _shapeSection;
+    private readonly PropertySection _guidesSection;
+    private readonly PropertySection _behaviorSection;
+    private readonly PropertySection _filmLoopSection;
     private Blingo2DSpriteDTO? _sprite;
     private BlingoMemberDTO? _member;
-    private string _lastTab = "Sprite";
+    private string _selectionText = "";
 
     public BlingoMemberDTO? CurrentMember => _member;
 
@@ -56,20 +69,48 @@ internal sealed class PropertyInspector : View
     public PropertyInspector()
     {
         CanFocus = true;
-        Text = "Properties";
-        _tabs = new TabView
+        //Text = "Properties";
+
+        _selectionLabel = new Label
         {
-            Width = Dim.Fill(),
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill() - 1,
+            Height = 1
+        };
+        _selectionLabel.Text = string.Empty;
+        Add(_selectionLabel);
+
+        _verticalSeparator = new LineView(Orientation.Vertical)
+        {
+            X = 0,
+            Y = 1,
+            Width = 1,
             Height = Dim.Fill()
         };
-        _tabs.SelectedTabChanged += (_, e) =>
+        Add(_verticalSeparator);
+
+        _contentContainer = new View
         {
-            if (e.NewTab != null)
-            {
-                _lastTab = e.NewTab.Text?.ToString() ?? _lastTab;
-            }
+            X = 0,
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ContentSizeTracksViewport = false
         };
-        Add(_tabs);
+        _contentContainer.BorderStyle = LineStyle.None;
+        var verticalScrollBar = _contentContainer.VerticalScrollBar;
+        if (verticalScrollBar != null)
+        {
+            verticalScrollBar.AutoShow = true;
+        }
+        var horizontalScrollBar = _contentContainer.HorizontalScrollBar;
+        if (horizontalScrollBar != null)
+        {
+            horizontalScrollBar.AutoShow = false;
+            horizontalScrollBar.Visible = false;
+        }
+        Add(_contentContainer);
 
         _spriteSpecs.AddRange(new[]
         {
@@ -80,10 +121,6 @@ internal sealed class PropertyInspector : View
             new PropertySpec("LocH", typeof(int)),
             new PropertySpec("LocV", typeof(int)),
             new PropertySpec("LocZ", typeof(int)),
-            new PropertySpec("Left", typeof(int)),
-            new PropertySpec("Top", typeof(int)),
-            new PropertySpec("Right", typeof(int)),
-            new PropertySpec("Bottom", typeof(int)),
             new PropertySpec("Width", typeof(int)),
             new PropertySpec("Height", typeof(int)),
             new PropertySpec("Ink", typeof(int)),
@@ -94,13 +131,11 @@ internal sealed class PropertyInspector : View
             new PropertySpec("Skew", typeof(float)),
             new PropertySpec("ForeColor", typeof(Color)),
             new PropertySpec("BackColor", typeof(Color)),
-            new PropertySpec("Behaviors", typeof(string))
         });
-        var tabSpriteTuple = CreateTab("Sprite", _spriteSpecs);
-        _spriteTab = tabSpriteTuple.Tab;
-        _spriteTable = tabSpriteTuple.Data;
-        _spriteTableView = tabSpriteTuple.View;
-        _tabs.AddTab(_spriteTab,true);
+        var spriteSection = CreateSection("Sprite", _spriteSpecs, PropertyTarget.Sprite);
+        _spriteSection = spriteSection.Section;
+        _spriteTableView = spriteSection.View;
+        _spriteTable = spriteSection.Data;
 
         _memberSpecs.AddRange(new[]
         {
@@ -118,20 +153,21 @@ internal sealed class PropertyInspector : View
             new PropertySpec("PurgePriority", typeof(int), true)
         });
 
-        var tabMemberTuple = CreateTab("Member", _memberSpecs);
-        _memberTab = tabMemberTuple.Tab;
-        _memberTableView = tabMemberTuple.View;
-        _memberTable = tabMemberTuple.Data;
-        _tabs.AddTab(_memberTab, true);
-       
-        _bitmapTab = CreateTab("Bitmap", new[]
+        var memberSection = CreateSection("Member", _memberSpecs, PropertyTarget.Member);
+        _memberSection = memberSection.Section;
+        _memberTableView = memberSection.View;
+        _memberTable = memberSection.Data;
+
+        var (bitmapSection, _, _) = CreateSection("Bitmap", new[]
         {
             new PropertySpec("Dimensions", typeof(string), true),
             new PropertySpec("Highlight", typeof(bool)),
             new PropertySpec("RegPointX", typeof(int)),
             new PropertySpec("RegPointY", typeof(int))
-        });
-        _soundTab = CreateTab("Sound", new[]
+        }, PropertyTarget.Member);
+        _bitmapSection = bitmapSection;
+
+        var (soundSection, _, _) = CreateSection("Sound", new[]
         {
             new PropertySpec("Loop", typeof(bool)),
             new PropertySpec("Duration", typeof(float), true),
@@ -140,8 +176,10 @@ internal sealed class PropertyInspector : View
             new PropertySpec("Channels", typeof(int), true),
             new PropertySpec("Play", typeof(bool)),
             new PropertySpec("Stop", typeof(bool))
-        });
-        _movieTab = CreateTab("Movie", new[]
+        }, PropertyTarget.Member);
+        _soundSection = soundSection;
+
+        var (movieSection, _, _) = CreateSection("Movie", new[]
         {
             new PropertySpec("StageWidth", typeof(int)),
             new PropertySpec("StageHeight", typeof(int)),
@@ -150,27 +188,35 @@ internal sealed class PropertyInspector : View
             new PropertySpec("BackgroundColor", typeof(Color)),
             new PropertySpec("About", typeof(string)),
             new PropertySpec("Copyright", typeof(string))
-        });
-        _castTab = CreateTab("Cast", new[]
+        }, PropertyTarget.Member);
+        _movieSection = movieSection;
+
+        var (castSection, _, _) = CreateSection("Cast", new[]
         {
             new PropertySpec("Number", typeof(int)),
             new PropertySpec("Name", typeof(string))
-        });
-        _textTab = CreateTab("Text", new[]
+        }, PropertyTarget.Member);
+        _castSection = castSection;
+
+        var (textSection, _, _) = CreateSection("Text", new[]
         {
             new PropertySpec("Width", typeof(int)),
             new PropertySpec("Height", typeof(int)),
             new PropertySpec("Edit", typeof(bool))
-        });
-        _shapeTab = CreateTab("Shape", new[]
+        }, PropertyTarget.Member);
+        _textSection = textSection;
+
+        var (shapeSection, _, _) = CreateSection("Shape", new[]
         {
             new PropertySpec("Shape", typeof(string)),
             new PropertySpec("Filled", typeof(bool)),
             new PropertySpec("Width", typeof(int)),
             new PropertySpec("Height", typeof(int)),
             new PropertySpec("Edit", typeof(bool))
-        });
-        _guidesTab = CreateTab("Guides", new[]
+        }, PropertyTarget.Member);
+        _shapeSection = shapeSection;
+
+        var (guidesSection, _, _) = CreateSection("Guides", new[]
         {
             new PropertySpec("GuidesColor", typeof(Color)),
             new PropertySpec("GuidesVisible", typeof(bool)),
@@ -184,18 +230,21 @@ internal sealed class PropertyInspector : View
             new PropertySpec("RemoveGuides", typeof(bool)),
             new PropertySpec("GridWidth", typeof(int)),
             new PropertySpec("GridHeight", typeof(int))
-        });
-        _behaviorTab = CreateTab("Behavior", new[] { new PropertySpec("Behaviors", typeof(string)) });
-        _filmLoopTab = CreateTab("FilmLoop", new[]
+        }, PropertyTarget.Member);
+        _guidesSection = guidesSection;
+
+        var (behaviorSection, _, _) = CreateSection("Behavior", new[] { new PropertySpec("Behaviors", typeof(string)) }, PropertyTarget.Member);
+        _behaviorSection = behaviorSection;
+
+        var (filmLoopSection, _, _) = CreateSection("FilmLoop", new[]
         {
             new PropertySpec("Framing", typeof(string)),
             new PropertySpec("Loop", typeof(bool)),
             new PropertySpec("FrameCount", typeof(int))
-        });
+        }, PropertyTarget.Member);
+        _filmLoopSection = filmLoopSection;
 
-        SetTabs( _movieTab);
-        var initial = _tabs.Tabs.FirstOrDefault(t => t.Text.ToString() == _lastTab) ?? _spriteTab;
-        _tabs.SelectedTab = initial;
+        SubViewLayout += (_, _) => UpdateSectionLayout();
 
         var store = TerminalDataStore.Instance;
         UpdateSelection(store.GetSelectedSprite());
@@ -217,6 +266,23 @@ internal sealed class PropertyInspector : View
                 ShowMember(m);
             }
         };
+        store.SpriteChanged += sprite =>
+        {
+            var current = _sprite;
+            if (current == null)
+            {
+                return;
+            }
+
+            if (sprite.SpriteNum == current.SpriteNum && sprite.BeginFrame == current.BeginFrame)
+            {
+                ShowSprite(sprite);
+                if (sprite.Member != null)
+                {
+                    ShowMember(store.FindMember(sprite.Member.CastLibNum, sprite.Member.MemberNum));
+                }
+            }
+        };
     }
   
 
@@ -225,14 +291,22 @@ internal sealed class PropertyInspector : View
         var store = TerminalDataStore.Instance;
         var sprite = sel.HasValue ? store.FindSprite(sel.Value) : null;
         ShowSprite(sprite);
+        BlingoMemberDTO? member = null;
+        var memberText = ""; 
         if (sprite != null)
         {
+            member = store.FindMember(sprite.Member!.CastLibNum, sprite.Member.MemberNum);
+            if (member != null)
+                memberText = member.Name + " ("+ member.CastLibNum + "." + member.NumberInCast + ")";
             ShowMember(store.FindMember(sprite.Member!.CastLibNum, sprite.Member.MemberNum));
         }
         else
         {
             ShowMember(null);
         }
+        _selectionText = (sprite != null ? "Sprite " + sprite.SpriteNum + ": " : "") + memberText;
+        _selectionLabel.Text = _selectionText;
+        _selectionLabel.SetNeedsDraw();
     }
 
     public void ShowSprite(Blingo2DSpriteDTO? sprite)
@@ -275,16 +349,85 @@ internal sealed class PropertyInspector : View
 
 
 
-    private void SetTabs(params Tab[] tabs)
+    private void SetVisibleSections(params PropertySection[] sections)
     {
-        foreach (var existing in _tabs.Tabs.ToList())
-            _tabs.RemoveTab(existing);
+        _visibleSections.Clear();
+        foreach (var section in sections)
+        {
+            if (section != null && !_visibleSections.Contains(section))
+            {
+                _visibleSections.Add(section);
+            }
+        }
 
-        foreach (var tab in tabs)
-            _tabs.AddTab(tab, false);
+        UpdateSectionLayout();
+        var verticalScrollBar = _contentContainer.VerticalScrollBar;
+        if (verticalScrollBar != null)
+        {
+            verticalScrollBar.Position = 0;
+        }
     }
 
-   
+    private void UpdateSectionLayout()
+    {
+        foreach (var section in _sections)
+        {
+            section.Container.Visible = false;
+        }
+
+        var y = 0;
+        foreach (var section in _visibleSections)
+        {
+            section.Container.Visible = true;
+            section.Container.X = 0;
+            section.Container.Y = y;
+            y += section.Height;
+        }
+
+        var width = _contentContainer.Frame.Width;
+        if (width <= 0)
+        {
+            width = Frame.Width;
+        }
+        if (width <= 0)
+        {
+            width = 1;
+        }
+
+        var height = y;
+        var visibleHeight = _contentContainer.Frame.Height;
+        if (visibleHeight > 0)
+        {
+            height = Math.Max(height, visibleHeight);
+        }
+        else if (height <= 0)
+        {
+            height = 1;
+            visibleHeight = height;
+        }
+        else
+        {
+            visibleHeight = height;
+        }
+
+        _contentContainer.SetContentSize(new System.Drawing.Size(width, height));
+
+        var verticalScrollBar = _contentContainer.VerticalScrollBar;
+        //if (verticalScrollBar != null)
+        //{
+        //    var viewportHeight = visibleHeight > 0 ? visibleHeight : height;
+        //    verticalScrollBar.VisibleContentSize = viewportHeight;
+        //    verticalScrollBar.ScrollableContentSize = height;
+        //    var maxPosition = Math.Max(0, height - viewportHeight);
+        //    if (verticalScrollBar.Position > maxPosition)
+        //    {
+        //        verticalScrollBar.Position = maxPosition;
+        //    }
+        //}
+
+        _contentContainer.SetNeedsDraw();
+    }
+
     private static string? EditValue(Type type, string name, string value)
     {
         string? result = null;
@@ -412,95 +555,113 @@ internal sealed class PropertyInspector : View
 
         if (member == null)
         {
-            var tabsEmpty = new List<Tab>();
+            var sections = new List<PropertySection>();
             if (_sprite != null)
             {
-                tabsEmpty.Add(_spriteTab);
+                sections.Add(_spriteSection);
             }
-            tabsEmpty.Add(_memberTab);
-            SetTabs(tabsEmpty.ToArray());
-            var target = _tabs.Tabs.FirstOrDefault(t => t.Text.ToString() == _lastTab);
-            _tabs.SelectedTab = target ?? (_sprite != null ? _spriteTab : _memberTab);
+            sections.Add(_memberSection);
+            SetVisibleSections(sections.ToArray());
             _memberTableView.SetNeedsDraw();
             return;
         }
 
         _memberTableView.SetNeedsDraw();
 
-        var tabs = new List<Tab>();
+        var visibleSections = new List<PropertySection>();
         if (_sprite != null)
         {
-            tabs.Add(_spriteTab);
+            visibleSections.Add(_spriteSection);
             if (_sprite.Behaviors.Any())
-                tabs.Add(_behaviorTab);
+            {
+                visibleSections.Add(_behaviorSection);
+            }
         }
-        tabs.Add(_memberTab);
-        tabs.Add(_castTab);
+        visibleSections.Add(_memberSection);
+        visibleSections.Add(_castSection);
 
         switch (member.Type)
         {
             case BlingoMemberTypeDTO.Bitmap:
             case BlingoMemberTypeDTO.Picture:
-                tabs.Add(_bitmapTab);
+                visibleSections.Add(_bitmapSection);
                 break;
             case BlingoMemberTypeDTO.Sound:
-                tabs.Add(_soundTab);
+                visibleSections.Add(_soundSection);
                 break;
             case BlingoMemberTypeDTO.Text:
             case BlingoMemberTypeDTO.Field:
-                tabs.Add(_textTab);
+                visibleSections.Add(_textSection);
                 break;
             case BlingoMemberTypeDTO.Shape:
-                tabs.Add(_shapeTab);
+                visibleSections.Add(_shapeSection);
                 break;
             case BlingoMemberTypeDTO.FilmLoop:
-                tabs.Add(_filmLoopTab);
+                visibleSections.Add(_filmLoopSection);
                 break;
             case BlingoMemberTypeDTO.Movie:
-                tabs.Add(_movieTab);
+                visibleSections.Add(_movieSection);
                 break;
         }
 
-        SetTabs(tabs.ToArray());
-        var desired = _tabs.Tabs.FirstOrDefault(t => t.Text.ToString() == _lastTab);
-        _tabs.SelectedTab = desired ?? (_sprite != null ? _spriteTab : _memberTab);
-        _tabs.SetNeedsDraw();
+        SetVisibleSections(visibleSections.ToArray());
     }
 
-   
-
-
-
-
-    private Tab CreateTab(string title, PropertySpec[] props)
-    {
-        var tab = new Tab();
-        RNetTerminalStyle.SetForTableView(tab);
-        tab.DisplayText = title;
-        var tableView = BuildPropertyTableView(props);
-        AttachEditPopup(props, tableView);
-        tab.View = tableView.View;
-        return (tab);
-    }
-    private (Tab Tab, TableView View, DataTable Data) CreateTab(string name, IList<PropertySpec> data)
-    {
-        var tab = new Tab();
-        tab.CanFocus = true;
-        RNetTerminalStyle.SetForTableView(tab);
-        tab.DisplayText = name;
-        var tableView = CreateTable(data);
-        AttachEditPopup(data, tableView);
-        tab.View = tableView.View;
-        return (tab, tableView.View, tableView.Data);
-    }
-    private (TableView View, DataTable Data) BuildPropertyTableView(PropertySpec[] props)
+ 
+    private (PropertySection Section, TableView View, DataTable Data) CreateSection(string title, IList<PropertySpec> props, PropertyTarget target)
     {
         var table = CreateTable(props);
-        
-        return table;
+        AttachEditPopup(props, table, target);
+        var section = BuildSection(title, table.View, table.Data);
+        return (section, table.View, table.Data);
     }
 
-    private void AttachEditPopup(IList<PropertySpec> props, (TableView View, DataTable Data) table)
+    private PropertySection BuildSection(string title, TableView tableView, DataTable data)
+    {
+        var tableHeight = Math.Max(1, data.Rows.Count+1);
+        tableView.Height = tableHeight;
+        tableView.Width = Dim.Fill();
+
+        var container = new View
+        {
+            Width = Dim.Fill()-1,
+            Height = tableHeight + 2
+        };
+        container.BorderStyle = LineStyle.None;
+        container.HorizontalScrollBar.Enabled = false;
+        container.VerticalScrollBar.Enabled = false;
+
+        var separator = new LineView(Orientation.Horizontal)
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill()
+        };
+        container.Add(separator);
+
+        var titleLabel = new Label
+        {
+            X = 0,
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = 1
+        };
+        titleLabel.Text = $" {title} ";
+        titleLabel.SetScheme(SectionTitleScheme);
+        container.Add(titleLabel);
+
+        tableView.X = 0;
+        tableView.Y = 2;
+        container.Add(tableView);
+
+        var section = new PropertySection(container, tableView, data, tableHeight + 2);
+        _sections.Add(section);
+        _contentContainer.Add(container);
+
+        return section;
+    }
+
+    private void AttachEditPopup(IList<PropertySpec> props, (TableView View, DataTable Data) table, PropertyTarget target)
     {
         table.View.CellActivated += (_, args) =>
         {
@@ -515,7 +676,7 @@ internal sealed class PropertyInspector : View
             {
                 if (!DelayPropertyUpdates)
                     table.Data.Rows[args.Row][1] = newValue;
-                PropertyChanged?.Invoke(PropertyTarget.Member, spec.Name, newValue);
+                PropertyChanged?.Invoke(target, spec.Name, newValue);
             }
             //view.SetNeedsDisplay();
             //view.SetNeedsDraw();
@@ -555,9 +716,8 @@ internal sealed class PropertyInspector : View
         var tableView = new TableView
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
             Table = new DataTableSource(datas),
-            FullRowSelect = true
+            FullRowSelect = true,
         };
         RNetTerminalStyle.SetForTableView(tableView);
         tableView.Style.AlwaysShowHeaders = false;
@@ -567,6 +727,14 @@ internal sealed class PropertyInspector : View
         tableView.Style.ShowVerticalHeaderLines = false;
         tableView.Style.ShowVerticalCellLines = false;
         tableView.MultiSelect = false;
+        tableView.HorizontalScrollBar.Enabled = false;
+        tableView.VerticalScrollBar.Enabled = false;
+        tableView.HorizontalScrollBar.Visible = false;
+        tableView.VerticalScrollBar.Visible = false;
+        tableView.VerticalScrollBar.MouseBindings.Clear();
+        tableView.HorizontalScrollBar.MouseBindings.Clear();
+        tableView.HorizontalScrollBar.WantMousePositionReports = false;
+        tableView.ContentSizeTracksViewport = true;
         //tableView.SelectedColumn = 1;
         //tableView.SelectedCellChanged += (_, _) => tableView.SelectedColumn = 1;
         //tableView.KeyDown += (_, e) =>
@@ -576,9 +744,26 @@ internal sealed class PropertyInspector : View
         //        e.Handled = true;
         //    }
         //};
+        tableView.CanFocus = true;
         tableView.Style.ColumnStyles.Add(0, new ColumnStyle { Alignment = Alignment.Start });
         tableView.Style.ColumnStyles.Add(1, new ColumnStyle { Alignment = Alignment.End });
         return tableView;
+    }
+
+    private sealed class PropertySection
+    {
+        public PropertySection(View container, TableView tableView, DataTable data, int height)
+        {
+            Container = container;
+            TableView = tableView;
+            Data = data;
+            Height = height;
+        }
+
+        public View Container { get; }
+        public TableView TableView { get; }
+        public DataTable Data { get; }
+        public int Height { get; }
     }
 
     private sealed class PropertySpec

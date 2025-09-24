@@ -198,6 +198,97 @@ end";
     }
 
     [Fact]
+    public void PropertyDescriptionListWithColorEntriesMatchesExpectedOutput()
+    {
+        var lingo = string.Join('\n',
+            "on getPropertyDescriptionList",
+            "  description = [:]",
+            "  addProp description,#myColor, [#default:rgb(0,0,0), #format:#color, #comment:\"Color:\"]",
+            "  addProp description,#myColorOver, [#default:rgb(100,0,0), #format:#color, #comment:\"ColorOver:\"]",
+            "  addProp description,#myColorLock, [#default:rgb(150,150,150), #format:#color, #comment:\"ColorLock:\"]",
+            "  addProp description,#myLock, [#default:false, #format:#boolean, #comment:\"Start Locked:\"]",
+            "  addProp description,#myFunction, [#default:0, #format:#symbol, #comment:\"Function:\"]",
+            "  addProp description,#mySpriteNum, [#default:4, #format:#integer, #comment:\"Sprite Num:\"]",
+            "  addProp description,#myVar1, [#default:0, #format:#integer, #comment:\"Var 1:\"]",
+            "  addProp description,#myVar2, [#default:0, #format:#integer, #comment:\"Var 2:\"]",
+            "  return description",
+            "end");
+
+        var result = _converter.Convert(lingo);
+
+        var expected = string.Join('\n',
+            "public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()",
+            "{",
+            "    return new BehaviorPropertyDescriptionList()",
+            "        .Add(this, x => x.myColor, \"Color:\", AColor.FromCode(0,0,0))",
+            "        .Add(this, x => x.myColorOver, \"ColorOver:\", AColor.FromCode(100,0,0))",
+            "        .Add(this, x => x.myColorLock, \"ColorLock:\", AColor.FromCode(150,150,150))",
+            "        .Add(this, x => x.myLock, \"Start Locked:\", false)",
+            "        .Add(this, x => x.myFunction, \"Function:\", \"0\")",
+            "        .Add(this, x => x.mySpriteNum, \"Sprite Num:\", 4)",
+            "        .Add(this, x => x.myVar1, \"Var 1:\", 0)",
+            "        .Add(this, x => x.myVar2, \"Var 2:\", 0);",
+            "}");
+
+        var normalized = result.Replace("\r\n", "\n").Trim();
+        Assert.Equal(expected, normalized);
+    }
+
+    [Fact]
+    public void BehaviorScriptWithPropertyDescriptionsEmitsClassMethod()
+    {
+        var source = string.Join('\n',
+            "-- Sample behavior",
+            "property myColor,myColorOver,myColorLock,myLock",
+            "property myFunction,mySpriteNum,myVar1,myVar2",
+            "",
+            "on getPropertyDescriptionList",
+            "  description = [:]",
+            "  addProp description,#myColor, [#default:rgb(0,0,0), #format:#color, #comment:\"Color:\"]",
+            "  addProp description,#myColorOver, [#default:rgb(100,0,0), #format:#color, #comment:\"ColorOver:\"]",
+            "  addProp description,#myColorLock, [#default:rgb(150,150,150), #format:#color, #comment:\"ColorLock:\"]",
+            "  addProp description,#myLock, [#default:false, #format:#boolean, #comment:\"Start Locked:\"]",
+            "  addProp description,#myFunction, [#default:0, #format:#symbol, #comment:\"Function:\"]",
+            "  addProp description,#mySpriteNum, [#default:4, #format:#integer, #comment:\"Sprite Num:\"]",
+            "  addProp description,#myVar1, [#default:0, #format:#integer, #comment:\"Var 1:\"]",
+            "  addProp description,#myVar2, [#default:0, #format:#integer, #comment:\"Var 2:\"]",
+            "  return description",
+            "end",
+            "",
+            "on beginSprite me",
+            "  if myLock=true then",
+            "    sprite(me.spritenum).member.color = myColorLock",
+            "  else",
+            "    sprite(me.spritenum).member.color = myColor",
+            "  end if",
+            "end",
+            "",
+            "on mousedown me",
+            "  if myLock=false then",
+            "    if myFunction=0 then exit",
+            "    sendSprite(mySpriteNum,myFunction,myVar1,myVar2)",
+            "  end if",
+            "end");
+
+        var script = new BlingoScriptFile
+        {
+            Name = "Color_Button",
+            Source = source,
+            Type = BlingoScriptType.Behavior
+        };
+
+        var result = _converter.Convert(script);
+        var normalized = result.Replace("\r\n", "\n");
+
+        Assert.Contains("public class Color_ButtonBehavior", normalized);
+        Assert.Contains("public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()", normalized);
+        Assert.Contains(".Add(this, x => x.myColor, \"Color:\", AColor.FromCode(0,0,0))", normalized);
+        Assert.Contains(".Add(this, x => x.myVar2, \"Var 2:\", 0)", normalized);
+        var methodMatches = Regex.Matches(normalized, "BehaviorPropertyDescriptionList\\? GetPropertyDescriptionList\\(");
+        Assert.Single(methodMatches);
+    }
+
+    [Fact]
     public void DuplicatePropertyDescriptionEntriesAreOverwritten()
     {
         var lingo = string.Join('\n',

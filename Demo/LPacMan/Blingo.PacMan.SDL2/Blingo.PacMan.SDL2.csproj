@@ -1,0 +1,121 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<StartupObject>Blingo.PacMan.SDL2.Program</StartupObject>
+		<Platforms>AnyCPU;x64;x86</Platforms>
+		<Configurations>Debug;Release;DebugWithDirector</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'DebugWithDirector'">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>portable</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>DEBUG;TRACE;DEBUG_WITH_DIRECTOR</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'DebugWithDirector'">
+		<ProjectReference Include="..\..\..\src\Director\BlingoEngine.Director.SDL2\BlingoEngine.Director.SDL2.csproj" />
+		<ProjectReference Include="..\..\..\src\Director\BlingoEngine.Director.Core\BlingoEngine.Director.Core.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<ProjectReference Include="..\..\..\src\Net\BlingoEngine.Net.RNetProjectHost\BlingoEngine.Net.RNetProjectHost.csproj" />
+		<ProjectReference Include="..\..\..\src\Net\BlingoEngine.Net.RNetPipeServer\BlingoEngine.Net.RNetPipeServer.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="Media\NewFolder\**" />
+	  <EmbeddedResource Remove="Media\NewFolder\**" />
+	  <None Remove="Media\NewFolder\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\characters.png" Link="Media\Data\characters.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-1.png" Link="Media\Data\maze-1.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-2.png" Link="Media\Data\maze-2.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-3.png" Link="Media\Data\maze-3.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-4.png" Link="Media\Data\maze-4.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze.png" Link="Media\Data\maze.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\misc.png" Link="Media\Data\misc.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\mspacman.png" Link="Media\Data\mspacman.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\pills.png" Link="Media\Data\pills.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\sprites.png" Link="Media\Data\sprites.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\start.png" Link="Media\Data\start.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Fonts\OFL.txt" Link="Media\Fonts\OFL.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Fonts\press-start-2p-v9-latin-regular.ttf" Link="Media\Fonts\press-start-2p-v9-latin-regular.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Fonts\press-start-2p-v9-latin-regular2.ttf" Link="Media\Fonts\press-start-2p-v9-latin-regular2.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\back.mp3" Link="Media\Sounds\back.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\bonus.mp3" Link="Media\Sounds\bonus.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\dead.mp3" Link="Media\Sounds\dead.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\dot.mp3" Link="Media\Sounds\dot.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\eat.mp3" Link="Media\Sounds\eat.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\eaten.mp3" Link="Media\Sounds\eaten.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\frightened.mp3" Link="Media\Sounds\frightened.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\intro.mp3" Link="Media\Sounds\intro.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Sounds\life.mp3" Link="Media\Sounds\life.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Icons\DirectorSharp_Icon.png" Link="Media\Icons\DirectorSharp_Icon.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Icons\Director_Icons.png" Link="Media\Icons\Director_Icons.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Icons\General_Icons.png" Link="Media\Icons\General_Icons.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Icons\Painter2_Icons.png" Link="Media\Icons\Painter2_Icons.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Icons\Painter_Icons.png" Link="Media\Icons\Painter_Icons.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\src\BlingoEngine.SDL2\BlingoEngine.SDL2.csproj" />
+		<ProjectReference Include="..\Blingo.PacMan.Core\Blingo.PacMan.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Media\Data\" />
+		<Folder Include="Media\Icons\" />
+		<Folder Include="Media\Fonts\" />
+		<Folder Include="Media\Sounds\" />
+	</ItemGroup>
+
+
+
+
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
+	</ItemGroup>
+
+</Project>
+

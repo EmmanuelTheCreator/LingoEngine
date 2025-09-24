@@ -1,0 +1,15 @@
+﻿{
+  "profiles": {
+   
+    "Godot": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Godot\\Godot_v4.5-dev5_mono_win64.exe",
+      "commandLineArgs": "$(ConfigurationName)",
+      "workingDirectory": ".",
+      "nativeDebugging": true,
+      "environmentVariables": {
+        "GODOT_MSBUILD_ARGS": "/p:Configuration=DebugWithDirector"
+      }
+    }
+  }
+}

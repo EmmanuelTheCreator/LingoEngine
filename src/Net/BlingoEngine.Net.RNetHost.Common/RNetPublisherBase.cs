@@ -21,6 +21,7 @@ namespace BlingoEngine.Net.RNetHost.Common;
 public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 {
     private readonly ConcurrentDictionary<(int SpriteNum, int BeginFrame), SpriteDeltaDto> _spriteQueue = new();
+    private readonly ConcurrentDictionary<BlingoSprite2D, (int SpriteNum, int BeginFrame)> _spriteKeys = new();
     private readonly ConcurrentDictionary<(int CastLibNum, int MemberNum, string Prop), RNetMemberPropertyDto> _memberQueue = new();
     private readonly ConcurrentDictionary<string, RNetMoviePropertyDto> _movieQueue = new();
     private readonly ConcurrentDictionary<string, RNetStagePropertyDto> _stageQueue = new();
@@ -36,7 +37,11 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 
     /// <inheritdoc />
     public void TryPublishDelta(SpriteDeltaDto delta)
-        => _spriteQueue[(delta.SpriteNum, delta.BeginFrame)] = delta;
+    {
+        var key = (delta.SpriteNum, delta.BeginFrame);
+        _spriteQueue[key] = delta;
+        TryFlushSpriteDelta(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishKeyframe(KeyframeDto keyframe)
@@ -68,15 +73,27 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 
     /// <inheritdoc />
     public void TryPublishMemberProperty(RNetMemberPropertyDto property)
-        => _memberQueue[(property.CastLibNum, property.MemberNum, property.Prop)] = property;
+    {
+        var key = (property.CastLibNum, property.MemberNum, property.Prop);
+        _memberQueue[key] = property;
+        TryFlushMemberProperty(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishMovieProperty(RNetMoviePropertyDto property)
-        => _movieQueue[property.Prop] = property;
+    {
+        var key = property.Prop;
+        _movieQueue[key] = property;
+        TryFlushMovieProperty(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishStageProperty(RNetStagePropertyDto property)
-        => _stageQueue[property.Prop] = property;
+    {
+        var key = property.Prop;
+        _stageQueue[key] = property;
+        TryFlushStageProperty(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishTextStyle(TextStyleDto style)
@@ -91,34 +108,22 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
     {
         foreach (var kv in _spriteQueue)
         {
-            if (TryPublishDeltaCore(kv.Value))
-            {
-                _spriteQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushSpriteDelta(kv.Key);
         }
 
         foreach (var kv in _memberQueue)
         {
-            if (TryPublishMemberPropertyCore(kv.Value))
-            {
-                _memberQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushMemberProperty(kv.Key);
         }
 
         foreach (var kv in _movieQueue)
         {
-            if (TryPublishMoviePropertyCore(kv.Value))
-            {
-                _movieQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushMovieProperty(kv.Key);
         }
 
         foreach (var kv in _stageQueue)
         {
-            if (TryPublishStagePropertyCore(kv.Value))
-            {
-                _stageQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushStageProperty(kv.Key);
         }
     }
 
@@ -335,6 +340,24 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
         }
     }
 
+    private void OnSpitePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is BlingoSprite2D sprite2D && e.PropertyName is not null)
+        {
+            var newKey = (sprite2D.SpriteNum, sprite2D.BeginFrame);
+            if (_spriteKeys.TryGetValue(sprite2D, out var previousKey) && previousKey != newKey)
+            {
+                _spriteQueue.TryRemove(previousKey, out _);
+            }
+
+            var frame = _movie?.Frame ?? sprite2D.BeginFrame;
+            var delta = sprite2D.ToDelta(frame);
+            TryPublishDelta(delta);
+
+            _spriteKeys[sprite2D] = newKey;
+        }
+    }
+
     private void OnMoviePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is IBlingoMovie movie && e.PropertyName is not null)
@@ -361,10 +384,16 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 
     private void SubscribeSprite(BlingoSprite sprite)
     {
-        PropertyChangedEventHandler handler = (_, __) => { };
+        PropertyChangedEventHandler handler = OnSpitePropertyChanged;
         // Currently no per-property sprite publishing.
         Subscribe(sprite, handler);
+        if (sprite is BlingoSprite2D sprite2D)
+        {
+            _spriteKeys[sprite2D] = (sprite2D.SpriteNum, sprite2D.BeginFrame);
+        }
     }
+
+   
 
     private void Subscribe(IHasPropertyChanged src, PropertyChangedEventHandler handler)
     {
@@ -378,6 +407,67 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
         {
             src.PropertyChanged -= h;
         }
+        if (src is BlingoSprite2D sprite2D)
+        {
+            if (_spriteKeys.TryRemove(sprite2D, out var key))
+            {
+                _spriteQueue.TryRemove(key, out _);
+            }
+        }
+
+    }
+
+    private void TryFlushSpriteDelta((int SpriteNum, int BeginFrame) key)
+    {
+        if (!_spriteQueue.TryGetValue(key, out var delta))
+        {
+            return;
+        }
+
+        if (TryPublishDeltaCore(delta))
+        {
+            _spriteQueue.TryRemove(key, out _);
+        }
+    }
+
+    private void TryFlushMemberProperty((int CastLibNum, int MemberNum, string Prop) key)
+    {
+        if (!_memberQueue.TryGetValue(key, out var property))
+        {
+            return;
+        }
+
+        if (TryPublishMemberPropertyCore(property))
+        {
+            _memberQueue.TryRemove(key, out _);
+        }
+    }
+
+    private void TryFlushMovieProperty(string key)
+    {
+        if (!_movieQueue.TryGetValue(key, out var property))
+        {
+            return;
+        }
+
+        if (TryPublishMoviePropertyCore(property))
+        {
+            _movieQueue.TryRemove(key, out _);
+        }
+    }
+
+    private void TryFlushStageProperty(string key)
+    {
+        if (!_stageQueue.TryGetValue(key, out var property))
+        {
+            return;
+        }
+
+        if (TryPublishStagePropertyCore(property))
+        {
+            _stageQueue.TryRemove(key, out _);
+        }
+
     }
 }
 

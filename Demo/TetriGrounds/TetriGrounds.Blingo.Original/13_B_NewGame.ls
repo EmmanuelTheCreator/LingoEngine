@@ -1,2 +1,1 @@
 -- Copyright to EmmanuelTheCreator.com-- This file was written in 2005, yeah a lot has evolved since then :-)on mouseUp me  cursor -1  go to "Game"  endon mouseWithin me  cursor 280endon mouseleave me  cursor -1end
-  cursor -1  go to "Game"  endon mouseWithin me  cursor 280endon mouseleave me  cursor -1end

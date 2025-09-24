@@ -113,6 +113,11 @@ internal static class BlLegacyReturnTypeHelper
             return null;
         }
 
+        if (trimmed.StartsWith("Convert.ToInt32(", StringComparison.Ordinal))
+        {
+            return "int";
+        }
+
         if (trimmed.Equals("true", StringComparison.OrdinalIgnoreCase) ||
             trimmed.Equals("false", StringComparison.OrdinalIgnoreCase))
         {
@@ -210,4 +215,5 @@ internal static class BlLegacyReturnTypeHelper
 
         return depth == 0;
     }
+
 }

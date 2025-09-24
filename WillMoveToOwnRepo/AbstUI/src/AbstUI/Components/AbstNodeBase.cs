@@ -14,7 +14,7 @@ namespace AbstUI.Components
         protected TFramework _framework;
 #pragma warning restore CS8618
 
-        public virtual bool Visibility { get => _framework.Visibility; set => _framework.Visibility = value; }
+        public virtual bool Visibility { get => _framework != null? _framework.Visibility: false; set => _framework.Visibility = value; }
         public virtual string Name { get => _framework.Name; set => _framework.Name = value; }
         public virtual AMargin Margin { get => _framework.Margin; set => _framework.Margin = value; }
 

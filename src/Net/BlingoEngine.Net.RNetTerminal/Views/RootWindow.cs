@@ -20,9 +20,8 @@ namespace BlingoEngine.Net.RNetTerminal.Views
     {
        
         private readonly List<string> _logs = new();
-       
-        private ListView? _logList = new ListView();
-        private View? _logWindow;
+
+        private TextView? _logTextView;
         private PropertyInspector? _propertyInspector;
         private Label? _connectionStatusLabel;
         private Label? _infoItem;
@@ -42,6 +41,10 @@ namespace BlingoEngine.Net.RNetTerminal.Views
         private Func<RNetCommand, CancellationToken?, Task>? _sendCommandAsync;
         private int _lastRequestedFrame = -1;
         private bool _suppressNextFrameCommand;
+        private CheckBox? _showFirstBehaviorCheckBox;
+        private CheckBox? _showMemberNameCheckBox;
+        private CheckBox? _showSpriteNameCheckBox;
+        private bool _updatingShowMenu;
 
         private int _port => BlingoRNetTerminal.Port;
         public RootWindow()
@@ -54,6 +57,11 @@ namespace BlingoEngine.Net.RNetTerminal.Views
         {
             _setPort = setPort;
             _sendCommandAsync = sendCommandAsync;
+            _score = BuildScoreWindow();
+            _stage = BuildStageWindow();
+            _cast = BuildCastWindow();
+            _propInsp = CreatePropertyInspector(sendCommandAsync);
+            var logs = CreateLog();
             var top = new Window
             {
                 BorderStyle = LineStyle.None,
@@ -67,8 +75,8 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                     NewMenuItemv2("_Host Port", string.Empty, SetPort),
                     NewMenuItemv2("_Quit", string.Empty, () => Application.RequestStop())
                 }),
-                //new MenuBarItemv2("_Edit", System.Array.Empty<MenuItemv2>()),
-                new MenuBarItemv2("_Help", Array.Empty<MenuItemv2>())
+                new MenuBarItemv2("_Show", CreateShowMenuItems()),
+               // new MenuBarItemv2("_Help", Array.Empty<MenuItemv2>())
             });
             _stageBtn = NewMenuItemv2("_Stage", string.Empty, () => SwitchToStageMode());
             _castBtn = NewMenuItemv2("_Cast", string.Empty, () => SwitchToCastMode());
@@ -78,6 +86,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             top.Add(_stageBtn);
             top.Add(_castBtn);
             RNetTerminalStyle.SetMenuSchema(menu);
+            UpdateShowMenuChecks();
             
 
             _connectionStatusLabel = RUI.NewLabel(string.Empty, Pos.AnchorEnd(15), 0, 15);
@@ -107,25 +116,48 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 Orientation = Orientation.Vertical,
                 BorderStyle = LineStyle.None
             };
+            var tvMargin = tv.Margin;
+            if (tvMargin != null)
+            {
+                tvMargin.Thickness = new Thickness(0);
+            }
+            var tvPadding = tv.Padding;
+            if (tvPadding != null)
+            {
+                tvPadding.Thickness = new Thickness(0);
+            }
             RNetTerminalStyle.SetTileViewSchema(tv);
             tv.Border!.Width = 0;
             tv.Border.Visible = false;
             tv.TrySplitTile(0, 2, out var tvLeft);
             tv.TrySplitTile(1, 2, out var tv2);
-
-            _score = BuildScoreWindow();
-            _stage = BuildStageWindow();
-            _cast = BuildCastWindow();
-            _propInsp = CreatePropertyInspector(sendCommandAsync);
-            var logs = CreateLog();
-
+            var leftMargin = tvLeft.Margin;
+            if (leftMargin != null)
+            {
+                leftMargin.Thickness = new Thickness(0);
+            }
+            var leftPadding = tvLeft.Padding;
+            if (leftPadding != null)
+            {
+                leftPadding.Thickness = new Thickness(0);
+            }
+            var rightMargin = tv2.Margin;
+            if (rightMargin != null)
+            {
+                rightMargin.Thickness = new Thickness(-1,-1,0,-1);
+            }
+            var rightPadding = tv2.Padding;
+            if (rightPadding != null)
+            {
+                rightPadding.Thickness = new Thickness(0);
+            }
 
             _stage.Visible = true;
             _cast.Visible = false;
 
             tv.LineStyle = LineStyle.Single;
             tv2.LineStyle = LineStyle.Single;
-            tv2.Tiles.ElementAt(0).Title = "Property Inspector";
+            //tv2.Tiles.ElementAt(0).Title = "Property Inspector";
             tv2.Tiles.ElementAt(0).ContentView!.Add(_propInsp);
             tv2.Tiles.ElementAt(1).Title = "Log";
             tv2.Tiles.ElementAt(1).ContentView!.Add(logs);
@@ -156,6 +188,88 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             store.MovieStateChanged -= OnMovieStateChanged;
         }
 
+        private IEnumerable<View> CreateShowMenuItems()
+        {
+            return new View[]
+            {
+                CreateShowMenuCheck("_Show first Behavior", () => _score?.ShowFirstBehavior ?? false, value =>
+                {
+                    if (_score != null)
+                    {
+                        _score.ShowFirstBehavior = value;
+                    }
+                }, checkBox => _showFirstBehaviorCheckBox = checkBox),
+                CreateShowMenuCheck("Show _Member Name", () => _score?.ShowMemberName ?? false, value =>
+                {
+                    if (_score != null)
+                    {
+                        _score.ShowMemberName = value;
+                    }
+                }, checkBox => _showMemberNameCheckBox = checkBox),
+                CreateShowMenuCheck("Show _Sprite Name", () => _score?.ShowSpriteName ?? false, value =>
+                {
+                    if (_score != null)
+                    {
+                        _score.ShowSpriteName = value;
+                    }
+                }, checkBox => _showSpriteNameCheckBox = checkBox)
+            };
+        }
+
+        private MenuItemv2 CreateShowMenuCheck(string label, Func<bool> getter, Action<bool> setter, Action<CheckBox> register)
+        {
+            var checkBox = new CheckBox
+            {
+                Title = label,
+                CheckedState = getter() ? CheckState.Checked : CheckState.UnChecked
+            };
+            register(checkBox);
+            var menuItem = new MenuItemv2 { CommandView = checkBox };
+            menuItem.SetScheme(RNetTerminalStyle.MenuScheme);
+            checkBox.CheckedStateChanged += (_, _) =>
+            {
+                if (_updatingShowMenu)
+                {
+                    return;
+                }
+
+                setter(checkBox.CheckedState == CheckState.Checked);
+                UpdateShowMenuChecks();
+            };
+            return menuItem;
+        }
+
+        private void UpdateShowMenuChecks()
+        {
+            if (_score == null)
+            {
+                return;
+            }
+
+            _updatingShowMenu = true;
+            try
+            {
+                if (_showFirstBehaviorCheckBox != null)
+                {
+                    _showFirstBehaviorCheckBox.CheckedState = _score.ShowFirstBehavior ? CheckState.Checked : CheckState.UnChecked;
+                }
+
+                if (_showMemberNameCheckBox != null)
+                {
+                    _showMemberNameCheckBox.CheckedState = _score.ShowMemberName ? CheckState.Checked : CheckState.UnChecked;
+                }
+
+                if (_showSpriteNameCheckBox != null)
+                {
+                    _showSpriteNameCheckBox.CheckedState = _score.ShowSpriteName ? CheckState.Checked : CheckState.UnChecked;
+                }
+            }
+            finally
+            {
+                _updatingShowMenu = false;
+            }
+        }
+
         private MenuItemv2 NewMenuItemv2(string text, string helperText, Action action)
         {
             var menuItem = new MenuItemv2(text, helperText, action);
@@ -176,12 +290,29 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             {
                 Log($"Play from {f}");
                 QueueGoToFrame(f, force: true);
+                if (!_isMoviePlaying)
+                {
+                    var store = TerminalDataStore.Instance;
+                    if (store.ApplyLocalChanges)
+                    {
+                        ToggleLocalPlayback(true);
+                    }
+                    else
+                    {
+                        SendMovieCommand(new ResumeCmd());
+                        var state = store.MovieState;
+                        if (!state.IsPlaying || state.Frame != f)
+                        {
+                            store.UpdateMovieState(state with { Frame = f, IsPlaying = true });
+                        }
+                    }
+                }
             };
             scoreView.InfoChanged += (f, ch, sp, mem) =>
             {
                 UpdateInfo(f, ch, sp, mem);
-                TerminalDataStore.Instance.SetFrame(f);
-                QueueGoToFrame(f, force: true);
+                //TerminalDataStore.Instance.SetFrame(f);
+                //QueueGoToFrame(f, force: true);
             };
             return scoreView;
         }
@@ -248,14 +379,23 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             return _propertyInspector;
         }
         private View CreateLog()
-{
+        {
 
-            _logWindow = new View { X =0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
-            _logWindow.HorizontalScrollBar.Visible = true;
-            _logWindow.VerticalScrollBar.Visible = true;
-            _logList = RUI.NewListView(_logs, 0,0, Dim.Fill(), Dim.Fill());
-            _logWindow.Add(_logList);
-            return _logWindow;
+            _logTextView = new TextView
+            {
+                X = 0,
+                Y = 0,
+                Width = Dim.Fill(),
+                Height = Dim.Fill(),
+                ReadOnly = true,
+                Multiline = true,
+                WordWrap = true
+            };
+            _logTextView.VerticalScrollBar.AutoShow = true;
+            _logTextView.VerticalScrollBar.Visible = true;
+            _logTextView.HorizontalScrollBar.AutoShow = false;
+            _logTextView.HorizontalScrollBar.Visible = false;
+            return _logTextView;
         }
 
       
@@ -389,6 +529,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             }
 
             SendMovieCommand(new RewindCmd());
+            ToggleLocalPlayback(false);
         }
 
         private void OnPlayPauseClicked()
@@ -439,10 +580,10 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 if (_logs.Count > 100)
                     _logs.RemoveAt(0);
                 
-                if (_logList != null)
+                if (_logTextView != null)
                 {
-                    _logList.SetSource(new System.Collections.ObjectModel.ObservableCollection<string>(_logs));
-                    _logList.MoveEnd();
+                    _logTextView.Text = string.Join(Environment.NewLine, _logs);
+                    _logTextView.MoveEnd();
                 }
             }
 

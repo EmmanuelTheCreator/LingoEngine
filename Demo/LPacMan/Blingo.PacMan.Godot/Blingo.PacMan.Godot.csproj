@@ -1,0 +1,81 @@
+﻿<Project Sdk="Godot.NET.Sdk/4.5.0-dev.5">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<EnableDynamicLoading>true</EnableDynamicLoading>
+		<Nullable>enable</Nullable>
+		<LangVersion>12</LangVersion>
+		<Platforms>AnyCPU;x64;x86</Platforms>
+		<Configurations>Debug;Release;DebugWithDirector</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'DebugWithDirector'">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>portable</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>DEBUG;TRACE;DEBUG_WITH_DIRECTOR</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='DebugWithDirector'">
+		<UseDirector>true</UseDirector>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug' AND '$(UseDirector)'=='true'">
+		<DefineConstants>$(DefineConstants);DEBUG_WITH_DIRECTOR</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<ProjectReference Include="..\..\..\src\Director\BlingoEngine.Director.LGodot\BlingoEngine.Director.LGodot.csproj" />
+		<ProjectReference Include="..\..\..\src\Director\BlingoEngine.Director.Core\BlingoEngine.Director.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Media\Icons\DirectorSharp_Icon.png" />
+	  <None Include="Media\Icons\Director_Icons.png" />
+	  <None Include="Media\Icons\General_Icons.png" />
+	  <None Include="Media\Icons\Painter2_Icons.png" />
+	  <None Include="Media\Icons\Painter_Icons.png" />
+	  <None Include="Media\Sounds\back.mp3" />
+	  <None Include="Media\Sounds\bonus.mp3" />
+	  <None Include="Media\Sounds\dead.mp3" />
+	  <None Include="Media\Sounds\dot.mp3" />
+	  <None Include="Media\Sounds\eat.mp3" />
+	  <None Include="Media\Sounds\eaten.mp3" />
+	  <None Include="Media\Sounds\frightened.mp3" />
+	  <None Include="Media\Sounds\intro.mp3" />
+	  <None Include="Media\Sounds\life.mp3" />
+	  <None Include="Media\Fonts\OFL.txt" />
+	  <None Include="Media\Fonts\press-start-2p-v9-latin-regular.ttf" />
+	  <None Include="Media\Fonts\press-start-2p-v9-latin-regular2.ttf" />
+	  <None Include="Media\Data\characters.png" />
+	  <None Include="Media\Data\maze-1.png" />
+	  <None Include="Media\Data\maze-2.png" />
+	  <None Include="Media\Data\maze-3.png" />
+	  <None Include="Media\Data\maze-4.png" />
+	  <None Include="Media\Data\maze.png" />
+	  <None Include="Media\Data\misc.png" />
+	  <None Include="Media\Data\mspacman.png" />
+	  <None Include="Media\Data\pills.png" />
+	  <None Include="Media\Data\sprites.png" />
+	  <None Include="Media\Data\start.png" />
+	  <Content Include="Properties\launchSettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="project.godot" />
+	  <None Include="Scenes\root_node_tetri_grounds.tscn" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\src\BlingoEngine.LGodot\BlingoEngine.LGodot.csproj" />
+		<ProjectReference Include="..\..\..\src\BlingoEngine\BlingoEngine.csproj" />
+		<ProjectReference Include="..\Blingo.PacMan.Core\Blingo.PacMan.Core.csproj" />
+	</ItemGroup>
+
+
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="echo CONFIG=$(Configuration)  DEFS=$(DefineConstants)" />
+	</Target>
+
+
+</Project>

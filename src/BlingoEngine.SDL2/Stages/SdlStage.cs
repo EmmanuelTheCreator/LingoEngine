@@ -182,7 +182,7 @@ public class SdlStage : AbstSdlComponent, IBlingoFrameworkStage, IDisposable
             childMovieContext.RenderToTexture(context);
         }
         //_activeMovie!.RenderSprites(context);
-        _factory.ComponentContainer.Render(context);
+        //_factory.ComponentContainer.Render(context);
         SDL.SDL_SetRenderTarget(context.Renderer, prev);
     }
 

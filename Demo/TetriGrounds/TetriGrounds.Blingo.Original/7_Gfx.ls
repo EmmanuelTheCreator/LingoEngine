@@ -1,2 +1,2 @@
 -- Copyright to EmmanuelTheCreator.com-- This file was written in 2005, yeah a lot has evolved since then :-)property myStartX, myStartYon new me  myStartX = 250  myStartY =45  return meendon PositionBlock me,_sprNum,_X,_Y  if voidp(_sprNum) then exit  xx = myStartX + _X*17  yy = myStartY + _Y*17  sprite(_sprNum).locH=xx  sprite(_sprNum).locV=yyendon destroy me  end
-on new me  myStartX = 250  myStartY =45  return meendon PositionBlock me,_sprNum,_X,_Y  if voidp(_sprNum) then exit  xx = myStartX + _X*17  yy = myStartY + _Y*17  sprite(_sprNum).locH=xx  sprite(_sprNum).locV=yyendon destroy me  end
+

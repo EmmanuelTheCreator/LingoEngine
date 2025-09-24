@@ -52,6 +52,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
 
         private void Refresh()
         {
+            
             bool changed = false;
             if (myOldX != _Mouse.MouseH)
             {
@@ -65,6 +66,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
             if (changed)
             {
+                //Console.WriteLine($"Mouse at {_Mouse.MouseH},{_Mouse.MouseV}");
                 var sprite = Sprite(myNum);
                 sprite.SetMember(myMembers[myAnimateNum]);
                 
@@ -82,8 +84,8 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
                     else
                         myDir = 1;
                 }
-                sprite.LocH = _Mouse.MouseH + 22;
-                sprite.LocV = _Mouse.MouseV;
+                sprite.LocH = _Mouse.MouseH + 20;
+                sprite.LocV = _Mouse.MouseV + 15;
             }
         }
 
