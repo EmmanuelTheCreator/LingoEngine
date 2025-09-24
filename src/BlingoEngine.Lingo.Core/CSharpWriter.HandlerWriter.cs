@@ -53,7 +53,7 @@ public partial class CSharpWriter
         AppendLine("{");
         Indent();
 
-        var props = new List<PropDesc>();
+        var propBuilder = new OrderedPropertyListBuilder<string, PropDesc>(StringComparer.OrdinalIgnoreCase);
         foreach (var child in node.Block.Children)
         {
             if (child is BlingoCallNode call &&
@@ -97,11 +97,12 @@ public partial class CSharpWriter
                 if (propName != null && comment != null && defDatum != null)
                 {
                     var defVal = FormatDefault(defDatum, format);
-                    props.Add(new PropDesc(propName, EscapeString(comment), defVal));
+                    propBuilder.AddOrUpdate(propName, new PropDesc(propName, EscapeString(comment), defVal));
                 }
             }
         }
 
+        var props = propBuilder.Items;
         if (props.Count > 0)
         {
             AppendLine("return new BehaviorPropertyDescriptionList()");

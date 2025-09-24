@@ -587,7 +587,7 @@ public class BlingoToCSharpConverter
 
     private static List<(string Name, string Default, string Comment, string Format)> ExtractPropertyDescriptions(string source)
     {
-        var list = new List<(string Name, string Default, string Comment, string Format)>();
+        var builder = new OrderedPropertyListBuilder<string, (string Name, string Default, string Comment, string Format)>(StringComparer.OrdinalIgnoreCase);
         var regex = new Regex(@"addProp\s+description,#(?<name>\w+),\s*\[(?<body>[^\]]*)\]", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         foreach (Match m in regex.Matches(source))
         {
@@ -605,9 +605,10 @@ public class BlingoToCSharpConverter
             else if (fmt == "color" && Regex.IsMatch(def, @"^\d+$"))
                 def = $"AColor.FromCode({def})";
             var comment = commentMatch.Success ? Escape(commentMatch.Groups[1].Value) : string.Empty;
-            list.Add((name, def, comment, fmt));
+            var entry = (name, def, comment, fmt);
+            builder.AddOrUpdate(name, entry);
         }
-        return list;
+        return builder.ToList();
     }
 
     private static List<string> ExtractPropertyDeclarations(string source)
