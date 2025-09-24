@@ -154,6 +154,7 @@ public partial class CSharpWriter
 
                 if (propName != null && comment != null && (defDatum != null || defaultNode != null))
                 {
+
                     string? defVal;
                     if (defDatum != null)
                     {

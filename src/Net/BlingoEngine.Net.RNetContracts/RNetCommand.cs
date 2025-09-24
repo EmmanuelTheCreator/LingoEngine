@@ -1,8 +1,18 @@
-﻿namespace BlingoEngine.Net.RNetContracts;
+﻿using System.Text.Json.Serialization;
+
+namespace BlingoEngine.Net.RNetContracts;
 
 /// <summary>
 /// Base type for commands sent over the network.
 /// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(SetSpritePropCmd), nameof(SetSpritePropCmd))]
+[JsonDerivedType(typeof(SetMemberPropCmd), nameof(SetMemberPropCmd))]
+[JsonDerivedType(typeof(SetCastPropCmd), nameof(SetCastPropCmd))]
+[JsonDerivedType(typeof(GoToFrameCmd), nameof(GoToFrameCmd))]
+[JsonDerivedType(typeof(RewindCmd), nameof(RewindCmd))]
+[JsonDerivedType(typeof(PauseCmd), nameof(PauseCmd))]
+[JsonDerivedType(typeof(ResumeCmd), nameof(ResumeCmd))]
 public abstract record RNetCommand : IRNetCommand;
 
 /// <summary>

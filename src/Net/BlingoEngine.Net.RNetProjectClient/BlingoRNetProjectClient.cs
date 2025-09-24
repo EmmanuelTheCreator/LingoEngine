@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using BlingoEngine.Net.RNetClient.Common;
 using BlingoEngine.Net.RNetContracts;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -19,6 +20,7 @@ public sealed class BlingoRNetProjectClient : IBlingoRNetProjectClient
     private HubConnection? _connection;
     private BlingoNetConnectionState _state = BlingoNetConnectionState.Disconnected;
     private readonly IRNetConfiguration _config;
+    private static readonly JsonSerializerOptions CommandSerializerOptions = new(JsonSerializerDefaults.Web);
 
     public BlingoRNetProjectClient(IRNetConfiguration config)
     {
@@ -35,6 +37,8 @@ public sealed class BlingoRNetProjectClient : IBlingoRNetProjectClient
         public RNetClientType ClientType { get; set; } = RNetClientType.Project;
         public RNetRemoteRole RemoteRole { get; set; } = RNetRemoteRole.Client;
     }
+
+    private sealed record CommandEnvelope(string Type, JsonElement Payload);
 
     /// <inheritdoc />
     public event Action<BlingoNetConnectionState>? ConnectionStatusChanged;
@@ -224,7 +228,10 @@ public sealed class BlingoRNetProjectClient : IBlingoRNetProjectClient
     public Task SendCommandAsync(RNetCommand cmd, CancellationToken ct = default)
     {
         EnsureConnected();
-        return _connection!.InvokeAsync("SendCommand", cmd, ct).WaitAsync(TimeSpan.FromSeconds(5), ct);
+        var type = cmd.GetType();
+        var payload = JsonSerializer.SerializeToElement(cmd, type, CommandSerializerOptions);
+        var envelope = new CommandEnvelope(type.Name, payload);
+        return _connection!.InvokeAsync("SendCommand", envelope, ct).WaitAsync(TimeSpan.FromSeconds(5), ct);
     }
 
     /// <inheritdoc />

@@ -23,12 +23,12 @@ namespace BlingoEngine.IO.Legacy.Texts
     public sealed class XmedDocument
     {
         public string Text { get; set; } = string.Empty;
-        public List<XmedTextRun> Runs { get; } = new();
-        public List<XmedStyleDescriptor> Styles { get; } = new();
-        public List<XmedRunMapEntry> RunMap { get; } = new();
+        public List<XmedTextRun> Runs { get; set; } = new();
+        public List<XmedStyleDescriptor> Styles { get; set; } = new(); 
+        public List<XmedRunMapEntry> RunMap { get; set; } = new();
         public uint Width { get; set; }
         public uint LineSpacing { get; set; }
-        public uint TextLength { get; set; }
+        public int TextLength { get; set; }
         public int DirectorVersion { get; set; }
         public XmedRichTextMetadata? RichText { get; set; }
     }
@@ -191,7 +191,16 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Modern XMED (v13+) parse.</summary>
         private XmedDocument ReadModernXmed(byte[] buffer, int directorVersion)
         {
-            var directory = ReadHeaderDirectory(buffer);
+
+            (var styles, string text, List<byte> somting) = ReadBlocks(buffer);
+            var doc = new XmedDocument();
+            doc.Styles = styles;
+            doc.Text = text;
+            doc.TextLength = text.Length;
+            doc.Runs.Add(new XmedTextRun { Text = text, Length = text.Length });
+            return doc;
+
+            //var directory = ReadHeaderDirectory(buffer);
             // var json = System.Text.Json.JsonSerializer.Serialize(directory, new JsonSerializerOptions { WriteIndented = true });
             //var (_, _, textData) = ReadTextBlock(directory);
             //var test = textData.ToArray().ToHexString();
@@ -297,7 +306,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             //    MergeAdjacentEqualStyleRuns(doc.Runs);
             //}
-//            return doc;
+            //            return doc;
             throw new NotImplementedException();
         }
 
@@ -349,21 +358,22 @@ namespace BlingoEngine.IO.Legacy.Texts
         #region Directory reading
         public XmedDir ReadHeaderDirectory(byte[] buffer)
         {
-            return new XmedDir(buffer, new List<XmedDirEntry>(), 0);
-            var blocks = ReadBlocks(buffer);
-
+            //return new XmedDir(buffer, new List<XmedDirEntry>(), 0);
+            //(var style, string text, List<int> somting) = ReadBlocks(buffer);
+            
             throw new NotImplementedException();
         }
-        static List<byte[]> ReadBlocks(byte[] buffer)
+        static (List<XmedStyleDescriptor> style, string Text,List<byte> Something) ReadBlocks(byte[] buffer)
         {
             // only for test : Text_Single_Line_Multi_Style_file_should_read_long_text_and_runs
             // Text_Single_Line_Multi_Style_13.xmed.bin
             // Todo : find the header legth and how to read it
             // TODO : find the 
-            TryFindLength(buffer);
+            //TryFindLength(buffer);
             var styles = new List<XmedStyleDescriptor>();
 
             var blocks = new List<byte[]>();
+            List<byte> parts = new();
             int i = 0;// 233;
             var sb = new StringBuilder();
             string allText = "";
@@ -381,7 +391,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     {
                         // reading somthing, is identical for all files.
                         // 045,046,182,181,149,181,165,165,046,039,034,145,146,147,148,133,131 
-                        var parts = ReadRunTuples(blockdata, 0, blockdata.Length, allText.Length);
+                        parts = ReadRunTuples(blockdata, 0, blockdata.Length, allText.Length);
                     }
                     else if (len == 64) // font/style tail (hardcoded for now)
                     {
@@ -416,7 +426,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 //while (i < buffer.Length && buffer[i] != 0x2c) i++;
             }
             var testtttt = sb.ToString();
-            return blocks;
+            return (styles, allText, parts);
         }
 
         private static void TryFindLength(byte[] buffer)

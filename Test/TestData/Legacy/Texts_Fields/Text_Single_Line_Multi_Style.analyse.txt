@@ -121,6 +121,15 @@ Last block:
 					 
 045,046,182,181,149,181,165,165,046,039,034,145,146,147,148,133,131 	// Text_Multi_Line_Multi_Style_13
 
+Colors:
+Arial :  #FF0000 	red		46 46 30 30 30 30			color index: 12		line 
+Tahoma:  #FFFF00	yellow	46 46 46 46 30 30			color index: 14		line 
+Teminal: #00FF00 	green	30 30 46 46 30 30			color index: 10		line 
+Tahoma:  #FF9900	orange	46 46 30 30 + 39 39 30 30	color index: 54		line 
+arial :  #FF0000 	red		46 46 30 30 30 30           color index: 12		
+
+[ 02 30 02 <font size key> 01 ] [ 02 ?? ?? <line height key> 01 ]
+
 
 font size, line height, bytes
 09	,	11	,	02 30 02 39 32 01 30 C1 03 02 2D 31 82 02 35 42

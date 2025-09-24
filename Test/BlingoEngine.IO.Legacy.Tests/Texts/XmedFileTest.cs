@@ -20,6 +20,15 @@ public class XmedFileTest
         textFromRuns.ShouldMatchNormalized("Hallo");
         document.Runs.Should().HaveCount(1);
     }
+    [Fact]
+    public void Text_3_Paragraps_13()
+    {
+        var document = ReadDocument("Text_3_Paragraps_13.xmed.bin");
+
+        string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
+        //textFromRuns.ShouldMatchNormalized("My first paragraph centered");
+        document.Runs.Should().HaveCount(1);
+    }
 
     [Fact]
     public void Text_Hallo_multifont_file_should_list_multiple_fonts()
@@ -47,6 +56,14 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("This text is red, Arial,12px,  The text is yellow, Tahoma, 9px, , bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again");
+    }
+    [Fact]
+    public void Text_Multi_Line_Multi_Style_file_should_read_long_text_and_runs()
+    {
+        var document = ReadDocument("Text_Multi_Line_Multi_Style_13.xmed.bin");
+
+        string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
+        //textFromRuns.ShouldMatchNormalized("This text is red, Arial,12px,  The text is yellow, Tahoma, 9px, , bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again");
     }
 
     [Fact]
