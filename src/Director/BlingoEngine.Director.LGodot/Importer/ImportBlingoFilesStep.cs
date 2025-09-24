@@ -1,5 +1,7 @@
-﻿using Godot;
-using BlingoEngine.Lingo.Core;
+using Godot;
+using BlingoEngine.Director.Core.Importer;
+using BlingoEngine.Legacy.Lingo;
+using BlingoEngine.Scripts;
 using BlingoEngine.Projects;
 
 namespace BlingoEngine.Director.LGodot.Gfx;

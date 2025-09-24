@@ -9,4 +9,8 @@
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BlingoEngine\BlingoEngine.csproj" />
+  </ItemGroup>
+
 </Project>
