@@ -159,4 +159,48 @@ public class B2Behavior : BlingoSpriteBehavior
         LegacyCodeAssert.AreEqual(expectedCaller, callerCode);
         LegacyCodeAssert.AreEqual(expectedCallee, calleeCode);
     }
+
+    [Fact]
+    public void SendSpriteAssignment_AssignsResultVariable()
+    {
+        const string callerSource = """
+on beginSprite
+  result = sendSprite 2, #getValue
+end
+""";
+        const string calleeSource = """
+on getValue
+  return 5
+end
+""";
+
+        var generator = new BlLegacyClassGenerator();
+        var calleeCode = generator.GenerateClass("B2", calleeSource, BlLingoScriptKind.Behavior);
+        var callerCode = generator.GenerateClass("B1", callerSource, BlLingoScriptKind.Behavior);
+
+        const string expectedCaller = """
+public class B1Behavior : BlingoSpriteBehavior, IHasBeginSpriteEvent
+{
+    public B1Behavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void BeginSprite()
+    {
+        result = SendSprite<B2Behavior, int>(2, b2behavior => b2behavior.getValue());
+    }
+}
+""";
+
+        const string expectedCallee = """
+public class B2Behavior : BlingoSpriteBehavior
+{
+    public B2Behavior(IBlingoMovieEnvironment env) : base(env) { }
+    public int GetValue()
+    {
+        return 5;
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expectedCaller, callerCode);
+        LegacyCodeAssert.AreEqual(expectedCallee, calleeCode);
+    }
 }

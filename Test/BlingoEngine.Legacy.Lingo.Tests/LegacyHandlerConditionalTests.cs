@@ -121,4 +121,60 @@ public class TestScriptBehavior : BlingoSpriteBehavior
 
         LegacyCodeAssert.AreEqual(expected, code);
     }
+
+    [Fact]
+    public void NestedConditionals_TranslateWithinLoops()
+    {
+        const string source = """
+on test
+  if flag then
+    repeat with i = 1 to limit
+      repeat with item in items
+        if item > threshold then
+          put item into total
+        else
+          put 0 into total
+        end if
+      end repeat
+    end repeat
+  else
+    put 0 into total
+  end if
+end
+""";
+
+        var code = GenerateBehavior(source);
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        if (flag)
+        {
+            for (int i = 1; i <= limit; i++)
+            {
+                foreach (var item in items)
+                {
+                    if (item > threshold)
+                    {
+                        total = item;
+                    }
+                    else
+                    {
+                        total = 0;
+                    }
+                }
+            }
+        }
+        else
+        {
+            total = 0;
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
+    }
 }

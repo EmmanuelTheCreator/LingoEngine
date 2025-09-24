@@ -43,7 +43,7 @@
     <ProjectReference Include="..\..\BlingoEngine.IO.Data\BlingoEngine.IO.Data.csproj" />
     <ProjectReference Include="..\..\BlingoEngine.IO\BlingoEngine.IO.csproj" />
     <ProjectReference Include="..\..\BlingoEngine.LGodot\BlingoEngine.LGodot.csproj" />
-    <ProjectReference Include="..\..\BlingoEngine.Lingo.Core\BlingoEngine.Lingo.Core.csproj" />
+    <ProjectReference Include="..\..\BlingoEngine.Legacy.Lingo\BlingoEngine.Legacy.Lingo.csproj" />
     <ProjectReference Include="..\..\BlingoEngine\BlingoEngine.csproj" />
     <ProjectReference Include="..\BlingoEngine.Director.Core\BlingoEngine.Director.Core.csproj" />
   </ItemGroup>

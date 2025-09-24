@@ -39,7 +39,7 @@
     <ProjectReference Include="..\..\BlingoEngine.IO\BlingoEngine.IO.csproj" />
     <ProjectReference Include="..\..\BlingoEngine.IO.Legacy\BlingoEngine.IO.Legacy.csproj" />
     <ProjectReference Include="..\..\BlingoEngine\BlingoEngine.csproj" />
-    <ProjectReference Include="..\..\BlingoEngine.Lingo.Core\BlingoEngine.Lingo.Core.csproj" />
+    <ProjectReference Include="..\..\BlingoEngine.Legacy.Lingo\BlingoEngine.Legacy.Lingo.csproj" />
     <ProjectReference Include="..\..\Net\BlingoEngine.Net.RNetHost.Common\BlingoEngine.Net.RNetHost.Common.csproj" />
     <ProjectReference Include="..\..\Net\BlingoEngine.Net.RNetProjectClient\BlingoEngine.Net.RNetProjectClient.csproj" />
     <ProjectReference Include="..\..\Net\BlingoEngine.Net.RNetPipeClient\BlingoEngine.Net.RNetPipeClient.csproj" />
