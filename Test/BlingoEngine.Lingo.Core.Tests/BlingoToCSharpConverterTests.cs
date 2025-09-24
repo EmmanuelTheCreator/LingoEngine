@@ -198,6 +198,43 @@ end";
     }
 
     [Fact]
+    public void PropertyDescriptionListWithColorEntriesMatchesExpectedOutput()
+    {
+        var lingo = string.Join('\n',
+            "on getPropertyDescriptionList",
+            "  description = [:]",
+            "  addProp description,#myColor, [#default:rgb(0,0,0), #format:#color, #comment:\"Color:\"]",
+            "  addProp description,#myColorOver, [#default:rgb(100,0,0), #format:#color, #comment:\"ColorOver:\"]",
+            "  addProp description,#myColorLock, [#default:rgb(150,150,150), #format:#color, #comment:\"ColorLock:\"]",
+            "  addProp description,#myLock, [#default:false, #format:#boolean, #comment:\"Start Locked:\"]",
+            "  addProp description,#myFunction, [#default:0, #format:#symbol, #comment:\"Function:\"]",
+            "  addProp description,#mySpriteNum, [#default:4, #format:#integer, #comment:\"Sprite Num:\"]",
+            "  addProp description,#myVar1, [#default:0, #format:#integer, #comment:\"Var 1:\"]",
+            "  addProp description,#myVar2, [#default:0, #format:#integer, #comment:\"Var 2:\"]",
+            "  return description",
+            "end");
+
+        var result = _converter.Convert(lingo);
+
+        var expected = string.Join('\n',
+            "public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()",
+            "{",
+            "    return new BehaviorPropertyDescriptionList()",
+            "        .Add(this, x => x.myColor, \"Color:\", AColor.FromCode(0,0,0))",
+            "        .Add(this, x => x.myColorOver, \"ColorOver:\", AColor.FromCode(100,0,0))",
+            "        .Add(this, x => x.myColorLock, \"ColorLock:\", AColor.FromCode(150,150,150))",
+            "        .Add(this, x => x.myLock, \"Start Locked:\", false)",
+            "        .Add(this, x => x.myFunction, \"Function:\", \"0\")",
+            "        .Add(this, x => x.mySpriteNum, \"Sprite Num:\", 4)",
+            "        .Add(this, x => x.myVar1, \"Var 1:\", 0)",
+            "        .Add(this, x => x.myVar2, \"Var 2:\", 0);",
+            "}");
+
+        var normalized = result.Replace("\r\n", "\n").Trim();
+        Assert.Equal(expected, normalized);
+    }
+
+    [Fact]
     public void DuplicatePropertyDescriptionEntriesAreOverwritten()
     {
         var lingo = string.Join('\n',
