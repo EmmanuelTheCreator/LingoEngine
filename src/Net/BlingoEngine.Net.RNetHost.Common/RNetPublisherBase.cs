@@ -21,6 +21,7 @@ namespace BlingoEngine.Net.RNetHost.Common;
 public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 {
     private readonly ConcurrentDictionary<(int SpriteNum, int BeginFrame), SpriteDeltaDto> _spriteQueue = new();
+    private readonly ConcurrentDictionary<BlingoSprite2D, (int SpriteNum, int BeginFrame)> _spriteKeys = new();
     private readonly ConcurrentDictionary<(int CastLibNum, int MemberNum, string Prop), RNetMemberPropertyDto> _memberQueue = new();
     private readonly ConcurrentDictionary<string, RNetMoviePropertyDto> _movieQueue = new();
     private readonly ConcurrentDictionary<string, RNetStagePropertyDto> _stageQueue = new();
@@ -339,9 +340,17 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
     {
         if (sender is BlingoSprite2D sprite2D && e.PropertyName is not null)
         {
-            var value = sprite2D.ToDto();
-            // todo
-            //TryPublishSpriteProperty(value);
+            var newKey = (sprite2D.SpriteNum, sprite2D.BeginFrame);
+            if (_spriteKeys.TryGetValue(sprite2D, out var previousKey) && previousKey != newKey)
+            {
+                _spriteQueue.TryRemove(previousKey, out _);
+            }
+
+            var frame = _movie?.Frame ?? sprite2D.BeginFrame;
+            var delta = sprite2D.ToDelta(frame);
+            TryPublishDelta(delta);
+
+            _spriteKeys[sprite2D] = newKey;
         }
     }
 
@@ -374,6 +383,10 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
         PropertyChangedEventHandler handler = OnSpitePropertyChanged;
         // Currently no per-property sprite publishing.
         Subscribe(sprite, handler);
+        if (sprite is BlingoSprite2D sprite2D)
+        {
+            _spriteKeys[sprite2D] = (sprite2D.SpriteNum, sprite2D.BeginFrame);
+        }
     }
 
    
@@ -389,6 +402,13 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
         if (_propSubs.Remove(src, out var h))
         {
             src.PropertyChanged -= h;
+        }
+        if (src is BlingoSprite2D sprite2D)
+        {
+            if (_spriteKeys.TryRemove(sprite2D, out var key))
+            {
+                _spriteQueue.TryRemove(key, out _);
+            }
         }
     }
 }
