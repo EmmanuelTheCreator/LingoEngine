@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Blingo.PacMan.Core.Models;
+using AbstUI.Primitives;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
@@ -48,6 +49,11 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     /// Member that contains the Pac-Man artwork.
     /// </summary>
     public string MemberName { get; set; } = "sprites";
+
+    /// <summary>
+    /// Optional rectangle that selects the Pac-Man icon within the sprite sheet.
+    /// </summary>
+    public ARect? MemberSourceRect { get; set; }
 
     public void BeginSprite()
     {
@@ -135,6 +141,12 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
             if (member != null)
             {
                 sprite2D.Member = member;
+            }
+
+            var sourceRect = MemberSourceRect ?? Me.MemberSourceRect;
+            if (sourceRect is { })
+            {
+                sprite2D.MemberSourceRect = sourceRect;
             }
 
             if (Math.Abs(ScaleFactor - 1f) > float.Epsilon)

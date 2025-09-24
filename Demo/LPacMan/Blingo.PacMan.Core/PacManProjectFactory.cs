@@ -1,10 +1,13 @@
 ﻿using BlingoEngine.Casts;
 using BlingoEngine.Core;
+using AbstUI.Primitives;
 using Blingo.PacMan.Core.Models;
+using Blingo.PacMan.Core.Sprites.Behaviors;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Projects;
 using BlingoEngine.Setup;
+using BlingoEngine.Sprites;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Blingo.PacMan.Core;
@@ -16,7 +19,7 @@ public class PacManProjectFactory : IBlingoProjectFactory
     /// Name used throughout the project when referring to the root movie.
     /// </summary>
     public const string MovieName = "Blingo PacMan";
-    private BlingoProjectSettings _settings;
+    private BlingoProjectSettings? _settings;
     private IBlingoMovie? _movie;
     private BlingoPlayer? _blingoPlayer;
 
@@ -31,12 +34,13 @@ public class PacManProjectFactory : IBlingoProjectFactory
             .AddFont("press-start-2p_2", Path.Combine("Media", "Fonts", "press-start-2p-v9-latin-regular2.ttf"))
             .WithProjectSettings(s =>
                 {
+                    _settings = s;
                     s.ProjectFolder = "..\\";
                     s.ProjectName = "BlingoPacMan";
                     s.CodeFolder = "..\\Blingo.PacMan.Core\\";
                     s.MaxSpriteChannelCount = 300;
                     s.StageWidth = 730;
-                    s.StageHeight = 500; 
+                    s.StageHeight = 500;
                 })
                 .ForMovie(MovieName, s => s
                     .AddScriptsFromAssembly()
@@ -145,9 +149,86 @@ public class PacManProjectFactory : IBlingoProjectFactory
     /// </summary>
     public void InitSprites()
     {
-       
-        //_movie.Transitions.Add(54, new BlingoTransitionFrameSettings { Duration = 0.5f, TransitionId = 37 }); // 37.: Venetian blinds
-        _movie.AddSprite(1,1,50,-230,-230).SetMember("start"); // background
+        if (_movie == null)
+        {
+            return;
+        }
+
+        var frameCount = Math.Max(1, _movie.FrameCount);
+        _movie.AddFrameBehavior<PacManStayOnFrameBehavior>(1);
+
+        var stageWidth = _blingoPlayer?.Stage.Width ?? _settings?.StageWidth ?? 730;
+        var stageHeight = _blingoPlayer?.Stage.Height ?? _settings?.StageHeight ?? 500;
+        var centerX = stageWidth / 2f;
+        var centerY = stageHeight / 2f;
+
+        var background = _movie.AddSprite(1, 1, frameCount, -230, -230, sprite => sprite.Lock = true);
+        background.SetMember("start");
+
+        var controller = _movie.AddSprite("PacMan.Controller", sprite =>
+        {
+            sprite.BeginFrame = 1;
+            sprite.EndFrame = frameCount;
+            sprite.LocH = centerX;
+            sprite.LocV = centerY;
+            sprite.LocZ = 100;
+            sprite.Puppet = true;
+            sprite.Lock = true;
+            sprite.Visibility = false;
+        });
+        controller.AddBehavior<PacManGameBehavior>();
+
+        var hudBanner = _movie.AddSprite(5, 1, frameCount, centerX, 40f, sprite =>
+        {
+            sprite.Puppet = true;
+            sprite.Lock = true;
+        });
+        hudBanner.SetMember("misc");
+        hudBanner.MemberSourceRect = new ARect(126, 4, 174, 52);
+
+        var startPrompt = _movie.AddSprite(6, 1, frameCount, centerX, 120f, sprite =>
+        {
+            sprite.Puppet = true;
+            sprite.Lock = true;
+        });
+        startPrompt.SetMember("misc");
+        startPrompt.MemberSourceRect = new ARect(68, 6, 112, 54);
+
+        var livesAnchor = _movie.AddSprite(20, 1, frameCount, 80f, stageHeight - 40f, sprite =>
+        {
+            sprite.Puppet = true;
+            sprite.Lock = true;
+            sprite.Visibility = false;
+        });
+        livesAnchor.SetMember("sprites");
+        var lifeSourceRect = new ARect(160, 2, 186, 28);
+        livesAnchor.MemberSourceRect = lifeSourceRect;
+        livesAnchor.AddBehavior<LivesBehavior>(behavior =>
+        {
+            behavior.Spacing = 36f;
+            behavior.ScaleFactor = 1f;
+            behavior.CastLibName = "Data";
+            behavior.MemberName = "sprites";
+            behavior.MemberSourceRect = lifeSourceRect;
+        });
+
+        var bonusesAnchor = _movie.AddSprite(21, 1, frameCount, stageWidth - 80f, stageHeight - 40f, sprite =>
+        {
+            sprite.Puppet = true;
+            sprite.Lock = true;
+            sprite.Visibility = false;
+        });
+        bonusesAnchor.SetMember("misc");
+        var bonusSourceRect = new ARect(186, 4, 238, 56);
+        bonusesAnchor.MemberSourceRect = bonusSourceRect;
+        bonusesAnchor.AddBehavior<BonusesBehavior>(behavior =>
+        {
+            behavior.Spacing = 48f;
+            behavior.ScaleFactor = 0.75f;
+            behavior.BonusCastLibName = "Data";
+            behavior.BonusMemberName = "misc";
+            behavior.MemberSourceRect = bonusSourceRect;
+        });
     }
 }
 
