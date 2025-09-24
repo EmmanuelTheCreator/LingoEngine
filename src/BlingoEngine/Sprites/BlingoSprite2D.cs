@@ -45,6 +45,8 @@ namespace BlingoEngine.Sprites
         private int _constraint;
         private bool _directToStage;
         private float _blend = 100f;
+        private ARect? _memberSourceRect;
+        private bool _memberSourceRectChanged;
 
 
         #region Properties
@@ -271,6 +273,20 @@ namespace BlingoEngine.Sprites
             }
         }
 
+        public ARect? MemberSourceRect
+        {
+            get => _memberSourceRect;
+            set
+            {
+                if (_memberSourceRect == value) return;
+                _memberSourceRect = value;
+                _memberSourceRectChanged = true;
+                if (_frameworkSprite != null && _member != null)
+                    MemberHasChanged(forceSizeUpdate: true);
+                OnPropertyChanged();
+            }
+        }
+
         public int Size => Media.Length;
 
         public byte[] Media { get; set; } = new byte[] { };
@@ -336,6 +352,8 @@ namespace BlingoEngine.Sprites
             _frameworkSprite = frameworkSprite;
             _frameworkSprite.Ink = _ink;
             ApplyBlend();
+            if (_memberSourceRectChanged && _member != null)
+                MemberHasChanged(forceSizeUpdate: true);
         }
 
         #region Behaviors
@@ -528,18 +546,62 @@ When a movie stops, events occur in the following order:
 
         private APoint GetRegPointOffset()
         {
-            if (_member is { } member)
+            if (_member is null)
+                return new APoint();
+
+            var (baseOffset, sourceWidth, sourceHeight) = GetMemberSourceMetrics();
+            if (sourceWidth != 0 && sourceHeight != 0)
             {
-                var baseOffset = member.CenterOffsetFromRegPoint();
-                if (member.Width != 0 && member.Height != 0)
-                {
-                    float scaleX = Width / member.Width;
-                    float scaleY = Height / member.Height;
-                    return new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
-                }
-                return baseOffset;
+                float scaleX = Width / sourceWidth;
+                float scaleY = Height / sourceHeight;
+                return new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
             }
-            return new APoint();
+            return baseOffset;
+        }
+
+
+        private void ApplyMemberSourceRectSize(bool force)
+        {
+            if (_frameworkSprite == null || _member == null)
+                return;
+
+            float targetWidth;
+            float targetHeight;
+
+            if (_member is BlingoMemberBitmap && MemberSourceRect is { } rect)
+            {
+                targetWidth = rect.Width;
+                targetHeight = rect.Height;
+            }
+            else
+            {
+                targetWidth = _member.Width;
+                targetHeight = _member.Height;
+            }
+
+            if (targetWidth > 0 && (force || Width == 0))
+                Width = targetWidth;
+
+            if (targetHeight > 0 && (force || Height == 0))
+                Height = targetHeight;
+        }
+
+        public (APoint offset, float sourceWidth, float sourceHeight) GetMemberSourceMetrics()
+        {
+            if (_member == null)
+                return (new APoint(), 0f, 0f);
+
+            if (_member is BlingoMemberBitmap && MemberSourceRect is { } rect)
+            {
+                var centerX = rect.Left + rect.Width / 2f;
+                var centerY = rect.Top + rect.Height / 2f;
+                var regPoint = _member.RegPoint;
+                var baseOffset = new APoint(regPoint.X - centerX, regPoint.Y - centerY);
+                return (baseOffset, rect.Width, rect.Height);
+            }
+
+            var defaultOffset = _member.CenterOffsetFromRegPoint();
+            return (defaultOffset, _member.Width, _member.Height);
         }
 
 
@@ -590,8 +652,9 @@ When a movie stops, events occur in the following order:
             return this;
         }
 
-        private void MemberHasChanged()
+        private void MemberHasChanged(bool forceSizeUpdate = false)
         {
+            var forceUpdate = forceSizeUpdate || _memberSourceRectChanged;
             var existingPlayer = GetActorsOfType<BlingoFilmLoopPlayer>().FirstOrDefault();
             if (_member is BlingoFilmLoopMember)
             {
@@ -610,7 +673,16 @@ When a movie stops, events occur in the following order:
                 RemoveActor(existingPlayer);
             }
 
-            _frameworkSprite.MemberChanged();
+            if (_frameworkSprite != null)
+            {
+                ApplyMemberSourceRectSize(forceUpdate);
+                _frameworkSprite.MemberChanged();
+                _memberSourceRectChanged = false;
+            }
+            else
+            {
+                _memberSourceRectChanged = forceUpdate;
+            }
 
             OnPropertyChanged();
         }
@@ -947,6 +1019,7 @@ When a movie stops, events occur in the following order:
         protected override void OnLoadState(BlingoSpriteState state)
         {
             if (state is not BlingoSprite2DState s || Puppet) return;
+            MemberSourceRect = s.MemberSourceRect;
             if (s.Width > 0) Width = s.Width;
             if (s.Height > 0) Height = s.Height;
             //SetMember(s.Member); // Gives problems in SDL
@@ -999,6 +1072,7 @@ When a movie stops, events occur in the following order:
             s.BackColor = BackColor;
             s.Editable = Editable;
             s.IsDraggable = IsDraggable;
+            s.MemberSourceRect = MemberSourceRect;
         }
 
         #endregion

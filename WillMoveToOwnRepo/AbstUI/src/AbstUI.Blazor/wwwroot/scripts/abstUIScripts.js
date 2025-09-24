@@ -22,6 +22,13 @@ export class abstCanvas {
         }
     }
 
+    static setCanvasOffset(canvas, x, y) {
+        if (!canvas) return;
+        canvas.style.position = 'absolute';
+        canvas.style.left = `${-x}px`;
+        canvas.style.top = `${-y}px`;
+    }
+
     static setCanvasVisible(canvas, visible) {
         canvas.style.display = visible ? 'block' : 'none';
     }

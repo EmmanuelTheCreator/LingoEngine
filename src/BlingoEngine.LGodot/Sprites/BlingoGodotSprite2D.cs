@@ -334,12 +334,18 @@ namespace BlingoEngine.LGodot.Sprites
             _filmloopPlayer = null;
             if (BlingoSprite.Member != null)
             {
-                if (Width == 0 || Height == 0)
-                {
-                    Width = BlingoSprite.Member.Width;
-                    Height = BlingoSprite.Member.Height;
-                }
+                var (_, sourceWidth, sourceHeight) = BlingoSprite.GetMemberSourceMetrics();
+                if (sourceWidth <= 0)
+                    sourceWidth = BlingoSprite.Member.Width;
+                if (sourceHeight <= 0)
+                    sourceHeight = BlingoSprite.Member.Height;
+
+                if (Width == 0)
+                    Width = sourceWidth;
+                if (Height == 0)
+                    Height = sourceHeight;
             }
+            UpdateTextureRegion();
             IsDirtyMember = true;
         }
         private void UpdateSizeFromTexture()
@@ -354,8 +360,15 @@ namespace BlingoEngine.LGodot.Sprites
 
             //if (Width == 0 || Height == 0)
             {
-                Width = _texture.Width;
-                Height = _texture.Height;
+                float baseWidth = _texture.Width;
+                float baseHeight = _texture.Height;
+                if (BlingoSprite.Member is BlingoMemberBitmap && BlingoSprite.MemberSourceRect is { } rect)
+                {
+                    baseWidth = rect.Width;
+                    baseHeight = rect.Height;
+                }
+                Width = baseWidth;
+                Height = baseHeight;
             }
         }
         internal void Update()
@@ -489,16 +502,43 @@ namespace BlingoEngine.LGodot.Sprites
             _texture = tex;
             // because we dont need to clone the textures, we dont need to subscribe unsubscribe to  texture.
             _blingoSprite2D.FWTextureHasChanged(tex, false);
-            if (Width == 0 || Height == 0)
+            UpdateTextureRegion();
+
+            float sourceWidth = tex.Width;
+            float sourceHeight = tex.Height;
+            if (_blingoSprite2D.Member is BlingoMemberBitmap && _blingoSprite2D.MemberSourceRect is { } rect)
             {
-                Width = tex.Width;
-                Height = tex.Height;
+                sourceWidth = rect.Width;
+                sourceHeight = rect.Height;
             }
+
+            if (Width == 0)
+                Width = sourceWidth;
+
+            if (Height == 0)
+                Height = sourceHeight;
         }
         public void SetTexture(IAbstTexture2D texture)
         {
             TextureHasChanged((AbstGodotTexture2D)texture);
         }
+
+        private void UpdateTextureRegion()
+        {
+            if (_sprite2D.Texture == null)
+                return;
+
+            if (_blingoSprite2D.Member is BlingoMemberBitmap && _blingoSprite2D.MemberSourceRect is { } rect)
+            {
+                _sprite2D.RegionEnabled = true;
+                _sprite2D.RegionRect = new Rect2(rect.Left, rect.Top, rect.Width, rect.Height);
+            }
+            else
+            {
+                _sprite2D.RegionEnabled = false;
+            }
+        }
+
         private void UpdateMemberFilmLoop(BlingoGodotFilmLoopMember filmLoop)
         {
             var size = filmLoop.GetBoundingBox();
@@ -544,28 +584,34 @@ namespace BlingoEngine.LGodot.Sprites
 
         public void Resize(float targetWidth, float targetHeight)
         {
-            var width = _sprite2D.Texture.GetWidth();
-            var height = _sprite2D.Texture.GetHeight();
-            float scaleFactorW = targetWidth / width;
-            float scaleFactorH = targetHeight / _sprite2D.Texture.GetHeight();
+            float sourceWidth = _texture?.Width ?? _sprite2D.Texture?.GetWidth() ?? 0f;
+            float sourceHeight = _texture?.Height ?? _sprite2D.Texture?.GetHeight() ?? 0f;
+            if (BlingoSprite.Member is BlingoMemberBitmap && BlingoSprite.MemberSourceRect is { } rect)
+            {
+                sourceWidth = rect.Width;
+                sourceHeight = rect.Height;
+            }
+
+            if (sourceWidth == 0 || sourceHeight == 0)
+                return;
+
+            float scaleFactorW = targetWidth / sourceWidth;
+            float scaleFactorH = targetHeight / sourceHeight;
             _sprite2D.Scale = new Vector2(scaleFactorW, scaleFactorH);
         }
 
         private APoint GetRegPointOffset()
         {
             if (_blingoSprite2D.Member == null) return new APoint();
-            if (_blingoSprite2D.Member is BlingoMemberBitmap member)
+
+            var (baseOffset, sourceWidth, sourceHeight) = _blingoSprite2D.GetMemberSourceMetrics();
+            if (sourceWidth != 0 && sourceHeight != 0)
             {
-                var baseOffset = member.CenterOffsetFromRegPoint();
-                if (member.Width != 0 && member.Height != 0)
-                {
-                    float scaleX = _sprite2D.Scale.X;
-                    float scaleY = _sprite2D.Scale.Y;
-                    return new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
-                }
-                return baseOffset;
+                float scaleX = Width / sourceWidth;
+                float scaleY = Height / sourceHeight;
+                return new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
             }
-            return _blingoSprite2D.Member.RegPoint;
+            return baseOffset;
         }
 
 

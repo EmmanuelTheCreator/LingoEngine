@@ -22,20 +22,45 @@
     {
         var drawW = Sprite.DesiredWidth > 0 ? Sprite.DesiredWidth : Sprite.Width;
         var drawH = Sprite.DesiredHeight > 0 ? Sprite.DesiredHeight : Sprite.Height;
-        var x = Sprite.X - Sprite.RegPoint.X;
-        var y = Sprite.Y - Sprite.RegPoint.Y;
-        var scaleX = Sprite.FlipH ? -1 : 1;
-        var scaleY = Sprite.FlipV ? -1 : 1;
-        var transform = $"translate({Sprite.RegPoint.X}px,{Sprite.RegPoint.Y}px) rotate({Sprite.Rotation}deg) scale({scaleX},{scaleY}) translate(-{Sprite.RegPoint.X}px,-{Sprite.RegPoint.Y}px)";
-        var style = $"position:absolute;left:{x}px;top:{y}px;width:{drawW}px;height:{drawH}px;z-index:{Sprite.ZIndex};opacity:{Sprite.Blend};transform:{transform};";
+
+        var (baseOffset, sourceWidth, sourceHeight) = Sprite.GetMemberSourceMetrics();
+        if (sourceWidth <= 0)
+            sourceWidth = drawW != 0 ? drawW : 1f;
+        if (sourceHeight <= 0)
+            sourceHeight = drawH != 0 ? drawH : 1f;
+
+        var scaleMagX = sourceWidth != 0 ? drawW / sourceWidth : 1f;
+        var scaleMagY = sourceHeight != 0 ? drawH / sourceHeight : 1f;
+
+        var offsetX = baseOffset.X * scaleMagX;
+        var offsetY = baseOffset.Y * scaleMagY;
+
+        var left = Sprite.X - offsetX - drawW / 2f;
+        var top = Sprite.Y - offsetY - drawH / 2f;
+
+        var regPointDisplayX = (baseOffset.X + sourceWidth / 2f) * scaleMagX;
+        var regPointDisplayY = (baseOffset.Y + sourceHeight / 2f) * scaleMagY;
+
+        var flipScaleX = Sprite.FlipH ? -1 : 1;
+        var flipScaleY = Sprite.FlipV ? -1 : 1;
+
+        var transform = $"translate({regPointDisplayX}px,{regPointDisplayY}px) rotate({Sprite.Rotation}deg) scale({flipScaleX},{flipScaleY}) translate(-{regPointDisplayX}px,-{regPointDisplayY}px)";
+        var style = $"position:absolute;left:{left}px;top:{top}px;width:{drawW}px;height:{drawH}px;z-index:{Sprite.ZIndex};opacity:{Sprite.Blend};transform:{transform};";
         if (!Sprite.Visibility) style += "display:none;";
+        if (Sprite.MemberSourceRect != null) style += "overflow:hidden;";
         return style;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (Sprite.Texture is AbstBlazorTexture2D tex)
+        {
             await Scripts.CanvasAddToElement(_host, tex.Canvas);
+            var rect = Sprite.MemberSourceRect;
+            var offsetX = rect?.Left ?? 0;
+            var offsetY = rect?.Top ?? 0;
+            await Scripts.CanvasSetOffset(tex.Canvas, offsetX, offsetY);
+        }
     }
 
     public void Dispose()
