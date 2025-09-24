@@ -6,6 +6,7 @@ namespace BlingoEngine.Core
     {
         private List<IHasStepFrameEvent> _actors = new();
         public void Add(IHasStepFrameEvent actor) => _actors.Add(actor);
+        public void Append(IHasStepFrameEvent actor) => _actors.Add(actor);
 
         public void Clear()
         {
@@ -16,6 +17,8 @@ namespace BlingoEngine.Core
 
 
         public void Remove(IHasStepFrameEvent actor) => _actors.Remove(actor);
+        public void DeleteOne(IHasStepFrameEvent actor) => _actors.Remove(actor);
+        public void Delete(IHasStepFrameEvent actor) => _actors.Remove(actor);
 
         internal void Invoke()
         {
