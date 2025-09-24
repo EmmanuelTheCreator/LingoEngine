@@ -143,6 +143,7 @@ public class PacManProjectFactory : IBlingoProjectFactory
     {
        
         //_movie.Transitions.Add(54, new BlingoTransitionFrameSettings { Duration = 0.5f, TransitionId = 37 }); // 37.: Venetian blinds
+        _movie.AddSprite(1,1,50,-230,-230).SetMember("start"); // background
     }
 }
 
