@@ -45,6 +45,62 @@ public partial class CSharpWriter
         return value;
     }
 
+    private static string? FormatDefaultNode(BlingoNode node, string? format)
+    {
+        switch (node)
+        {
+            case BlingoDatumNode datumNode:
+                return FormatDefault(datumNode.Datum, format);
+            case BlingoLiteralNode literalNode:
+                return FormatDefault(literalNode.Value, format);
+            case BlingoVarNode varNode:
+                if (string.Equals(varNode.VarName, "true", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(varNode.VarName, "false", StringComparison.OrdinalIgnoreCase))
+                {
+                    return varNode.VarName.ToLowerInvariant();
+                }
+                break;
+            case BlingoCallNode callNode:
+                if (callNode.Callee is BlingoVarNode callee &&
+                    callee.VarName.Equals("rgb", StringComparison.OrdinalIgnoreCase) &&
+                    callNode.Arguments is BlingoDatumNode argsDatum &&
+                    argsDatum.Datum.Type == BlingoDatum.DatumType.ArgList &&
+                    argsDatum.Datum.Value is List<BlingoNode> argNodes)
+                {
+                    var components = new List<string>();
+                    foreach (var arg in argNodes)
+                    {
+                        var formatted = FormatSimpleExpression(arg);
+                        if (formatted is null)
+                        {
+                            components = null;
+                            break;
+                        }
+                        components.Add(formatted);
+                    }
+
+                    if (components is { Count: 3 })
+                    {
+                        return $"AColor.FromCode({string.Join(',', components)})";
+                    }
+                }
+                break;
+        }
+
+        return null;
+    }
+
+    private static string? FormatSimpleExpression(BlingoNode node)
+    {
+        return node switch
+        {
+            BlingoDatumNode datumNode => FormatDefault(datumNode.Datum, null),
+            BlingoLiteralNode literalNode => FormatDefault(literalNode.Value, null),
+            BlingoVarNode varNode => varNode.VarName,
+            _ => null,
+        };
+    }
+
     private void WritePropertyDescriptionListHandler(BlingoHandlerNode node)
     {
         Append(_methodAccessModifier);
@@ -53,7 +109,7 @@ public partial class CSharpWriter
         AppendLine("{");
         Indent();
 
-        var props = new List<PropDesc>();
+        var propBuilder = new OrderedPropertyListBuilder<string, PropDesc>(StringComparer.OrdinalIgnoreCase);
         foreach (var child in node.Block.Children)
         {
             if (child is BlingoCallNode call &&
@@ -74,6 +130,7 @@ public partial class CSharpWriter
                 string? comment = null;
                 string? format = null;
                 BlingoDatum? defDatum = null;
+                BlingoNode? defaultNode = null;
 
                 for (int i = 0; i + 1 < plist.Count; i += 2)
                 {
@@ -91,17 +148,35 @@ public partial class CSharpWriter
                     else if (key == "default")
                     {
                         if (valNode is BlingoDatumNode dn) defDatum = dn.Datum;
+                        defaultNode = valNode;
                     }
                 }
 
-                if (propName != null && comment != null && defDatum != null)
+                if (propName != null && comment != null && (defDatum != null || defaultNode != null))
                 {
-                    var defVal = FormatDefault(defDatum, format);
-                    props.Add(new PropDesc(propName, EscapeString(comment), defVal));
+                    string? defVal;
+                    if (defDatum != null)
+                    {
+                        defVal = FormatDefault(defDatum, format);
+                    }
+                    else if (defaultNode != null)
+                    {
+                        defVal = FormatDefaultNode(defaultNode, format);
+                    }
+                    else
+                    {
+                        defVal = null;
+                    }
+
+                    if (!string.IsNullOrEmpty(defVal))
+                    {
+                        propBuilder.AddOrUpdate(propName, new PropDesc(propName, EscapeString(comment), defVal));
+                    }
                 }
             }
         }
 
+        var props = propBuilder.Items;
         if (props.Count > 0)
         {
             AppendLine("return new BehaviorPropertyDescriptionList()");

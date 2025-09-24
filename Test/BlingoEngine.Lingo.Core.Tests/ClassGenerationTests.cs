@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using FluentAssertions;
+using System;
+using System.Text.RegularExpressions;
 using BlingoEngine.Lingo.Core;
 using Xunit;
 
@@ -77,7 +79,6 @@ public class MyParentParent : BlingoParentScript
     public MyParentParent(IBlingoMovieEnvironment env, GlobalVars global, object x) : base(env)
     {
         _global = global;
-        
         myVar = x;
     }
 }";
@@ -216,6 +217,38 @@ end",
         Assert.Contains(".Add(this, x => x.myFunction, \"function to execute:\", \"70\")", result);
         Assert.Contains("public int myStartMembernum = 0;", result);
         Assert.Contains("public string myFunction = \"70\";", result);
+
+        var addMatches = Regex.Matches(result, @"\.Add\(this,\s*x => x\.(?<name>\w+)");
+        var propertyNames = addMatches.Cast<Match>().Select(m => m.Groups["name"].Value).ToList();
+        Assert.Equal(8, propertyNames.Count);
+        Assert.Equal(propertyNames.Count, propertyNames.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [Fact]
+    public void DuplicatePropertyDescriptionEntriesAreOverwrittenInClassGeneration()
+    {
+        var file = new BlingoScriptFile
+        {
+            Name = "DupScript",
+            Source = @"on getPropertyDescriptionList
+  description = [:]
+  addProp description,#myValue, [#default:1, #format:#integer, #comment:""First:""]
+  addProp description,#myValue, [#default:2, #format:#integer, #comment:""Second:""]
+  return description
+end",
+            Type = BlingoScriptType.Behavior
+        };
+
+        var result = _converter.ConvertClass(file);
+
+        var matches = Regex.Matches(result, @"\.Add\(this,\s*x => x\.(?<name>\w+)");
+        var propertyNames = matches.Cast<Match>().Select(m => m.Groups["name"].Value).ToList();
+        Assert.Single(propertyNames);
+
+        var valueMatch = Regex.Match(result, @"\.Add\(this,\s*x => x\.myValue,\s*""(?<comment>[^""]*)"",\s*(?<default>[^\)]+)\)");
+        Assert.True(valueMatch.Success);
+        Assert.Equal("Second:", valueMatch.Groups["comment"].Value);
+        Assert.Equal("2", valueMatch.Groups["default"].Value.Trim());
     }
 
     [Fact]
