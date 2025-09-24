@@ -112,13 +112,35 @@ internal sealed class ScoreView : View
         get => _showFirstBehavior;
         set
         {
-            if (_showFirstBehavior == value)
+
+            if (value)
             {
-                return;
+                if (_showFirstBehavior && !_showMemberName && !_showSpriteName)
+                {
+                    return;
+                }
+
+                var changed = !_showFirstBehavior || _showMemberName || _showSpriteName;
+                _showFirstBehavior = true;
+                _showMemberName = false;
+                _showSpriteName = false;
+
+                if (changed)
+                {
+                    SetNeedsDraw();
+                }
+            }
+            else
+            {
+                if (!_showFirstBehavior)
+                {
+                    return;
+                }
+
+                _showFirstBehavior = false;
+                SetNeedsDraw();
             }
 
-            _showFirstBehavior = value;
-            SetNeedsDraw();
         }
     }
 
@@ -127,13 +149,35 @@ internal sealed class ScoreView : View
         get => _showMemberName;
         set
         {
-            if (_showMemberName == value)
+
+            if (value)
             {
-                return;
+                if (_showMemberName && !_showFirstBehavior && !_showSpriteName)
+                {
+                    return;
+                }
+
+                var changed = !_showMemberName || _showFirstBehavior || _showSpriteName;
+                _showMemberName = true;
+                _showFirstBehavior = false;
+                _showSpriteName = false;
+
+                if (changed)
+                {
+                    SetNeedsDraw();
+                }
+            }
+            else
+            {
+                if (!_showMemberName)
+                {
+                    return;
+                }
+
+                _showMemberName = false;
+                SetNeedsDraw();
             }
 
-            _showMemberName = value;
-            SetNeedsDraw();
         }
     }
 
@@ -142,13 +186,34 @@ internal sealed class ScoreView : View
         get => _showSpriteName;
         set
         {
-            if (_showSpriteName == value)
-            {
-                return;
-            }
 
-            _showSpriteName = value;
-            SetNeedsDraw();
+            if (value)
+            {
+                if (_showSpriteName && !_showFirstBehavior && !_showMemberName)
+                {
+                    return;
+                }
+
+                var changed = !_showSpriteName || _showFirstBehavior || _showMemberName;
+                _showSpriteName = true;
+                _showFirstBehavior = false;
+                _showMemberName = false;
+
+                if (changed)
+                {
+                    SetNeedsDraw();
+                }
+            }
+            else
+            {
+                if (!_showSpriteName)
+                {
+                    return;
+                }
+
+                _showSpriteName = false;
+                SetNeedsDraw();
+            }
         }
     }
     public void ReloadData()
