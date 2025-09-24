@@ -133,7 +133,7 @@ namespace BlingoEngine.IO.Legacy.Tools
             return infoData.ScanForPascalString();
         }
 
-        public static string ToHexString(this ReadOnlySpan<byte> data, int bytesPerLine = 16, bool includeAddresses = false)
+        public static string ToHexString(this ReadOnlySpan<byte> data, int bytesPerLine = 16, bool includeAddresses = false, int addressOffset = 0, bool withASCIIText = false)
         {
             if (bytesPerLine <= 0)
             {
@@ -146,18 +146,26 @@ namespace BlingoEngine.IO.Legacy.Tools
             }
 
             var builder = new StringBuilder(data.Length * 3);
+            var asciiText = new List<byte>();
+            var asciiTextt = "";
             for (int i = 0; i < data.Length; i++)
             {
                 if (i % bytesPerLine == 0)
                 {
                     if (i > 0)
                     {
+                        if (withASCIIText)
+                        {
+                            asciiTextt = ASCIIEncoding.ASCII.GetString(asciiText.ToArray()).Replace("\0"," ");
+                            asciiText.Clear();
+                            builder.Append($" \t {asciiTextt}");
+                        }
                         builder.AppendLine();
                     }
 
                     if (includeAddresses)
                     {
-                        builder.Append($"0x{i:X8}: ");
+                        builder.Append($"0x{(i+ addressOffset):X8}: ");
                     }
                 }
                 else
@@ -166,9 +174,15 @@ namespace BlingoEngine.IO.Legacy.Tools
                 }
 
                 builder.Append(data[i].ToString("X2", CultureInfo.InvariantCulture));
+                asciiText.Add(data[i]);
             }
-
-            return builder.ToString();
+            if (withASCIIText)
+            {
+                asciiTextt = ASCIIEncoding.ASCII.GetString(asciiText.ToArray()).Replace("\0", " ");
+                builder.Append($"{new string(' ', (bytesPerLine - asciiText.Count) * 3)} \t {asciiTextt}");
+            }
+            var text =  builder.ToString();
+            return text;
         }
 
         /// <summary>
@@ -178,10 +192,10 @@ namespace BlingoEngine.IO.Legacy.Tools
         /// <param name="bytesPerLine">Number of bytes shown per output line.</param>
         /// <param name="includeAddresses">Whether to prefix each line with the starting offset.</param>
         /// <returns>Formatted hexadecimal text for the supplied bytes.</returns>
-        public static string ToHexString(this byte[] data, int bytesPerLine = 16, bool includeAddresses = false)
+        public static string ToHexString(this byte[] data, int bytesPerLine = 16, bool includeAddresses = false, int addressOffset = 0, bool withASCIIText = false)
         {
             ArgumentNullException.ThrowIfNull(data);
-            return ToHexString(data.AsSpan(), bytesPerLine, includeAddresses);
+            return ToHexString(data.AsSpan(), bytesPerLine, includeAddresses, addressOffset, withASCIIText); 
         }
 
         public static uint ReadUInt32LittleEndian(this byte[] buffer, int offset)
@@ -320,6 +334,17 @@ namespace BlingoEngine.IO.Legacy.Tools
         {
             return long.Parse(span, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         }
+        public static long ParseHexInt64(this ReadOnlySpan<byte> span)
+        {
+            Span<char> chars = stackalloc char[span.Length];
+            for (int i = 0; i < span.Length; i++)
+            {
+                chars[i] = (char)span[i];
+            }
+
+            ReadOnlySpan<char> charSpan = chars;
+            return charSpan.ParseHexInt64();
+        }
 
         public static int ParseInt32(this ReadOnlySpan<byte> span)
         {
@@ -360,5 +385,77 @@ namespace BlingoEngine.IO.Legacy.Tools
 
             return -1;
         }
+
+        public static uint Peek3(this byte[] buf, long? off)
+        {
+            if (off is null) return 0;
+            long o = off.Value;
+            if ((ulong)(o + 3) > (ulong)buf.Length) return 0;
+            return ((uint)buf[(int)o] << 16) | ((uint)buf[(int)o + 1] << 8) | buf[(int)o + 2];
+        }
+
+        public static string Peek3String(this byte[] buf, long? off)
+        {
+            if (off is null) return string.Empty;
+            long o = off.Value;
+            if ((ulong)(o + 3) > (ulong)buf.Length) return string.Empty;
+            return new string(new[] { (char)buf[(int)o], (char)buf[(int)o + 1], (char)buf[(int)o + 2] });
+        }
+
+        public static int ParseHexInt32(this byte[] buffer, int offset, int length)
+        {
+            return int.Parse(
+                Encoding.ASCII.GetString(buffer, offset, length),
+                System.Globalization.NumberStyles.HexNumber);
+        }
+        public static int IndexOfSequence(this byte[] buffer, byte[] seq, int start, int end)
+        {
+            if (seq == null || seq.Length == 0) return -1;
+            if (start < 0) start = 0;
+            if (end > buffer.Length) end = buffer.Length;
+            int last = end - seq.Length;
+            for (int i = start; i <= last; i++)
+            {
+                int j = 0;
+                for (; j < seq.Length; j++)
+                    if (buffer[i + j] != seq[j]) break;
+                if (j == seq.Length) return i;
+            }
+            return -1;
+        }
+
+        public static (int DataLength, int DataStart, int BytesRead) ReadCommaLengthValue(this byte[] buffer, int offset)
+        {
+            int end = Math.Min(buffer.Length, offset + 5);
+            int zero = -1, comma = -1;
+
+            for (int i = offset; i < end; i++)
+            {
+                byte b = buffer[i];
+                if (b == 0x00 && zero < 0) zero = i;
+                if (b == 0x2C) { comma = i; break; }
+            }
+
+            if (zero < 0 || comma <= zero + 1) return (0, 0, 0);
+
+            int val = 0;
+            for (int i = zero + 1; i < comma; i++)
+            {
+                byte ch = buffer[i];
+                int d = ch <= '9' && ch >= '0' ? ch - '0'
+                      : ch <= 'F' && ch >= 'A' ? ch - 'A' + 10
+                      : ch <= 'f' && ch >= 'a' ? ch - 'a' + 10
+                      : -1;
+                if (d < 0) return (0, 0, 0);
+                val = (val << 4) | d;
+            }
+
+            int dataStart = comma + 1;              // exact payload start
+            int bytesRead = (comma - offset) + 1;   // header bytes consumed from 'offset' (incl. comma)
+
+            return (val, dataStart, bytesRead);
+        }
+
+      
     }
 }
