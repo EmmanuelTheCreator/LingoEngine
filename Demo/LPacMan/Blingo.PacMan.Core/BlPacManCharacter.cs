@@ -129,7 +129,7 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         PauseCharacterAnimation();
     }
 
-    public void Move(PacManDirection direction = PacManDirection.None)
+    public virtual void Move(PacManDirection direction = PacManDirection.None)
     {
         if (direction == PacManDirection.None)
         {
@@ -421,6 +421,16 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         {
             _nextAnimation = null;
         }
+    }
+
+    protected void SetNextAnimationLabel(string? label)
+    {
+        _nextAnimation = label;
+    }
+
+    protected float GetStepSize()
+    {
+        return _step * (_speed / 100f);
     }
 
     private float GetStep()
