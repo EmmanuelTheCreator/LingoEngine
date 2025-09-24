@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using Blingo.PacMan.Core.Models;
+using AbstUI.Primitives;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
@@ -29,6 +30,11 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
         public string BonusMemberName { get; set; } = "sprites";
 
         public string BonusCastLibName { get; set; } = "Data";
+
+        /// <summary>
+        /// Optional cropping rectangle applied to each bonus sprite.
+        /// </summary>
+        public ARect? MemberSourceRect { get; set; }
 
         public BonusesBehavior(IBlingoMovieEnvironment env, IBonusesModel model)
             : base(env)
@@ -119,6 +125,12 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
                 if (member != null)
                 {
                     sprite2D.Member = member;
+                }
+
+                var sourceRect = MemberSourceRect ?? Me.MemberSourceRect;
+                if (sourceRect is { })
+                {
+                    sprite2D.MemberSourceRect = sourceRect;
                 }
             });
 
