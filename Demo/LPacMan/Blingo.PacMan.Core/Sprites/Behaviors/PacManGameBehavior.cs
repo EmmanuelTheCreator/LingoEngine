@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Blingo.PacMan.Core.Models;
+using Blingo.PacMan.Core;
 using BlingoEngine.Events;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
@@ -23,6 +25,7 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
 {
     private readonly IGameModel _model;
     private readonly IBonusesModel _bonusesModel;
+    private readonly List<IGhostModeController> _ghosts = new();
 
     private Map? _map;
 
@@ -70,6 +73,7 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
         }
 
         UnsubscribeModelEvents();
+        _ghosts.Clear();
         _initialized = false;
     }
 
@@ -283,6 +287,21 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
         _model.LevelChanged -= OnLevelChanged;
     }
 
+    internal void RegisterGhost(IGhostModeController ghost)
+    {
+        if (ghost is null)
+        {
+            throw new ArgumentNullException(nameof(ghost));
+        }
+
+        if (_ghosts.Contains(ghost))
+        {
+            return;
+        }
+
+        _ghosts.Add(ghost);
+    }
+
     private void OnScoreChanged(int score)
     {
         // Score display is handled by dedicated HUD behaviours. We keep the hook for parity with JS code.
@@ -310,7 +329,15 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
 
     private void OnModeChanged(GhostMode? mode)
     {
-        // Forward mode changes to any ghosts once they are fully ported.
+        if (_ghosts.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var ghost in _ghosts)
+        {
+            ghost.SetMode(mode);
+        }
     }
 
     private void OnLevelChanged(int level)
