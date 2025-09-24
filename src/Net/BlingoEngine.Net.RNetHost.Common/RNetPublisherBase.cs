@@ -335,6 +335,16 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
         }
     }
 
+    private void OnSpitePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is BlingoSprite2D sprite2D && e.PropertyName is not null)
+        {
+            var value = sprite2D.ToDto();
+            // todo
+            //TryPublishSpriteProperty(value);
+        }
+    }
+
     private void OnMoviePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is IBlingoMovie movie && e.PropertyName is not null)
@@ -361,10 +371,12 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 
     private void SubscribeSprite(BlingoSprite sprite)
     {
-        PropertyChangedEventHandler handler = (_, __) => { };
+        PropertyChangedEventHandler handler = OnSpitePropertyChanged;
         // Currently no per-property sprite publishing.
         Subscribe(sprite, handler);
     }
+
+   
 
     private void Subscribe(IHasPropertyChanged src, PropertyChangedEventHandler handler)
     {
