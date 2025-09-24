@@ -93,6 +93,7 @@ internal sealed class StageView : View
                      .Where(s => s.BeginFrame <= _frame && _frame <= s.EndFrame)
                      .OrderBy(s => s.LocZ))
         {
+            if (sprite.Member == null) continue;
             var member = TerminalDataStore.Instance.FindMember(sprite.Member!.CastLibNum, sprite.Member.MemberNum);
             if (member == null)
             {

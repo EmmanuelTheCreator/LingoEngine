@@ -112,7 +112,7 @@ internal sealed class ScoreView : View
         Height = TotalChannels + 1;
         _sprites.Clear();
         _sprites.AddRange(store.GetSprites()
-            .Select(s => new SpriteBlock(s, s.SpriteNum, s.BeginFrame, s.EndFrame, s.SpriteNum, s.Member!.CastLibNum, s.Member.MemberNum, s.Width)));
+            .Select(s => new SpriteBlock(s, s.SpriteNum, s.BeginFrame, s.EndFrame, s.SpriteNum, s.Member != null? s.Member.CastLibNum: 0, s.Member != null? s.Member.MemberNum:0, s.Width)));
         foreach (var list in _specialChannelSprites)
         {
             list.Clear();

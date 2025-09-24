@@ -48,21 +48,23 @@ internal partial class DirSDLMainMenu : AbstSdlWindow, IDirFrameworkMainMenuWind
     {
         ComponentContext.AlwaysOnTop = true;
         _directorMainMenu = directorMainMenu;
-        _directorMainMenu.Init(this);
+        _root = factory.CreatePanel("MenuBarRoot");
         _menuBar = directorMainMenu.MenuBar.Framework<AbstSdlWrapPanel>();
         _iconBar = directorMainMenu.IconBar.Framework<AbstSdlWrapPanel>();
+        _root.Width = _menuBar.Width + _iconBar.Width + _iconBar.X;
+        _root.Height = 50;
+        Title = "Main menu";
+        Width = _root.Width;
+        Height = _root.Height;
+        _directorMainMenu.Init(this);
+        
         Borderless = true;
         //CreateBgColor();
 
         //AddChild(_bgColorPanel);
         //AddChild(_menuBar);
         //AddChild(_iconBar);
-        _root = factory.CreatePanel("MenuBarRoot");
-        _root.Width = _menuBar.Width + _iconBar.Width + _iconBar.X;
-        _root.Height = 50;
-        Title = "Main menu";
-        Width = _root.Width;
-        Height = _root.Height;
+        
         _directorMainMenu.Width = (int)Width;
         _directorMainMenu.Height = (int)Height;
         _root.BackgroundColor = DirectorColors.BG_TopMenu;
