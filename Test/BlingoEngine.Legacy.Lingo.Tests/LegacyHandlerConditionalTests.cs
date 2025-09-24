@@ -40,6 +40,34 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     }
 
     [Fact]
+    public void IfVoidPThenAlert_TranslatesToNullCheck()
+    {
+        const string source = """
+on test
+  if VoidP(key1) then alert "wrong keys"
+end
+""";
+
+        var code = GenerateBehavior(source);
+
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        if (key1 == null)
+        {
+            _Player.Alert("wrong keys");
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
     public void ElseIf_BecomesElseIf()
     {
         const string source = """
@@ -72,6 +100,39 @@ public class TestScriptBehavior : BlingoSpriteBehavior
         else
         {
             value = 3;
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
+    public void InlineIfWithSendSprite_TranslatesKeyPressedChecks()
+    {
+        const string source = """
+on keyDown me
+  if keyPressed(35) then sendSprite myTargetSprite, #PauseGame
+  if keyPressed(49) then sendSprite myTargetSprite, #SpaceBar
+end
+""";
+
+        var code = GenerateBehavior(source);
+
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior, IHasKeyDownEvent
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void KeyDown()
+    {
+        if (_Key.KeyPressed(35))
+        {
+            SendSprite<PauseGameBehavior>(myTargetSprite, sprite => sprite.PauseGame());
+        }
+        if (_Key.KeyPressed(49))
+        {
+            SendSprite<SpaceBarBehavior>(myTargetSprite, sprite => sprite.SpaceBar());
         }
     }
 }
