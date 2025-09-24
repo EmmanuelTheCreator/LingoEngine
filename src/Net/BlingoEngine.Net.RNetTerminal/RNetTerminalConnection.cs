@@ -26,6 +26,8 @@ public sealed record class RNetTerminalConnectionOptions(int Port, RNetTerminalT
 public sealed class RNetTerminalConnection : IAsyncDisposable
 {
     private readonly TerminalDataStore _store;
+    private readonly Func<RNetTerminalTransport, IBlingoRNetClient> _clientFactory;
+    private readonly Action<Action> _dispatcher;
     private IBlingoRNetClient? _client;
     private CancellationTokenSource? _cts;
     private Timer? _heartbeatTimer;
@@ -43,8 +45,18 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
     public BlingoNetConnectionState ConnectionState { get; private set; } = BlingoNetConnectionState.Disconnected;
 
     public RNetTerminalConnection()
+        : this(TerminalDataStore.Instance, CreateClient, EnqueueOnApplication)
     {
-        _store = TerminalDataStore.Instance;
+    }
+
+    internal RNetTerminalConnection(
+        TerminalDataStore store,
+        Func<RNetTerminalTransport, IBlingoRNetClient> clientFactory,
+        Action<Action> dispatcher)
+    {
+        _store = store ?? throw new ArgumentNullException(nameof(store));
+        _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _store.SpriteMoveRequested += OnSpriteMoveRequested;
     }
 
@@ -57,7 +69,7 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
 
         await DisconnectAsync().ConfigureAwait(false);
 
-        var client = CreateClient(options.Transport);
+        var client = _clientFactory(options.Transport);
         _client = client;
         client.ConnectionStatusChanged += HandleClientConnectionStatus;
 
@@ -77,10 +89,10 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
             throw;
         }
 
+        await LoadProjectDataAsync(client).ConfigureAwait(false);
+
         StartBackgroundReaders(client);
         StartHeartbeat();
-
-        await LoadProjectDataAsync(client).ConfigureAwait(false);
     }
 
     public async Task DisconnectAsync()
@@ -161,6 +173,16 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
             RNetTerminalTransport.Pipe => new RNetPipeClient.RNetPipeClient(),
             _ => throw new ArgumentOutOfRangeException(nameof(transport), transport, null)
         };
+
+    private static void EnqueueOnApplication(Action action)
+    {
+        Application.AddTimeout(TimeSpan.Zero, () =>
+        {
+            action();
+
+            return false; // do not repeat
+        });
+    }
 
     private static Uri BuildUri(RNetTerminalConnectionOptions options)
         => options.Transport switch
@@ -380,14 +402,7 @@ public sealed class RNetTerminalConnection : IAsyncDisposable
         }
     }
 
-    private static void Dispatch(Action action)
-    {
-        Application.AddTimeout(System.TimeSpan.Zero, () =>
-        {
-            action();
-
-            return false; // do not repeat
-        });
-    }
+    private void Dispatch(Action action)
+        => _dispatcher(action);
 }
 

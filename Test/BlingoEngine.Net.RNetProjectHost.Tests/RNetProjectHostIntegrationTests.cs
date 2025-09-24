@@ -42,6 +42,25 @@ public class RNetProjectHostIntegrationTests
             }
         });
 
+    [Fact]
+    public Task HttpClientAndServer_ForwardSpriteDeltas()
+        => WithServerAndClientAsync(async (scenario, token) =>
+        {
+            var delta = new SpriteDeltaDto(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+            await using var enumerator = scenario.Client.StreamDeltasAsync(token).GetAsyncEnumerator(token);
+
+            await scenario.Bus.Deltas.Writer.WriteAsync(delta, token);
+
+            Assert.True(await enumerator.MoveNextAsync());
+            var received = enumerator.Current;
+
+            Assert.Equal(delta.SpriteNum, received.SpriteNum);
+            Assert.Equal(delta.BeginFrame, received.BeginFrame);
+            Assert.Equal(delta.CastLibNum, received.CastLibNum);
+            Assert.Equal(delta.MemberNum, received.MemberNum);
+        });
+
     public static IEnumerable<object[]> CommandData()
     {
         yield return new object[] { new SetSpritePropCmd(3, 1, RNetSpriteTypeDto.Sprite2D, "LocH", "123") };
