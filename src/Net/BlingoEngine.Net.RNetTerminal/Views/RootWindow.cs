@@ -41,6 +41,10 @@ namespace BlingoEngine.Net.RNetTerminal.Views
         private Func<RNetCommand, CancellationToken?, Task>? _sendCommandAsync;
         private int _lastRequestedFrame = -1;
         private bool _suppressNextFrameCommand;
+        private CheckBox? _showFirstBehaviorCheckBox;
+        private CheckBox? _showMemberNameCheckBox;
+        private CheckBox? _showSpriteNameCheckBox;
+        private bool _updatingShowMenu;
 
         private int _port => BlingoRNetTerminal.Port;
         public RootWindow()
@@ -53,6 +57,11 @@ namespace BlingoEngine.Net.RNetTerminal.Views
         {
             _setPort = setPort;
             _sendCommandAsync = sendCommandAsync;
+            _score = BuildScoreWindow();
+            _stage = BuildStageWindow();
+            _cast = BuildCastWindow();
+            _propInsp = CreatePropertyInspector(sendCommandAsync);
+            var logs = CreateLog();
             var top = new Window
             {
                 BorderStyle = LineStyle.None,
@@ -66,7 +75,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                     NewMenuItemv2("_Host Port", string.Empty, SetPort),
                     NewMenuItemv2("_Quit", string.Empty, () => Application.RequestStop())
                 }),
-                //new MenuBarItemv2("_Edit", System.Array.Empty<MenuItemv2>()),
+                new MenuBarItemv2("_Show", CreateShowMenuItems()),
                 new MenuBarItemv2("_Help", Array.Empty<MenuItemv2>())
             });
             _stageBtn = NewMenuItemv2("_Stage", string.Empty, () => SwitchToStageMode());
@@ -77,6 +86,7 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             top.Add(_stageBtn);
             top.Add(_castBtn);
             RNetTerminalStyle.SetMenuSchema(menu);
+            UpdateShowMenuChecks();
             
 
             _connectionStatusLabel = RUI.NewLabel(string.Empty, Pos.AnchorEnd(15), 0, 15);
@@ -142,13 +152,6 @@ namespace BlingoEngine.Net.RNetTerminal.Views
                 rightPadding.Thickness = new Thickness(0);
             }
 
-            _score = BuildScoreWindow();
-            _stage = BuildStageWindow();
-            _cast = BuildCastWindow();
-            _propInsp = CreatePropertyInspector(sendCommandAsync);
-            var logs = CreateLog();
-
-
             _stage.Visible = true;
             _cast.Visible = false;
 
@@ -183,6 +186,88 @@ namespace BlingoEngine.Net.RNetTerminal.Views
             Application.Run(top);
             top.Dispose();
             store.MovieStateChanged -= OnMovieStateChanged;
+        }
+
+        private IEnumerable<View> CreateShowMenuItems()
+        {
+            return new View[]
+            {
+                CreateShowMenuCheck("_Show first Behavior", () => _score?.ShowFirstBehavior ?? false, value =>
+                {
+                    if (_score != null)
+                    {
+                        _score.ShowFirstBehavior = value;
+                    }
+                }, checkBox => _showFirstBehaviorCheckBox = checkBox),
+                CreateShowMenuCheck("Show _Member Name", () => _score?.ShowMemberName ?? false, value =>
+                {
+                    if (_score != null)
+                    {
+                        _score.ShowMemberName = value;
+                    }
+                }, checkBox => _showMemberNameCheckBox = checkBox),
+                CreateShowMenuCheck("Show _Sprite Name", () => _score?.ShowSpriteName ?? false, value =>
+                {
+                    if (_score != null)
+                    {
+                        _score.ShowSpriteName = value;
+                    }
+                }, checkBox => _showSpriteNameCheckBox = checkBox)
+            };
+        }
+
+        private MenuItemv2 CreateShowMenuCheck(string label, Func<bool> getter, Action<bool> setter, Action<CheckBox> register)
+        {
+            var checkBox = new CheckBox
+            {
+                Title = label,
+                CheckedState = getter() ? CheckState.Checked : CheckState.UnChecked
+            };
+            register(checkBox);
+            var menuItem = new MenuItemv2 { CommandView = checkBox };
+            menuItem.SetScheme(RNetTerminalStyle.MenuScheme);
+            checkBox.CheckedStateChanged += (_, _) =>
+            {
+                if (_updatingShowMenu)
+                {
+                    return;
+                }
+
+                setter(checkBox.CheckedState == CheckState.Checked);
+                UpdateShowMenuChecks();
+            };
+            return menuItem;
+        }
+
+        private void UpdateShowMenuChecks()
+        {
+            if (_score == null)
+            {
+                return;
+            }
+
+            _updatingShowMenu = true;
+            try
+            {
+                if (_showFirstBehaviorCheckBox != null)
+                {
+                    _showFirstBehaviorCheckBox.CheckedState = _score.ShowFirstBehavior ? CheckState.Checked : CheckState.UnChecked;
+                }
+
+                if (_showMemberNameCheckBox != null)
+                {
+                    _showMemberNameCheckBox.CheckedState = _score.ShowMemberName ? CheckState.Checked : CheckState.UnChecked;
+                }
+
+                if (_showSpriteNameCheckBox != null)
+                {
+                    _showSpriteNameCheckBox.CheckedState = _score.ShowSpriteName ? CheckState.Checked : CheckState.UnChecked;
+                }
+            }
+            finally
+            {
+                _updatingShowMenu = false;
+            }
         }
 
         private MenuItemv2 NewMenuItemv2(string text, string helperText, Action action)
