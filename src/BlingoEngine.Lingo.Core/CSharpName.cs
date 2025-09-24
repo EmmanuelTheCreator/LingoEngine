@@ -11,13 +11,24 @@ public static class CSharpName
         var sb = new StringBuilder();
         foreach (var c in name)
             sb.Append(char.IsLetterOrDigit(c) || c == '_' ? c : '_');
-        int trim = 0;
-        while (trim < sb.Length && (char.IsDigit(sb[trim]) || sb[trim] == '_'))
-            trim++;
-        if (trim > 0)
-            sb.Remove(0, trim);
+
+        void TrimLeadingUnderscoresAndDigits()
+        {
+            var trim = 0;
+            while (trim < sb.Length && (char.IsDigit(sb[trim]) || sb[trim] == '_'))
+                trim++;
+            if (trim > 0)
+                sb.Remove(0, trim);
+        }
+
+        TrimLeadingUnderscoresAndDigits();
+
         if (sb.Length > 2 && sb[1] == '_' && char.IsLetter(sb[0]))
+        {
             sb.Remove(0, 2);
+            TrimLeadingUnderscoresAndDigits();
+        }
+
         if (sb.Length == 0 || !char.IsLetter(sb[0]))
             sb.Insert(0, 'L');
         return sb.ToString();
