@@ -171,6 +171,7 @@ internal sealed class StageView : View
         {
             var w = bounds.Width;
             var h = bounds.Height;
+            var mouse = me.Position;
             foreach (var sprite in _sprites
                          .Where(s => s.BeginFrame <= _frame && _frame <= s.EndFrame)
                          .OrderByDescending(s => s.LocZ))
@@ -184,7 +185,7 @@ internal sealed class StageView : View
                     sw = 1;
                     sh = 1;
                 }
-                if (me.ScreenPosition.X >= x && me.ScreenPosition.X < x + sw && me.ScreenPosition.Y >= y && me.ScreenPosition.Y < y + sh)
+                if (mouse.X >= x && mouse.X < x + sw && mouse.Y >= y && mouse.Y < y + sh)
                 {
                     var sel = new SpriteRef(sprite.SpriteNum, sprite.BeginFrame);
                     TerminalDataStore.Instance.SelectSprite(sel);
