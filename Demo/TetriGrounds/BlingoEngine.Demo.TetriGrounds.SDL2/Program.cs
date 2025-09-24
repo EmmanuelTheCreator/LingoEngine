@@ -34,11 +34,11 @@ namespace BlingoEngine.Demo.TetriGrounds.SDL2
                         d.CsProjFile = "BlingoEngine.Demo.TetriGrounds.Core\\BlingoEngine.Demo.TetriGrounds.Core.csproj";
                     })
 #else
-                    .WithBlingoSdlEngine("TetriGrounds", 730, 547)
+                    .WithBlingoSdlEngine("TetriGrounds", 730, 500)
 #endif
 #if DEBUG
-                    //.WithRNetProjectHostServer(61699,true)
-                    .WithRNetPipeHostServer(61699,true)
+                    .WithRNetProjectHostServer(61699,true)
+                    //.WithRNetPipeHostServer(61699,true)
 #endif
                     .SetProjectFactory<BlingoEngine.Demo.TetriGrounds.Core.TetriGroundsProjectFactory>()
                     .BuildAndRunProject(sp => serviceProvider = sp)
