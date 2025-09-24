@@ -29,6 +29,7 @@ public class AbstSDLComponentContext : IDisposable
     public float OffsetY { get; set; }
     public bool FlipH { get; set; }
     public bool FlipV { get; set; }
+    public SDL.SDL_Rect? SourceRect { get; set; }
     public bool AlwaysOnTop { get; set; }
     public int ZIndex { get; private set; }
     public SDL.SDL_BlendMode BlendMode { get; set; } = SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND;
@@ -121,7 +122,14 @@ public class AbstSDLComponentContext : IDisposable
         if (Component is AbstSdlComponent comp) name = comp.Name;
         //Console.WriteLine($"SDL CTX BLIT dst=({drawX},{drawY},{TargetWidth},{TargetHeight}) {name}");
 
-        SDL.SDL_RenderCopyEx(Renderer, Texture, nint.Zero, ref dst, 0, nint.Zero, flip);
+        if (SourceRect is SDL.SDL_Rect src)
+        {
+            SDL.SDL_RenderCopyEx(Renderer, Texture, ref src, ref dst, 0, nint.Zero, flip);
+        }
+        else
+        {
+            SDL.SDL_RenderCopyEx(Renderer, Texture, nint.Zero, ref dst, 0, nint.Zero, flip);
+        }
     }
 
     public void Dispose()

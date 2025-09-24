@@ -1,4 +1,5 @@
-﻿using BlingoEngine.Bitmaps;
+﻿using System;
+using BlingoEngine.Bitmaps;
 using BlingoEngine.Members;
 using BlingoEngine.FilmLoops;
 using BlingoEngine.Medias;
@@ -280,11 +281,18 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
     {
         if (_blingoSprite2D.Member is { } member)
         {
-            if(Width ==0)
-                Width = member.Width;
+            var (_, sourceWidth, sourceHeight) = _blingoSprite2D.GetMemberSourceMetrics();
+            if (sourceWidth <= 0)
+                sourceWidth = member.Width;
+            if (sourceHeight <= 0)
+                sourceHeight = member.Height;
+
+            if (Width == 0)
+                Width = sourceWidth;
             if (Height == 0)
-                Height = member.Height;
+                Height = sourceHeight;
         }
+        UpdateSourceRect();
         IsDirtyMember = true;
         ComponentContext.QueueRedraw(this);
     }
@@ -317,13 +325,13 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
         var offset = new APoint();
         if (_blingoSprite2D.Member is { } member)
         {
-            var baseOffset = member.CenterOffsetFromRegPoint();
+            var (baseOffset, sourceWidth, sourceHeight) = _blingoSprite2D.GetMemberSourceMetrics();
             float scaleX = 1f;
             float scaleY = 1f;
-            if (member.Width != 0 && member.Height != 0)
+            if (sourceWidth != 0 && sourceHeight != 0)
             {
-                scaleX = Width / member.Width;
-                scaleY = Height / member.Height;
+                scaleX = Width / sourceWidth;
+                scaleY = Height / sourceHeight;
             }
             offset = new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
 
@@ -395,17 +403,45 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
         if (_texture == nint.Zero)
             return;
         _textureOwned = true;
-        if (Width == 0 || Height == 0)
+        float sourceWidth = tex.Width;
+        float sourceHeight = tex.Height;
+        if (_blingoSprite2D.Member is BlingoMemberBitmap && _blingoSprite2D.MemberSourceRect is { } rect)
         {
-            Width = tex.Width;
-            Height = tex.Height;
+            sourceWidth = rect.Width;
+            sourceHeight = rect.Height;
         }
+
+        if (Width == 0)
+            Width = sourceWidth;
+
+        if (Height == 0)
+            Height = sourceHeight;
+
+        UpdateSourceRect();
     }
 
     public void SetTexture(IAbstTexture2D texture)
     {
         var tex = (SdlTexture2D)texture;
         TextureHasChanged(tex);
+    }
+
+    private void UpdateSourceRect()
+    {
+        if (_blingoSprite2D.Member is BlingoMemberBitmap && _blingoSprite2D.MemberSourceRect is { } rect)
+        {
+            ComponentContext.SourceRect = new SDL.SDL_Rect
+            {
+                x = (int)MathF.Round(rect.Left),
+                y = (int)MathF.Round(rect.Top),
+                w = Math.Max(0, (int)MathF.Round(rect.Width)),
+                h = Math.Max(0, (int)MathF.Round(rect.Height))
+            };
+        }
+        else
+        {
+            ComponentContext.SourceRect = null;
+        }
     }
 
     private static readonly SDL.SDL_BlendMode _subtractBlend = SDL.SDL_ComposeCustomBlendMode(

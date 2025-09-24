@@ -36,6 +36,9 @@ public class AbstUIScriptResolver : IAsyncDisposable
     public async ValueTask CanvasAddToElement(ElementReference element, ElementReference canvas)
         => await (await GetModuleAsync()).InvokeVoidAsync("abstCanvas.addCanvasToElement", element, canvas);
 
+    public async ValueTask CanvasSetOffset(ElementReference canvas, double offsetX, double offsetY)
+        => await (await GetModuleAsync()).InvokeVoidAsync("abstCanvas.setCanvasOffset", canvas, offsetX, offsetY);
+
     public async ValueTask CanvasSetVisible(ElementReference canvas, bool visible)
         => await (await GetModuleAsync()).InvokeVoidAsync("abstCanvas.setCanvasVisible", canvas, visible);
 
