@@ -44,6 +44,8 @@ public interface IGameModel
 
     void UpdateMode();
 
+    void ResetLives(int lives);
+
     void Pause();
 
     void Resume();
@@ -140,6 +142,11 @@ public sealed class GameModel : IGameModel
 
         _score = 0;
         OnScoreChanged();
+    }
+
+    public void ResetLives(int lives)
+    {
+        SetLives(Math.Max(0, lives));
     }
 
     public void UpdateMode()
@@ -355,9 +362,10 @@ public sealed class GameModel : IGameModel
         double frightenedTimeSeconds,
         int frightenedFlashes,
         IReadOnlyList<string> map,
-        string mazeMemberName)
+        string mazeMemberName,
+        int defaultLives = 3)
     {
-        var game = new GameSettings(modeSequence, bonusIndex, bonusScore, map, mazeMemberName);
+        var game = new GameSettings(modeSequence, bonusIndex, bonusScore, map, mazeMemberName, defaultLives);
         var pacman = new PacmanSettings(pacmanSpeed, pacmanDotSpeed, pacmanFrightenedSpeed, pacmanFrightenedDotSpeed);
         var ghost = new GhostSettings(
             ghostSpeed,
@@ -383,7 +391,8 @@ public sealed record GameSettings(
     int BonusIndex,
     int BonusScore,
     IReadOnlyList<string> MapLayout,
-    string MazeMemberName);
+    string MazeMemberName,
+    int DefaultLives);
 
 /// <summary>
 /// Level-specific configuration for Pac-Man's speed profile.
