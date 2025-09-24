@@ -1,5 +1,6 @@
 ﻿using BlingoEngine.Casts;
 using BlingoEngine.Core;
+using Blingo.PacMan.Core.Models;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Projects;
@@ -42,6 +43,7 @@ public class PacManProjectFactory : IBlingoProjectFactory
                 )
                 .ServicesBlingo(s => s
                     .AddSingleton<IPacManCore, PacManCore>()
+                    .AddSingleton<IBonusesModel, BonusesModel>()
                     )
                 ;
     }
