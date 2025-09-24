@@ -20,7 +20,7 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-        _Movie.ActorList.Add(this);
+        _Movie.ActorList.Append(this);
     }
 }
 """;
@@ -44,7 +44,7 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
     public void Test()
     {
-        _Movie.ActorList.Remove(this);
+        _Movie.ActorList.DeleteOne(this);
     }
 }
 """;

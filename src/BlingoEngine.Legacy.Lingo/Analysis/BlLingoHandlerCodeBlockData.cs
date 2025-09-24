@@ -66,7 +66,16 @@ public sealed record BlLingoPutBlockData(
     public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
 }
 
-public sealed record BlLingoActorListMutationBlockData(string ArgumentExpression, bool IsRemoval = false) : IBlBlockDataVisitor
+public enum BlLingoActorListMutationKind
+{
+    Append,
+    DeleteOne,
+    Delete,
+}
+
+public sealed record BlLingoActorListMutationBlockData(
+    string ArgumentExpression,
+    BlLingoActorListMutationKind Kind = BlLingoActorListMutationKind.Append) : IBlBlockDataVisitor
 {
     public void Visit(IBlLegacyHandlerBlockDataVisitor visitor) => visitor.Visit(this);
 }

@@ -204,7 +204,7 @@ public class MyBehaviorBeh : BlingoSpriteBehavior
 public class MyBehaviorBehavior : BlingoSpriteBehavior, IHasMouseUpEvent
 {
     public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
-    public void MouseUp(object? btn)
+    public void MouseUp(BlingoMouseEvent btn)
     {
         value = 1;
     }

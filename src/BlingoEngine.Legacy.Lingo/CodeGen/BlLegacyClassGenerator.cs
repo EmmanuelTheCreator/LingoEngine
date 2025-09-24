@@ -414,10 +414,39 @@ public sealed class BlLegacyClassGenerator
                 suffix++;
             }
 
-            parameters.Add($"object? {candidate}");
+            var typeName = ResolveParameterType(symbol);
+            parameters.Add($"{typeName} {candidate}");
         }
 
         return parameters;
+    }
+
+    private static string ResolveParameterType(BlCodeSymbol symbol)
+    {
+        if (symbol is null)
+        {
+            return "object";
+        }
+
+        var resolved = symbol.ResolvedTypeName;
+        if (string.IsNullOrWhiteSpace(resolved))
+        {
+            return "object";
+        }
+
+        var normalized = NormalizeParameterType(resolved);
+        return string.IsNullOrEmpty(normalized) ? "object" : normalized;
+    }
+
+    private static string NormalizeParameterType(string typeName)
+    {
+        var normalized = typeName.Trim();
+        if (string.Equals(normalized, "object?", StringComparison.Ordinal))
+        {
+            return "object";
+        }
+
+        return normalized;
     }
 
 }
