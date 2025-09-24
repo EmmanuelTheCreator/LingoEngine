@@ -32,7 +32,7 @@ internal class DummyTextMember : IBlingoMemberTextBase, IBlingoMemberTextBaseInt
     public int Height { get; set; }
     public long Size { get; set; }
     public string Comments { get; set; } = string.Empty;
-    public string FileName { get; set; }
+    public string FileName { get; set; } = string.Empty;
     public BlingoMemberType Type { get; set; } = BlingoMemberType.Text;
     public string CastName => string.Empty;
     public IBlingoCast Cast => _cast;
