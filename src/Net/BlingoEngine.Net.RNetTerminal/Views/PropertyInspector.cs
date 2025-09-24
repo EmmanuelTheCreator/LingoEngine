@@ -62,6 +62,16 @@ internal sealed class PropertyInspector : View
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
+        var tabsMargin = _tabs.Margin;
+        if (tabsMargin != null)
+        {
+            tabsMargin.Thickness = new Thickness(0);
+        }
+        var tabsPadding = _tabs.Padding;
+        if (tabsPadding != null)
+        {
+            tabsPadding.Thickness = new Thickness(0);
+        }
         _tabs.SelectedTabChanged += (_, e) =>
         {
             if (e.NewTab != null)
@@ -96,7 +106,7 @@ internal sealed class PropertyInspector : View
             new PropertySpec("BackColor", typeof(Color)),
             new PropertySpec("Behaviors", typeof(string))
         });
-        var tabSpriteTuple = CreateTab("Sprite", _spriteSpecs);
+        var tabSpriteTuple = CreateTab("Sprite", _spriteSpecs, PropertyTarget.Sprite);
         _spriteTab = tabSpriteTuple.Tab;
         _spriteTable = tabSpriteTuple.Data;
         _spriteTableView = tabSpriteTuple.View;
@@ -118,19 +128,19 @@ internal sealed class PropertyInspector : View
             new PropertySpec("PurgePriority", typeof(int), true)
         });
 
-        var tabMemberTuple = CreateTab("Member", _memberSpecs);
+        var tabMemberTuple = CreateTab("Member", _memberSpecs, PropertyTarget.Member);
         _memberTab = tabMemberTuple.Tab;
         _memberTableView = tabMemberTuple.View;
         _memberTable = tabMemberTuple.Data;
         _tabs.AddTab(_memberTab, true);
-       
+
         _bitmapTab = CreateTab("Bitmap", new[]
         {
             new PropertySpec("Dimensions", typeof(string), true),
             new PropertySpec("Highlight", typeof(bool)),
             new PropertySpec("RegPointX", typeof(int)),
             new PropertySpec("RegPointY", typeof(int))
-        });
+        }, PropertyTarget.Member);
         _soundTab = CreateTab("Sound", new[]
         {
             new PropertySpec("Loop", typeof(bool)),
@@ -140,7 +150,7 @@ internal sealed class PropertyInspector : View
             new PropertySpec("Channels", typeof(int), true),
             new PropertySpec("Play", typeof(bool)),
             new PropertySpec("Stop", typeof(bool))
-        });
+        }, PropertyTarget.Member);
         _movieTab = CreateTab("Movie", new[]
         {
             new PropertySpec("StageWidth", typeof(int)),
@@ -150,18 +160,18 @@ internal sealed class PropertyInspector : View
             new PropertySpec("BackgroundColor", typeof(Color)),
             new PropertySpec("About", typeof(string)),
             new PropertySpec("Copyright", typeof(string))
-        });
+        }, PropertyTarget.Member);
         _castTab = CreateTab("Cast", new[]
         {
             new PropertySpec("Number", typeof(int)),
             new PropertySpec("Name", typeof(string))
-        });
+        }, PropertyTarget.Member);
         _textTab = CreateTab("Text", new[]
         {
             new PropertySpec("Width", typeof(int)),
             new PropertySpec("Height", typeof(int)),
             new PropertySpec("Edit", typeof(bool))
-        });
+        }, PropertyTarget.Member);
         _shapeTab = CreateTab("Shape", new[]
         {
             new PropertySpec("Shape", typeof(string)),
@@ -169,7 +179,7 @@ internal sealed class PropertyInspector : View
             new PropertySpec("Width", typeof(int)),
             new PropertySpec("Height", typeof(int)),
             new PropertySpec("Edit", typeof(bool))
-        });
+        }, PropertyTarget.Member);
         _guidesTab = CreateTab("Guides", new[]
         {
             new PropertySpec("GuidesColor", typeof(Color)),
@@ -184,14 +194,14 @@ internal sealed class PropertyInspector : View
             new PropertySpec("RemoveGuides", typeof(bool)),
             new PropertySpec("GridWidth", typeof(int)),
             new PropertySpec("GridHeight", typeof(int))
-        });
-        _behaviorTab = CreateTab("Behavior", new[] { new PropertySpec("Behaviors", typeof(string)) });
+        }, PropertyTarget.Member);
+        _behaviorTab = CreateTab("Behavior", new[] { new PropertySpec("Behaviors", typeof(string)) }, PropertyTarget.Member);
         _filmLoopTab = CreateTab("FilmLoop", new[]
         {
             new PropertySpec("Framing", typeof(string)),
             new PropertySpec("Loop", typeof(bool)),
             new PropertySpec("FrameCount", typeof(int))
-        });
+        }, PropertyTarget.Member);
 
         SetTabs( _movieTab);
         var initial = _tabs.Tabs.FirstOrDefault(t => t.Text.ToString() == _lastTab) ?? _spriteTab;
@@ -472,24 +482,24 @@ internal sealed class PropertyInspector : View
 
 
 
-    private Tab CreateTab(string title, PropertySpec[] props)
+    private Tab CreateTab(string title, PropertySpec[] props, PropertyTarget target)
     {
         var tab = new Tab();
         RNetTerminalStyle.SetForTableView(tab);
         tab.DisplayText = title;
         var tableView = BuildPropertyTableView(props);
-        AttachEditPopup(props, tableView);
+        AttachEditPopup(props, tableView, target);
         tab.View = tableView.View;
         return (tab);
     }
-    private (Tab Tab, TableView View, DataTable Data) CreateTab(string name, IList<PropertySpec> data)
+    private (Tab Tab, TableView View, DataTable Data) CreateTab(string name, IList<PropertySpec> data, PropertyTarget target)
     {
         var tab = new Tab();
         tab.CanFocus = true;
         RNetTerminalStyle.SetForTableView(tab);
         tab.DisplayText = name;
         var tableView = CreateTable(data);
-        AttachEditPopup(data, tableView);
+        AttachEditPopup(data, tableView, target);
         tab.View = tableView.View;
         return (tab, tableView.View, tableView.Data);
     }
@@ -500,7 +510,7 @@ internal sealed class PropertyInspector : View
         return table;
     }
 
-    private void AttachEditPopup(IList<PropertySpec> props, (TableView View, DataTable Data) table)
+    private void AttachEditPopup(IList<PropertySpec> props, (TableView View, DataTable Data) table, PropertyTarget target)
     {
         table.View.CellActivated += (_, args) =>
         {
@@ -515,7 +525,7 @@ internal sealed class PropertyInspector : View
             {
                 if (!DelayPropertyUpdates)
                     table.Data.Rows[args.Row][1] = newValue;
-                PropertyChanged?.Invoke(PropertyTarget.Member, spec.Name, newValue);
+                PropertyChanged?.Invoke(target, spec.Name, newValue);
             }
             //view.SetNeedsDisplay();
             //view.SetNeedsDraw();
