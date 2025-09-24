@@ -95,7 +95,7 @@ internal class DummyTextMember : IBlingoMemberTextBase, IBlingoMemberTextBaseInt
     public IAbstTexture2D? GetTexture() => null;
     public void ChangesHasBeenApplied() { }
     public void LoadFile() { LoadFileCalled = true; }
-    public void SetFileName(string name) => _fileName = name;
+    public void SetFileName(string name) => FileName = name;
 
     public string GetTextMDString()
     {

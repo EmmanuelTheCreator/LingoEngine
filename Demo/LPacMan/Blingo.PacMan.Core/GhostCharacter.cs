@@ -5,12 +5,17 @@ using BlingoEngine.Movies.Events;
 
 namespace Blingo.PacMan.Core;
 
+internal interface IGhostModeController
+{
+    void SetMode(GhostMode? mode);
+}
+
 /// <summary>
 /// Represents a single ghost character, ported from the original JavaScript implementation. The
 /// class keeps the overall structure – mode transitions, frightened timers and score progression –
 /// while adapting the movement logic to the <see cref="BlPacManCharacter"/> abstraction.
 /// </summary>
-internal class GhostCharacter : BlPacManCharacter, IHasExitFrameEvent
+internal class GhostCharacter : BlPacManCharacter, IHasExitFrameEvent, IGhostModeController
 {
     private const float DeadSpeed = 130f;
 
