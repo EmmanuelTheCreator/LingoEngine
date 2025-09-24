@@ -5,16 +5,16 @@
 ---
 
 ## 1) Header Directory (ASCII)
-The XMED header starts with ASCII **directory rows**: STILL WRONG
+It seems The XMED header starts with ASCII **directory rows**: 
 ```
 <TYPE:4>,<OFFSET:8>,<COUNT:8>
 ```
+
 - All three numbers are **hex strings** (ASCII).  
 - Rows continue **until the first 0x00 byte** (no explicit header length).  
 - Example: `0008,000005B0,00000010` → Type **0008** at offset **0x05B0** with **16** entries capacity. STILL WRONG
 
 
----
 blocks starting with 
 0x00 [XX XX: is the length of the content] [COMMA]
 - First block is the text
@@ -22,23 +22,9 @@ blocks starting with
 - The latest : We always get these values in the latest blok
 	045,046,182,181,149,181,165,165,046,039,034,145,146,147,148,133,131 	
 
+Perhaps:
+- **0008** → **Font‑names table** (“40,” records).
 
-### Known TYPEs (from tests) 
-- **0008** → **Font‑names table** (“40,” records).STILL WRONG
-
-> Parser rule: read directory rows → `DirEntry { Type, Offset, Count }`. Use `Count` as upper bound; do **not** scan past it.
-
----
-
-## 2) Text Block (the text itself)
-- At the end of the header there is an **ASCII length** for the text block (example bytes at **[240–244]**: `00 31 32 41 2C` → `"12A,"` → **0x12A = 298**).  
-- **Text starts at 245** and spans that length (includes CR separators `0x0D` for multi‑line).
-
-> Parser rule: read ASCII length, compute `textStart = 245`, slice `[textStart .. textStart+length)`. No scanning.
-
----
-
-## 3) Font‑Names Table (TYPE=0008)
 - Jump to OFFSET from the directory entry.  
 - Structure repeats **COUNT** times:
   - ASCII **`"40,"`** (`34 30 2C`),
@@ -46,21 +32,6 @@ blocks starting with
   - **L** bytes ASCII font name,
   - optional **NUL padding** before next record.
 
-> Empty slots have length **00**. Iterate exactly **COUNT** records.
-
----
-
-## 4) Run / Style Map (20‑digit ASCII rows)
-Multi‑style files contain a map of **ASCII hex digits**, grouped into 5 fields (4 digits each):
-```
-F1 F2 F3 F4 F5   (total 20 hex digits)
-```
-- **F3** = **run length** (chars/bytes for the text run).  
-- **F5** = **style descriptor id** (used to select a descriptor block).
-
-> Parser rule: read 20‑digit rows at the map location (from header/known offsets), convert each field from ASCII hex to `ushort`.
-
----
 
 ## 5) Style Descriptor Blocks
 Found later in the file for multi‑style texts; each block carries:
@@ -130,35 +101,45 @@ Two adjacent bytes encode styles and alignment/layout:
 
 > Note: Offsets beyond the core header can drift with file variants. Treat these as **typical locations** observed in this test batch.
 
----
+# style maps?
 
-## 8) End‑to‑End Parse (reference points)
-- **Header** → `ReadDirectory()` until `0x00` → entries `{Type,Offset,Count}`.  
-- **Text** → read ASCII length (e.g., at 240–244) → slice at 245 for `length` bytes.  
-- **Fonts** → locate TYPE `0008` → iterate **COUNT** `"40,"` records.  
-- **Run map** → read 20‑digit rows → `F3=length`, `F5=descriptorId`.  
-- **Descriptors** → jump by id → read style/align, color index, font link.  
-- **Flags** → bytes `0x001C`/`0x001D` give styles + alignment (bitwise).
-
----
-
-## 9) Validation Hints
-- Cross‑check line lengths from run map (`F3`) with actual text CR‑split lengths.  
-- Font names discovered at TYPE `0008` must match names referenced by descriptors.  
-- For alignment: decode `0x001D & 0b11` and verify Justified (=3) when present.
-
----
-
-## 10) Known Good Samples (from this set)
-- Multi‑line, multi‑style with verified lengths: **38, 70, 72, 70, 44**.  
-- Font table example at **0x05B0**: `"40,05,Arial"` followed by slots (COUNT=16).  
-- Alignment combined values observed: `00, 10, 15, 1A, 19, 03`.
-
-
-
-
+Observed at 0x0050
 
 [ 02 30 02 <font size key> 01 ] [ 02 ?? ?? <line height key> 01 ]
-
-
-*Status legend*: Confirmed = stable across files; Confirm = needs more dedicated single‑feature files (time‑boxed).
+font size, line height, bytes
+|------:|---------|
+| 09	|	11	|	02 30 02 39 32 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 10	|	12	|	02 30 02 39 33 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 11	|	13	|	02 30 02 39 46 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 12	|	14	|	02 30 02 41 30 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 13	|	16	|	02 30 02 41 38 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 14	|	17	|	02 30 02 41 43 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 15	|	18	|	02 30 02 41 46 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 16	|	19	|	02 30 02 42 39 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 17	|	21	|	02 30 02 42 46 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 18	|	22	|	02 30 02 43 44 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 19	|	23	|	02 30 02 44 31 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 20	|	24	|	02 30 02 45 30 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 21	|	25	|	02 30 02 45 42 01 30 C1 03 02 2D 31 82 02 35 42		| 
+| 22	|	27	|	02 30 02 31 30 37 01 30 C1 03 02 2D 31 82 02 35		| 
+| 23	|	28	|	02 30 02 31 30 43 01 30 C1 03 02 2D 31 82 02 35		| 
+| 24	|	29	|	02 30 02 31 31 31 01 30 C1 03 02 2D 31 82 02 35		| 
+| 28	|	34	|	02 30 02 31 34 43 01 30 C1 03 02 2D 31 82 02 35		| 
+| 29	|	35	|	02 30 02 31 35 39 01 30 C1 03 02 2D 31 82 02 35		| 
+| 39	|	47	|	02 30 02 32 31 43 01 30 C1 03 02 2D 31 82 02 35		| 
+| 40	|	48	|	02 30 02 32 32 35 01 30 C1 03 02 2D 31 82 02 35		| 
+| 41	|	49	|	02 30 02 32 32 45 01 30 C1 03 02 2D 31 82 02 35		| 
+| 42	|	51	|	02 30 02 32 34 30 01 30 C1 03 02 2D 31 82 02 35		| 
+| 43	|	52	|	02 30 02 32 34 39 01 30 C1 03 02 2D 31 82 02 35		| 
+| 47	|	57	|	02 30 02 32 37 36 01 30 C1 03 02 2D 31 82 02 35		| 
+| 49	|	59	|	02 30 02 32 38 38 01 30 C1 03 02 2D 31 82 02 35		| 
+| 50	|	60	|	02 30 02 32 43 44 01 30 C1 03 02 2D 31 82 02 35		| 
+| 51	|	62	|	02 30 02 32 45 31 01 30 C1 03 02 2D 31 82 02 35		| 
+| 52	|	63	|	02 30 02 33 32 41 01 30 C1 03 02 2D 31 82 02 35		| 
+| 53	|	64	|	02 30 02 33 33 35 01 30 C1 03 02 2D 31 82 02 35		| 
+| 54	|	65	|	02 30 02 33 34 42 01 30 C1 03 02 2D 31 82 02 35		| 
+| 69	|	71	|	02 30 02 35 31 31 01 30 C1 03 02 2D 31 82 02 35		| 
+| 79	|	95	|	02 30 02 36 43 46 01 30 C1 03 02 2D 31 82 02 35		| 
+| 89	|	107	|	02 30 02 37 39 42 01 30 C1 03 02 2D 31 82 02 35		| 
+| 96	|	116	|	02 30 02 38 33 42 01 30 C1 03 02 2D 31 82 02 35		| 
+| 200	|	241	|	02 30 02 32 44 42 37 01 30 C1 03 02 2D 31 82 02		| 
