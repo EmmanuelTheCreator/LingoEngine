@@ -5,8 +5,13 @@ using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.Analysis.Passes;
 
-public sealed class BlLegacyTypeHintPass : BlLingoAnalysisPass
+/// <summary>
+/// Builds the legacy type model, extracts hints, and applies resolved property and parameter types.
+/// </summary>
+public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
 {
+    public const string TypeCollectionKey = "LegacyTypeCollection";
+
     private static readonly HashSet<string> s_mouseHandlers = new(StringComparer.OrdinalIgnoreCase)
     {
         "MouseDown",
@@ -25,8 +30,8 @@ public sealed class BlLegacyTypeHintPass : BlLingoAnalysisPass
         "KeyUp",
     };
 
-    public BlLegacyTypeHintPass()
-        : base("LegacyTypeHints")
+    public BlLegacyTypeAnalysisPass()
+        : base("LegacyTypeAnalysis")
     {
     }
 
@@ -34,18 +39,10 @@ public sealed class BlLegacyTypeHintPass : BlLingoAnalysisPass
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (!context.TryGetData(BlLegacyTypeCollectionPass.TypeCollectionKey, out BlLegacyTypeCollection? collection) ||
-            collection is null)
-        {
-            return;
-        }
+        var collection = BuildTypeCollection(context.Symbols);
+        context.SetData(TypeCollectionKey, collection);
 
-        IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? handlerBlocks = null;
-        if (context.TryGetData(BlLingoHandlerCodeBlockPass.HandlerCodeBlocksKey, out IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? blocks) &&
-            blocks is not null)
-        {
-            handlerBlocks = blocks;
-        }
+        var handlerBlocks = TryGetHandlerBlocks(context);
 
         foreach (var scope in collection.Scopes)
         {
@@ -53,7 +50,8 @@ public sealed class BlLegacyTypeHintPass : BlLingoAnalysisPass
             {
                 AssignEventParameterTypes(collection, handler);
 
-                if (handlerBlocks is null || handler.Symbol is null || !handlerBlocks.TryGetValue(handler.Symbol, out var blocksForHandler))
+                if (handlerBlocks is null || handler.Symbol is null ||
+                    !handlerBlocks.TryGetValue(handler.Symbol, out var blocksForHandler))
                 {
                     continue;
                 }
@@ -77,6 +75,61 @@ public sealed class BlLegacyTypeHintPass : BlLingoAnalysisPass
                     }
                 }
             }
+        }
+
+        collection.ApplyResolvedTypes();
+    }
+
+    private static BlLegacyTypeCollection BuildTypeCollection(BlLingoSymbolTable symbols)
+    {
+        var collection = new BlLegacyTypeCollection();
+
+        foreach (var classScope in EnumerateClasses(symbols))
+        {
+            var scope = collection.GetOrAddScope(classScope);
+
+            foreach (var property in classScope.Properties.Values)
+            {
+                if (property is not null)
+                {
+                    scope.RegisterProperty(property);
+                }
+            }
+
+            foreach (var handler in classScope.Handlers.Values)
+            {
+                if (handler is null)
+                {
+                    continue;
+                }
+
+                var handlerScope = scope.RegisterHandler(handler);
+                collection.RegisterHandler(handlerScope);
+            }
+        }
+
+        return collection;
+    }
+
+    private static IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? TryGetHandlerBlocks(
+        BlLingoAnalysisContext context)
+    {
+        if (context.TryGetData(BlLingoHandlerCodeBlockPass.HandlerCodeBlocksKey,
+                out IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? blocks) &&
+            blocks is not null)
+        {
+            return blocks;
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<BlLingoClassSymbolTable> EnumerateClasses(BlLingoSymbolTable symbols)
+    {
+        yield return symbols.MovieScript;
+        foreach (var scope in symbols.ClassScopes.Values)
+        {
+            yield return scope;
         }
     }
 
@@ -332,4 +385,3 @@ public sealed class BlLegacyTypeHintPass : BlLingoAnalysisPass
         return false;
     }
 }
-

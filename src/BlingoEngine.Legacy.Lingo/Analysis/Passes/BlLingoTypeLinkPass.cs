@@ -10,6 +10,7 @@ namespace BlingoEngine.Legacy.Lingo.Analysis.Passes;
 public sealed class BlLingoTypeLinkPass : BlLingoAnalysisPass
 {
     public const string PendingTypeSymbolsKey = nameof(PendingTypeSymbolsKey);
+    public const string KnownClassesKey = nameof(KnownClassesKey);
 
     public BlLingoTypeLinkPass()
         : base("TypeLink")
@@ -90,7 +91,10 @@ public sealed class BlLingoTypeLinkPass : BlLingoAnalysisPass
         }
 
         var pending = CollectPendingSymbols(symbols);
+        var knownClasses = CollectKnownClasses(symbols);
+        ResolvePendingSymbols(pending, knownClasses);
         context.SetData(PendingTypeSymbolsKey, pending);
+        context.SetData(KnownClassesKey, knownClasses);
     }
 
     private static List<BlCodeSymbol> CollectPendingSymbols(BlLingoSymbolTable symbols)
@@ -133,6 +137,47 @@ public sealed class BlLingoTypeLinkPass : BlLingoAnalysisPass
             AddPending(handler.Symbol, pending);
             AddPending(handler.Parameters.Values, pending);
             AddPending(handler.Locals.Values, pending);
+        }
+    }
+
+    private static HashSet<string> CollectKnownClasses(BlLingoSymbolTable symbols)
+    {
+        var known = new HashSet<string>(symbols.Classes.Keys, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var classScope in symbols.ClassScopes.Values)
+        {
+            known.Add(classScope.Symbol.Name);
+        }
+
+        return known;
+    }
+
+    private static void ResolvePendingSymbols(IEnumerable<BlCodeSymbol> pending, HashSet<string> knownClasses)
+    {
+        if (knownClasses.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var symbol in pending)
+        {
+            if (!symbol.HasUnresolvedTypeCodes)
+            {
+                continue;
+            }
+
+            foreach (var typeCode in symbol.TypeCodes)
+            {
+                if (symbol.HasResolvedTypeName(typeCode))
+                {
+                    continue;
+                }
+
+                if (knownClasses.Contains(typeCode))
+                {
+                    symbol.SetResolvedTypeName(typeCode);
+                }
+            }
         }
     }
 
