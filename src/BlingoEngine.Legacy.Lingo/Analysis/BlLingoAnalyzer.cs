@@ -24,12 +24,13 @@ public sealed class BlLingoAnalyzer
     public static BlLingoAnalyzer Create(IReadOnlyList<BlSyntaxToken> tokens)
     {
         var analyzer = new BlLingoAnalyzer(tokens);
-        // Pass order is important: discovery populates the symbol table, type linking records unresolved symbols, and class
-        // linking collects class names for later reference resolution.
+        // Pass order is important: declarations populate the symbol table, handler analysis captures
+        // structured blocks for type inference, type analysis resolves member signatures, and type linking
+        // finalizes script associations before generating class metadata.
         analyzer.AddPass(new BlLingoDeclarationPass());
-        analyzer.AddPass(new BlLingoTypeLinkPass());
-        analyzer.AddPass(new BlLingoClassLinkPass());
         analyzer.AddPass(new BlLingoHandlerCodeBlockPass());
+        analyzer.AddPass(new BlLegacyTypeAnalysisPass());
+        analyzer.AddPass(new BlLingoTypeLinkPass());
         analyzer.AddPass(new BlLegacyClassMemberPass());
         return analyzer;
     }

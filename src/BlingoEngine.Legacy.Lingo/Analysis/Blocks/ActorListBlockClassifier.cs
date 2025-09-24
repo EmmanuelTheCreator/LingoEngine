@@ -27,9 +27,10 @@ internal sealed class ActorListBlockClassifier : IHandlerBlockClassifier
             return false;
         }
 
-        if (!BlLegacyHandlerTokenUtilities.IsIdentifier(tokens[3], "append") &&
-            !BlLegacyHandlerTokenUtilities.IsIdentifier(tokens[3], "deleteOne") &&
-            !BlLegacyHandlerTokenUtilities.IsIdentifier(tokens[3], "delete"))
+        var operationToken = tokens[3];
+        if (!BlLegacyHandlerTokenUtilities.IsIdentifier(operationToken, "append") &&
+            !BlLegacyHandlerTokenUtilities.IsIdentifier(operationToken, "deleteOne") &&
+            !BlLegacyHandlerTokenUtilities.IsIdentifier(operationToken, "delete"))
         {
             return false;
         }
@@ -48,13 +49,20 @@ internal sealed class ActorListBlockClassifier : IHandlerBlockClassifier
         var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(tokens, 5, closeIndex - 5);
         var argument = BlLegacyExpressionConverter.Convert(argumentTokens);
 
-        var isRemoval = BlLegacyHandlerTokenUtilities.IsIdentifier(tokens[3], "deleteOne") ||
-            BlLegacyHandlerTokenUtilities.IsIdentifier(tokens[3], "delete");
+        var kind = BlLingoActorListMutationKind.Append;
+        if (BlLegacyHandlerTokenUtilities.IsIdentifier(operationToken, "deleteOne"))
+        {
+            kind = BlLingoActorListMutationKind.DeleteOne;
+        }
+        else if (BlLegacyHandlerTokenUtilities.IsIdentifier(operationToken, "delete"))
+        {
+            kind = BlLingoActorListMutationKind.Delete;
+        }
 
         block = new BlLingoHandlerCodeBlock(
-            isRemoval ? BlLingoHandlerCodeBlockKind.ActorListRemove : BlLingoHandlerCodeBlockKind.ActorListAppend,
+            kind == BlLingoActorListMutationKind.Append ? BlLingoHandlerCodeBlockKind.ActorListAppend : BlLingoHandlerCodeBlockKind.ActorListRemove,
             tokens,
-            new BlLingoActorListMutationBlockData(argument, IsRemoval: isRemoval));
+            new BlLingoActorListMutationBlockData(argument, kind));
         return true;
     }
 }

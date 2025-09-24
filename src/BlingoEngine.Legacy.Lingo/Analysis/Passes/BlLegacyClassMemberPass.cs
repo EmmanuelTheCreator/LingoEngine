@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using BlingoEngine.Legacy.Lingo.CodeGen;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.Analysis.Passes;
@@ -111,25 +110,18 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
             EnsureDeclaredProperties(entry);
         }
 
-        IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? handlerBlocks = null;
-        if (context.TryGetData(BlLingoHandlerCodeBlockPass.HandlerCodeBlocksKey, out IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? retrieved))
-        {
-            handlerBlocks = retrieved;
-        }
-
         var results = new Dictionary<BlLingoClassSymbolTable, BlLegacyClassMemberInfo>();
         foreach (var pair in classData)
         {
             var data = pair.Value;
-            InferPropertyTypes(data, handlerBlocks);
-
             var orderedProperties = new List<PropertyState>(data.Properties.Values);
             orderedProperties.Sort(static (left, right) => left.Order.CompareTo(right.Order));
 
             var propertyInfos = new List<BlLegacyPropertyInfo>(orderedProperties.Count);
             foreach (var property in orderedProperties)
             {
-                propertyInfos.Add(new BlLegacyPropertyInfo(property.Name, property.Type, property.Comment));
+                var typeName = ResolvePropertyType(data.Scope, property);
+                propertyInfos.Add(new BlLegacyPropertyInfo(property.Name, typeName, property.Comment));
             }
 
             results[pair.Key] = new BlLegacyClassMemberInfo(
@@ -160,7 +152,7 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
             }
 
             var order = property.Declarations.Count > 0 ? property.Declarations[0].Span.Start : int.MaxValue;
-            data.GetOrAddProperty(property.Name, order);
+            data.GetOrAddProperty(property.Name, order, property);
         }
     }
 
@@ -180,7 +172,7 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
                 var name = current.ValueText;
                 if (!string.IsNullOrWhiteSpace(name) && data.Scope.Properties.TryGetValue(name, out var symbol))
                 {
-                    var info = data.GetOrAddProperty(symbol.Name, current.Span.Start);
+                    var info = data.GetOrAddProperty(symbol.Name, current.Span.Start, symbol);
                     var comment = ExtractTrailingComment(current);
                     if (!string.IsNullOrWhiteSpace(comment) && info.Comment is null)
                     {
@@ -204,283 +196,28 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
         return lastIndex;
     }
 
-    private static void InferPropertyTypes(
-        ClassData data,
-        IReadOnlyDictionary<BlLingoHandlerSymbolTable, IReadOnlyList<BlLingoHandlerCodeBlock>>? handlerBlocks)
+    private static string ResolvePropertyType(BlLingoClassSymbolTable scope, PropertyState property)
     {
-        foreach (var property in data.Properties.Values)
-        {
-            property.Type = "object";
-        }
-
-        if (handlerBlocks is null || handlerBlocks.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var handler in data.Scope.Handlers.Values)
-        {
-            if (handler is null || !handlerBlocks.TryGetValue(handler, out var blocks))
-            {
-                continue;
-            }
-
-            foreach (var block in blocks)
-            {
-                switch (block.Kind)
-                {
-                    case BlLingoHandlerCodeBlockKind.Put when block.Data is BlLingoPutBlockData put:
-                        ProcessPutBlock(data.Properties, put);
-                        break;
-                    case BlLingoHandlerCodeBlockKind.Expression:
-                        ProcessExpressionBlock(data.Properties, block);
-                        break;
-                }
-            }
-        }
-    }
-
-    private static void ProcessPutBlock(
-        IDictionary<string, PropertyState> propertyMap,
-        BlLingoPutBlockData data)
-    {
-        if (data is null || data.Kind != BlLingoPutAssignmentKind.Direct)
-        {
-            return;
-        }
-
-        var target = NormalizePropertyTarget(data.TargetExpression);
-        if (string.IsNullOrEmpty(target) || !propertyMap.TryGetValue(target, out var property))
-        {
-            return;
-        }
-
-        var typeName = DeterminePropertyType(data.ValueExpression);
-        if (typeName.Length == 0)
-        {
-            return;
-        }
-
-        property.Type = MergePropertyTypes(property.Type, typeName);
-    }
-
-    private static void ProcessExpressionBlock(
-        IDictionary<string, PropertyState> propertyMap,
-        BlLingoHandlerCodeBlock block)
-    {
-        if (block is null || block.Tokens.Count == 0)
-        {
-            return;
-        }
-
-        if (!TryExtractAssignment(block.Tokens, out var propertyName, out var valueTokens))
-        {
-            return;
-        }
-
-        if (!propertyMap.TryGetValue(propertyName, out var property))
-        {
-            return;
-        }
-
-        var expression = BlLegacyExpressionConverter.Convert(valueTokens);
-        var typeName = DeterminePropertyType(expression);
-        if (typeName.Length == 0)
-        {
-            return;
-        }
-
-        property.Type = MergePropertyTypes(property.Type, typeName);
-    }
-
-    private static string NormalizePropertyTarget(string? target)
-    {
-        if (string.IsNullOrWhiteSpace(target))
-        {
-            return string.Empty;
-        }
-
-        var trimmed = target.Trim();
-        if (trimmed.StartsWith("this.", StringComparison.OrdinalIgnoreCase))
-        {
-            return trimmed[5..];
-        }
-
-        return trimmed;
-    }
-
-    private static string NormalizeTypeName(string? typeName)
-    {
-        if (string.IsNullOrWhiteSpace(typeName))
-        {
-            return string.Empty;
-        }
-
-        var trimmed = typeName.Trim();
-        if (string.Equals(trimmed, "object?", StringComparison.Ordinal))
+        if (property is null)
         {
             return "object";
         }
 
-        return trimmed;
-    }
-
-    private static string MergePropertyTypes(string currentType, string candidate)
-    {
-        if (string.IsNullOrWhiteSpace(candidate))
+        var symbol = property.Symbol;
+        if (symbol is null && scope.Properties.TryGetValue(property.Name, out var lookup) && lookup is not null)
         {
-            return currentType;
+            symbol = lookup;
+            property.Symbol = lookup;
         }
 
-        if (string.IsNullOrWhiteSpace(currentType) || string.Equals(currentType, "object", StringComparison.Ordinal))
+        var resolved = symbol?.ResolvedTypeName;
+        if (string.IsNullOrWhiteSpace(resolved))
         {
-            return candidate;
+            return "object";
         }
 
-        if (string.Equals(currentType, candidate, StringComparison.Ordinal))
-        {
-            return currentType;
-        }
-
-        if ((string.Equals(currentType, "int", StringComparison.Ordinal) && string.Equals(candidate, "double", StringComparison.Ordinal)) ||
-            (string.Equals(currentType, "double", StringComparison.Ordinal) && string.Equals(candidate, "int", StringComparison.Ordinal)))
-        {
-            return "double";
-        }
-
-        if (string.Equals(candidate, "object", StringComparison.Ordinal))
-        {
-            return currentType;
-        }
-
-        return "object";
-    }
-
-    private static string DeterminePropertyType(string? expression)
-    {
-        var typeName = NormalizeTypeName(BlLegacyReturnTypeHelper.InferLiteral(expression));
-        if (!string.IsNullOrEmpty(typeName))
-        {
-            return typeName;
-        }
-
-        if (IsStringMemberAccess(expression))
-        {
-            return "string";
-        }
-
-        return string.Empty;
-    }
-
-    private static bool IsStringMemberAccess(string? expression)
-    {
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            return false;
-        }
-
-        var trimmed = expression.Trim();
-        if (!trimmed.StartsWith("Member<", StringComparison.Ordinal) &&
-            !trimmed.StartsWith("Member(", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        return ContainsSegment(trimmed, ".Line") ||
-            ContainsSegment(trimmed, ".Word") ||
-            ContainsSegment(trimmed, ".Text") ||
-            ContainsSegment(trimmed, ".Char");
-    }
-
-    private static bool ContainsSegment(string expression, string segment)
-    {
-        return expression.IndexOf(segment, StringComparison.OrdinalIgnoreCase) >= 0;
-    }
-
-    private static bool TryExtractAssignment(
-        IReadOnlyList<BlSyntaxToken> tokens,
-        out string propertyName,
-        out IReadOnlyList<BlSyntaxToken> valueTokens)
-    {
-        propertyName = string.Empty;
-        valueTokens = Array.Empty<BlSyntaxToken>();
-
-        if (tokens is null || tokens.Count < 3)
-        {
-            return false;
-        }
-
-        var index = 0;
-        string? candidate = null;
-
-        if (IsMeToken(tokens[index]))
-        {
-            index++;
-            if (index >= tokens.Count || tokens[index].Kind != BlSyntaxKind.PeriodToken)
-            {
-                return false;
-            }
-
-            index++;
-            if (index >= tokens.Count || tokens[index].Kind != BlSyntaxKind.IdentifierToken)
-            {
-                return false;
-            }
-
-            candidate = tokens[index].ValueText;
-            index++;
-        }
-        else if (tokens[index].Kind == BlSyntaxKind.IdentifierToken)
-        {
-            candidate = tokens[index].ValueText;
-            index++;
-        }
-        else
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(candidate) || index >= tokens.Count)
-        {
-            return false;
-        }
-
-        var token = tokens[index];
-        if (token.Kind != BlSyntaxKind.OperatorToken || !string.Equals(token.ValueText, "=", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        index++;
-        if (index >= tokens.Count)
-        {
-            return false;
-        }
-
-        var values = new List<BlSyntaxToken>(tokens.Count - index);
-        for (; index < tokens.Count; index++)
-        {
-            values.Add(tokens[index]);
-        }
-
-        if (values.Count == 0)
-        {
-            return false;
-        }
-
-        propertyName = candidate!;
-        valueTokens = values;
-        return true;
-    }
-
-    private static bool IsMeToken(BlSyntaxToken token)
-    {
-        if (token.Kind is BlSyntaxKind.KeywordToken or BlSyntaxKind.IdentifierToken)
-        {
-            return string.Equals(token.ValueText, "me", StringComparison.OrdinalIgnoreCase);
-        }
-
-        return false;
+        var normalized = resolved.Trim();
+        return string.Equals(normalized, "object?", StringComparison.Ordinal) ? "object" : normalized;
     }
 
     private static string? ExtractTrailingComment(BlSyntaxToken token)
@@ -625,16 +362,21 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
 
         public bool HasGlobalDeclarations { get; set; }
 
-        public PropertyState GetOrAddProperty(string name, int order)
+        public PropertyState GetOrAddProperty(string name, int order, BlCodeSymbol? symbol)
         {
             if (!Properties.TryGetValue(name, out var info))
             {
-                info = new PropertyState(name, order);
+                info = new PropertyState(name, order, symbol);
                 Properties[name] = info;
             }
             else if (info.Order == int.MaxValue)
             {
                 info.Order = order;
+            }
+
+            if (info.Symbol is null && symbol is not null)
+            {
+                info.Symbol = symbol;
             }
 
             return info;
@@ -656,18 +398,18 @@ public sealed class BlLegacyClassMemberPass : BlLingoAnalysisPass
 
     private sealed class PropertyState
     {
-        public PropertyState(string name, int order)
+        public PropertyState(string name, int order, BlCodeSymbol? symbol)
         {
             Name = name;
             Order = order;
-            Type = "object";
+            Symbol = symbol;
         }
 
         public string Name { get; }
 
         public int Order { get; set; }
 
-        public string Type { get; set; }
+        public BlCodeSymbol? Symbol { get; set; }
 
         public string? Comment { get; set; }
     }

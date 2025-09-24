@@ -63,8 +63,8 @@ end
             .BeAssignableTo<IEnumerable<BlCodeSymbol>>()
             .Which.Should().Contain(symbol => symbol.Name == "me");
 
-        result.Data.Should().ContainKey(BlLingoClassLinkPass.KnownClassesKey);
-        result.Data[BlLingoClassLinkPass.KnownClassesKey]
+        result.Data.Should().ContainKey(BlLingoTypeLinkPass.KnownClassesKey);
+        result.Data[BlLingoTypeLinkPass.KnownClassesKey]
             .Should()
             .BeAssignableTo<IEnumerable<string>>()
             .Which.Should().BeEmpty();

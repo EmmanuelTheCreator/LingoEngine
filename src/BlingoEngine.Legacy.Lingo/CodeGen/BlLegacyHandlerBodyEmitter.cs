@@ -162,7 +162,12 @@ public sealed class BlLegacyHandlerBodyEmitter : IBlLegacyHandlerBlockDataVisito
 
     public void Visit(BlLingoActorListMutationBlockData data)
     {
-        var method = data.IsRemoval ? "Remove" : "Add";
+        var method = data.Kind switch
+        {
+            BlLingoActorListMutationKind.Append => "Append",
+            BlLingoActorListMutationKind.DeleteOne => "DeleteOne",
+            _ => "Remove",
+        };
         _writer.WriteLine($"_Movie.ActorList.{method}({data.ArgumentExpression});");
     }
 
