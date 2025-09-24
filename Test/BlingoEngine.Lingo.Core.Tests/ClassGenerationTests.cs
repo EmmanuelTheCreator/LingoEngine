@@ -72,7 +72,7 @@ namespace Generated;
 
 public class MyParentParent : BlingoParentScript
 {
-    public object myVar;
+    public object myVar { get; set; }
 
     private readonly GlobalVars _global;
 
@@ -170,6 +170,22 @@ public class MyParentParent : BlingoParentScript
     }
 
     [Fact]
+    public void ClassNameDoesNotStartWithUnderscore()
+    {
+        var file = new BlingoScriptFile
+        {
+            Name = "p__MyBehavior",
+            Source = string.Empty,
+            Type = BlingoScriptType.Behavior
+        };
+
+        var result = _converter.ConvertClass(file);
+        var match = Regex.Match(result, @"class\s+(\w+)");
+        Assert.True(match.Success);
+        Assert.NotEqual('_', match.Groups[1].Value[0]);
+    }
+
+    [Fact]
     public void CustomSuffixesAreApplied()
     {
         var settings = new BlingoToCSharpConverterSettings
@@ -215,13 +231,39 @@ end",
         Assert.Contains("return new BehaviorPropertyDescriptionList()", result);
         Assert.Contains(".Add(this, x => x.myStartMembernum, \"My Start membernum:\", 0)", result);
         Assert.Contains(".Add(this, x => x.myFunction, \"function to execute:\", \"70\")", result);
-        Assert.Contains("public int myStartMembernum = 0;", result);
-        Assert.Contains("public string myFunction = \"70\";", result);
+        Assert.Contains("public int myStartMembernum { get; set; } = 0;", result);
+        Assert.Contains("public string myFunction { get; set; } = \"70\";", result);
 
         var addMatches = Regex.Matches(result, @"\.Add\(this,\s*x => x\.(?<name>\w+)");
         var propertyNames = addMatches.Cast<Match>().Select(m => m.Groups["name"].Value).ToList();
         Assert.Equal(8, propertyNames.Count);
         Assert.Equal(propertyNames.Count, propertyNames.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [Fact]
+    public void LeadingCommentsArePreserved()
+    {
+        var source = string.Join('\n',
+            "-- Copyright Foo",
+            "-- This file was written in 2005",
+            string.Empty,
+            "property myVar",
+            "on startMovie",
+            "end");
+        var file = new BlingoScriptFile
+        {
+            Name = "Commented",
+            Source = source,
+            Type = BlingoScriptType.Behavior
+        };
+
+        var result = _converter.Convert(file).Replace("\r", string.Empty);
+        var commentIndex = result.IndexOf("// Copyright Foo", StringComparison.Ordinal);
+        Assert.True(commentIndex >= 0);
+        var classMatch = Regex.Match(result, @"public class (\w+)");
+        Assert.True(classMatch.Success);
+        Assert.True(classMatch.Index > commentIndex);
+        Assert.Contains("// This file was written in 2005", result);
     }
 
     [Fact]
@@ -252,7 +294,7 @@ end",
     }
 
     [Fact]
-    public void PropertyDeclarationsBecomeFields()
+    public void PropertyDeclarationsBecomeProperties()
     {
         var file = new BlingoScriptFile
         {
@@ -263,8 +305,8 @@ end",
             Type = BlingoScriptType.Behavior
         };
         var result = _converter.ConvertClass(file);
-        Assert.Contains("public object myVar1;", result);
-        Assert.Contains("public object myVar2;", result);
+        Assert.Contains("public object myVar1 { get; set; }", result);
+        Assert.Contains("public object myVar2 { get; set; }", result);
     }
 
     [Fact]
@@ -283,10 +325,10 @@ end",
             Type = BlingoScriptType.Behavior
         };
         var result = _converter.ConvertClass(file);
-        Assert.Contains("public int a;", result);
-        Assert.Contains("public string b;", result);
-        Assert.Contains("public string c;", result);
-        Assert.Contains("public bool d;", result);
+        Assert.Contains("public int a { get; set; }", result);
+        Assert.Contains("public string b { get; set; }", result);
+        Assert.Contains("public string c { get; set; }", result);
+        Assert.Contains("public bool d { get; set; }", result);
     }
 
     [Fact]
@@ -302,7 +344,7 @@ end",
             Type = BlingoScriptType.Behavior
         };
         var result = _converter.Convert(file);
-        Assert.Contains("public BlingoList<int> tempScore = new();", result);
+        Assert.Contains("public BlingoList<int> tempScore { get; set; } = new();", result);
         Assert.Contains("tempScore.Add(5);", result);
     }
 
@@ -319,7 +361,7 @@ end",
             Type = BlingoScriptType.Behavior
         };
         var result = _converter.Convert(file);
-        Assert.Contains("public BlingoList<int> nums = new();", result);
+        Assert.Contains("public BlingoList<int> nums { get; set; } = new();", result);
         Assert.Contains("nums.AddAt(1, 10);", result);
     }
 
