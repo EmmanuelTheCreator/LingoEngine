@@ -89,6 +89,11 @@ internal sealed class Map
         }
     }
 
+    public Tile? GetTile(float column, float row, bool inPixels = false)
+    {
+        return GetTile((int)column, (int)row, inPixels);
+    }
+
     public Tile? GetTile(int column, int row, bool inPixels = false)
     {
         if (_tiles.Count == 0)
