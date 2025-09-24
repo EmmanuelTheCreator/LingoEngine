@@ -64,6 +64,7 @@ internal sealed class TestContextHarness : IDisposable
     {
         using var harness = Open(relativePath);
         harness.ReadResources();
+        var libraries = harness.Context.ReadCastLibraries();
         return harness.Context.ReadTexts();
     }
 

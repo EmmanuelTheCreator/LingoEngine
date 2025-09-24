@@ -5,16 +5,26 @@
 ---
 
 ## 1) Header Directory (ASCII)
-The XMED header starts with ASCII **directory rows**:
+The XMED header starts with ASCII **directory rows**: STILL WRONG
 ```
 <TYPE:4>,<OFFSET:8>,<COUNT:8>
 ```
 - All three numbers are **hex strings** (ASCII).  
 - Rows continue **until the first 0x00 byte** (no explicit header length).  
-- Example: `0008,000005B0,00000010` → Type **0008** at offset **0x05B0** with **16** entries capacity.
+- Example: `0008,000005B0,00000010` → Type **0008** at offset **0x05B0** with **16** entries capacity. STILL WRONG
 
-### Known TYPEs (from tests)
-- **0008** → **Font‑names table** (“40,” records).
+
+---
+blocks starting with 
+0x00 [XX XX: is the length of the content] [COMMA]
+- First block is the text
+- Next blocks are always the font name
+- The latest : We always get these values in the latest blok
+	045,046,182,181,149,181,165,165,046,039,034,145,146,147,148,133,131 	
+
+
+### Known TYPEs (from tests) 
+- **0008** → **Font‑names table** (“40,” records).STILL WRONG
 
 > Parser rule: read directory rows → `DirEntry { Type, Offset, Count }`. Use `Count` as upper bound; do **not** scan past it.
 
@@ -144,6 +154,11 @@ Two adjacent bytes encode styles and alignment/layout:
 - Font table example at **0x05B0**: `"40,05,Arial"` followed by slots (COUNT=16).  
 - Alignment combined values observed: `00, 10, 15, 1A, 19, 03`.
 
----
+
+
+
+
+[ 02 30 02 <font size key> 01 ] [ 02 ?? ?? <line height key> 01 ]
+
 
 *Status legend*: Confirmed = stable across files; Confirm = needs more dedicated single‑feature files (time‑boxed).

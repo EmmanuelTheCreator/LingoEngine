@@ -1,3 +1,4 @@
+using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
@@ -64,7 +65,13 @@ public class BlLegacyTextReaderTests
             .Should().BeEquivalentTo(new[] { 11, 13 });
         texts.Should().OnlyContain(t => t.Format == BlLegacyTextFormatKind.Xmed);
     }
+    [Fact]
+    public void ReadFieldWidthWidth()
+    {
+        var libraries = TestContextHarness.LoadTexts("Texts_Fields/Text_Single_Line_Multi_Style.cst");
 
+        
+    }
     [Fact]
     public void ReadDirector2StandaloneText_LoadsStxtPayload()
     {
