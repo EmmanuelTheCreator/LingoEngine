@@ -4,6 +4,7 @@ public interface ITileItem
 {
     void Destroy();
     void Hide();
+    void Show();
 }
 
 internal sealed class Tile
@@ -51,14 +52,14 @@ internal sealed class Tile
 
     public bool HasPill() => Item is not null && Code == '*';
 
-    public Tile? Get(char direction)
+    public Tile? Get(PacManDirection direction)
     {
         return direction switch
         {
-            'u' or 'U' => GetUp(),
-            'd' or 'D' => GetDown(),
-            'l' or 'L' => GetLeft(),
-            'r' or 'R' => GetRight(),
+            PacManDirection.Up => GetUp(),
+            PacManDirection.Down => GetDown(),
+            PacManDirection.Left => GetLeft(),
+            PacManDirection.Right => GetRight(),
             _ => null,
         };
     }

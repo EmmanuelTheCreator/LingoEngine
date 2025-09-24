@@ -1,0 +1,561 @@
+using System;
+using System.Collections.Generic;
+using BlingoEngine.Movies;
+using BlingoEngine.Sprites.Events;
+
+namespace Blingo.PacMan.Core;
+
+internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
+{
+    private const float DefaultStep = 10f;
+    private const float DefaultSpeed = 80f;
+    private const float PositionTolerance = 1f;
+
+    private readonly Dictionary<PacManDirection, string> _animationLabels = new()
+    {
+        { PacManDirection.Left, "left" },
+        { PacManDirection.Right, "right" },
+        { PacManDirection.Up, "up" },
+        { PacManDirection.Down, "down" },
+    };
+
+    private float _step;
+    private float _speedSetting;
+    private float _speed;
+    private string? _animation;
+    private string? _nextAnimation;
+    private bool _moving;
+    private bool _preTurnActive;
+    private PacManDirection _nextDirection;
+    private PacManDirection _previousDirection;
+    private float _lastX;
+    private float _lastY;
+    private Tile? _lastTile;
+    private bool _defaultsCaptured;
+    private CharacterSnapshot? _defaults;
+
+    public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, PacManCharacterOptions? options = null)
+        : base(env, map)
+    {
+        _step = options?.Step ?? DefaultStep;
+        Speed = options?.Speed ?? DefaultSpeed;
+        Direction = options?.Direction ?? PacManDirection.None;
+        _previousDirection = Direction;
+        _nextDirection = PacManDirection.None;
+        Preturn = options?.Preturn ?? false;
+        Mode = options?.Mode;
+    }
+
+    public float Step
+    {
+        get => _step;
+        set => _step = value;
+    }
+
+    public float Speed
+    {
+        get => _speedSetting;
+        set
+        {
+            _speedSetting = value;
+            _speed = value;
+        }
+    }
+
+    public float EffectiveSpeed
+    {
+        get => _speed;
+        set => _speed = value;
+    }
+
+    public PacManDirection Direction { get; private set; }
+
+    public PacManDirection PreviousDirection => _previousDirection;
+
+    public PacManDirection NextDirection
+    {
+        get => _nextDirection;
+        set => _nextDirection = value;
+    }
+
+    public bool Preturn { get; set; }
+
+    public string? Mode { get; set; }
+
+    public string? Animation => _animation;
+
+    public event EventHandler? MoveStarted;
+
+    public event EventHandler? Stopped;
+
+    public event EventHandler<PacManPositionEventArgs>? PositionChanged;
+
+    public event EventHandler<TileEventArgs>? TileEntered;
+
+    public void BeginSprite()
+    {
+        _lastX = X;
+        _lastY = Y;
+
+        if (!_defaultsCaptured)
+        {
+            CaptureDefaults();
+            _defaultsCaptured = true;
+        }
+
+        PauseCharacterAnimation();
+    }
+
+    public void Reset()
+    {
+        if (_defaults is not CharacterSnapshot snapshot)
+        {
+            return;
+        }
+
+        X = snapshot.X;
+        Y = snapshot.Y;
+        _lastX = snapshot.LastX;
+        _lastY = snapshot.LastY;
+        Direction = snapshot.Direction;
+        _previousDirection = snapshot.PreviousDirection;
+        _nextAnimation = snapshot.NextAnimation;
+        _nextDirection = snapshot.NextDirection;
+        _moving = snapshot.IsMoving;
+        Mode = snapshot.Mode;
+        _preTurnActive = false;
+        _lastTile = null;
+        SetAnimation(snapshot.Animation);
+        PauseCharacterAnimation();
+    }
+
+    public void Move(PacManDirection direction = PacManDirection.None)
+    {
+        if (direction == PacManDirection.None)
+        {
+            direction = Direction;
+        }
+
+        if (direction == PacManDirection.None)
+        {
+            return;
+        }
+
+        var tile = GetTile();
+        if (tile is null)
+        {
+            return;
+        }
+
+        float? step = null;
+        var stepSize = GetStep();
+
+        if ((direction != Direction || _preTurnActive) && CanGo(direction, tile))
+        {
+            if (((direction != Direction && direction != Direction.GetOpposite()) || _preTurnActive) && !IsCentered(tile))
+            {
+                if (direction.IsVertical())
+                {
+                    var diffX = Math.Abs(X - tile.CenterX);
+                    if (Preturn)
+                    {
+                        if (!IsCentered(tile, Axis.X))
+                        {
+                            if (X > tile.CenterX)
+                            {
+                                X -= GetMin(diffX, stepSize);
+                            }
+                            else
+                            {
+                                X += GetMin(diffX, stepSize);
+                            }
+
+                            _preTurnActive = true;
+                        }
+                        else
+                        {
+                            _preTurnActive = false;
+                        }
+                    }
+                    else
+                    {
+                        step = GetMin(diffX, stepSize);
+                    }
+                }
+
+                if (direction.IsHorizontal())
+                {
+                    var diffY = Math.Abs(Y - tile.CenterY);
+                    if (Preturn)
+                    {
+                        if (!IsCentered(tile, Axis.Y))
+                        {
+                            if (Y > tile.CenterY)
+                            {
+                                Y -= GetMin(diffY, stepSize);
+                            }
+                            else
+                            {
+                                Y += GetMin(diffY, stepSize);
+                            }
+
+                            _preTurnActive = true;
+                        }
+                        else
+                        {
+                            _preTurnActive = false;
+                        }
+                    }
+                    else
+                    {
+                        step = GetMin(diffY, stepSize);
+                    }
+                }
+            }
+
+            if (step is null)
+            {
+                UpdateDirection(direction);
+                SetNextAnimation();
+            }
+        }
+
+        if (step is null)
+        {
+            if (CanGo(Direction, tile))
+            {
+                step = stepSize;
+            }
+            else
+            {
+                if (Direction.IsVertical())
+                {
+                    step = GetMin(Math.Abs(Y - tile.CenterY), stepSize);
+                }
+                else if (Direction.IsHorizontal())
+                {
+                    step = GetMin(Math.Abs(X - tile.CenterX), stepSize);
+                }
+            }
+        }
+
+        if (step is float distance && distance > 0)
+        {
+            switch (Direction)
+            {
+                case PacManDirection.Up:
+                    Y -= distance;
+                    break;
+                case PacManDirection.Right:
+                    X += distance;
+                    break;
+                case PacManDirection.Down:
+                    Y += distance;
+                    break;
+                case PacManDirection.Left:
+                    X -= distance;
+                    break;
+            }
+        }
+
+        WrapPosition();
+
+        var newTile = GetTile();
+        if (newTile is not null && !ReferenceEquals(newTile, _lastTile))
+        {
+            _lastTile = newTile;
+            HandleTileEntered(newTile);
+        }
+
+        Update();
+    }
+
+    public void SetAnimationLabel(PacManDirection direction, string label)
+    {
+        if (label is null)
+        {
+            throw new ArgumentNullException(nameof(label));
+        }
+
+        _animationLabels[direction] = label;
+    }
+
+    public void ForceDirection(PacManDirection direction)
+    {
+        _previousDirection = Direction;
+        Direction = direction;
+        _nextDirection = direction;
+        SetNextAnimation();
+    }
+
+    public void Update()
+    {
+        var tile = GetTile();
+        if (tile is not null)
+        {
+            if (Math.Abs(Y - tile.CenterY) < PositionTolerance)
+            {
+                Y = tile.CenterY;
+            }
+
+            if (Math.Abs(X - tile.CenterX) < PositionTolerance)
+            {
+                X = tile.CenterX;
+            }
+        }
+
+        var currentX = X;
+        var currentY = Y;
+
+        if (!AreEqual(_lastX, currentX) || !AreEqual(_lastY, currentY))
+        {
+            _lastX = currentX;
+            _lastY = currentY;
+
+            if (!_moving)
+            {
+                OnMoveStarted();
+                ResumeCharacterAnimation();
+                _moving = true;
+            }
+
+            var positionTile = tile ?? GetTile();
+            OnPositionChanged(new PacManPositionEventArgs(currentX, currentY, positionTile, Direction));
+        }
+        else if (_moving)
+        {
+            OnStopped();
+            PauseCharacterAnimation();
+            _moving = false;
+        }
+
+        if (_nextAnimation is not null && !string.Equals(_animation, _nextAnimation, StringComparison.Ordinal))
+        {
+            SetAnimation(_nextAnimation);
+        }
+    }
+
+    protected virtual void OnTileEntered(Tile tile)
+    {
+        SetNextAnimation();
+    }
+
+    private void CaptureDefaults()
+    {
+        SetNextAnimation();
+        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation);
+    }
+
+    private void HandleTileEntered(Tile tile)
+    {
+        OnTileEntered(tile);
+        TileEntered?.Invoke(this, new TileEventArgs(tile));
+    }
+
+    private void OnMoveStarted()
+    {
+        MoveStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnStopped()
+    {
+        Stopped?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnPositionChanged(PacManPositionEventArgs args)
+    {
+        PositionChanged?.Invoke(this, args);
+    }
+
+    private void PauseCharacterAnimation()
+    {
+        ControlledSprite.Pause();
+    }
+
+    private void ResumeCharacterAnimation()
+    {
+        ControlledSprite.Play();
+    }
+
+    public void SetAnimation(string? animation)
+    {
+        if (string.Equals(_animation, animation, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _animation = animation;
+        ApplyAnimation(animation);
+    }
+
+    protected virtual void ApplyAnimation(string? animation)
+    {
+        // Hook for integrating with the engine's animation system when available.
+    }
+
+    private void UpdateDirection(PacManDirection direction)
+    {
+        if (Direction == direction)
+        {
+            return;
+        }
+
+        _previousDirection = Direction;
+        Direction = direction;
+    }
+
+    protected virtual void SetNextAnimation()
+    {
+        if (Direction == PacManDirection.None)
+        {
+            _nextAnimation = null;
+            return;
+        }
+
+        if (_animationLabels.TryGetValue(Direction, out var label))
+        {
+            _nextAnimation = label;
+            _nextDirection = Direction;
+        }
+        else
+        {
+            _nextAnimation = null;
+        }
+    }
+
+    private float GetStep()
+    {
+        return _step * (_speed / 100f);
+    }
+
+    private bool CanGo(PacManDirection direction, Tile? currentTile = null)
+    {
+        var tile = currentTile ?? GetTile();
+        if (tile is null)
+        {
+            return false;
+        }
+
+        var nextTile = tile.Get(direction);
+        return nextTile is not null && !nextTile.IsHouse() && !nextTile.IsWall();
+    }
+
+    private bool IsCentered(Tile tile)
+    {
+        return IsCentered(tile, Axis.Both);
+    }
+
+    private bool IsCentered(Tile tile, Axis axis)
+    {
+        var centeredX = Math.Abs(X - tile.CenterX) < PositionTolerance;
+        var centeredY = Math.Abs(Y - tile.CenterY) < PositionTolerance;
+
+        return axis switch
+        {
+            Axis.X => centeredX,
+            Axis.Y => centeredY,
+            _ => centeredX && centeredY,
+        };
+    }
+
+    private static float GetMin(float value1, float value2)
+    {
+        return value1 < value2 ? value1 : value2;
+    }
+
+    private static bool AreEqual(float a, float b)
+    {
+        return Math.Abs(a - b) < 0.001f;
+    }
+
+    private void WrapPosition()
+    {
+        var mapWidth = Map.Width * Map.TileWidth;
+        if (mapWidth > 0)
+        {
+            if (X < 0)
+            {
+                X = mapWidth;
+            }
+            else if (X > mapWidth)
+            {
+                X = 0;
+            }
+        }
+
+        var mapHeight = Map.Height * Map.TileHeight;
+        if (mapHeight > 0)
+        {
+            if (Y < 0)
+            {
+                Y = mapHeight;
+            }
+            else if (Y > mapHeight)
+            {
+                Y = 0;
+            }
+        }
+    }
+
+    private enum Axis
+    {
+        Both,
+        X,
+        Y,
+    }
+
+    private readonly record struct CharacterSnapshot(
+        float X,
+        float Y,
+        float LastX,
+        float LastY,
+        PacManDirection Direction,
+        PacManDirection PreviousDirection,
+        string? NextAnimation,
+        PacManDirection NextDirection,
+        bool IsMoving,
+        string? Mode,
+        string? Animation);
+}
+
+internal sealed class PacManCharacterOptions
+{
+    public float? Step { get; set; }
+
+    public float? Speed { get; set; }
+
+    public PacManDirection? Direction { get; set; }
+
+    public bool? Preturn { get; set; }
+
+    public string? Mode { get; set; }
+}
+
+internal sealed class TileEventArgs : EventArgs
+{
+    public TileEventArgs(Tile tile)
+    {
+        Tile = tile ?? throw new ArgumentNullException(nameof(tile));
+    }
+
+    public Tile Tile { get; }
+}
+
+internal sealed class PacManPositionEventArgs : EventArgs
+{
+    public PacManPositionEventArgs(float x, float y, Tile? tile, PacManDirection direction)
+    {
+        X = x;
+        Y = y;
+        Tile = tile;
+        Direction = direction;
+    }
+
+    public float X { get; }
+
+    public float Y { get; }
+
+    public Tile? Tile { get; }
+
+    public PacManDirection Direction { get; }
+}
