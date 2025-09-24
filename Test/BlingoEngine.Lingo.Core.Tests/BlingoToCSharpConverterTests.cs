@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace BlingoEngine.Lingo.Core.Tests;
@@ -194,6 +195,28 @@ end";
             "        .Add(this, x => x.myFunction, \"function to execute:\", \"70\");",
             "}");
         Assert.Equal(expected.Trim(), result.Replace("\r", "").Trim());
+    }
+
+    [Fact]
+    public void DuplicatePropertyDescriptionEntriesAreOverwritten()
+    {
+        var lingo = string.Join('\n',
+            "on getPropertyDescriptionList",
+            "  description = [:]",
+            "  addProp description,#myValue, [#default:1, #format:#integer, #comment:\"Value:\"]",
+            "  addProp description,#myVar1, [#default:0, #format:#integer, #comment:\"Var 1:\"]",
+            "  addProp description,#myValue, [#default:5, #format:#integer, #comment:\"Value Updated:\"]",
+            "  return description",
+            "end");
+        var result = _converter.Convert(lingo);
+        var addMatches = Regex.Matches(result, @"\.Add\(this,\s*x => x\.(?<name>\w+)");
+        var propertyNames = addMatches.Cast<Match>().Select(m => m.Groups["name"].Value).ToList();
+        Assert.Equal(propertyNames.Count, propertyNames.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+
+        var valueMatch = Regex.Match(result, @"\.Add\(this,\s*x => x\.myValue,\s*""(?<comment>[^""]*)"",\s*(?<default>[^\)]+)\)");
+        Assert.True(valueMatch.Success);
+        Assert.Equal("Value Updated:", valueMatch.Groups["comment"].Value);
+        Assert.Equal("5", valueMatch.Groups["default"].Value.Trim());
     }
 
     [Fact]
