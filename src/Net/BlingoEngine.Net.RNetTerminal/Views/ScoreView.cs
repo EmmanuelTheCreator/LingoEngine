@@ -560,7 +560,7 @@ internal sealed class ScoreView : View
             var pos = _labelWidth + _playFrame - offsetX - label.Length + 1;
             if (pos >= _labelWidth)
             {
-                SetAttribute(new Attribute(ColorName16.BrightRed, ColorName16.BrightBlue));
+                SetAttribute(new Attribute(ColorName16.White, ColorName16.Red));
                 Move(pos, 0);
                 AddStr(label);
                 SetColorsSchemaNormal();
