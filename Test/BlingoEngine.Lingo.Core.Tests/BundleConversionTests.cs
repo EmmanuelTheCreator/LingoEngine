@@ -107,11 +107,11 @@ public class BundleConversionTests
         var script = new BlingoScriptFile("10_Block", source, ScriptDetectionType.Behavior);
         _converter.Convert(new[] { script }, new ConversionOptions { Namespace = "Demo.TetriGrounds" });
         Assert.Contains("class BlockBehavior", script.CSharp);
-        Assert.Contains("public string myMember;", script.CSharp);
-        Assert.Contains("public BlingoList<string> myMembers = new();", script.CSharp);
-        Assert.Contains("public int myMemberNumAnim;", script.CSharp);
-        Assert.Contains("public bool myDestroyAnim;", script.CSharp);
-        Assert.Contains("public AColor myColor = AColor.FromCode(0);", script.CSharp);
+        Assert.Contains("public string myMember { get; set; }", script.CSharp);
+        Assert.Contains("public BlingoList<string> myMembers { get; set; } = new();", script.CSharp);
+        Assert.Contains("public int myMemberNumAnim { get; set; }", script.CSharp);
+        Assert.Contains("public bool myDestroyAnim { get; set; }", script.CSharp);
+        Assert.Contains("public AColor myColor { get; set; } = AColor.FromCode(0);", script.CSharp);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class BundleConversionTests
         var path = Path.Combine(baseDir, "3_SpriteManager.ls");
         var script = new BlingoScriptFile("3_SpriteManager", File.ReadAllText(path), ScriptDetectionType.Parent);
         _converter.Convert(new[] { script });
-        Assert.Contains("public int pNum;", script.CSharp);
+        Assert.Contains("public int pNum { get; set; }", script.CSharp);
         Assert.Contains("SpriteManagerParent(IBlingoMovieEnvironment env, GlobalVars global, int _beginningsprite)", script.CSharp, StringComparison.OrdinalIgnoreCase);
     }
 

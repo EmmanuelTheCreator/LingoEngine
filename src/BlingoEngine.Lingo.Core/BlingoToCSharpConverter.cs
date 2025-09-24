@@ -158,6 +158,8 @@ public class BlingoToCSharpConverter
                     var ast = parser.Parse(source);
                     if (ast is BlingoBlockNode block)
                     {
+                        while (block.Children.Count > 0 && block.Children[0] is BlingoCommentNode)
+                            block.Children.RemoveAt(0);
                         var nh = block.Children.OfType<BlingoHandlerNode>()
                             .FirstOrDefault(h => h.Handler != null && h.Handler.Name.Equals("new", StringComparison.OrdinalIgnoreCase));
                         newHandlers[file.Name] = nh;
@@ -264,7 +266,7 @@ public class BlingoToCSharpConverter
             try
             {
                 newHandlers.TryGetValue(script.Name, out var nh);
-                var classCode = ConvertClass(script, nh, typeMap);
+                var classCode = ConvertClass(script, nh, typeMap, includePropertyDescriptionStub: false);
                 var sigMap = result.Methods.TryGetValue(script.Name, out var msList)
                     ? msList.ToDictionary(m => m.Name, m => m, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, MethodSignature>(StringComparer.OrdinalIgnoreCase);
@@ -368,7 +370,11 @@ public class BlingoToCSharpConverter
         return ConvertClass(script, newHandler);
     }
 
-    public string ConvertClass(BlingoScriptFile script, BlingoHandlerNode? newHandler, IReadOnlyDictionary<string, BlingoScriptType>? scriptTypes = null)
+    public string ConvertClass(
+        BlingoScriptFile script,
+        BlingoHandlerNode? newHandler,
+        IReadOnlyDictionary<string, BlingoScriptType>? scriptTypes = null,
+        bool includePropertyDescriptionStub = true)
     {
         var source = script.Source.Replace("\r", "\n");
         var handlers = ExtractHandlerNames(source);
@@ -387,7 +393,20 @@ public class BlingoToCSharpConverter
         var propDescs = ExtractPropertyDescriptions(source);
         var propDecls = ExtractPropertyDeclarations(source);
 
+        var leadingComments = ExtractLeadingComments(source);
+
         var sb = new System.Text.StringBuilder();
+        if (leadingComments.Count > 0)
+        {
+            foreach (var comment in leadingComments)
+            {
+                if (comment.Length == 0)
+                    sb.AppendLine();
+                else
+                    sb.AppendLine($"// {comment}");
+            }
+            sb.AppendLine();
+        }
         var interfaces = new List<string>();
         if (hasPropDescHandler)
             interfaces.Add("IBlingoPropertyDescriptionList");
@@ -442,12 +461,13 @@ public class BlingoToCSharpConverter
         {
             foreach (var kv in fieldMap)
             {
+                var line = $"    public {kv.Value.Type} {kv.Key} {{ get; set; }}";
                 if (kv.Value.Default != null)
-                    sb.AppendLine($"    public {kv.Value.Type} {kv.Key} = {kv.Value.Default};");
-                else if (kv.Value.Type.StartsWith("BlingoList<"))
-                    sb.AppendLine($"    public {kv.Value.Type} {kv.Key} = new();");
-                else
-                    sb.AppendLine($"    public {kv.Value.Type} {kv.Key};");
+                    line += $" = {kv.Value.Default};";
+                else if (kv.Value.Type.StartsWith("BlingoList<", StringComparison.Ordinal) ||
+                         kv.Value.Type.StartsWith("BlingoPropertyList<", StringComparison.Ordinal))
+                    line += " = new();";
+                sb.AppendLine(line);
             }
             sb.AppendLine();
         }
@@ -505,7 +525,7 @@ public class BlingoToCSharpConverter
             sb.AppendLine("    }");
         }
 
-        if (hasPropDescHandler)
+        if (hasPropDescHandler && includePropertyDescriptionStub)
         {
             var props = propDescs;
             sb.AppendLine();
@@ -609,6 +629,45 @@ public class BlingoToCSharpConverter
             builder.AddOrUpdate(name, entry);
         }
         return builder.ToList();
+    }
+
+    private static List<string> ExtractLeadingComments(string source)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrEmpty(source))
+            return result;
+
+        var lines = source.Split('\n');
+        var seenComment = false;
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.TrimEnd('\r');
+            var trimmed = line.Trim();
+
+            if (!seenComment && trimmed.Length == 0)
+                continue;
+
+            if (trimmed.StartsWith("--"))
+            {
+                var comment = trimmed.Length > 2 ? trimmed[2..].TrimStart() : string.Empty;
+                result.Add(comment);
+                seenComment = true;
+                continue;
+            }
+
+            if (seenComment && trimmed.Length == 0)
+            {
+                result.Add(string.Empty);
+                continue;
+            }
+
+            break;
+        }
+
+        while (result.Count > 0 && result[^1].Length == 0)
+            result.RemoveAt(result.Count - 1);
+
+        return result;
     }
 
     private static List<string> ExtractPropertyDeclarations(string source)

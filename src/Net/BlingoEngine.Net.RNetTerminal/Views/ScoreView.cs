@@ -156,6 +156,7 @@ internal sealed class ScoreView : View
         }
         SetContentSize(new Size(FrameCount + _labelWidth, TotalChannels + 1));
         OnStoreFrameChanged(store.GetFrame());
+
         SetNeedsDraw();
     }
 
