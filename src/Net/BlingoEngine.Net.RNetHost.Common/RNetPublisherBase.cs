@@ -37,7 +37,11 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 
     /// <inheritdoc />
     public void TryPublishDelta(SpriteDeltaDto delta)
-        => _spriteQueue[(delta.SpriteNum, delta.BeginFrame)] = delta;
+    {
+        var key = (delta.SpriteNum, delta.BeginFrame);
+        _spriteQueue[key] = delta;
+        TryFlushSpriteDelta(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishKeyframe(KeyframeDto keyframe)
@@ -69,15 +73,27 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
 
     /// <inheritdoc />
     public void TryPublishMemberProperty(RNetMemberPropertyDto property)
-        => _memberQueue[(property.CastLibNum, property.MemberNum, property.Prop)] = property;
+    {
+        var key = (property.CastLibNum, property.MemberNum, property.Prop);
+        _memberQueue[key] = property;
+        TryFlushMemberProperty(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishMovieProperty(RNetMoviePropertyDto property)
-        => _movieQueue[property.Prop] = property;
+    {
+        var key = property.Prop;
+        _movieQueue[key] = property;
+        TryFlushMovieProperty(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishStageProperty(RNetStagePropertyDto property)
-        => _stageQueue[property.Prop] = property;
+    {
+        var key = property.Prop;
+        _stageQueue[key] = property;
+        TryFlushStageProperty(key);
+    }
 
     /// <inheritdoc />
     public void TryPublishTextStyle(TextStyleDto style)
@@ -92,34 +108,22 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
     {
         foreach (var kv in _spriteQueue)
         {
-            if (TryPublishDeltaCore(kv.Value))
-            {
-                _spriteQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushSpriteDelta(kv.Key);
         }
 
         foreach (var kv in _memberQueue)
         {
-            if (TryPublishMemberPropertyCore(kv.Value))
-            {
-                _memberQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushMemberProperty(kv.Key);
         }
 
         foreach (var kv in _movieQueue)
         {
-            if (TryPublishMoviePropertyCore(kv.Value))
-            {
-                _movieQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushMovieProperty(kv.Key);
         }
 
         foreach (var kv in _stageQueue)
         {
-            if (TryPublishStagePropertyCore(kv.Value))
-            {
-                _stageQueue.TryRemove(kv.Key, out _);
-            }
+            TryFlushStageProperty(kv.Key);
         }
     }
 
@@ -410,6 +414,60 @@ public abstract class RNetPublisherBase : IRNetPublisherEngineBridge
                 _spriteQueue.TryRemove(key, out _);
             }
         }
+
+    }
+
+    private void TryFlushSpriteDelta((int SpriteNum, int BeginFrame) key)
+    {
+        if (!_spriteQueue.TryGetValue(key, out var delta))
+        {
+            return;
+        }
+
+        if (TryPublishDeltaCore(delta))
+        {
+            _spriteQueue.TryRemove(key, out _);
+        }
+    }
+
+    private void TryFlushMemberProperty((int CastLibNum, int MemberNum, string Prop) key)
+    {
+        if (!_memberQueue.TryGetValue(key, out var property))
+        {
+            return;
+        }
+
+        if (TryPublishMemberPropertyCore(property))
+        {
+            _memberQueue.TryRemove(key, out _);
+        }
+    }
+
+    private void TryFlushMovieProperty(string key)
+    {
+        if (!_movieQueue.TryGetValue(key, out var property))
+        {
+            return;
+        }
+
+        if (TryPublishMoviePropertyCore(property))
+        {
+            _movieQueue.TryRemove(key, out _);
+        }
+    }
+
+    private void TryFlushStageProperty(string key)
+    {
+        if (!_stageQueue.TryGetValue(key, out var property))
+        {
+            return;
+        }
+
+        if (TryPublishStagePropertyCore(property))
+        {
+            _stageQueue.TryRemove(key, out _);
+        }
+
     }
 }
 

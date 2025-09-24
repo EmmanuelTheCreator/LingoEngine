@@ -71,40 +71,37 @@ public class RNetPipePublisherTests
     }
 
     [Fact]
-    public void TryPublish_FlushesQueuedMessagesAndDrainsCommands()
+    public void TryPublish_SendsMessagesAndDrainsCommands()
     {
         var bus = new TestPipeBus();
         var publisher = new RNetPipePublisher(bus);
 
         var delta = new SpriteDeltaDto(3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         publisher.TryPublishDelta(delta);
-        Assert.False(bus.Deltas.Reader.TryRead(out _));
-
-        var memberProperty = new RNetMemberPropertyDto(5, 9, "Score", "1000");
-        publisher.TryPublishMemberProperty(memberProperty);
-        Assert.False(bus.MemberProperties.Reader.TryRead(out _));
-
-        var movieProperty = new RNetMoviePropertyDto("Title", "TestMovie");
-        publisher.TryPublishMovieProperty(movieProperty);
-        Assert.False(bus.MovieProperties.Reader.TryRead(out _));
-
-        var stageProperty = new RNetStagePropertyDto("Background", "Black");
-        publisher.TryPublishStageProperty(stageProperty);
-        Assert.False(bus.StageProperties.Reader.TryRead(out _));
-
-        publisher.FlushQueuedProperties();
-
         Assert.True(bus.Deltas.Reader.TryRead(out var actualDelta));
         Assert.Equal(delta, actualDelta);
 
+        var memberProperty = new RNetMemberPropertyDto(5, 9, "Score", "1000");
+        publisher.TryPublishMemberProperty(memberProperty);
         Assert.True(bus.MemberProperties.Reader.TryRead(out var actualMember));
         Assert.Equal(memberProperty, actualMember);
 
+        var movieProperty = new RNetMoviePropertyDto("Title", "TestMovie");
+        publisher.TryPublishMovieProperty(movieProperty);
         Assert.True(bus.MovieProperties.Reader.TryRead(out var actualMovie));
         Assert.Equal(movieProperty, actualMovie);
 
+        var stageProperty = new RNetStagePropertyDto("Background", "Black");
+        publisher.TryPublishStageProperty(stageProperty);
         Assert.True(bus.StageProperties.Reader.TryRead(out var actualStage));
         Assert.Equal(stageProperty, actualStage);
+
+        publisher.FlushQueuedProperties();
+
+        Assert.False(bus.Deltas.Reader.TryRead(out _));
+        Assert.False(bus.MemberProperties.Reader.TryRead(out _));
+        Assert.False(bus.MovieProperties.Reader.TryRead(out _));
+        Assert.False(bus.StageProperties.Reader.TryRead(out _));
 
         var commands = new List<IRNetCommand>
         {
