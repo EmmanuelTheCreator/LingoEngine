@@ -1,3 +1,4 @@
+using System;
 using BlingoEngine.Legacy.Lingo.Analysis;
 using BlingoEngine.Legacy.Lingo.CodeGen;
 using Xunit;
@@ -23,9 +24,28 @@ public class MyBehaviorBehavior : BlingoSpriteBehavior
     }
 
     [Fact]
-    public void ParentScript_IncludesGlobalFieldAndConstructor()
+    public void ParentScriptWithoutGlobals_UsesBasicConstructor()
     {
         var code = _generator.GenerateClass("MyParent", string.Empty, BlLingoScriptKind.Parent);
+        const string expected = """
+public class MyParentParent : BlingoParentScript
+{
+    public MyParentParent(IBlingoMovieEnvironment env) : base(env) { }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
+    public void ParentScriptWithGlobals_IncludesGlobalField()
+    {
+        const string source = "global gValue\n" +
+            "on startMovie\n" +
+            "  gValue = 1\n" +
+            "end";
+
+        var code = _generator.GenerateClass("MyParent", source, BlLingoScriptKind.Parent);
         const string expected = """
 public class MyParentParent : BlingoParentScript
 {
@@ -35,10 +55,53 @@ public class MyParentParent : BlingoParentScript
     {
         _global = global;
     }
+    public void StartMovie()
+    {
+        gValue = 1;
+    }
 }
 """;
 
         LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
+    public void Properties_AreDeclaredWithInferredTypesAndComments()
+    {
+        const string source = "property myStartX -- start X\n" +
+            "property myStartY\n" +
+            "on new me\n" +
+            "  myStartX = 250\n" +
+            "  myStartY = 45\n" +
+            "end";
+
+        var code = _generator.GenerateClass("Mover", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("public int myStartX { get; set; } // start X", code);
+        Assert.Contains("public int myStartY { get; set; }", code);
+
+        var propertyIndex = code.IndexOf("public int myStartX { get; set; } // start X", StringComparison.Ordinal);
+        var constructorIndex = code.IndexOf("public MoverBehavior(IBlingoMovieEnvironment env) : base(env) { }", StringComparison.Ordinal);
+        var handlerIndex = code.IndexOf("public void New()", StringComparison.Ordinal);
+
+        Assert.True(propertyIndex >= 0, "Properties were not generated");
+        Assert.True(constructorIndex > propertyIndex, "Constructor should appear after properties");
+        Assert.True(handlerIndex > constructorIndex, "Handler should appear after constructor");
+    }
+
+    [Fact]
+    public void Handlers_AppearInSourceOrder()
+    {
+        const string source = "on startMovie\nend\n" +
+            "on stopMovie\nend";
+
+        var code = _generator.GenerateClass("Order", source, BlLingoScriptKind.Movie);
+        var startIndex = code.IndexOf("public void StartMovie", StringComparison.Ordinal);
+        var stopIndex = code.IndexOf("public void StopMovie", StringComparison.Ordinal);
+
+        Assert.True(startIndex >= 0, "StartMovie handler not found");
+        Assert.True(stopIndex >= 0, "StopMovie handler not found");
+        Assert.True(startIndex < stopIndex, "Handlers are not in source order");
     }
 
     [Fact]
