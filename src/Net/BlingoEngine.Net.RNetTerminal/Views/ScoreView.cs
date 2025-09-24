@@ -91,10 +91,12 @@ internal sealed class ScoreView : View
             _selectedSprite = s;
             SetNeedsDraw();
         };
+        store.FrameChanged += OnStoreFrameChanged;
         store.SpritesChanged += ReloadData;
         store.CastsChanged += ReloadData;
         store.SpriteChanged += _ => SetNeedsDraw();
         store.MemberChanged += _ => SetNeedsDraw();
+        OnStoreFrameChanged(store.GetFrame());
         ReloadData();
     }
 
@@ -153,7 +155,20 @@ internal sealed class ScoreView : View
             AddSpecialSprite(idx, sound.BeginFrame, sound.EndFrame, label ?? string.Empty, ColorName16.Yellow);
         }
         SetContentSize(new Size(FrameCount + _labelWidth, TotalChannels + 1));
+        OnStoreFrameChanged(store.GetFrame());
+
         SetNeedsDraw();
+    }
+
+    private void OnStoreFrameChanged(int frame)
+    {
+        if (frame <= 0)
+        {
+            SetPlayFrame(0);
+            return;
+        }
+
+        SetPlayFrame(frame - 1);
     }
 
     private static string FormatTempoLabel(BlingoTempoSpriteDTO tempo)
@@ -619,7 +634,14 @@ internal sealed class ScoreView : View
 
     public void SetPlayFrame(int frame)
     {
-        _playFrame = System.Math.Clamp(frame, 0, FrameCount - 1);
+        var maxFrameIndex = System.Math.Max(0, FrameCount - 1);
+        var newFrame = System.Math.Clamp(frame, 0, maxFrameIndex);
+        if (_playFrame == newFrame)
+        {
+            return;
+        }
+
+        _playFrame = newFrame;
         SetNeedsDraw();
     }
 
