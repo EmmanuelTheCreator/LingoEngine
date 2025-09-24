@@ -46,6 +46,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         private bool myDownPressed;
         private bool myStopKeyAction;
         private int myLastKey;
+        private DateTime _currentBlockStartedAt;
 
         /// <summary>
         /// Prepares the controller with references to supporting services and seeds the random piece list.
@@ -237,7 +238,10 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         {
             if (myFinished)
                 return;
-            
+
+            var dropDuration = DateTime.UtcNow - _currentBlockStartedAt;
+            var rowsTravelled = Math.Max(0, myY - 2);
+
             foreach (var i in MySubBlocks)
             {
                 int y = (int)i["yy"] + myY;
@@ -249,7 +253,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             CreateBlock();
             myY = 2;
             myX = myMaxX / 2;
-            myScoreManager.BlockFrozen();// add score when you freeze a block
+            myScoreManager.BlockFrozen(dropDuration, rowsTravelled);// add score when you freeze a block
             myScoreManager.AddDropedBlock(hardDrop); // add that there's a block dropped
 
             // check if we go a level up
@@ -417,6 +421,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
             RefreshBlock();
             UpdateNextBlock();
+            _currentBlockStartedAt = DateTime.UtcNow;
         }
 
         /// <summary>

@@ -32,6 +32,10 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         private DateTime _started = DateTime.MinValue;
         private TimeSpan _elapsed;
         private readonly TimeSpan myComboDuration = TimeSpan.FromSeconds(2);
+        private const int BlockFreezeBaseScore = 4;
+        private const double MinimumDropSeconds = 0.1;
+        private const double MaximumSpeedForBonus = 10.0;
+        private const int DropSpeedLevelMultiplier = 2;
 
         public bool IsNewHighScore { get; private set; }
 
@@ -141,11 +145,18 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             myNumberLinesTot += 1;
         }
         /// <summary>
-        /// Called when the current block locks in place, awarding a small amount of points.
+        /// Called when the current block locks in place, awarding score based on how quickly it fell.
         /// </summary>
-        public void BlockFrozen()
+        public void BlockFrozen(TimeSpan fallDuration, int rowsTravelled)
         {
-            myPlayerScore += 4;
+            var clampedRows = Math.Max(rowsTravelled, 0);
+            var seconds = Math.Max(fallDuration.TotalSeconds, MinimumDropSeconds);
+            var speed = clampedRows / seconds;
+            var clampedSpeed = Math.Min(Math.Max(speed, 0), MaximumSpeedForBonus);
+            var levelMultiplier = Math.Max(myLevel, 1);
+            var speedBonus = (int)Math.Round(clampedSpeed * levelMultiplier * DropSpeedLevelMultiplier);
+
+            myPlayerScore += BlockFreezeBaseScore + speedBonus;
             Refresh();
         }
         /// <summary>
