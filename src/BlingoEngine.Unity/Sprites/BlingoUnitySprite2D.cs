@@ -184,6 +184,26 @@ public class BlingoUnitySprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSprit
         if (!IsDirty) return;
         IsDirty = false;
 
+        if (_blingoSprite.MemberSourceRect is null)
+        {
+            var pos = new Vector3(_x - _regPoint.X, _y - _regPoint.Y, 0f);
+            _go.transform.localPosition = pos;
+            _go.transform.localEulerAngles = new Vector3(0, 0, _rotation);
+
+            if (_texture?.Texture is Texture2D tex)
+            {
+                float defaultTargetWidth = _desiredWidth == 0 ? tex.width : _desiredWidth;
+                float defaultTargetHeight = _desiredHeight == 0 ? tex.height : _desiredHeight;
+                float defaultScaleX = defaultTargetWidth / tex.width;
+                float defaultScaleY = defaultTargetHeight / tex.height;
+                if (_flipH) defaultScaleX *= -1f;
+                if (_flipV) defaultScaleY *= -1f;
+                _go.transform.localScale = new Vector3(defaultScaleX, defaultScaleY, 1f);
+            }
+
+            return;
+        }
+
         var (baseOffset, sourceWidth, sourceHeight) = _blingoSprite.GetMemberSourceMetrics();
 
         float textureWidth = _texture?.Texture?.width ?? Width;

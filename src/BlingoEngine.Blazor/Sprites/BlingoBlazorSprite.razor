@@ -23,6 +23,18 @@
         var drawW = Sprite.DesiredWidth > 0 ? Sprite.DesiredWidth : Sprite.Width;
         var drawH = Sprite.DesiredHeight > 0 ? Sprite.DesiredHeight : Sprite.Height;
 
+        if (Sprite.MemberSourceRect is null)
+        {
+            var x = Sprite.X - Sprite.RegPoint.X;
+            var y = Sprite.Y - Sprite.RegPoint.Y;
+            var scaleX = Sprite.FlipH ? -1 : 1;
+            var scaleY = Sprite.FlipV ? -1 : 1;
+            var defaultTransform = $"translate({Sprite.RegPoint.X}px,{Sprite.RegPoint.Y}px) rotate({Sprite.Rotation}deg) scale({scaleX},{scaleY}) translate(-{Sprite.RegPoint.X}px,-{Sprite.RegPoint.Y}px)";
+            var defaultStyle = $"position:absolute;left:{x}px;top:{y}px;width:{drawW}px;height:{drawH}px;z-index:{Sprite.ZIndex};opacity:{Sprite.Blend};transform:{defaultTransform};";
+            if (!Sprite.Visibility) defaultStyle += "display:none;";
+            return defaultStyle;
+        }
+
         var (baseOffset, sourceWidth, sourceHeight) = Sprite.GetMemberSourceMetrics();
         if (sourceWidth <= 0)
             sourceWidth = drawW != 0 ? drawW : 1f;
@@ -47,7 +59,7 @@
         var transform = $"translate({regPointDisplayX}px,{regPointDisplayY}px) rotate({Sprite.Rotation}deg) scale({flipScaleX},{flipScaleY}) translate(-{regPointDisplayX}px,-{regPointDisplayY}px)";
         var style = $"position:absolute;left:{left}px;top:{top}px;width:{drawW}px;height:{drawH}px;z-index:{Sprite.ZIndex};opacity:{Sprite.Blend};transform:{transform};";
         if (!Sprite.Visibility) style += "display:none;";
-        if (Sprite.MemberSourceRect != null) style += "overflow:hidden;";
+        style += "overflow:hidden;";
         return style;
     }
 
