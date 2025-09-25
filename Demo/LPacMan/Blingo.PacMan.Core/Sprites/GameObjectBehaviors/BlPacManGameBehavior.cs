@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Blingo.PacMan.Core;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
@@ -28,34 +29,26 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private GameModel? _model;
     private BonusesModel? _bonusesModel;
     private BlPacManMapProvider? _mapProvider;
-    private readonly List<BlPacManGhostBehavior> _ghosts = new();
-    private readonly List<BlPacManConsumableComponent> _consumables = new();
     private readonly List<BlPacManEventSubscription> _modelSubscriptions = new();
 
     private Map? _map;
-    private BlPacManActorBehavior? _pacMan;
-    private BlPacManRoamingBonusBehavior? _bonus;
     private GameSettings? _currentGameSettings;
     private PacmanSettings? _currentPacmanSettings;
     private GhostSettings? _currentGhostSettings;
     private bool _isActorRegistered;
-
-    private int _pauseFrames;
-    private int _startCountdown;
-    private int _soundBackCooldown;
-    private int _remainingConsumables;
-
     private bool _initialized;
-    private bool _muted;
-    private bool _paused;
-    private bool _win;
-    private bool _gameOver;
 
     private GameModel Model => _model ??= _globals.GameModel ?? throw new InvalidOperationException("GameModel was not initialised.");
 
     private BonusesModel BonusesModel => _bonusesModel ??= _globals.BonusesModel ?? throw new InvalidOperationException("BonusesModel was not initialised.");
 
     private BlPacManMapProvider MapProvider => _mapProvider ??= _globals.MapProvider ?? throw new InvalidOperationException("Pac-Man map provider was not initialised.");
+
+    private BlPacManAssetContainer Assets => _globals.Assets;
+
+    private BlPacManGameState State => _globals.State;
+
+    private BlPacManBonusManager BonusManager => _globals.BonusManager;
 
     public BlPacManGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
@@ -78,6 +71,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
+        Assets.Reset();
         SubscribeModelEvents();
         ResetInternalState(resetScore: false);
         MakeLevel();
@@ -103,8 +97,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _currentPacmanSettings = null;
         _currentGhostSettings = null;
         UnsubscribeModelEvents();
-        _consumables.Clear();
-        _ghosts.Clear();
+        Assets.Reset();
         _initialized = false;
     }
 
@@ -156,27 +149,27 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
         _Movie.GoTo(BlPacManProjectFactory.GameRunningLabel);
 
-        if (_win)
+        if (State.Win)
         {
             Model.Level++;
             ResetInternalState(resetScore: false);
             MakeLevel();
-            _win = false;
+            State.Win = false;
             return;
         }
 
-        if (_gameOver)
+        if (State.GameOver)
         {
             Model.Level = 1;
             ResetInternalState(resetScore: true);
             MakeLevel();
-            _gameOver = false;
+            State.GameOver = false;
             _Player.SoundPlayIntro();
             return;
         }
 
         _Player.SoundPlayIntro();
-        _startCountdown = Math.Max(_startCountdown, 1);
+        State.StartCountdown = Math.Max(State.StartCountdown, 1);
     }
 
     /// <summary>
@@ -214,10 +207,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.CurrentPacmanSettings = _currentPacmanSettings;
         _globals.CurrentGhostSettings = _currentGhostSettings;
 
-        _pauseFrames = 80;
-        _soundBackCooldown = 0;
-        _remainingConsumables = 0;
-        _consumables.Clear();
+        State.ResetForNewLevel(settings, Model);
+        BonusManager.Configure(settings);
+        BonusManager.ResetForLevel();
 
         BonusesModel.Level = Model.Level;
 
@@ -228,22 +220,29 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             _globals.ConsumableFieldMediator?.Publish(context);
         }
 
-        if (_pacMan is not null && _currentPacmanSettings is not null)
+        if (Assets.PacMan is { } pacMan && _currentPacmanSettings is not null)
         {
-            _pacMan.Configure(this, _currentPacmanSettings);
+            pacMan.Configure(this, _currentPacmanSettings);
         }
 
-        foreach (var ghost in _ghosts)
+        if (_currentGhostSettings is not null)
         {
-            if (_currentGhostSettings is not null)
+            foreach (var ghost in Assets.Ghosts)
             {
                 ghost.Configure(this, _currentGhostSettings);
             }
         }
 
-        _bonus?.Configure(this, settings);
+        if (Assets.Bonus is { } bonus)
+        {
+            bonus.Configure(settings);
+            bonus.ResetForLife();
+        }
     }
 
+    /// <summary>
+    /// Runs the central gameplay loop for each frame, coordinating timers, audio, and state checks.
+    /// </summary>
     private void MainLoop()
     {
         if (_map is null)
@@ -251,102 +250,96 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_paused)
+        var state = State;
+
+        if (state.Paused)
         {
             return;
         }
 
-        if (_startCountdown <= 0)
+        if (state.StartCountdown <= 0)
         {
             Model.UpdateMode();
         }
 
-        if (_pauseFrames > 0)
+        if (state.PauseFrames > 0)
         {
-            _pauseFrames--;
+            state.PauseFrames--;
             return;
         }
 
-        if (_startCountdown > 0)
+        if (state.StartCountdown > 0)
         {
-            _startCountdown--;
-            if (_startCountdown == 0)
+            state.StartCountdown--;
+            if (state.StartCountdown == 0)
             {
-                _pauseFrames = 60;
+                state.PauseFrames = Math.Max(state.PauseFrames, 60);
             }
 
             return;
         }
 
-        if (_win)
+        if (state.Win)
         {
             StartLevel();
             return;
         }
 
-        if (_gameOver)
+        if (state.GameOver)
         {
             return;
         }
 
-        if (_soundBackCooldown > 0)
+        if (state.PacManEatenPending)
         {
-            _soundBackCooldown--;
+            if (state.Lives == 0)
+            {
+                return;
+            }
+
+            ResumeAfterPacManEaten();
+            return;
         }
+
+        BonusManager.Update(Model);
+        UpdateGhostAudioState();
     }
 
+    /// <summary>
+    /// Toggles the attract music playback while updating the muted flag.
+    /// </summary>
     private void ToggleSound()
     {
-        if (_muted)
-        {
-            _Player.SoundPlayBack();
-        }
-        else
+        var muted = !State.Muted;
+        State.Muted = muted;
+
+        if (muted)
         {
             _Player.SoundStopBack();
         }
-
-        _muted = !_muted;
-    }
-
-    private void TogglePause()
-    {
-        _paused = !_paused;
-        if (_paused)
-        {
-            Pause();
-        }
         else
-        {
-            Resume();
-        }
-    }
-
-    private void Pause()
-    {
-        Model.Pause();
-        _Player.SoundStopBack();
-    }
-
-    private void Resume()
-    {
-        Model.Resume();
-        if (!_muted)
         {
             _Player.SoundPlayBack();
         }
     }
 
+    /// <summary>
+    /// Switches between paused and resumed gameplay states, invoking the appropriate handlers.
+    /// </summary>
+    private void TogglePause()
+    {
+        _globals.PauseBehavior?.TogglePause();
+    }
+
+    /// <summary>
+    /// Clears transient counters and optionally resets the score when restarting gameplay.
+    /// </summary>
+    /// <param name="resetScore">Whether to wipe the player's score.</param>
     private void ResetInternalState(bool resetScore)
     {
-        _pauseFrames = 0;
-        _soundBackCooldown = 0;
-        _startCountdown = 2;
-        _win = false;
-        _gameOver = false;
-        _paused = false;
-        _remainingConsumables = 0;
-        _consumables.Clear();
+        State.Reset();
+        State.ApplyModelSnapshot(Model);
+        _globals.PauseBehavior?.Reset();
 
         if (resetScore)
         {
@@ -354,8 +347,12 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
 
         Model.ResetLives(Model.GetGameSettings().DefaultLives + 1);
+        State.ApplyModelSnapshot(Model);
     }
 
+    /// <summary>
+    /// Subscribes to model change notifications so the behaviour can react to score, lives, and mode updates.
+    /// </summary>
     private void SubscribeModelEvents()
     {
         ReleaseModelSubscriptions();
@@ -367,11 +364,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _modelSubscriptions.Add(Model.SubscribeLevelChanged(OnLevelChanged));
     }
 
+    /// <summary>
+    /// Removes all subscriptions registered by <see cref="SubscribeModelEvents"/>.
+    /// </summary>
     private void UnsubscribeModelEvents()
     {
         ReleaseModelSubscriptions();
     }
 
+    /// <summary>
+    /// Releases each model subscription to avoid leaking event handlers between sessions.
+    /// </summary>
     private void ReleaseModelSubscriptions()
     {
         if (_modelSubscriptions.Count == 0)
@@ -387,165 +390,202 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _modelSubscriptions.Clear();
     }
 
+    /// <summary>
+    /// Gets the map currently being played.
+    /// </summary>
     public Map? CurrentMap => _map;
 
+    /// <summary>
+    /// Gets the backing model powering the gameplay loop.
+    /// </summary>
     public GameModel GameModel => Model;
 
-    public void RegisterConsumable(BlPacManConsumableComponent consumable)
+    /// <summary>
+    /// Searches for a registered ghost by name.
+    /// </summary>
+    public BlPacManGhostBehavior? FindGhost(string name)
     {
-        if (consumable is null)
+        if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentNullException(nameof(consumable));
+            return null;
         }
 
-        _consumables.Add(consumable);
-        _remainingConsumables++;
+        return Assets.Ghosts.FirstOrDefault(g => string.Equals(g.GhostName, name, StringComparison.OrdinalIgnoreCase));
     }
 
-    public void NotifyConsumableEaten(BlPacManConsumableComponent consumable)
+    /// <summary>
+    /// Handles Pac-Man's death sequence and schedules the life reset.
+    /// </summary>
+    public void NotifyPacManEaten()
     {
-        if (consumable is null)
+        if (State.PacManEatenPending || State.GameOver)
         {
             return;
         }
 
-        if (_remainingConsumables > 0)
+        State.PacManEatenPending = true;
+        State.ResetGhostChain();
+        Assets.PacMan?.OnEatenByGhost();
+        State.PauseFrames = Math.Max(State.PauseFrames, 40);
+        State.SoundCooldown = 0;
+
+        Assets.PacMan?.Hide();
+        foreach (var ghost in Assets.Ghosts)
         {
-            _remainingConsumables--;
+            ghost.OnPacManEaten();
         }
 
-        switch (consumable.Type)
-        {
-            case BlPacManConsumableType.Pellet:
-                _Player.SoundPlayDot();
-                break;
-            case BlPacManConsumableType.PowerPill:
-                _Player.SoundPlayEat();
-                foreach (var ghost in _ghosts)
-                {
-                    ghost.SetMode(GhostMode.Frightened);
-                }
-                break;
-            case BlPacManConsumableType.Bonus:
-                _Player.SoundPlayBonus();
-                break;
-        }
+        BonusManager.OnPacManEaten();
+        State.BonusAppearCountdown = 250;
+        State.BonusDestroyCountdown = 0;
+        State.BonusLocked = false;
 
-        Model.AddScore(consumable.ScoreValue);
-
-        if (_remainingConsumables == 0)
-        {
-            _win = true;
-        }
+        var lives = Math.Max(0, Model.Lives - 1);
+        Model.ResetLives(lives);
+        State.ApplyModelSnapshot(Model);
     }
 
-    public void RegisterPacMan(BlPacManActorBehavior pacMan)
+    /// <summary>
+    /// Handles Pac-Man collecting the roaming bonus by awarding score and scheduling its removal.
+    /// </summary>
+    public void NotifyBonusEaten(BlPacManRoamingBonusBehavior bonus)
     {
-        _pacMan = pacMan ?? throw new ArgumentNullException(nameof(pacMan));
-        if (_currentPacmanSettings is not null)
+        if (bonus is null)
         {
-            _pacMan.Configure(this, _currentPacmanSettings);
+            throw new ArgumentNullException(nameof(bonus));
         }
+
+        BonusManager.HandleCollected(Model);
     }
 
-    public void RegisterGhost(BlPacManGhostBehavior ghost)
+    /// <summary>
+    /// Locks the bonus when it leaves the maze without being eaten.
+    /// </summary>
+    public void NotifyBonusExpired(BlPacManRoamingBonusBehavior bonus)
     {
-        if (ghost is null)
+        if (Assets.Bonus == bonus)
         {
-            throw new ArgumentNullException(nameof(ghost));
-        }
-
-        if (!_ghosts.Contains(ghost))
-        {
-            _ghosts.Add(ghost);
-        }
-
-        if (_currentGhostSettings is not null)
-        {
-            ghost.Configure(this, _currentGhostSettings);
+            BonusManager.HandleExpired();
         }
     }
 
-    public void RegisterBonus(BlPacManRoamingBonusBehavior bonus)
-    {
-        _bonus = bonus ?? throw new ArgumentNullException(nameof(bonus));
-        if (_currentGameSettings is not null)
-        {
-            _bonus.Configure(this, _currentGameSettings);
-        }
-    }
-
-    public void UnregisterConsumable(BlPacManConsumableComponent consumable)
-    {
-        if (consumable is null)
-        {
-            return;
-        }
-
-        _consumables.Remove(consumable);
-    }
-
-    public void UnregisterPacMan(BlPacManActorBehavior pacMan)
-    {
-        if (_pacMan == pacMan)
-        {
-            _pacMan = null;
-        }
-    }
-
-    public void UnregisterGhost(BlPacManGhostBehavior ghost)
-    {
-        _ghosts.Remove(ghost);
-    }
-
-    public void UnregisterBonus(BlPacManRoamingBonusBehavior bonus)
-    {
-        if (_bonus == bonus)
-        {
-            _bonus = null;
-        }
-    }
-
+    /// <summary>
+    /// Updates HUD bindings when the player's score changes.
+    /// </summary>
     private void OnScoreChanged(int score)
     {
-        // Score display is handled by dedicated HUD behaviours. Keep the hook for future updates.
+        State.Score = score;
     }
 
+    /// <summary>
+    /// Updates HUD bindings when the high-score value is bumped.
+    /// </summary>
     private void OnHighScoreChanged(int score)
     {
-        // Update hooks for score and HUD elements will be wired up once the UI sprites are in place.
+        State.HighScore = score;
     }
 
+    /// <summary>
+    /// Reacts to life count updates and triggers the game-over state when necessary.
+    /// </summary>
     private void OnLivesChanged(int lives)
     {
-        if (lives == 0)
-        {
-            _gameOver = true;
-            _Player.SoundStopBack();
-            Model.ResetScore();
-        }
-    }
+        State.Lives = lives;
 
-    private void OnExtraLivesChanged(int _)
-    {
-        _Player.SoundPlayLife();
-    }
-
-    private void OnModeChanged(GhostMode? mode)
-    {
-        if (_ghosts.Count == 0)
+        if (lives != 0)
         {
             return;
         }
 
-        foreach (var ghost in _ghosts)
+        State.GameOver = true;
+        _Player.SoundStopBack();
+        Model.ResetScore();
+    }
+
+    /// <summary>
+    /// Retains a hook for extra-life awards so dedicated HUD behaviours can react if needed.
+    /// </summary>
+    private void OnExtraLivesChanged(int _)
+    {
+        State.ApplyModelSnapshot(Model);
+    }
+
+    /// <summary>
+    /// Applies the current global ghost mode to every active ghost.
+    /// </summary>
+    private void OnModeChanged(GhostMode? mode)
+    {
+        if (Assets.Ghosts.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var ghost in Assets.Ghosts)
         {
             ghost.SetMode(mode);
         }
     }
 
+    /// <summary>
+    /// Keeps the bonus display model aligned with the active level.
+    /// </summary>
     private void OnLevelChanged(int level)
     {
         BonusesModel.Level = level;
+        State.Level = level;
+    }
+
+    /// <summary>
+    /// Chooses which looping audio to play based on frightened and dead ghost states.
+    /// </summary>
+    private void UpdateGhostAudioState()
+    {
+        if (State.SoundCooldown > 0)
+        {
+            State.SoundCooldown--;
+            return;
+        }
+
+        if (State.Muted || State.PacManEatenPending || State.Paused)
+        {
+            return;
+        }
+
+        if (Assets.Ghosts.Any(static g => g.IsDead))
+        {
+            _Player.SoundPlayDead();
+        }
+        else if (!Assets.Ghosts.Any(static g => g.IsFrightened))
+        {
+            _Player.SoundPlayBack();
+        }
+
+        State.SoundCooldown = 5;
+    }
+
+    /// <summary>
+    /// Restores actors after Pac-Man loses a life and restarts the countdown.
+    /// </summary>
+    private void ResumeAfterPacManEaten()
+    {
+        if (!State.PacManEatenPending || State.Lives == 0)
+        {
+            return;
+        }
+
+        var pacMan = Assets.PacMan;
+        pacMan?.ResetForLife();
+        pacMan?.Show();
+
+        foreach (var ghost in Assets.Ghosts)
+        {
+            ghost.ResetForLife();
+            ghost.Show();
+        }
+
+        BonusManager.ResetAfterLifeLost();
+        State.PacManEatenPending = false;
+        State.StartCountdown = Math.Max(State.StartCountdown, 1);
+        State.PauseFrames = Math.Max(State.PauseFrames, 60);
     }
 }

@@ -11,7 +11,8 @@ internal sealed class BlPacManConsumableComponent
     private readonly BlPacManConsumableType _type;
     private readonly int _scoreValue;
     private Tile? _tile;
-    private BlPacManGameBehavior? _coordinator;
+    private BlPacManAssetContainer? _assets;
+    private GlobalVars? _globals;
 
     public BlPacManConsumableComponent(BlingoSpriteBehavior owner, BlPacManConsumableType type, int scoreValue)
     {
@@ -26,12 +27,17 @@ internal sealed class BlPacManConsumableComponent
 
     public Tile? Tile => _tile;
 
-    public void Initialize(Tile tile, BlPacManGameBehavior coordinator)
+    public void SetGlobals(GlobalVars globals)
+    {
+        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+    }
+
+    public void Initialize(Tile tile, BlPacManAssetContainer assets)
     {
         _tile = tile ?? throw new ArgumentNullException(nameof(tile));
-        _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
+        _assets = assets ?? throw new ArgumentNullException(nameof(assets));
         _tile.Item = this;
-        _coordinator.RegisterConsumable(this);
+        _globals?.State.RegisterConsumableSpawn();
         Show();
     }
 
@@ -43,19 +49,18 @@ internal sealed class BlPacManConsumableComponent
         }
 
         Hide();
-        _coordinator?.UnregisterConsumable(this);
-        _coordinator?.NotifyConsumableEaten(this);
+        pacMan.HandleConsumableEaten(this);
     }
 
     public void Destroy()
     {
-        _coordinator?.UnregisterConsumable(this);
         if (_tile is not null)
         {
             _tile.Item = null;
             _tile = null;
         }
         _owner.GetSprite().RemoveMe();
+        _assets = null;
     }
 
     public void Hide()
