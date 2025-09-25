@@ -17,9 +17,9 @@ internal sealed class BlPacManPowerPillBehavior : BlingoSpriteBehavior
 
     public BlPacManConsumableComponent Component => _component;
 
-    public void Initialize(Tile tile, BlPacManAssetContainer assets)
+    public void Initialize(Tile tile)
     {
-        _component.Initialize(tile, assets);
+        _component.Initialize(tile);
     }
 
     public void Consume(BlPacManActorBehavior pacMan)

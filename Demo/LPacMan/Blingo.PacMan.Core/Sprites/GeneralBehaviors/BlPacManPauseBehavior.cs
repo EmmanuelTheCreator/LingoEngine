@@ -1,5 +1,6 @@
 using System;
 using Blingo.PacMan.Core.Game;
+using BlingoEngine.Events;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
@@ -16,10 +17,12 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
 {
     private readonly GlobalVars _globals;
 
+    public bool IsPaused { get; private set; }
+
     public BlPacManPauseBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
-        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+        _globals = globals;
     }
 
     public void BeginSprite()
@@ -36,19 +39,23 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
         }
     }
 
+    public void KeyDown(BlingoKeyEvent key)
+    {
+        // 'P' toggles pause mode.
+        if (key.KeyPressed(80))
+            TogglePause();
+    }
+
+
     /// <summary>
     /// Toggles between paused and resumed states.
     /// </summary>
     public void TogglePause()
     {
-        if (_globals.State.Paused)
-        {
+        if (IsPaused)
             Resume();
-        }
         else
-        {
             Pause();
-        }
     }
 
     /// <summary>
@@ -56,36 +63,28 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void Reset()
     {
-        _globals.State.Paused = false;
+        IsPaused = false;
         Me.Visibility = false;
     }
 
     private void Pause()
     {
-        if (_globals.State.Paused)
-        {
+        if (_globals.State.IsPaused)
             return;
-        }
 
-        _globals.State.Paused = true;
+        IsPaused = true;
         Me.Visibility = true;
-        _globals.GameModel?.Pause();
         _Player.SoundStopBack();
     }
 
     private void Resume()
     {
-        if (!_globals.State.Paused)
-        {
+        if (!_globals.State.IsPaused)
             return;
-        }
 
-        _globals.State.Paused = false;
+        IsPaused = false;
         Me.Visibility = false;
-        _globals.GameModel?.Resume();
-        if (!_globals.State.Muted)
-        {
+        if (!_globals.State.IsMuted)
             _Player.SoundPlayBack();
-        }
     }
 }

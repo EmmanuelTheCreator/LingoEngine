@@ -36,20 +36,16 @@ internal sealed class BlPacManMenuStartBehavior : BlingoSpriteBehavior,
 
     public void KeyDown(BlingoKeyEvent key)
     {
-        if (_consumed || key is null)
-        {
+        if (_consumed)
             return;
-        }
 
         StartGame();
     }
 
     public void MouseDown(BlingoMouseEvent mouse)
     {
-        if (_consumed || mouse is null)
-        {
+        if (_consumed)
             return;
-        }
 
         StartGame();
     }
@@ -58,6 +54,6 @@ internal sealed class BlPacManMenuStartBehavior : BlingoSpriteBehavior,
     {
         _consumed = true;
         _Movie.GoTo(BlPacManProjectFactory.GameRunningLabel);
-        _globals.GameBehavior?.StartLevel();
+        //_globals.GameBehavior?.StartLevel();
     }
 }

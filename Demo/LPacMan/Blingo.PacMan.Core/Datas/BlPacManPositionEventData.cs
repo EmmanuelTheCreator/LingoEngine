@@ -2,9 +2,9 @@ using Blingo.PacMan.Core.Game;
 
 namespace Blingo.PacMan.Core.Datas;
 
-internal sealed class BlPacManPositionContext
+internal sealed class BlPacManPositionEventData
 {
-    public BlPacManPositionContext(float x, float y, Tile? tile, BlPacManDirection direction)
+    public BlPacManPositionEventData(float x, float y, Tile? tile, BlPacManDirection direction)
     {
         X = x;
         Y = y;

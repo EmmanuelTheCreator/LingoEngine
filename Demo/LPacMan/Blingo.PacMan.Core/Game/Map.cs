@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 
 namespace Blingo.PacMan.Core.Game;
 
@@ -25,26 +24,17 @@ public sealed class Map
 
     public Map(IEnumerable<string> data)
     {
-        if (data is null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
         var rows = new List<string>();
         foreach (var row in data)
         {
             if (row is null)
-            {
                 throw new ArgumentException("Map rows cannot be null.", nameof(data));
-            }
 
             rows.Add(row);
         }
 
         if (rows.Count == 0)
-        {
             throw new ArgumentException("Map data must contain at least one row.", nameof(data));
-        }
 
         Width = rows[0].Length;
         Height = rows.Count;
@@ -58,9 +48,7 @@ public sealed class Map
         {
             var row = rows[y];
             if (row.Length != Width)
-            {
                 throw new ArgumentException("All rows in the map data must be of equal length.", nameof(data));
-            }
 
             for (var x = 0; x < Width; x++)
             {
@@ -68,14 +56,10 @@ public sealed class Map
                 _tiles.Add(tile);
 
                 if (tile.IsHouse() && firstHouseTile is null)
-                {
                     firstHouseTile = tile;
-                }
 
                 if (tile.IsTunnel() && (tile.Column == 0 || tile.Column == Width - 1))
-                {
                     _tunnels.Add(tile);
-                }
             }
         }
 
@@ -89,24 +73,17 @@ public sealed class Map
         }
     }
 
-    public Tile? GetTile(float column, float row, bool inPixels = false)
-    {
-        return GetTile((int)column, (int)row, inPixels);
-    }
+    public Tile? GetTile(float column, float row, bool inPixels = false) => GetTile((int)column, (int)row, inPixels);
 
     public Tile? GetTile(int column, int row, bool inPixels = false)
     {
         if (_tiles.Count == 0)
-        {
             return null;
-        }
 
         if (inPixels)
         {
             if (TileWidth == 0 || TileHeight == 0)
-            {
                 return null;
-            }
 
             column /= TileWidth;
             row /= TileHeight;
@@ -117,9 +94,7 @@ public sealed class Map
 
         var index = row * Width + column;
         if ((uint)index >= (uint)_tiles.Count)
-        {
             return null;
-        }
 
         return _tiles[index];
     }
@@ -127,34 +102,24 @@ public sealed class Map
     public void DestroyItems()
     {
         foreach (var tile in _tiles)
-        {
             tile.Item?.Destroy();
-        }
     }
 
     public void HideItems()
     {
         foreach (var tile in _tiles)
-        {
             tile.Item?.Hide();
-        }
     }
 
     private int WrapColumn(int column)
     {
         if (Width == 0)
-        {
             return column;
-        }
 
         if (column > Width - 1)
-        {
             column = 0;
-        }
         else if (column < 0)
-        {
             column = Width - 1;
-        }
 
         return column;
     }
@@ -162,18 +127,12 @@ public sealed class Map
     private int WrapRow(int row)
     {
         if (Height == 0)
-        {
             return row;
-        }
 
         if (row > Height - 1)
-        {
             row = 0;
-        }
         else if (row < 0)
-        {
             row = Height - 1;
-        }
 
         return row;
     }

@@ -1,18 +1,16 @@
-using System;
+using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
-using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
+using BlingoEngine.Bitmaps;
 using BlingoEngine.Events;
 using BlingoEngine.Inputs.Events;
-using BlingoEngine.Bitmaps;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
-using BlingoEngine.Members;
-using AbstUI.Primitives;
+using System.Reflection;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
@@ -24,40 +22,38 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
     IHasKeyDownEvent,
-    IHasStepFrameEvent
+    IHasExitFrameEvent
 {
-    private static readonly ARect[] LeftAnimation =
+    private static readonly ARect[] _leftAnimation =
     {
         new(0, 0, 32, 32),
         new(64, 0, 96, 32),
     };
 
-    private static readonly ARect[] RightAnimation =
+    private static readonly ARect[] _rightAnimation =
     {
         new(32, 0, 64, 32),
         new(128, 0, 160, 32),
     };
 
-    private static readonly ARect[] UpAnimation =
+    private static readonly ARect[] _upAnimation =
     {
         new(0, 32, 32, 64),
         new(64, 32, 96, 64),
     };
 
-    private static readonly ARect[] DownAnimation =
+    private static readonly ARect[] _downAnimation =
     {
         new(288, 32, 320, 64),
         new(352, 32, 384, 64),
     };
 
     private readonly GlobalVars _globals;
-    private BlPacManAssetContainer? _assets;
     private BlPacManGameBehavior? _coordinator;
     private BlPacManDirection _requestedDirection;
     private BlPacManCharacter? _character;
     private BlPacManEventSubscription? _tileEnteredSubscription;
     private BlPacManEventSubscription? _positionSubscription;
-    private bool _isActorRegistered;
     private bool _animationsConfigured;
 
     /// <summary>
@@ -82,7 +78,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             throw new ArgumentNullException(nameof(settings));
         }
         var character = EnsureCharacter();
-        character.SetMap(_coordinator.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized."));
+        character.SetMap(_globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized."));
         character.Speed = settings.Speed;
         character.EffectiveSpeed = settings.Speed;
         character.Step = 8f;
@@ -96,26 +92,19 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void BeginSprite()
     {
-        if (!_isActorRegistered)
-        {
-            Me.AddActor(this);
-            _isActorRegistered = true;
-        }
+        
         _coordinator = _globals.GameBehavior;
-        _assets = _globals.Assets;
         var character = EnsureCharacter();
         character.BeginSprite();
         EnsureAppearance();
-        _assets.AttachPacMan(this);
+        _globals.GameModel?.AttachPacMan(this);
 
         _positionSubscription?.Release();
         _positionSubscription = character.SubscribePositionChanged(OnPositionChanged);
         PublishPosition(character);
 
         if (_coordinator is not null && _globals.CurrentPacmanSettings is { } settings)
-        {
             Configure(_coordinator, settings);
-        }
     }
 
     /// <summary>
@@ -123,18 +112,17 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void EndSprite()
     {
-        _assets?.DetachPacMan(this);
+        _globals.GameModel?.DetachPacMan(this);
         _tileEnteredSubscription?.Release();
         _tileEnteredSubscription = null;
         _positionSubscription?.Release();
         _positionSubscription = null;
-        _assets = null;
     }
 
     /// <summary>
     /// Moves Pac-Man in the last requested direction.
     /// </summary>
-    public void StepFrame()
+    public void ExitFrame()
     {
         var character = EnsureCharacter();
         if (_globals.State.IsGameplayFrozen)
@@ -155,37 +143,25 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     public void KeyDown(BlingoKeyEvent key)
     {
         if (key is null)
-        {
             return;
-        }
 
         if (key.KeyPressed(37))
-        {
             _requestedDirection = BlPacManDirection.Left;
-        }
         else if (key.KeyPressed(39))
-        {
             _requestedDirection = BlPacManDirection.Right;
-        }
         else if (key.KeyPressed(38))
-        {
             _requestedDirection = BlPacManDirection.Up;
-        }
         else if (key.KeyPressed(40))
-        {
             _requestedDirection = BlPacManDirection.Down;
-        }
     }
 
     /// <summary>
     /// Consumes dots or pills when Pac-Man enters a tile containing a consumable component.
     /// </summary>
-    private void OnTileEntered(BlPacManTileContext args)
+    private void OnTileEntered(BlPacManTileEventData args)
     {
         if (args.Tile.Item is BlPacManConsumableComponent consumable)
-        {
             consumable.Consume(this);
-        }
     }
 
     /// <summary>
@@ -228,22 +204,15 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     internal void HandleConsumableEaten(BlPacManConsumableComponent consumable)
     {
         if (consumable is null)
-        {
             return;
-        }
 
-        var state = _globals.State;
-        state.RegisterConsumableEaten();
+        _globals.State.ConsumableEaten();
 
         var model = _globals.GameModel;
         if (model is not null && consumable.ScoreValue > 0)
-        {
             model.AddScore(consumable.ScoreValue);
-            state.Score = model.Score;
-            state.HighScore = model.HighScore;
-        }
 
-        if (!state.Muted)
+        if (!_globals.State.IsMuted)
         {
             switch (consumable.Type)
             {
@@ -261,30 +230,22 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
         if (consumable.Type == BlPacManConsumableType.PowerPill)
         {
-            state.ResetGhostChain();
-            foreach (var ghost in _globals.Assets.Ghosts)
-            {
-                ghost.SetMode(GhostMode.Frightened);
-            }
-        }
-
-        if (state.RemainingConsumables == 0)
-        {
-            state.Win = true;
+            _globals.GhostManager.ResetGhostChain();
+            _globals.GhostManager.SetAllFrightened();
         }
     }
 
     /// <summary>
     /// Handles the audio transition when Pac-Man is eaten by a ghost.
     /// </summary>
-    internal void OnEatenByGhost()
+    private void EatenByGhost()
     {
-        if (!_globals.State.Muted)
-        {
+        if (!_globals.State.IsMuted)
             _Player.SoundPlayEaten();
-        }
 
         _Player.SoundStopBack();
+        Hide();
+        _globals.GameBehavior?.NotifyPacManEaten();
     }
 
     private void EnsureAppearance()
@@ -309,76 +270,50 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
     private void CheckCollisions(BlPacManCharacter character)
     {
-        if (_assets is null || _globals.State.IsGameplayFrozen)
-        {
+        if (_globals.State.IsGameplayFrozen)
             return;
-        }
 
         var tile = character.GetTile();
         if (tile is null)
-        {
             return;
-        }
 
-        foreach (var ghost in _assets.Ghosts)
+        foreach (var ghost in _globals.GhostManager.GetGhostsOnTile(tile))
         {
-            var ghostTile = ghost.CurrentTile;
-            if (ghostTile is null || !ReferenceEquals(ghostTile, tile) || ghost.IsDead)
-            {
-                continue;
-            }
-
             if (ghost.IsFrightened)
             {
                 ghost.SetMode(GhostMode.Dead);
-                var state = _globals.State;
-                var score = state.RegisterGhostEaten();
-                var model = _globals.GameModel;
-                if (model is not null && score > 0)
-                {
-                    model.AddScore(score);
-                    state.Score = model.Score;
-                    state.HighScore = model.HighScore;
-                }
+                var score = _globals.GhostManager.RegisterGhostEaten();
+                if (_globals.GameModel is not null && score > 0)
+                    _globals.GameModel.AddScore(score);
 
+                var state = _globals.State;
                 state.SoundCooldown = 5;
                 state.PauseFrames = Math.Max(state.PauseFrames, 15);
                 ghost.OnEaten(score);
             }
             else
-            {
-                _globals.GameBehavior?.NotifyPacManEaten();
-            }
+                EatenByGhost();
 
             return;
         }
-
-        var bonus = _assets.Bonus;
-        if (bonus is not null && bonus.IsActive && ReferenceEquals(bonus.CurrentTile, tile))
-        {
-            bonus.Collect();
-        }
+        _globals.BonusManager.CollectOnTile(tile);
+        
     }
 
-    private void OnPositionChanged(BlPacManPositionContext context)
+    private void OnPositionChanged(BlPacManPositionEventData context)
     {
         if (context is null)
-        {
             return;
-        }
 
-        _globals.State.PacManPosition = context;
-        _assets?.UpdatePacManPosition(context);
+        _globals.State.UpdatePacManPosition(context);
     }
 
     private void PublishPosition(BlPacManCharacter character)
     {
         if (character is null)
-        {
             return;
-        }
 
-        var snapshot = new BlPacManPositionContext(Me.LocH, Me.LocV, character.GetTile(), character.Direction);
+        var snapshot = new BlPacManPositionEventData(Me.LocH, Me.LocV, character.GetTile(), character.Direction);
         OnPositionChanged(snapshot);
     }
 
@@ -386,21 +321,19 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     {
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
         {
-            behavior.SetAnimationRects("left", LeftAnimation, 2);
-            behavior.SetAnimationRects("right", RightAnimation, 2);
-            behavior.SetAnimationRects("up", UpAnimation, 2);
-            behavior.SetAnimationRects("down", DownAnimation, 2);
+            behavior.SetAnimationRects("left", _leftAnimation, 2);
+            behavior.SetAnimationRects("right", _rightAnimation, 2);
+            behavior.SetAnimationRects("up", _upAnimation, 2);
+            behavior.SetAnimationRects("down", _downAnimation, 2);
         });
     }
 
     private void ResetPosition()
     {
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
+        var map = _globals.Map;
         var startTile = map?.HouseCenter ?? map?.GetTile(map.Width / 2, map.Height - 3);
         if (startTile is null)
-        {
             return;
-        }
 
         Me.LocH = startTile.CenterX;
         Me.LocV = startTile.CenterY;
@@ -417,7 +350,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             return _character;
         }
 
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
             Step = 8f,
@@ -428,4 +361,6 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _tileEnteredSubscription = _character.SubscribeTileEntered(OnTileEntered);
         return _character;
     }
+
+  
 }

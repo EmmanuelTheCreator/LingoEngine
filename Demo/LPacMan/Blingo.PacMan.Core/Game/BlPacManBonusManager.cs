@@ -1,4 +1,3 @@
-using System;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
@@ -13,85 +12,82 @@ internal sealed class BlPacManBonusManager
     private readonly GlobalVars _globals;
     private GameSettings? _settings;
     private BlPacManRoamingBonusBehavior? _bonus;
+    private const int _maxBonuses = 8;
 
+    public int BonusAppearCountdown { get; private set; }
+
+    public int BonusDestroyCountdown { get; private set; }
+    public bool BonusLocked { get; private set; }
+    
+    
     public BlPacManBonusManager(GlobalVars globals)
     {
-        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+        _globals = globals;
     }
 
     public void Attach(BlPacManRoamingBonusBehavior bonus)
     {
-        _bonus = bonus ?? throw new ArgumentNullException(nameof(bonus));
+        _bonus = bonus;
         if (_settings is not null)
-        {
             _bonus.Configure(_settings);
-        }
     }
 
     public void Detach(BlPacManRoamingBonusBehavior bonus)
     {
         if (ReferenceEquals(_bonus, bonus))
-        {
             _bonus = null;
-        }
     }
 
     public void Configure(GameSettings settings)
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _settings = settings;
         if (_bonus is not null)
-        {
             _bonus.Configure(settings);
+    }
+    internal void MakeLevel(GameSettings settings)
+    {
+        Configure(settings);
+        if (_bonus != null)
+        {
+            _bonus.ResetForLife();
+            _bonus.Deactivate();
         }
     }
 
-    public void ResetForLevel()
-    {
-        _bonus?.ResetForLife();
-        _bonus?.Deactivate();
-    }
 
-    public void ResetAfterLifeLost()
-    {
-        _bonus?.ResetForLife();
-    }
+    public void ResetAfterLifeLost() => _bonus?.ResetForLife();
 
     public void OnPacManEaten()
     {
         _bonus?.OnPacManEaten();
+        BonusLocked = false;
+        BonusAppearCountdown = 250;
+        BonusDestroyCountdown = 0;
     }
 
     public void Update(GameModel model)
     {
         if (_bonus is null || _settings is null)
-        {
             return;
-        }
 
         var state = _globals.State;
-        if (state.BonusDestroyCountdown > 0)
+        if (BonusDestroyCountdown > 0)
         {
-            state.BonusDestroyCountdown--;
-            if (state.BonusDestroyCountdown == 0)
-            {
+            BonusDestroyCountdown--;
+            if (BonusDestroyCountdown == 0)
                 _bonus.Deactivate();
-            }
 
             return;
         }
 
-        if (state.BonusLocked)
-        {
+        if (BonusLocked)
             return;
-        }
 
-        if (state.BonusAppearCountdown > 0)
+        if (BonusAppearCountdown > 0)
         {
-            state.BonusAppearCountdown--;
-            if (state.BonusAppearCountdown == 0)
-            {
+            BonusAppearCountdown--;
+            if (BonusAppearCountdown == 0)
                 _bonus.Activate();
-            }
 
             return;
         }
@@ -99,28 +95,20 @@ internal sealed class BlPacManBonusManager
         _bonus.Tick();
     }
 
-    public void HandleCollected(GameModel model)
+    public void HandleCollected()
     {
         if (_bonus is null || _settings is null)
-        {
             return;
-        }
 
         var state = _globals.State;
-        if (state.BonusLocked)
-        {
+        if (BonusLocked)
             return;
-        }
 
-        state.BonusLocked = true;
-        state.BonusDestroyCountdown = 45;
+        BonusLocked = true;
+        BonusDestroyCountdown = 45;
 
         if (_settings.BonusScore > 0)
-        {
-            model.AddScore(_settings.BonusScore);
-            state.Score = model.Score;
-            state.HighScore = model.HighScore;
-        }
+            _globals.GameModel?.AddScore(_settings.BonusScore);
 
         _bonus.ShowScore();
     }
@@ -128,13 +116,49 @@ internal sealed class BlPacManBonusManager
     public void HandleExpired()
     {
         var state = _globals.State;
-        state.BonusLocked = true;
+        BonusLocked = true;
         _bonus?.Deactivate();
     }
-
+    internal void ResetForNewLevel()
+    {
+        BonusDestroyCountdown = 0;
+        BonusAppearCountdown = 500;
+    }
     public void Reset()
     {
+        BonusLocked = false;
         _settings = null;
         _bonus = null;
+        BonusAppearCountdown = 0;
+        BonusDestroyCountdown = 0;
     }
+
+
+    /// <summary>
+    /// Handles Pac-Man collecting the roaming bonus by awarding score and scheduling its removal.
+    /// </summary>
+    public void NotifyBonusEaten(BlPacManRoamingBonusBehavior bonus)
+    {
+        if (bonus is null)
+            throw new ArgumentNullException(nameof(bonus));
+
+        HandleCollected();
+    }
+
+    /// <summary>
+    /// Locks the bonus when it leaves the maze without being eaten.
+    /// </summary>
+    public void NotifyBonusExpired(BlPacManRoamingBonusBehavior bonus)
+    {
+        if (_bonus == bonus)
+            HandleExpired();
+    }
+
+    internal void CollectOnTile(Tile tile)
+    {
+        if (_bonus is not null && _bonus.IsActive && ReferenceEquals(_bonus.CurrentTile, tile))
+            _bonus.Collect();
+    }
+
+   
 }

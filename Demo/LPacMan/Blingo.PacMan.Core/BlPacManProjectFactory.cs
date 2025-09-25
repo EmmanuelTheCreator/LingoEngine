@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using AbstUI.Primitives;
+﻿using AbstUI.Primitives;
 using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
-using Blingo.PacMan.Core.Sprites.MovieScripts;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.Casts;
@@ -15,7 +11,6 @@ using BlingoEngine.Movies;
 using BlingoEngine.Projects;
 using BlingoEngine.Setup;
 using BlingoEngine.Sounds;
-using BlingoEngine.Sprites;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Blingo.PacMan.Core.Game;
@@ -49,22 +44,21 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                     s.ProjectFolder = "..\\";
                     s.ProjectName = "BlingoPacMan";
                     s.CodeFolder = "..\\Blingo.PacMan.Core\\";
-                    s.MaxSpriteChannelCount = 300;
-                    s.StageWidth = 730;
-                    s.StageHeight = 500;
+                    s.MaxSpriteChannelCount = 500;
+                    s.StageWidth = 900;
+                    s.StageHeight = 1200;
                 })
                 .ForMovie(MovieName, s => s
-                    .AddMovieScript<BlPacManStartMovieScript>()
                     .AddScriptsFromAssembly()
                 )
                 .ServicesBlingo(s => s
                     .AddSingleton<BlPacManCore>()
                     .AddSingleton<GameModelRepository>()
-                    )
-                ;
+                    );
     }
 
 
+    #region Members
 
     /// <summary>
     /// Loads all required cast libraries and keeps a reference to the player for later movie initialization.
@@ -105,14 +99,65 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
         InitMembers(blingoPlayer);
         return Task.CompletedTask;
     }
+    /// <summary>
+    /// Initializes static member properties that were previously stored as document metadata.
+    /// </summary>
+    public void InitMembers(BlingoPlayer player)
+    {
+        return;
+        if (player is null)
+            throw new ArgumentNullException(nameof(player));
+
+        var dataCast = player.CastLib("Data");
+        if (dataCast is null)
+            return;
+
+        // Preload sheets and assign registration points so sprites line up with the hand-authored stage layout.
+        // Large background images use a top-left registration point because the score positions them by absolute offsets,
+        // while character sheets keep a centred registration point so sub-rect selections remain anchored in the middle.
+        void ConfigureBitmap(string memberName, Func<BlingoMemberBitmap, APoint> regPointFactory)
+        {
+            var member = dataCast.GetMember<BlingoMemberBitmap>(memberName);
+            if (member is null)
+                return;
+
+            member.Preload();
+            member.RegPoint = regPointFactory(member);
+        }
+
+        //var backgroundMembers = new[] { "start", "maze", "maze-1", "maze-2", "maze-3", "maze-4" };
+        //foreach (var name in backgroundMembers)
+        //{
+        //    // Background bitmaps are positioned via raw offsets, so keep the registration point at the top-left corner.
+        //    ConfigureBitmap(name, _ => new APoint(0f, 0f));
+        //}
+
+        var centredSheets = new[] { "characters", "misc", "mspacman", "pills", "sprites" };
+        foreach (var name in centredSheets)
+        {
+            // Sprite sheets are trimmed with the registration point centred on each frame.
+            // Centre the registration point on the full sheet so individual sprite source rectangles stay aligned around their mid-points.
+            ConfigureBitmap(name, m => new APoint(m.Width / 2f, m.Height / 2f));
+        }
+
+        // Loop the backing track on channel 1 so the attract screen ambience keeps running across replays.
+        var backgroundSound = _blingoPlayer!.CastLib("Sounds").GetMember<BlingoMemberSound>("S_back");
+        if (backgroundSound is not null)
+            backgroundSound.Loop = true;
+    } 
+    #endregion
+
+
 
     /// <summary>
     /// Creates the initial movie instance that will be shown when the engine starts.
     /// </summary>
     public Task<IBlingoMovie?> LoadStartupMovieAsync(IBlingoServiceProvider serviceProvider, BlingoPlayer blingoPlayer)
     {
-        _movie = LoadMovie(blingoPlayer);
-
+        var globals = serviceProvider.GetRequiredService<GlobalVars>();
+        _movie = blingoPlayer.NewMovie(MovieName);
+        AddLabels();
+        InitSprites();
         return Task.FromResult<IBlingoMovie?>(_movie);
     }
 
@@ -125,16 +170,6 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             movie.Play();
     }
 
-    /// <summary>
-    /// Builds the movie, registers score labels and kicks off sprite initialization.
-    /// </summary>
-    public IBlingoMovie LoadMovie(IBlingoPlayer blingoPlayer)
-    {
-        _movie = blingoPlayer.NewMovie(MovieName);
-        AddLabels();
-        InitSprites();
-        return _movie;
-    }
 
     /// <summary>
     /// Adds score labels to the timeline so navigating frames in the Director UI remains intuitive.
@@ -146,65 +181,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
         _movie.SetScoreLabel(GameStartFrame, GameRunningLabel);
     }
 
-    /// <summary>
-    /// Initializes static member properties that were previously stored as document metadata.
-    /// </summary>
-    public void InitMembers(BlingoPlayer player)
-    {
-        if (player is null)
-        {
-            throw new ArgumentNullException(nameof(player));
-        }
-
-        var dataCast = player.CastLib("Data");
-        if (dataCast is null)
-        {
-            return;
-        }
-
-        // Preload sheets and assign registration points so sprites line up with the hand-authored stage layout.
-        // Large background images use a top-left registration point because the score positions them by absolute offsets,
-        // while character sheets keep a centred registration point so sub-rect selections remain anchored in the middle.
-        void ConfigureBitmap(string memberName, Func<BlingoMemberBitmap, APoint> regPointFactory)
-        {
-            var member = dataCast.GetMember<BlingoMemberBitmap>(memberName);
-            if (member is null)
-            {
-                return;
-            }
-
-            member.Preload();
-            member.RegPoint = regPointFactory(member);
-        }
-
-        var backgroundMembers = new[] { "start", "maze", "maze-1", "maze-2", "maze-3", "maze-4" };
-        foreach (var name in backgroundMembers)
-        {
-            // Background bitmaps are positioned via raw offsets, so keep the registration point at the top-left corner.
-            ConfigureBitmap(name, _ => new APoint(0f, 0f));
-        }
-
-        var centredSheets = new[] { "characters", "misc", "mspacman", "pills", "sprites" };
-        foreach (var name in centredSheets)
-        {
-            // Sprite sheets are trimmed with the registration point centred on each frame.
-            // Centre the registration point on the full sheet so individual sprite source rectangles stay aligned around their mid-points.
-            ConfigureBitmap(name, m => new APoint(m.Width / 2f, m.Height / 2f));
-        }
-
-        var soundsCast = player.CastLib("Sounds");
-        if (soundsCast is null)
-        {
-            return;
-        }
-
-        // Loop the backing track on channel 1 so the attract screen ambience keeps running across replays.
-        var backgroundSound = soundsCast.GetMember<BlingoMemberSound>("S_back");
-        if (backgroundSound is not null)
-        {
-            backgroundSound.Loop = true;
-        }
-    }
+    
 
     /// <summary>
     /// Builds the sprite setup expected by the Pac-Man timeline.
@@ -216,156 +193,93 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             return;
         }
 
-        var frameCount = Math.Max(GameStartFrame, _movie.FrameCount);
-        _movie.AddFrameBehavior<BlPacManStayOnFrameBehavior>(1);
+        var frameCount = Math.Max(GameStartFrame, 60);
+        _movie.AddFrameBehavior<BlPacManStayOnFrameBehavior>(5);
+        _movie.AddFrameBehavior<BlPacManGameBehavior>(GameStartFrame);
 
         var stageWidth = _blingoPlayer?.Stage.Width ?? _settings?.StageWidth ?? 730;
         var stageHeight = _blingoPlayer?.Stage.Height ?? _settings?.StageHeight ?? 500;
         var centerX = stageWidth / 2f;
         var centerY = stageHeight / 2f;
 
-        var menuBackground = _movie.AddSprite("PacMan.MenuBackground", sprite =>
-        {
-            sprite.BeginFrame = 1;
-            sprite.EndFrame = GameStartFrame - 1;
-            sprite.LocH = -230;
-            sprite.LocV = -230;
-            sprite.Lock = true;
-        });
-        menuBackground.SetMember("start");
+        _movie.AddSprite(1,1, GameStartFrame - 1,0,0, sprite => sprite.Lock = true).SetMember("start").AddBehavior<BlPacManMenuStartBehavior>(); ;
 
-        var mazeBackground = _movie.AddSprite("PacMan.MazeBackground", sprite =>
-        {
-            sprite.BeginFrame = GameStartFrame;
-            sprite.EndFrame = frameCount;
-            sprite.LocH = -230;
-            sprite.LocV = -230;
-            sprite.Lock = true;
-        });
-        mazeBackground.SetMember("maze");
+        _movie.AddSprite(2, GameStartFrame, frameCount,0,0, sprite =>sprite.Lock = true).SetMember("maze");
 
-        var controller = _movie.AddSprite("PacMan.Controller", sprite =>
-        {
-            sprite.LocH = centerX;
-            sprite.LocV = centerY;
-            sprite.LocZ = 100;
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        controller.AddBehavior<BlPacManGameBehavior>();
+        
+        _movie.AddSprite(4, GameStartFrame, frameCount, centerX, centerY, x => x.Name = "SoundManager").AddBehavior<BlPacManSoundManager>();
 
-        var startListener = _movie.AddSprite("PacMan.MenuStart", sprite =>
-        {
-            sprite.LocH = centerX;
-            sprite.LocV = centerY;
-            sprite.LocZ = 110;
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        startListener.AddBehavior<BlPacManMenuStartBehavior>();
+        _movie.AddSprite(5, GameStartFrame, frameCount, centerX, centerY, x => x.Name = "MenuStart"); //.AddBehavior<BlPacManMenuStartBehavior>(); // Start game button
 
-        var hudBanner = _movie.AddSprite(5, GameStartFrame, frameCount, centerX, 40f, sprite =>
-        {
-            sprite.Puppet = true;
-        });
-        hudBanner.SetMember("misc");
-        hudBanner.MemberSourceRect = new ARect(126, 4, 174, 52);
+        var hudBanner = _movie.AddSprite(6, GameStartFrame, frameCount, centerX, 40f,c => c.MemberSourceRect = new ARect(126, 4, 174, 52)).SetMember("misc");
 
-        var startPrompt = _movie.AddSprite(6, 1, GameStartFrame - 1, centerX, 120f, sprite =>
-        {
-            sprite.Puppet = true;
-        });
-        startPrompt.SetMember("misc");
-        startPrompt.MemberSourceRect = new ARect(68, 6, 112, 54);
+        var startPrompt = _movie.AddSprite(7, 1, GameStartFrame - 1, centerX, 120f, c => c.MemberSourceRect = new ARect(68, 6, 112, 54)).SetMember("misc");
 
-        var livesAnchor = _movie.AddSprite(20, GameStartFrame, frameCount, 80f, stageHeight - 40f, sprite =>
-        {
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        livesAnchor.SetMember("sprites");
         var lifeSourceRect = new ARect(160, 2, 186, 28);
-        livesAnchor.MemberSourceRect = lifeSourceRect;
-        livesAnchor.AddBehavior<LivesBehavior>(behavior =>
-        {
-            behavior.Spacing = 36f;
-            behavior.ScaleFactor = 1f;
-            behavior.CastLibName = "Data";
-            behavior.MemberName = "sprites";
-            behavior.MemberSourceRect = lifeSourceRect;
-        });
+        var livesAnchor = _movie.AddSprite(20, GameStartFrame, frameCount, 80f, stageHeight - 40f, sprite =>
+               {
+                   sprite.Visibility = false;
+                   sprite.MemberSourceRect = lifeSourceRect;
+               })
+            .SetMember("sprites")
+            .AddBehavior<LivesBehavior>(behavior =>
+            {
+                behavior.Spacing = 36f;
+                behavior.ScaleFactor = 1f;
+                behavior.MemberSourceRect = lifeSourceRect;
+            });
 
-        var bonusesAnchor = _movie.AddSprite(21, GameStartFrame, frameCount, stageWidth - 80f, stageHeight - 40f, sprite =>
-        {
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        bonusesAnchor.SetMember("misc");
         var bonusSourceRect = new ARect(186, 4, 238, 56);
-        bonusesAnchor.MemberSourceRect = bonusSourceRect;
-        bonusesAnchor.AddBehavior<BonusesBehavior>(behavior =>
-        {
-            behavior.Spacing = 48f;
-            behavior.ScaleFactor = 0.75f;
-            behavior.BonusCastLibName = "Data";
-            behavior.BonusMemberName = "misc";
-            behavior.MemberSourceRect = bonusSourceRect;
-        });
+        var bonusesAnchor = _movie.AddSprite(21, GameStartFrame, frameCount, stageWidth - 80f, stageHeight - 40f, sprite =>
+                {
+                    sprite.Visibility = false;
+                    sprite.MemberSourceRect = bonusSourceRect;
+                })
+            .SetMember("misc")
+            .AddBehavior<BonusesBehavior>(behavior =>
+                {
+                    behavior.Spacing = 48f;
+                    behavior.ScaleFactor = 0.75f;
+                    behavior.MemberSourceRect = bonusSourceRect;
+                });
 
-        var pelletField = _movie.AddSprite("PacMan.Pellets", sprite =>
-        {
-            sprite.LocH = centerX;
-            sprite.LocV = centerY;
-            sprite.LocZ = 10;
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        pelletField.AddBehavior<BlPacManPelletFieldBehavior>();
+        //var pelletField = _movie.AddSprite(22, GameStartFrame, frameCount, centerX, centerY, sprite =>
+        //    {
+        //        sprite.Visibility = false;
+        //    }).AddBehavior<BlPacManPelletFieldBehavior>();
 
-        var powerPillField = _movie.AddSprite("PacMan.PowerPills", sprite =>
-        {
-            sprite.LocH = centerX;
-            sprite.LocV = centerY;
-            sprite.LocZ = 15;
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        powerPillField.AddBehavior<BlPacManPowerPillFieldBehavior>();
+        //var powerPillField = _movie.AddSprite(23, GameStartFrame, frameCount, centerX, centerY, sprite =>
+        //    {
+        //        sprite.Visibility = false;
+        //    }).AddBehavior<BlPacManPowerPillManager>();
 
-        var roamingBonus = _movie.AddSprite("PacMan.Bonus", sprite =>
-        {
-            sprite.LocH = centerX;
-            sprite.LocV = centerY;
-            sprite.LocZ = 20;
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        roamingBonus.AddBehavior<BlPacManAnimationBehavior>();
-        roamingBonus.AddBehavior<BlPacManRoamingBonusBehavior>();
+        var roamingBonus = _movie.AddSprite(24, GameStartFrame, frameCount, centerX, centerY, sprite =>
+            {
+                sprite.Visibility = false;
+            })
+            .AddBehavior<BlPacManAnimationBehavior>()
+            .AddBehavior<BlPacManRoamingBonusBehavior>();
 
-        var pacMan = _movie.AddSprite("PacMan.Actor", sprite =>
-        {
-            sprite.LocZ = 50;
-            sprite.Puppet = true;
-            sprite.Visibility = false;
-        });
-        pacMan.AddBehavior<BlPacManAnimationBehavior>();
-        pacMan.AddBehavior<BlPacManActorBehavior>();
+        var pacMan = _movie.AddSprite(50, GameStartFrame, frameCount, centerX, centerY, sprite =>
+            {
+                sprite.Visibility = false;
+            })
+            .AddBehavior<BlPacManAnimationBehavior>()
+            .AddBehavior<BlPacManActorBehavior>();
 
-        var ghostNames = new[] { "Blinky", "Pinky", "Inky", "Clyde" };
+        var ghostNames = BlGhostManager.GhostNames;
         for (var i = 0; i < ghostNames.Length; i++)
         {
-            var ghost = _movie.AddSprite($"PacMan.Ghost.{ghostNames[i]}", sprite =>
-            {
-                sprite.LocZ = 40 + i;
-                sprite.Puppet = true;
-                sprite.Visibility = false;
-            });
-            ghost.AddBehavior<BlPacManAnimationBehavior>();
-            ghost.AddBehavior<BlPacManGhostBehavior>(behavior =>
-            {
-                behavior.GhostName = ghostNames[i];
-            });
+            var ghost = _movie.AddSprite(30+i, GameStartFrame, frameCount, centerX, centerY,  sprite =>
+                {
+                    sprite.Name = $"Ghost.{ghostNames[i]}";
+                    sprite.Visibility = false;
+                })
+                .AddBehavior<BlPacManAnimationBehavior>()
+                .AddBehavior<BlPacManGhostBehavior>(behavior =>
+                {
+                    behavior.GhostName = ghostNames[i];
+                });
         }
     }
 }

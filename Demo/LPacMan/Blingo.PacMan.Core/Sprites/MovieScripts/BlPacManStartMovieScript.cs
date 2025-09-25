@@ -1,5 +1,3 @@
-using System;
-using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Models;
 using BlingoEngine.Movies;
@@ -15,38 +13,19 @@ internal sealed class BlPacManStartMovieScript : BlingoMovieScript, IHasStartMov
     public BlPacManStartMovieScript(IBlingoMovieEnvironment env, GlobalVars globals, GameModelRepository repository)
         : base(env)
     {
-        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _globals = globals;
+        _repository = repository;
+
     }
 
     public void StartMovie()
     {
-        EnsureGlobals();
-        _globals.GameModel?.Resume();
+        //_globals.GameModel?.Resume();
     }
 
     public void StopMovie()
     {
-        _globals.GameModel?.Pause();
+       // _globals.GameModel?.Pause();
     }
-
-    private void EnsureGlobals()
-    {
-        if (_globals.MapProvider is null)
-        {
-            _globals.MapProvider = new BlPacManMapProvider();
-        }
-
-        if (_globals.ConsumableFieldMediator is null)
-        {
-            _globals.ConsumableFieldMediator = new BlPacManEventMediator<BlPacManFieldContext>();
-        }
-
-        if (_globals.BonusesModel is null)
-        {
-            _globals.BonusesModel = new BonusesModel();
-        }
-
-        _globals.GameModel ??= new GameModel(_repository);
-    }
+   
 }

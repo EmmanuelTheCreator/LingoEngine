@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Models;
 using AbstUI.Primitives;
-using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
@@ -16,7 +12,7 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 /// </summary>
 public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasEndSpriteEvent
 {
-    private const int DefaultIconCount = 5;
+    private const int _defaultIconCount = 5;
 
     private readonly List<LifeSprite> _pacmen = new();
     private readonly GlobalVars _globals;
@@ -42,15 +38,6 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     /// </summary>
     public float Spacing { get; set; } = 70f;
 
-    /// <summary>
-    /// Cast library used to source the Pac-Man member.
-    /// </summary>
-    public string CastLibName { get; set; } = "Data";
-
-    /// <summary>
-    /// Member that contains the Pac-Man artwork.
-    /// </summary>
-    public string MemberName { get; set; } = "sprites";
 
     /// <summary>
     /// Optional rectangle that selects the Pac-Man icon within the sprite sheet.
@@ -76,9 +63,7 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     public void EndSprite()
     {
         if (!_isInitialized)
-        {
             return;
-        }
 
         if (_model is not null)
         {
@@ -89,9 +74,7 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         }
 
         foreach (var pacman in _pacmen)
-        {
             pacman.Dispose();
-        }
 
         _pacmen.Clear();
         _isInitialized = false;
@@ -103,7 +86,7 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         var baseY = Me.LocV;
         var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
-        for (var i = 0; i < DefaultIconCount; i++)
+        for (var i = 0; i < _defaultIconCount; i++)
         {
             var x = baseX + i * spacing;
             var lifeSprite = CreateLifeSprite(i, x, baseY);
@@ -119,10 +102,8 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
 
     private void OnExtraLivesChanged(int _)
     {
-        if (!_globals.State.Muted)
-        {
+        if (!_globals.State.IsMuted)
             _Player.SoundPlayLife();
-        }
     }
 
     private void Render()
@@ -133,13 +114,9 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         for (var i = 0; i < _pacmen.Count; i++)
         {
             if (i < visibleCount)
-            {
                 _pacmen[i].Show();
-            }
             else
-            {
                 _pacmen[i].Hide();
-            }
         }
     }
 
@@ -154,18 +131,12 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
             sprite2D.Puppet = true;
             sprite2D.Ink = Me.Ink;
 
-            var cast = CastLib(CastLibName);
-            var member = cast?.GetMember<BlingoMember>(MemberName);
-            if (member != null)
-            {
-                sprite2D.Member = member;
-            }
+            if (Me.Member != null)
+                sprite2D.SetMember(Me.Member);
 
             var sourceRect = MemberSourceRect ?? Me.MemberSourceRect;
             if (sourceRect is { })
-            {
                 sprite2D.MemberSourceRect = sourceRect;
-            }
 
             if (Math.Abs(ScaleFactor - 1f) > float.Epsilon)
             {
@@ -173,14 +144,10 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
                 var height = sprite2D.Height;
 
                 if (width > 0)
-                {
                     sprite2D.Width = width * ScaleFactor;
-                }
 
                 if (height > 0)
-                {
                     sprite2D.Height = height * ScaleFactor;
-                }
             }
         });
 
@@ -208,12 +175,10 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         public void Dispose()
         {
             if (_disposed)
-            {
                 return;
-            }
 
             _disposed = true;
-            _movie.RemoveSprite(_name);
+            _sprite.Puppet = false;
         }
     }
 }

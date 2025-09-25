@@ -19,20 +19,19 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent
 {
-    private const int FrameSize = 60;
-    private const float VerticalOffset = -96f;
+    private const int _frameSize = 60;
+    private const float _verticalOffset = -96f;
 
-    private static readonly ARect[] DefaultAnimation = { CreateFrame(0, 0) };
-    private static readonly ARect[] Score100Animation = { CreateFrame(0, FrameSize) };
-    private static readonly ARect[] Score200Animation = { CreateFrame(FrameSize, FrameSize) };
-    private static readonly ARect[] Score500Animation = { CreateFrame(FrameSize * 2, FrameSize) };
-    private static readonly ARect[] Score700Animation = { CreateFrame(FrameSize * 3, FrameSize) };
-    private static readonly ARect[] Score1000Animation = { CreateFrame(FrameSize * 4, FrameSize) };
-    private static readonly ARect[] Score2000Animation = { CreateFrame(FrameSize * 5, FrameSize) };
-    private static readonly ARect[] Score5000Animation = { CreateFrame(FrameSize * 6, FrameSize) };
+    private static readonly ARect[] _defaultAnimation = { CreateFrame(0, 0) };
+    private static readonly ARect[] _score100Animation = { CreateFrame(0, _frameSize) };
+    private static readonly ARect[] _score200Animation = { CreateFrame(_frameSize, _frameSize) };
+    private static readonly ARect[] _score500Animation = { CreateFrame(_frameSize * 2, _frameSize) };
+    private static readonly ARect[] _score700Animation = { CreateFrame(_frameSize * 3, _frameSize) };
+    private static readonly ARect[] _score1000Animation = { CreateFrame(_frameSize * 4, _frameSize) };
+    private static readonly ARect[] _score2000Animation = { CreateFrame(_frameSize * 5, _frameSize) };
+    private static readonly ARect[] _score5000Animation = { CreateFrame(_frameSize * 6, _frameSize) };
 
     private readonly GlobalVars _globals;
-    private BlPacManAssetContainer? _assets;
     private GameSettings? _settings;
     private BlPacManCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
@@ -60,33 +59,25 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _scoreValue = settings.BonusScore;
-
-        var map = _globals.GameBehavior?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
-        if (map is not null)
-        {
-            EnsureCharacter().SetMap(map);
-            _targetTile = map.Tunnels.Count > 0 ? map.Tunnels[0] : map.HouseCenter;
-            _spawnTile = map.Tunnels.Count > 0 ? map.Tunnels[^1] : map.HouseCenter;
-        }
+        ParseMap();
     }
+
+   
 
     /// <summary>
     /// Registers the bonus with the coordinator and starts listening to Pac-Man position updates.
     /// </summary>
     public void BeginSprite()
     {
-        _assets = _globals.Assets;
         ApplyAppearance();
         var character = EnsureCharacter();
         character.BeginSprite();
         character.Hide();
-        _assets?.AttachBonus(this);
         _globals.BonusManager.Attach(this);
 
-        if (_globals.CurrentGameSettings is { } settings)
-        {
+        var settings = _globals.LevelManager.GetGameSettings();
+        if (settings != null)
             Configure(settings);
-        }
     }
 
     /// <summary>
@@ -94,12 +85,10 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void EndSprite()
     {
-        _assets?.DetachBonus(this);
         _globals.BonusManager.Detach(this);
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
-        _assets = null;
     }
 
     /// <summary>
@@ -108,9 +97,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     public void Tick()
     {
         if (!_active)
-        {
             return;
-        }
 
         var character = EnsureCharacter();
         var tile = character.GetTile();
@@ -182,12 +169,12 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         _active = false;
         ShowScore();
-        if (!_globals.State.Muted)
+        if (!_globals.State.IsMuted)
         {
             _Player.SoundPlayBonus();
         }
 
-        _globals.GameBehavior?.NotifyBonusEaten(this);
+        _globals.BonusManager.NotifyBonusEaten(this);
         return true;
     }
 
@@ -197,9 +184,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     public void ShowScore()
     {
         if (_scoreValue > 0)
-        {
             SetAnimation($"score{_scoreValue}");
-        }
     }
 
     /// <summary>
@@ -212,21 +197,30 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (member != null)
         {
             Me.Member = member;
-            Me.MemberSourceRect = DefaultAnimation[0];
+            Me.MemberSourceRect = _defaultAnimation[0];
         }
 
-        var map = _globals.GameBehavior?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
-        _spawnTile = map?.Tunnels.Count > 0 ? map.Tunnels[^1] : map?.HouseCenter;
-        _targetTile = map?.Tunnels.Count > 0 ? map.Tunnels[0] : map?.HouseCenter;
+        ParseMap();
 
         if (_spawnTile is not null)
         {
             Me.LocH = _spawnTile.CenterX;
-            Me.LocV = _spawnTile.CenterY + VerticalOffset;
+            Me.LocV = _spawnTile.CenterY + _verticalOffset;
         }
 
         EnsureAnimations();
         SetAnimation("default");
+    }
+
+    private void ParseMap()
+    {
+        var map = _globals.Map;
+        if (map is null)
+            return;
+        
+        EnsureCharacter().SetMap(map);
+        _spawnTile = map.Tunnels.Count > 0 ? map.Tunnels[^1] : map.HouseCenter;
+        _targetTile = map.Tunnels.Count > 0 ? map.Tunnels[0] : map.HouseCenter;
     }
 
     /// <summary>
@@ -239,7 +233,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
             return _character;
         }
 
-        var map = _globals.GameBehavior?.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var map = _globals.LevelManager.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
             Step = 8f,
@@ -266,14 +260,14 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
         {
-            behavior.SetAnimationRects("default", DefaultAnimation, 0);
-            behavior.SetAnimationRects("score100", Score100Animation, 0);
-            behavior.SetAnimationRects("score200", Score200Animation, 0);
-            behavior.SetAnimationRects("score500", Score500Animation, 0);
-            behavior.SetAnimationRects("score700", Score700Animation, 0);
-            behavior.SetAnimationRects("score1000", Score1000Animation, 0);
-            behavior.SetAnimationRects("score2000", Score2000Animation, 0);
-            behavior.SetAnimationRects("score5000", Score5000Animation, 0);
+            behavior.SetAnimationRects("default", _defaultAnimation, 0);
+            behavior.SetAnimationRects("score100", _score100Animation, 0);
+            behavior.SetAnimationRects("score200", _score200Animation, 0);
+            behavior.SetAnimationRects("score500", _score500Animation, 0);
+            behavior.SetAnimationRects("score700", _score700Animation, 0);
+            behavior.SetAnimationRects("score1000", _score1000Animation, 0);
+            behavior.SetAnimationRects("score2000", _score2000Animation, 0);
+            behavior.SetAnimationRects("score5000", _score5000Animation, 0);
         });
 
         _animationsConfigured = true;
@@ -293,7 +287,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Tracks visits to the target tile so the fruit despawns after reaching its end point twice.
     /// </summary>
-    private void OnTileEntered(BlPacManTileContext context)
+    private void OnTileEntered(BlPacManTileEventData context)
     {
         if (!_active || context is null)
         {
@@ -305,7 +299,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
             _remainingTargetVisits--;
             if (_remainingTargetVisits <= 0)
             {
-                _globals.GameBehavior?.NotifyBonusExpired(this);
+                _globals.BonusManager.NotifyBonusExpired(this);
                 Deactivate();
             }
         }
@@ -336,14 +330,10 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         foreach (var direction in directions)
         {
             if (direction == current.GetOpposite())
-            {
                 continue;
-            }
 
             if (!CanMove(direction, tile))
-            {
                 continue;
-            }
 
             var candidate = tile.Get(direction);
             var distance = TileMath.GetDistance(candidate, _targetTile);
@@ -358,9 +348,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         {
             var fallback = current.GetOpposite();
             if (fallback != BlPacManDirection.None && CanMove(fallback, tile))
-            {
                 return fallback;
-            }
 
             return current;
         }
@@ -380,8 +368,6 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Utility for generating sprite-sheet rectangles.
     /// </summary>
-    private static ARect CreateFrame(int offsetX, int offsetY)
-    {
-        return new ARect(offsetX, offsetY, offsetX + FrameSize, offsetY + FrameSize);
-    }
+    private static ARect CreateFrame(int offsetX, int offsetY) 
+        => new ARect(offsetX, offsetY, offsetX + _frameSize, offsetY + _frameSize);
 }

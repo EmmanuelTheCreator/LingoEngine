@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Blingo.PacMan.Core.Game;
 
 /// <summary>
@@ -23,9 +20,7 @@ public sealed class BlPacManEventSubscription
     public void Release()
     {
         if (_released)
-        {
             return;
-        }
 
         _released = true;
         _release();
@@ -47,11 +42,6 @@ internal sealed class BlPacManEventMediator<T>
     /// </summary>
     public BlPacManEventSubscription Subscribe(Action<T> handler)
     {
-        if (handler is null)
-        {
-            throw new ArgumentNullException(nameof(handler));
-        }
-
         _handlers.Add(handler);
 
         return new BlPacManEventSubscription(() =>
@@ -66,14 +56,10 @@ internal sealed class BlPacManEventMediator<T>
     public void Publish(T value)
     {
         if (_handlers.Count == 0)
-        {
             return;
-        }
 
         var snapshot = _handlers.ToArray();
         foreach (var handler in snapshot)
-        {
             handler(value);
-        }
     }
 }

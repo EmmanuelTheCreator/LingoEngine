@@ -1,6 +1,6 @@
-using System;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
+using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game;
 
@@ -9,105 +9,101 @@ namespace Blingo.PacMan.Core.Game;
 /// </summary>
 internal sealed class BlPacManGameState
 {
-    private static readonly int[] GhostScoreChain = { 200, 400, 800, 1_600 };
+  
+    private GlobalVars _globalVars;
 
-    public bool Muted { get; set; }
+   
 
-    public bool Paused { get; set; }
+    public bool IsMuted { get; set; }
+
+    public bool IsPaused => _globalVars.PauseBehavior?.IsPaused ?? false;
 
     public bool Win { get; set; }
 
-    public bool GameOver { get; set; }
+    public bool IsGameOver => Game.IsGameOver;
 
     public bool PacManEatenPending { get; set; }
 
-    public bool BonusLocked { get; set; }
-
     public int PauseFrames { get; set; }
 
-    public int StartCountdown { get; set; }
+    public int StartCountdown { get; private set; }
 
     public int SoundCooldown { get; set; }
 
     public int RemainingConsumables { get; set; }
 
-    public int GhostChainIndex { get; set; }
+   
 
-    public int BonusAppearCountdown { get; set; }
+   
 
-    public int BonusDestroyCountdown { get; set; }
+    public int Score => Game.Score;
 
-    public int Score { get; set; }
+    public int HighScore => Game.HighScore;
 
-    public int HighScore { get; set; }
+    public int Lives => Game.Lives;
+    public int ExtraLives => Game.ExtraLives;
 
-    public int Lives { get; set; }
 
-    public int Level { get; set; }
+    public Map? CurrentMap { get; set; }
 
-    public BlPacManPositionContext? PacManPosition { get; set; }
 
-    public bool IsGameplayFrozen => Paused || PauseFrames > 0 || StartCountdown > 0 || Win || GameOver || PacManEatenPending;
+    public bool IsGameplayFrozen => IsPaused || PauseFrames > 0 || StartCountdown > 0 || Win || IsGameOver || PacManEatenPending;
+   
+    public BlPacManPositionEventData? PacManPosition { get; private set; }
 
+
+
+    public GameModel Game => _globalVars.GameModel;
+
+
+    public BlPacManGameState(GlobalVars globalVars)
+    {
+        _globalVars = globalVars;
+        
+    }
+
+  
+
+    public void UpdatePacManPosition(BlPacManPositionEventData context)
+    {
+        PacManPosition = context;
+    }
+
+   
     public void Reset()
     {
-        Muted = false;
-        Paused = false;
+        _globalVars.BonusManager?.Reset();
         Win = false;
-        GameOver = false;
+        IsMuted = false;
         PacManEatenPending = false;
-        BonusLocked = false;
         PauseFrames = 0;
         StartCountdown = 2;
         SoundCooldown = 0;
         RemainingConsumables = 0;
-        GhostChainIndex = 0;
-        BonusAppearCountdown = 0;
-        BonusDestroyCountdown = 0;
-        Score = 0;
-        HighScore = 0;
-        Lives = 0;
-        Level = 1;
+        _globalVars.GhostManager.Reset();
+        _globalVars.BonusManager?.Reset();
+       
+        Game.Reset();
         PacManPosition = null;
-    }
-
-    public void ApplyModelSnapshot(GameModel model)
-    {
-        if (model is null)
-        {
-            throw new ArgumentNullException(nameof(model));
-        }
-
-        Score = model.Score;
-        HighScore = model.HighScore;
-        Lives = model.Lives;
-        Level = model.Level;
     }
 
     public void ResetForNewLevel(GameSettings settings, GameModel model)
     {
-        if (settings is null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
-
-        if (model is null)
-        {
-            throw new ArgumentNullException(nameof(model));
-        }
-
-        BonusLocked = false;
-        BonusDestroyCountdown = 0;
-        BonusAppearCountdown = 500;
+        _globalVars.BonusManager?.ResetForNewLevel();
+        _globalVars.GhostManager.Reset();
+        
         PauseFrames = 80;
         StartCountdown = 2;
         SoundCooldown = 0;
-        GhostChainIndex = 0;
         PacManEatenPending = false;
         Win = false;
-        GameOver = false;
+        model.Reset();
         RemainingConsumables = 0;
-        ApplyModelSnapshot(model);
+        Game.Reset();
+    }
+    internal void ResetPacManPosition()
+    {
+        PacManPosition = null;
     }
 
     public void RegisterConsumableSpawn()
@@ -115,28 +111,45 @@ internal sealed class BlPacManGameState
         RemainingConsumables++;
     }
 
-    public void RegisterConsumableEaten()
+    public void ConsumableEaten()
     {
         if (RemainingConsumables > 0)
-        {
             RemainingConsumables--;
-        }
+        if (RemainingConsumables == 0)
+            Win = true;
     }
 
-    public int RegisterGhostEaten()
+    internal void ResumeAfterPacManEaten()
     {
-        var index = Math.Clamp(GhostChainIndex, 0, GhostScoreChain.Length - 1);
-        var score = GhostScoreChain[index];
-        if (GhostChainIndex < GhostScoreChain.Length - 1)
+        PacManEatenPending = false;
+        StartTheCountDown();
+        PauseFrames = Math.Max(PauseFrames, 60);
+    }
+
+    internal void StartTheCountDown()
+    {
+        StartCountdown = Math.Max(StartCountdown, 1);
+    }
+
+    internal void OnPacManEaten()
+    {
+        PacManEatenPending = true;
+        PauseFrames = Math.Max(PauseFrames, 40);
+        SoundCooldown = 0;
+    }
+
+    public bool DecrementStartCountdown()
+    {
+        if (StartCountdown > 0)
         {
-            GhostChainIndex++;
+            StartCountdown--;
+            if (StartCountdown == 0)
+                PauseFrames = Math.Max(PauseFrames, 60);
+
+            return true;
         }
-
-        return score;
+        return false;
     }
 
-    public void ResetGhostChain()
-    {
-        GhostChainIndex = 0;
-    }
+    
 }

@@ -1,7 +1,13 @@
-using Blingo.PacMan.Core.Datas;
+namespace Blingo.PacMan.Core.Datas;
 
-namespace Blingo.PacMan.Core.Game;
-
+public enum BlPacManDirection
+{
+    None = 0,
+    Left,
+    Right,
+    Up,
+    Down,
+}
 public static class BlPacManDirectionExtensions
 {
     public static bool IsHorizontal(this BlPacManDirection direction)

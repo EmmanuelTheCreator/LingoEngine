@@ -8,53 +8,64 @@ namespace Blingo.PacMan.Core.Game;
 
 public sealed class GlobalVars : BlingoGlobalVars
 {
-    public GlobalVars()
-    {
-        State = new BlPacManGameState();
-        BonusManager = new BlPacManBonusManager(this);
-    }
+   
 
-    public GameModel? GameModel { get; set; }
-
-    public BonusesModel? BonusesModel { get; set; }
-
-    public BlPacManMapProvider? MapProvider { get; set; }
+    public GameModel GameModel { get; set; }
 
     internal BlPacManGameBehavior? GameBehavior { get; set; }
 
-    internal BlPacManAssetContainer Assets { get; } = new();
-
-    internal BlPacManGameState State { get; }
+    internal BlPacManGameState State { get; } 
 
     internal BlPacManBonusManager BonusManager { get; }
+    internal BlPacManPelletManager PelletManager { get; }
+    internal BlPacManPowerPillManager PowerPillManager { get; }
 
     public GameSettings? CurrentGameSettings { get; set; }
 
     public PacmanSettings? CurrentPacmanSettings { get; set; }
 
     public GhostSettings? CurrentGhostSettings { get; set; }
-
+    
     internal BlPacManPauseBehavior? PauseBehavior { get; set; }
 
-    internal BlPacManEventMediator<BlPacManFieldContext>? ConsumableFieldMediator { get; set; }
+    /// <summary>
+    /// Gets the map currently being played.
+    /// </summary>
+    public Map Map => LevelManager.Map;
+    internal BlPacManGameBehavior? Coordinator { get; set; }
+    internal BlGhostManager GhostManager { get; }
+    internal BlLevelManager LevelManager { get; }
 
-    internal BlPacManFieldContext? CurrentFieldContext { get; set; }
+    public GlobalVars()
+    {
+        State = new BlPacManGameState(this);
+        GameModel = new GameModel(this);
+        BonusManager = new BlPacManBonusManager(this);
+        GhostManager = new BlGhostManager();
+        LevelManager = new BlLevelManager();
+        PelletManager = new BlPacManPelletManager(this);
+        PowerPillManager = new BlPacManPowerPillManager(this);
+    }
 
     protected override void OnClearGlobals()
     {
         base.OnClearGlobals();
         GameModel = null;
-        BonusesModel = null;
-        MapProvider = null;
         GameBehavior = null;
-        Assets.Reset();
+        Reset();
         State.Reset();
-        BonusManager.Reset();
+        BonusManager?.Reset();
         CurrentGameSettings = null;
         CurrentPacmanSettings = null;
         CurrentGhostSettings = null;
-        ConsumableFieldMediator = null;
-        CurrentFieldContext = null;
         PauseBehavior = null;
     }
+    public void Reset()
+    {
+        GameBehavior = null;
+        CurrentGameSettings = null;
+        CurrentPacmanSettings = null;
+        CurrentGhostSettings = null;
+    }
+
 }

@@ -69,6 +69,8 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.Sprites.Behaviors
             pPlayer1 = 1;
             pPlayer2 = 0;
             myTargetSprite = 4;
+            //if (Sprite(38).HasSprite())
+            //    SendSprite<EnterHighScoreBehavior>(38, x => x.EnsureHidden());
         }
 
 

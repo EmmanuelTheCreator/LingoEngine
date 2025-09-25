@@ -2,11 +2,31 @@ using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game;
+/// <summary>
+/// Provides helper routines for working with tile geometry.
+/// </summary>
+internal static class TileMath
+{
+    /// <summary>
+    /// Calculates the Euclidean distance between two map tiles. When either tile is missing,
+    /// the method returns <see cref="float.PositiveInfinity"/> so callers can ignore that option.
+    /// </summary>
+    public static float GetDistance(Tile? tileA, Tile? tileB)
+    {
+        if (tileA is null || tileB is null)
+        {
+            return float.PositiveInfinity;
+        }
 
+        var dx = tileA.CenterX - tileB.CenterX;
+        var dy = tileA.CenterY - tileB.CenterY;
+        return MathF.Sqrt(dx * dx + dy * dy);
+    }
+}
 public sealed class Tile
 {
-    private const int DefaultTileSize = 32;
-    private const float VerticalCenterOffset = 4f;
+    private const int _defaultTileSize = 32;
+    private const float _verticalCenterOffset = 4f;
 
     public char Code { get; }
 
@@ -32,10 +52,10 @@ public sealed class Tile
         Code = code;
         Column = column;
         Row = row;
-        Width = DefaultTileSize;
-        Height = DefaultTileSize;
+        Width = _defaultTileSize;
+        Height = _defaultTileSize;
         CenterX = Column * Width + Width / 2f;
-        CenterY = Row * Height + Height / 2f + VerticalCenterOffset;
+        CenterY = Row * Height + Height / 2f + _verticalCenterOffset;
     }
 
     public bool IsWall() => Code == '=';

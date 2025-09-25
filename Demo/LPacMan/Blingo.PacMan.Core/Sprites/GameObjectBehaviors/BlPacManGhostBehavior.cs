@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
-using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
@@ -23,35 +20,33 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     IHasExitFrameEvent
 {
     // Sprite sheet rectangles for each ghost's default animation row.
-    private static readonly Dictionary<string, ARect> GhostRects = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<MrGhost, ARect> _ghostRects = new()
     {
-        ["Blinky"] = new ARect(0, 0, 32, 32),
-        ["Pinky"] = new ARect(32, 0, 64, 32),
-        ["Inky"] = new ARect(64, 0, 96, 32),
-        ["Clyde"] = new ARect(96, 0, 128, 32),
+        [MrGhost.Blinky] = new ARect(0, 0, 32, 32),
+        [MrGhost.Pinky] = new ARect(32, 0, 64, 32),
+        [MrGhost.Inky] = new ARect(64, 0, 96, 32),
+        [MrGhost.Clyde] = new ARect(96, 0, 128, 32),
     };
 
     // Horizontal offsets to stagger the ghosts within the house at level start.
-    private static readonly Dictionary<string, float> HorizontalOffsets = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<MrGhost, float> _horizontalOffsets = new()
     {
-        ["Blinky"] = -32f,
-        ["Pinky"] = -16f,
-        ["Inky"] = 16f,
-        ["Clyde"] = 32f,
+        [MrGhost.Blinky] = -32f,
+        [MrGhost.Pinky] = -16f,
+        [MrGhost.Inky] = 16f,
+        [MrGhost.Clyde] = 32f,
     };
 
     // Initial direction per ghost to mirror the arcade openings.
-    private static readonly Dictionary<string, BlPacManDirection> InitialDirections = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<MrGhost, BlPacManDirection> _initialDirections = new()
     {
-        ["Blinky"] = BlPacManDirection.Left,
-        ["Pinky"] = BlPacManDirection.Down,
-        ["Inky"] = BlPacManDirection.Up,
-        ["Clyde"] = BlPacManDirection.Up,
+        [MrGhost.Blinky] = BlPacManDirection.Left,
+        [MrGhost.Pinky] = BlPacManDirection.Down,
+        [MrGhost.Inky] = BlPacManDirection.Up,
+        [MrGhost.Clyde] = BlPacManDirection.Up,
     };
 
     private readonly GlobalVars _globals;
-    private BlPacManAssetContainer? _assets;
-    private BlPacManGameBehavior? _coordinator;
     private GhostSettings? _settings;
     private BlPacManCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
@@ -68,17 +63,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private bool _turnBack;
     private readonly Random _random = new();
 
-    public BlPacManGhostBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
-        : base(env)
-    {
-        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
-    }
+   
 
     /// <summary>
     /// Gets or sets the friendly name of the ghost. The name determines sprite offsets and
     /// targeting rules.
     /// </summary>
-    public string GhostName { get; set; } = "Ghost";
+    public MrGhost GhostName { get; set; } = MrGhost.Inky;
 
     /// <summary>
     /// Gets a value indicating whether the ghost is currently frightened.
@@ -95,13 +86,19 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     internal Tile? CurrentTile => _character?.GetTile();
 
+
+    public BlPacManGhostBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
+       : base(env)
+    {
+        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+    }
+
+
     /// <summary>
     /// Initialises the ghost, binds to the coordinator, and subscribes to Pac-Man position updates.
     /// </summary>
     public void BeginSprite()
     {
-        _coordinator = _globals.GameBehavior;
-        _assets = _globals.Assets;
         ApplyAppearance();
 
         var character = EnsureCharacter();
@@ -109,12 +106,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         ConfigureTargets();
         UpdateSpeedForCurrentMode(character.GetTile());
 
-        _assets?.AddGhost(this);
+        _globals.GhostManager.AddGhost(this);
 
-        if (_coordinator is not null && _globals.CurrentGhostSettings is { } ghostSettings)
-        {
-            Configure(_coordinator, ghostSettings);
-        }
+        if (_globals.CurrentGhostSettings is { } ghostSettings)
+            Configure(ghostSettings);
     }
 
     /// <summary>
@@ -122,11 +117,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void EndSprite()
     {
-        _assets?.RemoveGhost(this);
+        _globals.GhostManager.RemoveGhost(this);
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
-        _assets = null;
     }
 
     /// <summary>
@@ -134,11 +128,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void ExitFrame()
     {
-        if (_coordinator is null)
-        {
-            return;
-        }
-
         var character = EnsureCharacter();
 
         if (_globals.State.IsGameplayFrozen)
@@ -162,14 +151,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         var currentDirection = character.Direction;
-        if (currentDirection == BlPacManDirection.None)
-        {
-            currentDirection = _requestedDirection;
-        }
-        if (currentDirection == BlPacManDirection.None)
-        {
-            currentDirection = BlPacManDirection.Left;
-        }
+        if (currentDirection == BlPacManDirection.None) currentDirection = _requestedDirection;
+        if (currentDirection == BlPacManDirection.None) currentDirection = BlPacManDirection.Left;
 
         if (_turnBack)
         {
@@ -184,9 +167,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         if (_mode == GhostMode.Frightened)
-        {
             _requestedDirection = GetRandomDirection(tile, currentDirection);
-        }
         else
         {
             var target = GetTargetTile();
@@ -203,9 +184,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     public void SetMode(GhostMode? mode)
     {
         if (mode is null)
-        {
             mode = _globalMode;
-        }
 
         if (mode == GhostMode.Frightened)
         {
@@ -216,23 +195,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         if (mode == GhostMode.Scatter || mode == GhostMode.Chase)
         {
             if (_mode is GhostMode.Chase or GhostMode.Scatter && mode.Value != _mode)
-            {
                 _turnBack = true;
-            }
 
             _globalMode = mode.Value;
         }
 
         if (mode == GhostMode.House)
-        {
             mode = _globalMode;
-        }
 
         _mode = mode.Value;
         if (_mode != GhostMode.Frightened)
-        {
             _frightenedFrames = 0;
-        }
 
         UpdateSpeedForCurrentMode(_character?.GetTile());
     }
@@ -242,9 +215,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     /// <param name="coordinator">The active gameplay coordinator.</param>
     /// <param name="settings">The ghost tuning for the current level.</param>
-    public void Configure(BlPacManGameBehavior coordinator, GhostSettings settings)
+    public void Configure(GhostSettings settings)
     {
-        _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
         _baseSpeed = settings.Speed;
@@ -252,7 +224,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _frightenedSpeed = settings.FrightenedSpeed;
 
         var character = EnsureCharacter();
-        var map = coordinator.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         character.SetMap(map);
         character.Speed = _baseSpeed;
         character.EffectiveSpeed = _baseSpeed;
@@ -291,10 +263,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="score">The awarded score (unused, but retained for clarity).</param>
     public void OnEaten(int score)
     {
-        if (!_globals.State.Muted)
-        {
+        if (!_globals.State.IsMuted)
             _Player.SoundPlayEat();
-        }
 
         // Dead mode and speed adjustments are handled through SetMode and UpdateSpeedForCurrentMode.
         UpdateSpeedForCurrentMode(_character?.GetTile());
@@ -322,7 +292,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             Me.Member = member;
         }
 
-        if (GhostRects.TryGetValue(GhostName, out var rect))
+        if (_ghostRects.TryGetValue(GhostName, out var rect))
         {
             Me.MemberSourceRect = rect;
         }
@@ -331,11 +301,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             Me.MemberSourceRect = new ARect(0, 0, 32, 32);
         }
 
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
+        var map = _globals.Map;
         var center = map?.HouseCenter ?? map?.House ?? map?.GetTile(map.Width / 2, map.Height / 2);
         if (center != null)
         {
-            var offset = HorizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
+            var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
             Me.LocH = center.CenterX + offset;
             Me.LocV = center.CenterY;
         }
@@ -354,7 +324,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return _character;
         }
 
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
             Step = 8f,
@@ -374,11 +344,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void ConfigureTargets()
     {
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
+        var map = _globals.Map;
         if (map is null)
-        {
             return;
-        }
 
         _scatterTarget = DetermineScatterTarget(map);
         _deadTarget = DetermineDeadTarget(map);
@@ -394,9 +362,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         return GhostName switch
         {
-            var name when name.Equals("Pinky", StringComparison.OrdinalIgnoreCase) => map.GetTile(0, 0),
-            var name when name.Equals("Inky", StringComparison.OrdinalIgnoreCase) => map.GetTile(maxColumn, maxRow),
-            var name when name.Equals("Clyde", StringComparison.OrdinalIgnoreCase) => map.GetTile(0, maxRow),
+            var name when name == MrGhost.Pinky => map.GetTile(0, 0),
+            var name when name == MrGhost.Inky => map.GetTile(maxColumn, maxRow),
+            var name when name == MrGhost.Clyde => map.GetTile(0, maxRow),
             _ => map.GetTile(maxColumn, 0),
         };
     }
@@ -414,13 +382,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     private BlPacManDirection DetermineInitialDirection()
     {
-        return InitialDirections.TryGetValue(GhostName, out var direction) ? direction : BlPacManDirection.Left;
+        return _initialDirections.TryGetValue(GhostName, out var direction) ? direction : BlPacManDirection.Left;
     }
 
     /// <summary>
     /// Reacts to tile changes by refreshing the movement speed for tunnels and frightened mode.
     /// </summary>
-    private void OnTileEntered(BlPacManTileContext context)
+    private void OnTileEntered(BlPacManTileEventData context)
     {
         if (context is null)
         {
@@ -586,21 +554,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         var pacman = _globals.State.PacManPosition;
         if (pacman is not { Tile: { } pacTileNonNull })
-        {
             return null;
-        }
 
         var direction = pacman.Direction;
 
-        if (GhostName.Equals("Pinky", StringComparison.OrdinalIgnoreCase))
-        {
+        if (GhostName == MrGhost.Pinky)
             return StepForward(pacTileNonNull, direction, 4) ?? pacTileNonNull;
-        }
 
-        if (GhostName.Equals("Inky", StringComparison.OrdinalIgnoreCase))
+        if (GhostName == MrGhost.Inky)
         {
             var ahead = StepForward(pacTileNonNull, direction, 2);
-            var blinkyTile = _coordinator?.FindGhost("Blinky")?.CurrentTile;
+            var blinkyTile = _globals.GhostManager.FindGhost(MrGhost.Blinky)?.CurrentTile;
 
             if (ahead is null || blinkyTile is null)
             {
@@ -609,11 +573,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
             var offsetCol = ahead.Column - blinkyTile.Column;
             var offsetRow = ahead.Row - blinkyTile.Row;
-            var targetMap = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
+            var targetMap = _globals.Map;
             return targetMap?.GetTile(ahead.Column + offsetCol, ahead.Row + offsetRow);
         }
 
-        if (GhostName.Equals("Clyde", StringComparison.OrdinalIgnoreCase))
+        if (GhostName == MrGhost.Clyde)
         {
             var currentTile = _character?.GetTile();
             if (currentTile is null)

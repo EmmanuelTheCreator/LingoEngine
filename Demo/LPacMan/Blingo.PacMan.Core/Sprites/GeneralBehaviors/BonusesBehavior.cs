@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Models;
 using AbstUI.Primitives;
-using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
@@ -16,10 +12,9 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
     /// </summary>
     public sealed class BonusesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasEndSpriteEvent
     {
-        private const int BonusCount = 8;
+        private const int _bonusCount = 8;
         private readonly List<BonusSprite> _bonuses = new();
         private readonly GlobalVars _globals;
-        private BonusesModel? _model;
         private bool _isInitialized;
         private BlPacManEventSubscription? _levelSubscription;
 
@@ -33,10 +28,6 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
 
         public float Spacing { get; set; } = 64f;
 
-        public string BonusMemberName { get; set; } = "sprites";
-
-        public string BonusCastLibName { get; set; } = "Data";
-
         /// <summary>
         /// Optional cropping rectangle applied to each bonus sprite.
         /// </summary>
@@ -46,10 +37,9 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
         {
             if (!_isInitialized)
             {
-                _model ??= _globals.BonusesModel ?? throw new InvalidOperationException("BonusesModel was not initialised.");
                 InitializeBonuses();
                 _levelSubscription?.Release();
-                _levelSubscription = _model.SubscribeLevelChanged(OnLevelChanged);
+                _levelSubscription = _globals.LevelManager.SubscribeLevelChanged(OnLevelChanged);
                 _isInitialized = true;
             }
 
@@ -59,20 +49,13 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
         public void EndSprite()
         {
             if (!_isInitialized)
-            {
                 return;
-            }
 
-            if (_model is not null)
-            {
-                _levelSubscription?.Release();
-                _levelSubscription = null;
-            }
+            _levelSubscription?.Release();
+            _levelSubscription = null;
 
             foreach (var bonus in _bonuses)
-            {
                 bonus.Dispose();
-            }
 
             _bonuses.Clear();
             _isInitialized = false;
@@ -84,7 +67,7 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
             var baseY = Me.LocV;
             var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
-            for (var i = 0; i < BonusCount; i++)
+            for (var i = 0; i < _bonusCount; i++)
             {
                 var bonusX = baseX - i * spacing;
                 var bonus = CreateBonusSprite(i, bonusX, baseY);
@@ -100,17 +83,13 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
 
         private void Render()
         {
-            var model = _model ?? throw new InvalidOperationException("BonusesModel was not initialised.");
+            var level = _globals.LevelManager.Level;
             for (var i = 0; i < _bonuses.Count; i++)
             {
-                if (i < model.Level)
-                {
+                if (i < level)
                     _bonuses[i].Show();
-                }
                 else
-                {
                     _bonuses[i].Hide();
-                }
             }
         }
 
@@ -124,18 +103,12 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
                 sprite2D.LocZ = Me.LocZ;
                 sprite2D.Puppet = true;
 
-                var cast = CastLib(BonusCastLibName);
-                var member = cast?.GetMember<BlingoMember>(BonusMemberName);
-                if (member != null)
-                {
-                    sprite2D.Member = member;
-                }
+                if (Me.Member != null)
+                    sprite2D.SetMember(Me.Member);
 
                 var sourceRect = MemberSourceRect ?? Me.MemberSourceRect;
                 if (sourceRect is { })
-                {
                     sprite2D.MemberSourceRect = sourceRect;
-                }
             });
 
             return new BonusSprite(_Movie, name, sprite);
@@ -162,9 +135,7 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
             public void Dispose()
             {
                 if (_disposed)
-                {
                     return;
-                }
 
                 _disposed = true;
                 _movie.RemoveSprite(_name);
