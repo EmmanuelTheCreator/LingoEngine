@@ -1,5 +1,6 @@
 using System;
 using AbstUI.Resources;
+using Blingo.PacMan.Core.Datas;
 
 namespace Blingo.PacMan.Core.Models;
 
@@ -16,12 +17,12 @@ public sealed class GameModelRepository
         _resourceManager = resourceManager ?? throw new ArgumentNullException(nameof(resourceManager));
     }
 
-    public PacManSaveData? Load()
+    public BlPacManSaveData? Load()
     {
-        return _resourceManager.StorageRead<PacManSaveData>(StorageKey);
+        return _resourceManager.StorageRead<BlPacManSaveData>(StorageKey);
     }
 
-    public void Save(PacManSaveData data)
+    public void Save(BlPacManSaveData data)
     {
         if (data is null)
         {
@@ -30,12 +31,4 @@ public sealed class GameModelRepository
 
         _resourceManager.StorageWrite(StorageKey, data);
     }
-}
-
-/// <summary>
-/// Serializable payload stored in local storage for Pac-Man.
-/// </summary>
-public sealed class PacManSaveData
-{
-    public int HighScore { get; set; }
 }

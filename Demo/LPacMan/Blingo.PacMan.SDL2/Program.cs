@@ -10,6 +10,7 @@ using BlingoEngine.Director.SDL2;
 using BlingoEngine.Net.RNetProjectHost;
 using BlingoEngine.Net.RNetPipeServer;
 using Blingo.PacMan.Core;
+using Blingo.PacMan.Core.Game;
 #endif
 
 namespace Blingo.PacMan.SDL2
@@ -41,7 +42,7 @@ namespace Blingo.PacMan.SDL2
                     .WithRNetProjectHostServer(61699,true)
                     //.WithRNetPipeHostServer(61699,true)
 #endif
-                    .SetProjectFactory<PacManProjectFactory>()
+                    .SetProjectFactory<BlPacManProjectFactory>()
                     .BuildAndRunProject(sp => serviceProvider = sp)
                     );
             serviceProvider?.GetRequiredService<BlingoSdlRootContext>().Run();

@@ -1,6 +1,8 @@
 using System;
+using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
-using Blingo.PacMan.Core.Sprites.Behaviors;
+using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using BlingoEngine.Core;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
@@ -13,10 +15,10 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private const float DefaultSpeed = 80f;
     private const float PositionTolerance = 1f;
 
-    private readonly PacManEventMediator<BlPacManCharacter> _moveStarted = new();
-    private readonly PacManEventMediator<BlPacManCharacter> _stopped = new();
-    private readonly PacManEventMediator<PacManPositionContext> _positionChanged = new();
-    private readonly PacManEventMediator<PacManTileContext> _tileEntered = new();
+    private readonly BlPacManEventMediator<BlPacManCharacter> _moveStarted = new();
+    private readonly BlPacManEventMediator<BlPacManCharacter> _stopped = new();
+    private readonly BlPacManEventMediator<BlPacManPositionContext> _positionChanged = new();
+    private readonly BlPacManEventMediator<BlPacManTileContext> _tileEntered = new();
 
     private Map _map;
     private readonly BlingoSprite2D _sprite;
@@ -28,24 +30,24 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private string? _nextAnimation;
     private bool _moving;
     private bool _preTurnActive;
-    private PacManDirection _nextDirection;
-    private PacManDirection _previousDirection;
+    private BlPacManDirection _nextDirection;
+    private BlPacManDirection _previousDirection;
     private float _lastX;
     private float _lastY;
     private Tile? _lastTile;
     private bool _defaultsCaptured;
     private CharacterSnapshot? _defaults;
 
-    public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, PacManCharacterOptions? options = null)
+    public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, BlPacManCharacterOptions? options = null)
         : base(env)
     {
         _map = map ?? throw new ArgumentNullException(nameof(map));
         _sprite = sprite ?? throw new ArgumentNullException(nameof(sprite));
         _step = options?.Step ?? DefaultStep;
         Speed = options?.Speed ?? DefaultSpeed;
-        Direction = options?.Direction ?? PacManDirection.None;
+        Direction = options?.Direction ?? BlPacManDirection.None;
         _previousDirection = Direction;
-        _nextDirection = PacManDirection.None;
+        _nextDirection = BlPacManDirection.None;
         Preturn = options?.Preturn ?? false;
         Mode = options?.Mode;
     }
@@ -72,11 +74,11 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         set => _speed = value;
     }
 
-    public PacManDirection Direction { get; private set; }
+    public BlPacManDirection Direction { get; private set; }
 
-    public PacManDirection PreviousDirection => _previousDirection;
+    public BlPacManDirection PreviousDirection => _previousDirection;
 
-    public PacManDirection NextDirection
+    public BlPacManDirection NextDirection
     {
         get => _nextDirection;
         set => _nextDirection = value;
@@ -102,13 +104,13 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private Map Map => _map;
 
-    public PacManEventSubscription SubscribeMoveStarted(Action<BlPacManCharacter> handler) => _moveStarted.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeMoveStarted(Action<BlPacManCharacter> handler) => _moveStarted.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeStopped(Action<BlPacManCharacter> handler) => _stopped.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeStopped(Action<BlPacManCharacter> handler) => _stopped.Subscribe(handler);
 
-    public PacManEventSubscription SubscribePositionChanged(Action<PacManPositionContext> handler) => _positionChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribePositionChanged(Action<BlPacManPositionContext> handler) => _positionChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeTileEntered(Action<PacManTileContext> handler) => _tileEntered.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeTileEntered(Action<BlPacManTileContext> handler) => _tileEntered.Subscribe(handler);
 
     public void SetMap(Map map)
     {
@@ -152,14 +154,14 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         PauseCharacterAnimation();
     }
 
-    public void Move(PacManDirection direction = PacManDirection.None)
+    public void Move(BlPacManDirection direction = BlPacManDirection.None)
     {
-        if (direction == PacManDirection.None)
+        if (direction == BlPacManDirection.None)
         {
             direction = Direction;
         }
 
-        if (direction == PacManDirection.None)
+        if (direction == BlPacManDirection.None)
         {
             return;
         }
@@ -266,16 +268,16 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         {
             switch (Direction)
             {
-                case PacManDirection.Up:
+                case BlPacManDirection.Up:
                     Y -= distance;
                     break;
-                case PacManDirection.Right:
+                case BlPacManDirection.Right:
                     X += distance;
                     break;
-                case PacManDirection.Down:
+                case BlPacManDirection.Down:
                     Y += distance;
                     break;
-                case PacManDirection.Left:
+                case BlPacManDirection.Left:
                     X -= distance;
                     break;
             }
@@ -293,7 +295,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         Update();
     }
 
-    public void ForceDirection(PacManDirection direction)
+    public void ForceDirection(BlPacManDirection direction)
     {
         _previousDirection = Direction;
         Direction = direction;
@@ -333,7 +335,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             }
 
             var positionTile = tile ?? GetTile();
-            OnPositionChanged(new PacManPositionContext(currentX, currentY, positionTile, Direction));
+            OnPositionChanged(new BlPacManPositionContext(currentX, currentY, positionTile, Direction));
         }
         else if (_moving)
         {
@@ -378,11 +380,11 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     {
         if (animation is null)
         {
-            TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
+            TrySendSprite<BlPacManAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
             return;
         }
 
-        TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(animation));
+        TrySendSprite<BlPacManAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(animation));
     }
 
     private void CaptureDefaults()
@@ -394,7 +396,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void HandleTileEntered(Tile tile)
     {
         OnTileEntered(tile);
-        _tileEntered.Publish(new PacManTileContext(tile));
+        _tileEntered.Publish(new BlPacManTileContext(tile));
     }
 
     private void OnMoveStarted()
@@ -407,7 +409,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         _stopped.Publish(this);
     }
 
-    private void OnPositionChanged(PacManPositionContext args)
+    private void OnPositionChanged(BlPacManPositionContext args)
     {
         _positionChanged.Publish(args);
     }
@@ -415,7 +417,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void PauseCharacterAnimation()
     {
         _sprite.Pause();
-        TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
+        TrySendSprite<BlPacManAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
     }
 
     private void ResumeCharacterAnimation()
@@ -423,11 +425,11 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         _sprite.Play();
         if (_animation is not null)
         {
-            TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(_animation));
+            TrySendSprite<BlPacManAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(_animation));
         }
     }
 
-    private void UpdateDirection(PacManDirection direction)
+    private void UpdateDirection(BlPacManDirection direction)
     {
         if (Direction == direction)
         {
@@ -440,7 +442,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private void SetNextAnimation()
     {
-        if (Direction == PacManDirection.None)
+        if (Direction == BlPacManDirection.None)
         {
             _nextAnimation = null;
             return;
@@ -462,7 +464,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         return _step * (_speed / 100f);
     }
 
-    private bool CanGo(PacManDirection direction, Tile? currentTile = null)
+    private bool CanGo(BlPacManDirection direction, Tile? currentTile = null)
     {
         var tile = currentTile ?? GetTile();
         if (tile is null)
@@ -502,14 +504,14 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         return Math.Abs(a - b) < 0.001f;
     }
 
-    private static string? GetAnimationLabel(PacManDirection direction)
+    private static string? GetAnimationLabel(BlPacManDirection direction)
     {
         return direction switch
         {
-            PacManDirection.Left => "left",
-            PacManDirection.Right => "right",
-            PacManDirection.Up => "up",
-            PacManDirection.Down => "down",
+            BlPacManDirection.Left => "left",
+            BlPacManDirection.Right => "right",
+            BlPacManDirection.Up => "up",
+            BlPacManDirection.Down => "down",
             _ => null,
         };
     }
@@ -560,10 +562,10 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         float Y,
         float LastX,
         float LastY,
-        PacManDirection Direction,
-        PacManDirection PreviousDirection,
+        BlPacManDirection Direction,
+        BlPacManDirection PreviousDirection,
         string? NextAnimation,
-        PacManDirection NextDirection,
+        BlPacManDirection NextDirection,
         bool IsMoving,
         string? Mode,
         string? Animation);

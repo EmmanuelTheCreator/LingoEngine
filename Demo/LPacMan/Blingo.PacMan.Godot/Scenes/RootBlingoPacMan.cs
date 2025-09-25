@@ -8,6 +8,7 @@ using BlingoEngine.Director.LGodot;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using Blingo.PacMan.Core;
+using Blingo.PacMan.Core.Game;
 
 public partial class RootBlingoPacMan : Node2D
 {
@@ -56,7 +57,7 @@ public partial class RootBlingoPacMan : Node2D
 #else
                     .WithBlingoGodotEngine(this)
 #endif
-                    .SetProjectFactory<PacManProjectFactory>()
+                    .SetProjectFactory<BlPacManProjectFactory>()
                     .BuildAndRunProject()
                     );
         }
