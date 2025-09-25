@@ -1,4 +1,5 @@
-using Blingo.PacMan.Core.Sprites.Behaviors;
+using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game;
 
@@ -23,7 +24,7 @@ public sealed class Tile
 
     public float CenterY { get; }
 
-    internal PacManConsumableComponent? Item { get; set; }
+    internal BlPacManConsumableComponent? Item { get; set; }
 
     public Tile(char code, int column, int row, Map map)
     {
@@ -47,14 +48,14 @@ public sealed class Tile
 
     public bool HasPill() => Item is not null && Code == '*';
 
-    public Tile? Get(PacManDirection direction)
+    public Tile? Get(BlPacManDirection direction)
     {
         return direction switch
         {
-            PacManDirection.Up => GetUp(),
-            PacManDirection.Down => GetDown(),
-            PacManDirection.Left => GetLeft(),
-            PacManDirection.Right => GetRight(),
+            BlPacManDirection.Up => GetUp(),
+            BlPacManDirection.Down => GetDown(),
+            BlPacManDirection.Left => GetLeft(),
+            BlPacManDirection.Right => GetRight(),
             _ => null,
         };
     }

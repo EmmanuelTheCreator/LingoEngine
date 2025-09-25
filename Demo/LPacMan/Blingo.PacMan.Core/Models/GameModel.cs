@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Maps;
 using MapContent = Blingo.PacMan.Core.Maps.Maps;
@@ -23,12 +24,12 @@ public sealed class GameModel
     private int _extraLives = 1;
     private GhostMode? _mode;
 
-    private readonly PacManEventMediator<int> _levelChanged = new();
-    private readonly PacManEventMediator<int> _scoreChanged = new();
-    private readonly PacManEventMediator<int> _highScoreChanged = new();
-    private readonly PacManEventMediator<int> _livesChanged = new();
-    private readonly PacManEventMediator<int> _extraLivesChanged = new();
-    private readonly PacManEventMediator<GhostMode?> _modeChanged = new();
+    private readonly BlPacManEventMediator<int> _levelChanged = new();
+    private readonly BlPacManEventMediator<int> _scoreChanged = new();
+    private readonly BlPacManEventMediator<int> _highScoreChanged = new();
+    private readonly BlPacManEventMediator<int> _livesChanged = new();
+    private readonly BlPacManEventMediator<int> _extraLivesChanged = new();
+    private readonly BlPacManEventMediator<GhostMode?> _modeChanged = new();
 
     public GameModel(GameModelRepository repository)
     {
@@ -65,17 +66,17 @@ public sealed class GameModel
 
     public GhostMode? Mode => _mode;
 
-    public PacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeScoreChanged(Action<int> handler) => _scoreChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeScoreChanged(Action<int> handler) => _scoreChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeHighScoreChanged(Action<int> handler) => _highScoreChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeHighScoreChanged(Action<int> handler) => _highScoreChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeLivesChanged(Action<int> handler) => _livesChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeLivesChanged(Action<int> handler) => _livesChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeExtraLivesChanged(Action<int> handler) => _extraLivesChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeExtraLivesChanged(Action<int> handler) => _extraLivesChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeModeChanged(Action<GhostMode?> handler) => _modeChanged.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeModeChanged(Action<GhostMode?> handler) => _modeChanged.Subscribe(handler);
 
     public void AddScore(int score)
     {
@@ -239,7 +240,7 @@ public sealed class GameModel
 
     private void Save()
     {
-        _repository.Save(new PacManSaveData
+        _repository.Save(new BlPacManSaveData
         {
             HighScore = _highScore,
         });
@@ -320,56 +321,3 @@ public sealed class GameModel
         return new LevelSettings(game, pacman, ghost);
     }
 }
-
-/// <summary>
-/// Represents the duration of a ghost mode cycle.
-/// </summary>
-public readonly record struct ModeTiming(GhostMode Mode, TimeSpan Duration);
-
-/// <summary>
-/// Level-specific configuration for overall game behaviour.
-/// </summary>
-public sealed record GameSettings(
-    IReadOnlyList<ModeTiming> ModeSequence,
-    int BonusIndex,
-    int BonusScore,
-    IReadOnlyList<string> MapLayout,
-    string MazeMemberName,
-    int DefaultLives);
-
-/// <summary>
-/// Level-specific configuration for Pac-Man's speed profile.
-/// </summary>
-public sealed record PacmanSettings(
-    float Speed,
-    float DotSpeed,
-    float FrightenedSpeed,
-    float FrightenedDotSpeed);
-
-/// <summary>
-/// Cruise Elroy thresholds when ghosts speed up as pellets disappear.
-/// </summary>
-public sealed record CruiseElroySettings(
-    int DotsThreshold1,
-    float Speed1,
-    int DotsThreshold2,
-    float Speed2);
-
-/// <summary>
-/// Ghost-related level settings.
-/// </summary>
-public sealed record GhostSettings(
-    float Speed,
-    float TunnelSpeed,
-    CruiseElroySettings CruiseElroy,
-    float FrightenedSpeed,
-    TimeSpan FrightenedDuration,
-    int FrightenedFlashes);
-
-/// <summary>
-/// Bundles the settings for a particular level.
-/// </summary>
-public sealed record LevelSettings(
-    GameSettings Game,
-    PacmanSettings Pacman,
-    GhostSettings Ghost);

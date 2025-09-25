@@ -1,5 +1,6 @@
+using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
-using Blingo.PacMan.Core.Sprites.Behaviors;
+using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using BlingoEngine.Core;
 
 namespace Blingo.PacMan.Core.Game;
@@ -10,9 +11,9 @@ public sealed class GlobalVars : BlingoGlobalVars
 
     public BonusesModel? BonusesModel { get; set; }
 
-    public PacManMapProvider? MapProvider { get; set; }
+    public BlPacManMapProvider? MapProvider { get; set; }
 
-    internal PacManGameBehavior? GameBehavior { get; set; }
+    internal BlPacManGameBehavior? GameBehavior { get; set; }
 
     public GameSettings? CurrentGameSettings { get; set; }
 
@@ -20,9 +21,9 @@ public sealed class GlobalVars : BlingoGlobalVars
 
     public GhostSettings? CurrentGhostSettings { get; set; }
 
-    internal PacManEventMediator<PacManFieldContext>? ConsumableFieldMediator { get; set; }
+    internal BlPacManEventMediator<BlPacManFieldContext>? ConsumableFieldMediator { get; set; }
 
-    internal PacManFieldContext? CurrentFieldContext { get; set; }
+    internal BlPacManFieldContext? CurrentFieldContext { get; set; }
 
     protected override void OnClearGlobals()
     {

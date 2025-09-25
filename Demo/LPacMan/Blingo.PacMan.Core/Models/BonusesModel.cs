@@ -10,7 +10,7 @@ namespace Blingo.PacMan.Core.Models
     {
         private const int MaxBonuses = 8;
         private int _level;
-        private readonly PacManEventMediator<int> _levelChanged = new();
+        private readonly BlPacManEventMediator<int> _levelChanged = new();
 
         public int Level
         {
@@ -28,6 +28,6 @@ namespace Blingo.PacMan.Core.Models
             }
         }
 
-        public PacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
+        public BlPacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
     }
 }
