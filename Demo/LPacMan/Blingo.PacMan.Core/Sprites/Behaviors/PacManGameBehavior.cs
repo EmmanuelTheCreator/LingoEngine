@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core;
+using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Models;
 using BlingoEngine.Events;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
@@ -12,26 +13,36 @@ using BlingoEngine.Inputs.Events;
 namespace Blingo.PacMan.Core.Sprites.Behaviors;
 
 /// <summary>
-/// Rough C# port of the <c>JsPacman</c> controller. The original implementation orchestrated
-/// DOM elements; this behaviour adapts the flow to the Blingo runtime by relying on the
-/// timeline and model abstractions. It keeps track of the game's meta state (start screen,
-/// pause, win, game over) and forwards mode updates to the underlying <see cref="IGameModel"/>.
+/// Coordinates the overall Pac-Man gameplay state, wiring the models and sprite behaviours into the runtime.
+/// It keeps track of the game's meta state (start screen, pause, win, game over) and forwards mode updates to the model.
 /// </summary>
-public sealed class PacManGameBehavior : BlingoSpriteBehavior,
+internal sealed class PacManGameBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
     IHasExitFrameEvent,
-    IHasKeyDownEvent
+    IHasKeyDownEvent,
+    IHasStepFrameEvent
 {
-    private readonly IGameModel _model;
-    private readonly IBonusesModel _bonusesModel;
-    private readonly List<IGhostModeController> _ghosts = new();
+    private readonly GlobalVars _globals;
+    private GameModel? _model;
+    private BonusesModel? _bonusesModel;
+    private PacManMapProvider? _mapProvider;
+    private readonly List<PacManGhostBehavior> _ghosts = new();
+    private readonly List<PacManConsumableComponent> _consumables = new();
+    private readonly List<PacManEventSubscription> _modelSubscriptions = new();
 
     private Map? _map;
+    private PacManActorBehavior? _pacMan;
+    private PacManRoamingBonusBehavior? _bonus;
+    private GameSettings? _currentGameSettings;
+    private PacmanSettings? _currentPacmanSettings;
+    private GhostSettings? _currentGhostSettings;
+    private bool _isActorRegistered;
 
     private int _pauseFrames;
     private int _startCountdown;
     private int _soundBackCooldown;
+    private int _remainingConsumables;
 
     private bool _initialized;
     private bool _muted;
@@ -39,19 +50,28 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
     private bool _win;
     private bool _gameOver;
 
-    /// <summary>
-    /// Creates a new instance of the behaviour that coordinates overall game flow.
-    /// </summary>
-    public PacManGameBehavior(IBlingoMovieEnvironment env, IGameModel model, IBonusesModel bonusesModel)
+    private GameModel Model => _model ??= _globals.GameModel ?? throw new InvalidOperationException("GameModel was not initialised.");
+
+    private BonusesModel BonusesModel => _bonusesModel ??= _globals.BonusesModel ?? throw new InvalidOperationException("BonusesModel was not initialised.");
+
+    private PacManMapProvider MapProvider => _mapProvider ??= _globals.MapProvider ?? throw new InvalidOperationException("Pac-Man map provider was not initialised.");
+
+    public PacManGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
-        _model = model ?? throw new ArgumentNullException(nameof(model));
-        _bonusesModel = bonusesModel ?? throw new ArgumentNullException(nameof(bonusesModel));
+        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
     }
 
     /// <inheritdoc />
     public void BeginSprite()
     {
+        _globals.GameBehavior = this;
+        if (!_isActorRegistered)
+        {
+            Me.AddActor(this);
+            _isActorRegistered = true;
+        }
+
         if (_initialized)
         {
             return;
@@ -69,16 +89,31 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
     {
         if (!_initialized)
         {
+            _globals.GameBehavior = null;
             return;
         }
 
+        _globals.GameBehavior = null;
+        _globals.CurrentFieldContext = null;
+        _globals.CurrentGameSettings = null;
+        _globals.CurrentPacmanSettings = null;
+        _globals.CurrentGhostSettings = null;
+        _currentGameSettings = null;
+        _currentPacmanSettings = null;
+        _currentGhostSettings = null;
         UnsubscribeModelEvents();
+        _consumables.Clear();
         _ghosts.Clear();
         _initialized = false;
     }
 
     /// <inheritdoc />
     public void ExitFrame()
+    {
+        // ExitFrame is unused; gameplay updates run through StepFrame via the actor list.
+    }
+
+    public void StepFrame()
     {
         if (!_initialized)
         {
@@ -96,7 +131,7 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        // 'S' toggles sound as in the JavaScript implementation.
+        // 'S' toggles sound for the attract mode.
         if (key.KeyPressed(83))
         {
             ToggleSound();
@@ -118,9 +153,11 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
+        _Movie.GoTo(PacManProjectFactory.GameRunningLabel);
+
         if (_win)
         {
-            _model.Level++;
+            Model.Level++;
             ResetInternalState(resetScore: false);
             MakeLevel();
             _win = false;
@@ -129,51 +166,81 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
 
         if (_gameOver)
         {
-            _model.Level = 1;
+            Model.Level = 1;
             ResetInternalState(resetScore: true);
             MakeLevel();
             _gameOver = false;
-            PacManSounds.SoundPlayIntro(_Player);
+            _Player.SoundPlayIntro();
             return;
         }
 
-        PacManSounds.SoundPlayIntro(_Player);
+        _Player.SoundPlayIntro();
         _startCountdown = Math.Max(_startCountdown, 1);
     }
 
     /// <summary>
-    /// Restores the attract screen by mirroring the JavaScript controller's reset routine.
-    /// It resets the level, clears transient counters and rebuilds the current map so the
-    /// next frame tick behaves like a fresh boot.
+    /// Resets the attract screen by clearing transient counters and rebuilding the current map.
+    /// This ensures the next frame behaves like a fresh boot.
     /// </summary>
     public void ResetToAttract()
     {
         if (!_initialized)
         {
-            _Movie.GoTo(PacManProjectFactory.IntroLabel);
+            _Movie.GoTo(PacManProjectFactory.MenuLabel);
             return;
         }
 
-        _model.Level = 1;
+        Model.Level = 1;
         ResetInternalState(resetScore: true);
         MakeLevel();
-        _Movie.GoTo(PacManProjectFactory.IntroLabel);
+        _Movie.GoTo(PacManProjectFactory.MenuLabel);
     }
 
     /// <summary>
-    /// Equivalent of the JavaScript <c>makeLevel</c> routine. It reads the level settings from
-    /// the model and re-initialises counters used by the gameplay loop. Actual sprite spawning
-    /// will be implemented as the remaining actors are ported.
+    /// Reads the level settings from the model and re-initialises counters used by the gameplay loop.
     /// </summary>
     private void MakeLevel()
     {
-        var settings = _model.GetGameSettings();
+        var settings = Model.GetGameSettings();
         _map = new Map(settings.MapLayout);
+        MapProvider.CurrentMap = _map;
+
+        _currentGameSettings = settings;
+        _currentPacmanSettings = Model.GetPacmanSettings();
+        _currentGhostSettings = Model.GetGhostSettings();
+
+        _globals.CurrentGameSettings = _currentGameSettings;
+        _globals.CurrentPacmanSettings = _currentPacmanSettings;
+        _globals.CurrentGhostSettings = _currentGhostSettings;
 
         _pauseFrames = 80;
         _soundBackCooldown = 0;
+        _remainingConsumables = 0;
+        _consumables.Clear();
 
-        _bonusesModel.Level = _model.Level;
+        BonusesModel.Level = Model.Level;
+
+        if (_map is not null)
+        {
+            var context = new PacManFieldContext(_map, this);
+            _globals.CurrentFieldContext = context;
+            _globals.ConsumableFieldMediator?.Publish(context);
+        }
+
+        if (_pacMan is not null && _currentPacmanSettings is not null)
+        {
+            _pacMan.Configure(this, _currentPacmanSettings);
+        }
+
+        foreach (var ghost in _ghosts)
+        {
+            if (_currentGhostSettings is not null)
+            {
+                ghost.Configure(this, _currentGhostSettings);
+            }
+        }
+
+        _bonus?.Configure(this, settings);
     }
 
     private void MainLoop()
@@ -190,7 +257,7 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
 
         if (_startCountdown <= 0)
         {
-            _model.UpdateMode();
+            Model.UpdateMode();
         }
 
         if (_pauseFrames > 0)
@@ -231,11 +298,11 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
     {
         if (_muted)
         {
-            PacManSounds.SoundPlayBack(_Player);
+            _Player.SoundPlayBack();
         }
         else
         {
-            PacManSounds.SoundStopBack(_Player);
+            _Player.SoundStopBack();
         }
 
         _muted = !_muted;
@@ -256,16 +323,16 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
 
     private void Pause()
     {
-        _model.Pause();
-        PacManSounds.SoundStopBack(_Player);
+        Model.Pause();
+        _Player.SoundStopBack();
     }
 
     private void Resume()
     {
-        _model.Resume();
+        Model.Resume();
         if (!_muted)
         {
-            PacManSounds.SoundPlayBack(_Player);
+            _Player.SoundPlayBack();
         }
     }
 
@@ -277,58 +344,175 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
         _win = false;
         _gameOver = false;
         _paused = false;
+        _remainingConsumables = 0;
+        _consumables.Clear();
 
         if (resetScore)
         {
-            _model.ResetScore();
+            Model.ResetScore();
         }
 
-        _model.ResetLives(_model.GetGameSettings().DefaultLives + 1);
+        Model.ResetLives(Model.GetGameSettings().DefaultLives + 1);
     }
 
     private void SubscribeModelEvents()
     {
-        _model.ScoreChanged += OnScoreChanged;
-        _model.HighScoreChanged += OnHighScoreChanged;
-        _model.LivesChanged += OnLivesChanged;
-        _model.ExtraLivesChanged += OnExtraLivesChanged;
-        _model.ModeChanged += OnModeChanged;
-        _model.LevelChanged += OnLevelChanged;
+        ReleaseModelSubscriptions();
+        _modelSubscriptions.Add(Model.SubscribeScoreChanged(OnScoreChanged));
+        _modelSubscriptions.Add(Model.SubscribeHighScoreChanged(OnHighScoreChanged));
+        _modelSubscriptions.Add(Model.SubscribeLivesChanged(OnLivesChanged));
+        _modelSubscriptions.Add(Model.SubscribeExtraLivesChanged(OnExtraLivesChanged));
+        _modelSubscriptions.Add(Model.SubscribeModeChanged(OnModeChanged));
+        _modelSubscriptions.Add(Model.SubscribeLevelChanged(OnLevelChanged));
     }
 
     private void UnsubscribeModelEvents()
     {
-        _model.ScoreChanged -= OnScoreChanged;
-        _model.HighScoreChanged -= OnHighScoreChanged;
-        _model.LivesChanged -= OnLivesChanged;
-        _model.ExtraLivesChanged -= OnExtraLivesChanged;
-        _model.ModeChanged -= OnModeChanged;
-        _model.LevelChanged -= OnLevelChanged;
+        ReleaseModelSubscriptions();
     }
 
-    internal void RegisterGhost(IGhostModeController ghost)
+    private void ReleaseModelSubscriptions()
+    {
+        if (_modelSubscriptions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var subscription in _modelSubscriptions)
+        {
+            subscription.Release();
+        }
+
+        _modelSubscriptions.Clear();
+    }
+
+    public Map? CurrentMap => _map;
+
+    public GameModel GameModel => Model;
+
+    public void RegisterConsumable(PacManConsumableComponent consumable)
+    {
+        if (consumable is null)
+        {
+            throw new ArgumentNullException(nameof(consumable));
+        }
+
+        _consumables.Add(consumable);
+        _remainingConsumables++;
+    }
+
+    public void NotifyConsumableEaten(PacManConsumableComponent consumable)
+    {
+        if (consumable is null)
+        {
+            return;
+        }
+
+        if (_remainingConsumables > 0)
+        {
+            _remainingConsumables--;
+        }
+
+        switch (consumable.Type)
+        {
+            case PacManConsumableType.Pellet:
+                _Player.SoundPlayDot();
+                break;
+            case PacManConsumableType.PowerPill:
+                _Player.SoundPlayEat();
+                foreach (var ghost in _ghosts)
+                {
+                    ghost.SetMode(GhostMode.Frightened);
+                }
+                break;
+            case PacManConsumableType.Bonus:
+                _Player.SoundPlayBonus();
+                break;
+        }
+
+        Model.AddScore(consumable.ScoreValue);
+
+        if (_remainingConsumables == 0)
+        {
+            _win = true;
+        }
+    }
+
+    public void RegisterPacMan(PacManActorBehavior pacMan)
+    {
+        _pacMan = pacMan ?? throw new ArgumentNullException(nameof(pacMan));
+        if (_currentPacmanSettings is not null)
+        {
+            _pacMan.Configure(this, _currentPacmanSettings);
+        }
+    }
+
+    public void RegisterGhost(PacManGhostBehavior ghost)
     {
         if (ghost is null)
         {
             throw new ArgumentNullException(nameof(ghost));
         }
 
-        if (_ghosts.Contains(ghost))
+        if (!_ghosts.Contains(ghost))
+        {
+            _ghosts.Add(ghost);
+        }
+
+        if (_currentGhostSettings is not null)
+        {
+            ghost.Configure(this, _currentGhostSettings);
+        }
+    }
+
+    public void RegisterBonus(PacManRoamingBonusBehavior bonus)
+    {
+        _bonus = bonus ?? throw new ArgumentNullException(nameof(bonus));
+        if (_currentGameSettings is not null)
+        {
+            _bonus.Configure(this, _currentGameSettings);
+        }
+    }
+
+    public void UnregisterConsumable(PacManConsumableComponent consumable)
+    {
+        if (consumable is null)
         {
             return;
         }
 
-        _ghosts.Add(ghost);
+        _consumables.Remove(consumable);
+    }
+
+    public void UnregisterPacMan(PacManActorBehavior pacMan)
+    {
+        if (_pacMan == pacMan)
+        {
+            _pacMan = null;
+        }
+    }
+
+    public void UnregisterGhost(PacManGhostBehavior ghost)
+    {
+        _ghosts.Remove(ghost);
+    }
+
+    public void UnregisterBonus(PacManRoamingBonusBehavior bonus)
+    {
+        if (_bonus == bonus)
+        {
+            _bonus = null;
+        }
     }
 
     private void OnScoreChanged(int score)
     {
-        // Score display is handled by dedicated HUD behaviours. We keep the hook for parity with JS code.
+        // Score display is handled by dedicated HUD behaviours. Keep the hook for future updates.
     }
 
     private void OnHighScoreChanged(int score)
     {
-        // Mirrors the JavaScript change handler. Rendering will be wired up once the UI sprites are ported.
+        // Update hooks for score and HUD elements will be wired up once the UI sprites are in place.
     }
 
     private void OnLivesChanged(int lives)
@@ -336,14 +520,14 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
         if (lives == 0)
         {
             _gameOver = true;
-            PacManSounds.SoundStopBack(_Player);
-            _model.ResetScore();
+            _Player.SoundStopBack();
+            Model.ResetScore();
         }
     }
 
     private void OnExtraLivesChanged(int _)
     {
-        PacManSounds.SoundPlayLife(_Player);
+        _Player.SoundPlayLife();
     }
 
     private void OnModeChanged(GhostMode? mode)
@@ -361,6 +545,6 @@ public sealed class PacManGameBehavior : BlingoSpriteBehavior,
 
     private void OnLevelChanged(int level)
     {
-        _bonusesModel.Level = level;
+        BonusesModel.Level = level;
     }
 }

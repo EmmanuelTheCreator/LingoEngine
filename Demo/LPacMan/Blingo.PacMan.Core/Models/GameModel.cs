@@ -1,71 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using BlingoEngine.Core;
+using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Maps;
 using MapContent = Blingo.PacMan.Core.Maps.Maps;
 
 namespace Blingo.PacMan.Core.Models;
 
 /// <summary>
-/// Provides access to level-specific parameters and keeps track of the player's progress.
+/// Tracks the level state, score and life counters while exposing game settings.
 /// </summary>
-public interface IGameModel
+public sealed class GameModel
 {
-    int Level { get; set; }
-
-    int Score { get; }
-
-    int HighScore { get; }
-
-    int Lives { get; }
-
-    int ExtraLives { get; }
-
-    int ExtraLifeScore { get; }
-
-    GhostMode? Mode { get; }
-
-    event Action<int>? LevelChanged;
-
-    event Action<int>? ScoreChanged;
-
-    event Action<int>? HighScoreChanged;
-
-    event Action<int>? LivesChanged;
-
-    event Action<int>? ExtraLivesChanged;
-
-    event Action<GhostMode?>? ModeChanged;
-
-    void AddScore(int score);
-
-    void ResetScore();
-
-    void UpdateMode();
-
-    void ResetLives(int lives);
-
-    void Pause();
-
-    void Resume();
-
-    GameSettings GetGameSettings();
-
-    PacmanSettings GetPacmanSettings();
-
-    GhostSettings GetGhostSettings();
-}
-
-/// <summary>
-/// Default implementation that mirrors the behaviour of the original JavaScript model.
-/// </summary>
-public sealed class GameModel : IGameModel
-{
-    private readonly IGameModelRepository _repository;
-    private readonly IBlingoClock _clock;
-    private TimeSpan _modeElapsed;
-    private int? _lastModeTick;
+    private readonly GameModelRepository _repository;
+    private const int ModeFrameRate = 60;
+    private int _modeElapsedFrames;
     private bool _modePaused;
     private int _level = 1;
     private int _score;
@@ -74,10 +23,16 @@ public sealed class GameModel : IGameModel
     private int _extraLives = 1;
     private GhostMode? _mode;
 
-    public GameModel(IGameModelRepository repository, IBlingoClock clock)
+    private readonly PacManEventMediator<int> _levelChanged = new();
+    private readonly PacManEventMediator<int> _scoreChanged = new();
+    private readonly PacManEventMediator<int> _highScoreChanged = new();
+    private readonly PacManEventMediator<int> _livesChanged = new();
+    private readonly PacManEventMediator<int> _extraLivesChanged = new();
+    private readonly PacManEventMediator<GhostMode?> _modeChanged = new();
+
+    public GameModel(GameModelRepository repository)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         Load();
     }
 
@@ -94,7 +49,7 @@ public sealed class GameModel : IGameModel
 
             _level = clamped;
             ResetModeTimer();
-            LevelChanged?.Invoke(_level);
+            _levelChanged.Publish(_level);
         }
     }
 
@@ -110,17 +65,17 @@ public sealed class GameModel : IGameModel
 
     public GhostMode? Mode => _mode;
 
-    public event Action<int>? LevelChanged;
+    public PacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
 
-    public event Action<int>? ScoreChanged;
+    public PacManEventSubscription SubscribeScoreChanged(Action<int> handler) => _scoreChanged.Subscribe(handler);
 
-    public event Action<int>? HighScoreChanged;
+    public PacManEventSubscription SubscribeHighScoreChanged(Action<int> handler) => _highScoreChanged.Subscribe(handler);
 
-    public event Action<int>? LivesChanged;
+    public PacManEventSubscription SubscribeLivesChanged(Action<int> handler) => _livesChanged.Subscribe(handler);
 
-    public event Action<int>? ExtraLivesChanged;
+    public PacManEventSubscription SubscribeExtraLivesChanged(Action<int> handler) => _extraLivesChanged.Subscribe(handler);
 
-    public event Action<GhostMode?>? ModeChanged;
+    public PacManEventSubscription SubscribeModeChanged(Action<GhostMode?> handler) => _modeChanged.Subscribe(handler);
 
     public void AddScore(int score)
     {
@@ -158,41 +113,20 @@ public sealed class GameModel : IGameModel
             return;
         }
 
-        var frameRate = _clock.FrameRate;
-        if (frameRate <= 0)
+        if (!_modePaused)
         {
-            return;
+            _modeElapsedFrames++;
         }
 
-        var engineTickCount = _clock.EngineTickCount;
-        if (_lastModeTick is null)
-        {
-            _lastModeTick = engineTickCount;
-        }
-        else if (!_modePaused)
-        {
-            var deltaTicks = Math.Max(0, engineTickCount - _lastModeTick.Value);
-            if (deltaTicks > 0)
-            {
-                var deltaSeconds = deltaTicks / (double)frameRate;
-                _modeElapsed += TimeSpan.FromSeconds(deltaSeconds);
-            }
-            _lastModeTick = engineTickCount;
-        }
-        else
-        {
-            _lastModeTick = engineTickCount;
-        }
-
-        var elapsed = _modeElapsed;
-        var cumulative = TimeSpan.Zero;
+        var elapsedFrames = _modeElapsedFrames;
+        var cumulativeFrames = 0;
 
         GhostMode? selected = null;
         for (var i = 0; i < sequence.Count; i++)
         {
             var timing = sequence[i];
-            cumulative += timing.Duration;
-            if (elapsed < cumulative || i == sequence.Count - 1)
+            cumulativeFrames += ConvertToFrames(timing.Duration);
+            if (elapsedFrames < cumulativeFrames || i == sequence.Count - 1)
             {
                 selected = timing.Mode;
                 break;
@@ -210,7 +144,6 @@ public sealed class GameModel : IGameModel
     public void Resume()
     {
         _modePaused = false;
-        _lastModeTick = _clock.EngineTickCount;
     }
 
     public GameSettings GetGameSettings()
@@ -236,19 +169,19 @@ public sealed class GameModel : IGameModel
 
     private void OnScoreChanged()
     {
-        ScoreChanged?.Invoke(_score);
+        _scoreChanged.Publish(_score);
 
         if (_extraLives > 0 && _score >= ExtraLifeScore)
         {
             _extraLives--;
-            ExtraLivesChanged?.Invoke(_extraLives);
+            _extraLivesChanged.Publish(_extraLives);
             SetLives(_lives + 1);
         }
 
         if (_score > _highScore)
         {
             _highScore = _score;
-            HighScoreChanged?.Invoke(_highScore);
+            _highScoreChanged.Publish(_highScore);
             Save();
         }
     }
@@ -261,7 +194,7 @@ public sealed class GameModel : IGameModel
         }
 
         _lives = lives;
-        LivesChanged?.Invoke(_lives);
+        _livesChanged.Publish(_lives);
     }
 
     private void SetMode(GhostMode? mode)
@@ -272,15 +205,25 @@ public sealed class GameModel : IGameModel
         }
 
         _mode = mode;
-        ModeChanged?.Invoke(_mode);
+        _modeChanged.Publish(_mode);
     }
 
     private void ResetModeTimer()
     {
-        _modeElapsed = TimeSpan.Zero;
-        _lastModeTick = null;
+        _modeElapsedFrames = 0;
         _modePaused = false;
         SetMode(null);
+    }
+
+    private static int ConvertToFrames(TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero)
+        {
+            return 1;
+        }
+
+        var frames = (int)Math.Ceiling(duration.TotalSeconds * ModeFrameRate);
+        return Math.Max(1, frames);
     }
 
     private void Load()

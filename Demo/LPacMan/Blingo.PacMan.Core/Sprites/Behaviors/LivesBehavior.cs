@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Models;
 using AbstUI.Primitives;
 using BlingoEngine.Members;
@@ -10,28 +11,27 @@ using BlingoEngine.Sprites.Events;
 namespace Blingo.PacMan.Core.Sprites.Behaviors;
 
 /// <summary>
-/// Displays the remaining lives using miniature Pac-Man sprites, closely mirroring the
-/// JavaScript implementation that populated five instances on the stage and toggled their
-/// visibility based on the model.
+/// Displays the remaining lives using miniature Pac-Man sprites and keeps them in sync with the model.
 /// </summary>
 public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, IHasEndSpriteEvent
 {
     private const int DefaultIconCount = 5;
 
     private readonly List<LifeSprite> _pacmen = new();
-    private readonly IGameModel _model;
+    private readonly GlobalVars _globals;
+    private GameModel? _model;
+    private PacManEventSubscription? _livesSubscription;
 
     private bool _isInitialized;
 
-    public LivesBehavior(IBlingoMovieEnvironment env, IGameModel model)
+    public LivesBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
-        _model = model ?? throw new ArgumentNullException(nameof(model));
+        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
     }
 
     /// <summary>
-    /// Scaling factor applied to each life sprite. Matches the semantics of the original
-    /// implementation where a multiplicative factor was forwarded to the Pacman constructor.
+    /// Scaling factor applied to each life sprite. The value is forwarded to the Pac-Man constructor.
     /// </summary>
     public float ScaleFactor { get; set; } = 1f;
 
@@ -59,8 +59,10 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     {
         if (!_isInitialized)
         {
+            _model ??= _globals.GameModel ?? throw new InvalidOperationException("GameModel was not initialised.");
             InitializeLives();
-            _model.LivesChanged += OnLivesChanged;
+            _livesSubscription?.Release();
+            _livesSubscription = _model.SubscribeLivesChanged(OnLivesChanged);
             _isInitialized = true;
         }
 
@@ -74,7 +76,11 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
             return;
         }
 
-        _model.LivesChanged -= OnLivesChanged;
+        if (_model is not null)
+        {
+            _livesSubscription?.Release();
+            _livesSubscription = null;
+        }
 
         foreach (var pacman in _pacmen)
         {
@@ -107,7 +113,8 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
 
     private void Render()
     {
-        var visibleCount = Math.Max(0, _model.Lives - 1);
+        var model = _model ?? throw new InvalidOperationException("GameModel was not initialised.");
+        var visibleCount = Math.Max(0, model.Lives - 1);
 
         for (var i = 0; i < _pacmen.Count; i++)
         {
@@ -127,13 +134,10 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         var spriteName = $"{Me.SpriteNum}_{Me.Name}_Life_{index}";
         var sprite = _Movie.AddSprite(spriteName, sprite2D =>
         {
-            sprite2D.BeginFrame = 1;
-            sprite2D.EndFrame = Math.Max(1, _Movie.FrameCount);
             sprite2D.LocH = x;
             sprite2D.LocV = y;
             sprite2D.LocZ = Me.LocZ;
             sprite2D.Puppet = true;
-            sprite2D.Lock = true;
             sprite2D.Ink = Me.Ink;
 
             var cast = CastLib(CastLibName);
