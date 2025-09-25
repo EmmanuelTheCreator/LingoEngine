@@ -136,6 +136,31 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         }
     }
 
+    internal BlPacManCharacter Character => EnsureCharacter();
+
+    internal BlPacManEventSubscription SubscribePacManPosition(Action<BlPacManPositionContext> handler)
+    {
+        return EnsureCharacter().SubscribePositionChanged(handler);
+    }
+
+    internal void Hide()
+    {
+        EnsureCharacter().Hide();
+    }
+
+    internal void Show()
+    {
+        EnsureCharacter().Show();
+    }
+
+    internal void ResetForLife()
+    {
+        var character = EnsureCharacter();
+        character.Reset();
+        ResetPosition();
+        character.Update();
+    }
+
     private void EnsureAppearance()
     {
         if (Me.Member is null)

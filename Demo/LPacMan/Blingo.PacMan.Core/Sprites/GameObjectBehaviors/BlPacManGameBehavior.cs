@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Blingo.PacMan.Core;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Game;
@@ -45,11 +46,23 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private int _soundBackCooldown;
     private int _remainingConsumables;
 
+    private int _bonusAppearCountdown;
+    private int _bonusDestroyCountdown;
+    private bool _bonusLocked;
+    private bool _pacManEatenPending;
+    private int _ghostChainIndex;
+
+    private readonly BlPacManEventMediator<BlPacManPositionContext> _pacManPositionChanged = new();
+    private readonly List<BlPacManEventSubscription> _pacManSubscriptions = new();
+    private BlPacManPositionContext? _lastPacManPosition;
+
     private bool _initialized;
     private bool _muted;
     private bool _paused;
     private bool _win;
     private bool _gameOver;
+
+    private static readonly int[] GhostScoreChain = { 200, 400, 800, 1_600 };
 
     private GameModel Model => _model ??= _globals.GameModel ?? throw new InvalidOperationException("GameModel was not initialised.");
 
@@ -105,6 +118,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         UnsubscribeModelEvents();
         _consumables.Clear();
         _ghosts.Clear();
+        ReleasePacManSubscriptions();
         _initialized = false;
     }
 
@@ -242,6 +256,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
 
         _bonus?.Configure(this, settings);
+        _bonus?.ResetForLife();
     }
 
     private void MainLoop()
@@ -289,10 +304,20 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_soundBackCooldown > 0)
+        UpdateBonusLifecycle();
+
+        if (_pacManEatenPending)
         {
-            _soundBackCooldown--;
+            if (Model.Lives == 0)
+            {
+                return;
+            }
+
+            ResumeAfterPacManEaten();
+            return;
         }
+
+        UpdateGhostAudioState();
     }
 
     private void ToggleSound()
@@ -347,6 +372,12 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _paused = false;
         _remainingConsumables = 0;
         _consumables.Clear();
+        _bonusAppearCountdown = 500;
+        _bonusDestroyCountdown = 0;
+        _bonusLocked = false;
+        _pacManEatenPending = false;
+        _ghostChainIndex = 0;
+        _lastPacManPosition = null;
 
         if (resetScore)
         {
@@ -391,6 +422,117 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
     public GameModel GameModel => Model;
 
+    public bool IsGameplayFrozen => _paused || _pauseFrames > 0 || _startCountdown > 0 || _win || _gameOver || _pacManEatenPending;
+
+    public BlPacManEventSubscription SubscribePacManPosition(Action<BlPacManPositionContext> handler)
+    {
+        if (handler is null)
+        {
+            throw new ArgumentNullException(nameof(handler));
+        }
+
+        var subscription = _pacManPositionChanged.Subscribe(handler);
+
+        if (_lastPacManPosition is { } context)
+        {
+            handler(context);
+        }
+
+        return subscription;
+    }
+
+    public BlPacManGhostBehavior? FindGhost(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return null;
+        }
+
+        return _ghosts.FirstOrDefault(g => string.Equals(g.GhostName, name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public void NotifyGhostEaten(BlPacManGhostBehavior ghost)
+    {
+        if (ghost is null)
+        {
+            throw new ArgumentNullException(nameof(ghost));
+        }
+
+        var chainIndex = Math.Clamp(_ghostChainIndex, 0, GhostScoreChain.Length - 1);
+        var score = GhostScoreChain[chainIndex];
+        if (_ghostChainIndex < GhostScoreChain.Length - 1)
+        {
+            _ghostChainIndex++;
+        }
+
+        Model.AddScore(score);
+        _Player.SoundPlayEat();
+        _soundBackCooldown = 5;
+        _pauseFrames = Math.Max(_pauseFrames, 15);
+        ghost.OnEaten(score);
+    }
+
+    public void NotifyPacManEaten()
+    {
+        if (_pacManEatenPending || _gameOver)
+        {
+            return;
+        }
+
+        _pacManEatenPending = true;
+        _ghostChainIndex = 0;
+        _Player.SoundPlayEaten();
+        _Player.SoundStopBack();
+        _pauseFrames = Math.Max(_pauseFrames, 40);
+        _soundBackCooldown = 0;
+
+        _pacMan?.Hide();
+        foreach (var ghost in _ghosts)
+        {
+            ghost.OnPacManEaten();
+        }
+
+        _bonus?.OnPacManEaten();
+        _bonusAppearCountdown = 250;
+        _bonusDestroyCountdown = 0;
+        _bonusLocked = false;
+
+        var lives = Math.Max(0, Model.Lives - 1);
+        Model.ResetLives(lives);
+    }
+
+    public void NotifyBonusEaten(BlPacManRoamingBonusBehavior bonus)
+    {
+        if (bonus is null)
+        {
+            throw new ArgumentNullException(nameof(bonus));
+        }
+
+        if (_bonusLocked)
+        {
+            return;
+        }
+
+        var score = _currentGameSettings?.BonusScore ?? 0;
+        if (score > 0)
+        {
+            Model.AddScore(score);
+        }
+
+        _Player.SoundPlayBonus();
+        _bonusLocked = true;
+        _bonusDestroyCountdown = 45;
+        bonus.ShowScore();
+    }
+
+    public void NotifyBonusExpired(BlPacManRoamingBonusBehavior bonus)
+    {
+        if (_bonus == bonus)
+        {
+            _bonusLocked = true;
+        }
+    }
+
     public void RegisterConsumable(BlPacManConsumableComponent consumable)
     {
         if (consumable is null)
@@ -420,7 +562,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
                 _Player.SoundPlayDot();
                 break;
             case BlPacManConsumableType.PowerPill:
-                _Player.SoundPlayEat();
+                _Player.SoundPlayFrightened();
+                _pauseFrames = Math.Max(_pauseFrames, 2);
+                _ghostChainIndex = 0;
                 foreach (var ghost in _ghosts)
                 {
                     ghost.SetMode(GhostMode.Frightened);
@@ -446,6 +590,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         {
             _pacMan.Configure(this, _currentPacmanSettings);
         }
+
+        HookPacManEvents(_pacMan);
     }
 
     public void RegisterGhost(BlPacManGhostBehavior ghost)
@@ -489,6 +635,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     {
         if (_pacMan == pacMan)
         {
+            ReleasePacManSubscriptions();
             _pacMan = null;
         }
     }
@@ -504,6 +651,57 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         {
             _bonus = null;
         }
+    }
+
+    private void HookPacManEvents(BlPacManActorBehavior pacMan)
+    {
+        if (pacMan is null)
+        {
+            return;
+        }
+
+        ReleasePacManSubscriptions();
+
+        var character = pacMan.Character;
+        _pacManSubscriptions.Add(character.SubscribePositionChanged(OnPacManPositionChanged));
+
+        var sprite = pacMan.GetSprite();
+        var tile = character.GetTile();
+        var snapshot = new BlPacManPositionContext(sprite.LocH, sprite.LocV, tile, character.Direction);
+        OnPacManPositionChanged(snapshot);
+    }
+
+    private void OnPacManPositionChanged(BlPacManPositionContext context)
+    {
+        _lastPacManPosition = context;
+        _pacManPositionChanged.Publish(context);
+    }
+
+    private void BroadcastPacManPosition()
+    {
+        if (_pacMan is null)
+        {
+            return;
+        }
+
+        var character = _pacMan.Character;
+        var sprite = _pacMan.GetSprite();
+        OnPacManPositionChanged(new BlPacManPositionContext(sprite.LocH, sprite.LocV, character.GetTile(), character.Direction));
+    }
+
+    private void ReleasePacManSubscriptions()
+    {
+        if (_pacManSubscriptions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var subscription in _pacManSubscriptions)
+        {
+            subscription.Release();
+        }
+
+        _pacManSubscriptions.Clear();
     }
 
     private void OnScoreChanged(int score)
@@ -547,5 +745,91 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private void OnLevelChanged(int level)
     {
         BonusesModel.Level = level;
+    }
+
+    private void UpdateBonusLifecycle()
+    {
+        if (_bonus is null)
+        {
+            return;
+        }
+
+        if (_bonusDestroyCountdown > 0)
+        {
+            _bonusDestroyCountdown--;
+            if (_bonusDestroyCountdown == 0)
+            {
+                _bonus.Deactivate();
+            }
+
+            return;
+        }
+
+        if (_bonusLocked)
+        {
+            return;
+        }
+
+        if (_bonusAppearCountdown > 0)
+        {
+            _bonusAppearCountdown--;
+            if (_bonusAppearCountdown == 0)
+            {
+                _bonus.Activate();
+            }
+
+            return;
+        }
+
+        _bonus.Tick();
+    }
+
+    private void UpdateGhostAudioState()
+    {
+        if (_soundBackCooldown > 0)
+        {
+            _soundBackCooldown--;
+            return;
+        }
+
+        if (_muted || _pacManEatenPending || _paused)
+        {
+            return;
+        }
+
+        if (_ghosts.Any(static g => g.IsDead))
+        {
+            _Player.SoundPlayDead();
+        }
+        else if (!_ghosts.Any(static g => g.IsFrightened))
+        {
+            _Player.SoundPlayBack();
+        }
+
+        _soundBackCooldown = 5;
+    }
+
+    private void ResumeAfterPacManEaten()
+    {
+        if (!_pacManEatenPending || Model.Lives == 0)
+        {
+            return;
+        }
+
+        _pacMan?.ResetForLife();
+        _pacMan?.Show();
+
+        foreach (var ghost in _ghosts)
+        {
+            ghost.ResetForLife();
+            ghost.Show();
+        }
+
+        _bonus?.ResetForLife();
+        BroadcastPacManPosition();
+
+        _pacManEatenPending = false;
+        _startCountdown = Math.Max(_startCountdown, 1);
+        _pauseFrames = 60;
     }
 }
