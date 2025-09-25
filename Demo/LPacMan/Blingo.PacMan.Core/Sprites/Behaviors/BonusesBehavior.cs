@@ -118,13 +118,10 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
             var name = $"{Me.SpriteNum}_{Me.Name}_Bonus_{index}";
             var sprite = _Movie.AddSprite(name, sprite2D =>
             {
-                sprite2D.BeginFrame = 1;
-                sprite2D.EndFrame = Math.Max(1, _Movie.FrameCount);
                 sprite2D.LocH = x;
                 sprite2D.LocV = y;
                 sprite2D.LocZ = Me.LocZ;
                 sprite2D.Puppet = true;
-                sprite2D.Lock = true;
 
                 var cast = CastLib(BonusCastLibName);
                 var member = cast?.GetMember<BlingoMember>(BonusMemberName);

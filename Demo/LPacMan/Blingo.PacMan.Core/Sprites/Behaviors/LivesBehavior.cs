@@ -134,13 +134,10 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         var spriteName = $"{Me.SpriteNum}_{Me.Name}_Life_{index}";
         var sprite = _Movie.AddSprite(spriteName, sprite2D =>
         {
-            sprite2D.BeginFrame = 1;
-            sprite2D.EndFrame = Math.Max(1, _Movie.FrameCount);
             sprite2D.LocH = x;
             sprite2D.LocV = y;
             sprite2D.LocZ = Me.LocZ;
             sprite2D.Puppet = true;
-            sprite2D.Lock = true;
             sprite2D.Ink = Me.Ink;
 
             var cast = CastLib(CastLibName);

@@ -23,8 +23,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private readonly PacManEventMediator<BlPacManCharacter> _moveStarted = new();
     private readonly PacManEventMediator<BlPacManCharacter> _stopped = new();
-    private readonly PacManEventMediator<PacManPositionEventArgs> _positionChanged = new();
-    private readonly PacManEventMediator<TileEventArgs> _tileEntered = new();
+    private readonly PacManEventMediator<PacManPositionContext> _positionChanged = new();
+    private readonly PacManEventMediator<PacManTileContext> _tileEntered = new();
 
     private Map _map;
     private readonly BlingoSprite2D _sprite;
@@ -114,9 +114,9 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     public PacManEventSubscription SubscribeStopped(Action<BlPacManCharacter> handler) => _stopped.Subscribe(handler);
 
-    public PacManEventSubscription SubscribePositionChanged(Action<PacManPositionEventArgs> handler) => _positionChanged.Subscribe(handler);
+    public PacManEventSubscription SubscribePositionChanged(Action<PacManPositionContext> handler) => _positionChanged.Subscribe(handler);
 
-    public PacManEventSubscription SubscribeTileEntered(Action<TileEventArgs> handler) => _tileEntered.Subscribe(handler);
+    public PacManEventSubscription SubscribeTileEntered(Action<PacManTileContext> handler) => _tileEntered.Subscribe(handler);
 
     public void SetMap(Map map)
     {
@@ -351,7 +351,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             }
 
             var positionTile = tile ?? GetTile();
-            OnPositionChanged(new PacManPositionEventArgs(currentX, currentY, positionTile, Direction));
+            OnPositionChanged(new PacManPositionContext(currentX, currentY, positionTile, Direction));
         }
         else if (_moving)
         {
@@ -411,7 +411,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void HandleTileEntered(Tile tile)
     {
         OnTileEntered(tile);
-        _tileEntered.Publish(new TileEventArgs(tile));
+        _tileEntered.Publish(new PacManTileContext(tile));
     }
 
     private void OnMoveStarted()
@@ -424,7 +424,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         _stopped.Publish(this);
     }
 
-    private void OnPositionChanged(PacManPositionEventArgs args)
+    private void OnPositionChanged(PacManPositionContext args)
     {
         _positionChanged.Publish(args);
     }

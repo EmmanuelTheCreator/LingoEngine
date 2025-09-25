@@ -5,6 +5,7 @@ using AbstUI.Primitives;
 using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Sprites.Behaviors;
 using Blingo.PacMan.Core.Sprites.MovieScripts;
+using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
@@ -244,26 +245,20 @@ public class PacManProjectFactory : IBlingoProjectFactory
 
         var controller = _movie.AddSprite("PacMan.Controller", sprite =>
         {
-            sprite.BeginFrame = 1;
-            sprite.EndFrame = frameCount;
             sprite.LocH = centerX;
             sprite.LocV = centerY;
             sprite.LocZ = 100;
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         controller.AddBehavior<PacManGameBehavior>();
 
         var startListener = _movie.AddSprite("PacMan.MenuStart", sprite =>
         {
-            sprite.BeginFrame = 1;
-            sprite.EndFrame = GameStartFrame - 1;
             sprite.LocH = centerX;
             sprite.LocV = centerY;
             sprite.LocZ = 110;
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         startListener.AddBehavior<PacManMenuStartBehavior>();
@@ -271,7 +266,6 @@ public class PacManProjectFactory : IBlingoProjectFactory
         var hudBanner = _movie.AddSprite(5, GameStartFrame, frameCount, centerX, 40f, sprite =>
         {
             sprite.Puppet = true;
-            sprite.Lock = true;
         });
         hudBanner.SetMember("misc");
         hudBanner.MemberSourceRect = new ARect(126, 4, 174, 52);
@@ -279,7 +273,6 @@ public class PacManProjectFactory : IBlingoProjectFactory
         var startPrompt = _movie.AddSprite(6, 1, GameStartFrame - 1, centerX, 120f, sprite =>
         {
             sprite.Puppet = true;
-            sprite.Lock = true;
         });
         startPrompt.SetMember("misc");
         startPrompt.MemberSourceRect = new ARect(68, 6, 112, 54);
@@ -287,7 +280,6 @@ public class PacManProjectFactory : IBlingoProjectFactory
         var livesAnchor = _movie.AddSprite(20, GameStartFrame, frameCount, 80f, stageHeight - 40f, sprite =>
         {
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         livesAnchor.SetMember("sprites");
@@ -305,7 +297,6 @@ public class PacManProjectFactory : IBlingoProjectFactory
         var bonusesAnchor = _movie.AddSprite(21, GameStartFrame, frameCount, stageWidth - 80f, stageHeight - 40f, sprite =>
         {
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         bonusesAnchor.SetMember("misc");
@@ -322,50 +313,38 @@ public class PacManProjectFactory : IBlingoProjectFactory
 
         var pelletField = _movie.AddSprite("PacMan.Pellets", sprite =>
         {
-            sprite.BeginFrame = GameStartFrame;
-            sprite.EndFrame = frameCount;
             sprite.LocH = centerX;
             sprite.LocV = centerY;
             sprite.LocZ = 10;
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         pelletField.AddBehavior<PacManPelletFieldBehavior>();
 
         var powerPillField = _movie.AddSprite("PacMan.PowerPills", sprite =>
         {
-            sprite.BeginFrame = GameStartFrame;
-            sprite.EndFrame = frameCount;
             sprite.LocH = centerX;
             sprite.LocV = centerY;
             sprite.LocZ = 15;
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         powerPillField.AddBehavior<PacManPowerPillFieldBehavior>();
 
         var roamingBonus = _movie.AddSprite("PacMan.Bonus", sprite =>
         {
-            sprite.BeginFrame = GameStartFrame;
-            sprite.EndFrame = frameCount;
             sprite.LocH = centerX;
             sprite.LocV = centerY;
             sprite.LocZ = 20;
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         roamingBonus.AddBehavior<PacManRoamingBonusBehavior>();
 
         var pacMan = _movie.AddSprite("PacMan.Actor", sprite =>
         {
-            sprite.BeginFrame = GameStartFrame;
-            sprite.EndFrame = frameCount;
             sprite.LocZ = 50;
             sprite.Puppet = true;
-            sprite.Lock = true;
             sprite.Visibility = false;
         });
         pacMan.AddBehavior<PacManActorBehavior>();
@@ -375,11 +354,8 @@ public class PacManProjectFactory : IBlingoProjectFactory
         {
             var ghost = _movie.AddSprite($"PacMan.Ghost.{ghostNames[i]}", sprite =>
             {
-                sprite.BeginFrame = GameStartFrame;
-                sprite.EndFrame = frameCount;
                 sprite.LocZ = 40 + i;
                 sprite.Puppet = true;
-                sprite.Lock = true;
                 sprite.Visibility = false;
             });
             ghost.AddBehavior<PacManGhostBehavior>(behavior =>

@@ -9,11 +9,13 @@ namespace Blingo.PacMan.Core.Sprites.MovieScripts;
 internal sealed class PacManStartMovieScript : BlingoMovieScript, IHasStartMovieEvent, IHasStopMovieEvent
 {
     private readonly GlobalVars _globals;
+    private readonly GameModelRepository _repository;
 
-    public PacManStartMovieScript(IBlingoMovieEnvironment env, GlobalVars globals)
+    public PacManStartMovieScript(IBlingoMovieEnvironment env, GlobalVars globals, GameModelRepository repository)
         : base(env)
     {
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
     public void StartMovie()
@@ -44,10 +46,6 @@ internal sealed class PacManStartMovieScript : BlingoMovieScript, IHasStartMovie
             _globals.BonusesModel = new BonusesModel();
         }
 
-        if (_globals.GameModel is null)
-        {
-            var repository = _env.GetRequiredService<GameModelRepository>();
-            _globals.GameModel = new GameModel(repository);
-        }
+        _globals.GameModel ??= new GameModel(_repository);
     }
 }

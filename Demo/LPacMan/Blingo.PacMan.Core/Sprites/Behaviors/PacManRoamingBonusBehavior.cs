@@ -37,12 +37,10 @@ internal sealed class PacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _coordinator = _globals.GameBehavior;
         ApplyAppearance();
         _coordinator?.RegisterBonus(this);
-        Me.Visibility = true;
     }
 
     public void EndSprite()
     {
-        Me.Visibility = false;
         _coordinator?.UnregisterBonus(this);
     }
 

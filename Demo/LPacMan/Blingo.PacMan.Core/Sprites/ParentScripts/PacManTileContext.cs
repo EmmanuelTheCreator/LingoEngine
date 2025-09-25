@@ -3,9 +3,9 @@ using Blingo.PacMan.Core.Game;
 
 namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
-internal sealed class TileEventArgs : EventArgs
+internal sealed class PacManTileContext
 {
-    public TileEventArgs(Tile tile)
+    public PacManTileContext(Tile tile)
     {
         Tile = tile ?? throw new ArgumentNullException(nameof(tile));
     }

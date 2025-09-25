@@ -61,12 +61,10 @@ internal sealed class PacManActorBehavior : BlingoSpriteBehavior,
         character.BeginSprite();
         EnsureAppearance();
         _coordinator?.RegisterPacMan(this);
-        Me.Visibility = true;
     }
 
     public void EndSprite()
     {
-        Me.Visibility = false;
         _coordinator?.UnregisterPacMan(this);
         _tileEnteredSubscription?.Release();
         _tileEnteredSubscription = null;
@@ -103,7 +101,7 @@ internal sealed class PacManActorBehavior : BlingoSpriteBehavior,
         }
     }
 
-    private void OnTileEntered(TileEventArgs args)
+    private void OnTileEntered(PacManTileContext args)
     {
         if (args.Tile.Item is PacManConsumableComponent consumable)
         {

@@ -83,13 +83,10 @@ internal sealed class PacManPelletFieldBehavior : BlingoSpriteBehavior, IHasBegi
         var name = $"{Me.Name}_{tile.Column}_{tile.Row}";
         var sprite = _Movie.AddSprite(name, sprite2D =>
         {
-            sprite2D.BeginFrame = PacManProjectFactory.GameStartFrame;
-            sprite2D.EndFrame = Math.Max(PacManProjectFactory.GameStartFrame, _Movie.FrameCount);
             sprite2D.LocH = tile.CenterX;
             sprite2D.LocV = tile.CenterY;
             sprite2D.LocZ = Me.LocZ;
             sprite2D.Puppet = true;
-            sprite2D.Lock = true;
             sprite2D.Visibility = true;
 
             var cast = CastLib("Data");

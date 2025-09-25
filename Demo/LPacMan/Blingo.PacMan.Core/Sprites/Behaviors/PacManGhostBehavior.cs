@@ -51,12 +51,10 @@ internal sealed class PacManGhostBehavior : BlingoSpriteBehavior,
         _coordinator = _globals.GameBehavior;
         ApplyAppearance();
         _coordinator?.RegisterGhost(this);
-        Me.Visibility = true;
     }
 
     public void EndSprite()
     {
-        Me.Visibility = false;
         _coordinator?.UnregisterGhost(this);
     }
 

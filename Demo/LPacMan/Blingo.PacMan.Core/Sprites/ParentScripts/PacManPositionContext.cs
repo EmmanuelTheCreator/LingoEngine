@@ -1,11 +1,10 @@
-using System;
 using Blingo.PacMan.Core.Game;
 
 namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
-internal sealed class PacManPositionEventArgs : EventArgs
+internal sealed class PacManPositionContext
 {
-    public PacManPositionEventArgs(float x, float y, Tile? tile, PacManDirection direction)
+    public PacManPositionContext(float x, float y, Tile? tile, PacManDirection direction)
     {
         X = x;
         Y = y;
