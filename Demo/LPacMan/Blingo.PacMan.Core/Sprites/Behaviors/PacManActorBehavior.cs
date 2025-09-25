@@ -197,10 +197,6 @@ internal sealed class PacManActorBehavior : BlingoSpriteBehavior,
             Direction = PacManDirection.Left,
             Preturn = true,
         });
-        _character.SetAnimationLabel(PacManDirection.Left, "left");
-        _character.SetAnimationLabel(PacManDirection.Right, "right");
-        _character.SetAnimationLabel(PacManDirection.Up, "up");
-        _character.SetAnimationLabel(PacManDirection.Down, "down");
         _tileEnteredSubscription = _character.SubscribeTileEntered(OnTileEntered);
         return _character;
     }

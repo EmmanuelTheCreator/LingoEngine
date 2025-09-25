@@ -339,6 +339,7 @@ public class PacManProjectFactory : IBlingoProjectFactory
             sprite.Puppet = true;
             sprite.Visibility = false;
         });
+        roamingBonus.AddBehavior<BlPacmanAnimationBehavior>();
         roamingBonus.AddBehavior<PacManRoamingBonusBehavior>();
 
         var pacMan = _movie.AddSprite("PacMan.Actor", sprite =>

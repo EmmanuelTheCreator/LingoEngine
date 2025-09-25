@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Sprites.Behaviors;
 using BlingoEngine.Core;
@@ -13,14 +12,6 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private const float DefaultStep = 10f;
     private const float DefaultSpeed = 80f;
     private const float PositionTolerance = 1f;
-
-    private readonly Dictionary<PacManDirection, string> _animationLabels = new()
-    {
-        { PacManDirection.Left, "left" },
-        { PacManDirection.Right, "right" },
-        { PacManDirection.Up, "up" },
-        { PacManDirection.Down, "down" },
-    };
 
     private readonly PacManEventMediator<BlPacManCharacter> _moveStarted = new();
     private readonly PacManEventMediator<BlPacManCharacter> _stopped = new();
@@ -302,16 +293,6 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         Update();
     }
 
-    public void SetAnimationLabel(PacManDirection direction, string label)
-    {
-        if (label is null)
-        {
-            throw new ArgumentNullException(nameof(label));
-        }
-
-        _animationLabels[direction] = label;
-    }
-
     public void ForceDirection(PacManDirection direction)
     {
         _previousDirection = Direction;
@@ -465,15 +446,15 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             return;
         }
 
-        if (_animationLabels.TryGetValue(Direction, out var label))
-        {
-            _nextAnimation = label;
-            _nextDirection = Direction;
-        }
-        else
+        var label = GetAnimationLabel(Direction);
+        if (label is null)
         {
             _nextAnimation = null;
+            return;
         }
+
+        _nextAnimation = label;
+        _nextDirection = Direction;
     }
 
     private float GetStep()
@@ -519,6 +500,18 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private static bool AreEqual(float a, float b)
     {
         return Math.Abs(a - b) < 0.001f;
+    }
+
+    private static string? GetAnimationLabel(PacManDirection direction)
+    {
+        return direction switch
+        {
+            PacManDirection.Left => "left",
+            PacManDirection.Right => "right",
+            PacManDirection.Up => "up",
+            PacManDirection.Down => "down",
+            _ => null,
+        };
     }
 
     private void WrapPosition()
