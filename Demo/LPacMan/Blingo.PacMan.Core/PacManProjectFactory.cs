@@ -347,6 +347,7 @@ public class PacManProjectFactory : IBlingoProjectFactory
             sprite.Puppet = true;
             sprite.Visibility = false;
         });
+        pacMan.AddBehavior<BlPacmanAnimationBehavior>();
         pacMan.AddBehavior<PacManActorBehavior>();
 
         var ghostNames = new[] { "Blinky", "Pinky", "Inky", "Clyde" };
@@ -358,6 +359,7 @@ public class PacManProjectFactory : IBlingoProjectFactory
                 sprite.Puppet = true;
                 sprite.Visibility = false;
             });
+            ghost.AddBehavior<BlPacmanAnimationBehavior>();
             ghost.AddBehavior<PacManGhostBehavior>(behavior =>
             {
                 behavior.GhostName = ghostNames[i];

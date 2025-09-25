@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Sprites.Behaviors;
 using BlingoEngine.Core;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
@@ -371,11 +372,6 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         return Map.GetTile(X, Y, true);
     }
 
-    public void Destroy()
-    {
-        _sprite.RemoveMe();
-    }
-
     public void Hide()
     {
         _sprite.Visibility = false;
@@ -399,7 +395,13 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private void ApplyAnimation(string? animation)
     {
-        // Hook for integrating with the engine's animation system when available.
+        if (animation is null)
+        {
+            TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
+            return;
+        }
+
+        TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(animation));
     }
 
     private void CaptureDefaults()
@@ -432,11 +434,16 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void PauseCharacterAnimation()
     {
         _sprite.Pause();
+        TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
     }
 
     private void ResumeCharacterAnimation()
     {
         _sprite.Play();
+        if (_animation is not null)
+        {
+            TrySendSprite<BlPacmanAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(_animation));
+        }
     }
 
     private void UpdateDirection(PacManDirection direction)
