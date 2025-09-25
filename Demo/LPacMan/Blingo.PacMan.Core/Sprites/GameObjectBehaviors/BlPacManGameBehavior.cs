@@ -57,8 +57,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private BlPacManPositionContext? _lastPacManPosition;
 
     private bool _initialized;
-    private bool _muted;
-    private bool _paused;
     private bool _win;
     private bool _gameOver;
 
@@ -269,7 +267,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_paused)
+        if (IsPaused)
         {
             return;
         }
@@ -328,16 +326,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void ToggleSound()
     {
-        if (_muted)
-        {
-            _Player.SoundPlayBack();
-        }
-        else
+        var muted = !IsMuted;
+        _globals.IsMuted = muted;
+
+        if (muted)
         {
             _Player.SoundStopBack();
         }
-
-        _muted = !_muted;
+        else
+        {
+            _Player.SoundPlayBack();
+        }
     }
 
     /// <summary>
@@ -345,8 +344,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void TogglePause()
     {
-        _paused = !_paused;
-        if (_paused)
+        var paused = !IsPaused;
+        _globals.IsPaused = paused;
+        if (paused)
         {
             Pause();
         }
@@ -371,7 +371,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private void Resume()
     {
         Model.Resume();
-        if (!_muted)
+        if (!IsMuted)
         {
             _Player.SoundPlayBack();
         }
@@ -388,7 +388,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _startCountdown = 2;
         _win = false;
         _gameOver = false;
-        _paused = false;
+        _globals.IsPaused = false;
         _remainingConsumables = 0;
         _consumables.Clear();
         _bonusAppearCountdown = 500;
@@ -415,7 +415,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _modelSubscriptions.Add(Model.SubscribeScoreChanged(OnScoreChanged));
         _modelSubscriptions.Add(Model.SubscribeHighScoreChanged(OnHighScoreChanged));
         _modelSubscriptions.Add(Model.SubscribeLivesChanged(OnLivesChanged));
-        _modelSubscriptions.Add(Model.SubscribeExtraLivesChanged(OnExtraLivesChanged));
         _modelSubscriptions.Add(Model.SubscribeModeChanged(OnModeChanged));
         _modelSubscriptions.Add(Model.SubscribeLevelChanged(OnLevelChanged));
     }
@@ -456,10 +455,14 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     /// </summary>
     public GameModel GameModel => Model;
 
+    private bool IsMuted => _globals.IsMuted;
+
+    private bool IsPaused => _globals.IsPaused;
+
     /// <summary>
     /// Gets a value indicating whether gameplay updates should be skipped for this frame.
     /// </summary>
-    public bool IsGameplayFrozen => _paused || _pauseFrames > 0 || _startCountdown > 0 || _win || _gameOver || _pacManEatenPending;
+    public bool IsGameplayFrozen => IsPaused || _pauseFrames > 0 || _startCountdown > 0 || _win || _gameOver || _pacManEatenPending;
 
     /// <summary>
     /// Provides a subscription to Pac-Man's live position feed.
@@ -512,7 +515,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
 
         Model.AddScore(score);
-        _Player.SoundPlayEat();
         _soundBackCooldown = 5;
         _pauseFrames = Math.Max(_pauseFrames, 15);
         ghost.OnEaten(score);
@@ -530,8 +532,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
         _pacManEatenPending = true;
         _ghostChainIndex = 0;
-        _Player.SoundPlayEaten();
-        _Player.SoundStopBack();
+        _pacMan?.OnEatenByGhost();
         _pauseFrames = Math.Max(_pauseFrames, 40);
         _soundBackCooldown = 0;
 
@@ -571,7 +572,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             Model.AddScore(score);
         }
 
-        _Player.SoundPlayBonus();
         _bonusLocked = true;
         _bonusDestroyCountdown = 45;
         bonus.ShowScore();
@@ -603,7 +603,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
-    /// Processes score, audio, and frightened state when Pac-Man eats a consumable.
+    /// Processes score and frightened state when Pac-Man eats a consumable.
     /// </summary>
     public void NotifyConsumableEaten(BlPacManConsumableComponent consumable)
     {
@@ -617,23 +617,14 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             _remainingConsumables--;
         }
 
-        switch (consumable.Type)
+        if (consumable.Type == BlPacManConsumableType.PowerPill)
         {
-            case BlPacManConsumableType.Pellet:
-                _Player.SoundPlayDot();
-                break;
-            case BlPacManConsumableType.PowerPill:
-                _Player.SoundPlayFrightened();
-                _pauseFrames = Math.Max(_pauseFrames, 2);
-                _ghostChainIndex = 0;
-                foreach (var ghost in _ghosts)
-                {
-                    ghost.SetMode(GhostMode.Frightened);
-                }
-                break;
-            case BlPacManConsumableType.Bonus:
-                _Player.SoundPlayBonus();
-                break;
+            _pauseFrames = Math.Max(_pauseFrames, 2);
+            _ghostChainIndex = 0;
+            foreach (var ghost in _ghosts)
+            {
+                ghost.SetMode(GhostMode.Frightened);
+            }
         }
 
         Model.AddScore(consumable.ScoreValue);
@@ -825,14 +816,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
-    /// Plays the extra-life sound whenever the model awards one.
-    /// </summary>
-    private void OnExtraLivesChanged(int _)
-    {
-        _Player.SoundPlayLife();
-    }
-
-    /// <summary>
     /// Propagates global mode changes to each registered ghost.
     /// </summary>
     private void OnModeChanged(GhostMode? mode)
@@ -907,7 +890,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_muted || _pacManEatenPending || _paused)
+        if (IsMuted || _pacManEatenPending || IsPaused)
         {
             return;
         }

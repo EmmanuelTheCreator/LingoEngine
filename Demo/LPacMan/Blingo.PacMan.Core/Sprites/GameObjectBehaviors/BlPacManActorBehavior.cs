@@ -203,6 +203,49 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         character.Update();
     }
 
+    /// <summary>
+    /// Plays the appropriate sound effect when Pac-Man consumes an item.
+    /// </summary>
+    /// <param name="consumable">The component representing the consumed item.</param>
+    internal void HandleConsumableEaten(BlPacManConsumableComponent consumable)
+    {
+        if (consumable is null)
+        {
+            return;
+        }
+
+        if (_globals.IsMuted)
+        {
+            return;
+        }
+
+        switch (consumable.Type)
+        {
+            case BlPacManConsumableType.Pellet:
+                _Player.SoundPlayDot();
+                break;
+            case BlPacManConsumableType.PowerPill:
+                _Player.SoundPlayFrightened();
+                break;
+            case BlPacManConsumableType.Bonus:
+                _Player.SoundPlayBonus();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handles the audio transition when Pac-Man is eaten by a ghost.
+    /// </summary>
+    internal void OnEatenByGhost()
+    {
+        if (!_globals.IsMuted)
+        {
+            _Player.SoundPlayEaten();
+        }
+
+        _Player.SoundStopBack();
+    }
+
     private void EnsureAppearance()
     {
         if (Me.Member is null)

@@ -292,6 +292,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="score">The awarded score (unused, but retained for clarity).</param>
     public void OnEaten(int score)
     {
+        if (!_globals.IsMuted)
+        {
+            _Player.SoundPlayEat();
+        }
+
         // Dead mode and speed adjustments are handled through SetMode and UpdateSpeedForCurrentMode.
         UpdateSpeedForCurrentMode(_character?.GetTile());
     }

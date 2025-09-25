@@ -386,7 +386,11 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         _active = false;
         ShowScore();
-        _coordinator.NotifyBonusEaten(this);
+        if (!_globals.IsMuted)
+        {
+            _Player.SoundPlayBonus();
+        }
+        _coordinator?.NotifyBonusEaten(this);
     }
 
     /// <summary>

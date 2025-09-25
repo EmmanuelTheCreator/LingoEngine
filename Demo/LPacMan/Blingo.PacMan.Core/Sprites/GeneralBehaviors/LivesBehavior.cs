@@ -22,6 +22,7 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     private readonly GlobalVars _globals;
     private GameModel? _model;
     private BlPacManEventSubscription? _livesSubscription;
+    private BlPacManEventSubscription? _extraLivesSubscription;
 
     private bool _isInitialized;
 
@@ -64,6 +65,8 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
             InitializeLives();
             _livesSubscription?.Release();
             _livesSubscription = _model.SubscribeLivesChanged(OnLivesChanged);
+            _extraLivesSubscription?.Release();
+            _extraLivesSubscription = _model.SubscribeExtraLivesChanged(OnExtraLivesChanged);
             _isInitialized = true;
         }
 
@@ -81,6 +84,8 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
         {
             _livesSubscription?.Release();
             _livesSubscription = null;
+            _extraLivesSubscription?.Release();
+            _extraLivesSubscription = null;
         }
 
         foreach (var pacman in _pacmen)
@@ -110,6 +115,14 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     private void OnLivesChanged(int _)
     {
         Render();
+    }
+
+    private void OnExtraLivesChanged(int _)
+    {
+        if (!_globals.IsMuted)
+        {
+            _Player.SoundPlayLife();
+        }
     }
 
     private void Render()

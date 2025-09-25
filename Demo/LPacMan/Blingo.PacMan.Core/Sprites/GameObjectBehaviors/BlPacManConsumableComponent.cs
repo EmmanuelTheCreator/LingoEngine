@@ -43,6 +43,7 @@ internal sealed class BlPacManConsumableComponent
         }
 
         Hide();
+        pacMan.HandleConsumableEaten(this);
         _coordinator?.UnregisterConsumable(this);
         _coordinator?.NotifyConsumableEaten(this);
     }

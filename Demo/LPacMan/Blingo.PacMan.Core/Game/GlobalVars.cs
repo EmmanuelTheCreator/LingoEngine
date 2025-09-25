@@ -21,6 +21,10 @@ public sealed class GlobalVars : BlingoGlobalVars
 
     public GhostSettings? CurrentGhostSettings { get; set; }
 
+    public bool IsMuted { get; set; }
+
+    public bool IsPaused { get; set; }
+
     internal BlPacManEventMediator<BlPacManFieldContext>? ConsumableFieldMediator { get; set; }
 
     internal BlPacManFieldContext? CurrentFieldContext { get; set; }
@@ -37,5 +41,7 @@ public sealed class GlobalVars : BlingoGlobalVars
         CurrentGhostSettings = null;
         ConsumableFieldMediator = null;
         CurrentFieldContext = null;
+        IsMuted = false;
+        IsPaused = false;
     }
 }
