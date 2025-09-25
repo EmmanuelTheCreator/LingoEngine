@@ -259,6 +259,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _bonus?.ResetForLife();
     }
 
+    /// <summary>
+    /// Runs the central gameplay loop for each frame, coordinating timers, audio, and state checks.
+    /// </summary>
     private void MainLoop()
     {
         if (_map is null)
@@ -320,6 +323,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         UpdateGhostAudioState();
     }
 
+    /// <summary>
+    /// Toggles the attract music playback while updating the muted flag.
+    /// </summary>
     private void ToggleSound()
     {
         if (_muted)
@@ -334,6 +340,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _muted = !_muted;
     }
 
+    /// <summary>
+    /// Switches between paused and resumed gameplay states, invoking the appropriate handlers.
+    /// </summary>
     private void TogglePause()
     {
         _paused = !_paused;
@@ -347,12 +356,18 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Notifies the model of a pause and halts looping sound effects.
+    /// </summary>
     private void Pause()
     {
         Model.Pause();
         _Player.SoundStopBack();
     }
 
+    /// <summary>
+    /// Resumes the model and background sounds if audio is not muted.
+    /// </summary>
     private void Resume()
     {
         Model.Resume();
@@ -362,6 +377,10 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Clears transient counters and optionally resets the score when restarting gameplay.
+    /// </summary>
+    /// <param name="resetScore">Whether to wipe the player's score.</param>
     private void ResetInternalState(bool resetScore)
     {
         _pauseFrames = 0;
@@ -387,6 +406,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         Model.ResetLives(Model.GetGameSettings().DefaultLives + 1);
     }
 
+    /// <summary>
+    /// Subscribes to model change notifications so the behaviour can react to score, lives, and mode updates.
+    /// </summary>
     private void SubscribeModelEvents()
     {
         ReleaseModelSubscriptions();
@@ -398,11 +420,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _modelSubscriptions.Add(Model.SubscribeLevelChanged(OnLevelChanged));
     }
 
+    /// <summary>
+    /// Removes all subscriptions registered by <see cref="SubscribeModelEvents"/>.
+    /// </summary>
     private void UnsubscribeModelEvents()
     {
         ReleaseModelSubscriptions();
     }
 
+    /// <summary>
+    /// Releases each model subscription to avoid leaking event handlers between sessions.
+    /// </summary>
     private void ReleaseModelSubscriptions()
     {
         if (_modelSubscriptions.Count == 0)
@@ -418,12 +446,24 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _modelSubscriptions.Clear();
     }
 
+    /// <summary>
+    /// Gets the map currently being played.
+    /// </summary>
     public Map? CurrentMap => _map;
 
+    /// <summary>
+    /// Gets the backing model powering the gameplay loop.
+    /// </summary>
     public GameModel GameModel => Model;
 
+    /// <summary>
+    /// Gets a value indicating whether gameplay updates should be skipped for this frame.
+    /// </summary>
     public bool IsGameplayFrozen => _paused || _pauseFrames > 0 || _startCountdown > 0 || _win || _gameOver || _pacManEatenPending;
 
+    /// <summary>
+    /// Provides a subscription to Pac-Man's live position feed.
+    /// </summary>
     public BlPacManEventSubscription SubscribePacManPosition(Action<BlPacManPositionContext> handler)
     {
         if (handler is null)
@@ -441,6 +481,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         return subscription;
     }
 
+    /// <summary>
+    /// Searches for a registered ghost by name.
+    /// </summary>
     public BlPacManGhostBehavior? FindGhost(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -451,6 +494,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         return _ghosts.FirstOrDefault(g => string.Equals(g.GhostName, name, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    /// Awards score and handles audio when Pac-Man eats a ghost.
+    /// </summary>
     public void NotifyGhostEaten(BlPacManGhostBehavior ghost)
     {
         if (ghost is null)
@@ -472,6 +518,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         ghost.OnEaten(score);
     }
 
+    /// <summary>
+    /// Handles Pac-Man's death sequence and schedules the life reset.
+    /// </summary>
     public void NotifyPacManEaten()
     {
         if (_pacManEatenPending || _gameOver)
@@ -501,6 +550,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         Model.ResetLives(lives);
     }
 
+    /// <summary>
+    /// Handles Pac-Man collecting the roaming bonus by awarding score and scheduling its removal.
+    /// </summary>
     public void NotifyBonusEaten(BlPacManRoamingBonusBehavior bonus)
     {
         if (bonus is null)
@@ -525,6 +577,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         bonus.ShowScore();
     }
 
+    /// <summary>
+    /// Locks the bonus when it leaves the maze without being eaten.
+    /// </summary>
     public void NotifyBonusExpired(BlPacManRoamingBonusBehavior bonus)
     {
         if (_bonus == bonus)
@@ -533,6 +588,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Registers a dot, pill, or bonus so the coordinator can track remaining items.
+    /// </summary>
     public void RegisterConsumable(BlPacManConsumableComponent consumable)
     {
         if (consumable is null)
@@ -544,6 +602,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _remainingConsumables++;
     }
 
+    /// <summary>
+    /// Processes score, audio, and frightened state when Pac-Man eats a consumable.
+    /// </summary>
     public void NotifyConsumableEaten(BlPacManConsumableComponent consumable)
     {
         if (consumable is null)
@@ -583,6 +644,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Hooks Pac-Man into the coordinator and reapplies the latest settings.
+    /// </summary>
     public void RegisterPacMan(BlPacManActorBehavior pacMan)
     {
         _pacMan = pacMan ?? throw new ArgumentNullException(nameof(pacMan));
@@ -594,6 +658,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         HookPacManEvents(_pacMan);
     }
 
+    /// <summary>
+    /// Adds a ghost to the internal registry and configures it with the current level data.
+    /// </summary>
     public void RegisterGhost(BlPacManGhostBehavior ghost)
     {
         if (ghost is null)
@@ -612,6 +679,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Stores the roaming bonus instance so it can be triggered when the timer elapses.
+    /// </summary>
     public void RegisterBonus(BlPacManRoamingBonusBehavior bonus)
     {
         _bonus = bonus ?? throw new ArgumentNullException(nameof(bonus));
@@ -621,6 +691,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Removes a consumable from the remaining counter when it leaves the stage.
+    /// </summary>
     public void UnregisterConsumable(BlPacManConsumableComponent consumable)
     {
         if (consumable is null)
@@ -631,6 +704,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _consumables.Remove(consumable);
     }
 
+    /// <summary>
+    /// Clears references when Pac-Man's sprite is removed from the stage.
+    /// </summary>
     public void UnregisterPacMan(BlPacManActorBehavior pacMan)
     {
         if (_pacMan == pacMan)
@@ -640,11 +716,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Removes a ghost from the internal list.
+    /// </summary>
     public void UnregisterGhost(BlPacManGhostBehavior ghost)
     {
         _ghosts.Remove(ghost);
     }
 
+    /// <summary>
+    /// Clears the active bonus reference once it despawns.
+    /// </summary>
     public void UnregisterBonus(BlPacManRoamingBonusBehavior bonus)
     {
         if (_bonus == bonus)
@@ -653,6 +735,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Subscribes to Pac-Man callbacks and immediately publishes his current position.
+    /// </summary>
     private void HookPacManEvents(BlPacManActorBehavior pacMan)
     {
         if (pacMan is null)
@@ -677,6 +762,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _pacManPositionChanged.Publish(context);
     }
 
+    /// <summary>
+    /// Emits a snapshot of Pac-Man's position to all subscribers.
+    /// </summary>
     private void BroadcastPacManPosition()
     {
         if (_pacMan is null)
@@ -689,6 +777,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         OnPacManPositionChanged(new BlPacManPositionContext(sprite.LocH, sprite.LocV, character.GetTile(), character.Direction));
     }
 
+    /// <summary>
+    /// Releases any temporary subscriptions when Pac-Man despawns.
+    /// </summary>
     private void ReleasePacManSubscriptions()
     {
         if (_pacManSubscriptions.Count == 0)
@@ -704,16 +795,25 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _pacManSubscriptions.Clear();
     }
 
+    /// <summary>
+    /// Placeholder hook for HUD updates once the score display behaviours are connected.
+    /// </summary>
     private void OnScoreChanged(int score)
     {
         // Score display is handled by dedicated HUD behaviours. Keep the hook for future updates.
     }
 
+    /// <summary>
+    /// Placeholder hook that will bridge to the high-score HUD once implemented.
+    /// </summary>
     private void OnHighScoreChanged(int score)
     {
         // Update hooks for score and HUD elements will be wired up once the UI sprites are in place.
     }
 
+    /// <summary>
+    /// Handles the game-over transition when the player's lives reach zero.
+    /// </summary>
     private void OnLivesChanged(int lives)
     {
         if (lives == 0)
@@ -724,11 +824,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Plays the extra-life sound whenever the model awards one.
+    /// </summary>
     private void OnExtraLivesChanged(int _)
     {
         _Player.SoundPlayLife();
     }
 
+    /// <summary>
+    /// Propagates global mode changes to each registered ghost.
+    /// </summary>
     private void OnModeChanged(GhostMode? mode)
     {
         if (_ghosts.Count == 0)
@@ -742,11 +848,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Keeps the bonus display model in sync with the active level.
+    /// </summary>
     private void OnLevelChanged(int level)
     {
         BonusesModel.Level = level;
     }
 
+    /// <summary>
+    /// Advances timers that control when the roaming bonus appears, despawns, or moves.
+    /// </summary>
     private void UpdateBonusLifecycle()
     {
         if (_bonus is null)
@@ -784,6 +896,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _bonus.Tick();
     }
 
+    /// <summary>
+    /// Chooses which looping audio to play based on frightened and dead ghost states.
+    /// </summary>
     private void UpdateGhostAudioState()
     {
         if (_soundBackCooldown > 0)
@@ -809,6 +924,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _soundBackCooldown = 5;
     }
 
+    /// <summary>
+    /// Restores actors after Pac-Man loses a life and restarts the countdown.
+    /// </summary>
     private void ResumeAfterPacManEaten()
     {
         if (!_pacManEatenPending || Model.Lives == 0)

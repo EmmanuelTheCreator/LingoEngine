@@ -12,6 +12,9 @@ using BlingoEngine.Sprites.Events;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
+/// <summary>
+/// Controls the roaming bonus fruit, including spawn timing, navigation, and score reveal logic.
+/// </summary>
 internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent
@@ -43,12 +46,18 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     private int _remainingTargetVisits;
     private BlPacManDirection _direction = BlPacManDirection.Left;
 
+    /// <summary>
+    /// Initialises the bonus behaviour with the movie environment and shared globals.
+    /// </summary>
     public BlPacManRoamingBonusBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
     }
 
+    /// <summary>
+    /// Applies the current level settings used to determine spawn/target tiles and score values.
+    /// </summary>
     public void Configure(BlPacManGameBehavior coordinator, GameSettings settings)
     {
         _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
@@ -63,6 +72,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Registers the bonus with the coordinator and starts listening to Pac-Man position updates.
+    /// </summary>
     public void BeginSprite()
     {
         _coordinator = _globals.GameBehavior;
@@ -76,6 +88,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _coordinator?.RegisterBonus(this);
     }
 
+    /// <summary>
+    /// Releases event subscriptions when the sprite is removed.
+    /// </summary>
     public void EndSprite()
     {
         _coordinator?.UnregisterBonus(this);
@@ -86,6 +101,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _character = null;
     }
 
+    /// <summary>
+    /// Moves the fruit once it is active in the maze.
+    /// </summary>
     public void Tick()
     {
         if (!_active)
@@ -108,6 +126,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         CheckCollision(character);
     }
 
+    /// <summary>
+    /// Spawns the fruit and primes its target visit counter.
+    /// </summary>
     public void Activate()
     {
         var character = EnsureCharacter();
@@ -119,6 +140,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         SetAnimation("default");
     }
 
+    /// <summary>
+    /// Removes the fruit from the maze and resets animations.
+    /// </summary>
     public void Deactivate()
     {
         _active = false;
@@ -129,16 +153,25 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         SetAnimation("default");
     }
 
+    /// <summary>
+    /// Hides the fruit when Pac-Man loses a life.
+    /// </summary>
     public void ResetForLife()
     {
         Deactivate();
     }
 
+    /// <summary>
+    /// Ensures the fruit is hidden during the death animation.
+    /// </summary>
     public void OnPacManEaten()
     {
         Deactivate();
     }
 
+    /// <summary>
+    /// Switches the sprite to display the awarded score after being eaten.
+    /// </summary>
     public void ShowScore()
     {
         if (_scoreValue > 0)
@@ -147,6 +180,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Configures the sprite's member and default animation frames.
+    /// </summary>
     private void ApplyAppearance()
     {
         var cast = CastLib("Data");
@@ -171,6 +207,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         SetAnimation("default");
     }
 
+    /// <summary>
+    /// Lazily instantiates the character helper so the bonus can traverse the tile map.
+    /// </summary>
     private BlPacManCharacter EnsureCharacter()
     {
         if (_character is not null)
@@ -193,6 +232,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         return _character;
     }
 
+    /// <summary>
+    /// Registers each possible score animation lazily.
+    /// </summary>
     private void EnsureAnimations()
     {
         if (_animationsConfigured)
@@ -215,16 +257,25 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _animationsConfigured = true;
     }
 
+    /// <summary>
+    /// Applies the named animation if it has been registered.
+    /// </summary>
     private void SetAnimation(string name)
     {
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior => behavior.Play(name));
     }
 
+    /// <summary>
+    /// Stores Pac-Man's current tile for collision checks.
+    /// </summary>
     private void OnPacManPositionChanged(BlPacManPositionContext context)
     {
         _pacManPosition = context;
     }
 
+    /// <summary>
+    /// Tracks visits to the target tile so the fruit despawns after reaching its end point twice.
+    /// </summary>
     private void OnTileEntered(BlPacManTileContext context)
     {
         if (!_active || context is null)
@@ -243,6 +294,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Determines the next direction that moves the fruit closer to its goal while avoiding walls.
+    /// </summary>
     private BlPacManDirection GetNextDirection(Tile tile)
     {
         if (_targetTile is null)
@@ -297,12 +351,18 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         return bestDirection;
     }
 
+    /// <summary>
+    /// Indicates whether the fruit can travel into the specified tile.
+    /// </summary>
     private bool CanMove(BlPacManDirection direction, Tile tile)
     {
         var next = tile.Get(direction);
         return next is not null && !next.IsWall() && !next.IsHouse();
     }
 
+    /// <summary>
+    /// Detects collisions with Pac-Man and notifies the coordinator when the fruit is eaten.
+    /// </summary>
     private void CheckCollision(BlPacManCharacter character)
     {
         if (!_active || _coordinator is null || _pacManPosition is not { Tile: { } pacTile })
@@ -329,6 +389,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _coordinator.NotifyBonusEaten(this);
     }
 
+    /// <summary>
+    /// Utility for generating sprite-sheet rectangles.
+    /// </summary>
     private static ARect CreateFrame(int offsetX, int offsetY)
     {
         return new ARect(offsetX, offsetY, offsetX + FrameSize, offsetY + FrameSize);

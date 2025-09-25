@@ -16,6 +16,10 @@ using AbstUI.Primitives;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
+/// <summary>
+/// Drives the Pac-Man avatar sprite, including keyboard input handling, animation swapping, and
+/// dispatching position events to the rest of the gameplay behaviours.
+/// </summary>
 internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
@@ -54,12 +58,20 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     private bool _isActorRegistered;
     private bool _animationsConfigured;
 
+    /// <summary>
+    /// Initialises the behaviour with the movie environment and shared global references.
+    /// </summary>
     public BlPacManActorBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
     }
 
+    /// <summary>
+    /// Applies the current level settings retrieved from the model.
+    /// </summary>
+    /// <param name="coordinator">The gameplay coordinator managing global state.</param>
+    /// <param name="settings">Speed and mode settings for Pac-Man.</param>
     public void Configure(BlPacManGameBehavior coordinator, PacmanSettings settings)
     {
         _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
@@ -76,6 +88,9 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         ResetPosition();
     }
 
+    /// <summary>
+    /// Registers the behaviour as an actor and starts listening for movement updates.
+    /// </summary>
     public void BeginSprite()
     {
         if (!_isActorRegistered)
@@ -90,6 +105,9 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _coordinator?.RegisterPacMan(this);
     }
 
+    /// <summary>
+    /// Stops tracking Pac-Man when the sprite is removed from the stage.
+    /// </summary>
     public void EndSprite()
     {
         _coordinator?.UnregisterPacMan(this);
@@ -97,12 +115,18 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _tileEnteredSubscription = null;
     }
 
+    /// <summary>
+    /// Moves Pac-Man in the last requested direction.
+    /// </summary>
     public void StepFrame()
     {
         EnsureCharacter().Move(_requestedDirection);
         _requestedDirection = BlPacManDirection.None;
     }
 
+    /// <summary>
+    /// Translates keyboard input into direction requests that the next StepFrame will honour.
+    /// </summary>
     public void KeyDown(BlingoKeyEvent key)
     {
         if (key is null)
@@ -128,6 +152,9 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Consumes dots or pills when Pac-Man enters a tile containing a consumable component.
+    /// </summary>
     private void OnTileEntered(BlPacManTileContext args)
     {
         if (args.Tile.Item is BlPacManConsumableComponent consumable)
@@ -136,23 +163,38 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Exposes the underlying movement helper for other behaviours.
+    /// </summary>
     internal BlPacManCharacter Character => EnsureCharacter();
 
+    /// <summary>
+    /// Allows other behaviours to observe Pac-Man's tile and pixel position.
+    /// </summary>
     internal BlPacManEventSubscription SubscribePacManPosition(Action<BlPacManPositionContext> handler)
     {
         return EnsureCharacter().SubscribePositionChanged(handler);
     }
 
+    /// <summary>
+    /// Hides Pac-Man's sprite.
+    /// </summary>
     internal void Hide()
     {
         EnsureCharacter().Hide();
     }
 
+    /// <summary>
+    /// Shows Pac-Man's sprite.
+    /// </summary>
     internal void Show()
     {
         EnsureCharacter().Show();
     }
 
+    /// <summary>
+    /// Resets Pac-Man's position and clears transient timers after a lost life.
+    /// </summary>
     internal void ResetForLife()
     {
         var character = EnsureCharacter();

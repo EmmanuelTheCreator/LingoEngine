@@ -13,11 +13,17 @@ using BlingoEngine.Sprites.Events;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
+/// <summary>
+/// Implements the runtime behaviour for one of the four ghosts. The class mirrors the original
+/// JavaScript logic by handling scatter/chase mode transitions, frightened timers, collision
+/// detection, and target selection for each named ghost.
+/// </summary>
 internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
     IHasExitFrameEvent
 {
+    // Sprite sheet rectangles for each ghost's default animation row.
     private static readonly Dictionary<string, ARect> GhostRects = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Blinky"] = new ARect(0, 0, 32, 32),
@@ -26,6 +32,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         ["Clyde"] = new ARect(96, 0, 128, 32),
     };
 
+    // Horizontal offsets to stagger the ghosts within the house at level start.
     private static readonly Dictionary<string, float> HorizontalOffsets = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Blinky"] = -32f,
@@ -34,6 +41,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         ["Clyde"] = 32f,
     };
 
+    // Initial direction per ghost to mirror the arcade openings.
     private static readonly Dictionary<string, BlPacManDirection> InitialDirections = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Blinky"] = BlPacManDirection.Left,
@@ -68,14 +76,30 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
     }
 
+    /// <summary>
+    /// Gets or sets the friendly name of the ghost. The name determines sprite offsets and
+    /// targeting rules.
+    /// </summary>
     public string GhostName { get; set; } = "Ghost";
 
+    /// <summary>
+    /// Gets a value indicating whether the ghost is currently frightened.
+    /// </summary>
     public bool IsFrightened => _mode == GhostMode.Frightened;
 
+    /// <summary>
+    /// Gets a value indicating whether the ghost is travelling back to the house as eyes.
+    /// </summary>
     public bool IsDead => _mode == GhostMode.Dead;
 
+    /// <summary>
+    /// Returns the tile currently occupied by the ghost's collision centre.
+    /// </summary>
     internal Tile? CurrentTile => _character?.GetTile();
 
+    /// <summary>
+    /// Initialises the ghost, binds to the coordinator, and subscribes to Pac-Man position updates.
+    /// </summary>
     public void BeginSprite()
     {
         _coordinator = _globals.GameBehavior;
@@ -92,6 +116,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _coordinator?.RegisterGhost(this);
     }
 
+    /// <summary>
+    /// Cleans up sprite state and unsubscribes from external events when the ghost is removed.
+    /// </summary>
     public void EndSprite()
     {
         _coordinator?.UnregisterGhost(this);
@@ -102,6 +129,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _character = null;
     }
 
+    /// <summary>
+    /// Performs the per-frame movement and collision logic for the ghost.
+    /// </summary>
     public void ExitFrame()
     {
         if (_coordinator is null)
@@ -167,6 +197,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateCollision(character);
     }
 
+    /// <summary>
+    /// Updates the ghost's current mode, handling frightened overrides and scatter/chase flips.
+    /// </summary>
+    /// <param name="mode">The explicit mode to enter, or <c>null</c> to track the global mode.</param>
     public void SetMode(GhostMode? mode)
     {
         if (mode is null)
@@ -204,6 +238,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateSpeedForCurrentMode(_character?.GetTile());
     }
 
+    /// <summary>
+    /// Applies map references and per-level settings coming from the model.
+    /// </summary>
+    /// <param name="coordinator">The active gameplay coordinator.</param>
+    /// <param name="settings">The ghost tuning for the current level.</param>
     public void Configure(BlPacManGameBehavior coordinator, GhostSettings settings)
     {
         _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
@@ -227,8 +266,14 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateSpeedForCurrentMode(character.GetTile());
     }
 
+    /// <summary>
+    /// Responds to Pac-Man losing a life by hiding the ghost until the restart animation finishes.
+    /// </summary>
     public void OnPacManEaten() => Hide();
 
+    /// <summary>
+    /// Resets mode, speed, and direction after a Pac-Man death.
+    /// </summary>
     public void ResetForLife()
     {
         var character = EnsureCharacter();
@@ -241,16 +286,29 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateSpeedForCurrentMode(character.GetTile());
     }
 
+    /// <summary>
+    /// Called when the ghost is eaten to adjust the frightened timer and ensure speed updates.
+    /// </summary>
+    /// <param name="score">The awarded score (unused, but retained for clarity).</param>
     public void OnEaten(int score)
     {
         // Dead mode and speed adjustments are handled through SetMode and UpdateSpeedForCurrentMode.
         UpdateSpeedForCurrentMode(_character?.GetTile());
     }
 
+    /// <summary>
+    /// Shows the ghost sprite.
+    /// </summary>
     public void Show() => EnsureCharacter().Show();
 
+    /// <summary>
+    /// Hides the ghost sprite.
+    /// </summary>
     public void Hide() => EnsureCharacter().Hide();
 
+    /// <summary>
+    /// Loads the sprite artwork and positions the ghost at the house entrance.
+    /// </summary>
     private void ApplyAppearance()
     {
         var cast = CastLib("Data");
@@ -282,6 +340,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _requestedDirection = _initialDirection;
     }
 
+    /// <summary>
+    /// Lazily creates the shared character helper used to move the sprite around the tile map.
+    /// </summary>
     private BlPacManCharacter EnsureCharacter()
     {
         if (_character is not null)
@@ -304,6 +365,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return _character;
     }
 
+    /// <summary>
+    /// Resolves the scatter and dead targets based on the active map.
+    /// </summary>
     private void ConfigureTargets()
     {
         var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
@@ -316,6 +380,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _deadTarget = DetermineDeadTarget(map);
     }
 
+    /// <summary>
+    /// Returns the corner tile that the ghost should orbit during scatter mode.
+    /// </summary>
     private Tile? DetermineScatterTarget(Map map)
     {
         var maxColumn = Math.Max(0, map.Width - 1);
@@ -330,16 +397,25 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         };
     }
 
+    /// <summary>
+    /// Identifies the tile inside the ghost house used when returning as eyes.
+    /// </summary>
     private static Tile? DetermineDeadTarget(Map map)
     {
         return map.HouseCenter ?? map.GetTile(map.Width / 2, map.Height / 2);
     }
 
+    /// <summary>
+    /// Looks up the initial direction for the named ghost.
+    /// </summary>
     private BlPacManDirection DetermineInitialDirection()
     {
         return InitialDirections.TryGetValue(GhostName, out var direction) ? direction : BlPacManDirection.Left;
     }
 
+    /// <summary>
+    /// Reacts to tile changes by refreshing the movement speed for tunnels and frightened mode.
+    /// </summary>
     private void OnTileEntered(BlPacManTileContext context)
     {
         if (context is null)
@@ -350,11 +426,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateSpeedForCurrentMode(context.Tile);
     }
 
+    /// <summary>
+    /// Stores the latest Pac-Man position for future target calculations.
+    /// </summary>
     private void OnPacManPositionChanged(BlPacManPositionContext context)
     {
         _pacManPosition = context;
     }
 
+    /// <summary>
+    /// Applies the correct effective speed based on the current mode and tile type.
+    /// </summary>
     private void UpdateSpeedForCurrentMode(Tile? tile)
     {
         if (_character is null)
@@ -379,6 +461,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _character.EffectiveSpeed = speed;
     }
 
+    /// <summary>
+    /// Counts down the frightened timer and returns the ghost to the global mode when it expires.
+    /// </summary>
     private void UpdateFrightenedTimer()
     {
         if (_mode != GhostMode.Frightened)
@@ -399,6 +484,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Chooses the direction that brings the ghost closest to the target while avoiding reversals.
+    /// </summary>
     private BlPacManDirection FindBestDirection(Tile tile, BlPacManDirection currentDirection, Tile? target)
     {
         var directions = new[]
@@ -447,6 +535,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return bestDirection;
     }
 
+    /// <summary>
+    /// Selects a random available direction during frightened mode, avoiding reversals where possible.
+    /// </summary>
     private BlPacManDirection GetRandomDirection(Tile tile, BlPacManDirection currentDirection)
     {
         var options = new List<BlPacManDirection>
@@ -475,6 +566,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return options[index];
     }
 
+    /// <summary>
+    /// Computes the tile the ghost should head towards based on its current mode.
+    /// </summary>
     private Tile? GetTargetTile()
     {
         return _mode switch
@@ -486,6 +580,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         };
     }
 
+    /// <summary>
+    /// Calculates the chase target tile according to each ghost's personality rules.
+    /// </summary>
     private Tile? GetChaseTargetTile()
     {
         if (_pacManPosition is not { Tile: { } pacTileNonNull })
@@ -536,6 +633,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return pacTileNonNull;
     }
 
+    /// <summary>
+    /// Returns the tile lying a number of steps ahead in the provided direction.
+    /// </summary>
     private static Tile? StepForward(Tile? tile, BlPacManDirection direction, int steps)
     {
         var current = tile;
@@ -547,6 +647,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return current;
     }
 
+    /// <summary>
+    /// Determines whether the ghost may enter the next tile, considering walls and the house rules.
+    /// </summary>
     private bool CanMove(BlPacManDirection direction, Tile tile)
     {
         var next = tile.Get(direction);
@@ -568,6 +671,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return true;
     }
 
+    /// <summary>
+    /// Checks for overlap with Pac-Man and notifies the coordinator of the outcome.
+    /// </summary>
     private void UpdateCollision(BlPacManCharacter character)
     {
         if (_coordinator is null || _mode == GhostMode.Dead || _pacManPosition is not { Tile: { } pacTile })
@@ -600,6 +706,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
     }
 
+    /// <summary>
+    /// Switches the ghost into frightened mode, reversing its direction and slowing it down.
+    /// </summary>
     private void EnterFrightenedMode()
     {
         if (_mode == GhostMode.Dead)
