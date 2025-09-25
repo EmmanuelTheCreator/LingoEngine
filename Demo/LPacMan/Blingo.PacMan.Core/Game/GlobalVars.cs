@@ -1,6 +1,7 @@
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using BlingoEngine.Core;
 
 namespace Blingo.PacMan.Core.Game;
@@ -15,6 +16,8 @@ public sealed class GlobalVars : BlingoGlobalVars
 
     internal BlPacManGameBehavior? GameBehavior { get; set; }
 
+    internal BlPacManAssetContainer Assets { get; } = new();
+
     public GameSettings? CurrentGameSettings { get; set; }
 
     public PacmanSettings? CurrentPacmanSettings { get; set; }
@@ -24,6 +27,8 @@ public sealed class GlobalVars : BlingoGlobalVars
     public bool IsMuted { get; set; }
 
     public bool IsPaused { get; set; }
+
+    internal BlPacManPauseBehavior? PauseBehavior { get; set; }
 
     internal BlPacManEventMediator<BlPacManFieldContext>? ConsumableFieldMediator { get; set; }
 
@@ -36,6 +41,7 @@ public sealed class GlobalVars : BlingoGlobalVars
         BonusesModel = null;
         MapProvider = null;
         GameBehavior = null;
+        Assets.Reset();
         CurrentGameSettings = null;
         CurrentPacmanSettings = null;
         CurrentGhostSettings = null;
@@ -43,5 +49,6 @@ public sealed class GlobalVars : BlingoGlobalVars
         CurrentFieldContext = null;
         IsMuted = false;
         IsPaused = false;
+        PauseBehavior = null;
     }
 }

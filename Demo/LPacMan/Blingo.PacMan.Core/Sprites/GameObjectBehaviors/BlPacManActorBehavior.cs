@@ -51,6 +51,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     };
 
     private readonly GlobalVars _globals;
+    private BlPacManAssetContainer? _assets;
     private BlPacManGameBehavior? _coordinator;
     private BlPacManDirection _requestedDirection;
     private BlPacManCharacter? _character;
@@ -99,10 +100,16 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             _isActorRegistered = true;
         }
         _coordinator = _globals.GameBehavior;
+        _assets = _globals.Assets;
         var character = EnsureCharacter();
         character.BeginSprite();
         EnsureAppearance();
-        _coordinator?.RegisterPacMan(this);
+        _assets.AttachPacMan(this);
+
+        if (_coordinator is not null && _globals.CurrentPacmanSettings is { } settings)
+        {
+            Configure(_coordinator, settings);
+        }
     }
 
     /// <summary>
@@ -110,9 +117,10 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void EndSprite()
     {
-        _coordinator?.UnregisterPacMan(this);
+        _assets?.DetachPacMan(this);
         _tileEnteredSubscription?.Release();
         _tileEnteredSubscription = null;
+        _assets = null;
     }
 
     /// <summary>
@@ -120,8 +128,10 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void StepFrame()
     {
-        EnsureCharacter().Move(_requestedDirection);
+        var character = EnsureCharacter();
+        character.Move(_requestedDirection);
         _requestedDirection = BlPacManDirection.None;
+        CheckCollisions(character);
     }
 
     /// <summary>
@@ -263,6 +273,47 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         {
             ConfigureAnimations();
             _animationsConfigured = true;
+        }
+    }
+
+    private void CheckCollisions(BlPacManCharacter character)
+    {
+        if (_assets is null || _coordinator is null || _coordinator.IsGameplayFrozen)
+        {
+            return;
+        }
+
+        var tile = character.GetTile();
+        if (tile is null)
+        {
+            return;
+        }
+
+        foreach (var ghost in _assets.Ghosts)
+        {
+            var ghostTile = ghost.CurrentTile;
+            if (ghostTile is null || !ReferenceEquals(ghostTile, tile) || ghost.IsDead)
+            {
+                continue;
+            }
+
+            if (ghost.IsFrightened)
+            {
+                ghost.SetMode(GhostMode.Dead);
+                _coordinator?.NotifyGhostEaten(ghost);
+            }
+            else
+            {
+                _coordinator?.NotifyPacManEaten();
+            }
+
+            return;
+        }
+
+        var bonus = _assets.Bonus;
+        if (bonus is not null && bonus.IsActive && ReferenceEquals(bonus.CurrentTile, tile))
+        {
+            bonus.Collect();
         }
     }
 

@@ -29,13 +29,10 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private GameModel? _model;
     private BonusesModel? _bonusesModel;
     private BlPacManMapProvider? _mapProvider;
-    private readonly List<BlPacManGhostBehavior> _ghosts = new();
-    private readonly List<BlPacManConsumableComponent> _consumables = new();
     private readonly List<BlPacManEventSubscription> _modelSubscriptions = new();
+    private readonly List<BlPacManEventSubscription> _assetSubscriptions = new();
 
     private Map? _map;
-    private BlPacManActorBehavior? _pacMan;
-    private BlPacManRoamingBonusBehavior? _bonus;
     private GameSettings? _currentGameSettings;
     private PacmanSettings? _currentPacmanSettings;
     private GhostSettings? _currentGhostSettings;
@@ -52,10 +49,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private bool _pacManEatenPending;
     private int _ghostChainIndex;
 
-    private readonly BlPacManEventMediator<BlPacManPositionContext> _pacManPositionChanged = new();
-    private readonly List<BlPacManEventSubscription> _pacManSubscriptions = new();
-    private BlPacManPositionContext? _lastPacManPosition;
-
     private bool _initialized;
     private bool _win;
     private bool _gameOver;
@@ -67,6 +60,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private BonusesModel BonusesModel => _bonusesModel ??= _globals.BonusesModel ?? throw new InvalidOperationException("BonusesModel was not initialised.");
 
     private BlPacManMapProvider MapProvider => _mapProvider ??= _globals.MapProvider ?? throw new InvalidOperationException("Pac-Man map provider was not initialised.");
+
+    private BlPacManAssetContainer Assets => _globals.Assets;
 
     public BlPacManGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
@@ -89,7 +84,9 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
+        Assets.Reset();
         SubscribeModelEvents();
+        SubscribeAssetEvents();
         ResetInternalState(resetScore: false);
         MakeLevel();
 
@@ -114,9 +111,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _currentPacmanSettings = null;
         _currentGhostSettings = null;
         UnsubscribeModelEvents();
-        _consumables.Clear();
-        _ghosts.Clear();
-        ReleasePacManSubscriptions();
+        ReleaseAssetSubscriptions();
+        Assets.Reset();
         _initialized = false;
     }
 
@@ -229,7 +225,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _pauseFrames = 80;
         _soundBackCooldown = 0;
         _remainingConsumables = 0;
-        _consumables.Clear();
 
         BonusesModel.Level = Model.Level;
 
@@ -240,21 +235,26 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             _globals.ConsumableFieldMediator?.Publish(context);
         }
 
-        if (_pacMan is not null && _currentPacmanSettings is not null)
+        if (Assets.PacMan is { } pacMan && _currentPacmanSettings is not null)
         {
-            _pacMan.Configure(this, _currentPacmanSettings);
+            pacMan.Configure(this, _currentPacmanSettings);
         }
 
-        foreach (var ghost in _ghosts)
+        if (_currentGhostSettings is not null)
         {
-            if (_currentGhostSettings is not null)
+            foreach (var ghost in Assets.Ghosts)
             {
                 ghost.Configure(this, _currentGhostSettings);
             }
         }
 
-        _bonus?.Configure(this, settings);
-        _bonus?.ResetForLife();
+        if (Assets.Bonus is { } bonus)
+        {
+            bonus.Configure(this, settings);
+            bonus.ResetForLife();
+        }
+
+        Assets.BroadcastPacManPosition();
     }
 
     /// <summary>
@@ -344,37 +344,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void TogglePause()
     {
-        var paused = !IsPaused;
-        _globals.IsPaused = paused;
-        if (paused)
-        {
-            Pause();
-        }
-        else
-        {
-            Resume();
-        }
-    }
-
-    /// <summary>
-    /// Notifies the model of a pause and halts looping sound effects.
-    /// </summary>
-    private void Pause()
-    {
-        Model.Pause();
-        _Player.SoundStopBack();
-    }
-
-    /// <summary>
-    /// Resumes the model and background sounds if audio is not muted.
-    /// </summary>
-    private void Resume()
-    {
-        Model.Resume();
-        if (!IsMuted)
-        {
-            _Player.SoundPlayBack();
-        }
+        _globals.PauseBehavior?.TogglePause();
     }
 
     /// <summary>
@@ -390,13 +360,12 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _gameOver = false;
         _globals.IsPaused = false;
         _remainingConsumables = 0;
-        _consumables.Clear();
         _bonusAppearCountdown = 500;
         _bonusDestroyCountdown = 0;
         _bonusLocked = false;
         _pacManEatenPending = false;
         _ghostChainIndex = 0;
-        _lastPacManPosition = null;
+        _globals.PauseBehavior?.Reset();
 
         if (resetScore)
         {
@@ -415,8 +384,19 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _modelSubscriptions.Add(Model.SubscribeScoreChanged(OnScoreChanged));
         _modelSubscriptions.Add(Model.SubscribeHighScoreChanged(OnHighScoreChanged));
         _modelSubscriptions.Add(Model.SubscribeLivesChanged(OnLivesChanged));
+        _modelSubscriptions.Add(Model.SubscribeExtraLivesChanged(OnExtraLivesChanged));
         _modelSubscriptions.Add(Model.SubscribeModeChanged(OnModeChanged));
         _modelSubscriptions.Add(Model.SubscribeLevelChanged(OnLevelChanged));
+    }
+
+    /// <summary>
+    /// Subscribes to asset container events so the coordinator can react to consumable updates.
+    /// </summary>
+    private void SubscribeAssetEvents()
+    {
+        ReleaseAssetSubscriptions();
+        _assetSubscriptions.Add(Assets.SubscribeConsumableRegistered(OnConsumableRegistered));
+        _assetSubscriptions.Add(Assets.SubscribeConsumableEaten(OnConsumableEaten));
     }
 
     /// <summary>
@@ -446,6 +426,24 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
+    /// Releases the event subscriptions registered against the asset container.
+    /// </summary>
+    private void ReleaseAssetSubscriptions()
+    {
+        if (_assetSubscriptions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var subscription in _assetSubscriptions)
+        {
+            subscription.Release();
+        }
+
+        _assetSubscriptions.Clear();
+    }
+
+    /// <summary>
     /// Gets the map currently being played.
     /// </summary>
     public Map? CurrentMap => _map;
@@ -465,26 +463,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     public bool IsGameplayFrozen => IsPaused || _pauseFrames > 0 || _startCountdown > 0 || _win || _gameOver || _pacManEatenPending;
 
     /// <summary>
-    /// Provides a subscription to Pac-Man's live position feed.
-    /// </summary>
-    public BlPacManEventSubscription SubscribePacManPosition(Action<BlPacManPositionContext> handler)
-    {
-        if (handler is null)
-        {
-            throw new ArgumentNullException(nameof(handler));
-        }
-
-        var subscription = _pacManPositionChanged.Subscribe(handler);
-
-        if (_lastPacManPosition is { } context)
-        {
-            handler(context);
-        }
-
-        return subscription;
-    }
-
-    /// <summary>
     /// Searches for a registered ghost by name.
     /// </summary>
     public BlPacManGhostBehavior? FindGhost(string name)
@@ -494,7 +472,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return null;
         }
 
-        return _ghosts.FirstOrDefault(g => string.Equals(g.GhostName, name, StringComparison.OrdinalIgnoreCase));
+        return Assets.Ghosts.FirstOrDefault(g => string.Equals(g.GhostName, name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -532,17 +510,17 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
         _pacManEatenPending = true;
         _ghostChainIndex = 0;
-        _pacMan?.OnEatenByGhost();
+        Assets.PacMan?.OnEatenByGhost();
         _pauseFrames = Math.Max(_pauseFrames, 40);
         _soundBackCooldown = 0;
 
-        _pacMan?.Hide();
-        foreach (var ghost in _ghosts)
+        Assets.PacMan?.Hide();
+        foreach (var ghost in Assets.Ghosts)
         {
             ghost.OnPacManEaten();
         }
 
-        _bonus?.OnPacManEaten();
+        Assets.Bonus?.OnPacManEaten();
         _bonusAppearCountdown = 250;
         _bonusDestroyCountdown = 0;
         _bonusLocked = false;
@@ -582,212 +560,29 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void NotifyBonusExpired(BlPacManRoamingBonusBehavior bonus)
     {
-        if (_bonus == bonus)
+        if (Assets.Bonus == bonus)
         {
             _bonusLocked = true;
         }
     }
 
-    /// <summary>
-    /// Registers a dot, pill, or bonus so the coordinator can track remaining items.
-    /// </summary>
-    public void RegisterConsumable(BlPacManConsumableComponent consumable)
+    private void OnConsumableRegistered(BlPacManConsumableComponent consumable)
     {
         if (consumable is null)
         {
-            throw new ArgumentNullException(nameof(consumable));
+            return;
         }
 
-        _consumables.Add(consumable);
         _remainingConsumables++;
     }
 
-    /// <summary>
-    /// Processes score and frightened state when Pac-Man eats a consumable.
-    /// </summary>
-    public void NotifyConsumableEaten(BlPacManConsumableComponent consumable)
+    private void OnConsumableEaten(BlPacManConsumableComponent consumable)
     {
-        if (consumable is null)
-        {
-            return;
-        }
-
-        if (_remainingConsumables > 0)
-        {
-            _remainingConsumables--;
-        }
-
-        if (consumable.Type == BlPacManConsumableType.PowerPill)
-        {
-            _pauseFrames = Math.Max(_pauseFrames, 2);
-            _ghostChainIndex = 0;
-            foreach (var ghost in _ghosts)
-            {
-                ghost.SetMode(GhostMode.Frightened);
-            }
-        }
-
-        Model.AddScore(consumable.ScoreValue);
-
-        if (_remainingConsumables == 0)
-        {
-            _win = true;
-        }
+        NotifyConsumableEaten(consumable);
     }
 
     /// <summary>
-    /// Hooks Pac-Man into the coordinator and reapplies the latest settings.
-    /// </summary>
-    public void RegisterPacMan(BlPacManActorBehavior pacMan)
-    {
-        _pacMan = pacMan ?? throw new ArgumentNullException(nameof(pacMan));
-        if (_currentPacmanSettings is not null)
-        {
-            _pacMan.Configure(this, _currentPacmanSettings);
-        }
-
-        HookPacManEvents(_pacMan);
-    }
-
-    /// <summary>
-    /// Adds a ghost to the internal registry and configures it with the current level data.
-    /// </summary>
-    public void RegisterGhost(BlPacManGhostBehavior ghost)
-    {
-        if (ghost is null)
-        {
-            throw new ArgumentNullException(nameof(ghost));
-        }
-
-        if (!_ghosts.Contains(ghost))
-        {
-            _ghosts.Add(ghost);
-        }
-
-        if (_currentGhostSettings is not null)
-        {
-            ghost.Configure(this, _currentGhostSettings);
-        }
-    }
-
-    /// <summary>
-    /// Stores the roaming bonus instance so it can be triggered when the timer elapses.
-    /// </summary>
-    public void RegisterBonus(BlPacManRoamingBonusBehavior bonus)
-    {
-        _bonus = bonus ?? throw new ArgumentNullException(nameof(bonus));
-        if (_currentGameSettings is not null)
-        {
-            _bonus.Configure(this, _currentGameSettings);
-        }
-    }
-
-    /// <summary>
-    /// Removes a consumable from the remaining counter when it leaves the stage.
-    /// </summary>
-    public void UnregisterConsumable(BlPacManConsumableComponent consumable)
-    {
-        if (consumable is null)
-        {
-            return;
-        }
-
-        _consumables.Remove(consumable);
-    }
-
-    /// <summary>
-    /// Clears references when Pac-Man's sprite is removed from the stage.
-    /// </summary>
-    public void UnregisterPacMan(BlPacManActorBehavior pacMan)
-    {
-        if (_pacMan == pacMan)
-        {
-            ReleasePacManSubscriptions();
-            _pacMan = null;
-        }
-    }
-
-    /// <summary>
-    /// Removes a ghost from the internal list.
-    /// </summary>
-    public void UnregisterGhost(BlPacManGhostBehavior ghost)
-    {
-        _ghosts.Remove(ghost);
-    }
-
-    /// <summary>
-    /// Clears the active bonus reference once it despawns.
-    /// </summary>
-    public void UnregisterBonus(BlPacManRoamingBonusBehavior bonus)
-    {
-        if (_bonus == bonus)
-        {
-            _bonus = null;
-        }
-    }
-
-    /// <summary>
-    /// Subscribes to Pac-Man callbacks and immediately publishes his current position.
-    /// </summary>
-    private void HookPacManEvents(BlPacManActorBehavior pacMan)
-    {
-        if (pacMan is null)
-        {
-            return;
-        }
-
-        ReleasePacManSubscriptions();
-
-        var character = pacMan.Character;
-        _pacManSubscriptions.Add(character.SubscribePositionChanged(OnPacManPositionChanged));
-
-        var sprite = pacMan.GetSprite();
-        var tile = character.GetTile();
-        var snapshot = new BlPacManPositionContext(sprite.LocH, sprite.LocV, tile, character.Direction);
-        OnPacManPositionChanged(snapshot);
-    }
-
-    private void OnPacManPositionChanged(BlPacManPositionContext context)
-    {
-        _lastPacManPosition = context;
-        _pacManPositionChanged.Publish(context);
-    }
-
-    /// <summary>
-    /// Emits a snapshot of Pac-Man's position to all subscribers.
-    /// </summary>
-    private void BroadcastPacManPosition()
-    {
-        if (_pacMan is null)
-        {
-            return;
-        }
-
-        var character = _pacMan.Character;
-        var sprite = _pacMan.GetSprite();
-        OnPacManPositionChanged(new BlPacManPositionContext(sprite.LocH, sprite.LocV, character.GetTile(), character.Direction));
-    }
-
-    /// <summary>
-    /// Releases any temporary subscriptions when Pac-Man despawns.
-    /// </summary>
-    private void ReleasePacManSubscriptions()
-    {
-        if (_pacManSubscriptions.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var subscription in _pacManSubscriptions)
-        {
-            subscription.Release();
-        }
-
-        _pacManSubscriptions.Clear();
-    }
-
-    /// <summary>
-    /// Placeholder hook for HUD updates once the score display behaviours are connected.
+    /// Updates HUD bindings when the player's score changes.
     /// </summary>
     private void OnScoreChanged(int score)
     {
@@ -795,7 +590,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
-    /// Placeholder hook that will bridge to the high-score HUD once implemented.
+    /// Updates HUD bindings when the high-score value is bumped.
     /// </summary>
     private void OnHighScoreChanged(int score)
     {
@@ -803,36 +598,46 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
-    /// Handles the game-over transition when the player's lives reach zero.
+    /// Reacts to life count updates and triggers the game-over state when necessary.
     /// </summary>
     private void OnLivesChanged(int lives)
     {
-        if (lives == 0)
-        {
-            _gameOver = true;
-            _Player.SoundStopBack();
-            Model.ResetScore();
-        }
-    }
-
-    /// <summary>
-    /// Propagates global mode changes to each registered ghost.
-    /// </summary>
-    private void OnModeChanged(GhostMode? mode)
-    {
-        if (_ghosts.Count == 0)
+        if (lives != 0)
         {
             return;
         }
 
-        foreach (var ghost in _ghosts)
+        _gameOver = true;
+        _Player.SoundStopBack();
+        Model.ResetScore();
+    }
+
+    /// <summary>
+    /// Retains a hook for extra-life awards so dedicated HUD behaviours can react if needed.
+    /// </summary>
+    private void OnExtraLivesChanged(int _)
+    {
+        // Lives HUD handles the bonus-life chime to keep audio logic close to the display.
+    }
+
+    /// <summary>
+    /// Applies the current global ghost mode to every active ghost.
+    /// </summary>
+    private void OnModeChanged(GhostMode? mode)
+    {
+        if (Assets.Ghosts.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var ghost in Assets.Ghosts)
         {
             ghost.SetMode(mode);
         }
     }
 
     /// <summary>
-    /// Keeps the bonus display model in sync with the active level.
+    /// Keeps the bonus display model aligned with the active level.
     /// </summary>
     private void OnLevelChanged(int level)
     {
@@ -840,11 +645,12 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     }
 
     /// <summary>
-    /// Advances timers that control when the roaming bonus appears, despawns, or moves.
+    /// Advances timers that control the roaming bonus' lifecycle.
     /// </summary>
     private void UpdateBonusLifecycle()
     {
-        if (_bonus is null)
+        var bonus = Assets.Bonus;
+        if (bonus is null)
         {
             return;
         }
@@ -854,7 +660,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             _bonusDestroyCountdown--;
             if (_bonusDestroyCountdown == 0)
             {
-                _bonus.Deactivate();
+                bonus.Deactivate();
             }
 
             return;
@@ -870,13 +676,13 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             _bonusAppearCountdown--;
             if (_bonusAppearCountdown == 0)
             {
-                _bonus.Activate();
+                bonus.Activate();
             }
 
             return;
         }
 
-        _bonus.Tick();
+        bonus.Tick();
     }
 
     /// <summary>
@@ -895,16 +701,51 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_ghosts.Any(static g => g.IsDead))
+        if (Assets.Ghosts.Any(static g => g.IsDead))
         {
             _Player.SoundPlayDead();
         }
-        else if (!_ghosts.Any(static g => g.IsFrightened))
+        else if (!Assets.Ghosts.Any(static g => g.IsFrightened))
         {
             _Player.SoundPlayBack();
         }
 
         _soundBackCooldown = 5;
+    }
+
+    /// <summary>
+    /// Applies scoring, frightened mode transitions, and win detection when Pac-Man consumes an item.
+    /// </summary>
+    private void NotifyConsumableEaten(BlPacManConsumableComponent consumable)
+    {
+        if (consumable is null)
+        {
+            return;
+        }
+
+        if (_remainingConsumables > 0)
+        {
+            _remainingConsumables--;
+        }
+
+        if (consumable.ScoreValue > 0)
+        {
+            Model.AddScore(consumable.ScoreValue);
+        }
+
+        if (consumable.Type == BlPacManConsumableType.PowerPill)
+        {
+            _ghostChainIndex = 0;
+            foreach (var ghost in Assets.Ghosts)
+            {
+                ghost.SetMode(GhostMode.Frightened);
+            }
+        }
+
+        if (_remainingConsumables == 0)
+        {
+            _win = true;
+        }
     }
 
     /// <summary>
@@ -917,17 +758,18 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        _pacMan?.ResetForLife();
-        _pacMan?.Show();
+        var pacMan = Assets.PacMan;
+        pacMan?.ResetForLife();
+        pacMan?.Show();
 
-        foreach (var ghost in _ghosts)
+        foreach (var ghost in Assets.Ghosts)
         {
             ghost.ResetForLife();
             ghost.Show();
         }
 
-        _bonus?.ResetForLife();
-        BroadcastPacManPosition();
+        Assets.Bonus?.ResetForLife();
+        Assets.BroadcastPacManPosition();
 
         _pacManEatenPending = false;
         _startCountdown = Math.Max(_startCountdown, 1);

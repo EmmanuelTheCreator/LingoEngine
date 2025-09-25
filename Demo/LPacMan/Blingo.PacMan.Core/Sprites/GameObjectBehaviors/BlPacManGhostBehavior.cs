@@ -51,6 +51,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     };
 
     private readonly GlobalVars _globals;
+    private BlPacManAssetContainer? _assets;
     private BlPacManGameBehavior? _coordinator;
     private GhostSettings? _settings;
     private BlPacManCharacter? _character;
@@ -103,6 +104,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     public void BeginSprite()
     {
         _coordinator = _globals.GameBehavior;
+        _assets = _globals.Assets;
         ApplyAppearance();
 
         var character = EnsureCharacter();
@@ -111,9 +113,14 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateSpeedForCurrentMode(character.GetTile());
 
         _pacManSubscription?.Release();
-        _pacManSubscription = _coordinator?.SubscribePacManPosition(OnPacManPositionChanged);
+        _pacManSubscription = _assets?.SubscribePacManPosition(OnPacManPositionChanged);
 
-        _coordinator?.RegisterGhost(this);
+        _assets?.AddGhost(this);
+
+        if (_coordinator is not null && _globals.CurrentGhostSettings is { } ghostSettings)
+        {
+            Configure(_coordinator, ghostSettings);
+        }
     }
 
     /// <summary>
@@ -121,12 +128,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void EndSprite()
     {
-        _coordinator?.UnregisterGhost(this);
+        _assets?.RemoveGhost(this);
         _pacManSubscription?.Release();
         _pacManSubscription = null;
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
+        _assets = null;
     }
 
     /// <summary>
@@ -194,7 +202,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         character.Move(_requestedDirection);
-        UpdateCollision(character);
     }
 
     /// <summary>
@@ -674,41 +681,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Checks for overlap with Pac-Man and notifies the coordinator of the outcome.
-    /// </summary>
-    private void UpdateCollision(BlPacManCharacter character)
-    {
-        if (_coordinator is null || _mode == GhostMode.Dead || _pacManPosition is not { Tile: { } pacTile })
-        {
-            return;
-        }
-
-        var tile = character.GetTile();
-        if (tile is null)
-        {
-            return;
-        }
-
-        var opposite = _pacManPosition.Direction.GetOpposite();
-        var crossed = opposite != BlPacManDirection.None && ReferenceEquals(pacTile.Get(_pacManPosition.Direction), tile);
-
-        if (!ReferenceEquals(tile, pacTile) && !crossed)
-        {
-            return;
-        }
-
-        if (_mode == GhostMode.Frightened)
-        {
-            SetMode(GhostMode.Dead);
-            _coordinator.NotifyGhostEaten(this);
-        }
-        else
-        {
-            _coordinator.NotifyPacManEaten();
-        }
     }
 
     /// <summary>

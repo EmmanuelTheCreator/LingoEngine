@@ -75,11 +75,11 @@ internal sealed class BlPacManPelletFieldBehavior : BlingoSpriteBehavior, IHasBe
                 continue;
             }
 
-            CreateConsumableSprite(tile, context.Coordinator);
+            CreateConsumableSprite(tile);
         }
     }
 
-    private void CreateConsumableSprite(Tile tile, BlPacManGameBehavior coordinator)
+    private void CreateConsumableSprite(Tile tile)
     {
         var name = $"{Me.Name}_{tile.Column}_{tile.Row}";
         var sprite = _Movie.AddSprite(name, sprite2D =>
@@ -101,7 +101,7 @@ internal sealed class BlPacManPelletFieldBehavior : BlingoSpriteBehavior, IHasBe
         });
 
         var behavior = sprite.SetBehavior<BlPacManPelletBehavior>();
-        behavior.Initialize(tile, coordinator);
+        behavior.Initialize(tile, _globals.Assets);
         _spawnedConsumables.Add(behavior.Component);
     }
 

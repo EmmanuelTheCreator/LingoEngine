@@ -32,6 +32,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     private static readonly ARect[] Score5000Animation = { CreateFrame(FrameSize * 6, FrameSize) };
 
     private readonly GlobalVars _globals;
+    private BlPacManAssetContainer? _assets;
     private BlPacManGameBehavior? _coordinator;
     private GameSettings? _settings;
     private BlPacManCharacter? _character;
@@ -78,14 +79,20 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     public void BeginSprite()
     {
         _coordinator = _globals.GameBehavior;
+        _assets = _globals.Assets;
         ApplyAppearance();
         var character = EnsureCharacter();
         character.BeginSprite();
         character.Hide();
 
         _pacManSubscription?.Release();
-        _pacManSubscription = _coordinator?.SubscribePacManPosition(OnPacManPositionChanged);
-        _coordinator?.RegisterBonus(this);
+        _pacManSubscription = _assets?.SubscribePacManPosition(OnPacManPositionChanged);
+        _assets?.AttachBonus(this);
+
+        if (_coordinator is not null && _globals.CurrentGameSettings is { } settings)
+        {
+            Configure(_coordinator, settings);
+        }
     }
 
     /// <summary>
@@ -93,12 +100,13 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void EndSprite()
     {
-        _coordinator?.UnregisterBonus(this);
+        _assets?.DetachBonus(this);
         _pacManSubscription?.Release();
         _pacManSubscription = null;
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
+        _assets = null;
     }
 
     /// <summary>
@@ -123,7 +131,6 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         }
 
         character.Move(_direction);
-        CheckCollision(character);
     }
 
     /// <summary>
@@ -167,6 +174,28 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     public void OnPacManEaten()
     {
         Deactivate();
+    }
+
+    internal bool IsActive => _active;
+
+    internal Tile? CurrentTile => _character?.GetTile();
+
+    internal bool Collect()
+    {
+        if (!_active)
+        {
+            return false;
+        }
+
+        _active = false;
+        ShowScore();
+        if (!_globals.IsMuted)
+        {
+            _Player.SoundPlayBonus();
+        }
+
+        _coordinator?.NotifyBonusEaten(this);
+        return true;
     }
 
     /// <summary>
@@ -358,39 +387,6 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     {
         var next = tile.Get(direction);
         return next is not null && !next.IsWall() && !next.IsHouse();
-    }
-
-    /// <summary>
-    /// Detects collisions with Pac-Man and notifies the coordinator when the fruit is eaten.
-    /// </summary>
-    private void CheckCollision(BlPacManCharacter character)
-    {
-        if (!_active || _coordinator is null || _pacManPosition is not { Tile: { } pacTile })
-        {
-            return;
-        }
-
-        var tile = character.GetTile();
-        if (tile is null)
-        {
-            return;
-        }
-
-        var opposite = _pacManPosition.Direction.GetOpposite();
-        var crossed = opposite != BlPacManDirection.None && ReferenceEquals(pacTile.Get(_pacManPosition.Direction), tile);
-
-        if (!ReferenceEquals(tile, pacTile) && !crossed)
-        {
-            return;
-        }
-
-        _active = false;
-        ShowScore();
-        if (!_globals.IsMuted)
-        {
-            _Player.SoundPlayBonus();
-        }
-        _coordinator?.NotifyBonusEaten(this);
     }
 
     /// <summary>
