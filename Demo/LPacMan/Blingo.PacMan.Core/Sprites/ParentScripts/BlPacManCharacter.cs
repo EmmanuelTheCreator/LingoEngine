@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Blingo.PacMan.Core.Game;
+using BlingoEngine.Core;
 using BlingoEngine.Movies;
-using BlingoEngine.Sprites.Events;
+using BlingoEngine.Sprites;
 
-namespace Blingo.PacMan.Core;
+namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
-internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
+internal sealed class BlPacManCharacter : BlingoParentScript
 {
     private const float DefaultStep = 10f;
     private const float DefaultSpeed = 80f;
@@ -18,6 +20,14 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         { PacManDirection.Up, "up" },
         { PacManDirection.Down, "down" },
     };
+
+    private readonly PacManEventMediator<BlPacManCharacter> _moveStarted = new();
+    private readonly PacManEventMediator<BlPacManCharacter> _stopped = new();
+    private readonly PacManEventMediator<PacManPositionEventArgs> _positionChanged = new();
+    private readonly PacManEventMediator<TileEventArgs> _tileEntered = new();
+
+    private Map _map;
+    private readonly BlingoSprite2D _sprite;
 
     private float _step;
     private float _speedSetting;
@@ -34,9 +44,11 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
     private bool _defaultsCaptured;
     private CharacterSnapshot? _defaults;
 
-    public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, PacManCharacterOptions? options = null)
-        : base(env, map)
+    public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, PacManCharacterOptions? options = null)
+        : base(env)
     {
+        _map = map ?? throw new ArgumentNullException(nameof(map));
+        _sprite = sprite ?? throw new ArgumentNullException(nameof(sprite));
         _step = options?.Step ?? DefaultStep;
         Speed = options?.Speed ?? DefaultSpeed;
         Direction = options?.Direction ?? PacManDirection.None;
@@ -84,13 +96,32 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
 
     public string? Animation => _animation;
 
-    public event EventHandler? MoveStarted;
+    private float X
+    {
+        get => _sprite.LocH;
+        set => _sprite.LocH = value;
+    }
 
-    public event EventHandler? Stopped;
+    private float Y
+    {
+        get => _sprite.LocV;
+        set => _sprite.LocV = value;
+    }
 
-    public event EventHandler<PacManPositionEventArgs>? PositionChanged;
+    private Map Map => _map;
 
-    public event EventHandler<TileEventArgs>? TileEntered;
+    public PacManEventSubscription SubscribeMoveStarted(Action<BlPacManCharacter> handler) => _moveStarted.Subscribe(handler);
+
+    public PacManEventSubscription SubscribeStopped(Action<BlPacManCharacter> handler) => _stopped.Subscribe(handler);
+
+    public PacManEventSubscription SubscribePositionChanged(Action<PacManPositionEventArgs> handler) => _positionChanged.Subscribe(handler);
+
+    public PacManEventSubscription SubscribeTileEntered(Action<TileEventArgs> handler) => _tileEntered.Subscribe(handler);
+
+    public void SetMap(Map map)
+    {
+        _map = map ?? throw new ArgumentNullException(nameof(map));
+    }
 
     public void BeginSprite()
     {
@@ -129,7 +160,7 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         PauseCharacterAnimation();
     }
 
-    public virtual void Move(PacManDirection direction = PacManDirection.None)
+    public void Move(PacManDirection direction = PacManDirection.None)
     {
         if (direction == PacManDirection.None)
         {
@@ -335,46 +366,24 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         }
     }
 
-    protected virtual void OnTileEntered(Tile tile)
+    public Tile? GetTile()
     {
-        SetNextAnimation();
+        return Map.GetTile(X, Y, true);
     }
 
-    private void CaptureDefaults()
+    public void Destroy()
     {
-        SetNextAnimation();
-        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation);
+        _sprite.RemoveMe();
     }
 
-    private void HandleTileEntered(Tile tile)
+    public void Hide()
     {
-        OnTileEntered(tile);
-        TileEntered?.Invoke(this, new TileEventArgs(tile));
+        _sprite.Visibility = false;
     }
 
-    private void OnMoveStarted()
+    public void Show()
     {
-        MoveStarted?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnStopped()
-    {
-        Stopped?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnPositionChanged(PacManPositionEventArgs args)
-    {
-        PositionChanged?.Invoke(this, args);
-    }
-
-    private void PauseCharacterAnimation()
-    {
-        ControlledSprite.Pause();
-    }
-
-    private void ResumeCharacterAnimation()
-    {
-        ControlledSprite.Play();
+        _sprite.Visibility = true;
     }
 
     public void SetAnimation(string? animation)
@@ -388,9 +397,46 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         ApplyAnimation(animation);
     }
 
-    protected virtual void ApplyAnimation(string? animation)
+    private void ApplyAnimation(string? animation)
     {
         // Hook for integrating with the engine's animation system when available.
+    }
+
+    private void CaptureDefaults()
+    {
+        SetNextAnimation();
+        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation);
+    }
+
+    private void HandleTileEntered(Tile tile)
+    {
+        OnTileEntered(tile);
+        _tileEntered.Publish(new TileEventArgs(tile));
+    }
+
+    private void OnMoveStarted()
+    {
+        _moveStarted.Publish(this);
+    }
+
+    private void OnStopped()
+    {
+        _stopped.Publish(this);
+    }
+
+    private void OnPositionChanged(PacManPositionEventArgs args)
+    {
+        _positionChanged.Publish(args);
+    }
+
+    private void PauseCharacterAnimation()
+    {
+        _sprite.Pause();
+    }
+
+    private void ResumeCharacterAnimation()
+    {
+        _sprite.Play();
     }
 
     private void UpdateDirection(PacManDirection direction)
@@ -404,7 +450,7 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         Direction = direction;
     }
 
-    protected virtual void SetNextAnimation()
+    private void SetNextAnimation()
     {
         if (Direction == PacManDirection.None)
         {
@@ -421,16 +467,6 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         {
             _nextAnimation = null;
         }
-    }
-
-    protected void SetNextAnimationLabel(string? label)
-    {
-        _nextAnimation = label;
-    }
-
-    protected float GetStepSize()
-    {
-        return _step * (_speed / 100f);
     }
 
     private float GetStep()
@@ -507,6 +543,11 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         }
     }
 
+    private void OnTileEntered(Tile tile)
+    {
+        SetNextAnimation();
+    }
+
     private enum Axis
     {
         Both,
@@ -526,46 +567,4 @@ internal class BlPacManCharacter : BlPacManItem, IHasBeginSpriteEvent
         bool IsMoving,
         string? Mode,
         string? Animation);
-}
-
-internal sealed class PacManCharacterOptions
-{
-    public float? Step { get; set; }
-
-    public float? Speed { get; set; }
-
-    public PacManDirection? Direction { get; set; }
-
-    public bool? Preturn { get; set; }
-
-    public string? Mode { get; set; }
-}
-
-internal sealed class TileEventArgs : EventArgs
-{
-    public TileEventArgs(Tile tile)
-    {
-        Tile = tile ?? throw new ArgumentNullException(nameof(tile));
-    }
-
-    public Tile Tile { get; }
-}
-
-internal sealed class PacManPositionEventArgs : EventArgs
-{
-    public PacManPositionEventArgs(float x, float y, Tile? tile, PacManDirection direction)
-    {
-        X = x;
-        Y = y;
-        Tile = tile;
-        Direction = direction;
-    }
-
-    public float X { get; }
-
-    public float Y { get; }
-
-    public Tile? Tile { get; }
-
-    public PacManDirection Direction { get; }
 }

@@ -1,13 +1,4 @@
-namespace Blingo.PacMan.Core;
-
-public enum PacManDirection
-{
-    None = 0,
-    Left,
-    Right,
-    Up,
-    Down,
-}
+namespace Blingo.PacMan.Core.Game;
 
 public static class PacManDirectionExtensions
 {

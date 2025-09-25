@@ -6,7 +6,7 @@ namespace Blingo.PacMan.Core.Models;
 /// <summary>
 /// Persists Pac-Man specific player progress using the shared resource storage abstraction.
 /// </summary>
-public sealed class GameModelRepository : IGameModelRepository
+public sealed class GameModelRepository
 {
     private const string StorageKey = "PacManGameState";
     private readonly IAbstResourceManager _resourceManager;
@@ -30,16 +30,6 @@ public sealed class GameModelRepository : IGameModelRepository
 
         _resourceManager.StorageWrite(StorageKey, data);
     }
-}
-
-/// <summary>
-/// Abstraction used by <see cref="GameModel"/> so tests can provide in-memory implementations.
-/// </summary>
-public interface IGameModelRepository
-{
-    PacManSaveData? Load();
-
-    void Save(PacManSaveData data);
 }
 
 /// <summary>

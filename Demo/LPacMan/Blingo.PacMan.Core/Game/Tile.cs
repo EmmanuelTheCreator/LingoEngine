@@ -1,13 +1,8 @@
-namespace Blingo.PacMan.Core;
+using Blingo.PacMan.Core.Sprites.Behaviors;
 
-public interface ITileItem
-{
-    void Destroy();
-    void Hide();
-    void Show();
-}
+namespace Blingo.PacMan.Core.Game;
 
-internal sealed class Tile
+public sealed class Tile
 {
     private const int DefaultTileSize = 32;
     private const float VerticalCenterOffset = 4f;
@@ -28,7 +23,7 @@ internal sealed class Tile
 
     public float CenterY { get; }
 
-    public ITileItem? Item { get; set; }
+    internal PacManConsumableComponent? Item { get; set; }
 
     public Tile(char code, int column, int row, Map map)
     {

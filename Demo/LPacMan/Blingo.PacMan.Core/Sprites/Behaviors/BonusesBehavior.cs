@@ -1,9 +1,6 @@
-// Copyright to EmmanuelTheCreator.com
-// This file was written in 2005, yeah a lot has evolved since then :-)
-// Converted from original Lingo code, tried to keep it as identical as possible.
-
 using System;
 using System.Collections.Generic;
+using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Models;
 using AbstUI.Primitives;
 using BlingoEngine.Members;
@@ -20,8 +17,16 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
     {
         private const int BonusCount = 8;
         private readonly List<BonusSprite> _bonuses = new();
-        private readonly IBonusesModel _model;
+        private readonly GlobalVars _globals;
+        private BonusesModel? _model;
         private bool _isInitialized;
+        private PacManEventSubscription? _levelSubscription;
+
+        public BonusesBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
+            : base(env)
+        {
+            _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+        }
 
         public float ScaleFactor { get; set; } = 1f;
 
@@ -36,18 +41,14 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
         /// </summary>
         public ARect? MemberSourceRect { get; set; }
 
-        public BonusesBehavior(IBlingoMovieEnvironment env, IBonusesModel model)
-            : base(env)
-        {
-            _model = model ?? throw new ArgumentNullException(nameof(model));
-        }
-
         public void BeginSprite()
         {
             if (!_isInitialized)
             {
+                _model ??= _globals.BonusesModel ?? throw new InvalidOperationException("BonusesModel was not initialised.");
                 InitializeBonuses();
-                _model.LevelChanged += OnLevelChanged;
+                _levelSubscription?.Release();
+                _levelSubscription = _model.SubscribeLevelChanged(OnLevelChanged);
                 _isInitialized = true;
             }
 
@@ -61,7 +62,11 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
                 return;
             }
 
-            _model.LevelChanged -= OnLevelChanged;
+            if (_model is not null)
+            {
+                _levelSubscription?.Release();
+                _levelSubscription = null;
+            }
 
             foreach (var bonus in _bonuses)
             {
@@ -94,9 +99,10 @@ namespace Blingo.PacMan.Core.Sprites.Behaviors
 
         private void Render()
         {
+            var model = _model ?? throw new InvalidOperationException("BonusesModel was not initialised.");
             for (var i = 0; i < _bonuses.Count; i++)
             {
-                if (i < _model.Level)
+                if (i < model.Level)
                 {
                     _bonuses[i].Show();
                 }

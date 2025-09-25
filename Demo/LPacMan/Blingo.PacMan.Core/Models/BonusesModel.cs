@@ -1,30 +1,16 @@
-// Copyright to EmmanuelTheCreator.com
-// This file was written in 2005, yeah a lot has evolved since then :-)
-// Converted from original Lingo code, tried to keep it as identical as possible.
-
 using System;
+using Blingo.PacMan.Core.Game;
 
 namespace Blingo.PacMan.Core.Models
 {
     /// <summary>
-    /// Represents the current bonus progression for the player.
+    /// Tracks the current bonus progression for the player.
     /// </summary>
-    public interface IBonusesModel
-    {
-        int Level { get; set; }
-
-        event Action<int>? LevelChanged;
-    }
-
-    /// <summary>
-    /// Default implementation backed by a simple property with change notification.
-    /// </summary>
-    public sealed class BonusesModel : IBonusesModel
+    public sealed class BonusesModel
     {
         private const int MaxBonuses = 8;
         private int _level;
-
-        public event Action<int>? LevelChanged;
+        private readonly PacManEventMediator<int> _levelChanged = new();
 
         public int Level
         {
@@ -38,8 +24,10 @@ namespace Blingo.PacMan.Core.Models
                 }
 
                 _level = clampedLevel;
-                LevelChanged?.Invoke(_level);
+                _levelChanged.Publish(_level);
             }
         }
+
+        public PacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
     }
 }

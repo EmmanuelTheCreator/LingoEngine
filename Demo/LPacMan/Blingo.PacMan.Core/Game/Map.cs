@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-namespace Blingo.PacMan.Core;
+namespace Blingo.PacMan.Core.Game;
 
-internal sealed class Map
+public sealed class Map
 {
     private readonly List<Tile> _tiles;
     private readonly List<Tile> _tunnels;

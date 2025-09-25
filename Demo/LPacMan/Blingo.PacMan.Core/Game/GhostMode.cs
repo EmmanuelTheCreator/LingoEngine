@@ -1,4 +1,4 @@
-namespace Blingo.PacMan.Core;
+namespace Blingo.PacMan.Core.Game;
 
 /// <summary>
 /// Represents the high-level behavioural state a ghost can assume.

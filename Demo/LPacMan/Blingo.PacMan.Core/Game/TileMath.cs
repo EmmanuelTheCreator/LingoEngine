@@ -1,6 +1,6 @@
 using System;
 
-namespace Blingo.PacMan.Core;
+namespace Blingo.PacMan.Core.Game;
 
 /// <summary>
 /// Provides helper routines for working with tile geometry.
