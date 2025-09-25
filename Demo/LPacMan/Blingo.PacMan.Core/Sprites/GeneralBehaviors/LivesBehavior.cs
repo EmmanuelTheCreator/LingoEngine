@@ -119,7 +119,7 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
 
     private void OnExtraLivesChanged(int _)
     {
-        if (!_globals.IsMuted)
+        if (!_globals.State.Muted)
         {
             _Player.SoundPlayLife();
         }

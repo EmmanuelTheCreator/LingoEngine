@@ -8,6 +8,12 @@ namespace Blingo.PacMan.Core.Game;
 
 public sealed class GlobalVars : BlingoGlobalVars
 {
+    public GlobalVars()
+    {
+        State = new BlPacManGameState();
+        BonusManager = new BlPacManBonusManager(this);
+    }
+
     public GameModel? GameModel { get; set; }
 
     public BonusesModel? BonusesModel { get; set; }
@@ -18,15 +24,15 @@ public sealed class GlobalVars : BlingoGlobalVars
 
     internal BlPacManAssetContainer Assets { get; } = new();
 
+    internal BlPacManGameState State { get; }
+
+    internal BlPacManBonusManager BonusManager { get; }
+
     public GameSettings? CurrentGameSettings { get; set; }
 
     public PacmanSettings? CurrentPacmanSettings { get; set; }
 
     public GhostSettings? CurrentGhostSettings { get; set; }
-
-    public bool IsMuted { get; set; }
-
-    public bool IsPaused { get; set; }
 
     internal BlPacManPauseBehavior? PauseBehavior { get; set; }
 
@@ -42,13 +48,13 @@ public sealed class GlobalVars : BlingoGlobalVars
         MapProvider = null;
         GameBehavior = null;
         Assets.Reset();
+        State.Reset();
+        BonusManager.Reset();
         CurrentGameSettings = null;
         CurrentPacmanSettings = null;
         CurrentGhostSettings = null;
         ConsumableFieldMediator = null;
         CurrentFieldContext = null;
-        IsMuted = false;
-        IsPaused = false;
         PauseBehavior = null;
     }
 }

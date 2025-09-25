@@ -56,6 +56,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     private BlPacManDirection _requestedDirection;
     private BlPacManCharacter? _character;
     private BlPacManEventSubscription? _tileEnteredSubscription;
+    private BlPacManEventSubscription? _positionSubscription;
     private bool _isActorRegistered;
     private bool _animationsConfigured;
 
@@ -87,6 +88,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         character.Step = 8f;
         character.Reset();
         ResetPosition();
+        PublishPosition(character);
     }
 
     /// <summary>
@@ -106,6 +108,10 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         EnsureAppearance();
         _assets.AttachPacMan(this);
 
+        _positionSubscription?.Release();
+        _positionSubscription = character.SubscribePositionChanged(OnPositionChanged);
+        PublishPosition(character);
+
         if (_coordinator is not null && _globals.CurrentPacmanSettings is { } settings)
         {
             Configure(_coordinator, settings);
@@ -120,6 +126,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _assets?.DetachPacMan(this);
         _tileEnteredSubscription?.Release();
         _tileEnteredSubscription = null;
+        _positionSubscription?.Release();
+        _positionSubscription = null;
         _assets = null;
     }
 
@@ -129,6 +137,13 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     public void StepFrame()
     {
         var character = EnsureCharacter();
+        if (_globals.State.IsGameplayFrozen)
+        {
+            character.Update();
+            _requestedDirection = BlPacManDirection.None;
+            return;
+        }
+
         character.Move(_requestedDirection);
         _requestedDirection = BlPacManDirection.None;
         CheckCollisions(character);
@@ -179,14 +194,6 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     internal BlPacManCharacter Character => EnsureCharacter();
 
     /// <summary>
-    /// Allows other behaviours to observe Pac-Man's tile and pixel position.
-    /// </summary>
-    internal BlPacManEventSubscription SubscribePacManPosition(Action<BlPacManPositionContext> handler)
-    {
-        return EnsureCharacter().SubscribePositionChanged(handler);
-    }
-
-    /// <summary>
     /// Hides Pac-Man's sprite.
     /// </summary>
     internal void Hide()
@@ -211,6 +218,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         character.Reset();
         ResetPosition();
         character.Update();
+        PublishPosition(character);
     }
 
     /// <summary>
@@ -224,22 +232,45 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_globals.IsMuted)
+        var state = _globals.State;
+        state.RegisterConsumableEaten();
+
+        var model = _globals.GameModel;
+        if (model is not null && consumable.ScoreValue > 0)
         {
-            return;
+            model.AddScore(consumable.ScoreValue);
+            state.Score = model.Score;
+            state.HighScore = model.HighScore;
         }
 
-        switch (consumable.Type)
+        if (!state.Muted)
         {
-            case BlPacManConsumableType.Pellet:
-                _Player.SoundPlayDot();
-                break;
-            case BlPacManConsumableType.PowerPill:
-                _Player.SoundPlayFrightened();
-                break;
-            case BlPacManConsumableType.Bonus:
-                _Player.SoundPlayBonus();
-                break;
+            switch (consumable.Type)
+            {
+                case BlPacManConsumableType.Pellet:
+                    _Player.SoundPlayDot();
+                    break;
+                case BlPacManConsumableType.PowerPill:
+                    _Player.SoundPlayFrightened();
+                    break;
+                case BlPacManConsumableType.Bonus:
+                    _Player.SoundPlayBonus();
+                    break;
+            }
+        }
+
+        if (consumable.Type == BlPacManConsumableType.PowerPill)
+        {
+            state.ResetGhostChain();
+            foreach (var ghost in _globals.Assets.Ghosts)
+            {
+                ghost.SetMode(GhostMode.Frightened);
+            }
+        }
+
+        if (state.RemainingConsumables == 0)
+        {
+            state.Win = true;
         }
     }
 
@@ -248,7 +279,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     internal void OnEatenByGhost()
     {
-        if (!_globals.IsMuted)
+        if (!_globals.State.Muted)
         {
             _Player.SoundPlayEaten();
         }
@@ -278,7 +309,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
     private void CheckCollisions(BlPacManCharacter character)
     {
-        if (_assets is null || _coordinator is null || _coordinator.IsGameplayFrozen)
+        if (_assets is null || _globals.State.IsGameplayFrozen)
         {
             return;
         }
@@ -300,11 +331,23 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             if (ghost.IsFrightened)
             {
                 ghost.SetMode(GhostMode.Dead);
-                _coordinator?.NotifyGhostEaten(ghost);
+                var state = _globals.State;
+                var score = state.RegisterGhostEaten();
+                var model = _globals.GameModel;
+                if (model is not null && score > 0)
+                {
+                    model.AddScore(score);
+                    state.Score = model.Score;
+                    state.HighScore = model.HighScore;
+                }
+
+                state.SoundCooldown = 5;
+                state.PauseFrames = Math.Max(state.PauseFrames, 15);
+                ghost.OnEaten(score);
             }
             else
             {
-                _coordinator?.NotifyPacManEaten();
+                _globals.GameBehavior?.NotifyPacManEaten();
             }
 
             return;
@@ -315,6 +358,28 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         {
             bonus.Collect();
         }
+    }
+
+    private void OnPositionChanged(BlPacManPositionContext context)
+    {
+        if (context is null)
+        {
+            return;
+        }
+
+        _globals.State.PacManPosition = context;
+        _assets?.UpdatePacManPosition(context);
+    }
+
+    private void PublishPosition(BlPacManCharacter character)
+    {
+        if (character is null)
+        {
+            return;
+        }
+
+        var snapshot = new BlPacManPositionContext(Me.LocH, Me.LocV, character.GetTile(), character.Direction);
+        OnPositionChanged(snapshot);
     }
 
     private void ConfigureAnimations()

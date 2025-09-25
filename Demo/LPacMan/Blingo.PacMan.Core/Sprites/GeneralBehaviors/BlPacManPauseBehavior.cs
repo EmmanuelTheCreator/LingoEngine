@@ -41,7 +41,7 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void TogglePause()
     {
-        if (_globals.IsPaused)
+        if (_globals.State.Paused)
         {
             Resume();
         }
@@ -56,18 +56,18 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void Reset()
     {
-        _globals.IsPaused = false;
+        _globals.State.Paused = false;
         Me.Visibility = false;
     }
 
     private void Pause()
     {
-        if (_globals.IsPaused)
+        if (_globals.State.Paused)
         {
             return;
         }
 
-        _globals.IsPaused = true;
+        _globals.State.Paused = true;
         Me.Visibility = true;
         _globals.GameModel?.Pause();
         _Player.SoundStopBack();
@@ -75,15 +75,15 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
 
     private void Resume()
     {
-        if (!_globals.IsPaused)
+        if (!_globals.State.Paused)
         {
             return;
         }
 
-        _globals.IsPaused = false;
+        _globals.State.Paused = false;
         Me.Visibility = false;
         _globals.GameModel?.Resume();
-        if (!_globals.IsMuted)
+        if (!_globals.State.Muted)
         {
             _Player.SoundPlayBack();
         }

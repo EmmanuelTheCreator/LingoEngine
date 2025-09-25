@@ -33,12 +33,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
     private readonly GlobalVars _globals;
     private BlPacManAssetContainer? _assets;
-    private BlPacManGameBehavior? _coordinator;
     private GameSettings? _settings;
     private BlPacManCharacter? _character;
-    private BlPacManEventSubscription? _pacManSubscription;
     private BlPacManEventSubscription? _tileSubscription;
-    private BlPacManPositionContext? _pacManPosition;
     private Tile? _spawnTile;
     private Tile? _targetTile;
     private bool _animationsConfigured;
@@ -59,13 +56,13 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Applies the current level settings used to determine spawn/target tiles and score values.
     /// </summary>
-    public void Configure(BlPacManGameBehavior coordinator, GameSettings settings)
+    public void Configure(GameSettings settings)
     {
-        _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _scoreValue = settings.BonusScore;
 
-        if (_coordinator?.CurrentMap is { } map)
+        var map = _globals.GameBehavior?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
+        if (map is not null)
         {
             EnsureCharacter().SetMap(map);
             _targetTile = map.Tunnels.Count > 0 ? map.Tunnels[0] : map.HouseCenter;
@@ -78,20 +75,17 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void BeginSprite()
     {
-        _coordinator = _globals.GameBehavior;
         _assets = _globals.Assets;
         ApplyAppearance();
         var character = EnsureCharacter();
         character.BeginSprite();
         character.Hide();
-
-        _pacManSubscription?.Release();
-        _pacManSubscription = _assets?.SubscribePacManPosition(OnPacManPositionChanged);
         _assets?.AttachBonus(this);
+        _globals.BonusManager.Attach(this);
 
-        if (_coordinator is not null && _globals.CurrentGameSettings is { } settings)
+        if (_globals.CurrentGameSettings is { } settings)
         {
-            Configure(_coordinator, settings);
+            Configure(settings);
         }
     }
 
@@ -101,8 +95,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     public void EndSprite()
     {
         _assets?.DetachBonus(this);
-        _pacManSubscription?.Release();
-        _pacManSubscription = null;
+        _globals.BonusManager.Detach(this);
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
@@ -189,12 +182,12 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         _active = false;
         ShowScore();
-        if (!_globals.IsMuted)
+        if (!_globals.State.Muted)
         {
             _Player.SoundPlayBonus();
         }
 
-        _coordinator?.NotifyBonusEaten(this);
+        _globals.GameBehavior?.NotifyBonusEaten(this);
         return true;
     }
 
@@ -222,7 +215,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
             Me.MemberSourceRect = DefaultAnimation[0];
         }
 
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
+        var map = _globals.GameBehavior?.CurrentMap ?? _globals.MapProvider?.CurrentMap;
         _spawnTile = map?.Tunnels.Count > 0 ? map.Tunnels[^1] : map?.HouseCenter;
         _targetTile = map?.Tunnels.Count > 0 ? map.Tunnels[0] : map?.HouseCenter;
 
@@ -246,7 +239,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
             return _character;
         }
 
-        var map = _coordinator?.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var map = _globals.GameBehavior?.CurrentMap ?? _globals.MapProvider?.CurrentMap ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
             Step = 8f,
@@ -297,11 +290,6 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Stores Pac-Man's current tile for collision checks.
     /// </summary>
-    private void OnPacManPositionChanged(BlPacManPositionContext context)
-    {
-        _pacManPosition = context;
-    }
-
     /// <summary>
     /// Tracks visits to the target tile so the fruit despawns after reaching its end point twice.
     /// </summary>
@@ -317,7 +305,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
             _remainingTargetVisits--;
             if (_remainingTargetVisits <= 0)
             {
-                _coordinator?.NotifyBonusExpired(this);
+                _globals.GameBehavior?.NotifyBonusExpired(this);
                 Deactivate();
             }
         }

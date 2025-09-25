@@ -101,6 +101,7 @@ internal sealed class BlPacManPowerPillFieldBehavior : BlingoSpriteBehavior, IHa
         });
 
         var behavior = sprite.SetBehavior<BlPacManPowerPillBehavior>();
+        behavior.Component.SetGlobals(_globals);
         behavior.Initialize(tile, _globals.Assets);
         _spawnedConsumables.Add(behavior.Component);
     }

@@ -101,6 +101,7 @@ internal sealed class BlPacManPelletFieldBehavior : BlingoSpriteBehavior, IHasBe
         });
 
         var behavior = sprite.SetBehavior<BlPacManPelletBehavior>();
+        behavior.Component.SetGlobals(_globals);
         behavior.Initialize(tile, _globals.Assets);
         _spawnedConsumables.Add(behavior.Component);
     }

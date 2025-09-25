@@ -14,9 +14,8 @@ using BlingoEngine.Sprites.Events;
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 /// <summary>
-/// Implements the runtime behaviour for one of the four ghosts. The class mirrors the original
-/// JavaScript logic by handling scatter/chase mode transitions, frightened timers, collision
-/// detection, and target selection for each named ghost.
+/// Implements the runtime behaviour for one of the four ghosts, handling scatter/chase mode
+/// transitions, frightened timers, collision detection, and target selection for each named ghost.
 /// </summary>
 internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
@@ -56,8 +55,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private GhostSettings? _settings;
     private BlPacManCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
-    private BlPacManEventSubscription? _pacManSubscription;
-    private BlPacManPositionContext? _pacManPosition;
     private Tile? _scatterTarget;
     private Tile? _deadTarget;
     private BlPacManDirection _requestedDirection = BlPacManDirection.Left;
@@ -112,9 +109,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         ConfigureTargets();
         UpdateSpeedForCurrentMode(character.GetTile());
 
-        _pacManSubscription?.Release();
-        _pacManSubscription = _assets?.SubscribePacManPosition(OnPacManPositionChanged);
-
         _assets?.AddGhost(this);
 
         if (_coordinator is not null && _globals.CurrentGhostSettings is { } ghostSettings)
@@ -129,8 +123,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     public void EndSprite()
     {
         _assets?.RemoveGhost(this);
-        _pacManSubscription?.Release();
-        _pacManSubscription = null;
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
@@ -149,7 +141,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         var character = EnsureCharacter();
 
-        if (_coordinator.IsGameplayFrozen)
+        if (_globals.State.IsGameplayFrozen)
         {
             character.Update();
             return;
@@ -299,7 +291,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="score">The awarded score (unused, but retained for clarity).</param>
     public void OnEaten(int score)
     {
-        if (!_globals.IsMuted)
+        if (!_globals.State.Muted)
         {
             _Player.SoundPlayEat();
         }
@@ -441,11 +433,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Stores the latest Pac-Man position for future target calculations.
     /// </summary>
-    private void OnPacManPositionChanged(BlPacManPositionContext context)
-    {
-        _pacManPosition = context;
-    }
-
     /// <summary>
     /// Applies the correct effective speed based on the current mode and tile type.
     /// </summary>
@@ -597,12 +584,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     private Tile? GetChaseTargetTile()
     {
-        if (_pacManPosition is not { Tile: { } pacTileNonNull })
+        var pacman = _globals.State.PacManPosition;
+        if (pacman is not { Tile: { } pacTileNonNull })
         {
             return null;
         }
 
-        var direction = _pacManPosition.Direction;
+        var direction = pacman.Direction;
 
         if (GhostName.Equals("Pinky", StringComparison.OrdinalIgnoreCase))
         {

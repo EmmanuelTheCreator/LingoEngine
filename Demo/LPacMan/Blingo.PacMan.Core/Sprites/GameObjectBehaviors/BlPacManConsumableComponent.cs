@@ -12,6 +12,7 @@ internal sealed class BlPacManConsumableComponent
     private readonly int _scoreValue;
     private Tile? _tile;
     private BlPacManAssetContainer? _assets;
+    private GlobalVars? _globals;
 
     public BlPacManConsumableComponent(BlingoSpriteBehavior owner, BlPacManConsumableType type, int scoreValue)
     {
@@ -26,12 +27,17 @@ internal sealed class BlPacManConsumableComponent
 
     public Tile? Tile => _tile;
 
+    public void SetGlobals(GlobalVars globals)
+    {
+        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+    }
+
     public void Initialize(Tile tile, BlPacManAssetContainer assets)
     {
         _tile = tile ?? throw new ArgumentNullException(nameof(tile));
         _assets = assets ?? throw new ArgumentNullException(nameof(assets));
         _tile.Item = this;
-        _assets.RegisterConsumable(this);
+        _globals?.State.RegisterConsumableSpawn();
         Show();
     }
 
@@ -44,12 +50,10 @@ internal sealed class BlPacManConsumableComponent
 
         Hide();
         pacMan.HandleConsumableEaten(this);
-        _assets?.NotifyConsumableEaten(this);
     }
 
     public void Destroy()
     {
-        _assets?.UnregisterConsumable(this);
         if (_tile is not null)
         {
             _tile.Item = null;
