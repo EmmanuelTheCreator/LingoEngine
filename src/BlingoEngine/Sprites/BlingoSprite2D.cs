@@ -655,6 +655,7 @@ When a movie stops, events occur in the following order:
         private void MemberHasChanged(bool forceSizeUpdate = false)
         {
             var forceUpdate = forceSizeUpdate || _memberSourceRectChanged;
+            var isCropping = _member is BlingoMemberBitmap && MemberSourceRect is { };
             var existingPlayer = GetActorsOfType<BlingoFilmLoopPlayer>().FirstOrDefault();
             if (_member is BlingoFilmLoopMember)
             {
@@ -675,13 +676,14 @@ When a movie stops, events occur in the following order:
 
             if (_frameworkSprite != null)
             {
-                ApplyMemberSourceRectSize(forceUpdate);
+                var shouldForceSize = forceUpdate && isCropping;
+                ApplyMemberSourceRectSize(shouldForceSize);
                 _frameworkSprite.MemberChanged();
                 _memberSourceRectChanged = false;
             }
             else
             {
-                _memberSourceRectChanged = forceUpdate;
+                _memberSourceRectChanged = forceUpdate && isCropping;
             }
 
             OnPropertyChanged();
