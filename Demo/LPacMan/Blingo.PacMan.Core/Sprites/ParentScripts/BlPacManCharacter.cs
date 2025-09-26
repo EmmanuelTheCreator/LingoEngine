@@ -38,6 +38,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private Tile? _lastTile;
     private bool _defaultsCaptured;
     private CharacterSnapshot? _defaults;
+    public bool RotateSprite { get; set; }
 
     public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, BlPacManCharacterOptions? options = null)
         : base(env)
@@ -248,13 +249,19 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             switch (Direction)
             {
                 case BlPacManDirection.Up:
-                    _sprite.Rotation = 270;
-                    _sprite.FlipH = false;
+                    if (RotateSprite)
+                    {
+                        _sprite.Rotation = 270;
+                        _sprite.FlipH = false;
+                    }
                     Y -= distance;
                     break;
                 case BlPacManDirection.Right:
-                    _sprite.Rotation = 0;
-                    _sprite.FlipH = false;
+                    if (RotateSprite)
+                    {
+                        _sprite.Rotation = 0;
+                        _sprite.FlipH = false;
+                    }
                     X += distance;
                     break;
                 case BlPacManDirection.Down:
@@ -263,8 +270,11 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                     _sprite.FlipH = false;
                     break;
                 case BlPacManDirection.Left:
-                    _sprite.Rotation = 0;
-                    _sprite.FlipH = true;
+                    if (RotateSprite)
+                    {
+                        _sprite.Rotation = 0;
+                        _sprite.FlipH = true;
+                    }
                     X -= distance;
                     break;
             }

@@ -254,7 +254,6 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             var ghost = _movie.AddSprite(PCSpriteNums.GhostStart + i, GameStartFrame, frameCount, sprStartX + i* sprSize, sprStartY, sprite =>
                 {
                     sprite.Name = $"Ghost.{ghostNames[i]}";
-                    sprite.Visibility = false;
                     sprite.MemberSourceRect = ARect.New(i * sprSize, (i + 1) * sprSize, sprSize, sprSize);
                 })
                 .SetMember("sprites")

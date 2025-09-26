@@ -102,7 +102,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void BeginSprite()
     {
-        return;
         ApplyAppearance();
 
         var character = EnsureCharacter();
@@ -132,7 +131,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void ExitFrame()
     {
-        return;
         var character = EnsureCharacter();
 
         if (_globals.State.IsGameplayFrozen)
@@ -188,7 +186,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="mode">The explicit mode to enter, or <c>null</c> to track the global mode.</param>
     public void SetMode(GhostMode? mode)
     {
-        return;
         if (mode is null)
             mode = _globalMode;
 
@@ -223,7 +220,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="settings">The ghost tuning for the current level.</param>
     public void Configure(GhostSettings settings)
     {
-        return;
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
         _baseSpeed = settings.Speed;
@@ -292,22 +288,24 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void ApplyAppearance()
     {
-        var cast = CastLib("Data");
-        var member = cast?.GetMember<BlingoMemberBitmap>("characters");
-        if (member != null)
-        {
-            Me.Member = member;
-        }
+        //if (_ghostRects.TryGetValue(GhostName, out var rect))
+        //{
+        //    Me.MemberSourceRect = rect;
+        //}
+        //else
+        //{
+        //    Me.MemberSourceRect = new ARect(0, 0, 16, 16);
+        //}
 
-        if (_ghostRects.TryGetValue(GhostName, out var rect))
-        {
-            Me.MemberSourceRect = rect;
-        }
-        else
-        {
-            Me.MemberSourceRect = new ARect(0, 0, 16, 16);
-        }
+        
+        SetStartposition();
 
+        _initialDirection = DetermineInitialDirection();
+        _requestedDirection = _initialDirection;
+    }
+
+    private void SetStartposition()
+    {
         var map = _globals.Map;
         var center = map?.HouseCenter ?? map?.House ?? map?.GetTile(map.Width / 2, map.Height / 2);
         if (center != null)
@@ -316,9 +314,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             Me.LocH = center.CenterX + offset;
             Me.LocV = center.CenterY;
         }
-
-        _initialDirection = DetermineInitialDirection();
-        _requestedDirection = _initialDirection;
     }
 
     /// <summary>

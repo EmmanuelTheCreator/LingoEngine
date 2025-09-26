@@ -378,6 +378,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             Direction = BlPacManDirection.Left,
             Preturn = true,
         });
+        _character.RotateSprite = true;
         _tileEnteredSubscription = _character.SubscribeTileEntered(OnTileEntered);
         return _character;
     }
