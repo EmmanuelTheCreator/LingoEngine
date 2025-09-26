@@ -1,4 +1,4 @@
-namespace Blingo.PacMan.Core.Datas;
+namespace Blingo.PacMan.Core.Settings;
 
 /// <summary>
 /// Level-specific configuration for Pac-Man's speed profile.

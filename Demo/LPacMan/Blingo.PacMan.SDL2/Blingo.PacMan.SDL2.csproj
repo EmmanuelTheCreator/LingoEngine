@@ -31,19 +31,42 @@
 	  <None Remove="Media\NewFolder\**" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\characters.png" Link="Media\Data\characters.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-1.png" Link="Media\Data\maze-1.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-2.png" Link="Media\Data\maze-2.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-3.png" Link="Media\Data\maze-3.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-4.png" Link="Media\Data\maze-4.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze.png" Link="Media\Data\maze.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\misc.png" Link="Media\Data\misc.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\mspacman.png" Link="Media\Data\mspacman.png" />
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\pills.png" Link="Media\Data\pills.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\characters.png" Link="Media\Data\characters.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-1.png" Link="Media\Data\maze-1.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-2.png" Link="Media\Data\maze-2.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-3.png" Link="Media\Data\maze-3.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze-4.png" Link="Media\Data\maze-4.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\maze.png" Link="Media\Data\maze.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\misc.png" Link="Media\Data\misc.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\mspacman.png" Link="Media\Data\mspacman.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\pills.png" Link="Media\Data\pills.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Include="..\Blingo.PacMan.Godot\Media\Data\sprites.png" Link="Media\Data\sprites.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
-	  <None Include="..\Blingo.PacMan.Godot\Media\Data\start.png" Link="Media\Data\start.png" />
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\start.png" Link="Media\Data\start.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\Blingo.PacMan.Godot\Media\Data\pacman.png" Link="Media\Data\pacman.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Include="..\Blingo.PacMan.Godot\Media\Fonts\OFL.txt" Link="Media\Fonts\OFL.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>

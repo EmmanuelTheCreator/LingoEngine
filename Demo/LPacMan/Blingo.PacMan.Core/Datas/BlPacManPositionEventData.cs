@@ -1,3 +1,4 @@
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 
 namespace Blingo.PacMan.Core.Datas;

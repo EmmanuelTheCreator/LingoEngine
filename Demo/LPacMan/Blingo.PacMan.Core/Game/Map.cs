@@ -24,15 +24,7 @@ public sealed class Map
 
     public Map(IEnumerable<string> data)
     {
-        var rows = new List<string>();
-        foreach (var row in data)
-        {
-            if (row is null)
-                throw new ArgumentException("Map rows cannot be null.", nameof(data));
-
-            rows.Add(row);
-        }
-
+        var rows = data.ToList();
         if (rows.Count == 0)
             throw new ArgumentException("Map data must contain at least one row.", nameof(data));
 

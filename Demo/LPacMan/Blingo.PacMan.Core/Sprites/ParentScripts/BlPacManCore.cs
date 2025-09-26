@@ -1,5 +1,4 @@
 using System;
-using Blingo.PacMan.Core;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using BlingoEngine.Core;

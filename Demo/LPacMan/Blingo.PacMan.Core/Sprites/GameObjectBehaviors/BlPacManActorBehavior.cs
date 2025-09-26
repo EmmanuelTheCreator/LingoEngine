@@ -1,6 +1,9 @@
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
@@ -24,29 +27,58 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     IHasKeyDownEvent,
     IHasExitFrameEvent
 {
+    public static int SprSize = 16;
+    public static int SprY = 0;
     private static readonly ARect[] _leftAnimation =
     {
-        new(0, 0, 16, 16),
-        new(32, 0, 48, 16),
+        ARect.New(SprSize * 0, SprY, SprSize, SprSize),
+        ARect.New(SprSize * 1, SprY, SprSize, SprSize),
+        ARect.New(SprSize * 2, SprY, SprSize, SprSize),
+        ARect.New(SprSize * 1, SprY, SprSize, SprSize),
     };
+    private static readonly ARect[] _rightAnimation = _leftAnimation;
+    private static readonly ARect[] _upAnimation = _leftAnimation;
+    private static readonly ARect[] _downAnimation = _leftAnimation;
 
-    private static readonly ARect[] _rightAnimation =
-    {
-        new(16, 0, 32, 16),
-        new(64, 0, 80, 16),
-    };
+    //private static readonly ARect[] _leftAnimation =
+    //{
+    //    ARect.New(SprSize * 12, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 13, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 14, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 15, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 14, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 13, SprY, SprSize, SprSize),
+    //};
 
-    private static readonly ARect[] _upAnimation =
-    {
-        new(0, 16, 16, 32),
-        new(32, 16, 48, 32),
-    };
+    //private static readonly ARect[] _rightAnimation =
+    //{
+    //    ARect.New(SprSize * 0, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 1, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 2, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 3, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 2, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 1, SprY, SprSize, SprSize),
+    //};
 
-    private static readonly ARect[] _downAnimation =
-    {
-        new(144, 16, 160, 32),
-        new(176, 16, 192, 32),
-    };
+    //private static readonly ARect[] _upAnimation =
+    //{
+    //    ARect.New(SprSize * 8,  SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 9,  SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 10, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 11, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 10, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 9,  SprY, SprSize, SprSize),
+    //};
+
+    //private static readonly ARect[] _downAnimation =
+    //{
+    //    ARect.New(SprSize * 4, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 5, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 6, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 7, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 6, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 5, SprY, SprSize, SprSize),
+    //};
 
     private readonly GlobalVars _globals;
     private BlPacManGameBehavior? _coordinator;
@@ -92,7 +124,6 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void BeginSprite()
     {
-        
         _coordinator = _globals.GameBehavior;
         var character = EnsureCharacter();
         character.BeginSprite();
@@ -142,16 +173,13 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void KeyDown(BlingoKeyEvent key)
     {
-        if (key is null)
-            return;
-
-        if (key.KeyPressed(37))
+        if (key.KeyPressed(123))
             _requestedDirection = BlPacManDirection.Left;
-        else if (key.KeyPressed(39))
+        else if (key.KeyPressed(124))
             _requestedDirection = BlPacManDirection.Right;
-        else if (key.KeyPressed(38))
+        else if (key.KeyPressed(126))
             _requestedDirection = BlPacManDirection.Up;
-        else if (key.KeyPressed(40))
+        else if (key.KeyPressed(125))
             _requestedDirection = BlPacManDirection.Down;
     }
 
@@ -208,9 +236,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
         _globals.State.ConsumableEaten();
 
-        var model = _globals.GameModel;
-        if (model is not null && consumable.ScoreValue > 0)
-            model.AddScore(consumable.ScoreValue);
+        if (consumable.ScoreValue > 0)
+            _globals.ScoreManager.AddScore(consumable.ScoreValue);
 
         if (!_globals.State.IsMuted)
         {
@@ -250,22 +277,11 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
     private void EnsureAppearance()
     {
-        if (Me.Member is null)
-        {
-            var cast = CastLib("Data");
-            var member = cast?.GetMember<BlingoMemberBitmap>("mspacman") ?? cast?.GetMember<BlingoMemberBitmap>("characters");
-            if (member != null)
-            {
-                Me.Member = member;
-                Me.MemberSourceRect = new ARect(0, 0, 16, 16);
-            }
-        }
-
-        if (!_animationsConfigured)
-        {
-            ConfigureAnimations();
-            _animationsConfigured = true;
-        }
+        if (_animationsConfigured)
+            return;
+        
+        ConfigureAnimations();
+        _animationsConfigured = true;
     }
 
     private void CheckCollisions(BlPacManCharacter character)
@@ -283,8 +299,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             {
                 ghost.SetMode(GhostMode.Dead);
                 var score = _globals.GhostManager.RegisterGhostEaten();
-                if (_globals.GameModel is not null && score > 0)
-                    _globals.GameModel.AddScore(score);
+                if (score > 0)
+                    _globals.ScoreManager.AddScore(score);
 
                 var state = _globals.State;
                 state.SoundCooldown = 5;
@@ -331,7 +347,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     private void ResetPosition()
     {
         var map = _globals.Map;
-        var startTile = map?.HouseCenter ?? map?.GetTile(map.Width / 2, map.Height - 3);
+        if (map == null) return;
+        var startTile = map.HouseCenter;
         if (startTile is null)
             return;
 

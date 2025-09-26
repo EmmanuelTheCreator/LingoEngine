@@ -1,5 +1,4 @@
-using System;
-using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 using BlingoEngine.Sprites;
 
@@ -15,7 +14,7 @@ internal sealed class BlPacManConsumableComponent
 
     public BlPacManConsumableComponent(BlingoSpriteBehavior owner, BlPacManConsumableType type, int scoreValue)
     {
-        _owner = owner ?? throw new ArgumentNullException(nameof(owner));
+        _owner = owner;
         _type = type;
         _scoreValue = scoreValue;
     }
@@ -28,12 +27,12 @@ internal sealed class BlPacManConsumableComponent
 
     public void SetGlobals(GlobalVars globals)
     {
-        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+        _globals = globals;
     }
 
     public void Initialize(Tile tile)
     {
-        _tile = tile ?? throw new ArgumentNullException(nameof(tile));
+        _tile = tile;
         _tile.Item = this;
         _globals?.State.RegisterConsumableSpawn();
         Show();
@@ -55,7 +54,7 @@ internal sealed class BlPacManConsumableComponent
             _tile.Item = null;
             _tile = null;
         }
-        _owner.GetSprite().RemoveMe();
+        _owner.GetSprite().Puppet = false;
     }
 
     public void Hide()

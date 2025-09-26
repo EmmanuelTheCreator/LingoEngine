@@ -1,6 +1,9 @@
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.Movies;

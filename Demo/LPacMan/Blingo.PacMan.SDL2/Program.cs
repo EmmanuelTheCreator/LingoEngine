@@ -10,7 +10,6 @@ using BlingoEngine.Director.SDL2;
 using BlingoEngine.Net.RNetProjectHost;
 using BlingoEngine.Net.RNetPipeServer;
 using Blingo.PacMan.Core;
-using Blingo.PacMan.Core.Game;
 #endif
 
 namespace Blingo.PacMan.SDL2
@@ -36,7 +35,7 @@ namespace Blingo.PacMan.SDL2
                         d.CsProjFile = "Blingo.PacMan.Core\\Blingo.PacMan.Core.csproj";
                     })
 #else
-                    .WithBlingoSdlEngine("Blingo PacMan", 730, 500)
+                    .WithBlingoSdlEngine("Blingo PacMan", BlPacManProjectFactory.GameWidth, BlPacManProjectFactory.GameHeight, null,null,1)
 #endif
 #if DEBUG
                     .WithRNetProjectHostServer(61699,true)

@@ -15,7 +15,7 @@ public abstract class AbstUISdlRootContext<TMouse> : IAbstSDLRootContext, ISdlRo
     private IAbstGlobalKey _globalKey = null!;
     protected AbstSdlGlobalMouse<GlobalSDLAbstMouse, AbstMouseEvent>? _frameworkMouse;
     protected SdlKey? _frameworkKey;
-
+    public int WindowScale { get; set; } = 1;
     public nint Window { get; }
     public nint Renderer { get; }
 

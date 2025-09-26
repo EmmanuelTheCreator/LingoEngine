@@ -1,4 +1,4 @@
-namespace Blingo.PacMan.Core.Game;
+namespace Blingo.PacMan.Core.Engine;
 
 /// <summary>
 /// Represents a subscription to a Pac-Man event mediator. Call <see cref="Release"/> to

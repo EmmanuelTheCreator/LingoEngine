@@ -1,7 +1,8 @@
-﻿
-using Blingo.PacMan.Core.Datas;
+﻿using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Enums;
+using Blingo.PacMan.Core.Settings;
 using System.Collections.ObjectModel;
-using MapContent = Blingo.PacMan.Core.Maps.Maps;
+using MapContent = Blingo.PacMan.Core.Datas.Maps;
 
 
 namespace Blingo.PacMan.Core.Game

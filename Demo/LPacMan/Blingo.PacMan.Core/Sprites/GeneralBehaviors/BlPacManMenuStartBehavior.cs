@@ -1,5 +1,4 @@
 using System;
-using Blingo.PacMan.Core;
 using Blingo.PacMan.Core.Game;
 using BlingoEngine.Events;
 using BlingoEngine.Inputs.Events;

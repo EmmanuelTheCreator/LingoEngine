@@ -1,3 +1,5 @@
+using Blingo.PacMan.Core.Enums;
+
 namespace Blingo.PacMan.Core.Datas;
 
 internal sealed class BlPacManCharacterOptions

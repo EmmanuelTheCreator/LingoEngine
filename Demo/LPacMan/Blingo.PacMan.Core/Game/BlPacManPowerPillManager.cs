@@ -8,8 +8,6 @@ namespace Blingo.PacMan.Core.Game;
 
 internal sealed class BlPacManPowerPillManager 
 {
-    private static readonly ARect _pillRect = new(16, 0, 24, 12);
-
     private readonly List<BlPacManConsumableComponent> _spawnedConsumables = new();
     private readonly GlobalVars _globals;
 
@@ -46,20 +44,13 @@ internal sealed class BlPacManPowerPillManager
     private void CreateConsumableSprite(IBlingoMovie lingoMovie, Tile tile, int index)
     {
         var name = $"PowerPill_{tile.Column}_{tile.Row}";
-        var spriteNum = index + 71;
+        var spriteNum = index + PCSpriteNums.PowerPillStart;
         lingoMovie.Channel(spriteNum).Puppet = true;
         BlingoSprite2D sprite2D = (BlingoSprite2D)lingoMovie.GetSprite(spriteNum)!;
-        sprite2D.LocH = tile.CenterX;
-        sprite2D.LocV = tile.CenterY;
-        sprite2D.Puppet = true;
-        sprite2D.Visibility = true;
-
-        var cast = lingoMovie.CastLib["Data"];
-        var member = cast?.GetMember<BlingoMemberBitmap>("pills");
-        if (member != null)
-            sprite2D.Member = member;
-
-        sprite2D.MemberSourceRect = _pillRect;
+        sprite2D.LocH = tile.CenterX-2;
+        sprite2D.LocV = tile.CenterY-2;
+        sprite2D.SetMember("pills");
+        sprite2D.MemberSourceRect = new(0, 0, 6, 6);
 
         var behavior = sprite2D.SetBehavior<BlPacManPowerPillBehavior>();
         behavior.Component.SetGlobals(_globals);

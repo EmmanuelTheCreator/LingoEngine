@@ -22,7 +22,7 @@ public class BlingoSdlRootContext : AbstUISdlRootContext<BlingoMouse>
     public BlingoDebugOverlay DebugOverlay { get; set; } = null!;
 
     private Lazy<SdlStage> _stage;
-
+    
     public BlingoSdlKey Key { get; set; }
     public IAbstFrameworkMouse Mouse { get; set; }
     internal BlingoSdlFactory BlingoFactory { get; set; } = null!;

@@ -1,6 +1,8 @@
 using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Models;
+using Blingo.PacMan.Core.Settings;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
@@ -19,16 +21,19 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     IHasEnterFrameEvent
 {
     private readonly GlobalVars _globals;
-    private readonly GameModelRepository _gameModelRepository;
+    private readonly BlPacManRepository _gameRepository;
     private GameModel? _model;
-    private readonly List<BlPacManEventSubscription> _modelSubscriptions = new();
 
     
     private GameSettings? _currentGameSettings;
     private PacmanSettings? _currentPacmanSettings;
     private GhostSettings? _currentGhostSettings;
     private bool _initialized;
-    
+    private IBlingoSpriteChannel _spriteTextPlayer1 = null!;
+    private IBlingoSpriteChannel _spriteTextPlayer2 = null!;
+    private IBlingoSpriteChannel _spriteTextReady = null!;
+    private IBlingoSpriteChannel _gameBG = null!;
+
     private GameModel Model => _model ??= _globals.GameModel ?? throw new InvalidOperationException("GameModel was not initialised.");
 
     private BlPacManGameState State => _globals.State;
@@ -37,11 +42,11 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
 
 
-    public BlPacManGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals, GameModelRepository gameModelRepository)
+    public BlPacManGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals, BlPacManRepository gameRepository)
         : base(env)
     {
         _globals = globals;
-        _gameModelRepository = gameModelRepository;
+        _gameRepository = gameRepository;
     }
 
     /// <inheritdoc />
@@ -50,9 +55,11 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.GameBehavior = this;
         if (_initialized)
             return;
+        _gameBG = Sprite(PCSpriteNums.GameBG);
+        _globals.ScoreManager.Init(_Movie);
+        InitTargetSprites();
         Model.Reset();
-        SubscribeModelEvents();
-        ResetInternalState(resetScore: false);
+        StartCleanNewGame();
         MakeLevel();
 
         _initialized = true;
@@ -70,16 +77,13 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _currentGameSettings = null;
         _currentPacmanSettings = null;
         _currentGhostSettings = null;
-        UnsubscribeModelEvents();
         Model.Reset();
         _initialized = false;
     }
 
    
 
-    /// <summary>
-    /// Called by the start button sprite to kick off the current level.
-    /// </summary>
+   
     public void StartLevel()
     {
         if (!_initialized)
@@ -131,7 +135,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private void MakeLevel()
     {
         GameSettings settings = _globals.LevelManager.MakeLevel();
-
+        
         _currentGameSettings = settings;
         _currentPacmanSettings = _globals.LevelManager.GetPacmanSettings();
         _currentGhostSettings = _globals.LevelManager.GetGhostSettings();
@@ -141,14 +145,15 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.CurrentGhostSettings = _currentGhostSettings;
 
         State.ResetForNewLevel(settings, Model);
-
-        if (Model.PacMan is { } pacMan && _currentPacmanSettings is not null)
-            pacMan.Configure(this, _currentPacmanSettings);
+        _globals.GameModel.PacMan?.Configure(this, _currentPacmanSettings);
 
         _globals.GhostManager.MakeLevel(_globals.LevelManager.GetGhostSettings());
         _globals.BonusManager.MakeLevel(settings);
         _globals.PelletManager.MakeLevel(_Movie);
         _globals.PowerPillManager.MakeLevel(_Movie);
+        _globals.BonusAvailableManager.Init(_Movie);
+        _globals.LivesManager.Init(_Movie,_Player);
+        _gameBG.SetMember(_currentGameSettings.MazeMemberName);
 
     }
 
@@ -179,8 +184,19 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (State.DecrementStartCountdown())
+        if (State.DecrementStartCountdown(out var countDownChanged))
+        {
+            ShowReady();
+            ShowTextPlayer1();
             return;
+        }
+        if (!State.IsActivePlaying)
+        {
+            State.IsActivePlaying = true;
+            HideReady();
+            HideTextPlayer1();
+            HideTextPlayer2();
+        }
 
         if (State.Win)
         {
@@ -193,7 +209,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
         if (State.PacManEatenPending)
         {
-            if (State.Lives == 0)
+            if (!_globals.LivesManager.HasLives())
                 return;
 
             ResumeAfterPacManEaten();
@@ -206,21 +222,29 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
     public void Load()
     {
-        var data = _gameModelRepository.Load();
+        var data = _gameRepository.Load();
         if (data is null)
             return;
 
-        Model.SetHighScore(data.HighScore);
+        _globals.ScoreManager.SetHighScore(data.HighScore);
     }
 
     public void Save()
     {
-        _gameModelRepository.Save(new BlPacManSaveData
+        _gameRepository.Save(new BlPacManSaveData
         {
-            HighScore = Model.HighScore,
+            HighScore = _globals.ScoreManager.HighScore,
         });
     }
 
+    /// <summary>
+    /// Called by the start button sprite to kick off the current level.
+    /// </summary>
+    public void StartCleanNewGame()
+    {
+        _globals.LevelManager.Reset();
+        ResetInternalState(true);
+    }
 
 
     /// <summary>
@@ -231,45 +255,15 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     {
         State.Reset();
         _globals.PauseBehavior?.Reset();
+        _globals.BonusManager?.Reset();
+        _globals.GhostManager.Reset();
 
         if (resetScore)
-            Model.ResetScore();
+            _globals.ScoreManager.ResetScore();
 
-        Model.ResetLives(_globals.LevelManager.GetGameSettings().DefaultLives + 1);
+        _globals.LivesManager.ResetLives(_globals.LevelManager.GetGameSettings().DefaultLives + 1);
     }
 
-    /// <summary>
-    /// Subscribes to model change notifications so the behaviour can react to score, lives, and mode updates.
-    /// </summary>
-    private void SubscribeModelEvents()
-    {
-        ReleaseModelSubscriptions();
-        _modelSubscriptions.Add(Model.SubscribeLivesChanged(OnLivesChanged));
-    }
-
-    /// <summary>
-    /// Removes all subscriptions registered by <see cref="SubscribeModelEvents"/>.
-    /// </summary>
-    private void UnsubscribeModelEvents()
-    {
-        ReleaseModelSubscriptions();
-    }
-
-    /// <summary>
-    /// Releases each model subscription to avoid leaking event handlers between sessions.
-    /// </summary>
-    private void ReleaseModelSubscriptions()
-    {
-        if (_modelSubscriptions.Count == 0)
-            return;
-
-        foreach (var subscription in _modelSubscriptions)
-            subscription.Release();
-
-        _modelSubscriptions.Clear();
-    }
-
-  
     /// <summary>
     /// Handles Pac-Man's death sequence and schedules the life reset.
     /// </summary>
@@ -281,14 +275,14 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.GhostManager.OnEatenByGhost();
         BonusManager.OnPacManEaten();
         State.OnPacManEaten();
-        Model.OnPacManEaten();
+        _globals.LivesManager.OnPacManEaten();
     }
     /// <summary>
     /// Restores actors after Pac-Man loses a life and restarts the countdown.
     /// </summary>
     private void ResumeAfterPacManEaten()
     {
-        if (!State.PacManEatenPending || State.Lives == 0)
+        if (!State.PacManEatenPending || !_globals.LivesManager.HasLives())
             return;
 
         Model.ResumeAfterPacManEaten();
@@ -296,17 +290,6 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.GhostManager.ResumeAfterPacManEaten();
         _globals.BonusManager.ResetAfterLifeLost();
 
-    }
-
-
-    /// <summary>
-    /// Reacts to life count updates and triggers the game-over state when necessary.
-    /// </summary>
-    private void OnLivesChanged(int lives)
-    {
-        if (lives != 0)
-            return;
-        DoGameOver();
     }
 
     public void DoGameOver()
@@ -317,6 +300,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         ResetInternalState(resetScore: true);
         MakeLevel();
         _Player.SoundPlayIntro();
+        State.IsActivePlaying = false;
     }
 
 
@@ -344,5 +328,20 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         State.SoundCooldown = 5;
     }
 
-    
+    private void InitTargetSprites()
+    {
+        _spriteTextPlayer1 = Sprite(9);
+        _spriteTextPlayer2 = Sprite(10);
+        _spriteTextReady = Sprite(11);
+        HideTextPlayer2();
+    }
+
+    public void ShowTextPlayer1() => _spriteTextPlayer1.Blend = 100;
+    public void ShowTextPlayer2() => _spriteTextPlayer2.Blend = 100;
+    public void HideTextPlayer1() => _spriteTextPlayer1.Blend = 0;
+    public void HideTextPlayer2() => _spriteTextPlayer2.Blend = 0;
+    public void ShowReady() => _spriteTextReady.Blend = 100;
+    public void HideReady() => _spriteTextReady.Blend = 0;
+
+
 }

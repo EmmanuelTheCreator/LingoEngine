@@ -57,6 +57,7 @@
 	  <None Include="Media\Data\pills.png" />
 	  <None Include="Media\Data\sprites.png" />
 	  <None Include="Media\Data\start.png" />
+	  <None Include="Media\Data\pacman.png" />
 	  <Content Include="Properties\launchSettings.json" />
 	</ItemGroup>
 

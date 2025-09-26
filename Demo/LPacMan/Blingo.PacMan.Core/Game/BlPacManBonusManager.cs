@@ -1,5 +1,5 @@
-using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game;
@@ -108,7 +108,7 @@ internal sealed class BlPacManBonusManager
         BonusDestroyCountdown = 45;
 
         if (_settings.BonusScore > 0)
-            _globals.GameModel?.AddScore(_settings.BonusScore);
+            _globals.ScoreManager.AddScore(_settings.BonusScore);
 
         _bonus.ShowScore();
     }

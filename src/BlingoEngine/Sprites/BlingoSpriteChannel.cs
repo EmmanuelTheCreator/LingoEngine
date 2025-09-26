@@ -189,7 +189,11 @@ namespace BlingoEngine.Sprites
                             _sprite.Puppet = true;
                         }
                         else
+                        {
                             _sprite = _movie.AddSprite(Number, 1, _movie.FrameCount, 0, 0, c => c.Puppet = true);
+                            if (_sprite is BlingoSprite2D sprite2D)
+                                SetSprite(sprite2D);
+                        }
                     }
                 }
                 else
@@ -203,6 +207,7 @@ namespace BlingoEngine.Sprites
                         {
                             sprite2D.Reset();
                             _movie.Sprite2DManager.PuppetSpriteCacheAdd(Number, sprite2D);
+                            sprite2D.SpriteChannel = null;
                         }
                         _sprite = null;
                         //var typed = ((BlingoSprite)_sprite);
@@ -220,7 +225,7 @@ namespace BlingoEngine.Sprites
         {
             _sprite = sprite;
             sprite.SpriteChannel = this;
-            _sprite.Visibility = _visibility;
+            Visibility = sprite.Visibility;
         }
         internal void RemoveSprite()
         {

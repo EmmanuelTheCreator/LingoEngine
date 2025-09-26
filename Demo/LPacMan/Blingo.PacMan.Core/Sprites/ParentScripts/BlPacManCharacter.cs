@@ -1,5 +1,7 @@
 using System;
 using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
@@ -268,15 +270,23 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             switch (Direction)
             {
                 case BlPacManDirection.Up:
+                    _sprite.Rotation = 270;
+                    _sprite.FlipV = false;
                     Y -= distance;
                     break;
                 case BlPacManDirection.Right:
+                    _sprite.Rotation = 0;
+                    _sprite.FlipV = false;
                     X += distance;
                     break;
                 case BlPacManDirection.Down:
                     Y += distance;
+                    _sprite.Rotation = 90;
+                    _sprite.FlipV = false;
                     break;
                 case BlPacManDirection.Left:
+                    _sprite.Rotation = 180;
+                    _sprite.FlipV = true;
                     X -= distance;
                     break;
             }

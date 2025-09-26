@@ -1,4 +1,5 @@
-﻿using Blingo.PacMan.Core.Datas;
+﻿using Blingo.PacMan.Core.Enums;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game
@@ -12,8 +13,6 @@ namespace Blingo.PacMan.Core.Game
     }
     internal class BlGhostManager
     {
-        
-
         private static MrGhost[] _ghostNames = new[] { MrGhost.Blinky, MrGhost.Pinky, MrGhost.Inky, MrGhost.Clyde };
         private static readonly int[] _ghostScoreChain = { 200, 400, 800, 1_600 };
         private readonly List<BlPacManGhostBehavior> _ghosts = new();

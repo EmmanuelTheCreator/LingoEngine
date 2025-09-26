@@ -158,6 +158,7 @@ namespace BlingoEngine.Sprites
         }
         public APoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
+        /// <summary>Rotation of the sprite in degrees.</summary>
         public float Rotation
         {
             get => _frameworkSprite.Rotation;
@@ -593,10 +594,8 @@ When a movie stops, events occur in the following order:
 
             if (_member is BlingoMemberBitmap && MemberSourceRect is { } rect)
             {
-                var centerX = rect.Left + rect.Width / 2f;
-                var centerY = rect.Top + rect.Height / 2f;
                 var regPoint = _member.RegPoint;
-                var baseOffset = new APoint(regPoint.X - centerX, regPoint.Y - centerY);
+                var baseOffset = new APoint(regPoint.X - rect.Width + (rect.Width/2), regPoint.Y - rect.Height + (rect.Height / 2));
                 return (baseOffset, rect.Width, rect.Height);
             }
 

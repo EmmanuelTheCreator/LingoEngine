@@ -1,14 +1,15 @@
 using AbstUI.Primitives;
-using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 
-namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+namespace Blingo.PacMan.Core.Game;
 
 internal sealed class BlPacManPelletManager
 {
-    private static readonly ARect _pelletRect = new(0, 0, 8, 12);
+    // image is 24 x 6
+    private static readonly ARect _pelletRect = ARect.New(6, 0, 2, 2);
 
     private readonly List<BlPacManConsumableComponent> _spawnedConsumables = new();
     private readonly GlobalVars _globals;
@@ -39,32 +40,26 @@ internal sealed class BlPacManPelletManager
         for (int i = 0; i < pellets.Count; i++)
         {
             Tile? tile = pellets[i];
-            CreateConsumableSprite(lingoMovie, tile , i);
+            var behavior = CreateConsumableSprite(lingoMovie, tile , i);
+            _spawnedConsumables.Add(behavior.Component);
         }
     }
 
-    private void CreateConsumableSprite(IBlingoMovie lingoMovie, Tile tile,  int index)
+    private BlPacManPelletBehavior CreateConsumableSprite(IBlingoMovie lingoMovie, Tile tile,  int index)
     {
         var name = $"Pellet_{tile.Column}_{tile.Row}";
-        var spriteNum = index + 121;
+        var spriteNum = index + PCSpriteNums.PelletsStart;
         lingoMovie.Channel(spriteNum).Puppet = true;
         BlingoSprite2D sprite2D = (BlingoSprite2D)lingoMovie.GetSprite(spriteNum)!;
         sprite2D.LocH = tile.CenterX;
         sprite2D.LocV = tile.CenterY;
-        sprite2D.Puppet = true;
-        sprite2D.Visibility = true;
-
-        var cast = lingoMovie.CastLib["Data"];
-        var member = cast?.GetMember<BlingoMemberBitmap>("pills");
-        if (member != null)
-            sprite2D.Member = member;
-
+        sprite2D.SetMember("pills");
         sprite2D.MemberSourceRect = _pelletRect;
 
         var behavior = sprite2D.SetBehavior<BlPacManPelletBehavior>();
         behavior.Component.SetGlobals(_globals);
         behavior.Initialize(tile);
-        _spawnedConsumables.Add(behavior.Component);
+        return behavior;
     }
 
    

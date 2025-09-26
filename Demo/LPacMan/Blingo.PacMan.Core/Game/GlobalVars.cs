@@ -1,5 +1,5 @@
-using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using BlingoEngine.Core;
@@ -19,6 +19,9 @@ public sealed class GlobalVars : BlingoGlobalVars
     internal BlPacManBonusManager BonusManager { get; }
     internal BlPacManPelletManager PelletManager { get; }
     internal BlPacManPowerPillManager PowerPillManager { get; }
+    internal BlPacManBonusAvailableManager BonusAvailableManager { get; }
+    internal BlPacManLivesManager LivesManager { get; }
+    internal BlPacManScoreManager ScoreManager { get; }
 
     public GameSettings? CurrentGameSettings { get; set; }
 
@@ -45,6 +48,9 @@ public sealed class GlobalVars : BlingoGlobalVars
         LevelManager = new BlLevelManager();
         PelletManager = new BlPacManPelletManager(this);
         PowerPillManager = new BlPacManPowerPillManager(this);
+        BonusAvailableManager = new BlPacManBonusAvailableManager(this);
+        LivesManager = new BlPacManLivesManager(this);
+        ScoreManager = new BlPacManScoreManager(this);
     }
 
     protected override void OnClearGlobals()

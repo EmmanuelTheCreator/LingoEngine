@@ -1,4 +1,4 @@
-namespace Blingo.PacMan.Core.Datas;
+namespace Blingo.PacMan.Core.Settings;
 
 /// <summary>
 /// Cruise Elroy thresholds when ghosts speed up as pellets disappear.

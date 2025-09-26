@@ -1,6 +1,6 @@
 using BlingoEngine.Core;
 
-namespace Blingo.PacMan.Core
+namespace Blingo.PacMan.Core.Game
 {
     /// <summary>
     /// Convenience extension methods that wrap the various sound cues used throughout the Pac-Man game.

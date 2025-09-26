@@ -249,6 +249,7 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
         _zIndex = sprite.SpriteNum;
         _directToStage = sprite.DirectToStage;
         _ink = sprite.Ink;
+        Visibility = true;
         ApplyBlend();
         ApplyInk();
     }
@@ -264,14 +265,14 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
     }
     public void Show()
     {
-        Visibility = true;
+        //Visibility = true;
         _show(this);
         _somethingChanged = true;
     }
 
     public void Hide()
     {
-        Visibility = false;
+        //Visibility = false;
         _hide(this);
         _somethingChanged = true;
     }
@@ -311,10 +312,15 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
 
     public AbstSDLRenderResult Render(AbstSDLRenderContext context)
     {
-        if (!IsDirty && !IsDirtyMember && !_somethingChanged)
+#if DEBUG
+        //if (_blingoSprite2D.Name.Contains("Life_"))
+        if (_blingoSprite2D.SpriteNum == 10)
         {
-            return _lastTexture;
         }
+#endif
+        if (!IsDirty && !IsDirtyMember && !_somethingChanged)
+            return _lastTexture;
+        
         _somethingChanged = false;
         Update();
         ComponentContext.Renderer = context.Renderer;

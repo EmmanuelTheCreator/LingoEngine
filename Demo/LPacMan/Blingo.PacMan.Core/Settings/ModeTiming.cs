@@ -1,4 +1,6 @@
-namespace Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Enums;
+
+namespace Blingo.PacMan.Core.Settings;
 
 /// <summary>
 /// Represents the duration of a ghost mode cycle.

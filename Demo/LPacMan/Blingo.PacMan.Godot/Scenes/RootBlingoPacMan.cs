@@ -8,7 +8,6 @@ using BlingoEngine.Director.LGodot;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using Blingo.PacMan.Core;
-using Blingo.PacMan.Core.Game;
 
 public partial class RootBlingoPacMan : Node2D
 {
@@ -33,7 +32,7 @@ public partial class RootBlingoPacMan : Node2D
             ProjectSettings.SetSetting("display/window/size/initial_position_type", "3");
             ProjectSettings.SetSetting("display/window/stretch/mode", "canvas_items");
             ProjectSettings.SetSetting("display/window/stretch/aspect", "keep");
-            DisplayServer.WindowSetSize(new Vector2I(730, 500));
+            DisplayServer.WindowSetSize(new Vector2I(385, 250));
 #endif
             //DisplayServer.WindowSetPosition((DisplayServer.ScreenGetSize() - DisplayServer.WindowGetSize()) / 2);
 

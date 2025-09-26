@@ -1,4 +1,4 @@
-namespace Blingo.PacMan.Core.Datas;
+namespace Blingo.PacMan.Core.Enums;
 
 public enum BlPacManDirection
 {

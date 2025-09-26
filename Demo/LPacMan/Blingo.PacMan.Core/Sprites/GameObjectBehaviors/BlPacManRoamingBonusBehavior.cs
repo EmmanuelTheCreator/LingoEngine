@@ -1,7 +1,10 @@
 using System;
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
@@ -19,10 +22,11 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent
 {
-    private const int _frameSize = 30;
-    private const float _verticalOffset = -48f;
+    private static int _frameSize = TileMath.SpriteSize-2;
+    private const float _verticalOffset = -14f;
 
     private static readonly ARect[] _defaultAnimation = { CreateFrame(0, 0) };
+    internal static ARect DefaultAnimationRect =>_defaultAnimation[0];
     private static readonly ARect[] _score100Animation = { CreateFrame(0, _frameSize) };
     private static readonly ARect[] _score200Animation = { CreateFrame(_frameSize, _frameSize) };
     private static readonly ARect[] _score500Animation = { CreateFrame(_frameSize * 2, _frameSize) };

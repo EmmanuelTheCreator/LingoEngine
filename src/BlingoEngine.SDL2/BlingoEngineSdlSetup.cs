@@ -1,14 +1,15 @@
-﻿using AbstUI.Core;
+﻿using AbstUI;
+using AbstUI.Core;
+using AbstUI.Inputs;
+using AbstUI.SDL2;
+using AbstUI.SDL2.Core;
+using AbstUI.SDL2.SDLL;
+using BlingoEngine.Core;
 using BlingoEngine.FrameworkCommunication;
 using BlingoEngine.SDL2.Core;
 using BlingoEngine.Setup;
 using Microsoft.Extensions.DependencyInjection;
-using AbstUI.SDL2.SDLL;
-using AbstUI.SDL2;
-using BlingoEngine.Core;
-using AbstUI.SDL2.Core;
-using AbstUI.Inputs;
-using AbstUI;
+using static AbstUI.SDL2.SDLL.SDL;
 
 
 namespace BlingoEngine.SDL2;
@@ -16,7 +17,7 @@ namespace BlingoEngine.SDL2;
 public static class SdlSetup
 {
     private static bool _engineRegistered = false;
-    public static IBlingoEngineRegistration WithBlingoSdlEngine(this IBlingoEngineRegistration reg, string windowTitle, int width, int height, Action<BlingoSdlFactory>? setup = null, Action<IAbstFameworkComponentWinRegistrator>? componentRegistrations = null)
+    public static IBlingoEngineRegistration WithBlingoSdlEngine(this IBlingoEngineRegistration reg, string windowTitle, int width, int height, Action<BlingoSdlFactory>? setup = null, Action<IAbstFameworkComponentWinRegistrator>? componentRegistrations = null, float windowScale = 1)
     {
         if (_engineRegistered) return reg; // only register once
         _engineRegistered = true;
@@ -41,8 +42,10 @@ public static class SdlSetup
             return reg;
         }
         var renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED | SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
+        SDL.SDL_SetHint(SDL.SDL_HINT_RENDER_SCALE_QUALITY, "0");
         SDL.SDL_RenderSetLogicalSize(renderer, width, height); // Virtual resolution
-        //SDL.SDL_SetWindowResizable(window, SDL.SDL_bool.SDL_TRUE);
+        //SDL.SDL_RenderSetIntegerScale(renderer, SDL_bool.SDL_TRUE);
+        SDL.SDL_SetWindowSize(window, (int)(width * windowScale), (int)(height * windowScale));
         return reg.WithBlingoSdlEngine(window, renderer, setup, componentRegistrations);
     }
     public static void Dispose()

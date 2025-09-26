@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Blingo.PacMan.Core.Maps
+namespace Blingo.PacMan.Core.Datas
 {
     internal class Maps
     {

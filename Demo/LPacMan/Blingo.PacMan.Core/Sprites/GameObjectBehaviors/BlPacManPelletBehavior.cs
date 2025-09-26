@@ -1,4 +1,4 @@
-using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;

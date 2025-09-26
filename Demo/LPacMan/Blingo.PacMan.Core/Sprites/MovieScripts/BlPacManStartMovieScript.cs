@@ -1,5 +1,5 @@
+using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Game;
-using Blingo.PacMan.Core.Models;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 
@@ -8,9 +8,9 @@ namespace Blingo.PacMan.Core.Sprites.MovieScripts;
 internal sealed class BlPacManStartMovieScript : BlingoMovieScript, IHasStartMovieEvent, IHasStopMovieEvent
 {
     private readonly GlobalVars _globals;
-    private readonly GameModelRepository _repository;
+    private readonly BlPacManRepository _repository;
 
-    public BlPacManStartMovieScript(IBlingoMovieEnvironment env, GlobalVars globals, GameModelRepository repository)
+    public BlPacManStartMovieScript(IBlingoMovieEnvironment env, GlobalVars globals, BlPacManRepository repository)
         : base(env)
     {
         _globals = globals;
