@@ -325,9 +325,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var baseStep = TileMath.GetMovementStep(map);
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
-            Step = 4f,
+            Step = baseStep,
             Speed = _baseSpeed,
             Direction = _requestedDirection,
             Preturn = true,

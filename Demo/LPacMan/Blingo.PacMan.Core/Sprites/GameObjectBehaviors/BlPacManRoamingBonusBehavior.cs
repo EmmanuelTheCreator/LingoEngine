@@ -218,7 +218,9 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (map is null)
             return;
         
-        EnsureCharacter().SetMap(map);
+        var character = EnsureCharacter();
+        character.SetMap(map);
+        character.Step = TileMath.GetMovementStep(map);
         _spawnTile = map.Tunnels.Count > 0 ? map.Tunnels[^1] : map.HouseCenter;
         _targetTile = map.Tunnels.Count > 0 ? map.Tunnels[0] : map.HouseCenter;
     }
@@ -234,9 +236,10 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         }
 
         var map = _globals.LevelManager.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var baseStep = TileMath.GetMovementStep(map);
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
-            Step = 4f,
+            Step = baseStep,
             Speed = 40f,
             Direction = BlPacManDirection.Left,
             Preturn = true,

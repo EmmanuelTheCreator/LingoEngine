@@ -11,7 +11,6 @@ namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
 internal sealed class BlPacManCharacter : BlingoParentScript
 {
-    private const float DefaultStep = 5f;
     private const float DefaultSpeed = 80f;
     private const float PositionTolerance = 0.5f;
 
@@ -43,7 +42,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     {
         _map = map ?? throw new ArgumentNullException(nameof(map));
         _sprite = sprite ?? throw new ArgumentNullException(nameof(sprite));
-        _step = options?.Step ?? DefaultStep;
+        _step = options?.Step ?? TileMath.GetMovementStep(map);
         Speed = options?.Speed ?? DefaultSpeed;
         Direction = options?.Direction ?? BlPacManDirection.None;
         _previousDirection = Direction;

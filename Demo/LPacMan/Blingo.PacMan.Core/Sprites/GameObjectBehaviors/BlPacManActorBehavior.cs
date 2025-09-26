@@ -79,9 +79,9 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         }
         var character = EnsureCharacter();
         character.SetMap(_globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized."));
+        character.Step = GetBaseStepSize();
         character.Speed = settings.Speed;
         character.EffectiveSpeed = settings.Speed;
-        character.Step = 4f;
         character.Reset();
         ResetPosition();
         PublishPosition(character);
@@ -351,10 +351,12 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         }
 
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var baseStep = GetBaseStepSize();
+        var baseSpeed = _globals.CurrentPacmanSettings?.Speed ?? 80f;
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
-            Step = 4f,
-            Speed = 80f,
+            Step = baseStep,
+            Speed = baseSpeed,
             Direction = BlPacManDirection.Left,
             Preturn = true,
         });
@@ -362,5 +364,9 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         return _character;
     }
 
-  
+    private float GetBaseStepSize()
+    {
+        return TileMath.GetMovementStep(_globals.Map);
+    }
+
 }
