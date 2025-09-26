@@ -26,7 +26,7 @@ namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors
 
         public float ScaleFactor { get; set; } = 1f;
 
-        public float Spacing { get; set; } = 64f;
+        public float Spacing { get; set; } = 32f;
 
         /// <summary>
         /// Optional cropping rectangle applied to each bonus sprite.

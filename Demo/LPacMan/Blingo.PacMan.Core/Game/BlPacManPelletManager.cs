@@ -8,7 +8,7 @@ namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 internal sealed class BlPacManPelletManager
 {
-    private static readonly ARect _pelletRect = new(0, 0, 16, 24);
+    private static readonly ARect _pelletRect = new(0, 0, 8, 12);
 
     private readonly List<BlPacManConsumableComponent> _spawnedConsumables = new();
     private readonly GlobalVars _globals;

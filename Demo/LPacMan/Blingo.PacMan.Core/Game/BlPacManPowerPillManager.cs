@@ -8,7 +8,7 @@ namespace Blingo.PacMan.Core.Game;
 
 internal sealed class BlPacManPowerPillManager 
 {
-    private static readonly ARect _pillRect = new(32, 0, 48, 24);
+    private static readonly ARect _pillRect = new(16, 0, 24, 12);
 
     private readonly List<BlPacManConsumableComponent> _spawnedConsumables = new();
     private readonly GlobalVars _globals;

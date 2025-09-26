@@ -211,11 +211,11 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
 
         _movie.AddSprite(5, GameStartFrame, frameCount, centerX, centerY, x => x.Name = "MenuStart"); //.AddBehavior<BlPacManMenuStartBehavior>(); // Start game button
 
-        var hudBanner = _movie.AddSprite(6, GameStartFrame, frameCount, centerX, 40f,c => c.MemberSourceRect = new ARect(126, 4, 174, 52)).SetMember("misc");
+        var hudBanner = _movie.AddSprite(6, GameStartFrame, frameCount, centerX, 40f,c => c.MemberSourceRect = new ARect(63, 2, 87, 26)).SetMember("misc");
 
-        var startPrompt = _movie.AddSprite(7, 1, GameStartFrame - 1, centerX, 120f, c => c.MemberSourceRect = new ARect(68, 6, 112, 54)).SetMember("misc");
+        var startPrompt = _movie.AddSprite(7, 1, GameStartFrame - 1, centerX, 120f, c => c.MemberSourceRect = new ARect(34, 3, 56, 27)).SetMember("misc");
 
-        var lifeSourceRect = new ARect(160, 2, 186, 28);
+        var lifeSourceRect = new ARect(80, 1, 93, 14);
         var livesAnchor = _movie.AddSprite(20, GameStartFrame, frameCount, 80f, stageHeight - 40f, sprite =>
                {
                    sprite.Visibility = false;
@@ -224,12 +224,12 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             .SetMember("sprites")
             .AddBehavior<LivesBehavior>(behavior =>
             {
-                behavior.Spacing = 36f;
+                behavior.Spacing = 18f;
                 behavior.ScaleFactor = 1f;
                 behavior.MemberSourceRect = lifeSourceRect;
             });
 
-        var bonusSourceRect = new ARect(186, 4, 238, 56);
+        var bonusSourceRect = new ARect(93, 2, 119, 28);
         var bonusesAnchor = _movie.AddSprite(21, GameStartFrame, frameCount, stageWidth - 80f, stageHeight - 40f, sprite =>
                 {
                     sprite.Visibility = false;
@@ -238,7 +238,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             .SetMember("misc")
             .AddBehavior<BonusesBehavior>(behavior =>
                 {
-                    behavior.Spacing = 48f;
+                    behavior.Spacing = 24f;
                     behavior.ScaleFactor = 0.75f;
                     behavior.MemberSourceRect = bonusSourceRect;
                 });

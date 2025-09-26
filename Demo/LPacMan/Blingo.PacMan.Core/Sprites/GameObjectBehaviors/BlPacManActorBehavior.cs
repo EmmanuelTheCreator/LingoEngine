@@ -26,26 +26,26 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 {
     private static readonly ARect[] _leftAnimation =
     {
-        new(0, 0, 32, 32),
-        new(64, 0, 96, 32),
+        new(0, 0, 16, 16),
+        new(32, 0, 48, 16),
     };
 
     private static readonly ARect[] _rightAnimation =
     {
-        new(32, 0, 64, 32),
-        new(128, 0, 160, 32),
+        new(16, 0, 32, 16),
+        new(64, 0, 80, 16),
     };
 
     private static readonly ARect[] _upAnimation =
     {
-        new(0, 32, 32, 64),
-        new(64, 32, 96, 64),
+        new(0, 16, 16, 32),
+        new(32, 16, 48, 32),
     };
 
     private static readonly ARect[] _downAnimation =
     {
-        new(288, 32, 320, 64),
-        new(352, 32, 384, 64),
+        new(144, 16, 160, 32),
+        new(176, 16, 192, 32),
     };
 
     private readonly GlobalVars _globals;
@@ -81,7 +81,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         character.SetMap(_globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized."));
         character.Speed = settings.Speed;
         character.EffectiveSpeed = settings.Speed;
-        character.Step = 8f;
+        character.Step = 4f;
         character.Reset();
         ResetPosition();
         PublishPosition(character);
@@ -257,7 +257,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
             if (member != null)
             {
                 Me.Member = member;
-                Me.MemberSourceRect = new ARect(0, 0, 32, 32);
+                Me.MemberSourceRect = new ARect(0, 0, 16, 16);
             }
         }
 
@@ -353,7 +353,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
-            Step = 8f,
+            Step = 4f,
             Speed = 80f,
             Direction = BlPacManDirection.Left,
             Preturn = true,

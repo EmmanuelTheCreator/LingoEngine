@@ -36,7 +36,7 @@ public sealed class LivesBehavior : BlingoSpriteBehavior, IHasBeginSpriteEvent, 
     /// <summary>
     /// Horizontal spacing between consecutive life sprites.
     /// </summary>
-    public float Spacing { get; set; } = 70f;
+    public float Spacing { get; set; } = 35f;
 
 
     /// <summary>

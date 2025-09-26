@@ -11,9 +11,9 @@ namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
 internal sealed class BlPacManCharacter : BlingoParentScript
 {
-    private const float DefaultStep = 10f;
+    private const float DefaultStep = 5f;
     private const float DefaultSpeed = 80f;
-    private const float PositionTolerance = 1f;
+    private const float PositionTolerance = 0.5f;
 
     private readonly BlPacManEventMediator<BlPacManCharacter> _moveStarted = new();
     private readonly BlPacManEventMediator<BlPacManCharacter> _stopped = new();
