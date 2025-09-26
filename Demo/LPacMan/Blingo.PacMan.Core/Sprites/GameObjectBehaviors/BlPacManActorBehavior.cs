@@ -304,7 +304,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
                 var state = _globals.State;
                 state.SoundCooldown = 5;
-                state.PauseFrames = Math.Max(state.PauseFrames, 15);
+                state.GhostEaten();
+                
                 ghost.OnEaten(score);
             }
             else
@@ -348,7 +349,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     {
         var map = _globals.Map;
         if (map == null) return;
-        var startTile = map.HouseCenter;
+        var startTile = map.PacManCenter;
         if (startTile is null)
             return;
 

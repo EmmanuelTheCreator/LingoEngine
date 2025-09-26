@@ -188,25 +188,17 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                         if (!IsCentered(tile, Axis.X))
                         {
                             if (X > tile.CenterX)
-                            {
                                 X -= GetMin(diffX, stepSize);
-                            }
                             else
-                            {
                                 X += GetMin(diffX, stepSize);
-                            }
 
                             _preTurnActive = true;
                         }
                         else
-                        {
                             _preTurnActive = false;
-                        }
                     }
                     else
-                    {
                         step = GetMin(diffX, stepSize);
-                    }
                 }
 
                 if (direction.IsHorizontal())
@@ -217,25 +209,17 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                         if (!IsCentered(tile, Axis.Y))
                         {
                             if (Y > tile.CenterY)
-                            {
                                 Y -= GetMin(diffY, stepSize);
-                            }
                             else
-                            {
                                 Y += GetMin(diffY, stepSize);
-                            }
 
                             _preTurnActive = true;
                         }
                         else
-                        {
                             _preTurnActive = false;
-                        }
                     }
                     else
-                    {
                         step = GetMin(diffY, stepSize);
-                    }
                 }
             }
 
@@ -249,19 +233,13 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         if (step is null)
         {
             if (CanGo(Direction, tile))
-            {
                 step = stepSize;
-            }
             else
             {
                 if (Direction.IsVertical())
-                {
                     step = GetMin(Math.Abs(Y - tile.CenterY), stepSize);
-                }
                 else if (Direction.IsHorizontal())
-                {
                     step = GetMin(Math.Abs(X - tile.CenterX), stepSize);
-                }
             }
         }
 
@@ -271,22 +249,22 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             {
                 case BlPacManDirection.Up:
                     _sprite.Rotation = 270;
-                    _sprite.FlipV = false;
+                    _sprite.FlipH = false;
                     Y -= distance;
                     break;
                 case BlPacManDirection.Right:
                     _sprite.Rotation = 0;
-                    _sprite.FlipV = false;
+                    _sprite.FlipH = false;
                     X += distance;
                     break;
                 case BlPacManDirection.Down:
                     Y += distance;
                     _sprite.Rotation = 90;
-                    _sprite.FlipV = false;
+                    _sprite.FlipH = false;
                     break;
                 case BlPacManDirection.Left:
-                    _sprite.Rotation = 180;
-                    _sprite.FlipV = true;
+                    _sprite.Rotation = 0;
+                    _sprite.FlipH = true;
                     X -= distance;
                     break;
             }
@@ -318,14 +296,10 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         if (tile is not null)
         {
             if (Math.Abs(Y - tile.CenterY) < PositionTolerance)
-            {
                 Y = tile.CenterY;
-            }
 
             if (Math.Abs(X - tile.CenterX) < PositionTolerance)
-            {
                 X = tile.CenterX;
-            }
         }
 
         var currentX = X;
@@ -354,32 +328,19 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         }
 
         if (_nextAnimation is not null && !string.Equals(_animation, _nextAnimation, StringComparison.Ordinal))
-        {
             SetAnimation(_nextAnimation);
-        }
     }
 
-    public Tile? GetTile()
-    {
-        return Map.GetTile(X, Y, true);
-    }
+    public Tile? GetTile() => Map.GetTile(X, Y, true);
 
-    public void Hide()
-    {
-        _sprite.Visibility = false;
-    }
+    public void Hide() => _sprite.Visibility = false;
 
-    public void Show()
-    {
-        _sprite.Visibility = true;
-    }
+    public void Show() => _sprite.Visibility = true;
 
     public void SetAnimation(string? animation)
     {
         if (string.Equals(_animation, animation, StringComparison.Ordinal))
-        {
             return;
-        }
 
         _animation = animation;
         ApplyAnimation(animation);
@@ -531,26 +492,18 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         if (mapWidth > 0)
         {
             if (X < 0)
-            {
                 X = mapWidth;
-            }
             else if (X > mapWidth)
-            {
                 X = 0;
-            }
         }
 
         var mapHeight = Map.Height * Map.TileHeight;
         if (mapHeight > 0)
         {
             if (Y < 0)
-            {
                 Y = mapHeight;
-            }
             else if (Y > mapHeight)
-            {
                 Y = 0;
-            }
         }
     }
 

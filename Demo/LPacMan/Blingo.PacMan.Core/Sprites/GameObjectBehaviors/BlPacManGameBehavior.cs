@@ -178,11 +178,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         if (State.StartCountdown <= 0)
             Model.UpdateMode();
 
-        if (State.PauseFrames > 0)
-        {
-            State.PauseFrames--;
+        if (State.WaitForPauseTick())
             return;
-        }
 
         if (State.DecrementStartCountdown(out var countDownChanged))
         {

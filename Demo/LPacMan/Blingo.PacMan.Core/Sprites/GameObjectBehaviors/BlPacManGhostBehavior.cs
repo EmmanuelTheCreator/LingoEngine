@@ -102,6 +102,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void BeginSprite()
     {
+        return;
         ApplyAppearance();
 
         var character = EnsureCharacter();
@@ -131,6 +132,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void ExitFrame()
     {
+        return;
         var character = EnsureCharacter();
 
         if (_globals.State.IsGameplayFrozen)
@@ -186,6 +188,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="mode">The explicit mode to enter, or <c>null</c> to track the global mode.</param>
     public void SetMode(GhostMode? mode)
     {
+        return;
         if (mode is null)
             mode = _globalMode;
 
@@ -220,6 +223,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="settings">The ghost tuning for the current level.</param>
     public void Configure(GhostSettings settings)
     {
+        return;
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
         _baseSpeed = settings.Speed;

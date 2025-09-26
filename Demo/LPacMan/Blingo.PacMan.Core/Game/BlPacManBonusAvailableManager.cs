@@ -21,7 +21,7 @@ namespace Blingo.PacMan.Core.Game
             _globals = globals;
         }
 
-        public float ScaleFactor { get; set; } =  0.75f;
+        public float ScaleFactor { get; set; } = 1; //  0.75f;
         public float Spacing { get; set; } = 24f;
 
         public void Init(IBlingoMovie lingoMovie)

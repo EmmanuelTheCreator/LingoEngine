@@ -49,7 +49,7 @@ internal static class TileMath
 public sealed class Tile
 {
     public const int DefaultTileSize = 16;
-    private const float _verticalCenterOffset = 2f;
+    private const float _verticalCenterOffset = 0f;
 
     public char Code { get; }
 

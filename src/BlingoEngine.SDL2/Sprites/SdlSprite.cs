@@ -329,25 +329,82 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
             return nint.Zero;
         }
         var offset = new APoint();
+        SDL.SDL_Point? rotationCenter = null;
         if (_blingoSprite2D.Member is { } member)
         {
             var (baseOffset, sourceWidth, sourceHeight) = _blingoSprite2D.GetMemberSourceMetrics();
+            
             float scaleX = 1f;
             float scaleY = 1f;
-            if (sourceWidth != 0 && sourceHeight != 0)
+            float pivotX = 0;
+            float pivotY = 0;
+            if (Rotation == 0)
             {
-                scaleX = Width / sourceWidth;
-                scaleY = Height / sourceHeight;
+                if (sourceWidth != 0 && sourceHeight != 0)
+                {
+                    scaleX = Width / sourceWidth;
+                    scaleY = Height / sourceHeight;
+                }
             }
+            else
+            {
+                float targetWidth = Width != 0 ? Width : ComponentContext.TargetWidth;
+                float targetHeight = Height != 0 ? Height : ComponentContext.TargetHeight;
+                if (targetWidth == 0 && member.Width != 0) targetWidth = member.Width;
+                if (targetHeight == 0 && member.Height != 0) targetHeight = member.Height;
+                if (targetWidth == 0) targetWidth = 1f;
+                if (targetHeight == 0) targetHeight = 1f;
+
+                if (sourceWidth <= 0) sourceWidth = targetWidth;
+                if (sourceHeight <= 0) sourceHeight = targetHeight;
+
+                scaleX = sourceWidth != 0 ? targetWidth / sourceWidth : 1f;
+                scaleY = sourceHeight != 0 ? targetHeight / sourceHeight : 1f;
+                pivotX = sourceWidth / 2f; // (baseOffset.X + sourceWidth / 2f) * scaleX;
+                pivotY = sourceHeight / 2f; //(baseOffset.Y + sourceHeight / 2f) * scaleY;
+
+
+            }
+
             offset = new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
 
             if (_blingoSprite2D.Member is BlingoFilmLoopMember flm)
             {
                 var fl = flm.Framework<SdlMemberFilmLoop>();
-                offset = new APoint(offset.X - fl.Offset.X * scaleX, offset.Y - fl.Offset.Y * scaleY);
+                if (Rotation == 0)
+                    offset = new APoint(offset.X - fl.Offset.X * scaleX, offset.Y - fl.Offset.Y * scaleY);
+                else
+                {
+                    if (fl != null)
+                    {
+                        var filmLoopOffsetX = fl.Offset.X * scaleX;
+                        var filmLoopOffsetY = fl.Offset.Y * scaleY;
+                        offset = new APoint(offset.X - filmLoopOffsetX, offset.Y - filmLoopOffsetY);
+                        pivotX -= filmLoopOffsetX;
+                        pivotY -= filmLoopOffsetY;
+                    }
+                }
+            }
+            if (Rotation > 0)
+            {
+                rotationCenter = new SDL.SDL_Point
+                {
+                    x = (int)MathF.Round(pivotX),
+                    y = (int)MathF.Round(pivotY)
+                };
+                ComponentContext.RotationCenter = rotationCenter;
             }
         }
-
+        else if (Width > 0f && Height > 0f)
+        {
+            rotationCenter = new SDL.SDL_Point
+            {
+                x = (int)MathF.Round(Width / 2f),
+                y = (int)MathF.Round(Height / 2f)
+            };
+            ComponentContext.RotationCenter = rotationCenter;
+        }
+        ComponentContext.Rotation = _rotation;
         ComponentContext.OffsetX = -offset.X;
         ComponentContext.OffsetY = -offset.Y;
         UpdateContextPosition();

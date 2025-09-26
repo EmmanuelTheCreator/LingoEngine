@@ -23,7 +23,7 @@ public sealed class BlPacManLivesManager
     /// <summary>
     /// Scaling factor applied to each life sprite. The value is forwarded to the Pac-Man constructor.
     /// </summary>
-    public float ScaleFactor { get; set; } = 1f;
+    public float ScaleFactor { get; set; } = 1.8f;
     /// <summary>
     /// Horizontal spacing between consecutive life sprites.
     /// </summary>
@@ -120,7 +120,7 @@ public sealed class BlPacManLivesManager
     private void InitializeLives(IBlingoMovie lingoMovie)
     {
         var baseX = 20f;
-        var baseY = lingoMovie.Height - 20f;
+        var baseY = lingoMovie.Height - 32f;
         var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
         for (var i = 0; i < _defaultIconCount; i++)
@@ -142,7 +142,7 @@ public sealed class BlPacManLivesManager
         sprite2D.Name = spriteName;
         sprite2D.Visibility = false;
         sprite2D.SetMember("sprites");
-        sprite2D.MemberSourceRect = ARect.New(0,0, Tile.DefaultTileSize, Tile.DefaultTileSize);
+        sprite2D.MemberSourceRect = ARect.New(Tile.DefaultTileSize, 0, Tile.DefaultTileSize, Tile.DefaultTileSize);
 
         if (Math.Abs(ScaleFactor - 1f) > float.Epsilon)
         {
