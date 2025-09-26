@@ -22,19 +22,19 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     // Sprite sheet rectangles for each ghost's default animation row.
     private static readonly Dictionary<MrGhost, ARect> _ghostRects = new()
     {
-        [MrGhost.Blinky] = new ARect(0, 0, 32, 32),
-        [MrGhost.Pinky] = new ARect(32, 0, 64, 32),
-        [MrGhost.Inky] = new ARect(64, 0, 96, 32),
-        [MrGhost.Clyde] = new ARect(96, 0, 128, 32),
+        [MrGhost.Blinky] = new ARect(0, 0, 16, 16),
+        [MrGhost.Pinky] = new ARect(16, 0, 32, 16),
+        [MrGhost.Inky] = new ARect(32, 0, 48, 16),
+        [MrGhost.Clyde] = new ARect(48, 0, 64, 16),
     };
 
     // Horizontal offsets to stagger the ghosts within the house at level start.
     private static readonly Dictionary<MrGhost, float> _horizontalOffsets = new()
     {
-        [MrGhost.Blinky] = -32f,
-        [MrGhost.Pinky] = -16f,
-        [MrGhost.Inky] = 16f,
-        [MrGhost.Clyde] = 32f,
+        [MrGhost.Blinky] = -16f,
+        [MrGhost.Pinky] = -8f,
+        [MrGhost.Inky] = 8f,
+        [MrGhost.Clyde] = 16f,
     };
 
     // Initial direction per ghost to mirror the arcade openings.
@@ -298,7 +298,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
         else
         {
-            Me.MemberSourceRect = new ARect(0, 0, 32, 32);
+            Me.MemberSourceRect = new ARect(0, 0, 16, 16);
         }
 
         var map = _globals.Map;
@@ -325,9 +325,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var baseStep = TileMath.GetMovementStep(map);
         _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
         {
-            Step = 8f,
+            Step = baseStep,
             Speed = _baseSpeed,
             Direction = _requestedDirection,
             Preturn = true,

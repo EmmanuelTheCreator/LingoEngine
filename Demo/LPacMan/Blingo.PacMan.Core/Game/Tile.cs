@@ -22,11 +22,33 @@ internal static class TileMath
         var dy = tileA.CenterY - tileB.CenterY;
         return MathF.Sqrt(dx * dx + dy * dy);
     }
+
+    /// <summary>
+    /// Calculates the base per-frame movement step that keeps character speed aligned with the
+    /// current map's tile size. When no map information is available, the default tile size is used.
+    /// </summary>
+    /// <param name="map">The active tile map.</param>
+    /// <returns>The distance that should be traversed for a 100% speed setting.</returns>
+    public static float GetMovementStep(Map? map)
+    {
+        var baseSize = map?.TileWidth ?? 0;
+        if (baseSize <= 0 && map is not null)
+        {
+            baseSize = map.TileHeight;
+        }
+
+        if (baseSize <= 0)
+        {
+            baseSize = Tile.DefaultTileSize;
+        }
+
+        return MathF.Max(1f, baseSize / 4f);
+    }
 }
 public sealed class Tile
 {
-    private const int _defaultTileSize = 32;
-    private const float _verticalCenterOffset = 4f;
+    internal const int DefaultTileSize = 16;
+    private const float _verticalCenterOffset = 2f;
 
     public char Code { get; }
 
@@ -52,8 +74,8 @@ public sealed class Tile
         Code = code;
         Column = column;
         Row = row;
-        Width = _defaultTileSize;
-        Height = _defaultTileSize;
+        Width = DefaultTileSize;
+        Height = DefaultTileSize;
         CenterX = Column * Width + Width / 2f;
         CenterY = Row * Height + Height / 2f + _verticalCenterOffset;
     }
