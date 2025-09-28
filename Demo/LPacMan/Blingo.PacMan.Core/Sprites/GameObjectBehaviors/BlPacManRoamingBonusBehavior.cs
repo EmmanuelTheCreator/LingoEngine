@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Engine;
@@ -22,18 +23,8 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent
 {
-    private static int _frameSize = TileMath.SpriteSize-2;
-    private const float _verticalOffset = -14f;
-
-    private static readonly ARect[] _defaultAnimation = { CreateFrame(0, 0) };
-    internal static ARect DefaultAnimationRect =>_defaultAnimation[0];
-    private static readonly ARect[] _score100Animation = { CreateFrame(0, _frameSize) };
-    private static readonly ARect[] _score200Animation = { CreateFrame(_frameSize, _frameSize) };
-    private static readonly ARect[] _score500Animation = { CreateFrame(_frameSize * 2, _frameSize) };
-    private static readonly ARect[] _score700Animation = { CreateFrame(_frameSize * 3, _frameSize) };
-    private static readonly ARect[] _score1000Animation = { CreateFrame(_frameSize * 4, _frameSize) };
-    private static readonly ARect[] _score2000Animation = { CreateFrame(_frameSize * 5, _frameSize) };
-    private static readonly ARect[] _score5000Animation = { CreateFrame(_frameSize * 6, _frameSize) };
+    private static readonly IReadOnlyDictionary<string, ARect[]> _animations = BlPacManTheme.Bonus.Animations;
+    internal static ARect DefaultAnimationRect => BlPacManTheme.Bonus.DefaultFrame;
 
     private readonly GlobalVars _globals;
     private GameSettings? _settings;
@@ -201,7 +192,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (member != null)
         {
             Me.Member = member;
-            Me.MemberSourceRect = _defaultAnimation[0];
+            Me.MemberSourceRect = BlPacManTheme.Bonus.DefaultFrame;
         }
 
         ParseMap();
@@ -209,7 +200,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (_spawnTile is not null)
         {
             Me.LocH = _spawnTile.CenterX;
-            Me.LocV = _spawnTile.CenterY + _verticalOffset;
+            Me.LocV = _spawnTile.CenterY + BlPacManTheme.Bonus.VerticalOffset;
         }
 
         EnsureAnimations();
@@ -267,14 +258,10 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
         {
-            behavior.SetAnimationRects("default", _defaultAnimation, 0);
-            behavior.SetAnimationRects("score100", _score100Animation, 0);
-            behavior.SetAnimationRects("score200", _score200Animation, 0);
-            behavior.SetAnimationRects("score500", _score500Animation, 0);
-            behavior.SetAnimationRects("score700", _score700Animation, 0);
-            behavior.SetAnimationRects("score1000", _score1000Animation, 0);
-            behavior.SetAnimationRects("score2000", _score2000Animation, 0);
-            behavior.SetAnimationRects("score5000", _score5000Animation, 0);
+            foreach (var (name, frames) in _animations)
+            {
+                behavior.SetAnimationRects(name, frames, 0);
+            }
         });
 
         _animationsConfigured = true;
@@ -371,10 +358,4 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         var next = tile.Get(direction);
         return next is not null && !next.IsWall() && !next.IsHouse();
     }
-
-    /// <summary>
-    /// Utility for generating sprite-sheet rectangles.
-    /// </summary>
-    private static ARect CreateFrame(int offsetX, int offsetY) 
-        => new ARect(offsetX, offsetY, offsetX + _frameSize, offsetY + _frameSize);
 }

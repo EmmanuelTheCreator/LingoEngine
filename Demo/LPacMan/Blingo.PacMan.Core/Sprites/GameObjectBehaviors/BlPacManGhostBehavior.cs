@@ -10,6 +10,7 @@ using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
+using System.Collections.Generic;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
@@ -23,22 +24,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     IHasExitFrameEvent
 {
     // Sprite sheet rectangles for each ghost's default animation row.
-    private static readonly Dictionary<MrGhost, ARect> _ghostRects = new()
-    {
-        [MrGhost.Blinky] = new ARect(0, 0, 16, 16),
-        [MrGhost.Pinky] = new ARect(16, 0, 32, 16),
-        [MrGhost.Inky] = new ARect(32, 0, 48, 16),
-        [MrGhost.Clyde] = new ARect(48, 0, 64, 16),
-    };
+    private static readonly IReadOnlyDictionary<MrGhost, ARect> _ghostRects = BlPacManTheme.Ghosts.Sprites;
 
     // Horizontal offsets to stagger the ghosts within the house at level start.
-    private static readonly Dictionary<MrGhost, float> _horizontalOffsets = new()
-    {
-        [MrGhost.Blinky] = -16f,
-        [MrGhost.Pinky] = -8f,
-        [MrGhost.Inky] = 8f,
-        [MrGhost.Clyde] = 16f,
-    };
+    private static readonly IReadOnlyDictionary<MrGhost, float> _horizontalOffsets = BlPacManTheme.Ghosts.HorizontalOffsets;
 
     // Initial direction per ghost to mirror the arcade openings.
     private static readonly Dictionary<MrGhost, BlPacManDirection> _initialDirections = new()
@@ -301,7 +290,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
         else
         {
-            Me.MemberSourceRect = new ARect(0, 0, 16, 16);
+            var size = BlPacManTheme.Ghosts.SpriteSize;
+            Me.MemberSourceRect = new ARect(0, 0, size, size);
         }
 
         var map = _globals.Map;
