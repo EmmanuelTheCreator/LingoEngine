@@ -1,7 +1,6 @@
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Models;
 using Blingo.PacMan.Core.Settings;
-using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game;
 
@@ -10,7 +9,11 @@ namespace Blingo.PacMan.Core.Game;
 /// </summary>
 internal sealed class BlPacManGameState
 {
-  
+
+    public int DurationCountDown { get; set; } = 5;// 80;
+    public int DurationStartGame { get; set; } = 20;
+    public int DurationGhostEaten { get; set; } = 15;
+
     private GlobalVars _globalVars;
 
     public bool IsMuted { get; set; }
@@ -18,7 +21,7 @@ internal sealed class BlPacManGameState
     public bool Win { get; set; }
     public bool IsGameOver => Game.IsGameOver;
     public bool PacManEatenPending { get; set; }
-    public int PauseFrames { get; set; }
+    public int PauseFrames { get; private set; }
     public int StartCountdown { get; private set; }
     public int SoundCooldown { get; set; }
     public int RemainingConsumables { get; set; }
@@ -64,8 +67,8 @@ internal sealed class BlPacManGameState
         _globalVars.GhostManager.Reset();
         _globalVars.LevelManager.Reset();
 
-        PauseFrames = 80;
-        StartCountdown = 2;
+        PauseFrames = 0;
+        StartCountdown = DurationCountDown;
         SoundCooldown = 0;
         PacManEatenPending = false;
         Win = false;
@@ -111,13 +114,23 @@ internal sealed class BlPacManGameState
         SoundCooldown = 0;
     }
 
+    public bool WaitForPauseTick()
+    {
+        if (PauseFrames > 0)
+        {
+            PauseFrames--;
+            return true;
+        }
+        return false;
+    }
+
     public bool DecrementStartCountdown(out bool hasChanged)
     {
         if (StartCountdown > 0)
         {
             StartCountdown--;
             if (StartCountdown == 0)
-                PauseFrames = Math.Max(PauseFrames, 60);
+                PauseFrames = Math.Max(PauseFrames, DurationStartGame);
             hasChanged = true;
             return true;
         }
@@ -125,5 +138,8 @@ internal sealed class BlPacManGameState
         return false;
     }
 
-    
+    internal void GhostEaten()
+    {
+        PauseFrames = Math.Max(PauseFrames, DurationGhostEaten);
+    }
 }

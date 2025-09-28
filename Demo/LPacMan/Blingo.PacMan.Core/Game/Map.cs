@@ -17,7 +17,7 @@ public sealed class Map
     public Tile? House { get; }
 
     public Tile? HouseCenter { get; }
-
+    public Tile? PacManCenter { get; }
     public int TileWidth { get; }
 
     public int TileHeight { get; }
@@ -57,7 +57,7 @@ public sealed class Map
 
         House = firstHouseTile;
         HouseCenter = House?.GetDown()?.GetDown();
-
+        PacManCenter = GetTile((Width / 2)-1, Height - 10);
         if (_tiles.Count > 0)
         {
             TileWidth = _tiles[0].Width;

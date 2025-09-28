@@ -49,8 +49,10 @@ internal static class TileMath
 }
 public sealed class Tile
 {
+
     public static int DefaultTileSize => BlPacManTheme.Tiles.Size;
     private static float VerticalCenterOffset => BlPacManTheme.Tiles.VerticalCenterOffset;
+
 
     public char Code { get; }
 

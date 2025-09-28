@@ -218,6 +218,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         var character = EnsureCharacter();
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         character.SetMap(map);
+        SetStartposition();
         character.Speed = _baseSpeed;
         character.EffectiveSpeed = _baseSpeed;
 
@@ -277,12 +278,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void ApplyAppearance()
     {
-        var cast = CastLib("Data");
-        var member = cast?.GetMember<BlingoMemberBitmap>("characters");
-        if (member != null)
-        {
-            Me.Member = member;
-        }
+        //if (_ghostRects.TryGetValue(GhostName, out var rect))
+        //{
+        //    Me.MemberSourceRect = rect;
+        //}
+        //else
+        //{
+        //    Me.MemberSourceRect = new ARect(0, 0, 16, 16);
+        //}
+
+        
+        SetStartposition();
+
 
         if (_ghostRects.TryGetValue(GhostName, out var rect))
         {
@@ -293,18 +300,24 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             var size = BlPacManTheme.Ghosts.SpriteSize;
             Me.MemberSourceRect = new ARect(0, 0, size, size);
         }
-
-        var map = _globals.Map;
-        var center = map?.HouseCenter ?? map?.House ?? map?.GetTile(map.Width / 2, map.Height / 2);
-        if (center != null)
-        {
-            var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
-            Me.LocH = center.CenterX + offset;
-            Me.LocV = center.CenterY;
-        }
-
+mmanuel To check
         _initialDirection = DetermineInitialDirection();
         _requestedDirection = _initialDirection;
+    }
+
+
+    private bool SetStartposition()
+    {
+        var map = _globals.Map;
+        var center = map?.HouseCenter ?? map?.House ?? map?.GetTile(map.Width / 2, map.Height / 2);
+        if (center is null)
+            return false;
+
+        var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
+        Me.LocH = center.CenterX + offset;
+        Me.LocV = center.CenterY;
+        _character?.UpdateStartPosition(Me.LocH, Me.LocV);
+        return true;
     }
 
     /// <summary>
