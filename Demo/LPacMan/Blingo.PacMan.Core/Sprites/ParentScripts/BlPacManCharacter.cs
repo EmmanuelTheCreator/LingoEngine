@@ -133,6 +133,41 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         PauseCharacterAnimation();
     }
 
+    public void UpdateStartPosition(float x, float y)
+    {
+        X = x;
+        Y = y;
+        _lastX = x;
+        _lastY = y;
+
+        if (_defaults is CharacterSnapshot snapshot)
+        {
+            _defaults = snapshot with
+            {
+                X = x,
+                Y = y,
+                LastX = x,
+                LastY = y,
+            };
+        }
+        else
+        {
+            _defaults = new CharacterSnapshot(
+                x,
+                y,
+                x,
+                y,
+                Direction,
+                _previousDirection,
+                _nextAnimation,
+                _nextDirection,
+                _moving,
+                Mode,
+                _animation);
+            _defaultsCaptured = true;
+        }
+    }
+
     public void Reset()
     {
         if (_defaults is not CharacterSnapshot snapshot)

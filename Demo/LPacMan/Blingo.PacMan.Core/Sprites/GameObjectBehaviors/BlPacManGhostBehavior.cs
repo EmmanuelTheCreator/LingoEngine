@@ -229,6 +229,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         var character = EnsureCharacter();
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         character.SetMap(map);
+        SetStartposition();
         character.Speed = _baseSpeed;
         character.EffectiveSpeed = _baseSpeed;
 
@@ -304,16 +305,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _requestedDirection = _initialDirection;
     }
 
-    private void SetStartposition()
+    private bool SetStartposition()
     {
         var map = _globals.Map;
         var center = map?.HouseCenter ?? map?.House ?? map?.GetTile(map.Width / 2, map.Height / 2);
-        if (center != null)
-        {
-            var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
-            Me.LocH = center.CenterX + offset;
-            Me.LocV = center.CenterY;
-        }
+        if (center is null)
+            return false;
+
+        var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
+        Me.LocH = center.CenterX + offset;
+        Me.LocV = center.CenterY;
+        _character?.UpdateStartPosition(Me.LocH, Me.LocV);
+        return true;
     }
 
     /// <summary>
