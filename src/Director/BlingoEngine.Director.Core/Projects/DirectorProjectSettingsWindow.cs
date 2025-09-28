@@ -27,6 +27,7 @@ public class DirectorProjectSettingsWindow : DirectorWindow<IDirFrameworkProject
     private readonly IAbstCommandManager _commandManager;
     private readonly BlingoProjectSettings _settings;
     private readonly DirectorProjectSettings _dirSettings;
+    private bool _startNewProjectOnNextSave;
 
     private readonly AbstWrapPanel _root;
     private AbstWrapPanel? _vsCodePathRow;
@@ -191,6 +192,19 @@ public class DirectorProjectSettingsWindow : DirectorWindow<IDirFrameworkProject
         Title = "Project Settings";
     }
 
+    public void PrepareForNewProject()
+    {
+        _startNewProjectOnNextSave = true;
+        ProjectName = string.Empty;
+        FolderName = string.Empty;
+        CsProjFile = string.Empty;
+    }
+
+    public override void CloseWindow()
+    {
+        base.CloseWindow();
+        _startNewProjectOnNextSave = false;
+    }
 
 
     private void UpdateSlnPreview()
@@ -214,8 +228,9 @@ public class DirectorProjectSettingsWindow : DirectorWindow<IDirFrameworkProject
 
         SaveState();
         _state.SaveTo(_settings, _dirSettings);
-        _commandManager.Handle(new SaveDirProjectSettingsCommand(_dirSettings, _settings));
-        CloseWindow();
+        var handled = _commandManager.Handle(new SaveDirProjectSettingsCommand(_dirSettings, _settings, _startNewProjectOnNextSave));
+        if (handled)
+            CloseWindow();
     }
     private void LoadState(ProjectSettingsEditorState state)
     {

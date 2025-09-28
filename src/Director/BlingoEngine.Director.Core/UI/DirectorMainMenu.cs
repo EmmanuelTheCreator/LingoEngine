@@ -237,6 +237,10 @@ namespace BlingoEngine.Director.Core.UI
         private void CreateFileMenu(IBlingoFrameworkFactory factory)
         {
             // File Menu
+            var newProject = factory.CreateMenuItem("New...");
+            newProject.Activated += OpenNewProjectSettings;
+            _fileMenu.AddItem(newProject);
+
             var load = factory.CreateMenuItem("Load");
             load.Activated += () => _projectManager.LoadMovie();
             _fileMenu.AddItem(load);
@@ -256,6 +260,13 @@ namespace BlingoEngine.Director.Core.UI
             var quit = factory.CreateMenuItem("Quit");
             quit.Activated += () => Environment.Exit(0);
             _fileMenu.AddItem(quit);
+        }
+
+        private void OpenNewProjectSettings()
+        {
+            _windowManager.OpenWindow<DirectorProjectSettingsWindow>(
+                DirectorMenuCodes.ProjectSettingsWindow,
+                settingsWindow => settingsWindow.PrepareForNewProject());
         }
 
         private void CreateEditMenu(IBlingoFrameworkFactory factory)
