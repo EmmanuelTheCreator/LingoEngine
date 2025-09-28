@@ -13,6 +13,7 @@ using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
@@ -27,20 +28,14 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     IHasKeyDownEvent,
     IHasExitFrameEvent
 {
-    public static int SprSize = 16;
-    public static int SprY = 0;
-    private static readonly ARect[] _leftAnimation =
-    {
-        ARect.New(SprSize * 0, SprY, SprSize, SprSize),
-        ARect.New(SprSize * 1, SprY, SprSize, SprSize),
-        ARect.New(SprSize * 2, SprY, SprSize, SprSize),
-        ARect.New(SprSize * 1, SprY, SprSize, SprSize),
-    };
-    private static readonly ARect[] _rightAnimation = _leftAnimation;
-    private static readonly ARect[] _upAnimation = _leftAnimation;
-    private static readonly ARect[] _downAnimation = _leftAnimation;
+    public static int SprSize => BlPacManTheme.Actor.SpriteSize;
+    public static int SprY => BlPacManTheme.Actor.SpriteSheetY;
+    private static readonly IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> _animationDefinitions =
+        BlPacManTheme.Actor.Animations;
 
-    //private static readonly ARect[] _leftAnimation =
+    // Legacy 16px sprite loops retained for reference. To reinstate them, move the values below into
+    // BlPacManTheme.Actor.Animations.
+    //var leftAnimation = new[]
     //{
     //    ARect.New(SprSize * 12, SprY, SprSize, SprSize),
     //    ARect.New(SprSize * 13, SprY, SprSize, SprSize),
@@ -50,7 +45,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     //    ARect.New(SprSize * 13, SprY, SprSize, SprSize),
     //};
 
-    //private static readonly ARect[] _rightAnimation =
+    //var rightAnimation = new[]
     //{
     //    ARect.New(SprSize * 0, SprY, SprSize, SprSize),
     //    ARect.New(SprSize * 1, SprY, SprSize, SprSize),
@@ -60,7 +55,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     //    ARect.New(SprSize * 1, SprY, SprSize, SprSize),
     //};
 
-    //private static readonly ARect[] _upAnimation =
+    //var upAnimation = new[]
     //{
     //    ARect.New(SprSize * 8,  SprY, SprSize, SprSize),
     //    ARect.New(SprSize * 9,  SprY, SprSize, SprSize),
@@ -70,7 +65,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     //    ARect.New(SprSize * 9,  SprY, SprSize, SprSize),
     //};
 
-    //private static readonly ARect[] _downAnimation =
+    //var downAnimation = new[]
     //{
     //    ARect.New(SprSize * 4, SprY, SprSize, SprSize),
     //    ARect.New(SprSize * 5, SprY, SprSize, SprSize),
@@ -338,10 +333,10 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     {
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
         {
-            behavior.SetAnimationRects("left", _leftAnimation, 2);
-            behavior.SetAnimationRects("right", _rightAnimation, 2);
-            behavior.SetAnimationRects("up", _upAnimation, 2);
-            behavior.SetAnimationRects("down", _downAnimation, 2);
+            foreach (var (name, definition) in _animationDefinitions)
+            {
+                behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
+            }
         });
     }
 

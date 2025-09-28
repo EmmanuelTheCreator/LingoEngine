@@ -2,6 +2,7 @@
 using AbstUI.Texts;
 using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
@@ -10,6 +11,7 @@ using BlingoEngine.Core;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Projects;
+using BlingoEngine.Sprites;
 using BlingoEngine.Setup;
 using BlingoEngine.Sounds;
 using BlingoEngine.Texts;
@@ -20,8 +22,8 @@ namespace Blingo.PacMan.Core;
 
 public class BlPacManProjectFactory : IBlingoProjectFactory
 {
-    public const int GameWidth = 448;   // (28) * 16 = 448
-    public const int GameHeight = 576;  // (36) * 16 = 576
+    public static int GameWidth => BlPacManTheme.Stage.Width;
+    public static int GameHeight => BlPacManTheme.Stage.Height;
 
     /// <summary>
     /// Name used throughout the project when referring to the root movie.
@@ -195,11 +197,20 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                 sprite.Name = "ContinousBackground";
                 sprite.Lock = true;
                 sprite.MemberSourceRect = ARect.New(0, 0, 10, 10);
+                sprite.Width = GameWidth;
+                sprite.Height = GameHeight;
             })
             .SetMember("start")
             .AddBehavior<BlPacManSoundManager>();
 
-        _movie.AddSprite(PCSpriteNums.GameBG, 1, GameStartFrame - 1, 0, 0, sprite => sprite.Lock = true).SetMember("start").AddBehavior<BlPacManMenuStartBehavior>(); ;
+        _movie.AddSprite(PCSpriteNums.GameBG, 1, GameStartFrame - 1, 0, 0, sprite =>
+            {
+                sprite.Lock = true;
+                sprite.Width = GameWidth;
+                sprite.Height = GameHeight;
+            })
+            .SetMember("start")
+            .AddBehavior<BlPacManMenuStartBehavior>();
 
         _movie.AddSprite(PCSpriteNums.BtnStart, 1, GameStartFrame - 1, (_movie.Width / 2) - 50, (_movie.Height / 2) +30).SetMember("T_Start"); // Button Start
 
@@ -212,8 +223,13 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
 
         //var startPrompt = _movie.AddSprite(7, 1, GameStartFrame - 1, centerX, 120f, c => c.MemberSourceRect = new ARect(34, 3, 56, 27)).SetMember("misc");
 
-        var spriteBg = _movie.AddSprite(PCSpriteNums.GameBG, GameStartFrame, frameCount, 0, 0, sprite => sprite.Lock = true)
-            .SetMember("maze-1") ;
+        _movie.AddSprite(PCSpriteNums.GameBG, GameStartFrame, frameCount, 0, 0, sprite =>
+            {
+                sprite.Lock = true;
+                sprite.Width = GameWidth;
+                sprite.Height = GameHeight;
+            })
+            .SetMember("maze-1");
 
 
         var row1 = 5;

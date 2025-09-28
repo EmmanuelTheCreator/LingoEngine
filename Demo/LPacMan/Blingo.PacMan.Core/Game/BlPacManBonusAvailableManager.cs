@@ -91,7 +91,8 @@ namespace Blingo.PacMan.Core.Game
             sprite2D.LocH = x;
             sprite2D.LocV = y;
             sprite2D.SetMember("misc");
-            sprite2D.MemberSourceRect = ARect.New(((Tile.DefaultTileSize-1)* index) , 0, Tile.DefaultTileSize-1, Tile.DefaultTileSize-1);
+            var frameSize = TileMath.SpriteSize - 1;
+            sprite2D.MemberSourceRect = ARect.New(frameSize * index, 0, frameSize, frameSize);
 
             return new BonusSprite(name, sprite2D);
         }

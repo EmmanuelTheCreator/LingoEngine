@@ -1,3 +1,4 @@
+using Blingo.PacMan.Core;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Game;
@@ -154,6 +155,11 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.BonusAvailableManager.Init(_Movie);
         _globals.LivesManager.Init(_Movie,_Player);
         _gameBG.SetMember(_currentGameSettings.MazeMemberName);
+        if (_gameBG.Sprite is BlingoSprite2D background)
+        {
+            background.Width = BlPacManProjectFactory.GameWidth;
+            background.Height = BlPacManProjectFactory.GameHeight;
+        }
 
     }
 

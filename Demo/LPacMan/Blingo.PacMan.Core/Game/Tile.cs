@@ -1,4 +1,5 @@
 using Blingo.PacMan.Core.Enums;
+using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 namespace Blingo.PacMan.Core.Game;
@@ -7,7 +8,7 @@ namespace Blingo.PacMan.Core.Game;
 /// </summary>
 internal static class TileMath
 {
-    public static int SpriteSize = 16;
+    public static int SpriteSize => BlPacManTheme.Actor.SpriteSize;
     /// <summary>
     /// Calculates the Euclidean distance between two map tiles. When either tile is missing,
     /// the method returns <see cref="float.PositiveInfinity"/> so callers can ignore that option.
@@ -48,8 +49,10 @@ internal static class TileMath
 }
 public sealed class Tile
 {
-    public const int DefaultTileSize = 16;
-    private const float _verticalCenterOffset = 0f;
+
+    public static int DefaultTileSize => BlPacManTheme.Tiles.Size;
+    private static float VerticalCenterOffset => BlPacManTheme.Tiles.VerticalCenterOffset;
+
 
     public char Code { get; }
 
@@ -78,7 +81,7 @@ public sealed class Tile
         Width = DefaultTileSize;
         Height = DefaultTileSize;
         CenterX = Column * Width + Width / 2f;
-        CenterY = Row * Height + Height / 2f + _verticalCenterOffset;
+        CenterY = Row * Height + Height / 2f + VerticalCenterOffset;
     }
 
     public bool IsWall() => Code == '=';
