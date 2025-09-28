@@ -47,6 +47,7 @@ namespace BlingoEngine.Sprites
         private float _blend = 100f;
         private ARect? _memberSourceRect;
         private bool _memberSourceRectChanged;
+        private APoint _regPoint;
 
 
         #region Properties
@@ -224,7 +225,24 @@ namespace BlingoEngine.Sprites
             }
         }
 
-        public APoint RegPoint { get; set; }
+        public APoint RegPoint
+        {
+            get => _regPoint;
+            set
+            {
+                var target = value;
+                if (_member != null && MemberSourceRect is null)
+                {
+                    target = _member.RegPoint;
+                }
+
+                if (_regPoint.Equals(target))
+                    return;
+
+                _regPoint = target;
+                OnPropertyChanged();
+            }
+        }
         public AColor ForeColor
         {
             get => _foreColor;
@@ -281,11 +299,29 @@ namespace BlingoEngine.Sprites
             {
                 if (_memberSourceRect == value) return;
                 _memberSourceRect = value;
+
+                if (value is null)
+                {
+                    RegPoint = _member?.RegPoint ?? default;
+                }
+
                 _memberSourceRectChanged = true;
                 if (_frameworkSprite != null && _member != null)
                     MemberHasChanged(forceSizeUpdate: true);
                 OnPropertyChanged();
             }
+        }
+
+        public void SetMemberRect(ARect? memberRect, APoint? regPoint = null)
+        {
+            if (memberRect is null)
+            {
+                MemberSourceRect = null;
+                return;
+            }
+
+            MemberSourceRect = memberRect;
+            RegPoint = regPoint ?? _member?.RegPoint ?? default;
         }
 
         public int Size => Media.Length;
@@ -594,8 +630,8 @@ When a movie stops, events occur in the following order:
 
             if (_member is BlingoMemberBitmap && MemberSourceRect is { } rect)
             {
-                var regPoint = _member.RegPoint;
-                var baseOffset = new APoint(regPoint.X - rect.Width + (rect.Width/2), regPoint.Y - rect.Height + (rect.Height / 2));
+                var regPoint = RegPoint;
+                var baseOffset = new APoint(regPoint.X - rect.Width + (rect.Width / 2), regPoint.Y - rect.Height + (rect.Height / 2));
                 return (baseOffset, rect.Width, rect.Height);
             }
 
@@ -638,7 +674,8 @@ When a movie stops, events occur in the following order:
             if (_member != null)
             {
                 _member.UsedBy(this);
-                RegPoint = _member.RegPoint;
+                if (MemberSourceRect is null)
+                    RegPoint = _member.RegPoint;
             }
             if (member is BlingoFilmLoopMember filmLoop)
             {
