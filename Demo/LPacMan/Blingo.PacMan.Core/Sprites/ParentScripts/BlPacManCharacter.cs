@@ -549,8 +549,12 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                     return true;
                 }
 
-
                 return nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance());
+            }
+
+            if (AllowHouseExit && nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance()))
+            {
+                return !nextTile.IsWall();
             }
         }
 
