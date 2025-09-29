@@ -110,6 +110,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         character.Speed = settings.Speed;
         character.EffectiveSpeed = settings.Speed;
         character.Reset();
+        _requestedDirection = BlPacManDirection.None;
         ResetPosition();
         PublishPosition(character);
     }
@@ -129,6 +130,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _positionSubscription = character.SubscribePositionChanged(OnPositionChanged);
         PublishPosition(character);
 
+        _requestedDirection = BlPacManDirection.None;
         if (_coordinator is not null && _globals.CurrentPacmanSettings is { } settings)
             Configure(_coordinator, settings);
     }
@@ -154,12 +156,19 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         if (_globals.State.IsGameplayFrozen)
         {
             character.Update();
-            _requestedDirection = BlPacManDirection.None;
             return;
         }
 
-        character.Move(_requestedDirection);
-        _requestedDirection = BlPacManDirection.None;
+        var requestedDirection = _requestedDirection;
+        character.Move(requestedDirection);
+        if (requestedDirection != BlPacManDirection.None && character.Direction == requestedDirection)
+        {
+            _requestedDirection = BlPacManDirection.None;
+        }
+        else
+        {
+            character.NextDirection = requestedDirection;
+        }
         CheckCollisions(character);
     }
 
@@ -168,14 +177,14 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void KeyDown(BlingoKeyEvent key)
     {
-        if (key.KeyPressed(123))
-            _requestedDirection = BlPacManDirection.Left;
-        else if (key.KeyPressed(124))
-            _requestedDirection = BlPacManDirection.Right;
-        else if (key.KeyPressed(126))
-            _requestedDirection = BlPacManDirection.Up;
-        else if (key.KeyPressed(125))
-            _requestedDirection = BlPacManDirection.Down;
+        if (key.KeyCode == 123)
+            SetRequestedDirection(BlPacManDirection.Left);
+        else if (key.KeyCode == 124)
+            SetRequestedDirection(BlPacManDirection.Right);
+        else if (key.KeyCode == 126)
+            SetRequestedDirection(BlPacManDirection.Up);
+        else if (key.KeyCode == 125)
+            SetRequestedDirection(BlPacManDirection.Down);
     }
 
     /// <summary>
@@ -218,6 +227,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         ResetPosition();
         character.Update();
         PublishPosition(character);
+        _requestedDirection = BlPacManDirection.None;
     }
 
     /// <summary>
@@ -376,6 +386,15 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _character.RotateSprite = true;
         _tileEnteredSubscription = _character.SubscribeTileEntered(OnTileEntered);
         return _character;
+    }
+
+    private void SetRequestedDirection(BlPacManDirection direction)
+    {
+        _requestedDirection = direction;
+        if (_character is { } character)
+        {
+            character.NextDirection = direction;
+        }
     }
 
     private float GetBaseStepSize()

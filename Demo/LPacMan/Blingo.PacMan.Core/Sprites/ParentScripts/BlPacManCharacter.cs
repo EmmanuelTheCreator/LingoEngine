@@ -19,7 +19,7 @@ internal static class BlPacManCharacterModes
 internal sealed class BlPacManCharacter : BlingoParentScript
 {
     private const float DefaultSpeed = 80f;
-    private const float PositionTolerance = 0.5f;
+    private const float PositionTolerance = 1.5f;
 
     private readonly BlPacManEventMediator<BlPacManCharacter> _moveStarted = new();
     private readonly BlPacManEventMediator<BlPacManCharacter> _stopped = new();
@@ -174,6 +174,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                 _animation,
                 _animationOverride,
                 AllowHouseExit);
+
             _defaultsCaptured = true;
         }
     }
@@ -197,6 +198,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         Mode = snapshot.Mode;
         _animationOverride = snapshot.AnimationOverride;
         AllowHouseExit = snapshot.AllowHouseExit;
+
         _preTurnActive = false;
         _lastTile = null;
         if (_animationOverride is not null)
@@ -447,6 +449,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     {
         SetNextAnimation();
         _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation, _animationOverride, AllowHouseExit);
+
     }
 
     private void HandleTileEntered(Tile tile)
@@ -546,6 +549,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                     return true;
                 }
 
+
                 return nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance());
             }
         }
@@ -640,4 +644,5 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         string? Animation,
         string? AnimationOverride,
         bool AllowHouseExit);
+
 }

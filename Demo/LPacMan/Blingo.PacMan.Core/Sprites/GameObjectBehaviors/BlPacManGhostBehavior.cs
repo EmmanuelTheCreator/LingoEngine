@@ -72,6 +72,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private ARect? _defaultRect;
     private ARect? _savedNormalRect;
 
+
     private void UpdateHouseExitAllowance()
     {
         if (_character is { } character)
@@ -79,6 +80,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             character.AllowHouseExit = _houseExiting;
         }
     }
+
 
    
 
@@ -206,6 +208,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         character.AllowHouseExit = _houseExiting;
 
+
         if (!_hasLeftHouse && _globals.State.IsActivePlaying && _houseReleaseCounter > 0)
         {
             _houseReleaseCounter--;
@@ -289,10 +292,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _frightenedFrames = 0;
             _houseExiting = _hasLeftHouse;
             UpdateHouseExitAllowance();
+
             UpdateSpeedForCurrentMode(_character?.GetTile());
             UpdateVisualForMode();
             return;
         }
+
 
         if (_mode == GhostMode.House && !_hasLeftHouse)
         {
@@ -303,6 +308,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
             return;
         }
+
 
         if (mode == GhostMode.Frightened)
         {
@@ -345,6 +351,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _houseExiting = startOutsideHouse;
         _hasLeftHouse = startOutsideHouse;
         UpdateHouseExitAllowance();
+
 
         var character = EnsureCharacter();
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
@@ -400,6 +407,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _hasLeftHouse = _startOutsideHouse;
         _houseReleaseCounter = _initialHouseReleaseDelay;
         UpdateHouseExitAllowance();
+
         if (_defaultRect is { } defaultRect)
         {
             _savedNormalRect = defaultRect;
@@ -467,13 +475,38 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         
         if (_ghostRects.TryGetValue(GhostName, out var rect))
         {
-            Me.MemberSourceRect = rect;
+            Me.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
         }
         else
         {
             var size = BlPacManTheme.Ghosts.SpriteSize;
-            Me.MemberSourceRect = new ARect(0, 0, size, size);
+            var fallbackRect = new ARect(0, 0, size, size);
+            Me.SetMemberRect(fallbackRect, new APoint(fallbackRect.Width / 2f, fallbackRect.Height / 2f));
         }
+
+        if (Me.MemberSourceRect is { } currentRect)
+        {
+            _defaultRect = currentRect;
+            _savedNormalRect = currentRect;
+        }
+        else
+        {
+            _defaultRect = null;
+            _savedNormalRect = null;
+        }
+        ConfigureFrightenedAnimations();
+
+        if (Me.MemberSourceRect is { } currentRect)
+        {
+            _defaultRect = currentRect;
+            _savedNormalRect = currentRect;
+        }
+        else
+        {
+            _defaultRect = null;
+            _savedNormalRect = null;
+        }
+        ConfigureFrightenedAnimations();
 
         if (Me.MemberSourceRect is { } currentRect)
         {

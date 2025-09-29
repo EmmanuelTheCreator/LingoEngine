@@ -43,6 +43,21 @@ public sealed class BlingoSprite2DMemberRectTests
     }
 
     [Fact]
+    public void SetMemberRectDefaultsRegPointToTopLeft()
+    {
+        var sprite = CreateSprite();
+        var member = CreateMember(new APoint(10, 20));
+        sprite.SetMember(member);
+
+        var rect = ARect.New(4, 6, 12, 14);
+
+        sprite.SetMemberRect(rect);
+
+        sprite.MemberSourceRect.Should().Be(rect);
+        sprite.RegPoint.Should().Be(new APoint(0f, 0f));
+    }
+
+    [Fact]
     public void ClearingMemberRectRestoresMembersRegPoint()
     {
         var sprite = CreateSprite();
