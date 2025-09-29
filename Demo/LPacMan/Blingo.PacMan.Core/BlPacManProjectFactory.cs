@@ -91,15 +91,15 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                     c.Add(BlingoMemberType.Bitmap, 0, "start", Path.Combine("Media", "Data", "start.png"));
                 })
             .AddCastLib("Texts", true, c => c
-                .AddTextMember("T_Label_HighScore", "High Score", AbstTextAlignment.Center,170)
-                .AddTextMember("T_HighScore","1", AbstTextAlignment.Center, 150)
+                .AddTextMember("T_Label_HighScore", "High Score", AbstTextAlignment.Center, 85)
+                .AddTextMember("T_HighScore","1", AbstTextAlignment.Center, 75)
                 .AddTextMember("T_Player1_Label","1UP")
                 .AddTextMember("T_Player2_Label","2UP")
                 .AddTextMember("T_Player1_Score","2")
-                .AddTextMember("T_Player2_Score","3", AbstTextAlignment.Right,150)
-                .AddTextMember("T_Player1_Text","Player One", AbstTextAlignment.Center, 170, AColor.FromHex("#55eeee"))
-                .AddTextMember("T_Player2_Text","Player Two", AbstTextAlignment.Center, 170, AColor.FromHex("#55eeee"))
-                .AddTextMember("T_Ready","Ready!", AbstTextAlignment.Center, 150, AColor.FromHex("#ff0000"))
+                .AddTextMember("T_Player2_Score","3", AbstTextAlignment.Right,75)
+                .AddTextMember("T_Player1_Text","Player One", AbstTextAlignment.Center, 85, AColor.FromHex("#55eeee"))
+                .AddTextMember("T_Player2_Text","Player Two", AbstTextAlignment.Center, 85, AColor.FromHex("#55eeee"))
+                .AddTextMember("T_Ready","Ready!", AbstTextAlignment.Center, 75, AColor.FromHex("#ff0000"))
                 .AddTextMember("T_Start","Start")
             )
             .AddCastLib("Sounds", true, c =>
@@ -233,17 +233,17 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
 
 
         var row1 = 5;
-        var row2 = 26;
-        var rightOffset = 60;
-        _movie.AddSprite(PCSpriteNums.T_Label_HighScore , GameStartFrame, frameCount, (_movie.Width / 2) - 80, row1).SetMember("T_Label_HighScore");
-        _movie.AddSprite(PCSpriteNums.T_HighScore , GameStartFrame, frameCount, (_movie.Width / 2) - 80, row2).SetMember("T_HighScore");
+        var row2 = 14;
+        var rightOffset = 30;
+        _movie.AddSprite(PCSpriteNums.T_Label_HighScore , GameStartFrame, frameCount, (_movie.Width / 2) - 40, row1).SetMember("T_Label_HighScore");
+        _movie.AddSprite(PCSpriteNums.T_HighScore , GameStartFrame, frameCount, (_movie.Width / 2) - 40, row2).SetMember("T_HighScore");
         _movie.AddSprite(PCSpriteNums.T_Player1_Label , GameStartFrame, frameCount, 10, row1).SetMember("T_Player1_Label");
         _movie.AddSprite(PCSpriteNums.T_Player2_Label , GameStartFrame, frameCount, _movie.Width - rightOffset, row1).SetMember("T_Player2_Label");
         _movie.AddSprite(PCSpriteNums.T_Player1_Score , GameStartFrame, frameCount, 10, row2).SetMember("T_Player1_Score");
         _movie.AddSprite(PCSpriteNums.T_Player2_Score , GameStartFrame, frameCount, _movie.Width - rightOffset-100, row2).SetMember("T_Player2_Score");
-        _movie.AddSprite(PCSpriteNums.T_Player1_Text ,  GameStartFrame, frameCount, (_movie.Width / 2) - 80, (_movie.Height / 2)-65).SetMember("T_Player1_Text");
-        _movie.AddSprite(PCSpriteNums.T_Player2_Text , GameStartFrame, frameCount, (_movie.Width / 2) - 80, (_movie.Height / 2)-65).SetMember("T_Player2_Text");
-        _movie.AddSprite(PCSpriteNums.T_Ready, GameStartFrame, frameCount, (_movie.Width / 2) - 80, (_movie.Height / 2)+ 35).SetMember("T_Ready");
+        _movie.AddSprite(PCSpriteNums.T_Player1_Text ,  GameStartFrame, frameCount, (_movie.Width / 2) - 40, (_movie.Height / 2)-32).SetMember("T_Player1_Text");
+        _movie.AddSprite(PCSpriteNums.T_Player2_Text , GameStartFrame, frameCount, (_movie.Width / 2) - 40, (_movie.Height / 2)-32).SetMember("T_Player2_Text");
+        _movie.AddSprite(PCSpriteNums.T_Ready, GameStartFrame, frameCount, (_movie.Width / 2) - 40, (_movie.Height / 2)+ 18).SetMember("T_Ready");
         
         var roamingBonus = _movie.AddSprite(PCSpriteNums.BonusesRoaming, GameStartFrame, frameCount, sprStartX, sprStartY + sprSize*2, sprite =>
             {
@@ -292,7 +292,7 @@ internal static class FactoryExtensions
         blingoCast.Add<BlingoMemberField>(0, name, c =>
         {
             c.Font = "press-start-2p";
-            c.FontSize = 16;
+            c.FontSize = 8;
             c.Color = color != null? color.Value: AColor.FromHex("#efefef");
             if (align != AbstTextAlignment.Left)
             {

@@ -1,7 +1,8 @@
 using AbstUI.Primitives;
+using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Settings;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
-using Blingo.PacMan.Core.Engine;
 
 namespace Blingo.PacMan.Core.Game
 {
@@ -70,8 +71,8 @@ namespace Blingo.PacMan.Core.Game
         }
         private void InitializeBonuses(IBlingoMovie lingoMovie)
         {
-            var baseX = lingoMovie.Width - 20f;
-            var baseY = lingoMovie.Height - 20f;
+            var baseX = lingoMovie.Width - BlPacManTheme.Tiles.Size*2;
+            var baseY = lingoMovie.Height - BlPacManTheme.Tiles.Size *2 +2;
             var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
             for (var i = 0; i < _bonusCount; i++)

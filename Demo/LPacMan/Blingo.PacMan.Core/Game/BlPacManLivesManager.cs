@@ -1,4 +1,5 @@
 using AbstUI.Primitives;
+using Blingo.PacMan.Core.Settings;
 using BlingoEngine.Core;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
@@ -23,7 +24,7 @@ public sealed class BlPacManLivesManager
     /// <summary>
     /// Scaling factor applied to each life sprite. The value is forwarded to the Pac-Man constructor.
     /// </summary>
-    public float ScaleFactor { get; set; } = 1.8f;
+    public float ScaleFactor { get; set; } = 1f;
     /// <summary>
     /// Horizontal spacing between consecutive life sprites.
     /// </summary>
@@ -119,8 +120,8 @@ public sealed class BlPacManLivesManager
 
     private void InitializeLives(IBlingoMovie lingoMovie)
     {
-        var baseX = 20f;
-        var baseY = lingoMovie.Height - 32f;
+        var baseX = 10f;
+        var baseY = lingoMovie.Height - BlPacManTheme.Tiles.Size- BlPacManTheme.Tiles.Size+1;
         var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
         for (var i = 0; i < _defaultIconCount; i++)
