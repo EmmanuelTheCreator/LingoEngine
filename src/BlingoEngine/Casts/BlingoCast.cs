@@ -1,4 +1,6 @@
-﻿using AbstUI.Primitives;
+﻿using System;
+using System.Collections.Generic;
+using AbstUI.Primitives;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.ColorPalettes;
 using BlingoEngine.Core;
@@ -21,6 +23,8 @@ namespace BlingoEngine.Casts
     /// <inheritdoc/>
     public class BlingoCast : IBlingoCast
     {
+
+        private const int MaxCastSlotNumber = 999;
 
         private readonly BlingoCastLibsContainer _castLibsContainer;
         private readonly IBlingoFrameworkFactory _factory;
@@ -88,6 +92,36 @@ namespace BlingoEngine.Casts
         }
         /// <inheritdoc/>
         public int FindEmpty() => _membersContainer.FindEmpty();
+
+        public IReadOnlyList<int> ResolveFreeSlotNumbers(int startSlot, int requiredCount)
+        {
+            if (requiredCount <= 0)
+                return Array.Empty<int>();
+
+            var slots = new List<int>(requiredCount);
+            var used = new HashSet<int>();
+
+            int start = startSlot;
+            if (start < 1 || start > MaxCastSlotNumber)
+            {
+                var fallback = FindEmpty();
+                start = fallback >= 1 && fallback <= MaxCastSlotNumber ? fallback : 1;
+            }
+
+            for (int slot = start; slot <= MaxCastSlotNumber && slots.Count < requiredCount; slot++)
+            {
+                if (_membersContainer[slot] == null && used.Add(slot))
+                    slots.Add(slot);
+            }
+
+            for (int slot = 1; slot < start && slots.Count < requiredCount; slot++)
+            {
+                if (_membersContainer[slot] == null && used.Add(slot))
+                    slots.Add(slot);
+            }
+
+            return slots;
+        }
         internal int GetUniqueNumber(int numberInCast)
         {
             //if (Number == 1 ? ((member.CastLibNum - 1) * 131114 : numberInCast : _cast.GetUniqueNumber();
