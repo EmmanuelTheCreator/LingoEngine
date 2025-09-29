@@ -80,6 +80,15 @@ public static class BlPacManTheme
     public static class Ghosts
     {
         public const int SpriteSize = Tiles.Size * 2;
+        private const int FrightenedRowIndex = 20;
+        private const int FrightenedBlueFirstColumn = 0;
+        private const int FrightenedBlueSecondColumn = 1;
+        private const int FrightenedWhiteFirstColumn = 16;
+        private const int FrightenedWhiteSecondColumn = 18;
+        private const int DefaultFrightenedFrameDelay = 6;
+        public const string FrightenedBlueAnimation = "ghost-frightened-blue";
+        public const string FrightenedFlashAnimation = "ghost-frightened-flash";
+        public const int FrightenedFlashWindowFrames = 12;
 
         public static IReadOnlyDictionary<MrGhost, ARect> Sprites { get; } = new Dictionary<MrGhost, ARect>
         {
@@ -96,6 +105,39 @@ public static class BlPacManTheme
             [MrGhost.Inky] = Tiles.Size / 2f,
             [MrGhost.Clyde] = Tiles.Size,
         };
+
+        public static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> FrightenedAnimations { get; }
+            = BuildFrightenedAnimations();
+
+        private static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> BuildFrightenedAnimations()
+        {
+            var blueFrames = new[]
+            {
+                CreateFrightenedFrame(FrightenedBlueFirstColumn),
+                CreateFrightenedFrame(FrightenedBlueSecondColumn),
+            };
+
+            var flashFrames = new[]
+            {
+                CreateFrightenedFrame(FrightenedBlueFirstColumn),
+                CreateFrightenedFrame(FrightenedWhiteFirstColumn),
+                CreateFrightenedFrame(FrightenedBlueSecondColumn),
+                CreateFrightenedFrame(FrightenedWhiteSecondColumn),
+            };
+
+            return new Dictionary<string, (ARect[] Frames, int FrameDelay)>(StringComparer.OrdinalIgnoreCase)
+            {
+                [FrightenedBlueAnimation] = (blueFrames, DefaultFrightenedFrameDelay),
+                [FrightenedFlashAnimation] = (flashFrames, DefaultFrightenedFrameDelay),
+            };
+        }
+
+        private static ARect CreateFrightenedFrame(int column)
+        {
+            var left = column * SpriteSize;
+            var top = FrightenedRowIndex * SpriteSize;
+            return new ARect(left, top, left + SpriteSize, top + SpriteSize);
+        }
     }
 
     /// <summary>
