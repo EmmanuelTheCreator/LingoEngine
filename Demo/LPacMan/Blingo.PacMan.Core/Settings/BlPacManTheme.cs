@@ -80,13 +80,22 @@ public static class BlPacManTheme
     public static class Ghosts
     {
         public const int SpriteSize = Tiles.Size * 2;
+        private const int FrightenedRowIndex = 20;
+        private const int FrightenedBlueFirstColumn = 0;
+        private const int FrightenedBlueSecondColumn = 1;
+        private const int FrightenedWhiteFirstColumn = 16;
+        private const int FrightenedWhiteSecondColumn = 18;
+        private const int DefaultFrightenedFrameDelay = 6;
+        public const string FrightenedBlueAnimation = "ghost-frightened-blue";
+        public const string FrightenedFlashAnimation = "ghost-frightened-flash";
+        public const int FrightenedFlashWindowFrames = 12;
 
         public static IReadOnlyDictionary<MrGhost, ARect> Sprites { get; } = new Dictionary<MrGhost, ARect>
         {
-            [MrGhost.Blinky] = new ARect(SpriteSize * 0, 0, SpriteSize * 1, SpriteSize),
-            [MrGhost.Pinky] = new ARect(SpriteSize * 1, 0, SpriteSize * 2, SpriteSize),
-            [MrGhost.Inky] = new ARect(SpriteSize * 2, 0, SpriteSize * 3, SpriteSize),
-            [MrGhost.Clyde] = new ARect(SpriteSize * 3, 0, SpriteSize * 4, SpriteSize),
+            [MrGhost.Blinky] = ARect.New(SpriteSize * 0, SpriteSize * 1, SpriteSize, SpriteSize),
+            [MrGhost.Pinky] = ARect.New(SpriteSize * 1, SpriteSize * 2, SpriteSize, SpriteSize),
+            [MrGhost.Inky] = ARect.New(SpriteSize * 2, SpriteSize * 3, SpriteSize, SpriteSize),
+            [MrGhost.Clyde] = ARect.New(SpriteSize * 3, SpriteSize * 4, SpriteSize, SpriteSize),
         };
 
         public static IReadOnlyDictionary<MrGhost, float> HorizontalOffsets { get; } = new Dictionary<MrGhost, float>
@@ -96,6 +105,39 @@ public static class BlPacManTheme
             [MrGhost.Inky] = Tiles.Size / 2f,
             [MrGhost.Clyde] = Tiles.Size,
         };
+
+        public static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> FrightenedAnimations { get; }
+            = BuildFrightenedAnimations();
+
+        private static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> BuildFrightenedAnimations()
+        {
+            var blueFrames = new[]
+            {
+                CreateFrightenedFrame(FrightenedBlueFirstColumn),
+                CreateFrightenedFrame(FrightenedBlueSecondColumn),
+            };
+
+            var flashFrames = new[]
+            {
+                CreateFrightenedFrame(FrightenedBlueFirstColumn),
+                CreateFrightenedFrame(FrightenedWhiteFirstColumn),
+                CreateFrightenedFrame(FrightenedBlueSecondColumn),
+                CreateFrightenedFrame(FrightenedWhiteSecondColumn),
+            };
+
+            return new Dictionary<string, (ARect[] Frames, int FrameDelay)>(StringComparer.OrdinalIgnoreCase)
+            {
+                [FrightenedBlueAnimation] = (blueFrames, DefaultFrightenedFrameDelay),
+                [FrightenedFlashAnimation] = (flashFrames, DefaultFrightenedFrameDelay),
+            };
+        }
+
+        private static ARect CreateFrightenedFrame(int column)
+        {
+            var left = column * SpriteSize;
+            var top = FrightenedRowIndex * SpriteSize;
+            return new ARect(left, top, left + SpriteSize, top + SpriteSize);
+        }
     }
 
     /// <summary>
