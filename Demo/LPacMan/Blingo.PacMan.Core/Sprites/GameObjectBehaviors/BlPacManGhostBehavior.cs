@@ -288,9 +288,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         //}
 
         
-        SetStartposition();
-
-
         if (_ghostRects.TryGetValue(GhostName, out var rect))
         {
             Me.MemberSourceRect = rect;
@@ -300,6 +297,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             var size = BlPacManTheme.Ghosts.SpriteSize;
             Me.MemberSourceRect = new ARect(0, 0, size, size);
         }
+
+        SetStartposition();
 
         _initialDirection = DetermineInitialDirection();
         _requestedDirection = _initialDirection;

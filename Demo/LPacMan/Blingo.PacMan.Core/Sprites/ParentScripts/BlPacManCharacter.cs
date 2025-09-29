@@ -300,9 +300,12 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                     X += distance;
                     break;
                 case BlPacManDirection.Down:
+                    if (RotateSprite)
+                    {
+                        _sprite.Rotation = 90;
+                        _sprite.FlipH = false;
+                    }
                     Y += distance;
-                    _sprite.Rotation = 90;
-                    _sprite.FlipH = false;
                     break;
                 case BlPacManDirection.Left:
                     if (RotateSprite)
