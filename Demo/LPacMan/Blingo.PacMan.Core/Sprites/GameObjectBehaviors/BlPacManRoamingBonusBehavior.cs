@@ -192,7 +192,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (member != null)
         {
             Me.Member = member;
-            Me.MemberSourceRect = BlPacManTheme.Bonus.DefaultFrame;
+            Me.SetMemberRect(BlPacManTheme.Bonus.DefaultFrame);
         }
 
         ParseMap();

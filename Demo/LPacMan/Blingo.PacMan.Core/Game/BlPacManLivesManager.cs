@@ -121,7 +121,7 @@ public sealed class BlPacManLivesManager
     private void InitializeLives(IBlingoMovie lingoMovie)
     {
         var baseX = 10f;
-        var baseY = lingoMovie.Height - BlPacManTheme.Tiles.Size- BlPacManTheme.Tiles.Size+1;
+        var baseY = lingoMovie.Height - BlPacManTheme.Tiles.Size+1;
         var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
         for (var i = 0; i < _defaultIconCount; i++)
@@ -145,7 +145,8 @@ public sealed class BlPacManLivesManager
         sprite2D.SetMember("sprites");
 
         var frameSize = TileMath.SpriteSize;
-        sprite2D.MemberSourceRect = ARect.New(0,0, frameSize, frameSize);
+        var rect = ARect.New(0,0, frameSize, frameSize);
+        sprite2D.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
 
 
         if (Math.Abs(ScaleFactor - 1f) > float.Epsilon)

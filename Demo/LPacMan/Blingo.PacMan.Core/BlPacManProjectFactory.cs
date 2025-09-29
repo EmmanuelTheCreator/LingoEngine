@@ -196,7 +196,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             {
                 sprite.Name = "ContinousBackground";
                 sprite.Lock = true;
-                sprite.MemberSourceRect = ARect.New(0, 0, 10, 10);
+                sprite.SetMemberRect(ARect.New(0, 0, 10, 10));
                 sprite.Width = GameWidth;
                 sprite.Height = GameHeight;
             })
@@ -248,7 +248,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
         var roamingBonus = _movie.AddSprite(PCSpriteNums.BonusesRoaming, GameStartFrame, frameCount, sprStartX, sprStartY + sprSize*2, sprite =>
             {
                 sprite.Name = "Bonuses.Roaming";
-                sprite.MemberSourceRect = BlPacManRoamingBonusBehavior.DefaultAnimationRect;
+                sprite.SetMemberRect(BlPacManRoamingBonusBehavior.DefaultAnimationRect);
             })
             .SetMember("misc")
             .AddBehavior<BlPacManAnimationBehavior>()
@@ -258,7 +258,8 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             {
                 //sprite.Visibility = false;
                 sprite.Name = "PacMan";
-                sprite.MemberSourceRect = new ARect(0, 0, sprSize, sprSize);
+                var rect = new ARect(0, 0, sprSize, sprSize);
+                sprite.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
             })
             .SetMember("sprites")
             .AddBehavior<BlPacManAnimationBehavior>()
@@ -270,7 +271,8 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             var ghost = _movie.AddSprite(PCSpriteNums.GhostStart + i, GameStartFrame, frameCount, sprStartX + i* sprSize, sprStartY, sprite =>
                 {
                     sprite.Name = $"Ghost.{ghostNames[i]}";
-                    sprite.MemberSourceRect = ARect.New(i * sprSize, (i + 1) * sprSize, sprSize, sprSize);
+                    var rect = ARect.New(i * sprSize, (i + 1) * sprSize, sprSize, sprSize);
+                    sprite.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
                 })
                 .SetMember("sprites")
                 .AddBehavior<BlPacManAnimationBehavior>()

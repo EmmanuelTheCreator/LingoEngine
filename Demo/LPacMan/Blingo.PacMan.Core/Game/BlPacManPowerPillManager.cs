@@ -50,7 +50,7 @@ internal sealed class BlPacManPowerPillManager
         sprite2D.LocH = tile.CenterX-2;
         sprite2D.LocV = tile.CenterY-2;
         sprite2D.SetMember("pills");
-        sprite2D.MemberSourceRect = new(0, 0, 6, 6);
+        sprite2D.SetMemberRect(new(0, 0, 6, 6));
 
         var behavior = sprite2D.SetBehavior<BlPacManPowerPillBehavior>();
         behavior.Component.SetGlobals(_globals);

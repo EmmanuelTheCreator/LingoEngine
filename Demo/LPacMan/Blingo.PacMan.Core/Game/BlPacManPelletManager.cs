@@ -54,7 +54,7 @@ internal sealed class BlPacManPelletManager
         sprite2D.LocH = tile.CenterX;
         sprite2D.LocV = tile.CenterY;
         sprite2D.SetMember("pills");
-        sprite2D.MemberSourceRect = _pelletRect;
+        sprite2D.SetMemberRect(_pelletRect);
 
         var behavior = sprite2D.SetBehavior<BlPacManPelletBehavior>();
         behavior.Component.SetGlobals(_globals);
