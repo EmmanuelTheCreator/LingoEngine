@@ -88,6 +88,27 @@ public sealed class Tile
 
     public bool IsHouse() => Code == 'h';
 
+    /// <summary>
+    /// Determines whether the tile is part of the ghost house doorway, allowing
+    /// ghosts to exit without re-entering from outside the maze.
+    /// </summary>
+    public bool IsGhostHouseEntrance()
+    {
+        var houseCenter = Map.HouseCenter;
+        if (houseCenter is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, houseCenter))
+        {
+            return true;
+        }
+
+        var doorway = houseCenter.GetUp();
+        return doorway is not null && ReferenceEquals(this, doorway);
+    }
+
     public bool IsTunnel() => Code == 't';
 
     public bool HasDot() => Item is not null && Code == '.';
