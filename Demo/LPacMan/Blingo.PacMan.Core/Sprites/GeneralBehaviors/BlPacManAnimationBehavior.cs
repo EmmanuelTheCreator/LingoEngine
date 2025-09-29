@@ -147,7 +147,13 @@ internal sealed class BlPacManAnimationBehavior : BlingoSpriteBehavior,
 
     private void ApplyFrame(in ARect rect)
     {
-        Me.MemberSourceRect = rect;
+        APoint? regPoint = null;
+        if (string.Equals(Me.Member?.Name, "sprites", StringComparison.OrdinalIgnoreCase))
+        {
+            regPoint = new APoint(rect.Width / 2f, rect.Height / 2f);
+        }
+
+        Me.SetMemberRect(rect, regPoint);
     }
 
     private readonly struct AnimationSequence

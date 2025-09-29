@@ -292,12 +292,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         
         if (_ghostRects.TryGetValue(GhostName, out var rect))
         {
-            Me.MemberSourceRect = rect;
+            Me.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
         }
         else
         {
             var size = BlPacManTheme.Ghosts.SpriteSize;
-            Me.MemberSourceRect = new ARect(0, 0, size, size);
+            var fallbackRect = new ARect(0, 0, size, size);
+            Me.SetMemberRect(fallbackRect, new APoint(fallbackRect.Width / 2f, fallbackRect.Height / 2f));
         }
 
         SetStartposition();

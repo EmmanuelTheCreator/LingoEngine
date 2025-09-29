@@ -336,20 +336,21 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
             
             float scaleX = 1f;
             float scaleY = 1f;
-            float pivotX = 0;
-            float pivotY = 0;
+            float targetWidth = Width != 0 ? Width : ComponentContext.TargetWidth;
+            float targetHeight = Height != 0 ? Height : ComponentContext.TargetHeight;
             if (Rotation == 0)
             {
                 if (sourceWidth != 0 && sourceHeight != 0)
                 {
-                    scaleX = Width / sourceWidth;
-                    scaleY = Height / sourceHeight;
+                    if (targetWidth == 0) targetWidth = sourceWidth;
+                    if (targetHeight == 0) targetHeight = sourceHeight;
+
+                    scaleX = sourceWidth != 0 ? targetWidth / sourceWidth : 1f;
+                    scaleY = sourceHeight != 0 ? targetHeight / sourceHeight : 1f;
                 }
             }
             else
             {
-                float targetWidth = Width != 0 ? Width : ComponentContext.TargetWidth;
-                float targetHeight = Height != 0 ? Height : ComponentContext.TargetHeight;
                 if (targetWidth == 0 && member.Width != 0) targetWidth = member.Width;
                 if (targetHeight == 0 && member.Height != 0) targetHeight = member.Height;
                 if (targetWidth == 0) targetWidth = 1f;
@@ -360,11 +361,10 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
 
                 scaleX = sourceWidth != 0 ? targetWidth / sourceWidth : 1f;
                 scaleY = sourceHeight != 0 ? targetHeight / sourceHeight : 1f;
-                pivotX = sourceWidth / 2f; // (baseOffset.X + sourceWidth / 2f) * scaleX;
-                pivotY = sourceHeight / 2f; //(baseOffset.Y + sourceHeight / 2f) * scaleY;
-
-
             }
+
+            var pivotX = _blingoSprite2D.RegPoint.X * scaleX;
+            var pivotY = _blingoSprite2D.RegPoint.Y * scaleY;
 
             offset = new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
 
@@ -397,10 +397,12 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
         }
         else if (Width > 0f && Height > 0f)
         {
+            var pivotX = _blingoSprite2D.RegPoint.X;
+            var pivotY = _blingoSprite2D.RegPoint.Y;
             rotationCenter = new SDL.SDL_Point
             {
-                x = (int)MathF.Round(Width / 2f),
-                y = (int)MathF.Round(Height / 2f)
+                x = (int)MathF.Round(pivotX),
+                y = (int)MathF.Round(pivotY)
             };
             ComponentContext.RotationCenter = rotationCenter;
         }
