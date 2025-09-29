@@ -65,6 +65,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private float _houseBottomBoundary;
     private Tile? _houseEntranceTile;
     private Tile? _houseDoorTile;
+    private Tile? _houseExitDestinationTile;
+    private float _houseExitX;
+    private float _houseExitTargetY;
     private BlPacManDirection _houseDirection = BlPacManDirection.Up;
     private bool _frightenedAnimationsConfigured;
     private bool _frightenedFlashing;
@@ -253,6 +256,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         {
             var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
             if (_requestedDirection != direction)
+
             {
                 character.ForceDirection(direction);
             }
@@ -269,14 +273,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         if (currentTile is not null && !currentTile.IsHouse() && !currentTile.IsGhostHouseEntrance())
         {
             CompleteHouseExit(character);
+
         }
     }
+
 
     private void CompleteHouseExit(BlPacManCharacter character)
     {
         _mode = _globalMode;
         _hasLeftHouse = true;
         _housePreparingExit = false;
+
         UpdateHouseExitAllowance();
         _requestedDirection = BlPacManDirection.Up;
         character.ForceDirection(BlPacManDirection.Up);
@@ -349,6 +356,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         Me.LocV = _deadEndY;
         _houseReleaseCounter = Math.Max(0, _initialHouseReleaseDelay);
         _housePreparingExit = _houseReleaseCounter == 0;
+
         UpdateHouseExitAllowance();
         UpdateSpeedForCurrentMode(character.GetTile());
         UpdateVisualForMode();
@@ -785,6 +793,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         _deadEndY = _houseEntranceTile?.CenterY ?? Me.LocV;
         _deadEndX = _houseEntranceTile?.CenterX ?? Me.LocH;
+
         _deadEndTile = map.GetTile(_deadEndX, _deadEndY, true);
         _deadPrepareEnter = false;
     }
@@ -840,6 +849,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         if (_housePreparingExit && _mode != GhostMode.Dead && tile is not null && !tile.IsHouse() && !tile.IsGhostHouseEntrance())
         {
             _housePreparingExit = false;
+
             UpdateHouseExitAllowance();
         }
     }
