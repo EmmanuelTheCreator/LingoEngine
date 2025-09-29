@@ -496,30 +496,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
         ConfigureFrightenedAnimations();
 
-        if (Me.MemberSourceRect is { } currentRect)
-        {
-            _defaultRect = currentRect;
-            _savedNormalRect = currentRect;
-        }
-        else
-        {
-            _defaultRect = null;
-            _savedNormalRect = null;
-        }
-        ConfigureFrightenedAnimations();
-
-        if (Me.MemberSourceRect is { } currentRect)
-        {
-            _defaultRect = currentRect;
-            _savedNormalRect = currentRect;
-        }
-        else
-        {
-            _defaultRect = null;
-            _savedNormalRect = null;
-        }
-        ConfigureFrightenedAnimations();
-
         SetStartposition();
 
         _initialDirection = DetermineInitialDirection();
