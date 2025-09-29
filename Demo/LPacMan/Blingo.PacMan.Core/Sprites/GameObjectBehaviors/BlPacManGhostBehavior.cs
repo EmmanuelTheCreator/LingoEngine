@@ -298,6 +298,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return;
         }
 
+
+        if (_mode == GhostMode.House && !_hasLeftHouse)
+        {
+            if (mode is GhostMode.Chase or GhostMode.Scatter)
+            {
+                _globalMode = mode.Value;
+            }
+
+            return;
+        }
+
+
         if (mode == GhostMode.Frightened)
         {
             EnterFrightenedMode();
@@ -471,6 +483,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             var fallbackRect = new ARect(0, 0, size, size);
             Me.SetMemberRect(fallbackRect, new APoint(fallbackRect.Width / 2f, fallbackRect.Height / 2f));
         }
+
+        if (Me.MemberSourceRect is { } currentRect)
+        {
+            _defaultRect = currentRect;
+            _savedNormalRect = currentRect;
+        }
+        else
+        {
+            _defaultRect = null;
+            _savedNormalRect = null;
+        }
+        ConfigureFrightenedAnimations();
 
         if (Me.MemberSourceRect is { } currentRect)
         {
