@@ -57,7 +57,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private readonly Random _random = new();
     private const float HouseBoundaryTolerance = 0.5f;
     private bool _startOutsideHouse;
-    private bool _houseExiting;
+    private bool _housePreparingExit;
     private bool _hasLeftHouse;
     private int _initialHouseReleaseDelay;
     private int _houseReleaseCounter;
@@ -84,7 +84,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         if (_character is { } character)
         {
-            character.AllowHouseExit = _houseExiting || _mode == GhostMode.Dead;
+            character.AllowHouseExit = _housePreparingExit || _mode == GhostMode.Dead;
         }
     }
 
@@ -219,12 +219,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _houseReleaseCounter--;
             if (_houseReleaseCounter == 0)
             {
-                _houseExiting = true;
+                _housePreparingExit = true;
                 UpdateHouseExitAllowance();
             }
         }
 
-        if (!_houseExiting)
+        if (!_housePreparingExit)
         {
             if (!_houseDirection.IsVertical())
             {
@@ -250,37 +250,40 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (_houseDoorTile is Tile)
+        var exitX = _houseDoorTile?.CenterX ?? Me.LocH;
+        var deltaX = exitX - Me.LocH;
+        if (Math.Abs(deltaX) > HouseBoundaryTolerance)
         {
-            var deltaX = _houseExitX - Me.LocH;
-            if (Math.Abs(deltaX) > HouseBoundaryTolerance)
+            var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
+            if (_requestedDirection != direction)
+
             {
-                var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
-                _requestedDirection = direction;
-                character.Move(direction);
-                return;
+                character.ForceDirection(direction);
             }
 
-            if (Me.LocV > _houseExitTargetY + HouseBoundaryTolerance)
-            {
-                _requestedDirection = BlPacManDirection.Up;
-                character.Move(BlPacManDirection.Up);
-
-                if (Me.LocV > _houseExitTargetY + HouseBoundaryTolerance)
-                {
-                    return;
-                }
-            }
+            _requestedDirection = direction;
+            character.Move(direction);
+            return;
         }
 
-        CompleteHouseExit(character);
+        _requestedDirection = BlPacManDirection.Up;
+        character.Move(BlPacManDirection.Up);
+
+        var currentTile = character.GetTile();
+        if (currentTile is not null && !currentTile.IsHouse() && !currentTile.IsGhostHouseEntrance())
+        {
+            CompleteHouseExit(character);
+
+        }
     }
+
 
     private void CompleteHouseExit(BlPacManCharacter character)
     {
         _mode = _globalMode;
         _hasLeftHouse = true;
-        _houseExiting = false;
+        _housePreparingExit = false;
+
         UpdateHouseExitAllowance();
         _requestedDirection = BlPacManDirection.Up;
         character.ForceDirection(BlPacManDirection.Up);
@@ -352,7 +355,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         Me.LocH = _deadEndX;
         Me.LocV = _deadEndY;
         _houseReleaseCounter = Math.Max(0, _initialHouseReleaseDelay);
-        _houseExiting = _houseReleaseCounter == 0;
+        _housePreparingExit = _houseReleaseCounter == 0;
+
         UpdateHouseExitAllowance();
         UpdateSpeedForCurrentMode(character.GetTile());
         UpdateVisualForMode();
@@ -376,7 +380,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         {
             _mode = GhostMode.House;
             _frightenedFrames = 0;
-            _houseExiting = _hasLeftHouse;
+            _housePreparingExit = _hasLeftHouse;
             UpdateHouseExitAllowance();
 
             UpdateSpeedForCurrentMode(_character?.GetTile());
@@ -446,7 +450,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _startOutsideHouse = startOutsideHouse;
         _initialHouseReleaseDelay = Math.Max(0, houseReleaseDelayFrames);
         _houseReleaseCounter = _initialHouseReleaseDelay;
-        _houseExiting = startOutsideHouse;
+        _housePreparingExit = startOutsideHouse;
         _hasLeftHouse = startOutsideHouse;
         UpdateHouseExitAllowance();
 
@@ -501,7 +505,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _frightenedDurationFrames = 0;
         _frightenedFlashing = false;
         _turnBack = false;
-        _houseExiting = _startOutsideHouse;
+        _housePreparingExit = _startOutsideHouse;
         _hasLeftHouse = _startOutsideHouse;
         _houseReleaseCounter = _initialHouseReleaseDelay;
         _deadPrepareEnter = false;
@@ -787,12 +791,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     private void ConfigureDeadReturnTargets(Map map)
     {
-        _houseExitDestinationTile = _houseDoorTile?.GetUp();
-        _houseExitX = _houseDoorTile?.CenterX ?? Me.LocH;
-        _houseExitTargetY = _houseExitDestinationTile?.CenterY ?? _houseDoorTile?.CenterY ?? _houseTopBoundary;
-
         _deadEndY = _houseEntranceTile?.CenterY ?? Me.LocV;
-        _deadEndX = Me.LocH;
+        _deadEndX = _houseEntranceTile?.CenterX ?? Me.LocH;
+
         _deadEndTile = map.GetTile(_deadEndX, _deadEndY, true);
         _deadPrepareEnter = false;
     }
@@ -845,9 +846,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         var tile = context.Tile;
         UpdateSpeedForCurrentMode(tile);
 
-        if (_houseExiting && _mode != GhostMode.Dead && tile is not null && !tile.IsHouse() && !tile.IsGhostHouseEntrance())
+        if (_housePreparingExit && _mode != GhostMode.Dead && tile is not null && !tile.IsHouse() && !tile.IsGhostHouseEntrance())
         {
-            _houseExiting = false;
+            _housePreparingExit = false;
+
             UpdateHouseExitAllowance();
         }
     }
