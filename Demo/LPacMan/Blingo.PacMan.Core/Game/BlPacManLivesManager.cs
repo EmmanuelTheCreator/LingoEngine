@@ -144,7 +144,8 @@ public sealed class BlPacManLivesManager
         sprite2D.SetMember("sprites");
 
         var frameSize = TileMath.SpriteSize;
-        sprite2D.MemberSourceRect = ARect.New(0,0, frameSize, frameSize);
+        var rect = ARect.New(0,0, frameSize, frameSize);
+        sprite2D.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
 
 
         if (Math.Abs(ScaleFactor - 1f) > float.Epsilon)

@@ -228,20 +228,36 @@ namespace BlingoEngine.Sprites
         public APoint RegPoint
         {
             get => _regPoint;
-            set
+            private set => SetRegPointInternal(value, respectMemberRegPoint: true);
+        }
+        internal void SetRegPoint(APoint value, bool respectMemberRegPoint = true)
+            => SetRegPointInternal(value, respectMemberRegPoint);
+
+        APoint IBlingoSprite.RegPoint
+        {
+            get => RegPoint;
+            set => SetRegPoint(value);
+        }
+
+        APoint IBlingoSprite2DLight.RegPoint
+        {
+            get => RegPoint;
+            set => SetRegPoint(value);
+        }
+
+        private void SetRegPointInternal(APoint value, bool respectMemberRegPoint)
+        {
+            var target = value;
+            if (respectMemberRegPoint && _member != null && MemberSourceRect is null)
             {
-                var target = value;
-                if (_member != null && MemberSourceRect is null)
-                {
-                    target = _member.RegPoint;
-                }
-
-                if (_regPoint.Equals(target))
-                    return;
-
-                _regPoint = target;
-                OnPropertyChanged();
+                target = _member.RegPoint;
             }
+
+            if (_regPoint.Equals(target))
+                return;
+
+            _regPoint = target;
+            OnPropertyChanged();
         }
         public AColor ForeColor
         {
@@ -317,11 +333,15 @@ namespace BlingoEngine.Sprites
             if (memberRect is null)
             {
                 MemberSourceRect = null;
+                var fallbackRegPoint = _member?.RegPoint ?? default;
+                SetRegPointInternal(fallbackRegPoint, respectMemberRegPoint: false);
                 return;
             }
 
-            MemberSourceRect = memberRect;
-            RegPoint = regPoint ?? _member?.RegPoint ?? default;
+            var rectValue = memberRect.Value;
+            MemberSourceRect = rectValue;
+            var targetRegPoint = regPoint ?? default;
+            SetRegPointInternal(targetRegPoint, respectMemberRegPoint: false);
         }
 
         public int Size => Media.Length;
