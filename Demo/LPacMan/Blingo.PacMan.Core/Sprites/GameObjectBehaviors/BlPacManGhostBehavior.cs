@@ -5,6 +5,7 @@ using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
+using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
@@ -54,6 +55,22 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private int _frightenedFrames;
     private bool _turnBack;
     private readonly Random _random = new();
+    private const float HouseBoundaryTolerance = 0.5f;
+    private bool _startOutsideHouse;
+    private bool _houseExiting;
+    private bool _hasLeftHouse;
+    private int _initialHouseReleaseDelay;
+    private int _houseReleaseCounter;
+    private float _houseTopBoundary;
+    private float _houseBottomBoundary;
+    private Tile? _houseEntranceTile;
+    private Tile? _houseDoorTile;
+    private BlPacManDirection _houseDirection = BlPacManDirection.Up;
+    private bool _frightenedAnimationsConfigured;
+    private bool _frightenedFlashing;
+    private int _frightenedDurationFrames;
+    private ARect? _defaultRect;
+    private ARect? _savedNormalRect;
 
    
 
@@ -137,6 +154,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return;
         }
 
+        if (_mode == GhostMode.House)
+        {
+            HandleHouseMode(character);
+            return;
+        }
+
         if (_mode == GhostMode.Dead && _deadTarget is not null && ReferenceEquals(tile, _deadTarget))
         {
             _mode = _globalMode;
@@ -170,6 +193,74 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         character.Move(_requestedDirection);
     }
 
+    private void HandleHouseMode(BlPacManCharacter character)
+    {
+        if (!_hasLeftHouse && _globals.State.IsActivePlaying && _houseReleaseCounter > 0)
+        {
+            _houseReleaseCounter--;
+            if (_houseReleaseCounter == 0)
+            {
+                _houseExiting = true;
+            }
+        }
+
+        if (!_houseExiting)
+        {
+            if (!_houseDirection.IsVertical())
+            {
+                _houseDirection = BlPacManDirection.Up;
+                character.ForceDirection(_houseDirection);
+            }
+
+            _requestedDirection = _houseDirection;
+            character.Move(_houseDirection);
+
+            var currentY = Me.LocV;
+            if (_houseDirection == BlPacManDirection.Up && currentY <= _houseTopBoundary + HouseBoundaryTolerance)
+            {
+                _houseDirection = BlPacManDirection.Down;
+                character.ForceDirection(_houseDirection);
+            }
+            else if (_houseDirection == BlPacManDirection.Down && currentY >= _houseBottomBoundary - HouseBoundaryTolerance)
+            {
+                _houseDirection = BlPacManDirection.Up;
+                character.ForceDirection(_houseDirection);
+            }
+
+            return;
+        }
+
+        if (_houseDoorTile is Tile door)
+        {
+            var targetX = door.CenterX;
+            var deltaX = targetX - Me.LocH;
+            if (Math.Abs(deltaX) > HouseBoundaryTolerance)
+            {
+                var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
+                _requestedDirection = direction;
+                character.Move(direction);
+                return;
+            }
+
+            var exitY = door.CenterY;
+            if (Me.LocV > exitY + HouseBoundaryTolerance)
+            {
+                _requestedDirection = BlPacManDirection.Up;
+                character.Move(BlPacManDirection.Up);
+                return;
+            }
+        }
+
+        _mode = _globalMode;
+        _hasLeftHouse = true;
+        _houseExiting = false;
+        _requestedDirection = BlPacManDirection.Up;
+        character.ForceDirection(BlPacManDirection.Up);
+        _turnBack = false;
+        UpdateSpeedForCurrentMode(character.GetTile());
+        UpdateVisualForMode();
+    }
+
     /// <summary>
     /// Updates the ghost's current mode, handling frightened overrides and scatter/chase flips.
     /// </summary>
@@ -177,7 +268,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     public void SetMode(GhostMode? mode)
     {
         if (mode is null)
-            mode = _globalMode;
+            mode = _mode == GhostMode.House && !_hasLeftHouse ? GhostMode.House : _globalMode;
+
+        if (mode == GhostMode.House)
+        {
+            _mode = GhostMode.House;
+            _frightenedFrames = 0;
+            _houseExiting = _hasLeftHouse;
+            UpdateSpeedForCurrentMode(_character?.GetTile());
+            UpdateVisualForMode();
+            return;
+        }
 
         if (mode == GhostMode.Frightened)
         {
@@ -193,14 +294,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _globalMode = mode.Value;
         }
 
-        if (mode == GhostMode.House)
-            mode = _globalMode;
-
         _mode = mode.Value;
         if (_mode != GhostMode.Frightened)
             _frightenedFrames = 0;
 
         UpdateSpeedForCurrentMode(_character?.GetTile());
+        UpdateVisualForMode();
     }
 
     /// <summary>
@@ -208,7 +307,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     /// <param name="coordinator">The active gameplay coordinator.</param>
     /// <param name="settings">The ghost tuning for the current level.</param>
-    public void Configure(GhostSettings settings)
+    public void Configure(GhostSettings settings, bool startOutsideHouse, int houseReleaseDelayFrames)
     {
         _settings = settings;
 
@@ -216,19 +315,43 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _tunnelSpeed = settings.TunnelSpeed;
         _frightenedSpeed = settings.FrightenedSpeed;
 
+        _startOutsideHouse = startOutsideHouse;
+        _initialHouseReleaseDelay = Math.Max(0, houseReleaseDelayFrames);
+        _houseReleaseCounter = _initialHouseReleaseDelay;
+        _houseExiting = startOutsideHouse;
+        _hasLeftHouse = startOutsideHouse;
+
         var character = EnsureCharacter();
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         character.SetMap(map);
+        ConfigureHouseGeometry(map);
         SetStartposition();
         character.Speed = _baseSpeed;
         character.EffectiveSpeed = _baseSpeed;
 
         _initialDirection = DetermineInitialDirection();
-        _requestedDirection = _initialDirection;
-        character.ForceDirection(_initialDirection);
+        if (_startOutsideHouse)
+        {
+            _requestedDirection = _initialDirection;
+            character.ForceDirection(_initialDirection);
+            _mode = _globalMode;
+        }
+        else
+        {
+            _houseDirection = _initialDirection;
+            if (!_houseDirection.IsVertical())
+            {
+                _houseDirection = BlPacManDirection.Up;
+            }
+
+            _requestedDirection = _houseDirection;
+            character.ForceDirection(_houseDirection);
+            _mode = GhostMode.House;
+        }
 
         ConfigureTargets();
         UpdateSpeedForCurrentMode(character.GetTile());
+        UpdateVisualForMode();
         _isConfigured = true;
     }
 
@@ -244,11 +367,37 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         var character = EnsureCharacter();
         character.Reset();
-        _mode = _globalMode;
         _frightenedFrames = 0;
+        _frightenedDurationFrames = 0;
+        _frightenedFlashing = false;
         _turnBack = false;
-        _requestedDirection = _initialDirection;
-        character.ForceDirection(_initialDirection);
+        _houseExiting = _startOutsideHouse;
+        _hasLeftHouse = _startOutsideHouse;
+        _houseReleaseCounter = _initialHouseReleaseDelay;
+        if (_defaultRect is { } defaultRect)
+        {
+            _savedNormalRect = defaultRect;
+        }
+
+        if (_startOutsideHouse)
+        {
+            _mode = _globalMode;
+            _requestedDirection = _initialDirection;
+            character.ForceDirection(_initialDirection);
+        }
+        else
+        {
+            _mode = GhostMode.House;
+            _houseDirection = _initialDirection;
+            if (!_houseDirection.IsVertical())
+            {
+                _houseDirection = BlPacManDirection.Up;
+            }
+
+            _requestedDirection = _houseDirection;
+            character.ForceDirection(_houseDirection);
+        }
+
         UpdateSpeedForCurrentMode(character.GetTile());
     }
 
@@ -300,6 +449,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             Me.MemberSourceRect = new ARect(0, 0, size, size);
         }
 
+        if (Me.MemberSourceRect is { } currentRect)
+        {
+            _defaultRect = currentRect;
+            _savedNormalRect = currentRect;
+        }
+        else
+        {
+            _defaultRect = null;
+            _savedNormalRect = null;
+        }
+        ConfigureFrightenedAnimations();
+
         SetStartposition();
 
         _initialDirection = DetermineInitialDirection();
@@ -310,13 +471,25 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private bool SetStartposition()
     {
         var map = _globals.Map;
-        var center = map?.HouseCenter ?? map?.House ?? map?.GetTile(map.Width / 2, map.Height / 2);
-        if (center is null)
+        if (map is null)
             return false;
 
-        var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
-        Me.LocH = center.CenterX + offset;
-        Me.LocV = center.CenterY;
+        if (_startOutsideHouse && _houseDoorTile is not null)
+        {
+            Me.LocH = _houseDoorTile.CenterX;
+            Me.LocV = _houseDoorTile.CenterY;
+        }
+        else
+        {
+            var center = map.HouseCenter ?? map.House ?? map.GetTile(map.Width / 2, map.Height / 2);
+            if (center is null)
+                return false;
+
+            var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
+            Me.LocH = center.CenterX + offset;
+            Me.LocV = center.CenterY;
+        }
+
         _character?.UpdateStartPosition(Me.LocH, Me.LocV);
         return true;
     }
@@ -339,6 +512,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             Speed = _baseSpeed,
             Direction = _requestedDirection,
             Preturn = true,
+            Mode = BlPacManCharacterModes.Ghost,
         });
 
         _tileSubscription?.Release();
@@ -358,6 +532,117 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         _scatterTarget = DetermineScatterTarget(map);
         _deadTarget = DetermineDeadTarget(map);
+    }
+
+    private void ConfigureFrightenedAnimations()
+    {
+        if (_frightenedAnimationsConfigured)
+        {
+            return;
+        }
+
+        var animations = BlPacManTheme.Ghosts.FrightenedAnimations;
+
+        SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
+        {
+            foreach (var (name, definition) in animations)
+            {
+                behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
+            }
+        });
+
+        _frightenedAnimationsConfigured = true;
+    }
+
+    private void UpdateVisualForMode()
+    {
+        if (_mode == GhostMode.Frightened)
+        {
+            ConfigureFrightenedAnimations();
+            EnsureCharacter().SetAnimationOverride(
+                _frightenedFlashing
+                    ? BlPacManTheme.Ghosts.FrightenedFlashAnimation
+                    : BlPacManTheme.Ghosts.FrightenedBlueAnimation);
+        }
+        else
+        {
+            RestoreNormalAppearance();
+        }
+    }
+
+    private void RestoreNormalAppearance()
+    {
+        if (_character is { } character)
+        {
+            character.SetAnimationOverride(null);
+        }
+
+        if (_savedNormalRect is { } savedRect)
+        {
+            Me.MemberSourceRect = savedRect;
+        }
+        else if (_defaultRect is { } defaultRect)
+        {
+            Me.MemberSourceRect = defaultRect;
+        }
+
+        _frightenedFlashing = false;
+    }
+
+    private void UpdateFrightenedAnimationState()
+    {
+        if (_mode != GhostMode.Frightened || _settings is null)
+        {
+            return;
+        }
+
+        var flashes = _settings.FrightenedFlashes;
+        if (flashes <= 0 || _frightenedDurationFrames <= 0)
+        {
+            return;
+        }
+
+        var flashWindow = Math.Min(_frightenedDurationFrames, flashes * BlPacManTheme.Ghosts.FrightenedFlashWindowFrames);
+        if (flashWindow <= 0)
+        {
+            return;
+        }
+
+        var shouldFlash = _frightenedFrames <= flashWindow;
+
+        if (shouldFlash == _frightenedFlashing)
+        {
+            return;
+        }
+
+        _frightenedFlashing = shouldFlash;
+        EnsureCharacter().SetAnimationOverride(
+            shouldFlash
+                ? BlPacManTheme.Ghosts.FrightenedFlashAnimation
+                : BlPacManTheme.Ghosts.FrightenedBlueAnimation);
+    }
+
+    private void ConfigureHouseGeometry(Map map)
+    {
+        _houseEntranceTile = map.HouseCenter;
+        _houseDoorTile = _houseEntranceTile?.GetUp();
+
+        var entranceY = _houseEntranceTile?.CenterY ?? Me.LocV;
+        var doorY = _houseDoorTile?.CenterY ?? entranceY;
+
+        _houseTopBoundary = Math.Min(entranceY, doorY);
+        _houseBottomBoundary = Math.Max(entranceY, doorY);
+
+        var lowerTile = _houseEntranceTile?.GetDown();
+        if (lowerTile is not null && !lowerTile.IsWall())
+        {
+            _houseBottomBoundary = Math.Max(_houseBottomBoundary, lowerTile.CenterY);
+        }
+
+        if (Math.Abs(_houseBottomBoundary - _houseTopBoundary) < HouseBoundaryTolerance)
+        {
+            _houseBottomBoundary = _houseTopBoundary + map.TileHeight;
+        }
     }
 
     /// <summary>
@@ -451,11 +736,14 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _frightenedFrames--;
         }
 
+        UpdateFrightenedAnimationState();
+
         if (_frightenedFrames == 0)
         {
             _mode = _globalMode;
             _turnBack = true;
             UpdateSpeedForCurrentMode(_character?.GetTile());
+            UpdateVisualForMode();
         }
     }
 
@@ -654,7 +942,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void EnterFrightenedMode()
     {
-        if (_mode == GhostMode.Dead)
+        if (_mode == GhostMode.Dead || (_mode == GhostMode.House && !_hasLeftHouse))
         {
             return;
         }
@@ -663,8 +951,16 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             ? 180
             : Math.Max(1, (int)Math.Round(_settings.FrightenedDuration.TotalSeconds * 60));
 
+        if (Me.MemberSourceRect is { } frightenedEntryRect)
+        {
+            _savedNormalRect = frightenedEntryRect;
+        }
+        _frightenedDurationFrames = _frightenedFrames;
+        _frightenedFlashing = false;
+
         _mode = GhostMode.Frightened;
         _turnBack = true;
         UpdateSpeedForCurrentMode(_character?.GetTile());
+        UpdateVisualForMode();
     }
 }

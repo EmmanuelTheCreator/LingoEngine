@@ -11,6 +11,11 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
+internal static class BlPacManCharacterModes
+{
+    public const string Ghost = "Ghost";
+}
+
 internal sealed class BlPacManCharacter : BlingoParentScript
 {
     private const float DefaultSpeed = 80f;
@@ -29,6 +34,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private float _speed;
     private string? _animation;
     private string? _nextAnimation;
+    private string? _animationOverride;
     private bool _moving;
     private bool _preTurnActive;
     private BlPacManDirection _nextDirection;
@@ -163,7 +169,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                 _nextDirection,
                 _moving,
                 Mode,
-                _animation);
+                _animation,
+                _animationOverride);
             _defaultsCaptured = true;
         }
     }
@@ -185,9 +192,17 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         _nextDirection = snapshot.NextDirection;
         _moving = snapshot.IsMoving;
         Mode = snapshot.Mode;
+        _animationOverride = snapshot.AnimationOverride;
         _preTurnActive = false;
         _lastTile = null;
-        SetAnimation(snapshot.Animation);
+        if (_animationOverride is not null)
+        {
+            SetAnimation(_animationOverride);
+        }
+        else
+        {
+            SetAnimation(snapshot.Animation);
+        }
         PauseCharacterAnimation();
     }
 
@@ -394,6 +409,25 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         ApplyAnimation(animation);
     }
 
+    public void SetAnimationOverride(string? animation)
+    {
+        if (string.Equals(_animationOverride, animation, StringComparison.Ordinal))
+            return;
+
+        _animationOverride = animation;
+
+        if (animation is null)
+        {
+            SetNextAnimation();
+        }
+        else
+        {
+            _nextAnimation = animation;
+            _nextDirection = Direction;
+            SetAnimation(animation);
+        }
+    }
+
     private void ApplyAnimation(string? animation)
     {
         if (animation is null)
@@ -408,7 +442,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void CaptureDefaults()
     {
         SetNextAnimation();
-        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation);
+        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation, _animationOverride);
     }
 
     private void HandleTileEntered(Tile tile)
@@ -460,6 +494,13 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private void SetNextAnimation()
     {
+        if (_animationOverride is not null)
+        {
+            _nextAnimation = _animationOverride;
+            _nextDirection = Direction;
+            return;
+        }
+
         if (Direction == BlPacManDirection.None)
         {
             _nextAnimation = null;
@@ -491,6 +532,15 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         }
 
         var nextTile = tile.Get(direction);
+        if (Mode == BlPacManCharacterModes.Ghost)
+        {
+            var insideHouse = tile.IsHouse() || tile.IsGhostHouseEntrance();
+            if (insideHouse)
+            {
+                return nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance());
+            }
+        }
+
         return nextTile is not null && !nextTile.IsHouse() && !nextTile.IsWall();
     }
 
@@ -578,5 +628,6 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         BlPacManDirection NextDirection,
         bool IsMoving,
         string? Mode,
-        string? Animation);
+        string? Animation,
+        string? AnimationOverride);
 }
