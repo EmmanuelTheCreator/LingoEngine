@@ -635,7 +635,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return !next.IsWall();
         }
 
-        if (next.IsWall() || next.IsHouse())
+        if (next.IsWall())
+        {
+            return false;
+        }
+
+        var insideHouseRegion = tile.IsHouse() || tile.IsGhostHouseEntrance();
+        if (next.IsHouse() && !insideHouseRegion)
         {
             return false;
         }
