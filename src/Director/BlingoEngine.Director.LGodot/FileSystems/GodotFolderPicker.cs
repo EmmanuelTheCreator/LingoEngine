@@ -25,13 +25,27 @@ namespace BlingoEngine.Director.LGodot.FileSystems
         dialog.DirSelected += h =>
         {
             onPicked(h);
+            dialog.QueueFree();
         };
+        PrepareDialog(dialog);
         _directorRoot.RootNode.AddChild(dialog);
         dialog.PopupCentered();
 #else
             GD.PushWarning("Executable folder picker not available. Define USE_WINDOWS_FEATURES in your Godot project to enable it.");
 #endif
         }
+
+#if USE_WINDOWS_FEATURES
+        private static void PrepareDialog(FileDialog dialog)
+        {
+            dialog.Exclusive = false;
+            dialog.Transient = true;
+            dialog.TransientToFocused = true;
+
+            dialog.CloseRequested += dialog.QueueFree;
+            dialog.Canceled += dialog.QueueFree;
+        }
+#endif
     }
 }
 

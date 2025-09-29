@@ -20,7 +20,11 @@ public partial class GodotFilePicker : IDirFilePicker
     {
 #if USE_WINDOWS_FEATURES
         var dialog = CreateDialog(FileDialog.FileModeEnum.OpenFile, filter, currentFile, treatCurrentPathAsFile: true);
-        dialog.FileSelected += onPicked;
+        dialog.FileSelected += path =>
+        {
+            onPicked(path);
+            dialog.QueueFree();
+        };
         ShowDialog(dialog);
 #else
         GD.PushWarning("File picker not available. Define USE_WINDOWS_FEATURES in your Godot project to enable it.");
@@ -35,6 +39,7 @@ public partial class GodotFilePicker : IDirFilePicker
         {
             if (files.Length > 0)
                 onPicked(Array.AsReadOnly(files));
+            dialog.QueueFree();
         };
         ShowDialog(dialog);
 #else
@@ -90,8 +95,19 @@ public partial class GodotFilePicker : IDirFilePicker
 
     private void ShowDialog(FileDialog dialog)
     {
+        PrepareDialog(dialog);
         _directorRoot.RootNode.AddChild(dialog);
         dialog.PopupCentered();
+    }
+
+    private static void PrepareDialog(FileDialog dialog)
+    {
+        dialog.Exclusive = false;
+        dialog.Transient = true;
+        dialog.TransientToFocused = true;
+
+        dialog.CloseRequested += dialog.QueueFree;
+        dialog.Canceled += dialog.QueueFree;
     }
 #endif
 }
