@@ -98,7 +98,7 @@ namespace BlingoEngine.LGodot.Sprites
                 var currentPosition = _container2D.Position;
                 if (currentPosition.X == value.X && currentPosition.Y == value.Y) return;
                 _container2D.Position = new Vector2(value.X, value.Y);
-                _sprite2D.PivotOffset = new Vector2(value.X, value.Y);
+                _sprite2D.Offset = new Vector2(value.X, value.Y);
                 SetDirty();
             }
         }

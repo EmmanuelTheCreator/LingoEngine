@@ -177,13 +177,13 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void KeyDown(BlingoKeyEvent key)
     {
-        if (key.KeyPressed(123))
+        if (key.KeyCode == 123)
             SetRequestedDirection(BlPacManDirection.Left);
-        else if (key.KeyPressed(124))
+        else if (key.KeyCode == 124)
             SetRequestedDirection(BlPacManDirection.Right);
-        else if (key.KeyPressed(126))
+        else if (key.KeyCode == 126)
             SetRequestedDirection(BlPacManDirection.Up);
-        else if (key.KeyPressed(125))
+        else if (key.KeyCode == 125)
             SetRequestedDirection(BlPacManDirection.Down);
     }
 

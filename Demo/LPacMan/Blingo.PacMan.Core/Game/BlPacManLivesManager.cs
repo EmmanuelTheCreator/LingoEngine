@@ -121,7 +121,7 @@ public sealed class BlPacManLivesManager
     private void InitializeLives(IBlingoMovie lingoMovie)
     {
         var baseX = 10f;
-        var baseY = lingoMovie.Height - BlPacManTheme.Tiles.Size- BlPacManTheme.Tiles.Size+1;
+        var baseY = lingoMovie.Height - BlPacManTheme.Tiles.Size+1;
         var spacing = Spacing * (Math.Abs(ScaleFactor) <= float.Epsilon ? 1f : ScaleFactor);
 
         for (var i = 0; i < _defaultIconCount; i++)
