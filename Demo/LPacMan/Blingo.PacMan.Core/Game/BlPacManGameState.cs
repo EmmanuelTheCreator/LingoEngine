@@ -63,10 +63,6 @@ internal sealed class BlPacManGameState
 
     public void ResetForNewLevel(GameSettings settings, GameModel model)
     {
-        _globalVars.BonusManager?.ResetForNewLevel();
-        _globalVars.GhostManager.Reset();
-        _globalVars.LevelManager.Reset();
-
         PauseFrames = 0;
         StartCountdown = DurationCountDown;
         SoundCooldown = 0;

@@ -113,7 +113,7 @@ namespace BlingoEngine.Setup
             {
                 var globals = new TGlobalVars();
                 setup?.Invoke(globals);
-                return new TGlobalVars();
+                return globals;
             });
             if (typeof(TGlobalVars) == typeof(BlingoGlobalVars))
                 _container.AddSingleton<BlingoGlobalVars>();

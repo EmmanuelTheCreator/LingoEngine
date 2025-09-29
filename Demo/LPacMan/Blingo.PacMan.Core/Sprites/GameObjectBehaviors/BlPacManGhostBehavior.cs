@@ -37,7 +37,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         [MrGhost.Inky] = BlPacManDirection.Up,
         [MrGhost.Clyde] = BlPacManDirection.Up,
     };
-
+    private bool _isConfigured;
     private readonly GlobalVars _globals;
     private GhostSettings? _settings;
     private BlPacManCharacter? _character;
@@ -100,8 +100,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         _globals.GhostManager.AddGhost(this);
 
-        if (_globals.CurrentGhostSettings is { } ghostSettings)
-            Configure(ghostSettings);
+        
     }
 
     /// <summary>
@@ -113,6 +112,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
+        _isConfigured = false;
     }
 
     /// <summary>
@@ -120,6 +120,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// </summary>
     public void ExitFrame()
     {
+        if (!_isConfigured) return;
         var character = EnsureCharacter();
 
         if (_globals.State.IsGameplayFrozen)
@@ -209,7 +210,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     /// <param name="settings">The ghost tuning for the current level.</param>
     public void Configure(GhostSettings settings)
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _settings = settings;
 
         _baseSpeed = settings.Speed;
         _tunnelSpeed = settings.TunnelSpeed;
@@ -228,6 +229,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         ConfigureTargets();
         UpdateSpeedForCurrentMode(character.GetTile());
+        _isConfigured = true;
     }
 
     /// <summary>

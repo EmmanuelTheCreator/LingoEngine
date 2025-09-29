@@ -146,5 +146,10 @@ namespace Blingo.PacMan.Core.Game
         {
             Level = 1;
         }
+
+        internal void ResetForNewLevel()
+        {
+            
+        }
     }
 }

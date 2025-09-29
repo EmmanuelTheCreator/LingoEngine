@@ -240,7 +240,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
         _movie.AddSprite(PCSpriteNums.T_Player1_Label , GameStartFrame, frameCount, 10, row1).SetMember("T_Player1_Label");
         _movie.AddSprite(PCSpriteNums.T_Player2_Label , GameStartFrame, frameCount, _movie.Width - rightOffset, row1).SetMember("T_Player2_Label");
         _movie.AddSprite(PCSpriteNums.T_Player1_Score , GameStartFrame, frameCount, 10, row2).SetMember("T_Player1_Score");
-        _movie.AddSprite(PCSpriteNums.T_Player2_Score , GameStartFrame, frameCount, _movie.Width - rightOffset-100, row2).SetMember("T_Player2_Score");
+        _movie.AddSprite(PCSpriteNums.T_Player2_Score , GameStartFrame, frameCount, _movie.Width - rightOffset-50, row2).SetMember("T_Player2_Score");
         _movie.AddSprite(PCSpriteNums.T_Player1_Text ,  GameStartFrame, frameCount, (_movie.Width / 2) - 40, (_movie.Height / 2)-32).SetMember("T_Player1_Text");
         _movie.AddSprite(PCSpriteNums.T_Player2_Text , GameStartFrame, frameCount, (_movie.Width / 2) - 40, (_movie.Height / 2)-32).SetMember("T_Player2_Text");
         _movie.AddSprite(PCSpriteNums.T_Ready, GameStartFrame, frameCount, (_movie.Width / 2) - 40, (_movie.Height / 2)+ 18).SetMember("T_Ready");

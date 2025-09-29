@@ -14,6 +14,7 @@ namespace Blingo.PacMan.Core.Game
     internal class BlGhostManager
     {
         private static MrGhost[] _ghostNames = new[] { MrGhost.Blinky, MrGhost.Pinky, MrGhost.Inky, MrGhost.Clyde };
+        private GhostSettings? _ghostSettings;
         private static readonly int[] _ghostScoreChain = { 200, 400, 800, 1_600 };
         private readonly List<BlPacManGhostBehavior> _ghosts = new();
 
@@ -22,12 +23,20 @@ namespace Blingo.PacMan.Core.Game
         public int GhostChainIndex { get; private set; }
 
 
+        public BlGhostManager()
+        {
+            
+        }
+
+
         internal void RemoveGhost(BlPacManGhostBehavior ghost) => _ghosts.Remove(ghost);
         internal void AddGhost(BlPacManGhostBehavior ghost)
         {
             if (_ghosts.Contains(ghost))
                 return;
             _ghosts.Add(ghost);
+            if (_ghostSettings != null)
+                ghost.Configure(_ghostSettings);
         }
         
         public int RegisterGhostEaten()
@@ -42,7 +51,7 @@ namespace Blingo.PacMan.Core.Game
 
         public void ResetGhostChain() => GhostChainIndex = 0;
 
-        public void Reset()
+        public void ResetAllForFreshNewGame()
         {
             _ghosts.Clear();
             ResetGhostChain();
@@ -53,21 +62,21 @@ namespace Blingo.PacMan.Core.Game
         /// </summary>
         public void SetMode(GhostMode? mode)
         {
-            if (Ghosts.Count == 0)
+            if (_ghosts.Count == 0)
                 return;
 
-            foreach (var ghost in Ghosts)
+            foreach (var ghost in _ghosts)
                 ghost.SetMode(mode);
         }
-        public bool HasDeathGhosts()=> Ghosts.Any(g => g.IsDead);
-        public bool HasFrightenedGhosts()=> Ghosts.Any(g => g.IsFrightened);
+        public bool HasDeathGhosts()=> _ghosts.Any(g => g.IsDead);
+        public bool HasFrightenedGhosts()=> _ghosts.Any(g => g.IsFrightened);
 
-        public IEnumerable<BlPacManGhostBehavior> GetGhostsOnTile(Tile tile) => 
-            Ghosts.Where(ghost => ghost.CurrentTile != null && ReferenceEquals(ghost.CurrentTile, tile) && !ghost.IsDead);
+        public IEnumerable<BlPacManGhostBehavior> GetGhostsOnTile(Tile tile) =>
+            _ghosts.Where(ghost => ghost.CurrentTile != null && ReferenceEquals(ghost.CurrentTile, tile) && !ghost.IsDead);
        
         public void ResumeAfterPacManEaten()
         {
-            foreach (var ghost in Ghosts)
+            foreach (var ghost in _ghosts)
             {
                 ghost.ResetForLife();
                 ghost.Show();
@@ -82,26 +91,33 @@ namespace Blingo.PacMan.Core.Game
             if (name == null)
                 return null;
 
-            return Ghosts.FirstOrDefault(g => g.GhostName == name);
+            return _ghosts.FirstOrDefault(g => g.GhostName == name);
         }
 
         internal void OnEatenByGhost()
         {
-            foreach (var ghost in Ghosts)
+            foreach (var ghost in _ghosts)
                 ghost.OnPacManEaten();
             ResetGhostChain();
         }
 
+        internal void Reset()
+        {
+            
+        }
         internal void MakeLevel(GhostSettings ghostSettings)
         {
-            foreach (var ghost in Ghosts)
+            _ghostSettings = ghostSettings;
+            foreach (var ghost in _ghosts)
                 ghost.Configure(ghostSettings);
         }
 
         internal void SetAllFrightened()
         {
-            foreach (var ghost in Ghosts)
+            foreach (var ghost in _ghosts)
                 ghost.SetMode(GhostMode.Frightened);
         }
+
+        
     }
 }

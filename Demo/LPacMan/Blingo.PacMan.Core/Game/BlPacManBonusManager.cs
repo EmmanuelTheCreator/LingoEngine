@@ -46,6 +46,8 @@ internal sealed class BlPacManBonusManager
     }
     internal void MakeLevel(GameSettings settings)
     {
+        BonusDestroyCountdown = 0;
+        BonusAppearCountdown = 500;
         Configure(settings);
         if (_bonus != null)
         {
@@ -119,11 +121,7 @@ internal sealed class BlPacManBonusManager
         BonusLocked = true;
         _bonus?.Deactivate();
     }
-    internal void ResetForNewLevel()
-    {
-        BonusDestroyCountdown = 0;
-        BonusAppearCountdown = 500;
-    }
+    
     public void Reset()
     {
         BonusLocked = false;

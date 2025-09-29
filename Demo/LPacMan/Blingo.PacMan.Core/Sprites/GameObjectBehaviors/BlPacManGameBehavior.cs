@@ -146,6 +146,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _globals.CurrentGhostSettings = _currentGhostSettings;
 
         State.ResetForNewLevel(settings, Model);
+        _globals.LevelManager.ResetForNewLevel();
         _globals.GameModel.PacMan?.Configure(this, _currentPacmanSettings);
 
         _globals.GhostManager.MakeLevel(_globals.LevelManager.GetGhostSettings());
