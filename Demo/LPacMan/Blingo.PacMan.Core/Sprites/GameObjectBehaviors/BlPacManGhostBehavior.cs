@@ -300,7 +300,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             var size = BlPacManTheme.Ghosts.SpriteSize;
             Me.MemberSourceRect = new ARect(0, 0, size, size);
         }
-mmanuel To check
+
         _initialDirection = DetermineInitialDirection();
         _requestedDirection = _initialDirection;
     }
