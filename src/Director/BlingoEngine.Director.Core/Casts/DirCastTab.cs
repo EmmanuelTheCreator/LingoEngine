@@ -1,23 +1,26 @@
-﻿using System.Collections.Generic;
-using BlingoEngine.FrameworkCommunication;
-using BlingoEngine.Members;
+using System;
+using System.Collections.Generic;
 using AbstUI.Commands;
-using BlingoEngine.Director.Core.Scripts.Commands;
-using BlingoEngine.Director.Core.Tools;
-using BlingoEngine.Director.Core.Icons;
-using BlingoEngine.Events;
-using BlingoEngine.Texts;
+using AbstUI.Components.Buttons;
+using AbstUI.Components.Containers;
+using AbstUI.Inputs;
+using AbstUI.Primitives;
+using AbstUI.Windowing;
+using AbstUI.Windowing.Commands;
 using BlingoEngine.Bitmaps;
-using BlingoEngine.Scripts;
-using BlingoEngine.Director.Core.UI;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
-using AbstUI.Primitives;
-using AbstUI.Inputs;
+using BlingoEngine.Director.Core.Casts.Commands;
+using BlingoEngine.Director.Core.Icons;
+using BlingoEngine.Director.Core.Scripts.Commands;
 using BlingoEngine.Director.Core.Styles;
-using AbstUI.Components.Containers;
-using AbstUI.Components.Buttons;
-using AbstUI.Windowing.Commands;
+using BlingoEngine.Director.Core.Tools;
+using BlingoEngine.Director.Core.UI;
+using BlingoEngine.Events;
+using BlingoEngine.FrameworkCommunication;
+using BlingoEngine.Members;
+using BlingoEngine.Scripts;
+using BlingoEngine.Texts;
 
 namespace BlingoEngine.Director.Core.Casts
 {
@@ -38,6 +41,7 @@ namespace BlingoEngine.Director.Core.Casts
         private readonly IBlingoFrameworkFactory _factory;
         private readonly IDirectorIconManager _iconManager;
         private readonly MemberNavigationBar _navBar;
+        private readonly AbstContextMenu _contextMenu;
         private IDirCastItem? _selected;
         private IDirCastItem? _hoveredItem;
         private DirCastItem? _dragItem;
@@ -45,6 +49,7 @@ namespace BlingoEngine.Director.Core.Casts
         private float _dragStartX, _dragStartY;
         private int _columns = 1;
         private bool _listView;
+        private int _contextSlot;
         private static bool _openingEditor;
         private static readonly object _lock = new();
 
@@ -52,12 +57,22 @@ namespace BlingoEngine.Director.Core.Casts
         internal AbstTabItem TabItem => _tabItem;
 
         public int Width { get; private set; }
+        internal IBlingoCast Cast => _cast;
 
-        public DirCastTab(IBlingoFrameworkFactory factory, IBlingoCast cast, IDirectorIconManager iconManager, IAbstCommandManager commandManager, IDirectorEventMediator mediator, IBlingoPlayer player)
+        public DirCastTab(
+            IBlingoFrameworkFactory factory,
+            IBlingoCast cast,
+            IDirectorIconManager iconManager,
+            IAbstCommandManager commandManager,
+            IDirectorEventMediator mediator,
+            IBlingoPlayer player,
+            Func<AbstContextMenu> contextMenuFactory)
         {
             _commandManager = commandManager;
             _factory = factory;
             _iconManager = iconManager;
+            _contextMenu = (contextMenuFactory ?? throw new ArgumentNullException(nameof(contextMenuFactory)))();
+            _contextMenu.AddItemFluent(string.Empty, "Import member", () => _contextSlot > 0, StartImportMembers);
             var tabName = cast.Name ?? $"Cast{cast.Number}";
             _tabItem = factory.CreateTabItem("Cast_" + tabName, tabName);
             _root = factory.CreatePanel(tabName + "_Root");
@@ -96,6 +111,7 @@ namespace BlingoEngine.Director.Core.Casts
             _cast.MemberAdded -= MemberAdded;
             _cast.MemberDeleted -= MemberDeleted;
             _cast.MemberNameChanged -= MemberNameChanged;
+            _contextMenu.Dispose();
         }
 
         private void MemberNameChanged(IBlingoMember member)
@@ -236,25 +252,40 @@ namespace BlingoEngine.Director.Core.Casts
             switch (e.Type)
             {
                 case AbstMouseEventType.MouseDown:
-                    var member = memberHover;
-                    var item = hoverItem;
-                    if (item != null)
                     {
-                        Select(item);
-                        if (member != null)
+                        var member = memberHover;
+                        var item = hoverItem;
+                        int slotNumber = item is DirCastItem gridItem
+                            ? gridItem.SlotNumber
+                            : member?.NumberInCast ?? 0;
+                        bool isRightClick = e.Mouse.RightMouseDown;
+                        bool isDoubleClick = e.Mouse.DoubleClick;
+
+                        if (item != null)
                         {
-                            if (e.Mouse.DoubleClick)
+                            Select(item);
+                            if (member != null)
                             {
-                                OpenEditor(member);
+                                if (isDoubleClick && !isRightClick)
+                                    OpenEditor(member);
+
                                 MemberSelected?.Invoke(member, item);
+
+                                if (isRightClick)
+                                {
+                                    ShowContextMenu(slotNumber);
+                                }
+                                else if (!isDoubleClick)
+                                {
+                                    _dragStartX = x;
+                                    _dragStartY = y;
+                                    _dragging = false;
+                                    _dragItem = item as DirCastItem;
+                                }
                             }
-                            else
+                            else if (isRightClick && slotNumber > 0)
                             {
-                                MemberSelected?.Invoke(member, item);
-                                _dragStartX = x;
-                                _dragStartY = y;
-                                _dragging = false;
-                                _dragItem = item as DirCastItem;
+                                ShowContextMenu(slotNumber);
                             }
                         }
                     }
@@ -329,6 +360,25 @@ namespace BlingoEngine.Director.Core.Casts
             _scroll.RemoveItem(list ? _wrap : _listWrap);
             _scroll.AddItem(list ? _listWrap : _wrap);
             Select(null);
+        }
+
+        private void ShowContextMenu(int slotNumber)
+        {
+            if (slotNumber <= 0)
+                return;
+
+            _contextSlot = slotNumber;
+            _contextMenu.Popup();
+        }
+
+        private void StartImportMembers()
+        {
+            if (_contextSlot <= 0)
+                return;
+
+            var slot = _contextSlot;
+            _contextSlot = 0;
+            _commandManager.Handle(new OpenCastImportDialogCommand(_cast, slot));
         }
 
         private void OpenEditor(IBlingoMember member)

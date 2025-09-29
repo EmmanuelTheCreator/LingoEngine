@@ -1,4 +1,5 @@
 ﻿using AbstUI.Primitives;
+using System.Collections.Generic;
 using BlingoEngine.Core;
 using BlingoEngine.Members;
 using System;
@@ -60,6 +61,14 @@ namespace BlingoEngine.Casts
         /// displays the next empty cast member position or the position after a specified cast member. This method is available only on the current cast library.
         /// </summary>
         int FindEmpty();
+
+        /// <summary>
+        /// Resolves the next available cast member slots starting from a given slot number.
+        /// </summary>
+        /// <param name="startSlot">The slot number used as a starting point. When zero or negative the search starts from the first available slot.</param>
+        /// <param name="requiredCount">The number of slots that should be returned.</param>
+        /// <returns>A list containing up to <paramref name="requiredCount"/> available slot numbers ordered by appearance.</returns>
+        IReadOnlyList<int> ResolveFreeSlotNumbers(int startSlot, int requiredCount);
         IBlingoMember Add(BlingoMemberType type, int numberInCast, string name, string fileName = "", APoint regPoint = default);
         T Add<T>(int numberInCast, string name, Action<T>? configure = null) where T: IBlingoMember;
 

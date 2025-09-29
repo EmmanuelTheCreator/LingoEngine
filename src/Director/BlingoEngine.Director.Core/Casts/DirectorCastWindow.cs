@@ -1,4 +1,6 @@
-﻿using AbstUI.Commands;
+﻿using System;
+using System.Collections.Generic;
+using AbstUI.Commands;
 using AbstUI.Components.Containers;
 using AbstUI.Inputs;
 using AbstUI.Windowing;
@@ -28,7 +30,13 @@ namespace BlingoEngine.Director.Core.Casts
         public AbstTabContainer TabContainer => _tabs;
         public IBlingoMember? SelectedMember => _selected;
 
-        public DirectorCastWindow(IServiceProvider serviceProvider, IBlingoFrameworkFactory factory, IDirectorEventMediator mediator, IAbstCommandManager commandManager, IDirectorIconManager iconManager, IBlingoPlayer player) : base(serviceProvider, DirectorMenuCodes.CastWindow)
+        public DirectorCastWindow(
+            IServiceProvider serviceProvider,
+            IBlingoFrameworkFactory factory,
+            IDirectorEventMediator mediator,
+            IAbstCommandManager commandManager,
+            IDirectorIconManager iconManager,
+            IBlingoPlayer player) : base(serviceProvider, DirectorMenuCodes.CastWindow)
         {
             _player = (BlingoPlayer)player;
             _player.ActiveMovieChanged += OnActiveMovieChanged;
@@ -44,7 +52,7 @@ namespace BlingoEngine.Director.Core.Casts
             _tabs = factory.CreateTabContainer("CastTabs");
             //_tabs.Height = Height;
             _mediator.Subscribe(this);
-            
+
         }
        
         protected override void OnInit(IAbstFrameworkWindow frameworkWindow)
@@ -54,12 +62,13 @@ namespace BlingoEngine.Director.Core.Casts
             _mouseSub = MouseT.OnMouseEvent(OnMouseEvent);
             Content = _tabs;
         }
-       
+
         protected override void OnDispose()
         {
             _mediator.Unsubscribe(this);
             _mouseSub?.Release();
             _player.ActiveMovieChanged -= OnActiveMovieChanged;
+            ClearTabs();
             base.OnDispose();
         }
 
@@ -73,23 +82,36 @@ namespace BlingoEngine.Director.Core.Casts
 
         private void SetActiveMovie(IBlingoMovie? movie)
         {
-            _tabMap.Clear();
-            foreach (var tab in _tabMap)
-                tab.Value.Dispose();
-            _tabs.ClearTabs();
+            ClearTabs();
             if (movie == null)
                 return;
 
             foreach (var cast in movie.CastLib.GetAll())
             {
-                var tab = new DirCastTab(_factory, cast, _iconManager, _commandManager, _mediator, _player);
-                tab.SetViewportSize((int)_tabs.Width,(int) _tabs.Height);
+                var tab = new DirCastTab(
+                    _factory,
+                    cast,
+                    _iconManager,
+                    _commandManager,
+                    _mediator,
+                    _player,
+                    () => CreateContextMenu());
+                tab.SetViewportSize((int)_tabs.Width, (int)_tabs.Height);
                 _tabs.AddTab(tab.TabItem);
                 _tabMap[tab.TabItem.Title] = tab;
                 tab.MemberSelected += (m, i) => OnMemberSelected(tab, m, i);
-
                 tab.LoadAllMembers();
             }
+        }
+
+        private void ClearTabs()
+        {
+            foreach (var tab in _tabMap.Values)
+            {
+                tab.Dispose();
+            }
+            _tabMap.Clear();
+            _tabs.ClearTabs();
         }
         protected override void OnResizing(bool firstLoad, int width, int height)
         {
