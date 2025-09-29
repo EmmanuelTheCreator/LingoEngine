@@ -1,6 +1,8 @@
 ﻿using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Blingo.PacMan.Core.Game
 {
@@ -17,6 +19,26 @@ namespace Blingo.PacMan.Core.Game
         private GhostSettings? _ghostSettings;
         private static readonly int[] _ghostScoreChain = { 200, 400, 800, 1_600 };
         private readonly List<BlPacManGhostBehavior> _ghosts = new();
+        private readonly struct GhostHouseSetup
+        {
+            public GhostHouseSetup(bool startsOutside, int releaseDelayFrames)
+            {
+                StartsOutside = startsOutside;
+                ReleaseDelayFrames = releaseDelayFrames;
+            }
+
+            public bool StartsOutside { get; }
+            public int ReleaseDelayFrames { get; }
+        }
+
+        private static readonly IReadOnlyDictionary<MrGhost, GhostHouseSetup> _initialHouseStates =
+            new Dictionary<MrGhost, GhostHouseSetup>
+            {
+                [MrGhost.Blinky] = new GhostHouseSetup(true, 0),
+                [MrGhost.Pinky] = new GhostHouseSetup(false, 120),
+                [MrGhost.Inky] = new GhostHouseSetup(false, 240),
+                [MrGhost.Clyde] = new GhostHouseSetup(false, 360),
+            };
 
         internal IReadOnlyList<BlPacManGhostBehavior> Ghosts => _ghosts;
         public static MrGhost[] GhostNames => _ghostNames;
@@ -35,8 +57,7 @@ namespace Blingo.PacMan.Core.Game
             if (_ghosts.Contains(ghost))
                 return;
             _ghosts.Add(ghost);
-            if (_ghostSettings != null)
-                ghost.Configure(_ghostSettings);
+            ApplyConfiguration(ghost);
         }
         
         public int RegisterGhostEaten()
@@ -109,7 +130,7 @@ namespace Blingo.PacMan.Core.Game
         {
             _ghostSettings = ghostSettings;
             foreach (var ghost in _ghosts)
-                ghost.Configure(ghostSettings);
+                ApplyConfiguration(ghost);
         }
 
         internal void SetAllFrightened()
@@ -118,6 +139,18 @@ namespace Blingo.PacMan.Core.Game
                 ghost.SetMode(GhostMode.Frightened);
         }
 
-        
+        private void ApplyConfiguration(BlPacManGhostBehavior ghost)
+        {
+            if (_ghostSettings is null)
+                return;
+
+            var state = _initialHouseStates.TryGetValue(ghost.GhostName, out var info)
+                ? info
+                : new GhostHouseSetup(false, 0);
+
+            ghost.Configure(_ghostSettings, state.StartsOutside, state.ReleaseDelayFrames);
+        }
+
+
     }
 }

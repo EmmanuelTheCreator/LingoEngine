@@ -24,6 +24,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     private readonly GlobalVars _globals;
     private readonly BlPacManRepository _gameRepository;
     private GameModel? _model;
+    private BlPacManEventSubscription? _modeSubscription;
 
     
     private GameSettings? _currentGameSettings;
@@ -54,6 +55,7 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
     public void BeginSprite()
     {
         _globals.GameBehavior = this;
+        _modeSubscription ??= Model.SubscribeModeChanged(mode => _globals.GhostManager.SetMode(mode));
         if (_initialized)
             return;
         _gameBG = Sprite(PCSpriteNums.GameBG);
@@ -72,6 +74,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         if (!_initialized)
         {
             _globals.GameBehavior = null;
+            _modeSubscription?.Release();
+            _modeSubscription = null;
             return;
         }
         _globals.Reset();
@@ -79,6 +83,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         _currentPacmanSettings = null;
         _currentGhostSettings = null;
         Model.Reset();
+        _modeSubscription?.Release();
+        _modeSubscription = null;
         _initialized = false;
     }
 
