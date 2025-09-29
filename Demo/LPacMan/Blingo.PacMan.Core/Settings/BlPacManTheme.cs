@@ -92,10 +92,10 @@ public static class BlPacManTheme
 
         public static IReadOnlyDictionary<MrGhost, ARect> Sprites { get; } = new Dictionary<MrGhost, ARect>
         {
-            [MrGhost.Blinky] = new ARect(SpriteSize * 0, 0, SpriteSize * 1, SpriteSize),
-            [MrGhost.Pinky] = new ARect(SpriteSize * 1, 0, SpriteSize * 2, SpriteSize),
-            [MrGhost.Inky] = new ARect(SpriteSize * 2, 0, SpriteSize * 3, SpriteSize),
-            [MrGhost.Clyde] = new ARect(SpriteSize * 3, 0, SpriteSize * 4, SpriteSize),
+            [MrGhost.Blinky] = ARect.New(SpriteSize * 0, SpriteSize * 1, SpriteSize, SpriteSize),
+            [MrGhost.Pinky] = ARect.New(SpriteSize * 1, SpriteSize * 2, SpriteSize, SpriteSize),
+            [MrGhost.Inky] = ARect.New(SpriteSize * 2, SpriteSize * 3, SpriteSize, SpriteSize),
+            [MrGhost.Clyde] = ARect.New(SpriteSize * 3, SpriteSize * 4, SpriteSize, SpriteSize),
         };
 
         public static IReadOnlyDictionary<MrGhost, float> HorizontalOffsets { get; } = new Dictionary<MrGhost, float>

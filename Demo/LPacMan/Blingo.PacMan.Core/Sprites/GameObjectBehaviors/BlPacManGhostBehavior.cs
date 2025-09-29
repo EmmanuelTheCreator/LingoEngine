@@ -72,6 +72,16 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private ARect? _defaultRect;
     private ARect? _savedNormalRect;
 
+
+    private void UpdateHouseExitAllowance()
+    {
+        if (_character is { } character)
+        {
+            character.AllowHouseExit = _houseExiting;
+        }
+    }
+
+
    
 
     /// <summary>
@@ -111,6 +121,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         ApplyAppearance();
 
         var character = EnsureCharacter();
+        character.AllowHouseExit = _houseExiting;
         character.BeginSprite();
         ConfigureTargets();
         UpdateSpeedForCurrentMode(character.GetTile());
@@ -195,12 +206,16 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     private void HandleHouseMode(BlPacManCharacter character)
     {
+        character.AllowHouseExit = _houseExiting;
+
+
         if (!_hasLeftHouse && _globals.State.IsActivePlaying && _houseReleaseCounter > 0)
         {
             _houseReleaseCounter--;
             if (_houseReleaseCounter == 0)
             {
                 _houseExiting = true;
+                character.AllowHouseExit = true;
             }
         }
 
@@ -254,6 +269,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _mode = _globalMode;
         _hasLeftHouse = true;
         _houseExiting = false;
+        character.AllowHouseExit = false;
         _requestedDirection = BlPacManDirection.Up;
         character.ForceDirection(BlPacManDirection.Up);
         _turnBack = false;
@@ -275,6 +291,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _mode = GhostMode.House;
             _frightenedFrames = 0;
             _houseExiting = _hasLeftHouse;
+            UpdateHouseExitAllowance();
+
             UpdateSpeedForCurrentMode(_character?.GetTile());
             UpdateVisualForMode();
             return;
@@ -320,6 +338,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _houseReleaseCounter = _initialHouseReleaseDelay;
         _houseExiting = startOutsideHouse;
         _hasLeftHouse = startOutsideHouse;
+        UpdateHouseExitAllowance();
+
 
         var character = EnsureCharacter();
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
@@ -374,6 +394,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _houseExiting = _startOutsideHouse;
         _hasLeftHouse = _startOutsideHouse;
         _houseReleaseCounter = _initialHouseReleaseDelay;
+        UpdateHouseExitAllowance();
+
         if (_defaultRect is { } defaultRect)
         {
             _savedNormalRect = defaultRect;
@@ -449,6 +471,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             var fallbackRect = new ARect(0, 0, size, size);
             Me.SetMemberRect(fallbackRect, new APoint(fallbackRect.Width / 2f, fallbackRect.Height / 2f));
         }
+
+        if (Me.MemberSourceRect is { } currentRect)
+        {
+            _defaultRect = currentRect;
+            _savedNormalRect = currentRect;
+        }
+        else
+        {
+            _defaultRect = null;
+            _savedNormalRect = null;
+        }
+        ConfigureFrightenedAnimations();
 
         if (Me.MemberSourceRect is { } currentRect)
         {

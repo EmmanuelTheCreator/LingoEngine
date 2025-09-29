@@ -45,6 +45,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private bool _defaultsCaptured;
     private CharacterSnapshot? _defaults;
     public bool RotateSprite { get; set; }
+    public bool AllowHouseExit { get; set; }
 
     public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, BlPacManCharacterOptions? options = null)
         : base(env)
@@ -154,6 +155,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                 Y = y,
                 LastX = x,
                 LastY = y,
+                AllowHouseExit = AllowHouseExit,
             };
         }
         else
@@ -170,7 +172,9 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                 _moving,
                 Mode,
                 _animation,
-                _animationOverride);
+                _animationOverride,
+                AllowHouseExit);
+
             _defaultsCaptured = true;
         }
     }
@@ -193,6 +197,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         _moving = snapshot.IsMoving;
         Mode = snapshot.Mode;
         _animationOverride = snapshot.AnimationOverride;
+        AllowHouseExit = snapshot.AllowHouseExit;
+
         _preTurnActive = false;
         _lastTile = null;
         if (_animationOverride is not null)
@@ -442,7 +448,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void CaptureDefaults()
     {
         SetNextAnimation();
-        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation, _animationOverride);
+        _defaults = new CharacterSnapshot(X, Y, _lastX, _lastY, Direction, _previousDirection, _nextAnimation, _nextDirection, _moving, Mode, _animation, _animationOverride, AllowHouseExit);
+
     }
 
     private void HandleTileEntered(Tile tile)
@@ -537,6 +544,12 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             var insideHouse = tile.IsHouse() || tile.IsGhostHouseEntrance();
             if (insideHouse)
             {
+                if (AllowHouseExit && nextTile is not null && !nextTile.IsWall())
+                {
+                    return true;
+                }
+
+
                 return nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance());
             }
         }
@@ -629,5 +642,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         bool IsMoving,
         string? Mode,
         string? Animation,
-        string? AnimationOverride);
+        string? AnimationOverride,
+        bool AllowHouseExit);
+
 }
