@@ -62,6 +62,7 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _masterScroller.HorizontalScrollMode = ScrollContainer.ScrollMode.ShowAlways;
         _masterScroller.VerticalScrollMode= ScrollContainer.ScrollMode.ShowAlways;
         _masterScroller.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, Size.Y - _gfxValues.TopStripHeight- _footerMargin);
+        _directorScoreWindow.UpdateViewportSize(_masterScroller.Size.X, _masterScroller.Size.Y);
         _masterScroller.AddChild(_scrollContent);
         _marginContainer.AddChild(_masterScroller);
 
@@ -184,8 +185,15 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         }
         if (changed)
             _topStripContent.Position = new Vector2(-_masterScroller.ScrollHorizontal, _topStripContent.Position.Y);
-        
-        
+
+
+    }
+
+    public void ScrollTo(float horizontal, float vertical)
+    {
+        _masterScroller.ScrollHorizontal = (int)horizontal;
+        _masterScroller.ScrollVertical = (int)vertical;
+        UpdatePositioScollPositionChanged();
     }
 
     private void RefreshGrid()
@@ -210,7 +218,8 @@ public partial class DirGodotScoreWindow : BaseGodotWindow, IDirFrameworkScoreWi
         _leftChannelsScollClipper.Size = new Vector2(_gfxValues.ChannelInfoWidth, Size.Y - topHeight - 20 - _footerMargin);
         _topHClipper.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, topHeight + 20);
         _masterScroller.Size = new Vector2(Size.X - _gfxValues.ChannelInfoWidth, Size.Y - topHeight - 20 - _footerMargin);
-        
+        _directorScoreWindow.UpdateViewportSize(_masterScroller.Size.X, _masterScroller.Size.Y);
+
     }
 
 

@@ -1,5 +1,6 @@
 ﻿using BlingoEngine.FrameworkCommunication;
 using BlingoEngine.Movies;
+using System;
 using BlingoEngine.Director.Core.Inputs;
 using BlingoEngine.Director.Core.Sprites;
 using BlingoEngine.Core;
@@ -7,6 +8,7 @@ using BlingoEngine.Director.Core.Tools;
 using BlingoEngine.ColorPalettes;
 using AbstUI.Commands;
 using BlingoEngine.Director.Core.UI;
+using BlingoEngine.Director.Core.Members.Commands;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sounds;
 using AbstUI.Primitives;
@@ -16,11 +18,12 @@ using AbstUI.Windowing;
 using AbstUI.Components.Inputs;
 using AbstUI.Components.Containers;
 using BlingoEngine.Transitions.TransitionLibrary;
+using BlingoEngine.Members;
 
 
 namespace BlingoEngine.Director.Core.Scores
 {
-    public class DirectorScoreWindow : DirectorWindow<IDirFrameworkScoreWindow>
+    public class DirectorScoreWindow : DirectorWindow<IDirFrameworkScoreWindow>, IAbstCommandHandler<FindCastMemberInScoreCommand>
     {
         private readonly IDirSpritesManager _spritesManager;
         private readonly DirScoreManager _scoreManager;
@@ -44,6 +47,8 @@ namespace BlingoEngine.Director.Core.Scores
         private float _scollY;
         private float _scollX;
         private float _lastPosV;
+        private float _viewportWidth;
+        private float _viewportHeight;
         private KeyValuePair<string, string>[] _frameLabelsForCombo = [
                    new KeyValuePair<string, string>("Label1","Label1"),
                ];
@@ -308,6 +313,91 @@ namespace BlingoEngine.Director.Core.Scores
                 _LeftChannelContainer.UpdatePosition(new APoint(0, -_lastPosV + 1));
                 //_leftChannelsScollClipper.ScrollVertical = _masterScroller.ScrollVertical;
             }
+        }
+
+        public void UpdateViewportSize(float width, float height)
+        {
+            _viewportWidth = Math.Max(0, width);
+            _viewportHeight = Math.Max(0, height);
+        }
+
+        public bool CanExecute(FindCastMemberInScoreCommand command) => command.Member != null;
+
+        public bool Handle(FindCastMemberInScoreCommand command)
+        {
+            if (command.Member == null)
+                return false;
+
+            return TryFocusMember(command.Member);
+        }
+
+        private bool TryFocusMember(IBlingoMember member)
+        {
+            if (_viewportWidth <= 0 || _viewportHeight <= 0)
+                return false;
+            if (Framework == null)
+                return false;
+            var location = _scoreManager.TryGetSpriteForMember(member);
+            if (location is not { } found)
+                return false;
+            var (channel, sprite) = found;
+
+            var gfx = _scoreManager.GfxValues;
+            float spriteLeft = gfx.LeftMargin + (sprite.Sprite.BeginFrame - 1) * gfx.FrameWidth;
+            float spriteRight = gfx.LeftMargin + sprite.Sprite.EndFrame * gfx.FrameWidth;
+            float spriteTop = channel.Position.Y;
+            float spriteBottom = spriteTop + channel.Size.Y;
+
+            const float margin = 8f;
+
+            float targetScrollX = _scollX;
+            float targetScrollY = _scollY;
+
+            if (spriteLeft < targetScrollX)
+                targetScrollX = spriteLeft - margin;
+            else if (spriteRight > targetScrollX + _viewportWidth)
+                targetScrollX = spriteRight - _viewportWidth + margin;
+
+            if (spriteTop < targetScrollY)
+                targetScrollY = spriteTop - margin;
+            else if (spriteBottom > targetScrollY + _viewportHeight)
+                targetScrollY = spriteBottom - _viewportHeight + margin;
+
+            targetScrollX = Math.Clamp(targetScrollX, 0, ComputeMaxHorizontalScroll());
+            targetScrollY = Math.Clamp(targetScrollY, 0, ComputeMaxVerticalScroll());
+
+            Framework.ScrollTo(targetScrollX, targetScrollY);
+
+            if (sprite.Sprite is BlingoSprite blingoSprite)
+                _spritesManager.SelectSprite(blingoSprite);
+
+            return true;
+        }
+
+        private float ComputeMaxHorizontalScroll()
+        {
+            if (_movie == null)
+                return 0f;
+
+            var gfx = _scoreManager.GfxValues;
+            float totalWidth = gfx.LeftMargin + _movie.FrameCount * gfx.FrameWidth + gfx.ExtraMargin;
+            return Math.Max(0, totalWidth - _viewportWidth);
+        }
+
+        private float ComputeMaxVerticalScroll()
+        {
+            float max = 0f;
+            foreach (var ch in _scoreManager.Channels.Values)
+            {
+                if (!ch.Visible)
+                    continue;
+
+                var bottom = ch.Position.Y + ch.Size.Y;
+                if (bottom > max)
+                    max = bottom;
+            }
+
+            return Math.Max(0, max - _viewportHeight);
         }
 
 
