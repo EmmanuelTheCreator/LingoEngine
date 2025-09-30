@@ -61,6 +61,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                 .ServicesBlingo(s => s
                     .AddSingleton<BlPacManCore>()
                     .AddSingleton<BlPacManRepository>()
+                    .AddSingleton<IPacManRandomSource, PacManRandomSource>()
                     );
     }
 

@@ -1,210 +1,494 @@
+using System;
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Settings;
-using Blingo.PacMan.Core.Sprites.ParentScripts;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
+using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
-using System.Collections.Generic;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
 /// <summary>
-/// Implements the runtime behaviour for one of the four ghosts, handling scatter/chase mode
-/// transitions, frightened timers, collision detection, and target selection for each named ghost.
+/// Direct C# port of the original JavaScript ghost logic. The behaviour keeps the same state
+/// machine so scatter/chase transitions, frightened handling, and house routines match the arcade.
 /// </summary>
 internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
     IHasExitFrameEvent
 {
-    // Sprite sheet rectangles for each ghost's default animation row.
-    private static readonly IReadOnlyDictionary<MrGhost, ARect> _ghostRects = BlPacManTheme.Ghosts.Sprites;
+    private const float DeadSpeed = 130f;
+    private const float HouseSpeed = 70f;
 
-    // Horizontal offsets to stagger the ghosts within the house at level start.
-    private static readonly IReadOnlyDictionary<MrGhost, float> _horizontalOffsets = BlPacManTheme.Ghosts.HorizontalOffsets;
-
-    // Initial direction per ghost to mirror the arcade openings.
-    private static readonly Dictionary<MrGhost, BlPacManDirection> _initialDirections = new()
+    private static readonly IReadOnlyDictionary<MrGhost, ARect> SpriteRects = BlPacManTheme.Ghosts.Sprites;
+    private static readonly IReadOnlyDictionary<MrGhost, float> HouseOffsets = BlPacManTheme.Ghosts.HorizontalOffsets;
+    private static readonly IReadOnlyDictionary<MrGhost, BlPacManDirection> InitialDirections = new Dictionary<MrGhost, BlPacManDirection>
     {
         [MrGhost.Blinky] = BlPacManDirection.Left,
         [MrGhost.Pinky] = BlPacManDirection.Down,
         [MrGhost.Inky] = BlPacManDirection.Up,
         [MrGhost.Clyde] = BlPacManDirection.Up,
     };
-    private bool _isConfigured;
+
     private readonly GlobalVars _globals;
-    private GhostSettings? _settings;
+    private readonly IPacManRandomSource _random;
+
     private BlPacManCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
-    private Tile? _scatterTarget;
-    private Tile? _deadTarget;
-    private BlPacManDirection _requestedDirection = BlPacManDirection.Left;
-    private BlPacManDirection _queuedDirection = BlPacManDirection.Left;
-    private BlPacManDirection _initialDirection = BlPacManDirection.Left;
+
+    private GhostSettings? _settings;
+    private bool _configured;
+
+    private GhostMode _mode = GhostMode.House;
+    private GhostMode _globalMode = GhostMode.Scatter;
+    private GhostMode? _pendingFrightened;
+
+    private BlPacManDirection _dir = BlPacManDirection.Left;
+    private BlPacManDirection _nextDir = BlPacManDirection.Left;
+    private bool _turnBack;
+
     private float _baseSpeed = 75f;
     private float _tunnelSpeed = 75f;
     private float _frightenedSpeed = 60f;
-    private GhostMode _mode = GhostMode.Scatter;
-    private GhostMode _globalMode = GhostMode.Scatter;
+
     private int _frightenedFrames;
-    private bool _turnBack;
-    private readonly Random _random = new();
-    private const float HouseBoundaryTolerance = 0.5f;
+    private int _frightenedDurationFrames;
+    private int _frightenedFlashWindow;
+    private bool _frightenedBlink;
+    private bool _frightenedAnimationsConfigured;
+
     private bool _startOutsideHouse;
     private bool _housePreparingExit;
     private bool _hasLeftHouse;
-    private int _initialHouseReleaseDelay;
-    private int _houseReleaseCounter;
-    private float _houseTopBoundary;
-    private float _houseBottomBoundary;
-    private Tile? _houseEntranceTile;
-    private Tile? _houseDoorTile;
-    private Tile? _houseExitDestinationTile;
+    private int _initialHouseReleaseFrames;
+    private int _houseReleaseFrames;
+
+    private float _houseTop;
+    private float _houseBottom;
+    private Tile? _houseExitTile;
     private float _houseExitX;
-    private float _houseExitTargetY;
-    private BlPacManDirection _houseDirection = BlPacManDirection.Up;
-    private bool _frightenedAnimationsConfigured;
-    private bool _frightenedFlashing;
-    private int _frightenedDurationFrames;
-    private ARect? _defaultRect;
-    private ARect? _savedNormalRect;
-    private bool _deadPrepareEnter;
+    private float _houseCenterX;
+    private float _houseCenterY;
+
+    private Tile? _scatterTarget;
+    private Tile? _deadTarget;
     private Tile? _deadEndTile;
     private float _deadEndX;
     private float _deadEndY;
+    private bool _deadPreparingEntry;
 
+    private ARect? _defaultRect;
+    private ARect? _savedRect;
 
-    private void UpdateHouseExitAllowance()
-    {
-        if (_character is { } character)
-        {
-            character.AllowHouseExit = _housePreparingExit || _mode == GhostMode.Dead;
-        }
-    }
-
-
-   
-
-    /// <summary>
-    /// Gets or sets the friendly name of the ghost. The name determines sprite offsets and
-    /// targeting rules.
-    /// </summary>
     public MrGhost GhostName { get; set; } = MrGhost.Inky;
 
-    /// <summary>
-    /// Gets a value indicating whether the ghost is currently frightened.
-    /// </summary>
     public bool IsFrightened => _mode == GhostMode.Frightened;
 
-    /// <summary>
-    /// Gets a value indicating whether the ghost is travelling back to the house as eyes.
-    /// </summary>
     public bool IsDead => _mode == GhostMode.Dead;
 
-    /// <summary>
-    /// Returns the tile currently occupied by the ghost's collision centre.
-    /// </summary>
     internal Tile? CurrentTile => _character?.GetTile();
 
-
     public BlPacManGhostBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
-       : base(env)
+        : base(env)
     {
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+        _random = env.GetRequiredService<IPacManRandomSource>();
     }
 
-
-    /// <summary>
-    /// Initialises the ghost, binds to the coordinator, and subscribes to Pac-Man position updates.
-    /// </summary>
     public void BeginSprite()
     {
         ApplyAppearance();
-
         var character = EnsureCharacter();
-        UpdateHouseExitAllowance();
-        character.BeginSprite();
-        ConfigureTargets();
-        UpdateSpeedForCurrentMode(character.GetTile());
-
+        _tileSubscription = character.SubscribeTileEntered(OnTileEntered);
         _globals.GhostManager.AddGhost(this);
 
-        
+        if (_settings is not null)
+        {
+            ConfigureInternal();
+        }
     }
 
-    /// <summary>
-    /// Cleans up sprite state and unsubscribes from external events when the ghost is removed.
-    /// </summary>
     public void EndSprite()
     {
         _globals.GhostManager.RemoveGhost(this);
         _tileSubscription?.Release();
         _tileSubscription = null;
         _character = null;
-        _isConfigured = false;
+        _configured = false;
     }
 
-    /// <summary>
-    /// Performs the per-frame movement and collision logic for the ghost.
-    /// </summary>
     public void ExitFrame()
     {
-        if (!_isConfigured) return;
-        var character = EnsureCharacter();
-
-        if (_globals.State.IsGameplayFrozen)
+        if (!_configured || _character is null)
         {
-            character.Update();
             return;
         }
 
-        UpdateFrightenedTimer();
+        if (_globals.State.IsGameplayFrozen)
+        {
+            _character.Update();
+            return;
+        }
 
-        var tile = character.GetTile();
+        AdvanceFrightenedTimer();
+
+        var tile = _character.GetTile();
         if (tile is null)
         {
             return;
         }
 
-        if (_mode == GhostMode.House)
+        if (ShouldExitMode(tile))
         {
-            HandleHouseMode(character);
-            return;
-        }
-
-        if (_mode == GhostMode.Dead && HandleDeadMode(character, tile))
-        {
-            return;
-        }
-
-        var moveDirection = _requestedDirection;
-        if (moveDirection == BlPacManDirection.None)
-        {
-            moveDirection = character.Direction;
-            if (moveDirection == BlPacManDirection.None)
+            ExitCurrentMode();
+            tile = _character.GetTile();
+            if (tile is null)
             {
-                moveDirection = BlPacManDirection.Left;
+                _character.Update();
+                return;
             }
         }
 
-        character.Move(moveDirection);
+        switch (_mode)
+        {
+            case GhostMode.Dead:
+                MoveDead(tile);
+                break;
+            case GhostMode.House:
+                MoveInsideHouse();
+                break;
+            default:
+                MoveNormal();
+                break;
+        }
+
+        _character.Update();
     }
 
-    private void HandleHouseMode(BlPacManCharacter character)
+    public void SetMode(GhostMode? mode)
     {
-        UpdateHouseExitAllowance();
-
-        if (!_hasLeftHouse && _globals.State.IsActivePlaying && _houseReleaseCounter > 0)
+        if (mode is null)
         {
-            _houseReleaseCounter--;
-            if (_houseReleaseCounter == 0)
+            if (_pendingFrightened is not null)
+            {
+                _mode = _pendingFrightened.Value;
+                _pendingFrightened = null;
+            }
+            else
+            {
+                _mode = _globalMode;
+            }
+
+            UpdateSpeedForCurrentTile();
+            UpdateModeVisual();
+            return;
+        }
+
+        if (mode == GhostMode.Frightened)
+        {
+            if (_mode == GhostMode.House && !_hasLeftHouse)
+            {
+                _pendingFrightened = GhostMode.Frightened;
+                return;
+            }
+
+            if (_mode == GhostMode.Dead)
+            {
+                return;
+            }
+
+            EnterFrightenedMode();
+            return;
+        }
+
+        if (mode == GhostMode.Dead)
+        {
+            _mode = GhostMode.Dead;
+            _pendingFrightened = null;
+            _frightenedFrames = 0;
+            _deadPreparingEntry = false;
+            UpdateHouseExitAllowance();
+            UpdateSpeedForCurrentTile();
+            UpdateModeVisual();
+            return;
+        }
+
+        if (mode == GhostMode.House)
+        {
+            _mode = GhostMode.House;
+            _pendingFrightened = null;
+            _frightenedFrames = 0;
+            PrepareHouseState();
+            UpdateSpeedForCurrentTile();
+            UpdateModeVisual();
+            return;
+        }
+
+        if (mode is GhostMode.Scatter or GhostMode.Chase)
+        {
+            if (_mode is GhostMode.Scatter or GhostMode.Chase && mode.Value != _mode)
+            {
+                _turnBack = true;
+            }
+
+            _globalMode = mode.Value;
+            _mode = mode.Value;
+            _pendingFrightened = null;
+            _frightenedFrames = 0;
+            UpdateHouseExitAllowance();
+            UpdateSpeedForCurrentTile();
+            UpdateModeVisual();
+        }
+    }
+
+    public void Configure(GhostSettings settings, bool startOutsideHouse, int houseReleaseDelayFrames)
+    {
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _startOutsideHouse = startOutsideHouse;
+        _initialHouseReleaseFrames = Math.Max(0, houseReleaseDelayFrames);
+        _houseReleaseFrames = _initialHouseReleaseFrames;
+
+        if (_character is not null)
+        {
+            ConfigureInternal();
+        }
+    }
+
+    public void OnPacManEaten() => Hide();
+
+    public void ResetForLife()
+    {
+        if (!_configured || _character is null)
+        {
+            return;
+        }
+
+        _character.Reset();
+        PrepareInitialState();
+        _character.ForceDirection(_dir);
+        _character.Move(_dir);
+        UpdateSpeedForCurrentTile();
+        UpdateModeVisual();
+        _character.Update();
+        Show();
+    }
+
+    public void OnEaten(int score)
+    {
+        SetMode(GhostMode.Dead);
+        UpdateSpeedForCurrentTile();
+        UpdateModeVisual();
+    }
+
+    public void Show() => EnsureCharacter().Show();
+
+    public void Hide() => EnsureCharacter().Hide();
+
+    internal void ExitCurrentMode()
+    {
+        switch (_mode)
+        {
+            case GhostMode.Dead:
+                ReviveInHouse();
+                break;
+            case GhostMode.Frightened:
+                _mode = _globalMode;
+                UpdateSpeedForCurrentTile();
+                UpdateModeVisual();
+                break;
+            case GhostMode.House:
+                CompleteHouseExit();
+                break;
+            default:
+                _mode = _globalMode;
+                _turnBack = true;
+                UpdateSpeedForCurrentTile();
+                UpdateModeVisual();
+                break;
+        }
+    }
+
+    internal Tile? GetChaseTargetTile(
+        Tile? pacmanTile = null,
+        BlPacManDirection pacmanDirectionOverride = BlPacManDirection.None,
+        Tile? blinkyTile = null,
+        Tile? clydeTileOverride = null)
+    {
+        pacmanTile ??= _globals.State.PacManPosition?.Tile;
+        var direction = pacmanDirectionOverride == BlPacManDirection.None
+            ? _globals.State.PacManPosition?.Direction ?? BlPacManDirection.Left
+            : pacmanDirectionOverride;
+
+        return GhostName switch
+        {
+            MrGhost.Pinky => StepForward(pacmanTile, direction, 4) ?? pacmanTile,
+            MrGhost.Inky => ResolveInkyTarget(pacmanTile, direction, blinkyTile),
+            MrGhost.Clyde => ResolveClydeTarget(pacmanTile, clydeTileOverride),
+            _ => pacmanTile,
+        };
+    }
+
+    private void ConfigureInternal()
+    {
+        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialised.");
+
+        _baseSpeed = _settings?.Speed ?? _baseSpeed;
+        _tunnelSpeed = _settings?.TunnelSpeed ?? _tunnelSpeed;
+        _frightenedSpeed = _settings?.FrightenedSpeed ?? _frightenedSpeed;
+        _frightenedDurationFrames = Math.Max(1, (int)Math.Round((_settings?.FrightenedDuration ?? TimeSpan.Zero).TotalSeconds * 60));
+        _frightenedFlashWindow = (_settings?.FrightenedFlashes ?? 0) * BlPacManTheme.Ghosts.FrightenedFlashWindowFrames;
+
+        _character!.SetMap(map);
+        ConfigureHouseGeometry(map);
+        ConfigureTargets(map);
+        PlaceAtStart(map);
+        PrepareInitialState();
+
+        UpdateSpeedForCurrentTile();
+        UpdateModeVisual();
+        UpdateHouseExitAllowance();
+        _configured = true;
+    }
+
+    private void PrepareInitialState()
+    {
+        _frightenedFrames = 0;
+        _frightenedBlink = false;
+        _pendingFrightened = null;
+        _deadPreparingEntry = false;
+        if (_startOutsideHouse)
+        {
+            _mode = _globalMode;
+            _hasLeftHouse = true;
+            _housePreparingExit = true;
+            _dir = DetermineInitialDirection();
+            _nextDir = _dir;
+        }
+        else
+        {
+            _mode = GhostMode.House;
+            _hasLeftHouse = false;
+            _housePreparingExit = _initialHouseReleaseFrames == 0;
+            _houseReleaseFrames = _initialHouseReleaseFrames;
+            _dir = DetermineInitialDirection();
+            if (!_dir.IsVertical())
+            {
+                _dir = BlPacManDirection.Up;
+            }
+
+            _nextDir = _dir;
+        }
+
+        UpdateHouseExitAllowance();
+    }
+
+    private void ConfigureHouseGeometry(Map map)
+    {
+        var house = map.HouseCenter ?? map.House;
+        if (house is not null)
+        {
+            _houseTop = house.CenterY - house.Height / 2f;
+            _houseBottom = house.CenterY + house.Height / 2f;
+            _houseCenterX = house.CenterX;
+            _houseCenterY = house.CenterY;
+        }
+        else
+        {
+            _houseTop = Me.LocV - map.TileHeight / 2f;
+            _houseBottom = Me.LocV + map.TileHeight / 2f;
+            _houseCenterX = Me.LocH;
+            _houseCenterY = Me.LocV;
+        }
+
+        _houseExitTile = map.House?.GetRight();
+        _houseExitX = _houseExitTile?.CenterX ?? _houseCenterX;
+    }
+
+    private void ConfigureTargets(Map map)
+    {
+        _scatterTarget = GhostName switch
+        {
+            MrGhost.Pinky => map.GetTile(0, 0),
+            MrGhost.Inky => map.GetTile(Math.Max(0, map.Width - 1), Math.Max(0, map.Height - 1)),
+            MrGhost.Clyde => map.GetTile(0, Math.Max(0, map.Height - 1)),
+            _ => map.GetTile(Math.Max(0, map.Width - 1), 0),
+        };
+
+        _deadTarget = map.House?.GetRight()?.GetUp() ?? map.HouseCenter ?? map.GetTile(map.Width / 2, map.Height / 2);
+        _deadEndTile = map.HouseCenter ?? map.House;
+        _deadEndX = _deadEndTile?.CenterX ?? _houseCenterX;
+        _deadEndY = _deadEndTile?.CenterY ?? _houseCenterY;
+    }
+
+    private void PlaceAtStart(Map map)
+    {
+        if (_startOutsideHouse)
+        {
+            var doorway = map.House?.GetRight();
+            if (doorway is not null)
+            {
+                Me.LocH = doorway.CenterX;
+                Me.LocV = doorway.CenterY;
+            }
+            else
+            {
+                Me.LocH = _houseCenterX;
+                Me.LocV = _houseCenterY;
+            }
+        }
+        else
+        {
+            var center = map.HouseCenter ?? map.House;
+            var offset = HouseOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
+            if (center is not null)
+            {
+                Me.LocH = center.CenterX + offset;
+                Me.LocV = center.CenterY;
+            }
+            else
+            {
+                Me.LocH = _houseCenterX + offset;
+                Me.LocV = _houseCenterY;
+            }
+        }
+
+        _character?.UpdateStartPosition(Me.LocH, Me.LocV);
+    }
+
+    private void MoveNormal()
+    {
+        if (_character is null)
+        {
+            return;
+        }
+
+        var direction = _dir != BlPacManDirection.None ? _dir : _character.Direction;
+        if (direction == BlPacManDirection.None)
+        {
+            direction = BlPacManDirection.Left;
+        }
+
+        _character.Move(direction);
+    }
+
+    private void MoveInsideHouse()
+    {
+        if (_character is null)
+        {
+            return;
+        }
+
+        if (!_hasLeftHouse && _globals.State.IsActivePlaying && _houseReleaseFrames > 0)
+        {
+            _houseReleaseFrames--;
+            if (_houseReleaseFrames == 0)
             {
                 _housePreparingExit = true;
                 UpdateHouseExitAllowance();
@@ -213,1046 +497,312 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         if (!_housePreparingExit)
         {
-            if (!_houseDirection.IsVertical())
+            if (!_dir.IsVertical())
             {
-                _houseDirection = BlPacManDirection.Up;
-                character.ForceDirection(_houseDirection);
+                _dir = BlPacManDirection.Up;
+                _character.ForceDirection(_dir);
             }
 
-            _requestedDirection = _houseDirection;
-            _queuedDirection = _requestedDirection;
-            character.Move(_houseDirection);
+            _character.Move(_dir);
 
-            var currentY = Me.LocV;
-            if (_houseDirection == BlPacManDirection.Up && currentY <= _houseTopBoundary + HouseBoundaryTolerance)
+            var y = Me.LocV;
+            if (_dir == BlPacManDirection.Up && y <= _houseTop)
             {
-                _houseDirection = BlPacManDirection.Down;
-                character.ForceDirection(_houseDirection);
+                _dir = BlPacManDirection.Down;
+                _character.ForceDirection(_dir);
             }
-            else if (_houseDirection == BlPacManDirection.Down && currentY >= _houseBottomBoundary - HouseBoundaryTolerance)
+            else if (_dir == BlPacManDirection.Down && y >= _houseBottom)
             {
-                _houseDirection = BlPacManDirection.Up;
-                character.ForceDirection(_houseDirection);
-            }
-
-            return;
-        }
-
-        var exitX = _houseDoorTile?.CenterX ?? Me.LocH;
-        var deltaX = exitX - Me.LocH;
-        if (Math.Abs(deltaX) > HouseBoundaryTolerance)
-        {
-            var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
-            if (_requestedDirection != direction)
-
-            {
-                character.ForceDirection(direction);
-            }
-
-            _requestedDirection = direction;
-            _queuedDirection = _requestedDirection;
-
-            character.Move(direction);
-            return;
-        }
-
-        _requestedDirection = BlPacManDirection.Up;
-
-        _queuedDirection = _requestedDirection;
-
-        character.Move(BlPacManDirection.Up);
-
-        var currentTile = character.GetTile();
-        if (currentTile is not null && !currentTile.IsHouse() && !currentTile.IsGhostHouseEntrance())
-        {
-            CompleteHouseExit(character);
-
-        }
-    }
-
-
-    private void CompleteHouseExit(BlPacManCharacter character)
-    {
-        _mode = _globalMode;
-        _hasLeftHouse = true;
-        _housePreparingExit = false;
-        UpdateHouseExitAllowance();
-        _requestedDirection = BlPacManDirection.Up;
-        character.ForceDirection(BlPacManDirection.Up);
-        _turnBack = false;
-        InitializeDirectionPipeline(character.GetTile());
-        UpdateSpeedForCurrentMode(character.GetTile());
-        UpdateVisualForMode();
-    }
-
-    private bool HandleDeadMode(BlPacManCharacter character, Tile tile)
-    {
-        UpdateHouseExitAllowance();
-
-        if (!_deadPrepareEnter && _deadTarget is not null && ReferenceEquals(tile, _deadTarget))
-        {
-            _deadPrepareEnter = true;
-        }
-
-        if (!_deadPrepareEnter)
-        {
-            return false;
-        }
-
-        var targetX = _deadEndX;
-        if (Me.LocV < _deadEndY - HouseBoundaryTolerance && _deadTarget is { } deadTarget)
-        {
-            targetX = deadTarget.CenterX;
-        }
-
-        var deltaX = targetX - Me.LocH;
-        if (Math.Abs(deltaX) > HouseBoundaryTolerance)
-        {
-            var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
-            if (_requestedDirection != direction)
-            {
-                character.ForceDirection(direction);
-            }
-
-            _requestedDirection = direction;
-            _queuedDirection = _requestedDirection;
-            character.Move(direction);
-            return true;
-        }
-
-        if (Me.LocV < _deadEndY - HouseBoundaryTolerance)
-        {
-            _requestedDirection = BlPacManDirection.Down;
-            _queuedDirection = _requestedDirection;
-            character.Move(BlPacManDirection.Down);
-            return true;
-        }
-
-        if (Me.LocV > _deadEndY + HouseBoundaryTolerance)
-        {
-            _requestedDirection = BlPacManDirection.Up;
-            _queuedDirection = _requestedDirection;
-            character.Move(BlPacManDirection.Up);
-            return true;
-        }
-
-        ReviveInsideHouse(character);
-        return true;
-    }
-
-    private void ReviveInsideHouse(BlPacManCharacter character)
-    {
-        _deadPrepareEnter = false;
-        _mode = GhostMode.House;
-        _hasLeftHouse = false;
-        _houseDirection = BlPacManDirection.Up;
-        _requestedDirection = _houseDirection;
-        character.ForceDirection(_houseDirection);
-        _queuedDirection = _requestedDirection;
-        Me.LocH = _deadEndX;
-        Me.LocV = _deadEndY;
-        _houseReleaseCounter = Math.Max(0, _initialHouseReleaseDelay);
-        _housePreparingExit = _houseReleaseCounter == 0;
-        UpdateHouseExitAllowance();
-        UpdateSpeedForCurrentMode(character.GetTile());
-        UpdateVisualForMode();
-
-        if (_globals.Map is { } map)
-        {
-            ConfigureDeadReturnTargets(map);
-        }
-    }
-
-    private bool HandleDeadMode(BlPacManCharacter character, Tile tile)
-    {
-        UpdateHouseExitAllowance();
-
-        if (!_deadPrepareEnter && _deadTarget is not null && ReferenceEquals(tile, _deadTarget))
-        {
-            _deadPrepareEnter = true;
-        }
-
-        if (!_deadPrepareEnter)
-        {
-            return false;
-        }
-
-        var targetX = _deadEndX;
-        if (Me.LocV < _deadEndY - HouseBoundaryTolerance && _deadTarget is { } deadTarget)
-        {
-            targetX = deadTarget.CenterX;
-        }
-
-        var deltaX = targetX - Me.LocH;
-        if (Math.Abs(deltaX) > HouseBoundaryTolerance)
-        {
-            var direction = deltaX > 0 ? BlPacManDirection.Right : BlPacManDirection.Left;
-            if (_requestedDirection != direction)
-            {
-                character.ForceDirection(direction);
-            }
-
-            _requestedDirection = direction;
-            character.Move(direction);
-            return true;
-        }
-
-        if (Me.LocV < _deadEndY - HouseBoundaryTolerance)
-        {
-            _requestedDirection = BlPacManDirection.Down;
-            character.Move(BlPacManDirection.Down);
-            return true;
-        }
-
-        if (Me.LocV > _deadEndY + HouseBoundaryTolerance)
-        {
-            _requestedDirection = BlPacManDirection.Up;
-            character.Move(BlPacManDirection.Up);
-            return true;
-        }
-
-        ReviveInsideHouse(character);
-        return true;
-    }
-
-    private void ReviveInsideHouse(BlPacManCharacter character)
-    {
-        _deadPrepareEnter = false;
-        _mode = GhostMode.House;
-        _hasLeftHouse = false;
-        _houseDirection = BlPacManDirection.Up;
-        _requestedDirection = _houseDirection;
-        character.ForceDirection(_houseDirection);
-        Me.LocH = _deadEndX;
-        Me.LocV = _deadEndY;
-        _houseReleaseCounter = Math.Max(0, _initialHouseReleaseDelay);
-        _housePreparingExit = _houseReleaseCounter == 0;
-
-        UpdateHouseExitAllowance();
-        UpdateSpeedForCurrentMode(character.GetTile());
-        UpdateVisualForMode();
-
-        if (_globals.Map is { } map)
-        {
-            ConfigureDeadReturnTargets(map);
-        }
-    }
-
-    /// <summary>
-    /// Updates the ghost's current mode, handling frightened overrides and scatter/chase flips.
-    /// </summary>
-    /// <param name="mode">The explicit mode to enter, or <c>null</c> to track the global mode.</param>
-    public void SetMode(GhostMode? mode)
-    {
-        if (mode is null)
-            mode = _mode == GhostMode.House && !_hasLeftHouse ? GhostMode.House : _globalMode;
-
-        if (mode == GhostMode.House)
-        {
-            _mode = GhostMode.House;
-            _frightenedFrames = 0;
-            _housePreparingExit = _hasLeftHouse;
-
-            _queuedDirection = _requestedDirection;
-
-            UpdateHouseExitAllowance();
-
-            UpdateSpeedForCurrentMode(_character?.GetTile());
-            UpdateVisualForMode();
-            return;
-        }
-
-
-        if (_mode == GhostMode.House && !_hasLeftHouse)
-        {
-            if (mode is GhostMode.Chase or GhostMode.Scatter)
-            {
-                _globalMode = mode.Value;
+                _dir = BlPacManDirection.Up;
+                _character.ForceDirection(_dir);
             }
 
             return;
         }
 
-
-        if (mode == GhostMode.Frightened)
+        var x = Me.LocH;
+        if (Math.Abs(x - _houseExitX) > 0.5f)
         {
-            EnterFrightenedMode();
-            return;
-        }
-
-        if (mode == GhostMode.Dead)
-        {
-            _mode = GhostMode.Dead;
-            _frightenedFrames = 0;
-            _deadPrepareEnter = false;
-
-            _queuedDirection = _requestedDirection;
-
-            UpdateHouseExitAllowance();
-            UpdateSpeedForCurrentMode(_character?.GetTile());
-            UpdateVisualForMode();
-            return;
-        }
-
-        if (mode == GhostMode.Scatter || mode == GhostMode.Chase)
-        {
-            if (_mode is GhostMode.Chase or GhostMode.Scatter && mode.Value != _mode)
-                _turnBack = true;
-
-            _globalMode = mode.Value;
-        }
-
-        _mode = mode.Value;
-        if (_mode != GhostMode.Frightened)
-            _frightenedFrames = 0;
-
-        UpdateHouseExitAllowance();
-        UpdateSpeedForCurrentMode(_character?.GetTile());
-        UpdateVisualForMode();
-    }
-
-    /// <summary>
-    /// Applies map references and per-level settings coming from the model.
-    /// </summary>
-    /// <param name="coordinator">The active gameplay coordinator.</param>
-    /// <param name="settings">The ghost tuning for the current level.</param>
-    public void Configure(GhostSettings settings, bool startOutsideHouse, int houseReleaseDelayFrames)
-    {
-        _settings = settings;
-
-        _baseSpeed = settings.Speed;
-        _tunnelSpeed = settings.TunnelSpeed;
-        _frightenedSpeed = settings.FrightenedSpeed;
-
-        _startOutsideHouse = startOutsideHouse;
-        _initialHouseReleaseDelay = Math.Max(0, houseReleaseDelayFrames);
-        _houseReleaseCounter = _initialHouseReleaseDelay;
-        _housePreparingExit = startOutsideHouse;
-        _hasLeftHouse = startOutsideHouse;
-        UpdateHouseExitAllowance();
-
-
-        var character = EnsureCharacter();
-        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
-        character.SetMap(map);
-        ConfigureHouseGeometry(map);
-        SetStartposition();
-        character.Speed = _baseSpeed;
-        character.EffectiveSpeed = _baseSpeed;
-
-        _initialDirection = DetermineInitialDirection();
-        if (_startOutsideHouse)
-        {
-            _requestedDirection = _initialDirection;
-            character.ForceDirection(_initialDirection);
-            _mode = _globalMode;
-        }
-        else
-        {
-            _houseDirection = _initialDirection;
-            if (!_houseDirection.IsVertical())
+            var direction = x < _houseExitX ? BlPacManDirection.Right : BlPacManDirection.Left;
+            if (_dir != direction)
             {
-                _houseDirection = BlPacManDirection.Up;
+                _dir = direction;
+                _character.ForceDirection(direction);
             }
 
-            _requestedDirection = _houseDirection;
-            character.ForceDirection(_houseDirection);
-            _mode = GhostMode.House;
-        }
-
-        InitializeDirectionPipeline(character.GetTile());
-        ConfigureTargets();
-        UpdateSpeedForCurrentMode(character.GetTile());
-        UpdateVisualForMode();
-        _isConfigured = true;
-    }
-
-    /// <summary>
-    /// Responds to Pac-Man losing a life by hiding the ghost until the restart animation finishes.
-    /// </summary>
-    public void OnPacManEaten() => Hide();
-
-    /// <summary>
-    /// Resets mode, speed, and direction after a Pac-Man death.
-    /// </summary>
-    public void ResetForLife()
-    {
-        var character = EnsureCharacter();
-        character.Reset();
-        _frightenedFrames = 0;
-        _frightenedDurationFrames = 0;
-        _frightenedFlashing = false;
-        _turnBack = false;
-        _housePreparingExit = _startOutsideHouse;
-        _hasLeftHouse = _startOutsideHouse;
-        _houseReleaseCounter = _initialHouseReleaseDelay;
-        _deadPrepareEnter = false;
-        UpdateHouseExitAllowance();
-
-        if (_defaultRect is { } defaultRect)
-        {
-            _savedNormalRect = defaultRect;
-        }
-
-        if (_startOutsideHouse)
-        {
-            _mode = _globalMode;
-            _requestedDirection = _initialDirection;
-            character.ForceDirection(_initialDirection);
-        }
-        else
-        {
-            _mode = GhostMode.House;
-            _houseDirection = _initialDirection;
-            if (!_houseDirection.IsVertical())
-            {
-                _houseDirection = BlPacManDirection.Up;
-            }
-
-            _requestedDirection = _houseDirection;
-            character.ForceDirection(_houseDirection);
-        }
-
-        InitializeDirectionPipeline(character.GetTile());
-        UpdateSpeedForCurrentMode(character.GetTile());
-
-        if (_globals.Map is { } map)
-        {
-            ConfigureDeadReturnTargets(map);
-        }
-    }
-
-    /// <summary>
-    /// Called when the ghost is eaten to adjust the frightened timer and ensure speed updates.
-    /// </summary>
-    /// <param name="score">The awarded score (unused, but retained for clarity).</param>
-    public void OnEaten(int score)
-    {
-        if (!_globals.State.IsMuted)
-            _Player.SoundPlayEat();
-
-        // Dead mode and speed adjustments are handled through SetMode and UpdateSpeedForCurrentMode.
-        UpdateSpeedForCurrentMode(_character?.GetTile());
-    }
-
-    /// <summary>
-    /// Shows the ghost sprite.
-    /// </summary>
-    public void Show() => EnsureCharacter().Show();
-
-    /// <summary>
-    /// Hides the ghost sprite.
-    /// </summary>
-    public void Hide() => EnsureCharacter().Hide();
-
-    /// <summary>
-    /// Loads the sprite artwork and positions the ghost at the house entrance.
-    /// </summary>
-    private void ApplyAppearance()
-    {
-        //if (_ghostRects.TryGetValue(GhostName, out var rect))
-        //{
-        //    Me.MemberSourceRect = rect;
-        //}
-        //else
-        //{
-        //    Me.MemberSourceRect = new ARect(0, 0, 16, 16);
-        //}
-
-        
-        if (_ghostRects.TryGetValue(GhostName, out var rect))
-        {
-            Me.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
-        }
-        else
-        {
-            var size = BlPacManTheme.Ghosts.SpriteSize;
-            var fallbackRect = new ARect(0, 0, size, size);
-            Me.SetMemberRect(fallbackRect, new APoint(fallbackRect.Width / 2f, fallbackRect.Height / 2f));
-        }
-
-        if (Me.MemberSourceRect is { } currentRect)
-        {
-            _defaultRect = currentRect;
-            _savedNormalRect = currentRect;
-        }
-        else
-        {
-            _defaultRect = null;
-            _savedNormalRect = null;
-        }
-        ConfigureFrightenedAnimations();
-
-        SetStartposition();
-
-        _initialDirection = DetermineInitialDirection();
-        _requestedDirection = _initialDirection;
-    }
-
-
-    private bool SetStartposition()
-    {
-        var map = _globals.Map;
-        if (map is null)
-            return false;
-
-        if (_startOutsideHouse && _houseDoorTile is not null)
-        {
-            Me.LocH = _houseDoorTile.CenterX;
-            Me.LocV = _houseDoorTile.CenterY;
-        }
-        else
-        {
-            var center = map.HouseCenter ?? map.House ?? map.GetTile(map.Width / 2, map.Height / 2);
-            if (center is null)
-                return false;
-
-            var offset = _horizontalOffsets.TryGetValue(GhostName, out var value) ? value : 0f;
-            Me.LocH = center.CenterX + offset;
-            Me.LocV = center.CenterY;
-        }
-
-        _character?.UpdateStartPosition(Me.LocH, Me.LocV);
-        return true;
-    }
-
-    /// <summary>
-    /// Lazily creates the shared character helper used to move the sprite around the tile map.
-    /// </summary>
-    private BlPacManCharacter EnsureCharacter()
-    {
-        if (_character is not null)
-        {
-            return _character;
-        }
-
-        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
-        var baseStep = TileMath.GetMovementStep(map);
-        _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
-        {
-            Step = baseStep,
-            Speed = _baseSpeed,
-            Direction = _requestedDirection,
-            Preturn = true,
-            Mode = BlPacManCharacterModes.Ghost,
-        });
-
-        _tileSubscription?.Release();
-        _tileSubscription = _character.SubscribeTileEntered(OnTileEntered);
-
-        return _character;
-    }
-
-    /// <summary>
-    /// Resolves the scatter and dead targets based on the active map.
-    /// </summary>
-    private void ConfigureTargets()
-    {
-        var map = _globals.Map;
-        if (map is null)
-            return;
-
-        _scatterTarget = DetermineScatterTarget(map);
-        _deadTarget = DetermineDeadTarget(map);
-        ConfigureDeadReturnTargets(map);
-    }
-
-    private void InitializeDirectionPipeline(Tile? tile)
-    {
-        if (_mode is GhostMode.House or GhostMode.Dead)
-        {
-            _queuedDirection = _requestedDirection;
+            _character.Move(direction);
             return;
         }
 
-        _queuedDirection = DetermineNextDirection(tile);
+        if (_dir != BlPacManDirection.Up)
+        {
+            _dir = BlPacManDirection.Up;
+            _character.ForceDirection(BlPacManDirection.Up);
+        }
+
+        _character.Move(BlPacManDirection.Up);
     }
 
-    private void ProcessDirectionPipeline(Tile? tile)
-    {
-        if (_character is not { } character)
-        {
-            return;
-        }
-
-        var activeDirection = _requestedDirection != BlPacManDirection.None
-            ? _requestedDirection
-            : character.Direction;
-
-        if (_turnBack)
-        {
-            var opposite = activeDirection.GetOpposite();
-            if (opposite != BlPacManDirection.None)
-            {
-                _requestedDirection = opposite;
-                character.ForceDirection(opposite);
-            }
-
-            _queuedDirection = DetermineNextDirection(tile);
-            _turnBack = false;
-            return;
-        }
-
-        if (_queuedDirection != BlPacManDirection.None)
-        {
-            if (_queuedDirection != _requestedDirection)
-            {
-                _requestedDirection = _queuedDirection;
-                character.ForceDirection(_requestedDirection);
-            }
-        }
-        else if (_requestedDirection == BlPacManDirection.None)
-        {
-            _requestedDirection = activeDirection;
-        }
-
-        _queuedDirection = DetermineNextDirection(tile);
-
-    }
-
-    private void ConfigureFrightenedAnimations()
-    {
-        if (_frightenedAnimationsConfigured)
-        {
-            return;
-        }
-
-        var animations = BlPacManTheme.Ghosts.FrightenedAnimations;
-
-        SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
-        {
-            foreach (var (name, definition) in animations)
-            {
-                behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
-            }
-        });
-
-        _frightenedAnimationsConfigured = true;
-    }
-
-    private void UpdateVisualForMode()
-    {
-        if (_mode == GhostMode.Frightened)
-        {
-            ConfigureFrightenedAnimations();
-            EnsureCharacter().SetAnimationOverride(
-                _frightenedFlashing
-                    ? BlPacManTheme.Ghosts.FrightenedFlashAnimation
-                    : BlPacManTheme.Ghosts.FrightenedBlueAnimation);
-        }
-        else
-        {
-            RestoreNormalAppearance();
-        }
-    }
-
-    private void RestoreNormalAppearance()
-    {
-        if (_character is { } character)
-        {
-            character.SetAnimationOverride(null);
-        }
-
-        if (_savedNormalRect is { } savedRect)
-        {
-            Me.MemberSourceRect = savedRect;
-        }
-        else if (_defaultRect is { } defaultRect)
-        {
-            Me.MemberSourceRect = defaultRect;
-        }
-
-        _frightenedFlashing = false;
-    }
-
-    private void UpdateFrightenedAnimationState()
-    {
-        if (_mode != GhostMode.Frightened || _settings is null)
-        {
-            return;
-        }
-
-        var flashes = _settings.FrightenedFlashes;
-        if (flashes <= 0 || _frightenedDurationFrames <= 0)
-        {
-            return;
-        }
-
-        var flashWindow = Math.Min(_frightenedDurationFrames, flashes * BlPacManTheme.Ghosts.FrightenedFlashWindowFrames);
-        if (flashWindow <= 0)
-        {
-            return;
-        }
-
-        var shouldFlash = _frightenedFrames <= flashWindow;
-
-        if (shouldFlash == _frightenedFlashing)
-        {
-            return;
-        }
-
-        _frightenedFlashing = shouldFlash;
-        EnsureCharacter().SetAnimationOverride(
-            shouldFlash
-                ? BlPacManTheme.Ghosts.FrightenedFlashAnimation
-                : BlPacManTheme.Ghosts.FrightenedBlueAnimation);
-    }
-
-    private void ConfigureHouseGeometry(Map map)
-    {
-        _houseEntranceTile = map.HouseCenter;
-        _houseDoorTile = _houseEntranceTile?.GetUp();
-
-        var entranceY = _houseEntranceTile?.CenterY ?? Me.LocV;
-        var doorY = _houseDoorTile?.CenterY ?? entranceY;
-
-        _houseTopBoundary = Math.Min(entranceY, doorY);
-        _houseBottomBoundary = Math.Max(entranceY, doorY);
-
-        var lowerTile = _houseEntranceTile?.GetDown();
-        if (lowerTile is not null && !lowerTile.IsWall())
-        {
-            _houseBottomBoundary = Math.Max(_houseBottomBoundary, lowerTile.CenterY);
-        }
-
-        if (Math.Abs(_houseBottomBoundary - _houseTopBoundary) < HouseBoundaryTolerance)
-        {
-            _houseBottomBoundary = _houseTopBoundary + map.TileHeight;
-        }
-    }
-
-    private void ConfigureDeadReturnTargets(Map map)
-    {
-        _deadEndY = _houseEntranceTile?.CenterY ?? Me.LocV;
-        _deadEndX = _houseEntranceTile?.CenterX ?? Me.LocH;
-        _deadEndTile = map.GetTile(_deadEndX, _deadEndY, true);
-        _deadPrepareEnter = false;
-    }
-
-    /// <summary>
-    /// Returns the corner tile that the ghost should orbit during scatter mode.
-    /// </summary>
-    private Tile? DetermineScatterTarget(Map map)
-    {
-        var maxColumn = Math.Max(0, map.Width - 1);
-        var maxRow = Math.Max(0, map.Height - 1);
-
-        return GhostName switch
-        {
-            var name when name == MrGhost.Pinky => map.GetTile(0, 0),
-            var name when name == MrGhost.Inky => map.GetTile(maxColumn, maxRow),
-            var name when name == MrGhost.Clyde => map.GetTile(0, maxRow),
-            _ => map.GetTile(maxColumn, 0),
-        };
-    }
-
-    /// <summary>
-    /// Identifies the tile inside the ghost house used when returning as eyes.
-    /// </summary>
-    private static Tile? DetermineDeadTarget(Map map)
-    {
-        return map.House?.GetRight()?.GetUp()
-            ?? map.HouseCenter
-            ?? map.GetTile(map.Width / 2, map.Height / 2);
-    }
-
-    /// <summary>
-    /// Looks up the initial direction for the named ghost.
-    /// </summary>
-    private BlPacManDirection DetermineInitialDirection()
-    {
-        return _initialDirections.TryGetValue(GhostName, out var direction) ? direction : BlPacManDirection.Left;
-    }
-
-    /// <summary>
-    /// Reacts to tile changes by refreshing the movement speed for tunnels and frightened mode.
-    /// </summary>
-    private void OnTileEntered(BlPacManTileEventData context)
-    {
-        if (context is null)
-        {
-            return;
-        }
-
-        var tile = context.Tile;
-        UpdateSpeedForCurrentMode(tile);
-
-        if (_mode is not GhostMode.House and not GhostMode.Dead)
-        {
-            ProcessDirectionPipeline(tile);
-        }
-
-        if (_housePreparingExit && _mode != GhostMode.Dead && tile is not null && !tile.IsHouse() && !tile.IsGhostHouseEntrance())
-        {
-            _housePreparingExit = false;
-
-            UpdateHouseExitAllowance();
-        }
-    }
-
-    /// <summary>
-    /// Stores the latest Pac-Man position for future target calculations.
-    /// </summary>
-    /// <summary>
-    /// Applies the correct effective speed based on the current mode and tile type.
-    /// </summary>
-    private void UpdateSpeedForCurrentMode(Tile? tile)
+    private void MoveDead(Tile tile)
     {
         if (_character is null)
         {
             return;
         }
 
-        var speed = _baseSpeed;
-        if (_mode == GhostMode.Frightened)
+        if (!_deadPreparingEntry && _deadTarget is not null && ReferenceEquals(tile, _deadTarget))
         {
-            speed = _frightenedSpeed;
-        }
-        else if (_mode == GhostMode.Dead)
-        {
-            speed = 130f;
-        }
-        else if (tile?.IsTunnel() == true)
-        {
-            speed = _tunnelSpeed;
+            _deadPreparingEntry = true;
         }
 
-        _character.EffectiveSpeed = speed;
+        if (!_deadPreparingEntry)
+        {
+            _character.Move(_dir);
+            return;
+        }
+
+        var targetX = _deadEndX;
+        if (Me.LocV < _deadEndY && _deadTarget is not null)
+        {
+            targetX = _deadTarget.CenterX;
+        }
+
+        if (Math.Abs(Me.LocH - targetX) > 0.5f)
+        {
+            var direction = Me.LocH < targetX ? BlPacManDirection.Right : BlPacManDirection.Left;
+            if (_dir != direction)
+            {
+                _dir = direction;
+                _character.ForceDirection(direction);
+            }
+
+            _character.Move(direction);
+            return;
+        }
+
+        if (Me.LocV < _deadEndY - 0.5f)
+        {
+            if (_dir != BlPacManDirection.Down)
+            {
+                _dir = BlPacManDirection.Down;
+                _character.ForceDirection(_dir);
+            }
+
+            _character.Move(BlPacManDirection.Down);
+            return;
+        }
+
+        if (Me.LocV > _deadEndY + 0.5f)
+        {
+            if (_dir != BlPacManDirection.Up)
+            {
+                _dir = BlPacManDirection.Up;
+                _character.ForceDirection(_dir);
+            }
+
+            _character.Move(BlPacManDirection.Up);
+            return;
+        }
+
+        ReviveInHouse();
     }
 
-    /// <summary>
-    /// Counts down the frightened timer and returns the ghost to the global mode when it expires.
-    /// </summary>
-    private void UpdateFrightenedTimer()
+    private void ReviveInHouse()
+    {
+        _mode = GhostMode.House;
+        _hasLeftHouse = false;
+        _deadPreparingEntry = false;
+        Me.LocH = _deadEndX;
+        Me.LocV = _deadEndY;
+        _character?.UpdateStartPosition(Me.LocH, Me.LocV);
+        PrepareHouseState();
+        UpdateSpeedForCurrentTile();
+        UpdateModeVisual();
+    }
+
+    private void PrepareHouseState()
+    {
+        _housePreparingExit = _startOutsideHouse;
+        _houseReleaseFrames = _initialHouseReleaseFrames;
+        _dir = BlPacManDirection.Up;
+        _nextDir = _dir;
+        _character?.ForceDirection(_dir);
+        if (_character is not null)
+        {
+            _character.Speed = HouseSpeed;
+            _character.EffectiveSpeed = HouseSpeed;
+        }
+        UpdateHouseExitAllowance();
+    }
+
+    private void CompleteHouseExit()
+    {
+        _hasLeftHouse = true;
+        _housePreparingExit = false;
+        _mode = _globalMode;
+        _dir = BlPacManDirection.Up;
+        _nextDir = BlPacManDirection.Up;
+        _character?.ForceDirection(BlPacManDirection.Up);
+        UpdateHouseExitAllowance();
+        UpdateSpeedForCurrentTile();
+        UpdateModeVisual();
+    }
+
+    private void AdvanceFrightenedTimer()
     {
         if (_mode != GhostMode.Frightened)
         {
             return;
         }
 
-        if (_frightenedFrames > 0)
+        if (_frightenedFrames < _frightenedDurationFrames)
         {
-            _frightenedFrames--;
+            _frightenedFrames++;
         }
 
-        UpdateFrightenedAnimationState();
-
-        if (_frightenedFrames == 0)
+        if (_frightenedFlashWindow > 0 && _frightenedFrames >= Math.Max(1, _frightenedDurationFrames - _frightenedFlashWindow))
         {
-            _mode = _globalMode;
-            _turnBack = true;
-            UpdateSpeedForCurrentMode(_character?.GetTile());
-            UpdateVisualForMode();
+            _frightenedBlink = true;
+        }
+
+        if (_frightenedFrames >= _frightenedDurationFrames)
+        {
+            ExitCurrentMode();
         }
     }
 
-    private BlPacManDirection DetermineNextDirection(Tile? currentTile)
+    private bool ShouldExitMode(Tile tile)
     {
-        if (_mode is GhostMode.House or GhostMode.Dead)
+        return _mode switch
         {
-            return _requestedDirection;
-        }
-
-        var character = _character;
-        var baseDirection = _requestedDirection;
-        if (baseDirection == BlPacManDirection.None && character is not null)
-        {
-            baseDirection = character.Direction;
-        }
-
-        if (baseDirection == BlPacManDirection.None)
-        {
-            return BlPacManDirection.None;
-        }
-
-        Tile? evaluationTile = null;
-        if (currentTile is not null)
-        {
-            evaluationTile = currentTile.Get(baseDirection);
-        }
-
-        if (evaluationTile is null && character is not null)
-        {
-            var tile = character.GetTile();
-            evaluationTile = tile?.Get(baseDirection);
-        }
-
-        if (evaluationTile is null)
-        {
-            return baseDirection;
-        }
-
-        return _mode == GhostMode.Frightened
-            ? GetRandomDirection(evaluationTile, baseDirection)
-            : FindBestDirection(evaluationTile, baseDirection, GetTargetTile());
+            GhostMode.Dead => _deadEndTile is not null && ReferenceEquals(tile, _deadEndTile),
+            GhostMode.Frightened => _frightenedFrames >= _frightenedDurationFrames,
+            GhostMode.House => _houseExitTile is not null && ReferenceEquals(tile, _houseExitTile.GetUp()),
+            _ => _mode != _globalMode,
+        };
     }
 
-    /// <summary>
-    /// Chooses the direction that brings the ghost closest to the target while avoiding reversals.
-    /// </summary>
-    private BlPacManDirection FindBestDirection(Tile? tile, BlPacManDirection currentDirection, Tile? target)
+    private void EnterFrightenedMode()
     {
-        var evaluationTile = tile ?? _character?.GetTile();
-        if (evaluationTile is null)
+        _mode = GhostMode.Frightened;
+        _frightenedFrames = 0;
+        _frightenedBlink = false;
+        _turnBack = true;
+        UpdateSpeedForCurrentTile();
+        UpdateModeVisual();
+    }
+
+    private void OnTileEntered(BlPacManTileEventData context)
+    {
+        if (context.Tile is null || _character is null)
         {
-            return currentDirection;
+            return;
         }
 
-        var directions = new[]
+        UpdateSpeedForCurrentTile(context.Tile);
+
+        if (_turnBack)
+        {
+            var opposite = _character.Direction.GetOpposite();
+            if (opposite != BlPacManDirection.None)
+            {
+                _dir = opposite;
+                _character.ForceDirection(opposite);
+            }
+
+            _nextDir = DetermineNextDirection(context.Tile);
+            _turnBack = false;
+        }
+        else
+        {
+            if (_nextDir != BlPacManDirection.None)
+            {
+                _dir = _nextDir;
+                _character.ForceDirection(_dir);
+            }
+
+            _nextDir = DetermineNextDirection(context.Tile);
+        }
+
+    }
+
+    private BlPacManDirection DetermineNextDirection(Tile tile)
+    {
+        if (_mode == GhostMode.Frightened)
+        {
+            return GetRandomDirection(tile);
+        }
+
+        var currentDirection = _dir != BlPacManDirection.None ? _dir : _character?.Direction ?? BlPacManDirection.Left;
+        var nextTile = tile.Get(currentDirection) ?? tile;
+
+        var target = _mode == GhostMode.Chase
+            ? GetChaseTargetTile()
+            : _mode == GhostMode.Scatter
+                ? _scatterTarget
+                : _deadTarget;
+
+        var preferred = new[]
         {
             BlPacManDirection.Up,
             BlPacManDirection.Left,
             BlPacManDirection.Down,
-            BlPacManDirection.Right
+            BlPacManDirection.Right,
         };
 
-        BlPacManDirection bestDirection = currentDirection;
+        var best = currentDirection;
         var bestDistance = float.PositiveInfinity;
 
-        foreach (var direction in directions)
+        foreach (var option in preferred)
         {
-            if (direction == currentDirection.GetOpposite())
+            if (option == currentDirection.GetOpposite())
             {
                 continue;
             }
 
-            if (!CanMove(direction, evaluationTile))
+            if (!CanMove(option, nextTile))
             {
                 continue;
             }
 
-            var candidate = evaluationTile.Get(direction);
+            var candidate = nextTile.Get(option);
             var distance = TileMath.GetDistance(candidate, target);
             if (distance < bestDistance)
             {
                 bestDistance = distance;
-                bestDirection = direction;
+                best = option;
             }
         }
 
-        if (bestDistance.Equals(float.PositiveInfinity))
-        {
-            var opposite = currentDirection.GetOpposite();
-            if (opposite != BlPacManDirection.None && CanMove(opposite, evaluationTile))
-            {
-                return opposite;
-            }
-
-        }
-
-        return bestDirection;
+        return best;
     }
 
-    /// <summary>
-    /// Selects a random available direction during frightened mode, avoiding reversals where possible.
-    /// </summary>
-    private BlPacManDirection GetRandomDirection(Tile? tile, BlPacManDirection currentDirection)
+    private BlPacManDirection GetRandomDirection(Tile tile)
     {
-        var evaluationTile = tile ?? _character?.GetTile();
-        if (evaluationTile is null)
-        {
-            return currentDirection;
-        }
+        var currentDirection = _dir != BlPacManDirection.None ? _dir : _character?.Direction ?? BlPacManDirection.Left;
+        var nextTile = tile.Get(currentDirection) ?? tile;
 
-        var options = new List<BlPacManDirection>
-        {
-            BlPacManDirection.Up,
-            BlPacManDirection.Left,
-            BlPacManDirection.Down,
-            BlPacManDirection.Right
-        };
+        var directions = new[] { BlPacManDirection.Up, BlPacManDirection.Right, BlPacManDirection.Down, BlPacManDirection.Left };
+        var start = _random.Next(4);
 
-        for (var i = options.Count - 1; i >= 0; i--)
+        for (var i = 0; i < directions.Length; i++)
         {
-            var option = options[i];
-            if (option == currentDirection.GetOpposite() || !CanMove(option, evaluationTile))
+            var option = directions[(start + i) % directions.Length];
+            if (option == currentDirection.GetOpposite())
             {
-                options.RemoveAt(i);
+                continue;
+            }
+
+            if (CanMove(option, nextTile))
+            {
+                return option;
             }
         }
 
-        if (options.Count == 0)
-        {
-            var opposite = currentDirection.GetOpposite();
-            if (opposite != BlPacManDirection.None && CanMove(opposite, evaluationTile))
-            {
-                return opposite;
-            }
-
-            return currentDirection;
-        }
-
-        var index = _random.Next(options.Count);
-        return options[index];
+        var reverse = currentDirection.GetOpposite();
+        return reverse == BlPacManDirection.None ? currentDirection : reverse;
     }
 
-    /// <summary>
-    /// Computes the tile the ghost should head towards based on its current mode.
-    /// </summary>
-    private Tile? GetTargetTile()
-    {
-        return _mode switch
-        {
-            GhostMode.Chase => GetChaseTargetTile(),
-            GhostMode.Dead => _deadTarget,
-            GhostMode.Scatter => _scatterTarget,
-            _ => _scatterTarget,
-        };
-    }
-
-    /// <summary>
-    /// Calculates the chase target tile according to each ghost's personality rules.
-    /// </summary>
-    private Tile? GetChaseTargetTile()
-    {
-        var pacman = _globals.State.PacManPosition;
-        if (pacman is not { Tile: { } pacTileNonNull })
-            return null;
-
-        var direction = pacman.Direction;
-
-        if (GhostName == MrGhost.Pinky)
-            return StepForward(pacTileNonNull, direction, 4) ?? pacTileNonNull;
-
-        if (GhostName == MrGhost.Inky)
-        {
-            var ahead = StepForward(pacTileNonNull, direction, 2);
-            var blinkyTile = _globals.GhostManager.FindGhost(MrGhost.Blinky)?.CurrentTile;
-
-            if (ahead is null || blinkyTile is null)
-            {
-                return ahead ?? pacTileNonNull;
-            }
-
-            var offsetCol = ahead.Column - blinkyTile.Column;
-            var offsetRow = ahead.Row - blinkyTile.Row;
-            var targetMap = _globals.Map;
-            return targetMap?.GetTile(ahead.Column + offsetCol, ahead.Row + offsetRow);
-        }
-
-        if (GhostName == MrGhost.Clyde)
-        {
-            var currentTile = _character?.GetTile();
-            if (currentTile is null)
-            {
-                return pacTileNonNull;
-            }
-
-            var distance = TileMath.GetDistance(currentTile, pacTileNonNull);
-            if (distance <= 8 * pacTileNonNull.Width)
-            {
-                return _scatterTarget;
-            }
-
-            return pacTileNonNull;
-        }
-
-        return pacTileNonNull;
-    }
-
-    /// <summary>
-    /// Returns the tile lying a number of steps ahead in the provided direction.
-    /// </summary>
     private static Tile? StepForward(Tile? tile, BlPacManDirection direction, int steps)
     {
         var current = tile;
@@ -1264,28 +814,120 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return current;
     }
 
-    /// <summary>
-    /// Determines whether the ghost may enter the next tile, considering walls and the house rules.
-    /// </summary>
-    private bool CanMove(BlPacManDirection direction, Tile? tile)
+    private Tile? ResolveInkyTarget(Tile? pacmanTile, BlPacManDirection direction, Tile? blinkyTile)
     {
-        var origin = tile ?? _character?.GetTile();
-        if (origin is null)
+        pacmanTile ??= _globals.State.PacManPosition?.Tile;
+        blinkyTile ??= _globals.GhostManager.FindGhost(MrGhost.Blinky)?.CurrentTile;
+
+        var reference = StepForward(pacmanTile, direction, 2) ?? pacmanTile;
+        if (reference is null || blinkyTile is null)
         {
-            return false;
+            return reference;
+        }
+
+        var offsetColumn = reference.Column - blinkyTile.Column;
+        var offsetRow = reference.Row - blinkyTile.Row;
+
+        return reference.Map.GetTile(reference.Column + offsetColumn, reference.Row + offsetRow);
+    }
+
+    private Tile? ResolveClydeTarget(Tile? pacmanTile, Tile? clydeTileOverride)
+    {
+        pacmanTile ??= _globals.State.PacManPosition?.Tile;
+        var current = clydeTileOverride ?? _character?.GetTile();
+
+        if (pacmanTile is null || current is null)
+        {
+            return pacmanTile;
+        }
+
+        var distance = TileMath.GetDistance(pacmanTile, current);
+        return distance >= BlPacManTheme.Actor.SpriteSize ? pacmanTile : _scatterTarget;
+    }
+
+    private void UpdateSpeedForCurrentTile(Tile? tile = null)
+    {
+        if (_character is null)
+        {
+            return;
+        }
+
+        var speed = _baseSpeed;
+
+        if (_mode == GhostMode.Frightened)
+        {
+            speed = _frightenedSpeed;
+        }
+        else if (_mode == GhostMode.Dead)
+        {
+            speed = DeadSpeed;
+        }
+        else if (tile?.IsTunnel() == true)
+        {
+            speed = _tunnelSpeed;
+        }
+
+        if (_mode == GhostMode.House)
+        {
+            speed = HouseSpeed;
+        }
+
+        _character.EffectiveSpeed = speed;
+    }
+
+    private void UpdateModeVisual()
+    {
+        if (_mode == GhostMode.Frightened)
+        {
+            EnsureFrightenedAnimations();
+
+            var animation = _frightenedBlink
+                ? BlPacManTheme.Ghosts.FrightenedFlashAnimation
+                : BlPacManTheme.Ghosts.FrightenedBlueAnimation;
+
+            SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior => behavior.Play(animation));
+            return;
+        }
+
+        if (_savedRect is not null)
+        {
+            Me.SetMemberRect(_savedRect.Value, new APoint(_savedRect.Value.Width / 2f, _savedRect.Value.Height / 2f));
+        }
+    }
+
+    private void ApplyAppearance()
+    {
+        if (SpriteRects.TryGetValue(GhostName, out var rect))
+        {
+            Me.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
+            _defaultRect = rect;
+            _savedRect = rect;
+        }
+        else
+        {
+            var size = BlPacManTheme.Ghosts.SpriteSize;
+            var fallback = new ARect(0, 0, size, size);
+            Me.SetMemberRect(fallback, new APoint(fallback.Width / 2f, fallback.Height / 2f));
+            _defaultRect = fallback;
+            _savedRect = fallback;
+        }
+
+        _frightenedAnimationsConfigured = false;
+    }
+
+    private BlPacManDirection DetermineInitialDirection()
+    {
+        return InitialDirections.TryGetValue(GhostName, out var value) ? value : BlPacManDirection.Left;
+    }
+
+    private bool CanMove(BlPacManDirection direction, Tile origin)
+    {
+        if (origin.IsGhostHouseEntrance() && direction == BlPacManDirection.Up)
+        {
+            return true;
         }
 
         var next = origin.Get(direction);
-        if (_mode == GhostMode.Dead)
-        {
-            return next is null || !next.IsWall();
-        }
-
-        if (origin.IsGhostHouseEntrance() && direction == BlPacManDirection.Up)
-        {
-            return next is not null && !next.IsWall();
-        }
-
         if (next is null)
         {
             return false;
@@ -1296,8 +938,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return false;
         }
 
-        var insideHouseRegion = origin.IsHouse() || origin.IsGhostHouseEntrance();
-        if ((next.IsHouse() || next.IsGhostHouseEntrance()) && !insideHouseRegion)
+        var insideHouse = origin.IsHouse() || origin.IsGhostHouseEntrance();
+        if ((next.IsHouse() || next.IsGhostHouseEntrance()) && !insideHouse)
         {
             return false;
         }
@@ -1305,30 +947,55 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return !next.IsHouse();
     }
 
-    /// <summary>
-    /// Switches the ghost into frightened mode, reversing its direction and slowing it down.
-    /// </summary>
-    private void EnterFrightenedMode()
+    private void UpdateHouseExitAllowance()
     {
-        if (_mode == GhostMode.Dead || (_mode == GhostMode.House && !_hasLeftHouse))
+        if (_character is null)
         {
             return;
         }
 
-        _frightenedFrames = _settings is null
-            ? 180
-            : Math.Max(1, (int)Math.Round(_settings.FrightenedDuration.TotalSeconds * 60));
+        _character.AllowHouseExit = _housePreparingExit || _mode == GhostMode.Dead;
+    }
 
-        if (Me.MemberSourceRect is { } frightenedEntryRect)
+    private void EnsureFrightenedAnimations()
+    {
+        if (_frightenedAnimationsConfigured)
         {
-            _savedNormalRect = frightenedEntryRect;
+            return;
         }
-        _frightenedDurationFrames = _frightenedFrames;
-        _frightenedFlashing = false;
 
-        _mode = GhostMode.Frightened;
-        _turnBack = true;
-        UpdateSpeedForCurrentMode(_character?.GetTile());
-        UpdateVisualForMode();
+        var animations = BlPacManTheme.Ghosts.FrightenedAnimations;
+        SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
+        {
+            foreach (var (name, definition) in animations)
+            {
+                behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
+            }
+        });
+
+        _frightenedAnimationsConfigured = true;
+    }
+
+    private BlPacManCharacter EnsureCharacter()
+    {
+        if (_character is not null)
+        {
+            return _character;
+        }
+
+        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialised.");
+        var baseStep = TileMath.GetMovementStep(map);
+        _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
+        {
+            Step = baseStep,
+            Speed = _baseSpeed,
+            Direction = _dir,
+            Preturn = true,
+            Mode = BlPacManCharacterModes.Ghost,
+        });
+
+        _tileSubscription?.Release();
+        _tileSubscription = _character.SubscribeTileEntered(OnTileEntered);
+        return _character;
     }
 }
