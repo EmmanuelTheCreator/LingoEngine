@@ -46,6 +46,18 @@ internal static class TileMath
 
         return MathF.Max(1f, baseSize / 4f);
     }
+
+    public static float ClampVerticalPosition(float y, int mapHeight)
+    {
+        if (mapHeight <= 0)
+            return y;
+
+        if (y < 0)
+            return 0f;
+
+        var max = MathF.Max(0f, mapHeight - 1f);
+        return y >= mapHeight ? max : y;
+    }
 }
 public sealed class Tile
 {

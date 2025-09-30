@@ -770,6 +770,15 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             }
         }
 
+        if (float.IsPositiveInfinity(bestDistance))
+        {
+            var reverse = currentDirection.GetOpposite();
+            if (reverse != BlPacManDirection.None && CanMove(reverse, nextTile))
+            {
+                return reverse;
+            }
+        }
+
         return best;
     }
 
