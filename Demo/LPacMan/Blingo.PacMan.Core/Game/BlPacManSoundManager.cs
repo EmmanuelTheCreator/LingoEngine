@@ -18,7 +18,7 @@ namespace Blingo.PacMan.Core.Game
         public void KeyDown(BlingoKeyEvent key)
         {
             // 'S' toggles sound for the attract mode.
-            if (key.KeyPressed(83))
+            if (key.Key == "S")
                 ToggleSound();
         }
 

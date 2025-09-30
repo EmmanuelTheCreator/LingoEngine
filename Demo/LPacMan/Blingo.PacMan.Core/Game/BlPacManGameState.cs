@@ -16,7 +16,7 @@ internal sealed class BlPacManGameState
 
     private GlobalVars _globalVars;
 
-    public bool IsMuted { get; set; }
+    public bool IsMuted { get; set; } = true;
     public bool IsPaused => _globalVars.PauseBehavior?.IsPaused ?? false;
     public bool Win { get; set; }
     public bool IsGameOver => Game.IsGameOver;
@@ -48,9 +48,7 @@ internal sealed class BlPacManGameState
    
     public void Reset()
     {
-       
         Win = false;
-        IsMuted = false;
         PacManEatenPending = false;
         PauseFrames = 0;
         StartCountdown = 2;

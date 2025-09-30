@@ -127,9 +127,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     public void ExitFrame()
     {
         if (!_configured || _character is null)
-        {
             return;
-        }
 
         if (_globals.State.IsGameplayFrozen)
         {
@@ -141,9 +139,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         var tile = _character.GetTile();
         if (tile is null)
-        {
             return;
-        }
 
         if (ShouldExitMode(tile))
         {

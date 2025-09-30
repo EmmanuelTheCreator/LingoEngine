@@ -80,11 +80,11 @@ public static class BlPacManTheme
     public static class Ghosts
     {
         public const int SpriteSize = Tiles.Size * 2;
-        private const int FrightenedRowIndex = 20;
+        private const int FrightenedRowIndex = 5;
         private const int FrightenedBlueFirstColumn = 0;
-        private const int FrightenedBlueSecondColumn = 1;
-        private const int FrightenedWhiteFirstColumn = 16;
-        private const int FrightenedWhiteSecondColumn = 18;
+        private const int FrightenedBlueSecondColumn = 2;
+        private const int FrightenedWhiteFirstColumn = 1;
+        private const int FrightenedWhiteSecondColumn = 3;
         private const int DefaultFrightenedFrameDelay = 6;
         public const string FrightenedBlueAnimation = "ghost-frightened-blue";
         public const string FrightenedFlashAnimation = "ghost-frightened-flash";
