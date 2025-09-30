@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Blingo.PacMan.Core.Datas;
@@ -21,6 +23,10 @@ public sealed class BlPacManGhostBehaviorTests
     private static readonly MethodInfo CanMoveMethod = typeof(BlPacManGhostBehavior)
         .GetMethod("CanMove", BindingFlags.Instance | BindingFlags.NonPublic)
         ?? throw new InvalidOperationException("Unable to access CanMove method for testing.");
+
+    private static readonly MethodInfo DetermineNextDirectionMethod = typeof(BlPacManGhostBehavior)
+        .GetMethod("DetermineNextDirection", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Unable to access DetermineNextDirection method for testing.");
 
     [Fact]
     public void CanMove_allows_ghosts_to_leave_house_through_doorway()
@@ -49,6 +55,31 @@ public sealed class BlPacManGhostBehaviorTests
         var canMove = (bool)CanMoveMethod.Invoke(behavior, new object[] { BlPacManDirection.Down, outside })!;
 
         canMove.Should().BeFalse();
+    }
+
+    [Fact]
+    public void DetermineNextDirection_reverses_when_forward_is_blocked()
+    {
+        var layout = new[]
+        {
+            "===",
+            "=.=",
+            "=.=",
+            "===",
+        };
+
+        var globals = PrepareGlobalsWithMap(layout);
+        var ghost = CreateBehavior(globals);
+        SetField(ghost, "_mode", GhostMode.Scatter);
+
+        var deadEnd = globals.Map.GetTile(1, 1) ?? throw new InvalidOperationException();
+
+        SetField(ghost, "_dir", BlPacManDirection.Up);
+        SetField(ghost, "_scatterTarget", deadEnd);
+
+        var direction = (BlPacManDirection)DetermineNextDirectionMethod.Invoke(ghost, new object[] { deadEnd })!;
+
+        direction.Should().Be(BlPacManDirection.Down);
     }
 
     [Fact]
@@ -163,10 +194,10 @@ public sealed class BlPacManGhostBehaviorTests
         closeTarget.Should().BeSameAs(scatter);
     }
 
-    private static GlobalVars PrepareGlobalsWithMap()
+    private static GlobalVars PrepareGlobalsWithMap(IEnumerable<string>? layout = null)
     {
         var globals = new GlobalVars();
-        var map = new Map(Maps.Map1);
+        var map = new Map(layout ?? Maps.Map1);
         var managerField = typeof(BlLevelManager).GetField("_map", BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
         managerField.SetValue(globals.LevelManager, map);
         return globals;

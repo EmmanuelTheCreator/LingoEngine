@@ -65,7 +65,24 @@ public sealed class Map
         }
     }
 
-    public Tile? GetTile(float column, float row, bool inPixels = false) => GetTile((int)column, (int)row, inPixels);
+    public Tile? GetTile(float column, float row, bool inPixels = false)
+    {
+        if (!inPixels)
+        {
+            return GetTile((int)MathF.Floor(column), (int)MathF.Floor(row));
+        }
+
+        if (_tiles.Count == 0)
+            return null;
+
+        if (TileWidth == 0 || TileHeight == 0)
+            return null;
+
+        var columnIndex = (int)MathF.Floor(column / TileWidth);
+        var rowIndex = (int)MathF.Floor(row / TileHeight);
+
+        return GetTile(columnIndex, rowIndex);
+    }
 
     public Tile? GetTile(int column, int row, bool inPixels = false)
     {
@@ -74,15 +91,13 @@ public sealed class Map
 
         if (inPixels)
         {
-            if (TileWidth == 0 || TileHeight == 0)
-                return null;
-
-            column /= TileWidth;
-            row /= TileHeight;
+            return GetTile((float)column, (float)row, true);
         }
 
         column = WrapColumn(column);
-        row = WrapRow(row);
+
+        if (row < 0 || row >= Height)
+            return null;
 
         var index = row * Width + column;
         if ((uint)index >= (uint)_tiles.Count)
@@ -116,16 +131,4 @@ public sealed class Map
         return column;
     }
 
-    private int WrapRow(int row)
-    {
-        if (Height == 0)
-            return row;
-
-        if (row > Height - 1)
-            row = 0;
-        else if (row < 0)
-            row = Height - 1;
-
-        return row;
-    }
 }
