@@ -54,14 +54,14 @@ namespace Blingo.PacMan.Core.Game
             if (score == 0)
                 return;
 
-            _score = Math.Max(0, _score + score);
-            OnScoreChanged();
+            SetScore(_score + score);
         }
 
         public void SetScore(int score)
         {
             _score = Math.Max(0, score);
-            _memberScore1.Text = score.ToString();
+            _memberScore1.Text = score.ToString("D5");
+            OnScoreChanged();
         }
         public void SetHighScore(int score)
         {
@@ -73,7 +73,6 @@ namespace Blingo.PacMan.Core.Game
                 return;
 
             SetScore(0);
-            OnScoreChanged();
         }
         private void OnScoreChanged()
         {
@@ -91,7 +90,7 @@ namespace Blingo.PacMan.Core.Game
         private void SetHighScore()
         {
             _highScore = _score;
-            _memberHighScore.Text = _highScore.ToString();
+            _memberHighScore.Text = _highScore.ToString("D5");
             _highScoreChanged.Publish(_highScore);
         }
     }

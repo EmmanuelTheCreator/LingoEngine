@@ -93,11 +93,11 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                 })
             .AddCastLib("Texts", true, c => c
                 .AddTextMember("T_Label_HighScore", "High Score", AbstTextAlignment.Center, 85)
-                .AddTextMember("T_HighScore","1", AbstTextAlignment.Center, 75)
+                .AddTextMember("T_HighScore", "00000", AbstTextAlignment.Center, 75)
                 .AddTextMember("T_Player1_Label","1UP")
                 .AddTextMember("T_Player2_Label","2UP")
-                .AddTextMember("T_Player1_Score","2")
-                .AddTextMember("T_Player2_Score","3", AbstTextAlignment.Right,75)
+                .AddTextMember("T_Player1_Score","00000", AbstTextAlignment.Left, 75)
+                .AddTextMember("T_Player2_Score", "00000", AbstTextAlignment.Right,75)
                 .AddTextMember("T_Player1_Text","Player One", AbstTextAlignment.Center, 85, AColor.FromHex("#55eeee"))
                 .AddTextMember("T_Player2_Text","Player Two", AbstTextAlignment.Center, 85, AColor.FromHex("#55eeee"))
                 .AddTextMember("T_Ready","Ready!", AbstTextAlignment.Center, 75, AColor.FromHex("#ff0000"))
@@ -202,7 +202,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                 sprite.Height = GameHeight;
             })
             .SetMember("start")
-            .AddBehavior<BlPacManSoundManager>();
+            .AddBehavior<BlPacManSoundBehavior>();
 
         _movie.AddSprite(PCSpriteNums.GameBG, 1, GameStartFrame - 1, 0, 0, sprite =>
             {

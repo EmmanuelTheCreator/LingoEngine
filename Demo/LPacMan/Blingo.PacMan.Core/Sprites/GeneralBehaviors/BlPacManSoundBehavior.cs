@@ -5,11 +5,11 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Game
 {
-    internal class BlPacManSoundManager : BlingoSpriteBehavior,IHasKeyDownEvent
+    internal class BlPacManSoundBehavior : BlingoSpriteBehavior,IHasKeyDownEvent
     {
         private readonly GlobalVars _globals;
 
-        public BlPacManSoundManager(IBlingoMovieEnvironment env, GlobalVars globals) : base(env)
+        public BlPacManSoundBehavior(IBlingoMovieEnvironment env, GlobalVars globals) : base(env)
         {
             _globals = globals;
         }
@@ -17,7 +17,7 @@ namespace Blingo.PacMan.Core.Game
         /// <inheritdoc />
         public void KeyDown(BlingoKeyEvent key)
         {
-            // 'S' toggles sound for the attract mode.
+            // 'S' toggles sound .
             if (key.Key == "S")
                 ToggleSound();
         }
