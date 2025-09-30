@@ -613,13 +613,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         }
 
         var mapHeight = Map.Height * Map.TileHeight;
-        if (mapHeight > 0)
-        {
-            if (Y < 0)
-                Y = mapHeight;
-            else if (Y > mapHeight)
-                Y = 0;
-        }
+        Y = TileMath.ClampVerticalPosition(Y, mapHeight);
     }
 
     private void OnTileEntered(Tile tile)
