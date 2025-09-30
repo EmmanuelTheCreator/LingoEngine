@@ -381,7 +381,7 @@ namespace AbstEngine.Director.LGodot
         protected virtual void OnResizing(bool firstResize,Vector2 size)
         {
             var contentSize = new Vector2I((int)size.X,(int) size.Y - TitleBarHeight);
-            _window.ResizingContentFromFW(firstResize, contentSize.X, contentSize.Y);
+            _window?.ResizingContentFromFW(firstResize, contentSize.X, contentSize.Y);
         }
 
 
@@ -403,7 +403,7 @@ namespace AbstEngine.Director.LGodot
         public void SetThePosition(Vector2 pos)
         {
             Position = pos;
-            _window.SetPositionFromFW((int)Position.X, (int)Position.Y);
+            _window?.SetPositionFromFW((int)Position.X, (int)Position.Y);
         }
 
         public virtual void SetSize(int width, int height)

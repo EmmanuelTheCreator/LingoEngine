@@ -58,27 +58,22 @@ namespace BlingoEngine.LGodot.Texts
 
         private void AlignNode(GodotMemberTextNode node)
         {
-            if (node == null)
+            if (node == null || _blingoMemberText ==null)
                 return;
 
             var size = node.Node2D.Size;
             if (size == Vector2.Zero)
             {
                 size = node.Node2D.CustomMinimumSize;
-                if (size == Vector2.Zero && _blingoMemberText != null)
-                {
+                if (size == Vector2.Zero)
                     size = new Vector2(_blingoMemberText.Width, _blingoMemberText.Height);
-                }
             }
 
-            Vector2 regPoint = _blingoMemberText?.RegPoint.ToVector2() ?? size / 2f;
-            if (regPoint == Vector2.Zero && size != Vector2.Zero && _blingoMemberText == null)
-            {
-                regPoint = size / 2f;
-            }
+            var regPoint = _blingoMemberText!.RegPoint.ToVector2();
+            regPoint -= size / 2f;
 
-            node.Node2D.Position = -regPoint;
-            node.Node2D.SetPivotOffset(regPoint);
+            node.Node2D.Position = regPoint;
+            //node.Node2D.SetPivotOffset(regPoint);
         }
 
 

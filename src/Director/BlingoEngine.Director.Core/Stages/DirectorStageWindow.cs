@@ -15,6 +15,7 @@ using BlingoEngine.FrameworkCommunication;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 using BlingoEngine.Stages;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BlingoEngine.Director.Core.Stages;
 
@@ -29,7 +30,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
 {
     private const float ScrollAreaWidth = 3000f;
     private const float ScrollAreaHeight = 2000f;
-    private const float StagePadding = 40f;
+    private const float StagePadding = 0f;
 
     private readonly IBlingoPlayer _player;
     private readonly IHistoryManager _historyManager;
@@ -70,7 +71,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
     protected IBlingoStage Stage { get; }
 
     public StageTool SelectedTool { get; private set; }
-
+    public AbstPanel StageLayer => _stageLayer;
     public StageIconBar IconBar { get; }
 
     public DirectorStageWindowV2(
@@ -121,37 +122,34 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
         _stageBackgroundPanel.BackgroundColor = Stage.BackgroundColor;
         _stageBackgroundPanel.Width = Stage.Width;
         _stageBackgroundPanel.Height = Stage.Height;
-        _stageLayer.AddItem(_stageBackgroundPanel, StagePadding, StagePadding);
+       
+
+        var stageContainer = serviceProvider.GetRequiredService<IBlingoFrameworkStageContainer>();
 
         Stage.X = StagePadding;
         Stage.Y = StagePadding;
-        _stageLayer.AddItem(Stage);
+        //_stageLayer.AddItem(Stage);
 
         _boundingBoxesCanvas = _boundingBoxes.Canvas;
         _boundingBoxesCanvas.X = StagePadding;
         _boundingBoxesCanvas.Y = StagePadding;
-        _stageLayer.AddItem(_boundingBoxesCanvas);
-
+        
         _motionPathCanvas = _motionPath.Canvas;
         _motionPathCanvas.X = StagePadding;
         _motionPathCanvas.Y = StagePadding;
-        _stageLayer.AddItem(_motionPathCanvas);
 
         _guidesCanvas = _guides.Canvas;
         _guidesCanvas.X = StagePadding;
         _guidesCanvas.Y = StagePadding;
-        _stageLayer.AddItem(_guidesCanvas);
 
         _selectionCanvas = factory.CreateGfxCanvas("StageSelectionCanvas", (int)Stage.Width, (int)Stage.Height);
         _selectionCanvas.X = StagePadding;
         _selectionCanvas.Y = StagePadding;
         _selectionCanvas.Visibility = false;
-        _stageLayer.AddItem(_selectionCanvas);
 
         _spriteSummaryCanvas = _spriteSummary.Canvas;
         _spriteSummaryCanvas.X = StagePadding;
         _spriteSummaryCanvas.Y = StagePadding;
-        _stageLayer.AddItem(_spriteSummaryCanvas);
 
         _stageHostPanel = factory.ComponentFactory.CreatePanel("StageHost");
         _stageHostPanel.Width = ScrollAreaWidth;
@@ -166,7 +164,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
 
         _rootPanel.AddItem(_scrollContainer);
         _rootPanel.AddItem(IconBar.Panel);
-        Content = _rootPanel;
+       
 
         MinimumWidth = 200;
         MinimumHeight = 150;
@@ -199,6 +197,17 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
     {
         base.OnInit(frameworkWindow);
         Title = "Stage";
+        Content = _rootPanel;
+        _stageLayer.AddItem(_stageBackgroundPanel, StagePadding, StagePadding);
+    }
+    public void ComposeStageLayers()
+    {
+        
+        _stageLayer.AddItem(_boundingBoxesCanvas);
+        _stageLayer.AddItem(_motionPathCanvas);
+        _stageLayer.AddItem(_guidesCanvas);
+        _stageLayer.AddItem(_selectionCanvas);
+        _stageLayer.AddItem(_spriteSummaryCanvas);
     }
 
     private void Player_ActiveMovieChanged(IBlingoMovie? movie)
@@ -294,6 +303,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
         IconBar.Panel.Width = width;
         IconBar.Panel.Y = _scrollContainer.Height;
         IconBar.Panel.X = 0;
+        CenterScrollToStage();
     }
 
     protected override void OnRaiseKeyDown(AbstKeyEvent blingoKey)
@@ -498,30 +508,30 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
         Stage.X = StagePadding;
         Stage.Y = StagePadding;
 
-        _boundingBoxesCanvas.Width = Stage.Width;
-        _boundingBoxesCanvas.Height = Stage.Height;
-        _boundingBoxesCanvas.X = StagePadding;
-        _boundingBoxesCanvas.Y = StagePadding;
+        //_boundingBoxesCanvas.Width = Stage.Width;
+        //_boundingBoxesCanvas.Height = Stage.Height;
+        //_boundingBoxesCanvas.X = StagePadding;
+        //_boundingBoxesCanvas.Y = StagePadding;
 
-        _motionPathCanvas.Width = Stage.Width;
-        _motionPathCanvas.Height = Stage.Height;
-        _motionPathCanvas.X = StagePadding;
-        _motionPathCanvas.Y = StagePadding;
+        //_motionPathCanvas.Width = Stage.Width;
+        //_motionPathCanvas.Height = Stage.Height;
+        //_motionPathCanvas.X = StagePadding;
+        //_motionPathCanvas.Y = StagePadding;
 
         _guidesCanvas.Width = Stage.Width;
         _guidesCanvas.Height = Stage.Height;
         _guidesCanvas.X = StagePadding;
         _guidesCanvas.Y = StagePadding;
 
-        _selectionCanvas.Width = Stage.Width;
-        _selectionCanvas.Height = Stage.Height;
-        _selectionCanvas.X = StagePadding;
-        _selectionCanvas.Y = StagePadding;
+        //_selectionCanvas.Width = Stage.Width;
+        //_selectionCanvas.Height = Stage.Height;
+        //_selectionCanvas.X = StagePadding;
+        //_selectionCanvas.Y = StagePadding;
 
-        _spriteSummaryCanvas.Width = Stage.Width;
-        _spriteSummaryCanvas.Height = Stage.Height;
-        _spriteSummaryCanvas.X = StagePadding;
-        _spriteSummaryCanvas.Y = StagePadding;
+        //_spriteSummaryCanvas.Width = Stage.Width;
+        //_spriteSummaryCanvas.Height = Stage.Height;
+        //_spriteSummaryCanvas.X = StagePadding;
+        //_spriteSummaryCanvas.Y = StagePadding;
 
         _stageLayer.Width = Stage.Width + StagePadding * 2f;
         _stageLayer.Height = Stage.Height + StagePadding * 2f;

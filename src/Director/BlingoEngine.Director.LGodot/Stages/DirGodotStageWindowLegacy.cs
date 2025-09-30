@@ -20,7 +20,7 @@ namespace BlingoEngine.Director.LGodot.Movies;
 /// <summary>
 /// Legacy Godot stage window retained for reference.
 /// </summary>
-internal partial class DirGodotStageWindowLegacy : BaseGodotWindow, IDirFrameworkStageWindow, IFrameworkFor<DirectorStageWindow>
+internal partial class DirGodotStageWindowLegacy : BaseGodotWindow, IDirFrameworkStageWindow //, IFrameworkFor<DirectorStageWindow>
 {
     private const int IconBarHeight = 12;
     private readonly BlingoGodotStageContainer _stageContainer;
