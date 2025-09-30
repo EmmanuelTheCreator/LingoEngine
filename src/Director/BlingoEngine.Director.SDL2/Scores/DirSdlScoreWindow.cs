@@ -142,6 +142,7 @@ internal class DirSdlScoreWindow : AbstSdlWindow, IDirFrameworkScoreWindow, IDis
         _masterScroller.Y = topHeight;
         _masterScroller.Width = Width - _gfxValues.ChannelInfoWidth;
         _masterScroller.Height = Height - topHeight - FooterMargin;
+        _directorScoreWindow.UpdateViewportSize(_masterScroller.Width, _masterScroller.Height);
 
         _leftChannelsScroller.X = 0;
         _leftChannelsScroller.Y = topHeight;
@@ -185,6 +186,13 @@ internal class DirSdlScoreWindow : AbstSdlWindow, IDirFrameworkScoreWindow, IDis
             _topContainer.ScrollX = _lastScrollH;
             _leftChannelsScroller.ScrollVertical = _lastScrollV;
         }
+    }
+
+    public void ScrollTo(float horizontal, float vertical)
+    {
+        _masterScroller.ScrollHorizontal = horizontal;
+        _masterScroller.ScrollVertical = vertical;
+        UpdateScroll();
     }
 
     public new void Dispose()

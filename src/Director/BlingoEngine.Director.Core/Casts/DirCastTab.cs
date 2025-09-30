@@ -13,6 +13,7 @@ using BlingoEngine.Core;
 using BlingoEngine.Director.Core.Casts.Commands;
 using BlingoEngine.Director.Core.Icons;
 using BlingoEngine.Director.Core.Scripts.Commands;
+using BlingoEngine.Director.Core.Members.Commands;
 using BlingoEngine.Director.Core.Styles;
 using BlingoEngine.Director.Core.Tools;
 using BlingoEngine.Director.Core.UI;
@@ -42,6 +43,7 @@ namespace BlingoEngine.Director.Core.Casts
         private readonly IDirectorIconManager _iconManager;
         private readonly MemberNavigationBar _navBar;
         private readonly AbstContextMenu _contextMenu;
+        private readonly IDirectorEventMediator _mediator;
         private IDirCastItem? _selected;
         private IDirCastItem? _hoveredItem;
         private DirCastItem? _dragItem;
@@ -71,8 +73,14 @@ namespace BlingoEngine.Director.Core.Casts
             _commandManager = commandManager;
             _factory = factory;
             _iconManager = iconManager;
+            _mediator = mediator;
+            _cast = cast;
             _contextMenu = (contextMenuFactory ?? throw new ArgumentNullException(nameof(contextMenuFactory)))();
-            _contextMenu.AddItemFluent(string.Empty, "Import member", () => _contextSlot > 0, StartImportMembers);
+            _contextMenu
+                .AddItemFluent(string.Empty, "Find cast member", () =>
+                        _contextSlot > 0 && _cast.Member[_contextSlot] != null,
+                        FindCastMember)
+                .AddItemFluent(string.Empty, "Import member", () => _contextSlot > 0, StartImportMembers);
             var tabName = cast.Name ?? $"Cast{cast.Number}";
             _tabItem = factory.CreateTabItem("Cast_" + tabName, tabName);
             _root = factory.CreatePanel(tabName + "_Root");
@@ -91,7 +99,6 @@ namespace BlingoEngine.Director.Core.Casts
             _wrap = factory.CreateWrapPanel(AOrientation.Horizontal, tabName + "_Wrap");
             _listWrap = factory.CreateWrapPanel(AOrientation.Vertical, tabName + "_ListWrap");
             _listWrap.ItemMargin = new APoint(0, 0);
-            _cast = cast;
             _wrap.ItemMargin = new APoint(_itemMargin, _itemMargin);
             _scroll = factory.CreateScrollContainer(tabName + "_Scroll");
             _scroll.ClipContents = true;
@@ -379,6 +386,23 @@ namespace BlingoEngine.Director.Core.Casts
             var slot = _contextSlot;
             _contextSlot = 0;
             _commandManager.Handle(new OpenCastImportDialogCommand(_cast, slot));
+        }
+
+        private void FindCastMember()
+        {
+            if (_contextSlot <= 0)
+                return;
+
+            var slot = _contextSlot;
+            _contextSlot = 0;
+
+            var member = _cast.Member[slot];
+            if (member == null)
+                return;
+
+            _mediator.RaiseFindMember(member);
+            _mediator.RaiseMemberSelected(member);
+            _commandManager.Handle(new FindCastMemberInScoreCommand(member));
         }
 
         private void OpenEditor(IBlingoMember member)

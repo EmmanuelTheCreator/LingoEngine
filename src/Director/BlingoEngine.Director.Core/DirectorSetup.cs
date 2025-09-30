@@ -143,6 +143,7 @@ namespace BlingoEngine.Director.Core
                         .Register<DirectorStageWindow, MoveSpritesCommand>()
                         .Register<DirectorStageWindow, RotateSpritesCommand>()
                         .Register<DirCastManager, CreateFilmLoopCommand>()
+                        .Register<DirectorScoreWindow, FindCastMemberInScoreCommand>()
                         .Register<DirectorScriptsManager, OpenScriptCommand>()
                         .Register<BlingoCodeImporterPopupHandler, OpenBlingoCodeImporterCommand>()
                         .Register<BlingoCSharpConverterPopupHandler, OpenBlingoCSharpConverterCommand>()
