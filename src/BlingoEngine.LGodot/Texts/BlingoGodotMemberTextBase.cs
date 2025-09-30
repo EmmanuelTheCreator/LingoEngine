@@ -56,6 +56,31 @@ namespace BlingoEngine.LGodot.Texts
             }
         }
 
+        private void AlignNode(GodotMemberTextNode node)
+        {
+            if (node == null)
+                return;
+
+            var size = node.Node2D.Size;
+            if (size == Vector2.Zero)
+            {
+                size = node.Node2D.CustomMinimumSize;
+                if (size == Vector2.Zero && _blingoMemberText != null)
+                {
+                    size = new Vector2(_blingoMemberText.Width, _blingoMemberText.Height);
+                }
+            }
+
+            Vector2 regPoint = _blingoMemberText?.RegPoint.ToVector2() ?? size / 2f;
+            if (regPoint == Vector2.Zero && size != Vector2.Zero && _blingoMemberText == null)
+            {
+                regPoint = size / 2f;
+            }
+
+            node.Node2D.Position = -regPoint;
+            node.Node2D.SetPivotOffset(regPoint);
+        }
+
 
 
         private void RequireRedraw()
@@ -198,7 +223,11 @@ namespace BlingoEngine.LGodot.Texts
             get => _widthSet ? (int)_defaultTextNode.LabelNode.CustomMinimumSize.X : (int)Size.X;
             set
             {
-                Apply(x => x.LabelNode.CustomMinimumSize = new Vector2(value, x.LabelNode.CustomMinimumSize.Y));
+                Apply(x =>
+                {
+                    x.LabelNode.CustomMinimumSize = new Vector2(value, x.LabelNode.CustomMinimumSize.Y);
+                    AlignNode(x);
+                });
                 _widthSet = true;
             }
         }
@@ -209,7 +238,11 @@ namespace BlingoEngine.LGodot.Texts
             get => _heightSet ? (int)_defaultTextNode.LabelNode.CustomMinimumSize.Y : (int)Size.Y;
             set
             {
-                Apply(x => x.LabelNode.CustomMinimumSize = new Vector2(x.LabelNode.CustomMinimumSize.X, value));
+                Apply(x =>
+                {
+                    x.LabelNode.CustomMinimumSize = new Vector2(x.LabelNode.CustomMinimumSize.X, value);
+                    AlignNode(x);
+                });
                 _heightSet = true;
             }
         }
@@ -280,8 +313,8 @@ namespace BlingoEngine.LGodot.Texts
                 newNode.Node2D.Size = new Vector2(godotTexture.Width, godotTexture.Height);
                 newNode.Node2D.CustomMinimumSize = new Vector2(godotTexture.Width, godotTexture.Height);
                 newNode.Node2D.Texture = _texture.Texture;
-
             }
+            Apply(AlignNode);
             return newNode.Node2D;
         }
         public void ReleaseFromSprite(BlingoSprite2D blingoSprite)
