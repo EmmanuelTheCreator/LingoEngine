@@ -24,8 +24,6 @@ namespace BlingoEngine.Sprites
         public const int SpriteNumOffset = 6;
         private readonly List<BlingoSpriteBehavior> _behaviors = new();
         private readonly BlingoMovie _movie;
-        private readonly IBlingoFrameworkFactory _frameworkFactory;
-        private readonly IBlingoSpritesPlayer _spritesHolder;
         private readonly IBlingoMovieEnvironment _environment;
 
         public IReadOnlyList<BlingoSpriteBehavior> Behaviors => _behaviors;
@@ -50,6 +48,7 @@ namespace BlingoEngine.Sprites
         private APoint _regPoint;
 
 
+
         #region Properties
         public override int SpriteNumWithChannel => SpriteNum + SpriteNumOffset;
         internal BlingoSpriteChannel? SpriteChannel { get; set; }
@@ -61,6 +60,7 @@ namespace BlingoEngine.Sprites
         public AMargin Margin { get; set; } = AMargin.Zero;
         public int ZIndex { get => LocZ; set => LocZ = value; }
         IAbstFrameworkNode IAbstNode.FrameworkObj { get => _frameworkSprite; set => throw new NotImplementedException(); } // not allowed to set.
+        public T Framework<T>() where T : IAbstFrameworkNode => (T)_frameworkSprite;
 
 
         public override string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
@@ -279,7 +279,7 @@ namespace BlingoEngine.Sprites
                 OnPropertyChanged();
             }
         }
-        public List<string> ScriptInstanceList { get; private set; } = new();
+        public List<string> ScriptInstanceList => _behaviors.Select(x => x.Name).ToList();
 
 
 
@@ -400,8 +400,6 @@ namespace BlingoEngine.Sprites
 #pragma warning restore CS8618
         {
             _movie = (BlingoMovie)environment.Movie;
-            _frameworkFactory = environment.Factory;
-            _spritesHolder = spritesHolder;
             _environment = environment;
         }
         public void Init(IBlingoFrameworkSprite frameworkSprite)
@@ -1231,10 +1229,7 @@ When a movie stops, events occur in the following order:
             _lock = false;
         }
 
-        public T Framework<T>() where T : IAbstFrameworkNode
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }
 

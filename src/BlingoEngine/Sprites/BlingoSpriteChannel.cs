@@ -191,9 +191,10 @@ namespace BlingoEngine.Sprites
                         else
                         {
                             _sprite = _movie.AddSprite(Number, 1, _movie.FrameCount, 0, 0, c => c.Puppet = true);
-                            if (_sprite is BlingoSprite2D sprite2D)
-                                SetSprite(sprite2D);
+                            
                         }
+                        if (_sprite is BlingoSprite2D sprite2D)
+                            SetSprite(sprite2D);
                     }
                 }
                 else

@@ -23,6 +23,7 @@ internal partial class DirGodotStageWindowV2 : BaseGodotWindow, IDirFrameworkSta
         var godotStageContainer = (BlingoGodotStageContainer)stageContainer;
         stage.StageLayer.Framework<AbstGodotPanel>().AddChild(godotStageContainer.Container);
         stage.ComposeStageLayers();
+        FocusMode = FocusModeEnum.All;
     }
 
     public void UpdateBoundingBoxes()

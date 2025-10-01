@@ -309,6 +309,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
     protected override void OnRaiseKeyDown(AbstKeyEvent blingoKey)
     {
         base.OnRaiseKeyDown(blingoKey);
+        if (_currentMovie != null && _currentMovie.IsPlaying) return;
         if (blingoKey.KeyPressed(AbstUIKeyType.SPACE))
         {
             _spaceHeld = true;
@@ -323,6 +324,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
     protected override void OnRaiseKeyUp(AbstKeyEvent blingoKey)
     {
         base.OnRaiseKeyUp(blingoKey);
+        if (_currentMovie != null && _currentMovie.IsPlaying) return;
         if (!blingoKey.KeyPressed(AbstUIKeyType.SPACE))
         {
             _spaceHeld = false;
@@ -334,6 +336,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
 
     private void OnMouseDown(AbstMouseEvent e)
     {
+        if (_currentMovie != null && _currentMovie.IsPlaying) return;
         if (_spaceHeld)
         {
             _panning = true;
@@ -385,6 +388,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
 
     private void OnMouseUp(AbstMouseEvent e)
     {
+        if (_currentMovie != null && _currentMovie.IsPlaying) return;
         if (_panning)
         {
             _panning = false;
@@ -404,6 +408,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
 
     private void OnMouseMove(AbstMouseEvent e)
     {
+        if (_currentMovie != null && _currentMovie.IsPlaying) return;
         if (_panning)
         {
             var current = new APoint(e.MouseH, e.MouseV);
@@ -427,6 +432,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
 
     private void OnMouseWheel(AbstMouseEvent e)
     {
+        if (_currentMovie != null && _currentMovie.IsPlaying) return;
         if (!IsInsideStage(e))
         {
             return;

@@ -85,11 +85,11 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         /// <summary>
         /// Adds a new score entry, keeps only the top <see cref="MaxScoresToStore"/> entries and saves the result.
         /// </summary>
-        internal void StoreScore(string name, int myPlayerScore, int myLevel, DateTime started, TimeSpan elapsed)
+        internal void StoreScore(string name, int myPlayerScore, int myLevel, DateTime started, TimeSpan elapsed, int numberOfLinesCleared)
         {
             var myScores = _global.Scores;
             // Add new entry
-            myScores.Scores.Add(new ScoreEntry(name, myPlayerScore, started, elapsed, myLevel));
+            myScores.Scores.Add(new ScoreEntry(name, myPlayerScore, started, elapsed, myLevel, numberOfLinesCleared));
             // Sort: score desc, then oldest first, then name
             myScores.Scores.Sort((a, b) =>
             {

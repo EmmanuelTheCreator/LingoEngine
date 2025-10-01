@@ -20,7 +20,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core
         /// <summary>
         /// Represents a single leaderboard entry.
         /// </summary>
-        public record ScoreEntry(string PlayerName, int Score, DateTime when, TimeSpan duration, int Level);
+        public record ScoreEntry(string PlayerName, int Score, DateTime when, TimeSpan duration, int Level, int NumberOfLinesCleared);
         /// <summary>
         /// Scores payload as it appears on disk.
         /// </summary>
