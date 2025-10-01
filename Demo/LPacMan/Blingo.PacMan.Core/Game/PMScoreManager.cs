@@ -5,7 +5,7 @@ using BlingoEngine.Texts;
 
 namespace Blingo.PacMan.Core.Game
 {
-    internal class BlPacManScoreManager
+    internal class PMScoreManager
     {
 
         private int _score;
@@ -28,7 +28,7 @@ namespace Blingo.PacMan.Core.Game
         public BlPacManEventSubscription SubscribeHighScoreChanged(Action<int> handler) => _highScoreChanged.Subscribe(handler);
 
 
-        public BlPacManScoreManager(GlobalVars globals)
+        public PMScoreManager(GlobalVars globals)
         {
             _globals = globals;
         }

@@ -18,7 +18,7 @@ namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 /// <summary>
 /// Controls the roaming bonus fruit, including spawn timing, navigation, and score reveal logic.
 /// </summary>
-internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
+internal sealed class PMRoamingBonusBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent
 {
@@ -29,18 +29,18 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     private GameSettings? _settings;
     private PMCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
-    private Tile? _spawnTile;
-    private Tile? _targetTile;
+    private PMTile? _spawnTile;
+    private PMTile? _targetTile;
     private bool _animationsConfigured;
     private bool _active;
     private int _scoreValue;
     private int _remainingTargetVisits;
-    private BlPacManDirection _direction = BlPacManDirection.Left;
+    private PMDirection _direction = PMDirection.Left;
 
     /// <summary>
     /// Initialises the bonus behaviour with the movie environment and shared globals.
     /// </summary>
-    public BlPacManRoamingBonusBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
+    public PMRoamingBonusBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
@@ -98,7 +98,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (tile is not null)
         {
             var next = GetNextDirection(tile);
-            if (next != BlPacManDirection.None)
+            if (next != PMDirection.None)
             {
                 _direction = next;
             }
@@ -117,7 +117,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         character.Show();
         _active = true;
         _remainingTargetVisits = 2;
-        _direction = BlPacManDirection.Left;
+        _direction = PMDirection.Left;
         SetAnimation(PMCharacterAnimationType.BonusDefault);
     }
 
@@ -128,7 +128,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     {
         _active = false;
         _remainingTargetVisits = 0;
-        _direction = BlPacManDirection.Left;
+        _direction = PMDirection.Left;
         var character = EnsureCharacter();
         character.Hide();
         SetAnimation(PMCharacterAnimationType.BonusDefault);
@@ -152,7 +152,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
     internal bool IsActive => _active;
 
-    internal Tile? CurrentTile => _character?.GetTile();
+    internal PMTile? CurrentTile => _character?.GetTile();
 
     internal bool Collect()
     {
@@ -201,8 +201,8 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         if (_spawnTile is not null)
         {
-            Me.LocH = _spawnTile.X;
-            Me.LocV = _spawnTile.Y + BlPacManTheme.Bonus.VerticalOffset;
+            _character.X = _spawnTile.X;
+            _character.Y = _spawnTile.Y + BlPacManTheme.Bonus.VerticalOffset;
         }
 
         EnsureAnimations();
@@ -217,7 +217,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         
         var character = EnsureCharacter();
         character.SetMap(map);
-        character.Step = TileMath.GetMovementStep(map);
+        character.Step = PMTileMath.GetMovementStep(map);
         _spawnTile = map.Tunnels.Count > 0 ? map.Tunnels[^1] : map.HouseCenter;
         _targetTile = map.Tunnels.Count > 0 ? map.Tunnels[0] : map.HouseCenter;
     }
@@ -233,12 +233,12 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         }
 
         var map = _globals.LevelManager.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
-        var baseStep = TileMath.GetMovementStep(map);
+        var baseStep = PMTileMath.GetMovementStep(map);
         _character = new PMCharacter(_env, map, Me, PMCharacter.CharacterType.Fruit, new BlPacManCharacterOptions
         {
             Step = baseStep,
             Speed = 40f,
-            Direction = BlPacManDirection.Left,
+            Direction = PMDirection.Left,
             Preturn = true,
         });
 
@@ -304,7 +304,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Determines the next direction that moves the fruit closer to its goal while avoiding walls.
     /// </summary>
-    private BlPacManDirection GetNextDirection(Tile tile)
+    private PMDirection GetNextDirection(PMTile tile)
     {
         if (_targetTile is null)
         {
@@ -313,14 +313,14 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         var directions = new[]
         {
-            BlPacManDirection.Up,
-            BlPacManDirection.Left,
-            BlPacManDirection.Down,
-            BlPacManDirection.Right
+            PMDirection.Up,
+            PMDirection.Left,
+            PMDirection.Down,
+            PMDirection.Right
         };
 
-        var current = _direction == BlPacManDirection.None ? BlPacManDirection.Left : _direction;
-        BlPacManDirection bestDirection = current;
+        var current = _direction == PMDirection.None ? PMDirection.Left : _direction;
+        PMDirection bestDirection = current;
         var bestDistance = float.PositiveInfinity;
 
         foreach (var direction in directions)
@@ -332,7 +332,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
                 continue;
 
             var candidate = tile.Get(direction);
-            var distance = TileMath.GetDistance(candidate, _targetTile);
+            var distance = PMTileMath.GetDistance(candidate, _targetTile);
             if (distance < bestDistance)
             {
                 bestDistance = distance;
@@ -343,7 +343,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         if (bestDistance.Equals(float.PositiveInfinity))
         {
             var fallback = current.GetOpposite();
-            if (fallback != BlPacManDirection.None && CanMove(fallback, tile))
+            if (fallback != PMDirection.None && CanMove(fallback, tile))
                 return fallback;
 
             return current;
@@ -355,7 +355,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Indicates whether the fruit can travel into the specified tile.
     /// </summary>
-    private bool CanMove(BlPacManDirection direction, Tile tile)
+    private bool CanMove(PMDirection direction, PMTile tile)
     {
         var next = tile.Get(direction);
         return next is not null && !next.IsWall() && !next.IsHouse();

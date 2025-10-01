@@ -12,16 +12,16 @@ public sealed class GlobalVars : BlingoGlobalVars
 
     public GameModel GameModel { get; set; }
 
-    internal BlPacManGameBehavior? GameBehavior { get; set; }
+    internal PMGameBehavior? GameBehavior { get; set; }
 
-    internal BlPacManGameState State { get; } 
+    internal PMGameState State { get; } 
 
-    internal BlPacManBonusManager BonusManager { get; }
-    internal BlPacManPelletManager PelletManager { get; }
-    internal BlPacManPowerPillManager PowerPillManager { get; }
-    internal BlPacManBonusAvailableManager BonusAvailableManager { get; }
-    internal BlPacManLivesManager LivesManager { get; }
-    internal BlPacManScoreManager ScoreManager { get; }
+    internal PMBonusManager BonusManager { get; }
+    internal PMPelletManager PelletManager { get; }
+    internal PMPillManager PowerPillManager { get; }
+    internal PMBonusAvailableManager BonusAvailableManager { get; }
+    internal PMLivesManager LivesManager { get; }
+    internal PMScoreManager ScoreManager { get; }
 
     public GameSettings? CurrentGameSettings { get; set; }
 
@@ -34,23 +34,23 @@ public sealed class GlobalVars : BlingoGlobalVars
     /// <summary>
     /// Gets the map currently being played.
     /// </summary>
-    public Map Map => LevelManager.Map;
-    internal BlPacManGameBehavior? Coordinator { get; set; }
-    internal BlGhostManager GhostManager { get; }
-    internal BlLevelManager LevelManager { get; }
+    public PMMap Map => LevelManager.Map;
+    internal PMGameBehavior? Coordinator { get; set; }
+    internal PMGhostManager GhostManager { get; }
+    internal PMLevelManager LevelManager { get; }
 
     public GlobalVars()
     {
-        State = new BlPacManGameState(this);
+        State = new PMGameState(this);
         GameModel = new GameModel(this);
-        BonusManager = new BlPacManBonusManager(this);
-        GhostManager = new BlGhostManager();
-        LevelManager = new BlLevelManager();
-        PelletManager = new BlPacManPelletManager(this);
-        PowerPillManager = new BlPacManPowerPillManager(this);
-        BonusAvailableManager = new BlPacManBonusAvailableManager(this);
-        LivesManager = new BlPacManLivesManager(this);
-        ScoreManager = new BlPacManScoreManager(this);
+        BonusManager = new PMBonusManager(this);
+        GhostManager = new PMGhostManager();
+        LevelManager = new PMLevelManager();
+        PelletManager = new PMPelletManager(this);
+        PowerPillManager = new PMPillManager(this);
+        BonusAvailableManager = new PMBonusAvailableManager(this);
+        LivesManager = new PMLivesManager(this);
+        ScoreManager = new PMScoreManager(this);
     }
 
     protected override void OnClearGlobals()

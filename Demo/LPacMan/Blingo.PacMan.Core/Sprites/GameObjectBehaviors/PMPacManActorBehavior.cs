@@ -6,15 +6,12 @@ using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
-using BlingoEngine.Bitmaps;
 using BlingoEngine.Events;
 using BlingoEngine.Inputs.Events;
 using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
-using System.Collections.Generic;
-using System.Reflection;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
@@ -22,7 +19,7 @@ namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 /// Drives the Pac-Man avatar sprite, including keyboard input handling, animation swapping, and
 /// dispatching position events to the rest of the gameplay behaviours.
 /// </summary>
-internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
+internal sealed class PMPacManActorBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
     IHasKeyDownEvent,
@@ -76,8 +73,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     //};
 
     private readonly GlobalVars _globals;
-    private BlPacManGameBehavior? _coordinator;
-    private BlPacManDirection _requestedDirection;
+    private PMGameBehavior? _coordinator;
+    private PMDirection _requestedDirection;
     private PMCharacter? _character;
     private BlPacManEventSubscription? _tileEnteredSubscription;
     private BlPacManEventSubscription? _positionSubscription;
@@ -86,7 +83,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Initialises the behaviour with the movie environment and shared global references.
     /// </summary>
-    public BlPacManActorBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
+    public PMPacManActorBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
         : base(env)
     {
         _globals = globals ?? throw new ArgumentNullException(nameof(globals));
@@ -97,7 +94,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     /// <param name="coordinator">The gameplay coordinator managing global state.</param>
     /// <param name="settings">Speed and mode settings for Pac-Man.</param>
-    public void Configure(BlPacManGameBehavior coordinator, PacmanSettings settings)
+    public void Configure(PMGameBehavior coordinator, PacmanSettings settings)
     {
         _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
         if (settings is null)
@@ -110,7 +107,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         character.Speed = settings.Speed;
         character.EffectiveSpeed = settings.Speed;
         character.Reset();
-        _requestedDirection = BlPacManDirection.None;
+        _requestedDirection = PMDirection.None;
         ResetPosition();
         PublishPosition(character);
     }
@@ -130,7 +127,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _positionSubscription = character.SubscribePositionChanged(OnPositionChanged);
         PublishPosition(character);
 
-        _requestedDirection = BlPacManDirection.None;
+        _requestedDirection = PMDirection.None;
         if (_coordinator is not null && _globals.CurrentPacmanSettings is { } settings)
             Configure(_coordinator, settings);
     }
@@ -161,9 +158,9 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
         var requestedDirection = _requestedDirection;
         character.Move(requestedDirection);
-        if (requestedDirection != BlPacManDirection.None && character.Direction == requestedDirection)
+        if (requestedDirection != PMDirection.None && character.Direction == requestedDirection)
         {
-            _requestedDirection = BlPacManDirection.None;
+            _requestedDirection = PMDirection.None;
         }
         else
         {
@@ -178,13 +175,13 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     public void KeyDown(BlingoKeyEvent key)
     {
         if (key.KeyCode == 123)
-            SetRequestedDirection(BlPacManDirection.Left);
+            SetRequestedDirection(PMDirection.Left);
         else if (key.KeyCode == 124)
-            SetRequestedDirection(BlPacManDirection.Right);
+            SetRequestedDirection(PMDirection.Right);
         else if (key.KeyCode == 126)
-            SetRequestedDirection(BlPacManDirection.Up);
+            SetRequestedDirection(PMDirection.Up);
         else if (key.KeyCode == 125)
-            SetRequestedDirection(BlPacManDirection.Down);
+            SetRequestedDirection(PMDirection.Down);
     }
 
     /// <summary>
@@ -192,7 +189,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// </summary>
     private void OnTileEntered(BlPacManTileEventData args)
     {
-        if (args.Tile.Item is BlPacManConsumableComponent consumable)
+        if (args.Tile.Item is PMConsumableComponent consumable)
             consumable.Consume(this);
     }
 
@@ -227,14 +224,14 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         ResetPosition();
         character.Update();
         PublishPosition(character);
-        _requestedDirection = BlPacManDirection.None;
+        _requestedDirection = PMDirection.None;
     }
 
     /// <summary>
     /// Plays the appropriate sound effect when Pac-Man consumes an item.
     /// </summary>
     /// <param name="consumable">The component representing the consumed item.</param>
-    internal void HandleConsumableEaten(BlPacManConsumableComponent consumable)
+    internal void HandleConsumableEaten(PMConsumableComponent consumable)
     {
         if (consumable is null)
             return;
@@ -335,7 +332,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         if (character is null)
             return;
 
-        var snapshot = new BlPacManPositionEventData(Me.LocH, Me.LocV, character.GetTile(), character.Direction);
+        var snapshot = new BlPacManPositionEventData(_character!.X, _character!.Y, character.GetTile(), character.Direction);
         OnPositionChanged(snapshot);
     }
 
@@ -344,9 +341,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
         {
             foreach (var (name, definition) in _animationDefinitions)
-            {
                 behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
-            }
         });
     }
 
@@ -358,8 +353,8 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         if (startTile is null)
             return;
 
-        Me.LocH = startTile.X;
-        Me.LocV = startTile.Y;
+        _character!.X = startTile.X;
+        _character!.Y = startTile.Y;
     }
 
     private PMCharacter EnsureCharacter()
@@ -380,7 +375,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         {
             Step = baseStep,
             Speed = baseSpeed,
-            Direction = BlPacManDirection.Left,
+            Direction = PMDirection.Left,
             Preturn = true,
         });
         _character.RotateSprite = true;
@@ -388,7 +383,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         return _character;
     }
 
-    private void SetRequestedDirection(BlPacManDirection direction)
+    private void SetRequestedDirection(PMDirection direction)
     {
         _requestedDirection = direction;
         if (_character is { } character)
@@ -399,7 +394,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 
     private float GetBaseStepSize()
     {
-        return TileMath.GetMovementStep(_globals.Map);
+        return PMTileMath.GetMovementStep(_globals.Map);
     }
 
 }

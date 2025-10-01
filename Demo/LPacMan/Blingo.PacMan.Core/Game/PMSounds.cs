@@ -5,7 +5,7 @@ namespace Blingo.PacMan.Core.Game
     /// <summary>
     /// Convenience extension methods that wrap the various sound cues used throughout the Pac-Man game.
     /// </summary>
-    internal static class BlPacManSounds
+    internal static class PMSounds
     {
         public static void SoundPlayBack(this IBlingoPlayer player)
         {

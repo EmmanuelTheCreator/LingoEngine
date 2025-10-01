@@ -1,12 +1,12 @@
 
 namespace Blingo.PacMan.Core.Game;
 
-public sealed class Map
+public sealed class PMMap
 {
-    private readonly List<Tile> _tiles;
-    private readonly List<Tile> _tunnels;
+    private readonly List<PMTile> _tiles;
+    private readonly List<PMTile> _tunnels;
 
-    public IReadOnlyList<Tile> Tiles => _tiles;
+    public IReadOnlyList<PMTile> Tiles => _tiles;
 
    
 
@@ -14,15 +14,15 @@ public sealed class Map
 
     public int Height { get; }
 
-    public Tile? House { get; }
+    public PMTile? House { get; }
 
-    public Tile? HouseCenter { get; }
-    public Tile? PacManCenter { get; }
+    public PMTile? HouseCenter { get; }
+    public PMTile? PacManCenter { get; }
     public int TileWidth { get; }
 
     public int TileHeight { get; }
 
-    public Map(IEnumerable<string> data)
+    public PMMap(IEnumerable<string> data)
     {
         var rows = data.ToList();
         if (rows.Count == 0)
@@ -31,10 +31,10 @@ public sealed class Map
         Width = rows[0].Length;
         Height = rows.Count;
 
-        _tiles = new List<Tile>(Width * Height);
-        _tunnels = new List<Tile>();
+        _tiles = new List<PMTile>(Width * Height);
+        _tunnels = new List<PMTile>();
 
-        Tile? firstHouseTile = null;
+        PMTile? firstHouseTile = null;
 
         for (var y = 0; y < Height; y++)
         {
@@ -44,7 +44,7 @@ public sealed class Map
 
             for (var x = 0; x < Width; x++)
             {
-                var tile = new Tile(row[x], x, y, this);
+                var tile = new PMTile(row[x], x, y, this);
                 _tiles.Add(tile);
 
                 if (tile.IsHouse() && firstHouseTile is null)
@@ -64,11 +64,11 @@ public sealed class Map
             TileHeight = _tiles[0].Height;
         }
     }
-    public IReadOnlyList<Tile> Tunnels => _tunnels;
-    public IEnumerable<Tile> Pills => _tiles.Where(x => x.Type == Tile.TileType.Pill);
-    public IEnumerable<Tile> Walls => _tiles.Where(x => x.Type == Tile.TileType.Wall);
-    public IEnumerable<Tile> Pellets => _tiles.Where(x => x.Type == Tile.TileType.Pellet);
-    public Tile? GetTile(float column, float row, bool inPixels = false)
+    public IReadOnlyList<PMTile> Tunnels => _tunnels;
+    public IEnumerable<PMTile> Pills => _tiles.Where(x => x.Type == PMTile.TileType.Pill);
+    public IEnumerable<PMTile> Walls => _tiles.Where(x => x.Type == PMTile.TileType.Wall);
+    public IEnumerable<PMTile> Pellets => _tiles.Where(x => x.Type == PMTile.TileType.Pellet);
+    public PMTile? GetTile(float column, float row, bool inPixels = false)
     {
         if (!inPixels)
         {
@@ -87,8 +87,8 @@ public sealed class Map
         return GetTile(columnIndex, rowIndex);
     }
 
-    public Tile GetTileByIndex(int index) => _tiles[index];
-    public Tile? GetTile(int column, int row, bool inPixels = false)
+    public PMTile GetTileByIndex(int index) => _tiles[index];
+    public PMTile? GetTile(int column, int row, bool inPixels = false)
     {
         if (_tiles.Count == 0)
             return null;

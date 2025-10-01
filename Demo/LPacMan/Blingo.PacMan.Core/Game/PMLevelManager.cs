@@ -7,16 +7,16 @@ using MapContent = Blingo.PacMan.Core.Datas.Maps;
 
 namespace Blingo.PacMan.Core.Game
 {
-    internal class BlLevelManager
+    internal class PMLevelManager
     {
         private int _level = 1;
         private readonly BlPacManEventMediator<int> _levelChanged = new();
         public BlPacManEventSubscription SubscribeLevelChanged(Action<int> handler) => _levelChanged.Subscribe(handler);
-        private Map _map = new Map(_map1Layout);
+        private PMMap _map = new PMMap(_map1Layout);
         /// <summary>
         /// Gets the map currently being played.
         /// </summary>
-        public Map Map => _map;
+        public PMMap Map => _map;
 
         public int Level
         {
@@ -41,7 +41,7 @@ namespace Blingo.PacMan.Core.Game
         public GameSettings MakeLevel()
         {
             GameSettings settings = GetGameSettings();
-            _map = new Map(settings.MapLayout);
+            _map = new PMMap(settings.MapLayout);
             return settings;
         }
 

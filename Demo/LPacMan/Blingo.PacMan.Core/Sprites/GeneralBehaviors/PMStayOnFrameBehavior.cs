@@ -7,9 +7,9 @@ namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 /// <summary>
 /// Simple frame behaviour that keeps the playhead anchored on the current frame so Pac-Man can manage playback manually.
 /// </summary>
-internal sealed class BlPacManStayOnFrameBehavior : BlingoSpriteBehavior, IHasEnterFrameEvent
+internal sealed class PMStayOnFrameBehavior : BlingoSpriteBehavior, IHasEnterFrameEvent
 {
-    public BlPacManStayOnFrameBehavior(IBlingoMovieEnvironment env)
+    public PMStayOnFrameBehavior(IBlingoMovieEnvironment env)
         : base(env)
     {
     }

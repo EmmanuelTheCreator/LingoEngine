@@ -5,7 +5,7 @@ namespace Blingo.PacMan.Core.Datas;
 
 internal sealed class BlPacManPositionEventData
 {
-    public BlPacManPositionEventData(float x, float y, Tile? tile, BlPacManDirection direction)
+    public BlPacManPositionEventData(float x, float y, PMTile? tile, PMDirection direction)
     {
         X = x;
         Y = y;
@@ -17,7 +17,7 @@ internal sealed class BlPacManPositionEventData
 
     public float Y { get; }
 
-    public Tile? Tile { get; }
+    public PMTile? Tile { get; }
 
-    public BlPacManDirection Direction { get; }
+    public PMDirection Direction { get; }
 }

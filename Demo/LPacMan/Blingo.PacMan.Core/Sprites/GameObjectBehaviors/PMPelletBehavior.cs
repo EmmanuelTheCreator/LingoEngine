@@ -5,24 +5,24 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
-internal sealed class BlPacManPelletBehavior : BlingoSpriteBehavior
+internal sealed class PMPelletBehavior : BlingoSpriteBehavior
 {
-    private readonly BlPacManConsumableComponent _component;
+    private readonly PMConsumableComponent _component;
 
-    public BlPacManPelletBehavior(IBlingoMovieEnvironment env)
+    public PMPelletBehavior(IBlingoMovieEnvironment env)
         : base(env)
     {
-        _component = new BlPacManConsumableComponent(this, BlPacManConsumableType.Pellet, 10);
+        _component = new PMConsumableComponent(this, BlPacManConsumableType.Pellet, 10);
     }
 
-    public BlPacManConsumableComponent Component => _component;
+    public PMConsumableComponent Component => _component;
 
-    public void Initialize(Tile tile)
+    public void Initialize(PMTile tile)
     {
         _component.Initialize(tile);
     }
 
-    public void Consume(BlPacManActorBehavior pacMan)
+    public void Consume(PMPacManActorBehavior pacMan)
     {
         _component.Consume(pacMan);
     }

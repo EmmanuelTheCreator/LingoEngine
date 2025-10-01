@@ -9,7 +9,7 @@ namespace Blingo.PacMan.Core.Game;
 /// <summary>
 /// Displays the remaining lives using miniature Pac-Man sprites and keeps them in sync with the model.
 /// </summary>
-public sealed class BlPacManLivesManager
+public sealed class PMLivesManager
 {
     private const int _defaultIconCount = 9;
 
@@ -33,7 +33,7 @@ public sealed class BlPacManLivesManager
     public int Lives => _lives;
     public int ExtraLives => _extraLives;
 
-    public BlPacManLivesManager(GlobalVars globals)
+    public PMLivesManager(GlobalVars globals)
     {
         _globals = globals;
     }
@@ -144,7 +144,7 @@ public sealed class BlPacManLivesManager
         sprite2D.Visibility = false;
         sprite2D.SetMember("sprites");
 
-        var frameSize = TileMath.SpriteSize;
+        var frameSize = PMTileMath.SpriteSize;
         var rect = ARect.New(0,0, frameSize, frameSize);
         sprite2D.SetMemberRect(rect, new APoint(rect.Width / 2f, rect.Height / 2f));
 

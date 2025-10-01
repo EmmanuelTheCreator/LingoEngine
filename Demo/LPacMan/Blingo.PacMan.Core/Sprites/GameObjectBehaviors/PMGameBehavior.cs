@@ -1,4 +1,3 @@
-using Blingo.PacMan.Core;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Game;
@@ -8,7 +7,6 @@ using BlingoEngine.Movies;
 using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
-using System.Reflection;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
@@ -16,7 +14,7 @@ namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 /// Coordinates the overall Pac-Man gameplay state, wiring the models and sprite behaviours into the runtime.
 /// It keeps track of the game's meta state (start screen, pause, win, game over) and forwards mode updates to the model.
 /// </summary>
-internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
+internal sealed class PMGameBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent,
     IHasEnterFrameEvent
@@ -38,13 +36,13 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
 
     private GameModel Model => _model ??= _globals.GameModel ?? throw new InvalidOperationException("GameModel was not initialised.");
 
-    private BlPacManGameState State => _globals.State;
+    private PMGameState State => _globals.State;
 
-    private BlPacManBonusManager BonusManager => _globals.BonusManager;
+    private PMBonusManager BonusManager => _globals.BonusManager;
 
 
 
-    public BlPacManGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals, BlPacManRepository gameRepository)
+    public PMGameBehavior(IBlingoMovieEnvironment env, GlobalVars globals, BlPacManRepository gameRepository)
         : base(env)
     {
         _globals = globals;
@@ -188,8 +186,8 @@ internal sealed class BlPacManGameBehavior : BlingoSpriteBehavior,
         if (State.IsPaused)
             return;
 
-        if (State.StartCountdown <= 0)
-            Model.UpdateMode();
+        //if (State.StartCountdown <= 0)
+          //  Model.UpdateMode();
 
         if (State.WaitForPauseTick())
             return;

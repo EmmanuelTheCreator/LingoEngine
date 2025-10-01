@@ -547,11 +547,15 @@ When a movie stops, events occur in the following order:
             _behaviors.ForEach(b =>
             {
                 _eventMediator.Subscribe(b, SpriteNum + 6, true); //  we ignore mouse because it has to be within the boundingbox
-                if (_movie.IsPlaying)
-                    if (b is IHasBeginSpriteEvent beginSpriteEvent) beginSpriteEvent.BeginSprite();
-
             });
             base.DoBeginSprite();
+            if (_movie.IsPlaying)
+                _behaviors.ForEach(b =>
+                {
+                    if (_movie.IsPlaying)
+                        if (b is IHasBeginSpriteEvent beginSpriteEvent) beginSpriteEvent.BeginSprite();
+
+                });
         }
         internal virtual BlingoMember? DoPreStepFrame()
         {

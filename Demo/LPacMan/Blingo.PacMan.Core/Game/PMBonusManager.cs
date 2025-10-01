@@ -7,11 +7,11 @@ namespace Blingo.PacMan.Core.Game;
 /// <summary>
 /// Centralises the roaming bonus lifecycle so behaviours can trigger actions through the globals table.
 /// </summary>
-internal sealed class BlPacManBonusManager
+internal sealed class PMBonusManager
 {
     private readonly GlobalVars _globals;
     private GameSettings? _settings;
-    private BlPacManRoamingBonusBehavior? _bonus;
+    private PMRoamingBonusBehavior? _bonus;
     private const int _maxBonuses = 8;
 
     public int BonusAppearCountdown { get; private set; }
@@ -20,19 +20,19 @@ internal sealed class BlPacManBonusManager
     public bool BonusLocked { get; private set; }
     
     
-    public BlPacManBonusManager(GlobalVars globals)
+    public PMBonusManager(GlobalVars globals)
     {
         _globals = globals;
     }
 
-    public void Attach(BlPacManRoamingBonusBehavior bonus)
+    public void Attach(PMRoamingBonusBehavior bonus)
     {
         _bonus = bonus;
         if (_settings is not null)
             _bonus.Configure(_settings);
     }
 
-    public void Detach(BlPacManRoamingBonusBehavior bonus)
+    public void Detach(PMRoamingBonusBehavior bonus)
     {
         if (ReferenceEquals(_bonus, bonus))
             _bonus = null;
@@ -135,7 +135,7 @@ internal sealed class BlPacManBonusManager
     /// <summary>
     /// Handles Pac-Man collecting the roaming bonus by awarding score and scheduling its removal.
     /// </summary>
-    public void NotifyBonusEaten(BlPacManRoamingBonusBehavior bonus)
+    public void NotifyBonusEaten(PMRoamingBonusBehavior bonus)
     {
         if (bonus is null)
             throw new ArgumentNullException(nameof(bonus));
@@ -146,13 +146,13 @@ internal sealed class BlPacManBonusManager
     /// <summary>
     /// Locks the bonus when it leaves the maze without being eaten.
     /// </summary>
-    public void NotifyBonusExpired(BlPacManRoamingBonusBehavior bonus)
+    public void NotifyBonusExpired(PMRoamingBonusBehavior bonus)
     {
         if (_bonus == bonus)
             HandleExpired();
     }
 
-    internal void CollectOnTile(Tile tile)
+    internal void CollectOnTile(PMTile tile)
     {
         if (_bonus is not null && _bonus.IsActive && ReferenceEquals(_bonus.CurrentTile, tile))
             _bonus.Collect();

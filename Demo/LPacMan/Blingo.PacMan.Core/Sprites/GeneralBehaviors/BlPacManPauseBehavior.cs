@@ -75,6 +75,7 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
         IsPaused = true;
         Me.Visibility = true;
         _Player.SoundStopBack();
+        _globals.GhostManager.Pause();
     }
 
     private void Resume()
@@ -86,5 +87,6 @@ internal sealed class BlPacManPauseBehavior : BlingoSpriteBehavior,
         Me.Visibility = false;
         if (!_globals.State.IsMuted)
             _Player.SoundPlayBack();
+        _globals.GhostManager.Resume();
     }
 }

@@ -6,14 +6,14 @@ namespace Blingo.PacMan.Core.Game;
 /// <summary>
 /// Provides helper routines for working with tile geometry.
 /// </summary>
-internal static class TileMath
+internal static class PMTileMath
 {
     public static int SpriteSize => BlPacManTheme.Actor.SpriteSize;
     /// <summary>
     /// Calculates the Euclidean distance between two map tiles. When either tile is missing,
     /// the method returns <see cref="float.PositiveInfinity"/> so callers can ignore that option.
     /// </summary>
-    public static float GetDistance(Tile? tileA, Tile? tileB)
+    public static float GetDistance(PMTile? tileA, PMTile? tileB)
     {
         if (tileA is null || tileB is null)
         {
@@ -31,7 +31,7 @@ internal static class TileMath
     /// </summary>
     /// <param name="map">The active tile map.</param>
     /// <returns>The distance that should be traversed for a 100% speed setting.</returns>
-    public static float GetMovementStep(Map? map)
+    public static float GetMovementStep(PMMap? map)
     {
         var baseSize = map?.TileWidth ?? 0;
         if (baseSize <= 0 && map is not null)
@@ -41,25 +41,15 @@ internal static class TileMath
 
         if (baseSize <= 0)
         {
-            baseSize = Tile.DefaultTileSize;
+            baseSize = PMTile.DefaultTileSize;
         }
 
         return MathF.Max(1f, baseSize / 4f);
     }
 
-    public static float ClampVerticalPosition(float y, int mapHeight)
-    {
-        if (mapHeight <= 0)
-            return y;
-
-        if (y < 0)
-            return 0f;
-
-        var max = MathF.Max(0f, mapHeight - 1f);
-        return y >= mapHeight ? max : y;
-    }
+   
 }
-public sealed class Tile
+public sealed class PMTile
 {
     public enum TileType
     {
@@ -82,7 +72,7 @@ public sealed class Tile
 
     public int Row { get; }
 
-    public Map Map { get; }
+    public PMMap Map { get; }
 
     public int Width { get; }
 
@@ -92,9 +82,9 @@ public sealed class Tile
 
     public float Y { get; }
 
-    internal BlPacManConsumableComponent? Item { get; set; }
+    internal PMConsumableComponent? Item { get; set; }
 
-    public Tile(char code, int column, int row, Map map)
+    public PMTile(char code, int column, int row, PMMap map)
     {
         Map = map;
         Code = code;
@@ -146,23 +136,23 @@ public sealed class Tile
 
   
 
-    public Tile? Get(BlPacManDirection direction)
+    public PMTile? Get(PMDirection direction)
     {
         return direction switch
         {
-            BlPacManDirection.Up => GetUp(),
-            BlPacManDirection.Down => GetDown(),
-            BlPacManDirection.Left => GetLeft(),
-            BlPacManDirection.Right => GetRight(),
+            PMDirection.Up => GetUp(),
+            PMDirection.Down => GetDown(),
+            PMDirection.Left => GetLeft(),
+            PMDirection.Right => GetRight(),
             _ => null,
         };
     }
 
-    public Tile? GetUp() => Map.GetTile(Column, Row - 1);
+    public PMTile? GetUp() => Map.GetTile(Column, Row - 1);
 
-    public Tile? GetDown() => Map.GetTile(Column, Row + 1);
+    public PMTile? GetDown() => Map.GetTile(Column, Row + 1);
 
-    public Tile? GetLeft() => Map.GetTile(Column - 1, Row);
+    public PMTile? GetLeft() => Map.GetTile(Column - 1, Row);
 
-    public Tile? GetRight() => Map.GetTile(Column + 1, Row);
+    public PMTile? GetRight() => Map.GetTile(Column + 1, Row);
 }

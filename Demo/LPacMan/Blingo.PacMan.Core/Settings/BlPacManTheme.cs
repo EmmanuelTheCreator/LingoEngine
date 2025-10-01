@@ -102,6 +102,11 @@ public static class BlPacManTheme
                 [PMCharacterAnimationType.GhostRight] = (CreateLoop(1, 0), DefaultFrameDelay),
                 [PMCharacterAnimationType.GhostUp] = (CreateLoop(2, 0), DefaultFrameDelay),
                 [PMCharacterAnimationType.GhostDown] = (CreateLoop(3, 0), DefaultFrameDelay),
+
+                [PMCharacterAnimationType.GhostDeathLeft] = (CreateLoop(0, 0), DefaultFrameDelay),
+                [PMCharacterAnimationType.GhostDeathRight] = (CreateLoop(1, 0), DefaultFrameDelay),
+                [PMCharacterAnimationType.GhostDeathUp] = (CreateLoop(2, 0), DefaultFrameDelay),
+                [PMCharacterAnimationType.GhostDeathDown] = (CreateLoop(3, 0), DefaultFrameDelay),
             };
 
             return animations;

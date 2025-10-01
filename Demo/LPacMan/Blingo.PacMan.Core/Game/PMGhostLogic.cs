@@ -6,7 +6,7 @@ namespace Blingo.PacMan.Core.Game
 {
     internal class PMGhostLogic
     {
-        internal static Tile? GetChaseTargetTile(BlGhostManager ghostManager, MrGhost ghostName, PMCharacter character, Tile pacmanTile, BlPacManDirection direction, Tile scatterTarget)
+        internal static PMTile? GetChaseTargetTile(PMGhostManager ghostManager, MrGhost ghostName, PMCharacter character, PMTile pacmanTile, PMDirection direction, PMTile scatterTarget)
         {
             return ghostName switch
             {
@@ -18,9 +18,9 @@ namespace Blingo.PacMan.Core.Game
         }
 
 
-        private static Tile? ResolvePinkyTarget(Tile? pacmanTile, BlPacManDirection direction) => StepForward(pacmanTile, direction, 4);
+        private static PMTile? ResolvePinkyTarget(PMTile? pacmanTile, PMDirection direction) => StepForward(pacmanTile, direction, 4);
       
-        private static Tile? ResolveInkyTarget(BlGhostManager ghostManager, Tile pacmanTile, BlPacManDirection direction)
+        private static PMTile? ResolveInkyTarget(PMGhostManager ghostManager, PMTile pacmanTile, PMDirection direction)
         {
             var blinkyTile = ghostManager.FindGhost(MrGhost.Blinky)?.CurrentTile;
             // Two tiles in front of pacman
@@ -34,19 +34,19 @@ namespace Blingo.PacMan.Core.Game
             return pacmanTileNext.Map.GetTile(pacmanTileNext.Column + offsetColumn, pacmanTileNext.Row + offsetRow);
         }
 
-        private static Tile? ResolveSueTarget(Tile pacmanTile, PMCharacter character, Tile scatterTarget)
+        private static PMTile? ResolveSueTarget(PMTile pacmanTile, PMCharacter character, PMTile scatterTarget)
         {
             var current = character.GetTile();
 
             if (pacmanTile is null || current is null)
                 return pacmanTile;
 
-            var distance = TileMath.GetDistance(pacmanTile, current);
+            var distance = PMTileMath.GetDistance(pacmanTile, current);
             return distance >= BlPacManTheme.Actor.SpriteSize ? pacmanTile : scatterTarget;
         }
 
 
-        private static Tile? StepForward(Tile? pacmanTile, BlPacManDirection direction, int steps)
+        private static PMTile? StepForward(PMTile? pacmanTile, PMDirection direction, int steps)
         {
             var current = pacmanTile;
             for (var i = 0; i < steps && current is not null; i++)

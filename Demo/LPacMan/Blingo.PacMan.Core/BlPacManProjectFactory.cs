@@ -181,14 +181,14 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             return;
       
         var frameCount = Math.Max(GameStartFrame, 60);
-        _movie.AddFrameBehavior<BlPacManStayOnFrameBehavior>(5);
-        _movie.AddFrameBehavior<BlPacManGameBehavior>(GameStartFrame);
+        _movie.AddFrameBehavior<PMStayOnFrameBehavior>(5);
+        _movie.AddFrameBehavior<PMGameBehavior>(GameStartFrame);
 
         var stageWidth = _blingoPlayer?.Stage.Width ?? _settings?.StageWidth ?? 730;
         var stageHeight = _blingoPlayer?.Stage.Height ?? _settings?.StageHeight ?? 500;
         var centerX = stageWidth / 2f;
         var centerY = stageHeight / 2f;
-        var sprSize = TileMath.SpriteSize;
+        var sprSize = PMTileMath.SpriteSize;
         var sprStartX = 10;
         var sprStartY = 10;
 
@@ -248,11 +248,11 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
         var roamingBonus = _movie.AddSprite(PCSpriteNums.BonusesRoaming, GameStartFrame, frameCount, sprStartX, sprStartY + sprSize*2, sprite =>
             {
                 sprite.Name = "Bonuses.Roaming";
-                sprite.SetMemberRect(BlPacManRoamingBonusBehavior.DefaultAnimationRect);
+                sprite.SetMemberRect(PMRoamingBonusBehavior.DefaultAnimationRect);
             })
             .SetMember("misc")
             .AddBehavior<BlPacManAnimationBehavior>()
-            .AddBehavior<BlPacManRoamingBonusBehavior>();
+            .AddBehavior<PMRoamingBonusBehavior>();
 
         var pacMan = _movie.AddSprite(PCSpriteNums.PacMan, GameStartFrame, frameCount, sprStartX, sprStartY + sprSize, sprite =>
             {
@@ -263,10 +263,10 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             })
             .SetMember("sprites")
             .AddBehavior<BlPacManAnimationBehavior>()
-            .AddBehavior<BlPacManActorBehavior>();
+            .AddBehavior<PMPacManActorBehavior>();
 
-        var ghostNames = BlGhostManager.GhostNames;
-        for (var i = 0; i < ghostNames.Length-3; i++)
+        var ghostNames = PMGhostManager.GhostNames;
+        for (var i = 0; i < ghostNames.Length; i++)
         {
             var ghost = _movie.AddSprite(PCSpriteNums.GhostStart + i, GameStartFrame, frameCount, sprStartX + i* sprSize, sprStartY, sprite =>
                 {
@@ -276,7 +276,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                 })
                 .SetMember("sprites")
                 .AddBehavior<BlPacManAnimationBehavior>()
-                .AddBehavior<BlPacManGhostBehavior>(behavior =>
+                .AddBehavior<PMGhostBehavior>(behavior =>
                 {
                     behavior.GhostName = ghostNames[i];
                 })

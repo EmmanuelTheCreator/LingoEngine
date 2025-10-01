@@ -6,15 +6,15 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Game;
 
-internal sealed class BlPacManPelletManager
+internal sealed class PMPelletManager
 {
     // image is 24 x 6
     private static readonly ARect _pelletRect = ARect.New(6, 0, 2, 2);
 
-    private readonly List<BlPacManConsumableComponent> _spawnedConsumables = new();
+    private readonly List<PMConsumableComponent> _spawnedConsumables = new();
     private readonly GlobalVars _globals;
 
-    public BlPacManPelletManager(GlobalVars globals)
+    public PMPelletManager(GlobalVars globals)
     {
         _globals = globals;
     }
@@ -39,13 +39,13 @@ internal sealed class BlPacManPelletManager
         var pellets = _globals.Map.Pellets.ToList();
         for (int i = 0; i < pellets.Count; i++)
         {
-            Tile? tile = pellets[i];
+            PMTile? tile = pellets[i];
             var behavior = CreateConsumableSprite(lingoMovie, tile , i);
             _spawnedConsumables.Add(behavior.Component);
         }
     }
 
-    private BlPacManPelletBehavior CreateConsumableSprite(IBlingoMovie lingoMovie, Tile tile,  int index)
+    private PMPelletBehavior CreateConsumableSprite(IBlingoMovie lingoMovie, PMTile tile,  int index)
     {
         var name = $"Pellet_{tile.Column}_{tile.Row}";
         var spriteNum = index + PCSpriteNums.PelletsStart;
@@ -56,7 +56,7 @@ internal sealed class BlPacManPelletManager
         sprite2D.SetMember("pills");
         sprite2D.SetMemberRect(_pelletRect);
 
-        var behavior = sprite2D.SetBehavior<BlPacManPelletBehavior>();
+        var behavior = sprite2D.SetBehavior<PMPelletBehavior>();
         behavior.Component.SetGlobals(_globals);
         behavior.Initialize(tile);
         return behavior;

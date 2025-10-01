@@ -9,7 +9,7 @@ namespace Blingo.PacMan.Core.Game
     /// <summary>
     /// Class responsible for displaying the fruit bonuses availabl across levels.
     /// </summary>
-    public sealed class BlPacManBonusAvailableManager 
+    public sealed class PMBonusAvailableManager 
     {
         private const int _bonusCount = 8;
         private readonly List<BonusSprite> _bonuses = new();
@@ -17,7 +17,7 @@ namespace Blingo.PacMan.Core.Game
         private bool _isInitialized;
         private BlPacManEventSubscription? _levelSubscription;
 
-        public BlPacManBonusAvailableManager(GlobalVars globals)
+        public PMBonusAvailableManager(GlobalVars globals)
         {
             _globals = globals;
         }
@@ -92,7 +92,7 @@ namespace Blingo.PacMan.Core.Game
             sprite2D.LocH = x;
             sprite2D.LocV = y;
             sprite2D.SetMember("misc");
-            var frameSize = TileMath.SpriteSize - 1;
+            var frameSize = PMTileMath.SpriteSize - 1;
             sprite2D.SetMemberRect(ARect.New(frameSize * index, 0, frameSize, frameSize));
 
             return new BonusSprite(name, sprite2D);

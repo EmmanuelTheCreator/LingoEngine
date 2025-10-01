@@ -15,7 +15,7 @@ public sealed class GameModel
     private const int _modeFrameRate = 30;
     private int _modeElapsedFrames;
     private GhostMode? _mode;
-    private BlPacManActorBehavior? _pacMan;
+    private PMPacManActorBehavior? _pacMan;
     private readonly BlPacManEventMediator<GhostMode?> _modeChanged = new();
 
     public GameModel(GlobalVars globalVars)
@@ -29,15 +29,15 @@ public sealed class GameModel
 
 
     public BlPacManEventSubscription SubscribeModeChanged(Action<GhostMode?> handler) => _modeChanged.Subscribe(handler);
-    internal BlPacManActorBehavior? PacMan => _pacMan;
+    internal PMPacManActorBehavior? PacMan => _pacMan;
 
 
-    internal void AttachPacMan(BlPacManActorBehavior pacMan)
+    internal void AttachPacMan(PMPacManActorBehavior pacMan)
     {
         _pacMan = pacMan;
     }
 
-    internal void DetachPacMan(BlPacManActorBehavior pacMan)
+    internal void DetachPacMan(PMPacManActorBehavior pacMan)
     {
         if (!ReferenceEquals(_pacMan, pacMan))
             return;

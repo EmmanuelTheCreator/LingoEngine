@@ -6,30 +6,30 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
-internal sealed class BlPacManPowerPillBehavior : BlingoSpriteBehavior, IHasExitFrameEvent
+internal sealed class PMPillBehavior : BlingoSpriteBehavior, IHasExitFrameEvent
 {
-    private readonly BlPacManConsumableComponent _component;
+    private readonly PMConsumableComponent _component;
     private readonly GlobalVars _globalVars;
     private int _blinkMax = 20;
     private int _blinkCurrent = 0;
     private bool _lastVisibleState;
 
-    public BlPacManPowerPillBehavior(IBlingoMovieEnvironment env, GlobalVars globalVars)
+    public PMPillBehavior(IBlingoMovieEnvironment env, GlobalVars globalVars)
         : base(env)
     {
-        _component = new BlPacManConsumableComponent(this, BlPacManConsumableType.PowerPill, 50);
+        _component = new PMConsumableComponent(this, BlPacManConsumableType.PowerPill, 50);
         _globalVars = globalVars;
     }
 
-    public BlPacManConsumableComponent Component => _component;
+    public PMConsumableComponent Component => _component;
 
-    public void Initialize(Tile tile)
+    public void Initialize(PMTile tile)
     {
         _component.Initialize(tile);
         _blinkCurrent = Random(10);
     }
 
-    public void Consume(BlPacManActorBehavior pacMan)
+    public void Consume(PMPacManActorBehavior pacMan)
     {
         _component.Consume(pacMan);
     }

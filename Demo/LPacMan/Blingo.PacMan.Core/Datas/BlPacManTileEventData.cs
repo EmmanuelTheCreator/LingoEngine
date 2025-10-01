@@ -4,10 +4,10 @@ namespace Blingo.PacMan.Core.Datas;
 
 internal sealed class BlPacManTileEventData
 {
-    public BlPacManTileEventData(Tile tile)
+    public BlPacManTileEventData(PMTile tile)
     {
         Tile = tile ?? throw new ArgumentNullException(nameof(tile));
     }
 
-    public Tile Tile { get; }
+    public PMTile Tile { get; }
 }

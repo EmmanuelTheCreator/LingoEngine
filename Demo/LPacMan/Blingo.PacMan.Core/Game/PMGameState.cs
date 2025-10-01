@@ -7,7 +7,7 @@ namespace Blingo.PacMan.Core.Game;
 /// <summary>
 /// Holds runtime flags and counters that multiple behaviours share while the Pac-Man game runs.
 /// </summary>
-internal sealed class BlPacManGameState
+internal sealed class PMGameState
 {
 
     public int DurationCountDown { get; set; } = 5;// 80;
@@ -25,14 +25,14 @@ internal sealed class BlPacManGameState
     public int StartCountdown { get; private set; }
     public int SoundCooldown { get; set; }
     public int RemainingConsumables { get; set; }
-    public Map? CurrentMap { get; set; }
+    public PMMap? CurrentMap { get; set; }
     public bool IsGameplayFrozen => IsPaused || PauseFrames > 0 || StartCountdown > 0 || Win || IsGameOver || PacManEatenPending;
     public BlPacManPositionEventData? PacManPosition { get; private set; }
     public GameModel Game => _globalVars.GameModel;
 
     public bool IsActivePlaying { get; internal set; }
 
-    public BlPacManGameState(GlobalVars globalVars)
+    public PMGameState(GlobalVars globalVars)
     {
         _globalVars = globalVars;
         

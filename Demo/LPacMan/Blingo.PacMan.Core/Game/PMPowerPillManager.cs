@@ -6,13 +6,13 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Game;
 
-internal sealed class BlPacManPowerPillManager 
+internal sealed class PMPillManager 
 {
-    private readonly List<BlPacManConsumableComponent> _spawnedConsumables = new();
+    private readonly List<PMConsumableComponent> _spawnedConsumables = new();
     private readonly GlobalVars _globals;
 
 
-    public BlPacManPowerPillManager(GlobalVars globals)
+    public PMPillManager(GlobalVars globals)
     {
         _globals = globals;
     }
@@ -36,12 +36,12 @@ internal sealed class BlPacManPowerPillManager
         var pills = _globals.Map.Pills.ToList();
         for (int i = 0; i < pills.Count; i++)
         {
-            Tile? tile = pills[i];
+            PMTile? tile = pills[i];
             CreateConsumableSprite(lingoMovie, tile,i);
         }
     }
 
-    private void CreateConsumableSprite(IBlingoMovie lingoMovie, Tile tile, int index)
+    private void CreateConsumableSprite(IBlingoMovie lingoMovie, PMTile tile, int index)
     {
         var name = $"PowerPill_{tile.Column}_{tile.Row}";
         var spriteNum = index + PCSpriteNums.PowerPillStart;
@@ -52,7 +52,7 @@ internal sealed class BlPacManPowerPillManager
         sprite2D.SetMember("pills");
         sprite2D.SetMemberRect(new(0, 0, 6, 6));
 
-        var behavior = sprite2D.SetBehavior<BlPacManPowerPillBehavior>();
+        var behavior = sprite2D.SetBehavior<PMPillBehavior>();
         behavior.Component.SetGlobals(_globals);
         behavior.Initialize(tile);
         _spawnedConsumables.Add(behavior.Component);
