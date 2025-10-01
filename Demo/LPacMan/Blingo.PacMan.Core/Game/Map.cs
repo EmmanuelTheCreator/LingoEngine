@@ -8,7 +8,7 @@ public sealed class Map
 
     public IReadOnlyList<Tile> Tiles => _tiles;
 
-    public IReadOnlyList<Tile> Tunnels => _tunnels;
+   
 
     public int Width { get; }
 
@@ -64,7 +64,10 @@ public sealed class Map
             TileHeight = _tiles[0].Height;
         }
     }
-
+    public IReadOnlyList<Tile> Tunnels => _tunnels;
+    public IEnumerable<Tile> Pills => _tiles.Where(x => x.Type == Tile.TileType.Pill);
+    public IEnumerable<Tile> Walls => _tiles.Where(x => x.Type == Tile.TileType.Wall);
+    public IEnumerable<Tile> Pellets => _tiles.Where(x => x.Type == Tile.TileType.Pellet);
     public Tile? GetTile(float column, float row, bool inPixels = false)
     {
         if (!inPixels)
@@ -84,6 +87,7 @@ public sealed class Map
         return GetTile(columnIndex, rowIndex);
     }
 
+    public Tile GetTileByIndex(int index) => _tiles[index];
     public Tile? GetTile(int column, int row, bool inPixels = false)
     {
         if (_tiles.Count == 0)

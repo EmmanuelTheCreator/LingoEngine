@@ -5,6 +5,7 @@ namespace Blingo.PacMan.Core.Enums;
 /// </summary>
 public enum GhostMode
 {
+    Unknown,
     Scatter,
     Chase,
     Frightened,

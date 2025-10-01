@@ -9,7 +9,6 @@ using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Bitmaps;
-using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
@@ -23,12 +22,12 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     IHasBeginSpriteEvent,
     IHasEndSpriteEvent
 {
-    private static readonly IReadOnlyDictionary<string, ARect[]> _animations = BlPacManTheme.Bonus.Animations;
+    private static readonly IReadOnlyDictionary<PMCharacterAnimationType, ARect[]> _animations = BlPacManTheme.Bonus.Animations;
     internal static ARect DefaultAnimationRect => BlPacManTheme.Bonus.DefaultFrame;
 
     private readonly GlobalVars _globals;
     private GameSettings? _settings;
-    private BlPacManCharacter? _character;
+    private PMCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
     private Tile? _spawnTile;
     private Tile? _targetTile;
@@ -119,7 +118,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _active = true;
         _remainingTargetVisits = 2;
         _direction = BlPacManDirection.Left;
-        SetAnimation("default");
+        SetAnimation(PMCharacterAnimationType.BonusDefault);
     }
 
     /// <summary>
@@ -132,7 +131,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
         _direction = BlPacManDirection.Left;
         var character = EnsureCharacter();
         character.Hide();
-        SetAnimation("default");
+        SetAnimation(PMCharacterAnimationType.BonusDefault);
     }
 
     /// <summary>
@@ -179,7 +178,10 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     public void ShowScore()
     {
         if (_scoreValue > 0)
-            SetAnimation($"score{_scoreValue}");
+        {
+            var enumValue = Enum.Parse<PMCharacterAnimationType>($"BonusScore{_scoreValue}");
+            SetAnimation(enumValue);
+        }
     }
 
     /// <summary>
@@ -199,12 +201,12 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         if (_spawnTile is not null)
         {
-            Me.LocH = _spawnTile.CenterX;
-            Me.LocV = _spawnTile.CenterY + BlPacManTheme.Bonus.VerticalOffset;
+            Me.LocH = _spawnTile.X;
+            Me.LocV = _spawnTile.Y + BlPacManTheme.Bonus.VerticalOffset;
         }
 
         EnsureAnimations();
-        SetAnimation("default");
+        SetAnimation(PMCharacterAnimationType.BonusDefault);
     }
 
     private void ParseMap()
@@ -223,7 +225,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Lazily instantiates the character helper so the bonus can traverse the tile map.
     /// </summary>
-    private BlPacManCharacter EnsureCharacter()
+    private PMCharacter EnsureCharacter()
     {
         if (_character is not null)
         {
@@ -232,7 +234,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
 
         var map = _globals.LevelManager.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         var baseStep = TileMath.GetMovementStep(map);
-        _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
+        _character = new PMCharacter(_env, map, Me, PMCharacter.CharacterType.Fruit, new BlPacManCharacterOptions
         {
             Step = baseStep,
             Speed = 40f,
@@ -270,7 +272,7 @@ internal sealed class BlPacManRoamingBonusBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Applies the named animation if it has been registered.
     /// </summary>
-    private void SetAnimation(string name)
+    private void SetAnimation(PMCharacterAnimationType name)
     {
         SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior => behavior.Play(name));
     }

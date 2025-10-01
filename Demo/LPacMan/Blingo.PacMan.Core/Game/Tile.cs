@@ -20,8 +20,8 @@ internal static class TileMath
             return float.PositiveInfinity;
         }
 
-        var dx = tileA.CenterX - tileB.CenterX;
-        var dy = tileA.CenterY - tileB.CenterY;
+        var dx = tileA.X - tileB.X;
+        var dy = tileA.Y - tileB.Y;
         return MathF.Sqrt(dx * dx + dy * dy);
     }
 
@@ -61,12 +61,22 @@ internal static class TileMath
 }
 public sealed class Tile
 {
-
+    public enum TileType
+    {
+        Unknown,
+        Empty,
+        Wall,
+        Pellet,
+        Pill,
+        Tunnel,
+        House,
+    }
     public static int DefaultTileSize => BlPacManTheme.Tiles.Size;
     private static float VerticalCenterOffset => BlPacManTheme.Tiles.VerticalCenterOffset;
 
 
     public char Code { get; }
+    public TileType Type { get; }
 
     public int Column { get; }
 
@@ -78,27 +88,43 @@ public sealed class Tile
 
     public int Height { get; }
 
-    public float CenterX { get; }
+    public float X { get; }
 
-    public float CenterY { get; }
+    public float Y { get; }
 
     internal BlPacManConsumableComponent? Item { get; set; }
 
     public Tile(char code, int column, int row, Map map)
     {
-        Map = map ?? throw new ArgumentNullException(nameof(map));
+        Map = map;
         Code = code;
         Column = column;
         Row = row;
         Width = DefaultTileSize;
         Height = DefaultTileSize;
-        CenterX = Column * Width + Width / 2f;
-        CenterY = Row * Height + Height / 2f + VerticalCenterOffset;
+        X = Column * Width + Width / 2f;
+        Y = Row * Height + Height / 2f + VerticalCenterOffset;
+        Type = code switch
+        {
+            '=' => TileType.Wall,
+            '.' => TileType.Pellet,
+            '*' => TileType.Pill,
+            't' => TileType.Tunnel,
+            'h' => TileType.House,
+            '-' => TileType.Empty,
+            _ => TileType.Unknown,
+        };
     }
 
-    public bool IsWall() => Code == '=';
+    public bool IsWall() => Type == TileType.Wall;
+    public bool IsEmpty() => Type == TileType.Empty;
+    public bool IsHouse() => Type == TileType.House;
+    public bool IsTunnel() => Type == TileType.Tunnel;
 
-    public bool IsHouse() => Code == 'h';
+    public bool HasDot() => Item is not null && Type == TileType.Pellet;
+
+    public bool HasPill() => Item is not null && Type == TileType.Pill;
+
 
     /// <summary>
     /// Determines whether the tile is part of the ghost house doorway, allowing
@@ -108,24 +134,17 @@ public sealed class Tile
     {
         var houseCenter = Map.HouseCenter;
         if (houseCenter is null)
-        {
             return false;
-        }
 
         if (ReferenceEquals(this, houseCenter))
-        {
             return true;
-        }
 
         var doorway = houseCenter.GetUp();
-        return doorway is not null && ReferenceEquals(this, doorway);
+        var isDoorway = doorway is not null && ReferenceEquals(this, doorway);
+        return isDoorway;
     }
 
-    public bool IsTunnel() => Code == 't';
-
-    public bool HasDot() => Item is not null && Code == '.';
-
-    public bool HasPill() => Item is not null && Code == '*';
+  
 
     public Tile? Get(BlPacManDirection direction)
     {

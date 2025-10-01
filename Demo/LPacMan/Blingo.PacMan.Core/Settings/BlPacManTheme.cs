@@ -1,7 +1,8 @@
-using System;
-using System.Collections.Generic;
 using AbstUI.Primitives;
 using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Sprites.ParentScripts;
+using System;
+using System.Collections.Generic;
 
 namespace Blingo.PacMan.Core.Settings;
 
@@ -40,16 +41,16 @@ public static class BlPacManTheme
         /// <summary>
         /// Animation loops keyed by their behaviour label.
         /// </summary>
-        public static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> Animations { get; } = BuildAnimations();
+        public static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> Animations { get; } = BuildAnimations();
 
-        private static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> BuildAnimations()
+        private static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> BuildAnimations()
         {
-            var animations = new Dictionary<string, (ARect[] Frames, int FrameDelay)>(StringComparer.OrdinalIgnoreCase)
+            var animations = new Dictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)>()
             {
-                ["left"] = (CreateLoop(0), DefaultFrameDelay),
-                ["right"] = (CreateLoop(0), DefaultFrameDelay),
-                ["up"] = (CreateLoop(0), DefaultFrameDelay),
-                ["down"] = (CreateLoop(0), DefaultFrameDelay),
+                [PMCharacterAnimationType.PacManLeft] = (CreateLoop(0), DefaultFrameDelay),
+                [PMCharacterAnimationType.PacManRight] = (CreateLoop(0), DefaultFrameDelay),
+                [PMCharacterAnimationType.PacManUp] = (CreateLoop(0), DefaultFrameDelay),
+                [PMCharacterAnimationType.PacManDown] = (CreateLoop(0), DefaultFrameDelay),
             };
 
             return animations;
@@ -86,16 +87,43 @@ public static class BlPacManTheme
         private const int FrightenedWhiteFirstColumn = 1;
         private const int FrightenedWhiteSecondColumn = 3;
         private const int DefaultFrightenedFrameDelay = 6;
-        public const string FrightenedBlueAnimation = "ghost-frightened-blue";
-        public const string FrightenedFlashAnimation = "ghost-frightened-flash";
         public const int FrightenedFlashWindowFrames = 12;
+        private const int DefaultFrameDelay = 2;
+
+        public static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> Animations { get; } = BuildAnimations();
+
+        private static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> BuildAnimations()
+        {
+            var animations = new Dictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)>()
+            {
+                [PMCharacterAnimationType.GhostLeft] = (CreateLoop(0, 0), DefaultFrameDelay),
+                [PMCharacterAnimationType.GhostRight] = (CreateLoop(1, 0), DefaultFrameDelay),
+                [PMCharacterAnimationType.GhostUp] = (CreateLoop(2, 0), DefaultFrameDelay),
+                [PMCharacterAnimationType.GhostDown] = (CreateLoop(3, 0), DefaultFrameDelay),
+            };
+
+            return animations;
+        }
+        private static ARect[] CreateLoop(int ghostIndex,int startColumn)
+        {
+            return new[]
+            {
+                CreateFrame(ghostIndex,startColumn),
+            };
+        }
+        private static ARect CreateFrame(int ghostIndex, int column)
+        {
+            var left = column * SpriteSize;
+            var top = (ghostIndex +1) * SpriteSize;
+            return new ARect(left, top, left + SpriteSize, top + SpriteSize);
+        }
 
         public static IReadOnlyDictionary<MrGhost, ARect> Sprites { get; } = new Dictionary<MrGhost, ARect>
         {
             [MrGhost.Blinky] = ARect.New(SpriteSize * 0, SpriteSize * 1, SpriteSize, SpriteSize),
             [MrGhost.Pinky] = ARect.New(SpriteSize * 1, SpriteSize * 2, SpriteSize, SpriteSize),
             [MrGhost.Inky] = ARect.New(SpriteSize * 2, SpriteSize * 3, SpriteSize, SpriteSize),
-            [MrGhost.Clyde] = ARect.New(SpriteSize * 3, SpriteSize * 4, SpriteSize, SpriteSize),
+            [MrGhost.Sue] = ARect.New(SpriteSize * 3, SpriteSize * 4, SpriteSize, SpriteSize),
         };
 
         public static IReadOnlyDictionary<MrGhost, float> HorizontalOffsets { get; } = new Dictionary<MrGhost, float>
@@ -103,13 +131,13 @@ public static class BlPacManTheme
             [MrGhost.Blinky] = -Tiles.Size,
             [MrGhost.Pinky] = -Tiles.Size / 2f,
             [MrGhost.Inky] = Tiles.Size / 2f,
-            [MrGhost.Clyde] = Tiles.Size,
+            [MrGhost.Sue] = Tiles.Size,
         };
 
-        public static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> FrightenedAnimations { get; }
+        public static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> FrightenedAnimations { get; }
             = BuildFrightenedAnimations();
 
-        private static IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> BuildFrightenedAnimations()
+        private static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> BuildFrightenedAnimations()
         {
             var blueFrames = new[]
             {
@@ -125,10 +153,10 @@ public static class BlPacManTheme
                 CreateFrightenedFrame(FrightenedWhiteSecondColumn),
             };
 
-            return new Dictionary<string, (ARect[] Frames, int FrameDelay)>(StringComparer.OrdinalIgnoreCase)
+            return new Dictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)>()
             {
-                [FrightenedBlueAnimation] = (blueFrames, DefaultFrightenedFrameDelay),
-                [FrightenedFlashAnimation] = (flashFrames, DefaultFrightenedFrameDelay),
+                [PMCharacterAnimationType.GhostFrightenedBlue] = (blueFrames, DefaultFrightenedFrameDelay),
+                [PMCharacterAnimationType.GhostFrightenedWhite] = (flashFrames, DefaultFrightenedFrameDelay),
             };
         }
 
@@ -149,22 +177,22 @@ public static class BlPacManTheme
 
         public static int FrameSize => Actor.SpriteSize - 2;
 
-        public static IReadOnlyDictionary<string, ARect[]> Animations { get; } = BuildAnimations();
+        public static IReadOnlyDictionary<PMCharacterAnimationType, ARect[]> Animations { get; } = BuildAnimations();
 
-        public static ARect DefaultFrame => Animations["default"][0];
+        public static ARect DefaultFrame => Animations[PMCharacterAnimationType.BonusDefault][0];
 
-        private static IReadOnlyDictionary<string, ARect[]> BuildAnimations()
+        private static IReadOnlyDictionary<PMCharacterAnimationType, ARect[]> BuildAnimations()
         {
-            var animations = new Dictionary<string, ARect[]>(StringComparer.OrdinalIgnoreCase)
+            var animations = new Dictionary<PMCharacterAnimationType, ARect[]>()
             {
-                ["default"] = new[] { CreateFrame(0, 0) },
-                ["score100"] = new[] { CreateFrame(0, FrameSize) },
-                ["score200"] = new[] { CreateFrame(FrameSize * 1, FrameSize) },
-                ["score500"] = new[] { CreateFrame(FrameSize * 2, FrameSize) },
-                ["score700"] = new[] { CreateFrame(FrameSize * 3, FrameSize) },
-                ["score1000"] = new[] { CreateFrame(FrameSize * 4, FrameSize) },
-                ["score2000"] = new[] { CreateFrame(FrameSize * 5, FrameSize) },
-                ["score5000"] = new[] { CreateFrame(FrameSize * 6, FrameSize) },
+                [PMCharacterAnimationType.BonusDefault] = [ CreateFrame(0, 0) ],
+                [PMCharacterAnimationType.BonusScore100] = [ CreateFrame(0, FrameSize) ],
+                [PMCharacterAnimationType.BonusScore200] = [ CreateFrame(FrameSize * 1, FrameSize) ],
+                [PMCharacterAnimationType.BonusScore500] = [ CreateFrame(FrameSize * 2, FrameSize) ],
+                [PMCharacterAnimationType.BonusScore700] = [ CreateFrame(FrameSize * 3, FrameSize) ],
+                [PMCharacterAnimationType.BonusScore1000] = [ CreateFrame(FrameSize * 4, FrameSize) ],
+                [PMCharacterAnimationType.BonusScore2000] = [ CreateFrame(FrameSize * 5, FrameSize) ],
+                [PMCharacterAnimationType.BonusScore5000] = [ CreateFrame(FrameSize * 6, FrameSize) ],
             };
 
             return animations;

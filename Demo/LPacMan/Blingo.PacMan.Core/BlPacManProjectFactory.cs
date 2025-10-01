@@ -59,7 +59,6 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                     .AddScriptsFromAssembly()
                 )
                 .ServicesBlingo(s => s
-                    .AddSingleton<BlPacManCore>()
                     .AddSingleton<BlPacManRepository>()
                     .AddSingleton<IPacManRandomSource, PacManRandomSource>()
                     );
@@ -267,7 +266,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
             .AddBehavior<BlPacManActorBehavior>();
 
         var ghostNames = BlGhostManager.GhostNames;
-        for (var i = 0; i < ghostNames.Length; i++)
+        for (var i = 0; i < ghostNames.Length-3; i++)
         {
             var ghost = _movie.AddSprite(PCSpriteNums.GhostStart + i, GameStartFrame, frameCount, sprStartX + i* sprSize, sprStartY, sprite =>
                 {

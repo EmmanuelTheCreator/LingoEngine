@@ -8,14 +8,14 @@ namespace Blingo.PacMan.Core.Game
 {
     public enum MrGhost
     {
-        Blinky,
         Pinky,
+        Blinky,
         Inky,
-        Clyde,
+        Sue,
     }
     internal class BlGhostManager
     {
-        private static MrGhost[] _ghostNames = new[] { MrGhost.Blinky, MrGhost.Pinky, MrGhost.Inky, MrGhost.Clyde };
+        private static MrGhost[] _ghostNames = new[] { MrGhost.Blinky, MrGhost.Pinky, MrGhost.Inky, MrGhost.Sue };
         private GhostSettings? _ghostSettings;
         private static readonly int[] _ghostScoreChain = { 200, 400, 800, 1_600 };
         private readonly List<BlPacManGhostBehavior> _ghosts = new();
@@ -37,7 +37,7 @@ namespace Blingo.PacMan.Core.Game
                 [MrGhost.Blinky] = new GhostHouseSetup(true, 0),
                 [MrGhost.Pinky] = new GhostHouseSetup(false, 120),
                 [MrGhost.Inky] = new GhostHouseSetup(false, 240),
-                [MrGhost.Clyde] = new GhostHouseSetup(false, 360),
+                [MrGhost.Sue] = new GhostHouseSetup(false, 360),
             };
 
         internal IReadOnlyList<BlPacManGhostBehavior> Ghosts => _ghosts;

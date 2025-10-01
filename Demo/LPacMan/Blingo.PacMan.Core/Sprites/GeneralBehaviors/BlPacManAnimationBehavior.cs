@@ -1,9 +1,8 @@
-using System;
-using System.Collections.Generic;
 using AbstUI.Primitives;
+using Blingo.PacMan.Core.Sprites.ParentScripts;
 using BlingoEngine.Movies;
-using BlingoEngine.Sprites;
 using BlingoEngine.Movies.Events;
+using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
 
 namespace Blingo.PacMan.Core.Sprites.GeneralBehaviors;
@@ -13,9 +12,9 @@ internal sealed class BlPacManAnimationBehavior : BlingoSpriteBehavior,
     IHasEndSpriteEvent,
     IHasExitFrameEvent
 {
-    private readonly Dictionary<string, AnimationSequence> _animations = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<PMCharacterAnimationType, AnimationSequence> _animations = new();
 
-    private string? _currentAnimation;
+    private PMCharacterAnimationType _currentAnimation = PMCharacterAnimationType.Unknown;
     private int _currentFrameIndex;
     private int _waitCounter;
     private bool _isPlaying;
@@ -25,50 +24,30 @@ internal sealed class BlPacManAnimationBehavior : BlingoSpriteBehavior,
     {
     }
 
-    public void SetAnimationRects(string name, ARect[] targetMemberRects, int framesToWaitBeforeNext)
+    public void SetAnimationRects(PMCharacterAnimationType name, ARect[] targetMemberRects, int framesToWaitBeforeNext)
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Animation name is required.", nameof(name));
-        }
-
-        if (targetMemberRects is null)
-        {
-            throw new ArgumentNullException(nameof(targetMemberRects));
-        }
 
         if (targetMemberRects.Length == 0)
-        {
             throw new ArgumentException("Animation requires at least one frame.", nameof(targetMemberRects));
-        }
 
         var frames = new ARect[targetMemberRects.Length];
         Array.Copy(targetMemberRects, frames, targetMemberRects.Length);
         _animations[name] = new AnimationSequence(frames, Math.Max(framesToWaitBeforeNext, 0));
 
-        if (string.Equals(_currentAnimation, name, StringComparison.OrdinalIgnoreCase))
+        if (_currentAnimation == name)
         {
             _currentFrameIndex = Math.Min(_currentFrameIndex, frames.Length - 1);
             ApplyFrame(frames[_currentFrameIndex]);
         }
     }
 
-    public void Play(string name)
+    public void Play(PMCharacterAnimationType name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return;
-        }
-
         if (!_animations.TryGetValue(name, out var sequence) || sequence.Frames.Length == 0)
-        {
             return;
-        }
 
-        if (string.Equals(_currentAnimation, name, StringComparison.Ordinal) && _isPlaying)
-        {
+        if (_currentAnimation == name && _isPlaying)
             return;
-        }
 
         _currentAnimation = name;
         _currentFrameIndex = 0;
@@ -85,10 +64,8 @@ internal sealed class BlPacManAnimationBehavior : BlingoSpriteBehavior,
 
     public void BeginSprite()
     {
-        if (_currentAnimation is null)
-        {
+        if (_currentAnimation == PMCharacterAnimationType.Unknown)
             return;
-        }
 
         if (_animations.TryGetValue(_currentAnimation, out var sequence) && sequence.Frames.Length > 0)
         {
@@ -105,15 +82,11 @@ internal sealed class BlPacManAnimationBehavior : BlingoSpriteBehavior,
 
     public void ExitFrame()
     {
-        if (!_isPlaying || _currentAnimation is null)
-        {
+        if (!_isPlaying || _currentAnimation == PMCharacterAnimationType.Unknown)
             return;
-        }
 
         if (!_animations.TryGetValue(_currentAnimation, out var sequence) || sequence.Frames.Length == 0)
-        {
             return;
-        }
 
         if (sequence.FrameDelay == 0)
         {
@@ -149,9 +122,7 @@ internal sealed class BlPacManAnimationBehavior : BlingoSpriteBehavior,
     {
         APoint? regPoint = null;
         if (string.Equals(Me.Member?.Name, "sprites", StringComparison.OrdinalIgnoreCase))
-        {
             regPoint = new APoint(rect.Width / 2f, rect.Height / 2f);
-        }
 
         Me.SetMemberRect(rect, regPoint);
     }

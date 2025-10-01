@@ -30,7 +30,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
 {
     public static int SprSize => BlPacManTheme.Actor.SpriteSize;
     public static int SprY => BlPacManTheme.Actor.SpriteSheetY;
-    private static readonly IReadOnlyDictionary<string, (ARect[] Frames, int FrameDelay)> _animationDefinitions =
+    private static readonly IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> _animationDefinitions =
         BlPacManTheme.Actor.Animations;
 
     // Legacy 16px sprite loops retained for reference. To reinstate them, move the values below into
@@ -78,7 +78,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     private readonly GlobalVars _globals;
     private BlPacManGameBehavior? _coordinator;
     private BlPacManDirection _requestedDirection;
-    private BlPacManCharacter? _character;
+    private PMCharacter? _character;
     private BlPacManEventSubscription? _tileEnteredSubscription;
     private BlPacManEventSubscription? _positionSubscription;
     private bool _animationsConfigured;
@@ -199,7 +199,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
     /// <summary>
     /// Exposes the underlying movement helper for other behaviours.
     /// </summary>
-    internal BlPacManCharacter Character => EnsureCharacter();
+    internal PMCharacter Character => EnsureCharacter();
 
     /// <summary>
     /// Hides Pac-Man's sprite.
@@ -289,7 +289,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _animationsConfigured = true;
     }
 
-    private void CheckCollisions(BlPacManCharacter character)
+    private void CheckCollisions(PMCharacter character)
     {
         if (_globals.State.IsGameplayFrozen)
             return;
@@ -330,7 +330,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         _globals.State.UpdatePacManPosition(context);
     }
 
-    private void PublishPosition(BlPacManCharacter character)
+    private void PublishPosition(PMCharacter character)
     {
         if (character is null)
             return;
@@ -358,11 +358,11 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         if (startTile is null)
             return;
 
-        Me.LocH = startTile.CenterX;
-        Me.LocV = startTile.CenterY;
+        Me.LocH = startTile.X;
+        Me.LocV = startTile.Y;
     }
 
-    private BlPacManCharacter EnsureCharacter()
+    private PMCharacter EnsureCharacter()
     {
         if (_character is not null)
         {
@@ -376,7 +376,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
         var baseStep = GetBaseStepSize();
         var baseSpeed = _globals.CurrentPacmanSettings?.Speed ?? 80f;
-        _character = new BlPacManCharacter(_env, map, Me, new BlPacManCharacterOptions
+        _character = new PMCharacter(_env, map, Me, PMCharacter.CharacterType.PacMan, new BlPacManCharacterOptions
         {
             Step = baseStep,
             Speed = baseSpeed,

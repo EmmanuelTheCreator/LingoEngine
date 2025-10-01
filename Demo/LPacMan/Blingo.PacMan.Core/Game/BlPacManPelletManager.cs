@@ -36,7 +36,7 @@ internal sealed class BlPacManPelletManager
     {
         if (_globals.Map == null)
             return;
-        var pellets = _globals.Map.Tiles.Where(x => x.Code == '.').ToList();
+        var pellets = _globals.Map.Pellets.ToList();
         for (int i = 0; i < pellets.Count; i++)
         {
             Tile? tile = pellets[i];
@@ -51,8 +51,8 @@ internal sealed class BlPacManPelletManager
         var spriteNum = index + PCSpriteNums.PelletsStart;
         lingoMovie.Channel(spriteNum).Puppet = true;
         BlingoSprite2D sprite2D = (BlingoSprite2D)lingoMovie.GetSprite(spriteNum)!;
-        sprite2D.LocH = tile.CenterX;
-        sprite2D.LocV = tile.CenterY;
+        sprite2D.LocH = tile.X;
+        sprite2D.LocV = tile.Y;
         sprite2D.SetMember("pills");
         sprite2D.SetMemberRect(_pelletRect);
 

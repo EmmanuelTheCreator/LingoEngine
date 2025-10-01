@@ -33,7 +33,7 @@ internal sealed class BlPacManPowerPillManager
     {
         if (_globals.Map == null)
             return;
-        var pills = _globals.Map.Tiles.Where(x => x.Code == '*').ToList();
+        var pills = _globals.Map.Pills.ToList();
         for (int i = 0; i < pills.Count; i++)
         {
             Tile? tile = pills[i];
@@ -47,8 +47,8 @@ internal sealed class BlPacManPowerPillManager
         var spriteNum = index + PCSpriteNums.PowerPillStart;
         lingoMovie.Channel(spriteNum).Puppet = true;
         BlingoSprite2D sprite2D = (BlingoSprite2D)lingoMovie.GetSprite(spriteNum)!;
-        sprite2D.LocH = tile.CenterX-2;
-        sprite2D.LocV = tile.CenterY-2;
+        sprite2D.LocH = tile.X-2;
+        sprite2D.LocV = tile.Y-2;
         sprite2D.SetMember("pills");
         sprite2D.SetMemberRect(new(0, 0, 6, 6));
 

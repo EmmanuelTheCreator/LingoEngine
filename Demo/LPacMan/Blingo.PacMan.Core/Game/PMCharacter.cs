@@ -1,9 +1,7 @@
-using System;
 using Blingo.PacMan.Core.Datas;
 using Blingo.PacMan.Core.Engine;
 using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
-using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
 using BlingoEngine.Core;
 using BlingoEngine.Movies;
@@ -11,30 +9,56 @@ using BlingoEngine.Sprites;
 
 namespace Blingo.PacMan.Core.Sprites.ParentScripts;
 
-internal static class BlPacManCharacterModes
+
+public enum PMCharacterAnimationType
 {
-    public const string Ghost = "Ghost";
+    Unknown,
+    PacManUp,
+    PacManDown,
+    PacManLeft,
+    PacManRight,
+
+    GhostUp,
+    GhostDown,
+    GhostLeft,
+    GhostRight,
+    GhostFrightenedBlue,
+    GhostFrightenedWhite,
+    BonusDefault,
+    BonusScore100,
+    BonusScore200,
+    BonusScore500,
+    BonusScore700,
+    BonusScore1000,
+    BonusScore2000,
+    BonusScore5000,
 }
-
-internal sealed class BlPacManCharacter : BlingoParentScript
+internal sealed class PMCharacter : BlingoParentScript
 {
-    private const float DefaultSpeed = 80f;
-    private const float PositionTolerance = 1.5f;
+    public enum CharacterType
+    {
+        Unknown,
+        PacMan,
+        Ghost,
+        Bonus,
+        Fruit
+    }
+    private const float _defaultSpeed = 80f;
+    private const float _positionTolerance = 0.5f;
 
-    private readonly BlPacManEventMediator<BlPacManCharacter> _moveStarted = new();
-    private readonly BlPacManEventMediator<BlPacManCharacter> _stopped = new();
+    private readonly BlPacManEventMediator<PMCharacter> _moveStarted = new();
+    private readonly BlPacManEventMediator<PMCharacter> _stopped = new();
     private readonly BlPacManEventMediator<BlPacManPositionEventData> _positionChanged = new();
     private readonly BlPacManEventMediator<BlPacManTileEventData> _tileEntered = new();
 
     private Map _map;
     private readonly BlingoSprite2D _sprite;
-
     private float _step;
     private float _speedSetting;
     private float _speed;
-    private string? _animation;
-    private string? _nextAnimation;
-    private string? _animationOverride;
+    private PMCharacterAnimationType _animation = PMCharacterAnimationType.Unknown;
+    private PMCharacterAnimationType _nextAnimation = PMCharacterAnimationType.Unknown;
+    private PMCharacterAnimationType _animationOverride = PMCharacterAnimationType.Unknown;
     private bool _moving;
     private bool _preTurnActive;
     private BlPacManDirection _nextDirection;
@@ -46,20 +70,9 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private CharacterSnapshot? _defaults;
     public bool RotateSprite { get; set; }
     public bool AllowHouseExit { get; set; }
+    public CharacterType Type { get; private set; }
 
-    public BlPacManCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, BlPacManCharacterOptions? options = null)
-        : base(env)
-    {
-        _map = map ?? throw new ArgumentNullException(nameof(map));
-        _sprite = sprite ?? throw new ArgumentNullException(nameof(sprite));
-        _step = options?.Step ?? TileMath.GetMovementStep(map);
-        Speed = options?.Speed ?? DefaultSpeed;
-        Direction = options?.Direction ?? BlPacManDirection.None;
-        _previousDirection = Direction;
-        _nextDirection = BlPacManDirection.None;
-        Preturn = options?.Preturn ?? false;
-        Mode = options?.Mode;
-    }
+    #region Properties
 
     public float Step
     {
@@ -95,17 +108,17 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     public bool Preturn { get; set; }
 
-    public string? Mode { get; set; }
+    public GhostMode Mode { get; set; }
 
-    public string? Animation => _animation;
+    public PMCharacterAnimationType Animation => _animation;
 
-    private float X
+    public float X
     {
         get => _sprite.LocH;
         set => _sprite.LocH = value;
     }
 
-    private float Y
+    public float Y
     {
         get => _sprite.LocV;
         set => _sprite.LocV = value;
@@ -113,13 +126,33 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private Map Map => _map;
 
-    public BlPacManEventSubscription SubscribeMoveStarted(Action<BlPacManCharacter> handler) => _moveStarted.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeMoveStarted(Action<PMCharacter> handler) => _moveStarted.Subscribe(handler);
 
-    public BlPacManEventSubscription SubscribeStopped(Action<BlPacManCharacter> handler) => _stopped.Subscribe(handler);
+    public BlPacManEventSubscription SubscribeStopped(Action<PMCharacter> handler) => _stopped.Subscribe(handler);
 
     public BlPacManEventSubscription SubscribePositionChanged(Action<BlPacManPositionEventData> handler) => _positionChanged.Subscribe(handler);
 
     public BlPacManEventSubscription SubscribeTileEntered(Action<BlPacManTileEventData> handler) => _tileEntered.Subscribe(handler);
+
+    #endregion
+
+
+    public PMCharacter(IBlingoMovieEnvironment env, Map map, BlingoSprite2D sprite, CharacterType type, BlPacManCharacterOptions options)
+        : base(env)
+    {
+        Type = type;
+        _map = map;
+        _sprite = sprite;
+        _step = options.Step ?? TileMath.GetMovementStep(map);
+        Speed = options.Speed ?? _defaultSpeed;
+        Direction = options.Direction;
+        _previousDirection = Direction;
+        _nextDirection = BlPacManDirection.None;
+        Preturn = options.Preturn ?? false;
+        Mode = options.Mode;
+    }
+
+
 
     public void SetMap(Map map)
     {
@@ -201,50 +234,45 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
         _preTurnActive = false;
         _lastTile = null;
-        if (_animationOverride is not null)
-        {
+        if (_animationOverride != PMCharacterAnimationType.Unknown)
             SetAnimation(_animationOverride);
-        }
         else
-        {
             SetAnimation(snapshot.Animation);
-        }
         PauseCharacterAnimation();
     }
 
     public void Move(BlPacManDirection direction = BlPacManDirection.None)
     {
-        if (direction == BlPacManDirection.None)
+        if (Type== CharacterType.Ghost)
         {
-            direction = Direction;
+
         }
+        if (direction == BlPacManDirection.None)
+            direction = Direction;
 
         if (direction == BlPacManDirection.None)
-        {
             return;
-        }
 
         var tile = GetTile();
         if (tile is null)
-        {
             return;
-        }
 
         float? step = null;
         var stepSize = GetStep();
-
+        // Could go that direction.
         if ((direction != Direction || _preTurnActive) && CanGo(direction, tile))
         {
             if (((direction != Direction && direction != Direction.GetOpposite()) || _preTurnActive) && !IsCentered(tile))
             {
+                // Not in the center of the tile. Befor turn, set step so on next frame we get into the center.
                 if (direction.IsVertical())
                 {
-                    var diffX = Math.Abs(X - tile.CenterX);
-                    if (Preturn)
+                    var diffX = Math.Abs(X - tile.X);
+                    if (Preturn) // Set preturn to true to turn faster on corners.
                     {
                         if (!IsCentered(tile, Axis.X))
                         {
-                            if (X > tile.CenterX)
+                            if (X > tile.X)
                                 X -= GetMin(diffX, stepSize);
                             else
                                 X += GetMin(diffX, stepSize);
@@ -260,12 +288,12 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
                 if (direction.IsHorizontal())
                 {
-                    var diffY = Math.Abs(Y - tile.CenterY);
-                    if (Preturn)
-                    {
+                    var diffY = Math.Abs(Y - tile.Y);
+                    if (Preturn) // Set preturn to true to turn faster on corners.
+                    { 
                         if (!IsCentered(tile, Axis.Y))
                         {
-                            if (Y > tile.CenterY)
+                            if (Y > tile.Y)
                                 Y -= GetMin(diffY, stepSize);
                             else
                                 Y += GetMin(diffY, stepSize);
@@ -280,26 +308,28 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                 }
             }
 
+            // No step. Means change direction.
             if (step is null)
             {
                 UpdateDirection(direction);
                 SetNextAnimation();
             }
         }
-
         if (step is null)
         {
+            // Keep straight.
             if (CanGo(Direction, tile))
                 step = stepSize;
             else
             {
+                // Wall.
                 if (Direction.IsVertical())
-                    step = GetMin(Math.Abs(Y - tile.CenterY), stepSize);
+                    step = GetMin(Math.Abs(Y - tile.Y), stepSize);
                 else if (Direction.IsHorizontal())
-                    step = GetMin(Math.Abs(X - tile.CenterX), stepSize);
+                    step = GetMin(Math.Abs(X - tile.X), stepSize);
             }
         }
-
+        // Move.
         if (step is float distance && distance > 0)
         {
             switch (Direction)
@@ -338,7 +368,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
                     break;
             }
         }
-
+        // Pass away limits.
         WrapPosition();
 
         var newTile = GetTile();
@@ -364,11 +394,11 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         var tile = GetTile();
         if (tile is not null)
         {
-            if (Math.Abs(Y - tile.CenterY) < PositionTolerance)
-                Y = tile.CenterY;
+            if (Math.Abs(Y - tile.Y) < _positionTolerance)
+                Y = tile.Y;
 
-            if (Math.Abs(X - tile.CenterX) < PositionTolerance)
-                X = tile.CenterX;
+            if (Math.Abs(X - tile.X) < _positionTolerance)
+                X = tile.X;
         }
 
         var currentX = X;
@@ -396,7 +426,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
             _moving = false;
         }
 
-        if (_nextAnimation is not null && !string.Equals(_animation, _nextAnimation, StringComparison.Ordinal))
+        if (_nextAnimation != PMCharacterAnimationType.Unknown && _animation !=  _nextAnimation)
             SetAnimation(_nextAnimation);
     }
 
@@ -406,26 +436,24 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     public void Show() => _sprite.Visibility = true;
 
-    public void SetAnimation(string? animation)
+    public void SetAnimation(PMCharacterAnimationType animation)
     {
-        if (string.Equals(_animation, animation, StringComparison.Ordinal))
+        if (_animation ==  animation)
             return;
 
         _animation = animation;
         ApplyAnimation(animation);
     }
 
-    public void SetAnimationOverride(string? animation)
+    public void SetAnimationOverride(PMCharacterAnimationType animation)
     {
-        if (string.Equals(_animationOverride, animation, StringComparison.Ordinal))
+        if (_animationOverride ==  animation)
             return;
 
         _animationOverride = animation;
 
-        if (animation is null)
-        {
+        if (animation == PMCharacterAnimationType.Unknown)
             SetNextAnimation();
-        }
         else
         {
             _nextAnimation = animation;
@@ -434,9 +462,9 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         }
     }
 
-    private void ApplyAnimation(string? animation)
+    private void ApplyAnimation(PMCharacterAnimationType animation)
     {
-        if (animation is null)
+        if (animation == PMCharacterAnimationType.Unknown)
         {
             TrySendSprite<BlPacManAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.StopAnimation());
             return;
@@ -482,10 +510,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     private void ResumeCharacterAnimation()
     {
         _sprite.Play();
-        if (_animation is not null)
-        {
+        if (_animation != PMCharacterAnimationType.Unknown)
             TrySendSprite<BlPacManAnimationBehavior>(_sprite.SpriteNum, behavior => behavior.Play(_animation));
-        }
     }
 
     private void UpdateDirection(BlPacManDirection direction)
@@ -501,7 +527,7 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private void SetNextAnimation()
     {
-        if (_animationOverride is not null)
+        if (_animationOverride  != PMCharacterAnimationType.Unknown)
         {
             _nextAnimation = _animationOverride;
             _nextDirection = Direction;
@@ -510,14 +536,14 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
         if (Direction == BlPacManDirection.None)
         {
-            _nextAnimation = null;
+            _nextAnimation = PMCharacterAnimationType.Unknown;
             return;
         }
 
         var label = GetAnimationLabel(Direction);
-        if (label is null)
+        if (label == PMCharacterAnimationType.Unknown)
         {
-            _nextAnimation = null;
+            _nextAnimation = PMCharacterAnimationType.Unknown;
             return;
         }
 
@@ -534,31 +560,26 @@ internal sealed class BlPacManCharacter : BlingoParentScript
     {
         var tile = currentTile ?? GetTile();
         if (tile is null)
-        {
             return false;
-        }
 
         var nextTile = tile.Get(direction);
-        if (Mode == BlPacManCharacterModes.Ghost)
-        {
-            var insideHouse = tile.IsHouse() || tile.IsGhostHouseEntrance();
-            if (insideHouse)
-            {
-                if (AllowHouseExit && nextTile is not null && !nextTile.IsWall())
-                {
-                    return true;
-                }
+        //if (Mode == BlPacManCharacterModes.Ghost)
+        //{
+        //    var insideHouse = tile.IsHouse() || tile.IsGhostHouseEntrance();
+        //    if (insideHouse)
+        //    {
+        //        if (AllowHouseExit && nextTile is not null && !nextTile.IsWall())
+        //            return true;
+        //        return nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance());
+        //    }
 
-                return nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance());
-            }
+        //    if (AllowHouseExit && nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance()))
+        //        return !nextTile.IsWall();
+        //}
 
-            if (AllowHouseExit && nextTile is not null && (nextTile.IsHouse() || nextTile.IsGhostHouseEntrance()))
-            {
-                return !nextTile.IsWall();
-            }
-        }
-
-        return nextTile is not null && !nextTile.IsHouse() && !nextTile.IsWall();
+        //var canGo = nextTile is not null && !nextTile.IsHouse() && !nextTile.IsWall();
+        var canGo = nextTile is not null && !nextTile.IsHouse() && !nextTile.IsWall();
+        return canGo;
     }
 
     private bool IsCentered(Tile tile)
@@ -568,8 +589,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
 
     private bool IsCentered(Tile tile, Axis axis)
     {
-        var centeredX = Math.Abs(X - tile.CenterX) < PositionTolerance;
-        var centeredY = Math.Abs(Y - tile.CenterY) < PositionTolerance;
+        var centeredX = Math.Abs(X - tile.X) < _positionTolerance;
+        var centeredY = Math.Abs(Y - tile.Y) < _positionTolerance;
 
         return axis switch
         {
@@ -589,15 +610,26 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         return Math.Abs(a - b) < 0.001f;
     }
 
-    private static string? GetAnimationLabel(BlPacManDirection direction)
+    private PMCharacterAnimationType GetAnimationLabel(BlPacManDirection direction)
     {
+        if (Type == CharacterType.PacMan)
+        {
+            return direction switch
+            {
+                BlPacManDirection.Left => PMCharacterAnimationType.PacManLeft,
+                BlPacManDirection.Right => PMCharacterAnimationType.PacManRight,
+                BlPacManDirection.Up => PMCharacterAnimationType.PacManUp,
+                BlPacManDirection.Down => PMCharacterAnimationType.PacManDown,
+                _ => PMCharacterAnimationType.Unknown,
+            };
+        }
         return direction switch
         {
-            BlPacManDirection.Left => "left",
-            BlPacManDirection.Right => "right",
-            BlPacManDirection.Up => "up",
-            BlPacManDirection.Down => "down",
-            _ => null,
+            BlPacManDirection.Left => PMCharacterAnimationType.GhostLeft,
+            BlPacManDirection.Right => PMCharacterAnimationType.GhostRight,
+            BlPacManDirection.Up => PMCharacterAnimationType.GhostUp,
+            BlPacManDirection.Down => PMCharacterAnimationType.GhostDown,
+            _ => PMCharacterAnimationType.Unknown,
         };
     }
 
@@ -621,6 +653,8 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         SetNextAnimation();
     }
 
+  
+
     private enum Axis
     {
         Both,
@@ -635,12 +669,12 @@ internal sealed class BlPacManCharacter : BlingoParentScript
         float LastY,
         BlPacManDirection Direction,
         BlPacManDirection PreviousDirection,
-        string? NextAnimation,
+        PMCharacterAnimationType NextAnimation,
         BlPacManDirection NextDirection,
         bool IsMoving,
-        string? Mode,
-        string? Animation,
-        string? AnimationOverride,
+        GhostMode Mode,
+        PMCharacterAnimationType Animation,
+        PMCharacterAnimationType AnimationOverride,
         bool AllowHouseExit);
 
 }
