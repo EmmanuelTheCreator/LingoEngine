@@ -302,7 +302,7 @@ internal sealed class BlPacManActorBehavior : BlingoSpriteBehavior,
         {
             if (ghost.IsFrightened)
             {
-                ghost.SetMode(GhostMode.Dead);
+                ghost.setMode(GhostMode.Dead);
                 var score = _globals.GhostManager.RegisterGhostEaten();
                 if (score > 0)
                     _globals.ScoreManager.AddScore(score);
