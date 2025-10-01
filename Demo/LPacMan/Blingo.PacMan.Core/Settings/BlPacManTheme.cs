@@ -89,6 +89,8 @@ public static class BlPacManTheme
         private const int DefaultFrightenedFrameDelay = 6;
         public const int FrightenedFlashWindowFrames = 12;
         private const int DefaultFrameDelay = 2;
+        private const int ScoreRowOffset = 110;
+        private const int ScoreHorizontalAdjustment = -2;
 
         public static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> Animations { get; } = BuildAnimations();
 
@@ -137,6 +139,9 @@ public static class BlPacManTheme
         public static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> FrightenedAnimations { get; }
             = BuildFrightenedAnimations();
 
+        public static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> ScoreAnimations { get; }
+            = BuildScoreAnimations();
+
         private static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> BuildFrightenedAnimations()
         {
             var blueFrames = new[]
@@ -164,6 +169,24 @@ public static class BlPacManTheme
         {
             var left = column * SpriteSize;
             var top = FrightenedRowIndex * SpriteSize;
+            return new ARect(left, top, left + SpriteSize, top + SpriteSize);
+        }
+
+        private static IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> BuildScoreAnimations()
+        {
+            return new Dictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)>
+            {
+                [PMCharacterAnimationType.GhostScore200] = (new[] { CreateScoreFrame(0, ScoreHorizontalAdjustment) }, 0),
+                [PMCharacterAnimationType.GhostScore400] = (new[] { CreateScoreFrame(1, ScoreHorizontalAdjustment) }, 0),
+                [PMCharacterAnimationType.GhostScore800] = (new[] { CreateScoreFrame(2, ScoreHorizontalAdjustment) }, 0),
+                [PMCharacterAnimationType.GhostScore1600] = (new[] { CreateScoreFrame(3, 0) }, 0),
+            };
+        }
+
+        private static ARect CreateScoreFrame(int column, int adjustment)
+        {
+            var left = column * SpriteSize + adjustment;
+            var top = ScoreRowOffset;
             return new ARect(left, top, left + SpriteSize, top + SpriteSize);
         }
     }

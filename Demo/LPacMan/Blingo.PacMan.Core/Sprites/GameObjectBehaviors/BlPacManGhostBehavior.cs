@@ -11,7 +11,6 @@ using BlingoEngine.Movies.Events;
 using BlingoEngine.Sprites;
 using BlingoEngine.Sprites.Events;
 using System;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
 
@@ -40,6 +39,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     private readonly GlobalVars _globals;
     private readonly IPacManRandomSource _random;
+    private readonly BlPacManEventMediator<BlPacManGhostBehavior> _modeFrightenedEntered = new();
+    private readonly BlPacManEventMediator<BlPacManGhostBehavior> _modeFrightenedExited = new();
 
     private PMCharacter? _character;
     private BlPacManEventSubscription? _tileSubscription;
@@ -71,7 +72,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private float _houseBottom;
     private Tile? _houseExitTile;
     private float _houseExitTileX;
-    private float _houseExitX;
     private float _houseCenterX;
     private float _houseCenterY;
 
@@ -83,7 +83,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private Tile? _deadEndTile;
     private float _deadEndX;
     private float _deadEndY;
-    private bool _deadPreparingEntry;
+    private bool _deadPrepareEnter;
 
     private ARect? _defaultRect;
     private ARect? _savedRect;
@@ -91,12 +91,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private PMTimer? _houseTimer;
     private PMTimer? _frightenedTimer;
     private bool _housePrepareExit;
-    private GhostMode _pendingFrightened;
-    private bool _deadPrepareEnter;
+    private GhostMode _frightened;
+    private int _initialHouseReleaseFrames;
+    private int _houseReleaseFrames;
+    private bool _frightenedNotificationActive;
+    private bool _scoreAnimationsConfigured;
+    private PMCharacterAnimationType _pendingScoreAnimation = PMCharacterAnimationType.Unknown;
+    private PMCharacterAnimationType _nextAnimation = PMCharacterAnimationType.Unknown;
 
     public MrGhost GhostName { get; set; } = MrGhost.Inky;
 
-    public bool IsFrightened => _mode == GhostMode.Frightened || _pendingFrightened != GhostMode.Unknown;
+    public bool IsFrightened => _mode == GhostMode.Frightened || _frightened != GhostMode.Unknown;
 
     public bool IsDead => _mode == GhostMode.Dead;
 
@@ -119,10 +124,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         if (_settings is not null)
             ConfigureInternal();
     }
-    public void Configure(GhostSettings settings, bool startOutsideHouse)
+    public void Configure(GhostSettings settings, bool startOutsideHouse, int initialHouseReleaseFrames = 0)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _startOutsideHouse = startOutsideHouse;
+        _initialHouseReleaseFrames = initialHouseReleaseFrames;
+        _houseReleaseFrames = initialHouseReleaseFrames;
 
         if (_character is not null)
             ConfigureInternal();
@@ -153,8 +160,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         _frightenedFrames = 0;
         _frightenedBlink = false;
-        _pendingFrightened =  GhostMode.Unknown;
-        _deadPreparingEntry = false;
+        _frightened = GhostMode.Unknown;
+        _deadPrepareEnter = false;
+        NotifyModeFrightenedExited();
+        _frightenedNotificationActive = false;
+        _pendingScoreAnimation = PMCharacterAnimationType.Unknown;
         if (_startOutsideHouse)
         {
             _mode = _globalMode;
@@ -181,6 +191,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private void ConfigureTargets(Map map)
     {
         if (_character == null) return;
+
+        _houseCenterX = map.HouseCenter?.X ?? map.House?.X ?? _houseCenterX;
+        _houseCenterY = map.HouseCenter?.Y ?? map.House?.Y ?? _houseCenterY;
 
         _deadTarget = map.House!.GetRight()!.GetUp()!;
         _deadEndX = _deadEndTile?.X ?? _houseCenterX;
@@ -258,14 +271,16 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _configured = false;
     }
 
-    public void ExitFrame()
+    public void ExitFrame() => Move();
+
+    public void Move()
     {
         if (!_configured || _character is null)
             return;
 
         if (_globals.State.IsGameplayFrozen)
         {
-            _character.Update();
+            UpdateCharacter();
             return;
         }
 
@@ -277,11 +292,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         if (ShouldExitMode(tile))
         {
-            OnExitMode();
+            HandleExitMode();
             tile = _character.GetTile();
             if (tile is null)
             {
-                _character.Update();
+                UpdateCharacter();
                 return;
             }
         }
@@ -298,8 +313,6 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 MoveNormal();
                 break;
         }
-
-        _character.Update();
     }
 
     public void OnEnterMode(GhostMode mode)
@@ -307,16 +320,20 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         switch (mode)
         {
             case GhostMode.Dead:
-                // TODO
-                //_emit('item:modefrightened:exit');
+                NotifyModeFrightenedExited();
                 _deadPrepareEnter = false;
-                //_nextAnimation = this.animations[`score${ this.score}`];
-                //update();
+                if (_pendingScoreAnimation != PMCharacterAnimationType.Unknown)
+                {
+                    EnsureScoreAnimations();
+                    _character?.SetAnimationOverride(_pendingScoreAnimation);
+                    UpdateCharacter();
+                    _character?.SetAnimationOverride(PMCharacterAnimationType.Unknown);
+                    _pendingScoreAnimation = PMCharacterAnimationType.Unknown;
+                }
                 break;
             case GhostMode.Frightened:
                 _frightenedTimer = new PMTimer(_frightenedTime);
-                // TODO
-                //_emit('item:modefrightened:enter');
+                NotifyModeFrightenedEntered();
                 break;
             case GhostMode.House:
                 _housePrepareExit = false;
@@ -325,14 +342,15 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
     }
+
     public void SetMode(GhostMode? mode)
     {
         if (mode is null || mode == GhostMode.Unknown)
         {
-            if (_pendingFrightened != GhostMode.Unknown)
+            if (_frightened != GhostMode.Unknown)
             {
-                _mode = _pendingFrightened;
-                _pendingFrightened = GhostMode.Unknown;
+                _mode = _frightened;
+                _frightened = GhostMode.Unknown;
             }
             else
                 _mode = _globalMode;
@@ -346,7 +364,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         {
             if (_mode == GhostMode.House && !_hasLeftHouse)
             {
-                _pendingFrightened = GhostMode.Frightened;
+                _frightened = GhostMode.Frightened;
+                _frightenedFrames = 0;
+                _frightenedBlink = false;
+                _frightenedTimer = new PMTimer(_frightenedTime);
+                NotifyModeFrightenedEntered();
                 return;
             }
 
@@ -361,24 +383,30 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         if (mode == GhostMode.Dead)
         {
+            if (_mode == GhostMode.Frightened)
+                NotifyModeFrightenedExited();
             _mode = GhostMode.Dead;
-            _pendingFrightened = GhostMode.Unknown;
+            _frightened = GhostMode.Unknown;
             _frightenedFrames = 0;
-            _deadPreparingEntry = false;
+            _deadPrepareEnter = false;
             UpdateHouseExitAllowance();
             UpdateSpeedForCurrentTile();
             UpdateModeVisual();
+            OnEnterMode(GhostMode.Dead);
             return;
         }
 
         if (mode == GhostMode.House)
         {
+            if (_mode == GhostMode.Frightened)
+                NotifyModeFrightenedExited();
             _mode = GhostMode.House;
-            _pendingFrightened = GhostMode.Unknown;
+            _frightened = GhostMode.Unknown;
             _frightenedFrames = 0;
             PrepareHouseState();
             UpdateSpeedForCurrentTile();
             UpdateModeVisual();
+            OnEnterMode(GhostMode.House);
             return;
         }
 
@@ -390,16 +418,19 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             }
 
             _globalMode = mode.Value;
+            if (_mode == GhostMode.Frightened)
+                NotifyModeFrightenedExited();
             _mode = mode.Value;
-            _pendingFrightened = GhostMode.Unknown;
+            _frightened = GhostMode.Unknown;
             _frightenedFrames = 0;
             UpdateHouseExitAllowance();
             UpdateSpeedForCurrentTile();
             UpdateModeVisual();
+            OnEnterMode(_mode);
         }
     }
 
-   
+
 
     public void OnPacManEaten() => Hide();
 
@@ -416,12 +447,20 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _character.Move(_dir);
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
-        _character.Update();
+        UpdateCharacter();
         Show();
     }
 
     public void OnEaten(int score)
     {
+        _pendingScoreAnimation = score switch
+        {
+            200 => PMCharacterAnimationType.GhostScore200,
+            400 => PMCharacterAnimationType.GhostScore400,
+            800 => PMCharacterAnimationType.GhostScore800,
+            1_600 => PMCharacterAnimationType.GhostScore1600,
+            _ => PMCharacterAnimationType.Unknown,
+        };
         SetMode(GhostMode.Dead);
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
@@ -431,7 +470,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     public void Hide() => EnsureCharacter().Hide();
 
-    internal void OnExitMode()
+    private void HandleExitMode()
     {
         switch (_mode)
         {
@@ -439,6 +478,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 ReviveInHouse();
                 break;
             case GhostMode.Frightened:
+                NotifyModeFrightenedExited();
                 _mode = _globalMode;
                 UpdateSpeedForCurrentTile();
                 UpdateModeVisual();
@@ -454,6 +494,16 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 break;
         }
     }
+
+    public void ExitCurrentMode() => HandleExitMode();
+
+    internal void OnExitMode() => HandleExitMode();
+
+    public BlPacManEventSubscription SubscribeModeFrightenedEntered(Action<BlPacManGhostBehavior> handler)
+        => _modeFrightenedEntered.Subscribe(handler);
+
+    public BlPacManEventSubscription SubscribeModeFrightenedExited(Action<BlPacManGhostBehavior> handler)
+        => _modeFrightenedExited.Subscribe(handler);
 
   
 
@@ -518,72 +568,62 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     public void Resume()
     {
-        if (_mode == GhostMode.Frightened) _frightenedTimer?.Resume();
-        if (_mode == GhostMode.House && !_housePrepareExit) _houseTimer?.Resume();
+        if (_mode == GhostMode.Frightened)
+            _frightenedTimer?.Resume();
+        if (_mode == GhostMode.House && !_housePrepareExit)
+            _houseTimer?.Resume();
     }
 
     private void MoveInsideHouse()
     {
         if (_character is null)
+        {
             return;
+        }
+
         if (_houseTimer == null) _houseTimer = new PMTimer(_waitTime);
-        var tile = GetTile(); 
-        
+
+        var tile = GetTile();
+
         if (!_housePrepareExit && _houseTimer.HasElapsed() && !tile.IsWall())
         {
             _housePrepareExit = true;
             Me.LocV = tile.Y;
         }
 
-        if (_pendingFrightened == GhostMode.Frightened && (_frightenedTimer != null && _frightenedTimer.HasElapsed()))
-            _pendingFrightened = GhostMode.Unknown;
-
-        if (!_housePreparingExit)
+        if (_frightened == GhostMode.Frightened && (_frightenedTimer != null && _frightenedTimer.HasElapsed()))
         {
-            if (!_dir.IsVertical())
-            {
-                _dir = BlPacManDirection.Up;
-                _character.ForceDirection(_dir);
-            }
-
-            _character.Move(_dir);
-
-            var y = Me.LocV;
-            if (_dir == BlPacManDirection.Up && y <= _houseTop)
-            {
-                _dir = BlPacManDirection.Down;
-                _character.ForceDirection(_dir);
-            }
-            else if (_dir == BlPacManDirection.Down && y >= _houseBottom)
-            {
-                _dir = BlPacManDirection.Up;
-                _character.ForceDirection(_dir);
-            }
-
-            return;
+            _frightened = GhostMode.Unknown;
         }
 
-        var x = Me.LocH;
-        if (Math.Abs(x - _houseExitX) > 0.5f)
+        if (_housePrepareExit)
         {
-            var direction = x < _houseExitX ? BlPacManDirection.Right : BlPacManDirection.Left;
-            if (_dir != direction)
-            {
-                _dir = direction;
-                _character.ForceDirection(direction);
-            }
+            if (Me.LocH < _houseExitTileX) _dir = BlPacManDirection.Right;
+            else if (Me.LocH > _houseExitTileX) _dir = BlPacManDirection.Left;
+            else _dir = BlPacManDirection.Up;
 
-            _character.Move(direction);
-            return;
+            if (_dir == BlPacManDirection.Up)
+                Me.LocV -= GetMin(GetStep(), Me.LocV - (_houseExitTile?.GetUp()?.Y ?? Me.LocV));
+            if (_dir == BlPacManDirection.Right)
+                Me.LocH += GetMin(GetStep(), _houseExitTileX - Me.LocH);
+            if (_dir == BlPacManDirection.Left)
+                Me.LocH -= GetMin(GetStep(), Me.LocH - _houseExitTileX);
+
+        }
+        else
+        {
+            if (Me.LocV <= _houseTop && _dir == BlPacManDirection.Up) _dir = BlPacManDirection.Down;
+            if (Me.LocV >= _houseBottom && _dir == BlPacManDirection.Down) _dir = BlPacManDirection.Up;
+
+            if (_dir == BlPacManDirection.Up)
+                Me.LocV -= GetMin(GetStep(), Me.LocV - _houseTop);
+            if (_dir == BlPacManDirection.Down)
+                Me.LocV += GetMin(GetStep(), _houseBottom - Me.LocV);
+
         }
 
-        if (_dir != BlPacManDirection.Up)
-        {
-            _dir = BlPacManDirection.Up;
-            _character.ForceDirection(BlPacManDirection.Up);
-        }
-
-        _character.Move(BlPacManDirection.Up);
+        SetNextAnimation();
+        UpdateCharacter();
     }
 
     private void MoveDead(Tile tile)
@@ -593,12 +633,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        if (!_deadPreparingEntry && _deadTarget is not null && ReferenceEquals(tile, _deadTarget))
+        if (!_deadPrepareEnter && _deadTarget is not null && ReferenceEquals(tile, _deadTarget))
         {
-            _deadPreparingEntry = true;
+            _deadPrepareEnter = true;
         }
 
-        if (!_deadPreparingEntry)
+        if (!_deadPrepareEnter)
         {
             _character.Move(_dir);
             return;
@@ -654,7 +694,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     {
         _mode = GhostMode.House;
         _hasLeftHouse = false;
-        _deadPreparingEntry = false;
+        _deadPrepareEnter = false;
         Me.LocH = _deadEndX;
         Me.LocV = _deadEndY;
         _character?.UpdateStartPosition(Me.LocH, Me.LocV);
@@ -665,7 +705,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     private void PrepareHouseState()
     {
-        _housePreparingExit = _startOutsideHouse;
+        _housePrepareExit = _startOutsideHouse;
         _dir = BlPacManDirection.Up;
         _nextDir = _dir;
         _character?.ForceDirection(_dir);
@@ -680,7 +720,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     private void CompleteHouseExit()
     {
         _hasLeftHouse = true;
-        _housePreparingExit = false;
+        _housePrepareExit = false;
         _mode = _globalMode;
         _dir = BlPacManDirection.Up;
         _nextDir = BlPacManDirection.Up;
@@ -702,7 +742,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _frightenedBlink = true;
 
         if (_frightenedFrames >= _frightenedDurationFrames)
-            OnExitMode();
+            HandleExitMode();
     }
 
     private bool ShouldExitMode(Tile tile)
@@ -724,6 +764,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _turnBack = true;
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
+        OnEnterMode(GhostMode.Frightened);
     }
 
     private void OnTileEntered(BlPacManTileEventData context)
@@ -744,7 +785,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 _character.ForceDirection(opposite);
             }
 
-            _nextDir = DetermineNextDirection(context.Tile);
+            _nextDir = GetNextDirection(context.Tile);
             _turnBack = false;
         }
         else
@@ -755,12 +796,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 _character.ForceDirection(_dir);
             }
 
-            _nextDir = DetermineNextDirection(context.Tile);
+            _nextDir = GetNextDirection(context.Tile);
         }
 
     }
 
-    private BlPacManDirection DetermineNextDirection(Tile tile)
+    private BlPacManDirection GetNextDirection(Tile tile)
     {
         if (_mode == GhostMode.Frightened)
         {
@@ -794,7 +835,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 continue;
             }
 
-            if (!CanMove(option, nextTile))
+            if (!CanGo(option, nextTile))
             {
                 continue;
             }
@@ -811,7 +852,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         if (float.IsPositiveInfinity(bestDistance))
         {
             var reverse = currentDirection.GetOpposite();
-            if (reverse != BlPacManDirection.None && CanMove(reverse, nextTile))
+            if (reverse != BlPacManDirection.None && CanGo(reverse, nextTile))
             {
                 return reverse;
             }
@@ -836,7 +877,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 continue;
             }
 
-            if (CanMove(option, nextTile))
+            if (CanGo(option, nextTile))
             {
                 return option;
             }
@@ -847,6 +888,90 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     }
 
    
+
+    private float GetStep()
+    {
+        if (_character is null)
+        {
+            return 0f;
+        }
+
+        return _character.Step * (_character.EffectiveSpeed / 100f);
+    }
+
+    private static float GetMin(float a, float b) => MathF.Min(a, b);
+
+    private void SetNextAnimation()
+    {
+        if (_character is null)
+        {
+            return;
+        }
+
+        if (_dir != BlPacManDirection.None)
+        {
+            _character.ForceDirection(_dir);
+        }
+
+        _nextAnimation = _defaultAnimation;
+
+        if (_mode == GhostMode.Dead)
+        {
+            switch (_dir)
+            {
+                case BlPacManDirection.Up:
+                    _nextAnimation = PMCharacterAnimationType.GhostUp;
+                    break;
+                case BlPacManDirection.Right:
+                    _nextAnimation = PMCharacterAnimationType.GhostRight;
+                    break;
+                case BlPacManDirection.Down:
+                    _nextAnimation = PMCharacterAnimationType.GhostDown;
+                    break;
+                case BlPacManDirection.Left:
+                    _nextAnimation = PMCharacterAnimationType.GhostLeft;
+                    break;
+            }
+        }
+        else if (_mode == GhostMode.Frightened || (_mode == GhostMode.House && _frightened == GhostMode.Frightened))
+        {
+            var threshold = (long)MathF.Max(1f, _frightenedTime * 0.75f);
+            if (_frightenedTimer == null || !_frightenedTimer.HasElapsed(threshold))
+            {
+                _nextAnimation = PMCharacterAnimationType.GhostFrightenedBlue;
+            }
+            else
+            {
+                _nextAnimation = PMCharacterAnimationType.GhostFrightenedWhite;
+            }
+        }
+        else
+        {
+            _nextAnimation = _dir switch
+            {
+                BlPacManDirection.Up => PMCharacterAnimationType.GhostUp,
+                BlPacManDirection.Right => PMCharacterAnimationType.GhostRight,
+                BlPacManDirection.Down => PMCharacterAnimationType.GhostDown,
+                BlPacManDirection.Left => PMCharacterAnimationType.GhostLeft,
+                _ => _defaultAnimation,
+            };
+        }
+    }
+
+    private void UpdateCharacter()
+    {
+        if (_character is null)
+        {
+            return;
+        }
+
+        if (_nextAnimation != PMCharacterAnimationType.Unknown)
+        {
+            _character.SetAnimation(_nextAnimation);
+        }
+
+        _character.Update();
+    }
 
     private void UpdateSpeedForCurrentTile(Tile? tile = null)
     {
@@ -914,6 +1039,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
         _frightenedAnimationsConfigured = false;
+        _scoreAnimationsConfigured = false;
     }
 
     private BlPacManDirection DetermineInitialDirection()
@@ -921,7 +1047,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return InitialDirections.TryGetValue(GhostName, out var value) ? value : BlPacManDirection.Left;
     }
 
-    private bool CanMove(BlPacManDirection direction, Tile origin)
+    private bool CanGo(BlPacManDirection direction, Tile origin)
     {
         if (origin.IsGhostHouseEntrance() && direction == BlPacManDirection.Up)
         {
@@ -955,7 +1081,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             return;
         }
 
-        _character.AllowHouseExit = _housePreparingExit || _mode == GhostMode.Dead;
+        _character.AllowHouseExit = _housePrepareExit || _mode == GhostMode.Dead;
     }
 
     private void EnsureFrightenedAnimations()
@@ -975,6 +1101,47 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         });
 
         _frightenedAnimationsConfigured = true;
+    }
+
+    private void EnsureScoreAnimations()
+    {
+        if (_scoreAnimationsConfigured)
+        {
+            return;
+        }
+
+        var animations = BlPacManTheme.Ghosts.ScoreAnimations;
+        SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
+        {
+            foreach (var (name, definition) in animations)
+            {
+                behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
+            }
+        });
+
+        _scoreAnimationsConfigured = true;
+    }
+
+    private void NotifyModeFrightenedEntered()
+    {
+        if (_frightenedNotificationActive)
+        {
+            return;
+        }
+
+        _frightenedNotificationActive = true;
+        _modeFrightenedEntered.Publish(this);
+    }
+
+    private void NotifyModeFrightenedExited()
+    {
+        if (!_frightenedNotificationActive)
+        {
+            return;
+        }
+
+        _frightenedNotificationActive = false;
+        _modeFrightenedExited.Publish(this);
     }
 
    

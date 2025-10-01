@@ -25,8 +25,8 @@ public sealed class BlPacManGhostBehaviorTests
         ?? throw new InvalidOperationException("Unable to access CanMove method for testing.");
 
     private static readonly MethodInfo DetermineNextDirectionMethod = typeof(BlPacManGhostBehavior)
-        .GetMethod("DetermineNextDirection", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?? throw new InvalidOperationException("Unable to access DetermineNextDirection method for testing.");
+        .GetMethod("GetNextDirection", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Unable to access GetNextDirection method for testing.");
 
     [Fact]
     public void CanMove_allows_ghosts_to_leave_house_through_doorway()
