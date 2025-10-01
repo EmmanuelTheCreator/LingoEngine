@@ -281,6 +281,7 @@ public class BlPacManProjectFactory : IBlingoProjectFactory
                     behavior.GhostName = ghostNames[i];
                 })
                 ;
+            //break;
         }
     }
    

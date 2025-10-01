@@ -86,7 +86,10 @@ internal sealed class PMCharacter : BlingoParentScript
 
 
     #region Properties
-    public PMTile? LastTile { get => _lastTile; set => _lastTile = value; }
+    public PMTile? LastTile { 
+        get => _lastTile; 
+        set => _lastTile = value; 
+    }
     public bool RotateSprite { get; set; }
     public bool AllowHouseExit { get; set; }
     public CharacterType Type { get; private set; }
@@ -418,7 +421,8 @@ internal sealed class PMCharacter : BlingoParentScript
         if (newTile is not null && !ReferenceEquals(newTile, _lastTile))
         {
             _lastTile = newTile;
-            HandleTileEntered(newTile);
+            OnTileEntered(tile);
+            _tileEntered.Publish(new BlPacManTileEventData(newTile));
         }
 
         Update();
@@ -536,11 +540,7 @@ internal sealed class PMCharacter : BlingoParentScript
 
     }
 
-    private void HandleTileEntered(PMTile tile)
-    {
-        OnTileEntered(tile);
-        _tileEntered.Publish(new BlPacManTileEventData(tile));
-    }
+   
 
     private void OnMoveStarted()
     {

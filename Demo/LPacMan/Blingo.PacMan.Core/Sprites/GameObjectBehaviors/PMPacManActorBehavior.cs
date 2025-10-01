@@ -150,6 +150,7 @@ internal sealed class PMPacManActorBehavior : BlingoSpriteBehavior,
     public void ExitFrame()
     {
         var character = EnsureCharacter();
+        return;
         if (_globals.State.IsGameplayFrozen)
         {
             character.Update();

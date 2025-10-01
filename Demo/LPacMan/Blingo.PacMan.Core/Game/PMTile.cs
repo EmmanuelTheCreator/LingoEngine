@@ -1,6 +1,7 @@
 using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+using System.Diagnostics;
 
 namespace Blingo.PacMan.Core.Game;
 /// <summary>
@@ -49,6 +50,7 @@ internal static class PMTileMath
 
    
 }
+[DebuggerDisplay("Tile: {Column}x{Row}:Type={Type}:Pos={X}x{Y}")]
 public sealed class PMTile
 {
     public enum TileType

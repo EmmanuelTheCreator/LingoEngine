@@ -282,6 +282,36 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         Move();
     }
 
+
+    private void OnTileEntered(BlPacManTileEventData context)
+    {
+        if (context.Tile is null || _character is null)
+            return;
+#if DEBUG
+        if (context.Tile.Column == 3 && context.Tile.Row == 14)
+        {
+
+        }
+#endif
+
+        UpdateSpeedForCurrentTile(context.Tile);
+
+        if (_turnBack)
+        {
+            var opposite = _character.Direction.GetOpposite();
+            _dir = PMDirection.None;
+
+            _nextDir = GetNextDirection(context.Tile);
+            _turnBack = false;
+        }
+        else
+        {
+            _dir = _nextDir;
+            _nextDir = GetNextDirection(context.Tile);
+        }
+    }
+
+
     public void Reset()
     {
         _character!.Reset();
@@ -435,7 +465,7 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
                 _houseTimer = null;
                 _dir = PMDirection.Left;
                 _nextDir = PMDirection.Left;
-                _lastTile = tile.GetDown();
+                //_lastTile = tile.GetDown();
                 UpdateSpeedForCurrentTile();
                 SetMode(null);
                 break;
@@ -681,27 +711,27 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
             PMDirection.Right,
         };
 
-        var best = PMDirection.None;
-        var bestDistance = float.PositiveInfinity;
+        var nextDirection = PMDirection.None;
+        float? lastDistance = null;
 
-        foreach (var option in preferred)
+        foreach (var dir in preferred)
         {
-            if (option == currentDirection.GetOpposite())
+            if (dir == currentDirection.GetOpposite())
                 continue;
 
-            if (!CanGo(option, nextTile))
-                continue;
-
-            var candidate = nextTile?.Get(option);
-            var distance = PMTileMath.GetDistance(candidate, target);
-            if (distance < bestDistance)
+            if (CanGo(dir, nextTile))
             {
-                bestDistance = distance;
-                best = option;
+                var testTile = nextTile?.Get(dir);
+                var distance = PMTileMath.GetDistance(testTile, target);
+                if (lastDistance == null || lastDistance > distance)
+                {
+                    nextDirection = dir;
+                    lastDistance = distance;
+                }
             }
         }
 
-        return best;
+        return nextDirection;
     }
 
     private PMDirection GetRandomDirection(PMTile tile)
@@ -746,39 +776,7 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         OnEnterMode(GhostMode.Frightened);
     }
 
-    private void OnTileEntered(BlPacManTileEventData context)
-    {
-        if (context.Tile is null || _character is null)
-        {
-            return;
-        }
 
-        UpdateSpeedForCurrentTile(context.Tile);
-
-        if (_turnBack)
-        {
-            var opposite = _character.Direction.GetOpposite();
-            if (opposite != PMDirection.None)
-            {
-                _dir = opposite;
-                _character.ForceDirection(opposite);
-            }
-
-            _nextDir = GetNextDirection(context.Tile);
-            _turnBack = false;
-        }
-        else
-        {
-            if (_nextDir != PMDirection.None)
-            {
-                _dir = _nextDir;
-                _character.ForceDirection(_dir);
-            }
-
-            _nextDir = GetNextDirection(context.Tile);
-        }
-
-    }
 
 
 
