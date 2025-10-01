@@ -87,7 +87,7 @@ namespace Blingo.PacMan.Core.Game
                 return;
 
             foreach (var ghost in _ghosts)
-                ghost.setMode(mode);
+                ghost.SetMode(mode);
         }
         public bool HasDeathGhosts()=> _ghosts.Any(g => g.IsDead);
         public bool HasFrightenedGhosts()=> _ghosts.Any(g => g.IsFrightened);
@@ -136,7 +136,7 @@ namespace Blingo.PacMan.Core.Game
         internal void SetAllFrightened()
         {
             foreach (var ghost in _ghosts)
-                ghost.setMode(GhostMode.Frightened);
+                ghost.SetMode(GhostMode.Frightened);
         }
 
         private void ApplyConfiguration(BlPacManGhostBehavior ghost)

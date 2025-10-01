@@ -101,13 +101,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     public MrGhost GhostName { get; set; } = MrGhost.Inky;
 
-    public bool IsFrightened => isFrightened();
+    public bool IsFrightened => _mode == GhostMode.Frightened || _frightened != GhostMode.Unknown;
 
-    public bool IsDead => isDead();
-
-    public bool isFrightened() => _mode == GhostMode.Frightened || _frightened != GhostMode.Unknown;
-
-    public bool isDead() => _mode == GhostMode.Dead;
+    public bool IsDead => _mode == GhostMode.Dead;
 
     internal Tile? CurrentTile => _character?.GetTile();
 
@@ -204,8 +200,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _deadEndY = _deadEndTile?.Y ?? _houseCenterY;
         _deadEndTile = map.HouseCenter ?? map.House;
 
-        _houseTop = _character.Y - getTile().Height / 2;
-        _houseBottom = _character.Y + getTile().Height / 2;
+        _houseTop = _character.Y - GetTile().Height / 2;
+        _houseBottom = _character.Y + GetTile().Height / 2;
         _houseExitTile = map.House.GetRight()!;
         _houseExitTileX = _houseExitTile.X - map.TileWidth / 2;
 
@@ -275,34 +271,32 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _configured = false;
     }
 
-    public void ExitFrame() => move();
+    public void ExitFrame() => Move();
 
-    public void Move() => move();
-
-    public void move()
+    public void Move()
     {
         if (!_configured || _character is null)
             return;
 
         if (_globals.State.IsGameplayFrozen)
         {
-            update();
+            UpdateCharacter();
             return;
         }
 
-        advanceFrightenedTimer();
+        AdvanceFrightenedTimer();
 
         var tile = _character.GetTile();
         if (tile is null)
             return;
 
-        if (shouldExitMode(tile))
+        if (ShouldExitMode(tile))
         {
-            onExitMode();
+            HandleExitMode();
             tile = _character.GetTile();
             if (tile is null)
             {
-                update();
+                UpdateCharacter();
                 return;
             }
         }
@@ -310,20 +304,18 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         switch (_mode)
         {
             case GhostMode.Dead:
-                moveDead(tile);
+                MoveDead(tile);
                 break;
             case GhostMode.House:
-                moveInsideHouse();
+                MoveInsideHouse();
                 break;
             default:
-                moveNormal();
+                MoveNormal();
                 break;
         }
     }
 
-    public void OnEnterMode(GhostMode mode) => onEnterMode(mode);
-
-    public void onEnterMode(GhostMode mode)
+    public void OnEnterMode(GhostMode mode)
     {
         switch (mode)
         {
@@ -334,7 +326,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 {
                     EnsureScoreAnimations();
                     _character?.SetAnimationOverride(_pendingScoreAnimation);
-                    update();
+                    UpdateCharacter();
                     _character?.SetAnimationOverride(PMCharacterAnimationType.Unknown);
                     _pendingScoreAnimation = PMCharacterAnimationType.Unknown;
                 }
@@ -350,9 +342,8 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
 
     }
-    public void SetMode(GhostMode? mode) => setMode(mode);
 
-    public void setMode(GhostMode? mode)
+    public void SetMode(GhostMode? mode)
     {
         if (mode is null || mode == GhostMode.Unknown)
         {
@@ -386,7 +377,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 return;
             }
 
-            enterFrightenedMode();
+            EnterFrightenedMode();
             return;
         }
 
@@ -401,7 +392,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             UpdateHouseExitAllowance();
             UpdateSpeedForCurrentTile();
             UpdateModeVisual();
-            onEnterMode(GhostMode.Dead);
+            OnEnterMode(GhostMode.Dead);
             return;
         }
 
@@ -415,7 +406,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             PrepareHouseState();
             UpdateSpeedForCurrentTile();
             UpdateModeVisual();
-            onEnterMode(GhostMode.House);
+            OnEnterMode(GhostMode.House);
             return;
         }
 
@@ -435,7 +426,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             UpdateHouseExitAllowance();
             UpdateSpeedForCurrentTile();
             UpdateModeVisual();
-            onEnterMode(_mode);
+            OnEnterMode(_mode);
         }
     }
 
@@ -456,7 +447,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _character.Move(_dir);
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
-        update();
+        UpdateCharacter();
         Show();
     }
 
@@ -470,7 +461,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             1_600 => PMCharacterAnimationType.GhostScore1600,
             _ => PMCharacterAnimationType.Unknown,
         };
-        setMode(GhostMode.Dead);
+        SetMode(GhostMode.Dead);
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
     }
@@ -479,7 +470,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
     public void Hide() => EnsureCharacter().Hide();
 
-    internal void onExitMode()
+    private void HandleExitMode()
     {
         switch (_mode)
         {
@@ -504,9 +495,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
     }
 
-    public void ExitCurrentMode() => onExitMode();
+    public void ExitCurrentMode() => HandleExitMode();
 
-    internal void OnExitMode() => onExitMode();
+    internal void OnExitMode() => HandleExitMode();
 
     public BlPacManEventSubscription SubscribeModeFrightenedEntered(Action<BlPacManGhostBehavior> handler)
         => _modeFrightenedEntered.Subscribe(handler);
@@ -517,7 +508,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
   
 
  
-    private Tile getTile() => _character!.GetTile()!;
+    private Tile GetTile() => _character!.GetTile()!;
 
     private void PlaceAtStart(Map map)
     {
@@ -554,7 +545,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _character?.UpdateStartPosition(Me.LocH, Me.LocV);
     }
 
-    private void moveNormal()
+    private void MoveNormal()
     {
         if (_character is null)
             return;
@@ -569,13 +560,13 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
     }
 
 
-    public void pause()
+    public void Pause()
     {
         _houseTimer?.Pause();
         _frightenedTimer?.Pause();
     }
 
-    public void resume()
+    public void Resume()
     {
         if (_mode == GhostMode.Frightened)
             _frightenedTimer?.Resume();
@@ -583,11 +574,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _houseTimer?.Resume();
     }
 
-    public void Pause() => pause();
-
-    public void Resume() => resume();
-
-    private void moveInsideHouse()
+    private void MoveInsideHouse()
     {
         if (_character is null)
         {
@@ -596,7 +583,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
         if (_houseTimer == null) _houseTimer = new PMTimer(_waitTime);
 
-        var tile = getTile();
+        var tile = GetTile();
 
         if (!_housePrepareExit && _houseTimer.HasElapsed() && !tile.IsWall())
         {
@@ -616,11 +603,11 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             else _dir = BlPacManDirection.Up;
 
             if (_dir == BlPacManDirection.Up)
-                Me.LocV -= getMin(getStep(), Me.LocV - (_houseExitTile?.GetUp()?.Y ?? Me.LocV));
+                Me.LocV -= GetMin(GetStep(), Me.LocV - (_houseExitTile?.GetUp()?.Y ?? Me.LocV));
             if (_dir == BlPacManDirection.Right)
-                Me.LocH += getMin(getStep(), _houseExitTileX - Me.LocH);
+                Me.LocH += GetMin(GetStep(), _houseExitTileX - Me.LocH);
             if (_dir == BlPacManDirection.Left)
-                Me.LocH -= getMin(getStep(), Me.LocH - _houseExitTileX);
+                Me.LocH -= GetMin(GetStep(), Me.LocH - _houseExitTileX);
 
         }
         else
@@ -629,17 +616,17 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             if (Me.LocV >= _houseBottom && _dir == BlPacManDirection.Down) _dir = BlPacManDirection.Up;
 
             if (_dir == BlPacManDirection.Up)
-                Me.LocV -= getMin(getStep(), Me.LocV - _houseTop);
+                Me.LocV -= GetMin(GetStep(), Me.LocV - _houseTop);
             if (_dir == BlPacManDirection.Down)
-                Me.LocV += getMin(getStep(), _houseBottom - Me.LocV);
+                Me.LocV += GetMin(GetStep(), _houseBottom - Me.LocV);
 
         }
 
-        setNextAnimation();
-        update();
+        SetNextAnimation();
+        UpdateCharacter();
     }
 
-    private void moveDead(Tile tile)
+    private void MoveDead(Tile tile)
     {
         if (_character is null)
         {
@@ -743,7 +730,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         UpdateModeVisual();
     }
 
-    private void advanceFrightenedTimer()
+    private void AdvanceFrightenedTimer()
     {
         if (_mode != GhostMode.Frightened)
             return;
@@ -755,10 +742,10 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
             _frightenedBlink = true;
 
         if (_frightenedFrames >= _frightenedDurationFrames)
-            onExitMode();
+            HandleExitMode();
     }
 
-    private bool shouldExitMode(Tile tile)
+    private bool ShouldExitMode(Tile tile)
     {
         return _mode switch
         {
@@ -769,7 +756,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         };
     }
 
-    private void enterFrightenedMode()
+    private void EnterFrightenedMode()
     {
         _mode = GhostMode.Frightened;
         _frightenedFrames = 0;
@@ -777,7 +764,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         _turnBack = true;
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
-        onEnterMode(GhostMode.Frightened);
+        OnEnterMode(GhostMode.Frightened);
     }
 
     private void OnTileEntered(BlPacManTileEventData context)
@@ -798,7 +785,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 _character.ForceDirection(opposite);
             }
 
-            _nextDir = getNextDirection(context.Tile);
+            _nextDir = GetNextDirection(context.Tile);
             _turnBack = false;
         }
         else
@@ -809,12 +796,12 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
                 _character.ForceDirection(_dir);
             }
 
-            _nextDir = getNextDirection(context.Tile);
+            _nextDir = GetNextDirection(context.Tile);
         }
 
     }
 
-    private BlPacManDirection getNextDirection(Tile tile)
+    private BlPacManDirection GetNextDirection(Tile tile)
     {
         if (_mode == GhostMode.Frightened)
         {
@@ -902,7 +889,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
 
    
 
-    private float getStep()
+    private float GetStep()
     {
         if (_character is null)
         {
@@ -912,9 +899,9 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         return _character.Step * (_character.EffectiveSpeed / 100f);
     }
 
-    private static float getMin(float a, float b) => MathF.Min(a, b);
+    private static float GetMin(float a, float b) => MathF.Min(a, b);
 
-    private void setNextAnimation()
+    private void SetNextAnimation()
     {
         if (_character is null)
         {
@@ -971,7 +958,7 @@ internal sealed class BlPacManGhostBehavior : BlingoSpriteBehavior,
         }
     }
 
-    private void update()
+    private void UpdateCharacter()
     {
         if (_character is null)
         {
