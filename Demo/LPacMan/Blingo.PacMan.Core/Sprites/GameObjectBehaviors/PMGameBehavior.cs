@@ -53,7 +53,7 @@ internal sealed class PMGameBehavior : BlingoSpriteBehavior,
     public void BeginSprite()
     {
         _globals.GameBehavior = this;
-        _modeSubscription ??= Model.SubscribeModeChanged(mode => _globals.GhostManager.SetMode(mode));
+        _modeSubscription ??= Model.SubscribeModeChanged(mode => _globals.GhostManager.SetGlobalMode(mode));
         if (_initialized)
             return;
         _gameBG = Sprite(PCSpriteNums.GameBG);
@@ -186,8 +186,8 @@ internal sealed class PMGameBehavior : BlingoSpriteBehavior,
         if (State.IsPaused)
             return;
 
-        //if (State.StartCountdown <= 0)
-          //  Model.UpdateMode();
+        if (State.StartCountdown <= 0)
+            Model.UpdateMode();
 
         if (State.WaitForPauseTick())
             return;
