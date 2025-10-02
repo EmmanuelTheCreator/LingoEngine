@@ -47,7 +47,8 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
     private GhostMode _globalMode = GhostMode.Scatter;
 
     private PMDirection _dir { get => _character!.Direction; set => _character!.Direction = value; }
-    private PMDirection _nextDir { get => _character!.NextDirection; set => _character!.NextDirection = value; }
+    private PMDirection _moveDir = PMDirection.None;
+    private PMDirection _nextDir = PMDirection.None;
     private PMTile? _lastTile { get => _character!.LastTile; set => _character!.LastTile = value; }
     private float _x { get => _character!.X; set => _character!.X = value; }
     private float _y { get => _character!.Y; set => _character!.Y = value; }
@@ -164,6 +165,8 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         NotifyModeFrightenedExited();
         _frightenedNotificationActive = false;
         _pendingScoreAnimation = PMCharacterAnimationType.Unknown;
+        _moveDir = PMDirection.None;
+        _nextDir = PMDirection.None;
     }
 
   
@@ -238,6 +241,8 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         _tileSubscription?.Release();
         _tileSubscription = _character.SubscribeTileEntered(OnTileEntered);
         _nextAnimation = _defaultAnimation;
+        _moveDir = PMDirection.None;
+        _nextDir = PMDirection.None;
         return _character;
     }
 
@@ -299,14 +304,15 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         if (_turnBack)
         {
             var opposite = _character.Direction.GetOpposite();
-            _dir = PMDirection.None;
+            _dir = opposite;
+            _moveDir = PMDirection.None;
 
             _nextDir = GetNextDirection(context.Tile);
             _turnBack = false;
         }
         else
         {
-            _dir = _nextDir;
+            _moveDir = _nextDir;
             _nextDir = GetNextDirection(context.Tile);
         }
     }
@@ -315,6 +321,8 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
     public void Reset()
     {
         _character!.Reset();
+        _moveDir = PMDirection.None;
+        _nextDir = PMDirection.None;
         SetMode(GhostMode.House);
     }
     public void Pause()
@@ -464,6 +472,7 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
             case GhostMode.House:
                 _houseTimer = null;
                 _dir = PMDirection.Left;
+                _moveDir = PMDirection.Left;
                 _nextDir = PMDirection.Left;
                 //_lastTile = tile.GetDown();
                 UpdateSpeedForCurrentTile();
@@ -492,7 +501,7 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
                     MoveInsideHouse();
                     break;
                 default:
-                    _character!.Move(_dir);
+                    _character!.Move(_moveDir);
                     break;
             }
         }
@@ -538,6 +547,8 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         PrepareInitialState();
         _character.ForceDirection(_dir);
         _character.Move(_dir);
+        _moveDir = PMDirection.None;
+        _nextDir = PMDirection.None;
         UpdateSpeedForCurrentTile();
         UpdateModeVisual();
         Show();
@@ -691,12 +702,12 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         if (_mode == GhostMode.Frightened)
             return GetRandomDirection(tile);
 
-        var currentDirection = _dir != PMDirection.None
-               ? _dir
-               : _character?.Direction ?? PMDirection.Left;
+        var currentDirection = _moveDir != PMDirection.None
+            ? _moveDir
+            : _character?.Direction ?? PMDirection.Left;
         var direction = _globals.State.PacManPosition?.Direction ?? PMDirection.Left;
-        var nextTile = tile.Get(currentDirection); // no fallback
-        
+        var pivotTile = currentDirection != PMDirection.None ? tile.Get(currentDirection) : tile;
+
         var target = _mode == GhostMode.Chase
             ? PMGhostLogic.GetChaseTargetTile(_globals.GhostManager, GhostName, _character!, _globals.State.PacManPosition!.Tile!, direction, _scatterTarget!)
             : _mode == GhostMode.Scatter
@@ -719,9 +730,9 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
             if (dir == currentDirection.GetOpposite())
                 continue;
 
-            if (CanGo(dir, nextTile))
+            if (CanGo(dir, pivotTile))
             {
-                var testTile = nextTile?.Get(dir);
+                var testTile = pivotTile?.Get(dir);
                 var distance = PMTileMath.GetDistance(testTile, target);
                 if (lastDistance == null || lastDistance > distance)
                 {
@@ -736,11 +747,10 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
 
     private PMDirection GetRandomDirection(PMTile tile)
     {
-        var currentDirection = _dir != PMDirection.None
-            ? _dir
+        var currentDirection = _moveDir != PMDirection.None
+            ? _moveDir
             : _character?.Direction ?? PMDirection.Left;
-
-        var nextTile = tile.Get(currentDirection); // no fallback
+        var pivotTile = currentDirection != PMDirection.None ? tile.Get(currentDirection) : tile;
 
         var order = new[]
         {
@@ -758,11 +768,11 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
             if (option == currentDirection.GetOpposite())
                 continue;
 
-            if (CanGo(option, nextTile))
+            if (CanGo(option, pivotTile))
                 return option;
         }
 
-        return PMDirection.None; 
+        return PMDirection.None;
     }
 
 
