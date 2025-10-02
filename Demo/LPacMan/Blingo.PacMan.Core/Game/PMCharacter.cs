@@ -187,6 +187,7 @@ internal sealed class PMCharacter : BlingoParentScript
         Preturn = options.Preturn ?? false;
         Mode = options.Mode;
         _lastTile = options.StartTile;
+        
     }
 
 
@@ -614,12 +615,6 @@ internal sealed class PMCharacter : BlingoParentScript
     private void OnTileEntered(PMTile tile)
     {
         SetNextAnimation();
-    }
-
-    internal void ForceUpdateBlingoPosition()
-    {
-        _sprite.LocH = X;
-        _sprite.LocV = Y;
     }
 
     private enum Axis

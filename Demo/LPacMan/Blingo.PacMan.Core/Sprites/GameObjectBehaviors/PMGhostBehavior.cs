@@ -260,7 +260,7 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
             ConfigureInternal();
 
         // Force Update position after begin sprite has override the default position;
-        _character!.ForceUpdateBlingoPosition();
+        _character!.BeginSprite();
     }
 
 
@@ -539,10 +539,8 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
     public void ResetForLife()
     {
         if (!_configured || _character is null)
-        {
             return;
-        }
-
+        Reset();
         _character.Reset();
         PrepareInitialState();
         _character.ForceDirection(_dir);
