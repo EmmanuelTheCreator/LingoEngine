@@ -17,6 +17,7 @@ namespace Blingo.PacMan.Core.Game
     {
         private static MrGhost[] _ghostNames = new[] { MrGhost.Blinky, MrGhost.Pinky, MrGhost.Inky, MrGhost.Sue };
         private GhostSettings? _ghostSettings;
+        private GhostMode? _currentGlobalMode;
         private static readonly int[] _ghostScoreChain = { 200, 400, 800, 1_600 };
         private readonly List<PMGhostBehavior> _ghosts = new();
         private readonly struct GhostHouseSetup
@@ -58,6 +59,8 @@ namespace Blingo.PacMan.Core.Game
                 return;
             _ghosts.Add(ghost);
             ApplyConfiguration(ghost);
+            if (_currentGlobalMode is { } mode)
+                ghost.SetGlobalMode(mode);
         }
         
         public int RegisterGhostEaten()
@@ -88,6 +91,20 @@ namespace Blingo.PacMan.Core.Game
 
             foreach (var ghost in _ghosts)
                 ghost.SetMode(mode);
+        }
+
+        /// <summary>
+        /// Mirrors the JavaScript global mode listener by updating the stored mode used when ghosts exit their current state.
+        /// </summary>
+        public void SetGlobalMode(GhostMode? mode)
+        {
+            if (mode is null || mode == GhostMode.Unknown)
+                return;
+
+            _currentGlobalMode = mode;
+
+            foreach (var ghost in _ghosts)
+                ghost.SetGlobalMode(mode.Value);
         }
         public bool HasDeathGhosts()=> _ghosts.Any(g => g.IsDead);
         public bool HasFrightenedGhosts()=> _ghosts.Any(g => g.IsFrightened);

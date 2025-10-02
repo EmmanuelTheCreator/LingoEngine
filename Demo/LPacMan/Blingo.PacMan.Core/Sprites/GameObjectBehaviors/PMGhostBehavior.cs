@@ -345,6 +345,11 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
         _character!.Update();
     }
 
+    internal void SetGlobalMode(GhostMode mode)
+    {
+        _globalMode = mode;
+    }
+
     public void SetMode(GhostMode? mode)
     {
         if (mode is null || mode == GhostMode.Unknown)
@@ -414,7 +419,6 @@ internal sealed class PMGhostBehavior : BlingoSpriteBehavior,
                 _turnBack = true;
             }
 
-            _globalMode = mode.Value;
             if (_mode == GhostMode.Frightened)
                 NotifyModeFrightenedExited();
             _character!.Mode = mode.Value;
