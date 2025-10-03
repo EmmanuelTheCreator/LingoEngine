@@ -122,6 +122,120 @@ public sealed class BlLegacyExpressionConverter
         ["stage"] = "_Player.Stage",
     };
 
+    private sealed record PropertyListCommandInfo
+    {
+        public PropertyListCommandInfo(string methodName, int requiredArgumentCount, int[]? symbolArgumentIndices = null)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+            SymbolArgumentIndices = symbolArgumentIndices ?? Array.Empty<int>();
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+
+        public int[] SymbolArgumentIndices { get; }
+    }
+
+    private sealed record PropertyListFunctionInfo
+    {
+        public PropertyListFunctionInfo(
+            string methodName,
+            int requiredArgumentCount,
+            int[]? symbolArgumentIndices = null,
+            bool isPropertyAccess = false)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+            SymbolArgumentIndices = symbolArgumentIndices ?? Array.Empty<int>();
+            IsPropertyAccess = isPropertyAccess;
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+
+        public int[] SymbolArgumentIndices { get; }
+
+        public bool IsPropertyAccess { get; }
+    }
+
+    private sealed record ListCommandInfo
+    {
+        public ListCommandInfo(string methodName, int requiredArgumentCount)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+    }
+
+    private sealed record ListFunctionInfo
+    {
+        public ListFunctionInfo(string methodName, int requiredArgumentCount, bool isPropertyAccess = false)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+            IsPropertyAccess = isPropertyAccess;
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+
+        public bool IsPropertyAccess { get; }
+    }
+
+    private static readonly Dictionary<string, PropertyListCommandInfo> s_propertyListCommands = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["addprop"] = new PropertyListCommandInfo("Add", 3, new[] { 0 }),
+        ["setprop"] = new PropertyListCommandInfo("SetProp", 3, new[] { 0 }),
+        ["deleteprop"] = new PropertyListCommandInfo("DeleteProp", 2, new[] { 0 }),
+        ["setaprop"] = new PropertyListCommandInfo("SetaProp", 3, new[] { 0 }),
+        ["addat"] = new PropertyListCommandInfo("AddAt", 4, new[] { 1 }),
+        ["deleteat"] = new PropertyListCommandInfo("DeleteAt", 2),
+        ["setat"] = new PropertyListCommandInfo("SetAt", 3),
+    };
+
+    private static readonly Dictionary<string, PropertyListFunctionInfo> s_propertyListFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["getprop"] = new PropertyListFunctionInfo("GetProp", 2, new[] { 0 }),
+        ["getaprop"] = new PropertyListFunctionInfo("GetaProp", 2, new[] { 0 }),
+        ["getpropat"] = new PropertyListFunctionInfo("GetPropAt", 2),
+        ["findpos"] = new PropertyListFunctionInfo("FindPos", 2, new[] { 0 }),
+        ["findposnear"] = new PropertyListFunctionInfo("FindPosNear", 2, new[] { 0 }),
+        ["getpos"] = new PropertyListFunctionInfo("GetPos", 2),
+        ["getat"] = new PropertyListFunctionInfo("GetAt", 2),
+        ["count"] = new PropertyListFunctionInfo("Count", 1, isPropertyAccess: true),
+        ["duplicate"] = new PropertyListFunctionInfo("Duplicate", 1),
+    };
+
+    private static readonly Dictionary<string, ListCommandInfo> s_listCommands = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["add"] = new ListCommandInfo("Add", 2),
+        ["addat"] = new ListCommandInfo("AddAt", 3),
+        ["deleteat"] = new ListCommandInfo("DeleteAt", 2),
+        ["setat"] = new ListCommandInfo("SetAt", 3),
+        ["deleteone"] = new ListCommandInfo("DeleteOne", 2),
+        ["deleteall"] = new ListCommandInfo("DeleteAll", 1),
+        ["sort"] = new ListCommandInfo("Sort", 1),
+    };
+
+    private static readonly Dictionary<string, ListFunctionInfo> s_listFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["getone"] = new ListFunctionInfo("GetOne", 1),
+        ["getlast"] = new ListFunctionInfo("GetLast", 1),
+        ["getavalue"] = new ListFunctionInfo("GetAValue", 1),
+        ["ilk"] = new ListFunctionInfo("Ilk", 1),
+        ["listp"] = new ListFunctionInfo("ListP", 1),
+        ["max"] = new ListFunctionInfo("Max", 1),
+        ["min"] = new ListFunctionInfo("Min", 1),
+    };
+
     public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens)
     {
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
@@ -141,7 +255,11 @@ public sealed class BlLegacyExpressionConverter
     {
         while (_index < _tokens.Count)
         {
-            if (TryHandleVoidPredicate() ||
+            if (TryHandlePropertyListCommand() ||
+                TryHandlePropertyListFunction() ||
+                TryHandleListCommand() ||
+                TryHandleListFunction() ||
+                TryHandleVoidPredicate() ||
                 TryHandleScriptInstantiation() ||
                 TryHandleValueFunction() ||
                 TryHandleAlertCommand() ||
@@ -760,6 +878,370 @@ public sealed class BlLegacyExpressionConverter
         }
 
         return false;
+    }
+
+    private bool TryHandleListCommand()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_listCommands.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 1, _tokens.Count - (_index + 1));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            arguments.Add(Convert(segments[i]));
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        AppendRaw("(");
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            AppendRaw(arguments[i]);
+            if (i < arguments.Count - 1)
+            {
+                AppendRaw(", ");
+            }
+        }
+
+        AppendRaw(")");
+        _index = _tokens.Count;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleListFunction()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_listFunctions.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        if (info.IsPropertyAccess && segments.Count > info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            arguments.Add(Convert(segments[i]));
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        if (!info.IsPropertyAccess)
+        {
+            AppendRaw("(");
+            for (var i = 0; i < arguments.Count; i++)
+            {
+                AppendRaw(arguments[i]);
+                if (i < arguments.Count - 1)
+                {
+                    AppendRaw(", ");
+                }
+            }
+
+            AppendRaw(")");
+        }
+
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandlePropertyListCommand()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_propertyListCommands.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 1, _tokens.Count - (_index + 1));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            var segmentTokens = segments[i];
+            var expression = Convert(segmentTokens);
+            if (ContainsSymbolArgument(info.SymbolArgumentIndices, i - 1))
+            {
+                expression = EnsureSymbol(segmentTokens, expression);
+            }
+
+            arguments.Add(expression);
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        AppendRaw("(");
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            AppendRaw(arguments[i]);
+            if (i < arguments.Count - 1)
+            {
+                AppendRaw(", ");
+            }
+        }
+
+        AppendRaw(")");
+        _index = _tokens.Count;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandlePropertyListFunction()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_propertyListFunctions.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        if (info.IsPropertyAccess && segments.Count > info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            var segmentTokens = segments[i];
+            var expression = Convert(segmentTokens);
+            if (ContainsSymbolArgument(info.SymbolArgumentIndices, i - 1))
+            {
+                expression = EnsureSymbol(segmentTokens, expression);
+            }
+
+            arguments.Add(expression);
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        if (!info.IsPropertyAccess)
+        {
+            AppendRaw("(");
+            for (var i = 0; i < arguments.Count; i++)
+            {
+                AppendRaw(arguments[i]);
+                if (i < arguments.Count - 1)
+                {
+                    AppendRaw(", ");
+                }
+            }
+
+            AppendRaw(")");
+        }
+
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private static bool ContainsSymbolArgument(int[] indices, int index)
+    {
+        if (indices is null || indices.Length == 0)
+        {
+            return false;
+        }
+
+        return Array.IndexOf(indices, index) >= 0;
+    }
+
+    private static string EnsureSymbol(IReadOnlyList<BlSyntaxToken> tokens, string expression)
+    {
+        if (string.IsNullOrEmpty(expression))
+        {
+            return expression;
+        }
+
+        if (expression.StartsWith("Symbol(", StringComparison.Ordinal))
+        {
+            return expression;
+        }
+
+        if (tokens.Count > 0 && tokens[0].Kind == BlSyntaxKind.SymbolToken)
+        {
+            return $"Symbol({ToStringLiteral(tokens[0].ValueText)})";
+        }
+
+        if (expression[0] == '#')
+        {
+            return $"Symbol({ToStringLiteral(expression[1..])})";
+        }
+
+        return expression;
+    }
+
+    private static string ToStringLiteral(string value)
+    {
+        var builder = new StringBuilder();
+        builder.Append('"');
+        if (!string.IsNullOrEmpty(value))
+        {
+            for (var index = 0; index < value.Length; index++)
+            {
+                var ch = value[index];
+                builder.Append(ch switch
+                {
+                    '\\' => "\\\\",
+                    '"' => "\\\"",
+                    '\n' => "\\n",
+                    '\r' => "\\r",
+                    '\t' => "\\t",
+                    _ => ch.ToString(),
+                });
+            }
+        }
+
+        builder.Append('"');
+        return builder.ToString();
     }
 
     private static string ResolveClassName(IReadOnlyList<BlSyntaxToken> tokens)
