@@ -98,11 +98,19 @@ public class BlingoToCSharpConverterTests
 on beginsprite me
   num=me.spritenum
   woord=member(""MyTextMember"").line[1] &return& member(""MyTextMember"").line[2] &return& member(""MyTextMember"").line[3]
-  
+
 end";
         var file = new BlingoScriptFile { Name = "MyScript", Source = lingo, Type = BlingoScriptType.Behavior };
         var result = _converter.Convert(file);
         Assert.Contains("woord = (((GetMember<IBlingoMemberTextBase>(\"MyTextMember\").Line[1] + \"\\n\") + GetMember<IBlingoMemberTextBase>(\"MyTextMember\").Line[2]) + \"\\n\") + GetMember<IBlingoMemberTextBase>(\"MyTextMember\").Line[3];", result.Replace("\r", ""));
+    }
+
+    [Fact]
+    public void StringFunctionIsConvertedToToStringCall()
+    {
+        var result = _converter.Convert("member(\"PlayerName\").text = string(WebName)");
+        var normalized = result.Replace("\r", string.Empty);
+        Assert.Contains("Member<IBlingoMemberTextBase>(\"PlayerName\").Text = WebName.ToString();", normalized);
     }
 
     [Fact]

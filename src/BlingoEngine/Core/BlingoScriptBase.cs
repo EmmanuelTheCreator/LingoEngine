@@ -58,6 +58,7 @@ namespace BlingoEngine.Core
         /// Retrieves the current movie
         /// </summary>
         protected IBlingoMovie _Movie => _env.Movie;
+        protected IBlingoMovie _movie => _Movie;
         protected IBlingoSystem _System => _env.System;
 
         #endregion

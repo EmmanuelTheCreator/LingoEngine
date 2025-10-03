@@ -263,8 +263,10 @@ public sealed class BlLegacyExpressionConverter
                 TryHandleListFunction() ||
                 TryHandleVoidPredicate() ||
                 TryHandleScriptInstantiation() ||
+                TryHandleStringFunction() ||
                 TryHandleValueFunction() ||
                 TryHandleAlertCommand() ||
+                TryHandleGoToMovieNavigation() ||
                 TryHandleGoToCurrentFrame() ||
                 TryHandleMemberTypedAccess() ||
                 TryHandleListLiteral() ||
@@ -443,6 +445,61 @@ public sealed class BlLegacyExpressionConverter
         return true;
     }
 
+    private bool TryHandleStringFunction()
+    {
+        if (_index >= _tokens.Count ||
+            !string.Equals(_tokens[_index].ValueText, "string", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var argument = Convert(argumentTokens);
+
+        if (string.IsNullOrEmpty(argument))
+        {
+            AppendRaw("string.Empty");
+        }
+        else
+        {
+            if (RequiresParentheses(argumentTokens))
+            {
+                AppendRaw("(");
+                AppendRaw(argument);
+                AppendRaw(")");
+            }
+            else
+            {
+                AppendRaw(argument);
+            }
+
+            AppendRaw(".ToString()");
+        }
+
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
     private bool TryHandleAlertCommand()
     {
         if (_index >= _tokens.Count ||
@@ -468,6 +525,68 @@ public sealed class BlLegacyExpressionConverter
         }
 
         AppendRaw(")");
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleGoToMovieNavigation()
+    {
+        if (_index >= _tokens.Count || !IsIdentifier(_tokens[_index], "go"))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || !IsIdentifier(_tokens[_index + 1], "to"))
+        {
+            return false;
+        }
+
+        var argumentStart = _index + 2;
+        if (argumentStart >= _tokens.Count)
+        {
+            return false;
+        }
+
+        if (IsIdentifier(_tokens[argumentStart], "the"))
+        {
+            argumentStart++;
+            if (argumentStart >= _tokens.Count)
+            {
+                return false;
+            }
+        }
+
+        if (IsIdentifier(_tokens[argumentStart], "frame"))
+        {
+            var nextIndex = argumentStart + 1;
+            if (nextIndex >= _tokens.Count || ContainsNewLine(_tokens[nextIndex].LeadingTrivia))
+            {
+                return false;
+            }
+
+            var nextToken = _tokens[nextIndex];
+            if (IsValueToken(nextToken))
+            {
+                argumentStart = nextIndex;
+            }
+        }
+
+        if (argumentStart >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, argumentStart, _tokens.Count - argumentStart);
+        var argumentExpression = Convert(argumentTokens);
+        if (string.IsNullOrWhiteSpace(argumentExpression))
+        {
+            return false;
+        }
+
+        AppendRaw("_movie.GoTo(");
+        AppendRaw(argumentExpression);
+        AppendRaw(")");
+        _index = argumentStart + argumentTokens.Count;
         _afterDot = false;
         return true;
     }
@@ -502,7 +621,7 @@ public sealed class BlLegacyExpressionConverter
             return false;
         }
 
-        AppendRaw("_Movie.GoTo(_Movie.CurrentFrame)");
+        AppendRaw("_movie.GoTo(_movie.CurrentFrame)");
         _index += lookahead;
         _afterDot = false;
         return true;
@@ -663,8 +782,44 @@ public sealed class BlLegacyExpressionConverter
         _afterDot = false;
         return true;
     }
+    private static bool RequiresParentheses(IReadOnlyList<BlSyntaxToken> tokens)
+    {
+        if (tokens.Count == 0)
+        {
+            return false;
+        }
+
+        if (tokens.Count == 1)
+        {
+            return tokens[0].Kind switch
+            {
+                BlSyntaxKind.IdentifierToken => false,
+                BlSyntaxKind.KeywordToken => false,
+                BlSyntaxKind.NumberToken => false,
+                BlSyntaxKind.StringLiteralToken => false,
+                _ => true,
+            };
+        }
+
+        if (tokens[0].Kind == BlSyntaxKind.LeftParenthesisToken)
+        {
+            var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+                tokens,
+                0,
+                BlSyntaxKind.LeftParenthesisToken,
+                BlSyntaxKind.RightParenthesisToken);
+            if (closeIndex == tokens.Count - 1)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
     private void AppendIdentifier(BlSyntaxToken token, int tokenIndex)
+
     {
         var text = token.ValueText;
 
@@ -779,6 +934,18 @@ public sealed class BlLegacyExpressionConverter
         if (string.Equals(op, "&", StringComparison.Ordinal))
         {
             AppendRaw("+");
+            return;
+        }
+
+        if (string.Equals(op, "or", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("||");
+            return;
+        }
+
+        if (string.Equals(op, "and", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("&&");
             return;
         }
 
@@ -919,6 +1086,14 @@ public sealed class BlLegacyExpressionConverter
     {
         return token.Kind is BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken &&
             string.Equals(token.ValueText, value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsValueToken(BlSyntaxToken token)
+    {
+        return token.Kind is BlSyntaxKind.NumberToken or
+            BlSyntaxKind.StringLiteralToken or
+            BlSyntaxKind.IdentifierToken or
+            BlSyntaxKind.SymbolToken;
     }
 
     private static bool ContainsNewLine(IReadOnlyList<BlSyntaxTrivia> trivia)

@@ -108,7 +108,16 @@ public class MyParentParent : BlingoParentScript
         const string source = "on exitFrame me\n  go to the frame\nend";
         var code = _generator.GenerateClass("Stopper", source, BlLingoScriptKind.Behavior);
 
-        Assert.Contains("_Movie.GoTo(_Movie.CurrentFrame);", code);
+        Assert.Contains("_movie.GoTo(_movie.CurrentFrame);", code);
+    }
+
+    [Fact]
+    public void GoToLabel_UsesLowercaseMovieField()
+    {
+        const string source = "on exitFrame\n  go to \"Game\"\nend";
+        var code = _generator.GenerateClass("Navigator", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("_movie.GoTo(\"Game\");", code);
     }
 
     [Fact]
