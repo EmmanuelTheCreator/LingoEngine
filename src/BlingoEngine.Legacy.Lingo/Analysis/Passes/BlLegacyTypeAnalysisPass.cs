@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using BlingoEngine.Legacy.Lingo.Analysis;
 using BlingoEngine.Legacy.Lingo.CodeGen;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
@@ -241,20 +241,41 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
             MergePropertyOrParameter(collection, scope, handler, name, invocationType);
         }
 
+        if (BlLegacyExpressionTokenAnalyzer.TryInferLiteralType(valueTokens, out var literalType))
+        {
+            MergePropertyOrParameter(collection, scope, handler, name, literalType);
+            return;
+        }
+
         var expression = BlLegacyExpressionConverter.Convert(valueTokens);
         var typeName = BlLegacyTypeUtilities.DetermineExpressionType(expression);
         if (typeName.Length == 0)
         {
-            if (TryExtractSimpleIdentifier(expression, out var identifier) &&
-                scope.TryGetProperty(name, out var propertyTarget))
+            if (scope.TryGetProperty(name, out var propertyTarget))
             {
-                if (scope.TryGetProperty(identifier, out var sourceProperty))
+                if (BlLegacyExpressionTokenAnalyzer.TryGetIdentifier(valueTokens, out var identifier) ||
+                    TryExtractSimpleIdentifier(expression, out identifier))
                 {
-                    propertyTarget.LinkTo(sourceProperty);
-                }
-                else if (handler.TryGetParameter(identifier, out var parameterTarget))
-                {
-                    propertyTarget.LinkTo(parameterTarget);
+                    if (scope.TryGetProperty(identifier, out var sourceProperty))
+                    {
+                        sourceProperty.LinkTo(propertyTarget);
+                        propertyTarget.LinkTo(sourceProperty);
+                        var current = sourceProperty.CurrentHint;
+                        if (!string.IsNullOrEmpty(current))
+                        {
+                            propertyTarget.AddHint(current);
+                        }
+                    }
+                    else if (handler.TryGetParameter(identifier, out var parameterTarget))
+                    {
+                        parameterTarget.LinkTo(propertyTarget);
+                        propertyTarget.LinkTo(parameterTarget);
+                        var current = parameterTarget.CurrentHint;
+                        if (!string.IsNullOrEmpty(current))
+                        {
+                            propertyTarget.AddHint(current);
+                        }
+                    }
                 }
             }
 
@@ -660,14 +681,40 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
         }
 
         var trimmed = expression.Trim();
-        if (Regex.IsMatch(trimmed, "^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.CultureInvariant))
+        if (trimmed.StartsWith("this.", StringComparison.Ordinal))
         {
-            identifier = trimmed;
-            return true;
+            trimmed = trimmed[5..];
+        }
+        else if (trimmed.StartsWith("me.", StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed[3..];
         }
 
-        return false;
+        if (trimmed.Length == 0)
+        {
+            return false;
+        }
+
+        if (!IsIdentifierStart(trimmed[0]))
+        {
+            return false;
+        }
+
+        for (var index = 1; index < trimmed.Length; index++)
+        {
+            if (!IsIdentifierPart(trimmed[index]))
+            {
+                return false;
+            }
+        }
+
+        identifier = trimmed;
+        return true;
     }
+
+    private static bool IsIdentifierStart(char value) => char.IsLetter(value) || value == '_';
+
+    private static bool IsIdentifierPart(char value) => char.IsLetterOrDigit(value) || value == '_';
 
     private static bool TryGetToken(IReadOnlyList<BlSyntaxToken> tokens, int index, out BlSyntaxToken token)
     {

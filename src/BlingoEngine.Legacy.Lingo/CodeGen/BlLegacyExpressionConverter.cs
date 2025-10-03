@@ -177,6 +177,13 @@ public sealed class BlLegacyExpressionConverter
         ["min"] = new ListFunctionInfo("Min", 1),
     };
 
+    private static readonly string[] s_objectPredicateTypes =
+    {
+        "BlingoEngine.Core.IBlingoScriptBase",
+        "BlingoEngine.Xtras.IBlingoXtra",
+        "BlingoEngine.Core.IBlingoWindow",
+    };
+
     public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens, bool treatReturnAsStatement = false)
     {
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
@@ -328,11 +335,16 @@ public sealed class BlLegacyExpressionConverter
         {
             AppendRaw(expression);
             AppendRaw("is");
-            AppendRaw("BlingoEngine.Core.IBlingoScriptBase");
-            AppendRaw("or");
-            AppendRaw("BlingoEngine.Xtras.IBlingoXtra");
-            AppendRaw("or");
-            AppendRaw("BlingoEngine.Core.IBlingoWindow");
+
+            for (var index = 0; index < s_objectPredicateTypes.Length; index++)
+            {
+                if (index > 0)
+                {
+                    AppendRaw("or");
+                }
+
+                AppendRaw(s_objectPredicateTypes[index]);
+            }
         }
 
         _index = closeIndex + 1;
