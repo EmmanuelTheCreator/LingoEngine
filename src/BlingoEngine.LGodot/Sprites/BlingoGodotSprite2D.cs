@@ -110,6 +110,9 @@ namespace BlingoEngine.LGodot.Sprites
             {
                 if (_container2D.Visible == value) return;
                 _container2D.Visible = value;
+                _sprite2D.Visible = value;
+                if (_previousChildElementNode is CanvasItem canvasItem)
+                    canvasItem.Visible = value;
             }
         }
         public IBlingoCast? Cast { get; private set; }
@@ -233,9 +236,21 @@ namespace BlingoEngine.LGodot.Sprites
 
         private void ApplyBlend()
         {
-            var col = _sprite2D.SelfModulate;
+            var spriteColor = _sprite2D.SelfModulate;
             float alpha = Mathf.Clamp(_blend / 100f, 0f, 1f);
-            _sprite2D.SelfModulate = new Color(col.R, col.G, col.B, _directToStage ? 1f : alpha);
+            float targetAlpha = _directToStage ? 1f : alpha;
+
+            _sprite2D.SelfModulate = new Color(spriteColor.R, spriteColor.G, spriteColor.B, targetAlpha);
+
+            var containerColor = _container2D.Modulate;
+            _container2D.Modulate = new Color(containerColor.R, containerColor.G, containerColor.B, targetAlpha);
+
+            if (_previousChildElementNode is CanvasItem canvasItem)
+            {
+                var childColor = canvasItem.Modulate;
+                canvasItem.Modulate = new Color(childColor.R, childColor.G, childColor.B, targetAlpha);
+            }
+
             SetDirty();
         }
 
