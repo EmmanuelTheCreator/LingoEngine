@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using BlingoEngine.Legacy.Lingo.CodeGen;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
@@ -244,6 +245,19 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
         var typeName = BlLegacyTypeUtilities.DetermineExpressionType(expression);
         if (typeName.Length == 0)
         {
+            if (TryExtractSimpleIdentifier(expression, out var identifier) &&
+                scope.TryGetProperty(name, out var propertyTarget))
+            {
+                if (scope.TryGetProperty(identifier, out var sourceProperty))
+                {
+                    propertyTarget.LinkTo(sourceProperty);
+                }
+                else if (handler.TryGetParameter(identifier, out var parameterTarget))
+                {
+                    propertyTarget.LinkTo(parameterTarget);
+                }
+            }
+
             return;
         }
 
@@ -632,6 +646,24 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
                 name = token.ValueText;
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    private static bool TryExtractSimpleIdentifier(string expression, out string identifier)
+    {
+        identifier = string.Empty;
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return false;
+        }
+
+        var trimmed = expression.Trim();
+        if (Regex.IsMatch(trimmed, "^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.CultureInvariant))
+        {
+            identifier = trimmed;
+            return true;
         }
 
         return false;
