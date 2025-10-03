@@ -614,9 +614,9 @@ public class BlingoToCSharpConverter
         {
             var name = m.Groups["name"].Value;
             var body = m.Groups["body"].Value;
-            var defMatch = Regex.Match(body, @"#default:(?<val>[^#\]]+)");
-            var fmtMatch = Regex.Match(body, @"#format:#(?<fmt>\w+)");
-            var commentMatch = Regex.Match(body, @"#comment:""(.*?)""", RegexOptions.Singleline);
+            var defMatch = Regex.Match(body, @"#default\s*:\s*(?<val>[^,\]]+)", RegexOptions.IgnoreCase);
+            var fmtMatch = Regex.Match(body, @"#format\s*:\s*#(?<fmt>\w+)", RegexOptions.IgnoreCase);
+            var commentMatch = Regex.Match(body, @"#comment\s*:\s*""(.*?)""", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             var def = defMatch.Success ? defMatch.Groups["val"].Value.Trim().TrimEnd(',') : "0";
             var fmt = fmtMatch.Success ? fmtMatch.Groups["fmt"].Value.Trim().ToLowerInvariant() : string.Empty;
             if (Regex.IsMatch(def, @"(?i)rgb\s*\((.+)\)"))

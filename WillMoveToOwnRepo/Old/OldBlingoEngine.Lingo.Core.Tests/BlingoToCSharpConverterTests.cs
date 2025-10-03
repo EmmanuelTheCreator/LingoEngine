@@ -1398,6 +1398,43 @@ end",
     }
 
     [Fact]
+    public void PropertyDescriptionFormatsSetPropertyTypesInBatch()
+    {
+        var scripts = new[]
+        {
+            new BlingoScriptFile
+            {
+                Name = "FormatScript",
+                Source = @"property myFunction, mySpriteNum, myVar1, myVar2, myEnableMouseClick, myRollOverMember, myRollOverColor
+on getPropertyDescriptionList
+  description = [:]
+  addProp description,#myFunction, [#default:0, #format:#symbol, #comment:""Function:""]
+  addProp description,#mySpriteNum, [#default:4, #format:#integer, #comment:""Sprite Num:""]
+  addProp description,#myVar1, [#default:0, #format:#integer, #comment:""Var 1:""]
+  addProp description,#myVar2, [#default:0, #format:#float, #comment:""Var 2:""]
+  addProp description,#myEnableMouseClick, [#default:true, #format:#boolean, #comment:""Enable Mouseclick:""]
+  addProp description,#myRollOverMember, [#default:0, #format:#string, #comment:""Rollover member:""]
+  addProp description,#myRollOverColor, [#default:rgb(1,2,3), #format:#color, #comment:""Rollover color:""]
+  return description
+end",
+                Type = BlingoScriptType.Behavior
+            }
+        };
+
+        var batch = _converter.Convert(scripts);
+        Assert.True(batch.Properties.ContainsKey("FormatScript"));
+        var propertyTypes = batch.Properties["FormatScript"].ToDictionary(p => p.Name, p => p.Type, StringComparer.OrdinalIgnoreCase);
+
+        Assert.Equal("string", propertyTypes["myFunction"]);
+        Assert.Equal("int", propertyTypes["mySpriteNum"]);
+        Assert.Equal("int", propertyTypes["myVar1"]);
+        Assert.Equal("float", propertyTypes["myVar2"]);
+        Assert.Equal("bool", propertyTypes["myEnableMouseClick"]);
+        Assert.Equal("string", propertyTypes["myRollOverMember"]);
+        Assert.Equal("AColor", propertyTypes["myRollOverColor"]);
+    }
+
+    [Fact]
     public void RefreshCaseIsConverted()
     {
         var lingo = @"on refresh me
