@@ -39,10 +39,12 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var collection = BuildTypeCollection(context.Symbols);
+        var symbols = context.Symbols;
+        var collection = BuildTypeCollection(symbols);
         context.SetData(TypeCollectionKey, collection);
 
         var handlerBlocks = TryGetHandlerBlocks(context);
+        var handlerReturnTypes = TryGetHandlerReturnTypes(context);
 
         foreach (var scope in collection.Scopes)
         {
@@ -64,7 +66,7 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
                             ProcessPutBlock(collection, scope, handler, put);
                             break;
                         case BlLingoHandlerCodeBlockKind.Expression:
-                            ProcessExpressionBlock(collection, scope, handler, block);
+                            ProcessExpressionBlock(symbols, collection, scope, handler, block, handlerReturnTypes);
                             break;
                         case BlLingoHandlerCodeBlockKind.SendSprite when block.Data is BlLingoSendSpriteBlockData send:
                             ProcessSendSpriteBlock(collection, send);
@@ -119,6 +121,19 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
             blocks is not null)
         {
             return blocks;
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyDictionary<BlLingoHandlerSymbolTable, string?>? TryGetHandlerReturnTypes(
+        BlLingoAnalysisContext context)
+    {
+        if (context.TryGetData(BlLingoHandlerCodeBlockPass.HandlerReturnTypesKey,
+                out IReadOnlyDictionary<BlLingoHandlerSymbolTable, string?>? returnTypes) &&
+            returnTypes is not null)
+        {
+            return returnTypes;
         }
 
         return null;
@@ -196,10 +211,12 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
     }
 
     private static void ProcessExpressionBlock(
+        BlLingoSymbolTable symbols,
         BlLegacyTypeCollection collection,
         BlLegacyTypeCollection.Scope scope,
         BlLegacyTypeCollection.HandlerScope handler,
-        BlLingoHandlerCodeBlock block)
+        BlLingoHandlerCodeBlock block,
+        IReadOnlyDictionary<BlLingoHandlerSymbolTable, string?>? handlerReturnTypes)
     {
         if (block is null || block.Tokens.Count == 0)
         {
@@ -209,6 +226,18 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
         if (!TryExtractAssignment(block.Tokens, out var name, out var valueTokens))
         {
             return;
+        }
+
+        var invocationType = DetermineInvocationReturnType(
+            symbols,
+            collection,
+            scope,
+            handler,
+            valueTokens,
+            handlerReturnTypes);
+        if (invocationType.Length > 0)
+        {
+            MergePropertyOrParameter(collection, scope, handler, name, invocationType);
         }
 
         var expression = BlLegacyExpressionConverter.Convert(valueTokens);
@@ -300,6 +329,241 @@ public sealed class BlLegacyTypeAnalysisPass : BlLingoAnalysisPass
 
             collection.AddSharedHint(scriptKind, scriptName, handlerName, index, typeName);
         }
+    }
+
+    private static string DetermineInvocationReturnType(
+        BlLingoSymbolTable symbols,
+        BlLegacyTypeCollection collection,
+        BlLegacyTypeCollection.Scope scope,
+        BlLegacyTypeCollection.HandlerScope handler,
+        IReadOnlyList<BlSyntaxToken> valueTokens,
+        IReadOnlyDictionary<BlLingoHandlerSymbolTable, string?>? handlerReturnTypes)
+    {
+        if (!TryParseInvocation(valueTokens, out var targetName, out var handlerName))
+        {
+            return string.Empty;
+        }
+
+        BlLegacyTypeCollection.Scope? resolvedScope = null;
+        BlLingoScriptKind scriptKind;
+        string? scriptName;
+
+        if (string.Equals(targetName, "me", StringComparison.OrdinalIgnoreCase))
+        {
+            resolvedScope = scope;
+            scriptKind = scope.ScriptKind;
+            scriptName = scope.Name;
+        }
+        else
+        {
+            var symbol = ResolveSymbol(symbols, scope, handler, targetName);
+            if (symbol is null)
+            {
+                return string.Empty;
+            }
+
+            var candidateType = symbol.ResolvedTypeName;
+            if (string.IsNullOrWhiteSpace(candidateType))
+            {
+                candidateType = symbol.TypeCode;
+            }
+
+            var normalizedScript = ExtractScriptName(candidateType);
+            if (normalizedScript.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            if (!collection.TryFindScopeByName(normalizedScript, out resolvedScope) || resolvedScope is null)
+            {
+                return string.Empty;
+            }
+
+            scriptKind = resolvedScope.ScriptKind;
+            scriptName = resolvedScope.Name;
+        }
+
+        if (resolvedScope is null)
+        {
+            return string.Empty;
+        }
+
+        var targetHandler = collection.FindHandler(scriptName, handlerName, scriptKind);
+        string? resolvedType = null;
+
+        if (targetHandler is not null &&
+            targetHandler.Symbol is not null &&
+            handlerReturnTypes is not null &&
+            handlerReturnTypes.TryGetValue(targetHandler.Symbol, out var inferred) &&
+            !string.IsNullOrWhiteSpace(inferred))
+        {
+            resolvedType = inferred;
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedType))
+        {
+            resolvedType = BlLegacyHandlerReturnTypeRegistry.Resolve(scriptKind, scriptName, handlerName);
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedType) && targetHandler is not null)
+        {
+            var canonical = BlLingoHandlerFacts.GetClassification(handlerName).CanonicalName;
+            resolvedType = BlLegacyHandlerReturnTypeRegistry.Resolve(scriptKind, scriptName, canonical);
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedType))
+        {
+            var sanitized = BlCSharpName.SanitizeIdentifier(handlerName);
+            resolvedType = BlLegacyHandlerReturnTypeRegistry.Resolve(scriptKind, scriptName, sanitized);
+        }
+
+        var normalizedType = BlLegacyTypeUtilities.NormalizeTypeName(resolvedType);
+        return normalizedType;
+    }
+
+    private static bool TryParseInvocation(
+        IReadOnlyList<BlSyntaxToken> tokens,
+        out string targetName,
+        out string handlerName)
+    {
+        targetName = string.Empty;
+        handlerName = string.Empty;
+
+        if (tokens.Count < 4)
+        {
+            return false;
+        }
+
+        var index = 0;
+        while (index < tokens.Count && tokens[index].Kind == BlSyntaxKind.LeftParenthesisToken)
+        {
+            index++;
+        }
+
+        if (!TryGetToken(tokens, index, out var targetToken) || !IsIdentifierLike(targetToken))
+        {
+            return false;
+        }
+
+        targetName = targetToken.ValueText;
+        index++;
+
+        if (!TryGetToken(tokens, index, out var separator))
+        {
+            return false;
+        }
+
+        if (separator.Kind == BlSyntaxKind.QuestionToken)
+        {
+            index++;
+            if (!TryGetToken(tokens, index, out separator))
+            {
+                return false;
+            }
+        }
+
+        if (separator.Kind != BlSyntaxKind.PeriodToken)
+        {
+            return false;
+        }
+
+        index++;
+        if (!TryGetToken(tokens, index, out var handlerToken) || !IsIdentifierLike(handlerToken))
+        {
+            return false;
+        }
+
+        handlerName = handlerToken.ValueText;
+        index++;
+
+        if (!TryGetToken(tokens, index, out var openParen) || openParen.Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static BlCodeSymbol? ResolveSymbol(
+        BlLingoSymbolTable symbols,
+        BlLegacyTypeCollection.Scope scope,
+        BlLegacyTypeCollection.HandlerScope handler,
+        string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return null;
+        }
+
+        var handlerSymbol = handler.Symbol;
+        if (handlerSymbol is not null)
+        {
+            if (handlerSymbol.Locals.TryGetValue(name, out var local))
+            {
+                return local;
+            }
+
+            if (handlerSymbol.Parameters.TryGetValue(name, out var parameter))
+            {
+                return parameter;
+            }
+        }
+
+        var classScope = scope.Symbol;
+        if (classScope.Properties.TryGetValue(name, out var property))
+        {
+            return property;
+        }
+
+        if (!scope.IsMovieScript && symbols.MovieScript.Properties.TryGetValue(name, out var movieProperty))
+        {
+            return movieProperty;
+        }
+
+        if (symbols.Globals.TryGetValue(name, out var global))
+        {
+            return global;
+        }
+
+        return null;
+    }
+
+    private static string ExtractScriptName(string? typeName)
+    {
+        if (string.IsNullOrWhiteSpace(typeName))
+        {
+            return string.Empty;
+        }
+
+        var candidate = typeName.Trim();
+        if (candidate.StartsWith("global::", StringComparison.Ordinal))
+        {
+            candidate = candidate[8..];
+        }
+
+        if (candidate.EndsWith("?", StringComparison.Ordinal))
+        {
+            candidate = candidate[..^1];
+        }
+
+        var genericIndex = candidate.IndexOf('<');
+        if (genericIndex >= 0)
+        {
+            candidate = candidate[..genericIndex];
+        }
+
+        var lastDot = candidate.LastIndexOf('.');
+        if (lastDot >= 0)
+        {
+            candidate = candidate[(lastDot + 1)..];
+        }
+
+        return candidate;
+    }
+
+    private static bool IsIdentifierLike(BlSyntaxToken token)
+    {
+        return token.Kind is BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken or BlSyntaxKind.SymbolToken;
     }
 
     private static void MergePropertyOrParameter(
