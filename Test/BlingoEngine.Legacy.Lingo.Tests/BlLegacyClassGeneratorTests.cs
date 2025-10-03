@@ -112,6 +112,23 @@ public class MyParentParent : BlingoParentScript
     }
 
     [Fact]
+    public void ReturnKeywordInExpression_TranslatesToEnvironmentNewLine()
+    {
+        const string source = """
+on updateScores i
+  member("T_InternetScoresNames").text = member("T_InternetScoresNames").text & i[1] & return
+end
+""";
+
+        var code = _generator.GenerateClass("ScoreKeeper", source, BlLingoScriptKind.Parent);
+
+        Assert.Contains("Environment.NewLine", code);
+        Assert.Contains(
+            "Member<IBlingoMemberTextBase>(\"T_InternetScoresNames\").Text = Member<IBlingoMemberTextBase>(\"T_InternetScoresNames\").Text + i[1] + Environment.NewLine;",
+            code);
+    }
+
+    [Fact]
     public void Properties_InferTypesFromMemberAccess()
     {
         const string source = """

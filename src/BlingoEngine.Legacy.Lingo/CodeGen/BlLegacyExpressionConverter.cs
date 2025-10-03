@@ -9,6 +9,7 @@ namespace BlingoEngine.Legacy.Lingo.CodeGen;
 public sealed class BlLegacyExpressionConverter
 {
     private readonly IReadOnlyList<BlSyntaxToken> _tokens;
+    private readonly bool _treatReturnAsStatement;
     private readonly List<string> _parts = new();
     private int _index;
     private bool _afterDot;
@@ -236,19 +237,20 @@ public sealed class BlLegacyExpressionConverter
         ["min"] = new ListFunctionInfo("Min", 1),
     };
 
-    public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens)
+    public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens, bool treatReturnAsStatement = false)
     {
         _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
+        _treatReturnAsStatement = treatReturnAsStatement;
     }
 
-    public static string Convert(IReadOnlyList<BlSyntaxToken> tokens)
+    public static string Convert(IReadOnlyList<BlSyntaxToken> tokens, bool treatReturnAsStatement = false)
     {
         if (tokens is null || tokens.Count == 0)
         {
             return string.Empty;
         }
 
-        return new BlLegacyExpressionConverter(tokens).Build();
+        return new BlLegacyExpressionConverter(tokens, treatReturnAsStatement).Build();
     }
 
     public string Build()
@@ -271,12 +273,13 @@ public sealed class BlLegacyExpressionConverter
                 continue;
             }
 
+            var currentIndex = _index;
             var token = _tokens[_index++];
             switch (token.Kind)
             {
                 case BlSyntaxKind.IdentifierToken:
                 case BlSyntaxKind.KeywordToken:
-                    AppendIdentifier(token.ValueText);
+                    AppendIdentifier(token, currentIndex);
                     break;
                 case BlSyntaxKind.NumberToken:
                 case BlSyntaxKind.StringLiteralToken:
@@ -661,8 +664,24 @@ public sealed class BlLegacyExpressionConverter
         return true;
     }
 
-    private void AppendIdentifier(string text)
+    private void AppendIdentifier(BlSyntaxToken token, int tokenIndex)
     {
+        var text = token.ValueText;
+
+        if (string.Equals(text, "return", StringComparison.OrdinalIgnoreCase))
+        {
+            if (_treatReturnAsStatement || IsReturnStatement(tokenIndex))
+            {
+                AppendRaw("return");
+            }
+            else
+            {
+                AppendRaw("Environment.NewLine");
+            }
+            _afterDot = false;
+            return;
+        }
+
         if (string.Equals(text, "me", StringComparison.OrdinalIgnoreCase))
         {
             AppendRaw("this");
@@ -707,6 +726,46 @@ public sealed class BlLegacyExpressionConverter
 
         AppendRaw(text);
         _afterDot = false;
+    }
+
+    private bool IsReturnStatement(int tokenIndex)
+    {
+        if ((uint)tokenIndex >= (uint)_tokens.Count)
+        {
+            return false;
+        }
+
+        for (var index = tokenIndex + 1; index < _tokens.Count; index++)
+        {
+            var token = _tokens[index];
+            switch (token.Kind)
+            {
+                case BlSyntaxKind.OperatorToken:
+                    if (string.Equals(token.ValueText, "-", StringComparison.Ordinal) ||
+                        string.Equals(token.ValueText, "+", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    return false;
+                case BlSyntaxKind.IdentifierToken:
+                case BlSyntaxKind.KeywordToken:
+                case BlSyntaxKind.NumberToken:
+                case BlSyntaxKind.StringLiteralToken:
+                case BlSyntaxKind.SymbolToken:
+                case BlSyntaxKind.LeftParenthesisToken:
+                case BlSyntaxKind.HashToken:
+                    return true;
+                case BlSyntaxKind.CommaToken:
+                case BlSyntaxKind.RightParenthesisToken:
+                case BlSyntaxKind.RightBracketToken:
+                case BlSyntaxKind.RightBraceToken:
+                case BlSyntaxKind.SemicolonToken:
+                    return false;
+            }
+        }
+
+        return false;
     }
 
     private void AppendOperator(string op)

@@ -82,7 +82,9 @@ internal static class BlLegacyHandlerCodeBlockClassifier
             }
         }
 
-        var expression = BlLegacyExpressionConverter.Convert(tokens);
+        var treatReturnAsStatement =
+            tokens.Count > 0 && BlLegacyHandlerTokenUtilities.IsKeyword(tokens[0], "return");
+        var expression = BlLegacyExpressionConverter.Convert(tokens, treatReturnAsStatement);
         return new BlLingoHandlerCodeBlock(
             BlLingoHandlerCodeBlockKind.Expression,
             tokens,
