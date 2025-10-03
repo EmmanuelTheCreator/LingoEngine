@@ -57,6 +57,11 @@ internal static class BlLegacyTypeUtilities
             return typeName;
         }
 
+        if (TryDetermineMemberPropertyType(expression, out var memberPropertyType))
+        {
+            return memberPropertyType;
+        }
+
         if (IsMemberConstructor(expression))
         {
             return "IBlingoMember";
@@ -65,11 +70,6 @@ internal static class BlLegacyTypeUtilities
         if (TryDetermineArrayType(expression, out var arrayType))
         {
             return arrayType;
-        }
-
-        if (IsStringMemberAccess(expression))
-        {
-            return "string";
         }
 
         return string.Empty;
@@ -201,29 +201,87 @@ internal static class BlLegacyTypeUtilities
         return false;
     }
 
-    private static bool IsStringMemberAccess(string? expression)
+    private static bool TryDetermineMemberPropertyType(string? expression, out string typeName)
     {
+        typeName = string.Empty;
         if (string.IsNullOrWhiteSpace(expression))
         {
             return false;
         }
 
         var trimmed = expression.Trim();
-        if (!trimmed.StartsWith("Member<", StringComparison.Ordinal) &&
-            !trimmed.StartsWith("Member(", StringComparison.Ordinal))
+        if (!trimmed.StartsWith("Member", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        return ContainsSegment(trimmed, ".Line") ||
-            ContainsSegment(trimmed, ".Word") ||
-            ContainsSegment(trimmed, ".Text") ||
-            ContainsSegment(trimmed, ".Char");
+        var openIndex = trimmed.IndexOf('(');
+        if (openIndex < 0)
+        {
+            return false;
+        }
+
+        var closeIndex = FindClosingParenthesisIndex(trimmed, openIndex);
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var propertyName = ExtractLastMemberPropertyName(trimmed, closeIndex + 1);
+        if (propertyName.Length == 0)
+        {
+            return false;
+        }
+
+        if (!BlLegacyMemberPropertyFacts.TryGetValueType(propertyName, out var candidate))
+        {
+            return false;
+        }
+
+        typeName = NormalizeTypeName(candidate);
+        return true;
     }
 
-    private static bool ContainsSegment(string expression, string segment)
+    private static string ExtractLastMemberPropertyName(string expression, int startIndex)
     {
-        return expression.IndexOf(segment, StringComparison.OrdinalIgnoreCase) >= 0;
+        var last = string.Empty;
+        for (var index = startIndex; index < expression.Length; index++)
+        {
+            if (expression[index] != '.')
+            {
+                continue;
+            }
+
+            index++;
+            if (index >= expression.Length)
+            {
+                break;
+            }
+
+            var begin = index;
+            var startChar = expression[begin];
+            if (!char.IsLetter(startChar) && startChar != '_')
+            {
+                continue;
+            }
+
+            index++;
+            while (index < expression.Length)
+            {
+                var ch = expression[index];
+                if (char.IsLetterOrDigit(ch) || ch == '_')
+                {
+                    index++;
+                    continue;
+                }
+
+                break;
+            }
+
+            last = expression[begin..index];
+        }
+
+        return last;
     }
 
     private static int GetFirstSpan(BlCodeSymbol symbol)
