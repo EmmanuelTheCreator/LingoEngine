@@ -236,4 +236,36 @@ public class MyBehaviorBehavior : BlingoSpriteBehavior, IHasMouseUpEvent
         LegacyCodeAssert.AreEqual(expected, code);
     }
 
+    [Fact]
+    public void LeadingComments_ArePreservedBeforeClassDeclaration()
+    {
+        const string source = "-- Header comment\n-- Second line\non startMovie\nend";
+        var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
+
+        const string expectedPrefix = """
+// Header comment
+// Second line
+
+public class MyBehaviorBehavior : BlingoSpriteBehavior
+""";
+
+        Assert.StartsWith(expectedPrefix.ReplaceLineEndings(Environment.NewLine), code);
+    }
+
+    [Fact]
+    public void CommentsBetweenHandlers_ArePreserved()
+    {
+        const string source = "-- Header\n" +
+            "on mouseUp\n" +
+            "end\n" +
+            "\n" +
+            "-- Between handlers\n" +
+            "on mouseDown\n" +
+            "end";
+
+        var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
+
+        var commentSnippet = "    // Between handlers" + Environment.NewLine + Environment.NewLine + "    public void MouseDown";
+        Assert.Contains(commentSnippet.ReplaceLineEndings(Environment.NewLine), code);
+    }
 }
