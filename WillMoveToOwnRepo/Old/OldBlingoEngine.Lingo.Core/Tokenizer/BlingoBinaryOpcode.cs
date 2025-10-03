@@ -18,7 +18,8 @@
         GreaterThan,
         GreaterOrEqual,
         LessThan,
-        LessOrEqual
+        LessOrEqual,
+        Contains
         // Add other opcodes as needed
     }
 }

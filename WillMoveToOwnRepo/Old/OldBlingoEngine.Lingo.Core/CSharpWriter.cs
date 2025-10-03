@@ -256,6 +256,24 @@ public partial class CSharpWriter : IBlingoAstVisitor
             return;
         }
 
+        if (node.Opcode == BlingoBinaryOpcode.Contains)
+        {
+            bool needsParensTarget = node.Left is BlingoBinaryOpNode;
+            if (needsParensTarget) Append("(");
+            var startTarget = _sb.Length;
+            node.Left.Accept(this);
+            TrimSemicolon(startTarget);
+            if (needsParensTarget) Append(")");
+
+            Append(".Contains(");
+
+            var startArgument = _sb.Length;
+            node.Right.Accept(this);
+            TrimSemicolon(startArgument);
+            Append(")");
+            return;
+        }
+
         bool needsParensLeft = node.Left is BlingoBinaryOpNode;
         bool needsParensRight = node.Right is BlingoBinaryOpNode;
 
