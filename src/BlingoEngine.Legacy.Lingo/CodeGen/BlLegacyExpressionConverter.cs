@@ -202,6 +202,7 @@ public sealed class BlLegacyExpressionConverter
                 TryHandleListCommand() ||
                 TryHandleListFunction() ||
                 TryHandleVoidPredicate() ||
+                TryHandleObjectPredicate() ||
                 TryHandleScriptInstantiation() ||
                 TryHandleStringFunction() ||
                 TryHandleValueFunction() ||
@@ -284,6 +285,56 @@ public sealed class BlLegacyExpressionConverter
         AppendRaw(expression);
         AppendRaw("==");
         AppendRaw("null");
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleObjectPredicate()
+    {
+        if (_index >= _tokens.Count ||
+            !string.Equals(_tokens[_index].ValueText, "objectp", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var innerTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var expression = Convert(innerTokens);
+
+        if (string.IsNullOrEmpty(expression))
+        {
+            AppendRaw("false");
+        }
+        else
+        {
+            AppendRaw(expression);
+            AppendRaw("is");
+            AppendRaw("BlingoEngine.Core.IBlingoScriptBase");
+            AppendRaw("or");
+            AppendRaw("BlingoEngine.Xtras.IBlingoXtra");
+            AppendRaw("or");
+            AppendRaw("BlingoEngine.Core.IBlingoWindow");
+        }
+
         _index = closeIndex + 1;
         _afterDot = false;
         return true;
