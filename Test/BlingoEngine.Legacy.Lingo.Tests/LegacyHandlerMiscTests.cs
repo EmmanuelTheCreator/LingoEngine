@@ -1,3 +1,7 @@
+using System;
+using System.Text.RegularExpressions;
+using BlingoEngine.Legacy.Lingo.Analysis;
+using BlingoEngine.Legacy.Lingo.CodeGen;
 using Xunit;
 
 namespace BlingoEngine.Legacy.Lingo.Tests;
@@ -53,5 +57,26 @@ public class TestScriptBehavior : BlingoSpriteBehavior
 """;
 
         LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
+    public void ArithmeticAssignment_InfersIntegerTypes()
+    {
+        const string source = """
+property pNum
+on new me,_beginningsprite
+  pNum=_beginningsprite
+end
+on Sadd me
+  pNum=pNum+1
+end
+""";
+
+        var generator = new BlLegacyClassGenerator();
+        var code = generator.GenerateClass("SpriteManager", source, BlLingoScriptKind.Parent);
+
+        Assert.Contains("public int pNum { get; set; }", code);
+        Assert.Matches(new Regex(@"int\s+\w*beginningsprite", RegexOptions.IgnoreCase), code);
+        Assert.DoesNotMatch(new Regex(@"object\s+\w*beginningsprite", RegexOptions.IgnoreCase), code);
     }
 }

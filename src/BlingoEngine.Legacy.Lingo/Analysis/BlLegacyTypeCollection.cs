@@ -478,6 +478,7 @@ internal sealed class BlLegacyTypeCollection
     internal sealed class TypeTarget
     {
         private string? _mergedType;
+        private readonly List<TypeTarget> _linkedTargets = new();
 
         public TypeTarget(string name, BlLegacyTypeTargetKind kind, BlCodeSymbol? symbol, bool isSelfParameter)
         {
@@ -508,12 +509,29 @@ internal sealed class BlLegacyTypeCollection
                 : BlLegacyTypeUtilities.MergeTypeNames(_mergedType!, normalized);
         }
 
+        public void LinkTo(TypeTarget? target)
+        {
+            if (target is null || ReferenceEquals(this, target))
+            {
+                return;
+            }
+
+            if (!_linkedTargets.Contains(target))
+            {
+                _linkedTargets.Add(target);
+            }
+        }
+
         public void Apply()
         {
             var normalized = BlLegacyTypeUtilities.NormalizeTypeName(_mergedType);
             if (!string.IsNullOrEmpty(normalized) && Symbol is not null)
             {
                 Symbol.SetResolvedTypeName(normalized);
+                foreach (var linked in _linkedTargets)
+                {
+                    linked.AddHint(normalized);
+                }
             }
         }
     }

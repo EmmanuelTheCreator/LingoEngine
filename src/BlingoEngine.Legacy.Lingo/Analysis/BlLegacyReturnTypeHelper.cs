@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace BlingoEngine.Legacy.Lingo.Analysis;
 
@@ -151,6 +152,11 @@ internal static class BlLegacyReturnTypeHelper
             return "double";
         }
 
+        if (LooksLikeNumericArithmeticExpression(trimmed))
+        {
+            return ContainsFloatingPointLiteral(trimmed) ? "double" : "int";
+        }
+
         return null;
     }
 
@@ -158,6 +164,21 @@ internal static class BlLegacyReturnTypeHelper
     {
         return !string.IsNullOrEmpty(target) &&
             target.Equals("result", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool LooksLikeNumericArithmeticExpression(string expression)
+    {
+        if (!Regex.IsMatch(expression, "[+\\-*/]"))
+        {
+            return false;
+        }
+
+        return Regex.IsMatch(expression, @"\d");
+    }
+
+    private static bool ContainsFloatingPointLiteral(string expression)
+    {
+        return Regex.IsMatch(expression, @"\d\.\d");
     }
 
     public static bool IsReturnWithValue(string? expression)
