@@ -127,7 +127,8 @@ public sealed class BlLegacyClassGenerator
 
             if (interfaces.Contains("IBlingoPropertyDescriptionList"))
             {
-                WritePropertyDescriptionListStubs(writer);
+                var hasPropertyListHandler = classScope.Handlers.ContainsKey("getPropertyDescriptionList");
+                WritePropertyDescriptionListMembers(writer, hasPropertyListHandler);
             }
 
             WriteHandlers(writer, classScope, handlerConverter, memberInfo.HandlerOrder, commentsByLine);
@@ -452,18 +453,21 @@ public sealed class BlLegacyClassGenerator
         }
     }
 
-    private static void WritePropertyDescriptionListStubs(BlCSharpCodeWriter writer)
+    private static void WritePropertyDescriptionListMembers(BlCSharpCodeWriter writer, bool hasListHandler)
     {
         writer.WriteLine();
-        writer.WriteLine("public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()");
-        writer.WriteLine("{");
-        using (writer.IndentScope())
+        if (!hasListHandler)
         {
-            writer.WriteLine("return null;");
-        }
+            writer.WriteLine("public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()");
+            writer.WriteLine("{");
+            using (writer.IndentScope())
+            {
+                writer.WriteLine("return null;");
+            }
 
-        writer.WriteLine("}");
-        writer.WriteLine();
+            writer.WriteLine("}");
+            writer.WriteLine();
+        }
         writer.WriteLine("public string? GetBehaviorDescription() => null;");
         writer.WriteLine();
         writer.WriteLine("public string? GetBehaviorTooltip() => null;");
@@ -594,6 +598,12 @@ public sealed class BlLegacyClassGenerator
         if (string.IsNullOrEmpty(handlerName))
         {
             handlerName = handler?.OriginalName;
+        }
+
+        if (!string.IsNullOrEmpty(handlerName) &&
+            handlerName.Equals("GetPropertyDescriptionList", StringComparison.OrdinalIgnoreCase))
+        {
+            return "BehaviorPropertyDescriptionList?";
         }
 
         var scriptName = classScope?.Symbol?.Name;
