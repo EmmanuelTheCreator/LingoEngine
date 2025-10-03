@@ -332,6 +332,38 @@ end",
     }
 
     [Fact]
+    public void PropertyDescriptionFormatsDefinePropertyTypes()
+    {
+        var file = new BlingoScriptFile
+        {
+            Name = "FormatTypes",
+            Source = @"property myFunction, mySpriteNum, myVar1, myVar2, myEnableMouseClick, myRollOverMember, myRollOverColor
+on getPropertyDescriptionList
+  description = [:]
+  addProp description,#myFunction, [#default:0, #format:#symbol, #comment:""Function:""]
+  addProp description,#mySpriteNum, [#default:4, #format:#integer, #comment:""Sprite Num:""]
+  addProp description,#myVar1, [#default:0, #format:#integer, #comment:""Var 1:""]
+  addProp description,#myVar2, [#default:0, #format:#float, #comment:""Var 2:""]
+  addProp description,#myEnableMouseClick, [#default:true, #format:#boolean, #comment:""Enable Mouseclick:""]
+  addProp description,#myRollOverMember, [#default:0, #format:#string, #comment:""Rollover member:""]
+  addProp description,#myRollOverColor, [#default:rgb(1,2,3), #format:#color, #comment:""Rollover color:""]
+  return description
+end",
+            Type = BlingoScriptType.Behavior
+        };
+
+        var result = _converter.ConvertClass(file);
+
+        Assert.Contains("public string myFunction { get; set; } = \"0\";", result);
+        Assert.Contains("public int mySpriteNum { get; set; } = 4;", result);
+        Assert.Contains("public int myVar1 { get; set; } = 0;", result);
+        Assert.Contains("public float myVar2 { get; set; } = 0;", result);
+        Assert.Contains("public bool myEnableMouseClick { get; set; } = true;", result);
+        Assert.Contains("public string myRollOverMember { get; set; } = \"0\";", result);
+        Assert.Contains("public AColor myRollOverColor { get; set; } = AColor.FromCode(1,2,3);", result);
+    }
+
+    [Fact]
     public void AppendInfersBlingoList()
     {
         var file = new BlingoScriptFile
