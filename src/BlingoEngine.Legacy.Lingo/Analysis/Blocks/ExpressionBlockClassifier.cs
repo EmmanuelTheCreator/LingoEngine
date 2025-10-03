@@ -14,7 +14,9 @@ internal sealed class ExpressionBlockClassifier : IHandlerBlockClassifier
 
     public bool TryCreate(IReadOnlyList<BlSyntaxToken> tokens, BlLingoSymbolTable symbols, out BlLingoHandlerCodeBlock block)
     {
-        var expression = BlLegacyExpressionConverter.Convert(tokens);
+        var treatReturnAsStatement =
+            tokens.Count > 0 && BlLegacyHandlerTokenUtilities.IsKeyword(tokens[0], "return");
+        var expression = BlLegacyExpressionConverter.Convert(tokens, treatReturnAsStatement);
         block = new BlLingoHandlerCodeBlock(
             BlLingoHandlerCodeBlockKind.Expression,
             tokens,
