@@ -877,6 +877,18 @@ public sealed class BlLegacyExpressionConverter
             return;
         }
 
+        if (string.Equals(op, "or", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("||");
+            return;
+        }
+
+        if (string.Equals(op, "and", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("&&");
+            return;
+        }
+
         AppendRaw(op);
     }
 
