@@ -872,6 +872,20 @@ public sealed class BlLegacyExpressionConverter
             return;
         }
 
+        if (string.Equals(text, "or", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("||");
+            _afterDot = false;
+            return;
+        }
+
+        if (string.Equals(text, "and", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("&&");
+            _afterDot = false;
+            return;
+        }
+
         if (_afterDot)
         {
             AppendRaw(BlLegacyHandlerTokenUtilities.ToPascalCase(text));
