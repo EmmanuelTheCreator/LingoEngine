@@ -121,6 +121,38 @@ public class MyParentParent : BlingoParentScript
     }
 
     [Fact]
+    public void BooleanOperators_AreTranslatedToCSharpEquivalents()
+    {
+        const string source = """
+on checkFlags flagA, flagB
+  if flagA and flagB then
+    return "both"
+  end if
+
+  if flagA or flagB then
+    return "either"
+  end if
+
+  if flagA <> flagB then
+    return "different"
+  end if
+
+  return "none"
+end
+""";
+
+        var code = _generator.GenerateClass("BooleanLogic", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("if (flagA && flagB)", code);
+        Assert.Contains("if (flagA || flagB)", code);
+        Assert.Contains("if (flagA != flagB)", code);
+        Assert.Contains("return \"both\";", code);
+        Assert.Contains("return \"either\";", code);
+        Assert.Contains("return \"different\";", code);
+        Assert.Contains("return \"none\";", code);
+    }
+
+    [Fact]
     public void ReturnKeywordInExpression_TranslatesToEnvironmentNewLine()
     {
         const string source = """
