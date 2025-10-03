@@ -169,20 +169,41 @@ public class MyBehaviorBehavior : BlingoSpriteBehavior, IBlingoPropertyDescripti
 {
     public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
 
-    public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
-    {
-        return null;
-    }
-
     public string? GetBehaviorDescription() => null;
 
     public string? GetBehaviorTooltip() => null;
 
     public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
+    public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
+    {
+        return new BehaviorPropertyDescriptionList();
+    }
 }
 """;
 
         LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
+    public void PropertyDescriptionList_TranslatesAddPropStatements()
+    {
+        const string source = """
+property myFunction
+property mySpriteNum
+on getPropertyDescriptionList
+  addProp description,#myFunction,[#comment:"Function:", #default:"0"]
+  addProp description,#mySpriteNum,[#comment:"Sprite Num:", #default:4]
+end
+""";
+
+        var code = _generator.GenerateClass("Execute", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains(
+            ".Add(this, x => x.myFunction, \"Function:\", \"0\")",
+            code);
+        Assert.Contains(
+            ".Add(this, x => x.mySpriteNum, \"Sprite Num:\", 4)",
+            code);
     }
 
     [Fact]

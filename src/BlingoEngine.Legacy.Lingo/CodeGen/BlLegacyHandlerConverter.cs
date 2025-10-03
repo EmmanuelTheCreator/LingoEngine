@@ -58,7 +58,7 @@ public sealed class BlLegacyHandlerConverter
 
         if (_handlerBlocks.TryGetValue(handler, out var blocks))
         {
-            var emitter = new BlLegacyHandlerBodyEmitter(writer, blocks, _options, _analysis);
+            var emitter = new BlLegacyHandlerBodyEmitter(writer, handler, blocks, _options, _analysis);
             emitter.Emit();
             return;
         }
@@ -70,7 +70,7 @@ public sealed class BlLegacyHandlerConverter
         }
 
         var fallbackBlocks = BlLingoHandlerFallbackBuilder.Build(body.Tokens, body.EndLeadingTrivia, _analysis.Symbols);
-        var fallbackEmitter = new BlLegacyHandlerBodyEmitter(writer, fallbackBlocks, _options, _analysis);
+        var fallbackEmitter = new BlLegacyHandlerBodyEmitter(writer, handler, fallbackBlocks, _options, _analysis);
         fallbackEmitter.Emit();
     }
 
