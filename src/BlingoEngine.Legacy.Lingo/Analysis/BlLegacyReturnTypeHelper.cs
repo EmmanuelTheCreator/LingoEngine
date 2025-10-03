@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace BlingoEngine.Legacy.Lingo.Analysis;
 
@@ -152,9 +151,9 @@ internal static class BlLegacyReturnTypeHelper
             return "double";
         }
 
-        if (LooksLikeNumericArithmeticExpression(trimmed))
+        if (TryAnalyzeNumericArithmeticExpression(trimmed, out var containsFloatingPoint))
         {
-            return ContainsFloatingPointLiteral(trimmed) ? "double" : "int";
+            return containsFloatingPoint ? "double" : "int";
         }
 
         return null;
@@ -166,19 +165,53 @@ internal static class BlLegacyReturnTypeHelper
             target.Equals("result", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool LooksLikeNumericArithmeticExpression(string expression)
+    private static bool TryAnalyzeNumericArithmeticExpression(string expression, out bool containsFloatingPoint)
     {
-        if (!Regex.IsMatch(expression, "[+\\-*/]"))
+        containsFloatingPoint = false;
+
+        var hasOperator = false;
+        var hasDigit = false;
+        var sawDigitBeforeDot = false;
+        var awaitingFractionalDigit = false;
+
+        foreach (var ch in expression)
         {
-            return false;
+            if (char.IsWhiteSpace(ch))
+            {
+                continue;
+            }
+
+            if (char.IsDigit(ch))
+            {
+                hasDigit = true;
+                sawDigitBeforeDot = true;
+
+                if (awaitingFractionalDigit)
+                {
+                    containsFloatingPoint = true;
+                    awaitingFractionalDigit = false;
+                }
+
+                continue;
+            }
+
+            if (ch == '.')
+            {
+                awaitingFractionalDigit = sawDigitBeforeDot;
+                sawDigitBeforeDot = false;
+                continue;
+            }
+
+            sawDigitBeforeDot = false;
+            awaitingFractionalDigit = false;
+
+            if (ch == '+' || ch == '-' || ch == '*' || ch == '/')
+            {
+                hasOperator = true;
+            }
         }
 
-        return Regex.IsMatch(expression, @"\d");
-    }
-
-    private static bool ContainsFloatingPointLiteral(string expression)
-    {
-        return Regex.IsMatch(expression, @"\d\.\d");
+        return hasOperator && hasDigit;
     }
 
     public static bool IsReturnWithValue(string? expression)

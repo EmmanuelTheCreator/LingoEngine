@@ -337,14 +337,25 @@ internal sealed class BlLegacyTypeCollection
 
         public void Apply()
         {
-            foreach (var property in _properties.Values)
-            {
-                property.Apply();
-            }
+            ApplyHandlers();
+            ApplyProperties();
+            ApplyHandlers();
+            ApplyProperties();
+        }
 
+        private void ApplyHandlers()
+        {
             foreach (var handler in _handlers.Values)
             {
                 handler.Apply();
+            }
+        }
+
+        private void ApplyProperties()
+        {
+            foreach (var property in _properties.Values)
+            {
+                property.Apply();
             }
         }
     }
@@ -495,6 +506,8 @@ internal sealed class BlLegacyTypeCollection
         public BlCodeSymbol? Symbol { get; }
 
         public bool IsSelfParameter { get; }
+
+        public string? CurrentHint => BlLegacyTypeUtilities.NormalizeTypeName(_mergedType);
 
         public void AddHint(string typeName)
         {
