@@ -81,12 +81,13 @@ public class MyParentParent : BlingoParentScript
         Assert.Contains("public int myStartY { get; set; }", code);
 
         var propertyIndex = code.IndexOf("public int myStartX { get; set; } // start X", StringComparison.Ordinal);
-        var constructorIndex = code.IndexOf("public MoverBehavior(IBlingoMovieEnvironment env) : base(env) { }", StringComparison.Ordinal);
-        var handlerIndex = code.IndexOf("public void New()", StringComparison.Ordinal);
+        var constructorIndex = code.IndexOf("public MoverBehavior(IBlingoMovieEnvironment env) : base(env)", StringComparison.Ordinal);
 
         Assert.True(propertyIndex >= 0, "Properties were not generated");
         Assert.True(constructorIndex > propertyIndex, "Constructor should appear after properties");
-        Assert.True(handlerIndex > constructorIndex, "Handler should appear after constructor");
+        Assert.DoesNotContain("public void New()", code);
+        Assert.Contains("myStartX = 250;", code);
+        Assert.Contains("myStartY = 45;", code);
     }
 
     [Fact]
@@ -96,9 +97,9 @@ public class MyParentParent : BlingoParentScript
         var code = _generator.GenerateClass("MyParent", source, BlLingoScriptKind.Parent);
 
         Assert.Contains(
-            "public MyParentParent(IBlingoMovieEnvironment env, object _Gfx, object ChosenType) : base(env) { }",
+            "public MyParentParent(IBlingoMovieEnvironment env, object _Gfx, object ChosenType) : base(env)",
             code);
-        Assert.Contains("public void New(object _Gfx, object ChosenType)", code);
+        Assert.DoesNotContain("public void New(object _Gfx, object ChosenType)", code);
     }
 
     [Fact]
