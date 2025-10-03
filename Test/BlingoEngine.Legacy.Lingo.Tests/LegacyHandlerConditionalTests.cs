@@ -68,6 +68,36 @@ public class TestScriptBehavior : BlingoSpriteBehavior
     }
 
     [Fact]
+    public void IfObjectPThenPut_TranslatesToObjectTypeCheck()
+    {
+        const string source = """
+on test
+  if objectP(target) then
+    put 1 into value
+  end if
+end
+""";
+
+        var code = GenerateBehavior(source);
+
+        const string expected = """
+public class TestScriptBehavior : BlingoSpriteBehavior
+{
+    public TestScriptBehavior(IBlingoMovieEnvironment env) : base(env) { }
+    public void Test()
+    {
+        if (target is BlingoEngine.Core.IBlingoScriptBase or BlingoEngine.Xtras.IBlingoXtra or BlingoEngine.Core.IBlingoWindow)
+        {
+            value = 1;
+        }
+    }
+}
+""";
+
+        LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
     public void ElseIf_BecomesElseIf()
     {
         const string source = """
