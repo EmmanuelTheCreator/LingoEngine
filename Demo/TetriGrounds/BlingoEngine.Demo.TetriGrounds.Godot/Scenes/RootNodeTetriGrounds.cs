@@ -23,7 +23,7 @@ public partial class RootNodeTetriGrounds : Node2D
  var style = serviceProvider.GetRequiredService<BlingoGodotStyle>();
  this.Theme = style.Theme;
 */
-#if DEBUG22
+#if DEBUG
             ProjectSettings.SetSetting("display/window/stretch/mode", "disabled");
             ProjectSettings.SetSetting("display/window/stretch/aspect", "ignore");
             DisplayServer.WindowSetSize(new Vector2I(1600, 970));
@@ -45,7 +45,7 @@ public partial class RootNodeTetriGrounds : Node2D
             _services = new ServiceCollection();
             _services.RegisterBlingoEngine(c => c
 
-#if DEBUG22
+#if DEBUG
                     .WithDirectorGodotEngine(this)
                      .AddBuildAction(b =>
                      {

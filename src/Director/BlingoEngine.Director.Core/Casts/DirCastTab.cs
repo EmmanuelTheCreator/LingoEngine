@@ -400,7 +400,7 @@ namespace BlingoEngine.Director.Core.Casts
             if (member == null)
                 return;
 
-            _mediator.RaiseFindMember(member);
+            //_mediator.RaiseFindMember(member);
             _mediator.RaiseMemberSelected(member);
             _commandManager.Handle(new FindCastMemberInScoreCommand(member));
         }

@@ -295,7 +295,7 @@ public class DirectorStageWindowV2 : DirectorWindow<IDirFrameworkStageWindow>,
     {
         base.OnResizing(firstResize, width, height);
 
-        var iconHeight = (int)IconBar.Panel.Height;
+        var iconHeight = (int)IconBar.Panel.Height+ 5;
         _scrollContainer.Width = width;
         _scrollContainer.Height = Math.Max(0, height - iconHeight);
         _scrollContainer.X = 0;
