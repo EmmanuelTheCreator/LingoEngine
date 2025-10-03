@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using BlingoEngine.Legacy.Lingo.Analysis;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.CodeGen;
@@ -14,67 +15,6 @@ public sealed class BlLegacyExpressionConverter
     private int _index;
     private bool _afterDot;
 
-    private readonly struct MemberPropertyMapping
-    {
-        public MemberPropertyMapping(string genericType, string propertyName)
-        {
-            GenericType = genericType;
-            PropertyName = propertyName;
-        }
-
-        public string GenericType { get; }
-
-        public string PropertyName { get; }
-    }
-
-    private static readonly Dictionary<string, MemberPropertyMapping> s_memberPropertyMap = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["text"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Text"),
-        ["line"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Line"),
-        ["word"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Word"),
-        ["char"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Char"),
-        ["editable"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Editable"),
-        ["wordwrap"] = new MemberPropertyMapping("IBlingoMemberTextBase", "WordWrap"),
-        ["scrolltop"] = new MemberPropertyMapping("IBlingoMemberTextBase", "ScrollTop"),
-        ["textfont"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Font"),
-        ["font"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Font"),
-        ["textsize"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontSize"),
-        ["fontsize"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontSize"),
-        ["textstyle"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontStyle"),
-        ["fontstyle"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontStyle"),
-        ["textcolor"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Color"),
-        ["color"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Color"),
-        ["bold"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Bold"),
-        ["italic"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Italic"),
-        ["underline"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Underline"),
-        ["alignment"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Alignment"),
-        ["margin"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Margin"),
-        ["loop"] = new MemberPropertyMapping("BlingoMemberSound", "Loop"),
-        ["stereo"] = new MemberPropertyMapping("BlingoMemberSound", "Stereo"),
-        ["length"] = new MemberPropertyMapping("BlingoMemberSound", "Length"),
-        ["linked"] = new MemberPropertyMapping("BlingoMemberSound", "IsLinked"),
-        ["islinked"] = new MemberPropertyMapping("BlingoMemberSound", "IsLinked"),
-        ["linkedfilepath"] = new MemberPropertyMapping("BlingoMemberSound", "LinkedFilePath"),
-        ["isexternal"] = new MemberPropertyMapping("BlingoMemberSound", "IsExternal"),
-        ["imagedata"] = new MemberPropertyMapping("BlingoMemberBitmap", "ImageData"),
-        ["isloaded"] = new MemberPropertyMapping("BlingoMemberBitmap", "IsLoaded"),
-        ["format"] = new MemberPropertyMapping("BlingoMemberBitmap", "Format"),
-        ["vertexlist"] = new MemberPropertyMapping("BlingoMemberShape", "VertexList"),
-        ["shapetype"] = new MemberPropertyMapping("BlingoMemberShape", "ShapeType"),
-        ["shapetypeint"] = new MemberPropertyMapping("BlingoMemberShape", "ShapeTypeInt"),
-        ["fillcolor"] = new MemberPropertyMapping("BlingoMemberShape", "FillColor"),
-        ["endcolor"] = new MemberPropertyMapping("BlingoMemberShape", "EndColor"),
-        ["strokecolor"] = new MemberPropertyMapping("BlingoMemberShape", "StrokeColor"),
-        ["strokewidth"] = new MemberPropertyMapping("BlingoMemberShape", "StrokeWidth"),
-        ["closed"] = new MemberPropertyMapping("BlingoMemberShape", "Closed"),
-        ["antialias"] = new MemberPropertyMapping("BlingoMemberShape", "AntiAlias"),
-        ["filled"] = new MemberPropertyMapping("BlingoMemberShape", "Filled"),
-        ["duration"] = new MemberPropertyMapping("BlingoMemberMedia", "Duration"),
-        ["currenttime"] = new MemberPropertyMapping("BlingoMemberMedia", "CurrentTime"),
-        ["mediastatus"] = new MemberPropertyMapping("BlingoMemberMedia", "MediaStatus"),
-        ["scripttype"] = new MemberPropertyMapping("BlingoMemberScript", "ScriptType"),
-        ["behaviortypename"] = new MemberPropertyMapping("BlingoMemberScript", "BehaviorTypeName"),
-    };
 
     private static readonly Dictionary<string, string> s_thePropertyMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -658,7 +598,7 @@ public sealed class BlLegacyExpressionConverter
             return false;
         }
 
-        if (!s_memberPropertyMap.TryGetValue(propertyToken.ValueText, out var mapping))
+        if (!BlLegacyMemberPropertyFacts.TryGet(propertyToken.ValueText, out var mapping))
         {
             return false;
         }
@@ -666,7 +606,7 @@ public sealed class BlLegacyExpressionConverter
         var argsTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 2, argsClose - (_index + 2));
         var arguments = ConvertArguments(argsTokens);
 
-        AppendRaw($"Member<{mapping.GenericType}>");
+        AppendRaw($"Member<{mapping.MemberTypeName}>");
         AppendRaw("(");
         if (!string.IsNullOrEmpty(arguments))
         {

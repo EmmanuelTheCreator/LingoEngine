@@ -19,7 +19,7 @@ public sealed class BlingoToCSharpConverter
     {
         _errors.Clear();
         var script = new BlingoScriptFile("ConvertedScript", lingoSource ?? string.Empty, BlingoScriptType.Behavior);
-        return ConvertScript(script, respectDeclaredKind: false);
+        return TryConvertScript(script, respectDeclaredKind: false, out var code, out _) ? code : string.Empty;
     }
 
     public BlingoBatchResult Convert(IEnumerable<BlingoScriptFile> scripts)
@@ -38,12 +38,12 @@ public sealed class BlingoToCSharpConverter
                 continue;
             }
 
-            var code = ConvertScript(script, respectDeclaredKind: true);
-            if (!string.IsNullOrEmpty(code))
+            if (!TryConvertScript(script, respectDeclaredKind: true, out var code, out var scriptName))
             {
-                var key = string.IsNullOrWhiteSpace(script.Name) ? "ConvertedScript" : script.Name;
-                result.ConvertedScripts[key] = code;
+                continue;
             }
+
+            result.ConvertedScripts[scriptName] = code;
         }
 
         return result;
@@ -61,28 +61,24 @@ public sealed class BlingoToCSharpConverter
         return message;
     }
 
-    private string ConvertScript(BlingoScriptFile script, bool respectDeclaredKind)
+    private bool TryConvertScript(BlingoScriptFile script, bool respectDeclaredKind, out string code, out string scriptName)
     {
-        var scriptName = string.IsNullOrWhiteSpace(script.Name) ? "ConvertedScript" : script.Name;
+        scriptName = ResolveScriptName(script);
         var source = script.Source ?? string.Empty;
         var kind = respectDeclaredKind ? MapScriptType(script.Type) : BlLingoScriptKind.Unknown;
 
         try
         {
             var generator = new BlLegacyClassGenerator();
-            var code = generator.GenerateClass(scriptName, source, kind);
+            code = generator.GenerateClass(scriptName, source, kind);
             script.CSharp = code;
-            return code;
+            return true;
         }
         catch (Exception ex)
         {
-            var message = $"{scriptName}: {ex.Message}";
-            _errors.Add(message);
-            script.CSharp = string.Empty;
-            script.Errors = string.IsNullOrEmpty(script.Errors)
-                ? message
-                : string.Concat(script.Errors, Environment.NewLine, message);
-            return string.Empty;
+            code = string.Empty;
+            RecordConversionFailure(script, scriptName, ex);
+            return false;
         }
     }
 
@@ -95,6 +91,21 @@ public sealed class BlingoToCSharpConverter
             BlingoScriptType.Behavior => BlLingoScriptKind.Behavior,
             _ => BlLingoScriptKind.Unknown,
         };
+    }
+
+    private static string ResolveScriptName(BlingoScriptFile script)
+    {
+        return string.IsNullOrWhiteSpace(script.Name) ? "ConvertedScript" : script.Name;
+    }
+
+    private void RecordConversionFailure(BlingoScriptFile script, string scriptName, Exception ex)
+    {
+        var message = $"{scriptName}: {ex.Message}";
+        _errors.Add(message);
+        script.CSharp = string.Empty;
+        script.Errors = string.IsNullOrEmpty(script.Errors)
+            ? message
+            : string.Concat(script.Errors, Environment.NewLine, message);
     }
 }
 
