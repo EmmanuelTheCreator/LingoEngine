@@ -7,6 +7,9 @@
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="..\..\docs\DirDissasembly\XMED_Offsets.md" Link="XMED_Offsets.md" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../BlingoEngine.IO.Data/BlingoEngine.IO.Data.csproj" />
   </ItemGroup>
 </Project>
