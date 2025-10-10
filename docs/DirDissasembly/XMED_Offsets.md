@@ -2,6 +2,8 @@
 
 > Scope: **inside XMED text/field members only** (no CASt generalities). This file merges header pointers, text/run maps, font tables, and bit‑flag bytes. Values are derived from the provided test set and validated notes.
 
+Handy tool and docs : https://imhex.werwolv.net/  : https://docs.werwolv.net/imhex/views/hex-editor#data-visualizers
+
 ---
 
 ## 1) Header Directory (ASCII)
@@ -101,7 +103,60 @@ Two adjacent bytes encode styles and alignment/layout:
 
 > Note: Offsets beyond the core header can drift with file variants. Treat these as **typical locations** observed in this test batch.
 
-# style maps?
+
+
+
+# Assumptions
+plain ASCII bytes for readable data, and non-ASCII bytes (≤ 0x20 or ≥ 0x80) as control flags.
+
+### 🧩 1. Two intertwined layers
+| Layer	          | What it carries	                                                               | Byte range      |
+|-----------------|--------------------------------------------------------------------------------|---------------- |
+| Data layer	  | Anything you can type — text, hex digits for RGB, font names, numbers, etc.	   | 0x20–0x7E (normal printable ASCII) |
+| Control layer   |	Structural delimiters, property markers, run boundaries, style field switches  | 0x00–0x1F and 0x80–0xFF            |
+
+Director’s text system reuses Apple’s TextEdit style runs (moaTEStyles / ScrpSTElement) where high-bit markers signal “this is not literal text”.
+
+### 🧠 2. Common control families already seeing
+| Byte(s) | Binary | Typical meaning (from pattern analysis) |
+|----------|---------|-----------------------------------------|
+| **01**			 | 0000 0001			 | Start/value marker — next bytes are literal ASCII data (digits, hex pairs, etc.) |
+| **02**			 | 0000 0010			 | Numeric token start — read following ASCII digits as numeric value (font size, line height, etc.) |
+| **03**			 | 0000 0011			 | Small counter/terminator or parameter separator (often follows C1) |
+| **0A–0F** 🔹		 | 0000 1010 … 0000 1111 | *Low control codes used for style toggles:*<br>  • 0A / 0C = superscript markers (start/close)<br>  • 0B / 0D = subscript markers (start/close)<br>  • 0E / 0F = internal run or alignment boundaries |
+| **10–19 (hex)** 🔹 | 0001 0000 … 0001 1001 | *Higher “style state” IDs*:<br>  • 11 (0x0B paired with 0x11) = subscript block end<br>  • 12 (0x0A paired with 0x12) = superscript block end<br>  • 13 = strikeout end marker<br>  • 1C = underline end marker<br>  • 1E / 20 = normal/baseline state |
+| **2D**			 | 0010 1101			 | ASCII ‘-’; inside numeric token denotes negative (e.g., “-1”) |
+| **30–39, 41–46**	 | —					 | Printable ASCII digits ‘0’–‘9’, ‘A’–‘F’; literal data (colors, numbers) |
+| **81**			 | 1000 0001			 | Continuation / next sub-field within same property (RGB separator, multi-value) |
+| **82**			 | 1000 0010			 | End-of-value marker / boundary before next property block |
+| **83–87**			 | 1000 0011 … 1000 0111 | Reserved high-bit controls (unseen or undefined so far) |
+| **C1 xx**			 | 1100 0001 xxxx xxxx   | Style-opcode prefix — `xx` identifies property (bold, underline, strikeout, sub/sup, etc.) |
+| **C2 XX **         | 1100 0010			 | A block of numbers: PERHAPS : where XX is the count of following ASCII numbers? nont sure
+| **C3–CF**			 | 1100 0011 … 1100 1111 | Higher control tags (rare; likely extended run types) |
+| **FF**			 | 1111 1111			 | Padding / file-section end marker |
+
+All other bytes (30–39, 41–46, etc.) are literal characters used in property data — text, numbers, “FF00”, etc.
+
+### 🧩 3. Why this design
+
+Director had to store styled text inline with the actual characters but still survive on both Mac (Big-Endian, resource-fork) and Windows (flat files).
+ASCII-safe encoding made it portable, so any byte outside printable range was reserved for control signals — a bit-flagged mini-language marking:
+
+run start / end
+
+property ID (font, size, color, alignment, etc.)
+
+sub-field separators (for multi-value props like RGB)
+
+### Colors bytes
+Color Blue      : #0000ff : 01 30 82 82 81 01 46 46 30 30  81 01 30        01 46 46 46 46 81 81 01 30 82 02 
+Color Yellow    : #ffff00 : 01 30 82 82    01 46 46 30 30  81 01 30 81     01 46 46 46 46 81 81 01 30 82 02 
+Color Pink      : #ff00ff : 01 30 82 82    01 46 46 30 30  01 30           01 46 46 30 30 01 30 01 46 46 46 46 81
+Color LightGreen: #ccff99 : 01 30 82 82    01 43 43 30 30  01 46 46 30 30  01 39 39 30 30  01 30 01 46
+Color Orange    : #ffcc66 : 01 30 82 82    01 46 46 30 30  01 43 43 30 30  01 36 36 30 30  01 30 01 46
+Color Bordeau   : #880000 : 01 30 82 82    01 38 38 30 30  01 30 81 81     01 46 46 46 46 81 81 01 30 82
+
+### style maps?
 
 Observed at 0x0050
 
@@ -143,3 +198,50 @@ font size, line height, bytes
 | 89	|	107	|	02 30 02 37 39 42 01 30 C1 03 02 2D 31 82 02 35		| 
 | 96	|	116	|	02 30 02 38 33 42 01 30 C1 03 02 2D 31 82 02 35		| 
 | 200	|	241	|	02 30 02 32 44 42 37 01 30 C1 03 02 2D 31 82 02		| 
+
+## AI proposition
+
+Yep—same control/data scheme shows up for text styling. Here’s what’s consistent across your variants, plus the specific markers I can see toggling each style:
+
+What stays constant
+
+Printable bytes (30–39, 41–46) carry the payload (numbers, hex).
+
+Non-ASCII/high-bit bytes are control:
+
+02 … = numeric token (ASCII digits follow)
+01 / 81 = value/continuation (like with color)
+C1 xx = style opcode within a run; different xx identify/toggle specific styles.
+82 82 / 82 02 = property/run boundaries.
+
+Style opcodes I can fingerprint
+| Style            | Opcode pattern (decimal shown; hex in () ) | Notes / where seen                                   |
+|------------------|--------------------------------------------|------------------------------------------------------|
+| (baseline, none) | C1 30 (1E), C1 32 (20)                                                                     | Common structure in all files. |
+| **Underline ON** | **C1 28 (1C)** (+ small value: `81 81 01 31 01 30`) replaces a baseline `C1 32 (20)` at that spot | Underline file swaps a `C1 32` region for `C1 28 …`. |
+| **Strikeout ON** | **C1 11 (0B)** … value `01 31 01 30` … **C1 19 (13)**                                      | Clear paired markers around the toggle. |
+| **Subscript**    | **C1 11 (0B)** … `01 33 01 30` … **C1 17 (11)**; and later **C1 13 (0D)** … **C1 17 (11)** | Two paired sites for the subscript state.  |
+| **Superscript**  | **C1 10 (0A)** … `01 33 01 30` … **C1 18 (12)**; and later **C1 12 (0C)** … **C1 18 (12)** | Mirror of subscript with its own codes.  |
+| **Tabs enabled** | Same baseline opcodes; no extra C1 low-codes like above                                    | No special low `C1,xx` toggles beyond the common set. {index=5} |
+
+Concrete windows (so you can annotate)
+
+Underline vs NoBold around the same spot:
+NoBold: … 02 30 C2 07 **C1 20** 82 82 C1 03 82 03 …
+Underline: … 02 30 C2 07 **81 81 01 31 01 30 C1 1C** 82 82 C1 03 82 03 …
+Strikeout at the toggle site:
+… 02 30 C2 07 **C1 0B 01 31 01 30 C1 13** 82 82 C1 03 …
+Subscript (first site):
+… **C1 0B 01 33 01 30 C1 11** 82 82 C1 03 … and later … **C1 0D … C1 11** …
+Superscript (first site):
+… **C1 0A 01 33 01 30 C1 12** 82 82 C1 03 … and later … **C1 0C … C1 12** …
+
+How to read it (same logic as color)
+
+C1 xx = which style toggle/attribute.
+01/81 = field/value delimiters.
+Small ASCII numbers after the toggle (01 31, 01 33 = ‘1’, ‘3’) are the state/variant.
+
+A later C1 yy often closes or confirms the same style (paired markers).
+
+If you want, I can produce a compact CSV listing all C1,xx occurrences per file with byte offsets for quick diffing.

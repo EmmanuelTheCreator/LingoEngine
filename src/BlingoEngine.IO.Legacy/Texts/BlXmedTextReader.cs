@@ -167,7 +167,11 @@ namespace BlingoEngine.IO.Legacy.Texts
         private static readonly byte[] FontMarker = { (byte)'4', (byte)'0', (byte)',' }; // "40,"
 
         /// <summary>Read from byte[] (modern v13 default).</summary>
-        public XmedDocument Read(byte[] buffer) => Read(buffer, DefaultDirectorVersion);
+        public XmedDocument Read(byte[] buffer)
+        {
+            return Read(buffer, DefaultDirectorVersion);
+        }
+
         /// <summary>Read from byte[] with explicit Director version.</summary>
         public XmedDocument Read(byte[] buffer, int directorVersion)
         {
@@ -176,7 +180,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             return Read(ms, directorVersion);
         }
         /// <summary>Read from stream (modern v13 default).</summary>
-        public XmedDocument Read(Stream stream) => Read(stream, DefaultDirectorVersion);
+        public XmedDocument Read(Stream stream)
+        {
+            return Read(stream, DefaultDirectorVersion);
+        }
+
         /// <summary>Read from stream with explicit Director version.</summary>
         public XmedDocument Read(Stream stream, int directorVersion)
         {
@@ -191,6 +199,57 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Modern XMED (v13+) parse.</summary>
         private XmedDocument ReadModernXmed(byte[] buffer, int directorVersion)
         {
+            var bytesReader = new XMEDByteReader(buffer);
+            bytesReader.TryReadHeaderRecord(out var tableIndexRoot);       // 262145     :    : FFFF 0000 0006 0004 0001    Root directory card (table 4, entry 1).
+            bytesReader.TryReadAsciiInt(out var something2);               // 30634      : 01 : 77AA
+            var bytes0 = bytesReader.ReadByte();                           //            : 03 :
+            bytesReader.TryReadHeaderOrInlineRecord(out var tableIndex2);  //                   0000 0000 004F 0000 0000    Directory card pointing to the first header/data block at offset 0x4F.
+            bytesReader.TryReadHeaderOrInlineRecord(out var tableIndex3);  // 262145     : 02 : 40001                       Inline sentinel = (table 4, entry 1) → Fonts/Styles table anchor.
+            bytesReader.TryReadNumericToken(out var perhapsVersion);       // 257        : 02 : 101                         XMED/Style schema version (major=1, minor=1).
+            bytesReader.TryReadNumericToken(out var someNumber);           // -2147315680: 02 : -7FFD 6FE0                  Signed base pointer / rel delta used by the run indexer.
+            bytesReader.TryReadNumericToken(out var someNumber2);          // 0          : 02 : 0
+            var bytes1 = bytesReader.ReadBytes(2);                         // 194  3     : C2 03 : ?????                    End-of-segment (C2) with tail 03.
+            bytesReader.TryReadAsciiHexPair(out var dimensionPair);        // 72,72      : 02 : 48 0048                     Perhaps Dimension pair (box/line metrics).
+            bytesReader.TryReadNumericToken(out var someNumber4);          //            : 02 : -1
+            bytesReader.TryReadNumericToken(out var someNumber5);          //            : 02 : 0
+            bytesReader.TryReadNumericToken(out var someNumber6);          // 24         : 02 : 18
+            bytesReader.TryReadNumericToken(out var someNumber7);          //            : 02 : 0
+            bytesReader.TryReadNumericToken(out var someNumber8, 0x01);    //            : 01 : 0 -> bizar
+            var bytes2 = bytesReader.ReadBytes(2);                         // 193  3     : C1 03 : ?????
+            bytesReader.TryReadNumericToken(out var someNumber10);         //            : 02 : -1
+            var bytes3 = bytesReader.ReadByte();                           // 130        : 82 : ?????
+            bytesReader.TryReadNumericToken(out var someNumber11);         //            : 02 : 0
+            var bytes4 = bytesReader.ReadBytes(2);                         // 194 10     : C2 0A : ?????
+            bytesReader.TryReadNumericToken(out var someNumber12);         // 24         : 02 : 18
+            bytesReader.TryReadNumericToken(out var someNumber13);         // 178        : 02 : B2
+            bytesReader.TryReadNumericToken(out var someNumber14_A, 0x01); // 65280      : 01 : FF00
+            var someNumber14_B = bytesReader.ReadByte();                   // 0          : 81 : 
+            var someNumber14_C = bytesReader.ReadByte();                   // 0          : 81 : 
+            bytesReader.TryReadNumericToken(out var someNumber15_A, 0x01); //            : 01 : 0 
+            var someNumber15_B = bytesReader.ReadByte();                   // 0          : 82 : 
+            var someNumber15_C = bytesReader.ReadByte();                   // 0          : 82 : 
+            bytesReader.TryReadNumericToken(out var someNumber16);         // 1          : 02 : 1
+            bytesReader.TryReadNumericToken(out var someNumber17);         // 0          : 02 : 0
+            var bytes5 = bytesReader.ReadBytes(2);                         // 194  4     : C2 04 : ?????
+            bytesReader.TryReadNumericToken(out var someNumber18);         // 5          : 02 : 5
+            bytesReader.TryReadNumericToken(out var someNumber19, 0x01);   // 0          : 02 : 0
+            var bytes6 = bytesReader.ReadByte();                           //            : 03 :
+            bytesReader.TryReadHeaderRecord(out var tableIndex4);          //            :    : 00010000003200000001      Table=0, Entry=1, StyleId=1, Offset=50
+            bytesReader.TryReadNumericToken(out var someNumber20);         // 0          : 02 : 0
+            bytesReader.TryReadNumericToken(out var someNumber21);         // 5          : 02 : 5
+            bytesReader.TryReadNumericToken(out var someNumber22, 0x01);   // 132        : 02 : 84
+            bytesReader.TryReadNumericToken(out var someNumber23);         // 0          : 02 : 0
+            bytesReader.TryReadNumericToken(out var someNumber24, 0x01);   // 1          : 02 : 1
+            bytesReader.TryReadNumericToken(out var someNumber25);         // 0          : 02 : 0
+            bytesReader.TryReadNumericToken(out var someNumber26, 0x01);   // 1          : 02 : 1
+            bytesReader.TryReadNumericToken(out var someNumber27_A);       // 0          : 02 : 0
+            var someNumber27_B = bytesReader.ReadByte();                   // 0          : 82 : 
+            var someNumber27_C = bytesReader.ReadByte();                   // 0          : 82 : 
+            bytesReader.TryReadNumericToken(out var someNumber28);         // 24         : 02 : 18
+            bytesReader.TryReadNumericToken(out var someNumber29);         // 178        : 02 : B2
+            bytesReader.TryReadNumericToken(out var someNumber30_A, 0x01); // 1          : 02 : 1
+            var someNumber30_B = bytesReader.ReadByte();                   // 0          : 81 : 
+            bytesReader.TryReadNumericToken(out var someNumber31, 0x01);   // 8          : 02 : 8
 
             (var styles, string text, List<byte> somting) = ReadBlocks(buffer);
             var doc = new XmedDocument();

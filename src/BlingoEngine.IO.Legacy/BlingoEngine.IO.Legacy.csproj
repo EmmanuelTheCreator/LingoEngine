@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Configurations>Debug;Release</Configurations>
+	  <LangVersion>12</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\docs\DirDissasembly\XMED_Offsets.md" Link="XMED_Offsets.md" />

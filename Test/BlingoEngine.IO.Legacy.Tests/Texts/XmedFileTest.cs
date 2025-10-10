@@ -21,6 +21,15 @@ public class XmedFileTest
         document.Runs.Should().HaveCount(1);
     }
     [Fact]
+    public void Text_Hallo()
+    {
+        var document = ReadDocument("Text_Hallo_13.xmed.bin");
+
+        string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
+        textFromRuns.ShouldMatchNormalized("Hallo");
+        document.Runs.Should().HaveCount(1);
+    }
+    [Fact]
     public void Text_3_Paragraps_13()
     {
         var document = ReadDocument("Text_3_Paragraps_13.xmed.bin");
