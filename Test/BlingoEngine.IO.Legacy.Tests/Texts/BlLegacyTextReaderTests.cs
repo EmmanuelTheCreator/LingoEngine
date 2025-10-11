@@ -17,7 +17,9 @@ public class BlLegacyTextReaderTests
     [Fact]
     public void GenerateXmedText()
     {
-        var cstFiles = TestContextHarness.GetAllFilesFromFolder("Texts_Fields", "*.cst");
+        //var folder = "Texts_Fields";
+        var folder = "Texts_Fields/Tests2";
+        var cstFiles = TestContextHarness.GetAllFilesFromFolder(folder, "*.cst");
         foreach (var item in cstFiles)
         {
             var texts = TestContextHarness.LoadTexts(item);
@@ -28,12 +30,12 @@ public class BlLegacyTextReaderTests
 
                     if (textItem.Format == BlLegacyTextFormatKind.Xmed)
                     {
-                        var path = TestContextHarness.GetAssetPath("Texts_Fields/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.txt");
+                        var path = TestContextHarness.GetAssetPath(folder+"/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.txt");
                         if (File.Exists(path))
                             continue;
                         
                         File.WriteAllText(path, textItem.Bytes.ToHexString());
-                        var pathBin = TestContextHarness.GetAssetPath("Texts_Fields/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.bin");
+                        var pathBin = TestContextHarness.GetAssetPath(folder+"/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.bin");
                         File.WriteAllBytes(pathBin, textItem.Bytes);
                     }
                 }
