@@ -1,8 +1,10 @@
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Tools;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -199,6 +201,11 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Modern XMED (v13+) parse.</summary>
         private XmedDocument ReadModernXmed(byte[] buffer, int directorVersion)
         {
+            if (ModernXmedC1BlockParser.TryParse(buffer, directorVersion, out var parsedDocument))
+            {
+                return parsedDocument;
+            }
+
             var bytesReader = new XMEDByteReader(buffer);
             bytesReader.TryReadHeaderRecord(out var tableIndexRoot);       // 262145     :    : FFFF 0000 0006 0004 0001    Root directory card (table 4, entry 1).
             bytesReader.TryReadAsciiInt(out var something2);               // 30634      : 01 : 77AA
@@ -419,7 +426,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             //return new XmedDir(buffer, new List<XmedDirEntry>(), 0);
             //(var style, string text, List<int> somting) = ReadBlocks(buffer);
-            
+
             throw new NotImplementedException();
         }
         static (List<XmedStyleDescriptor> style, string Text,List<byte> Something) ReadBlocks(byte[] buffer)

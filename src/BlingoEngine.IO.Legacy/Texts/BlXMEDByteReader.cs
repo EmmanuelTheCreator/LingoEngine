@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -52,6 +54,16 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Advance by <paramref name="count"/> bytes if possible.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Skip(int count) => Position = Math.Min(Length, Position + Math.Max(0, count));
+
+        /// <summary>Move the cursor backwards by <paramref name="count"/> bytes.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Rewind(int count)
+        {
+            if (count <= 0) return;
+            int target = Position - count;
+            if (target < 0) target = 0;
+            Position = target;
+        }
 
         // Update methods to use AsSpan() for slicing:
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -466,11 +478,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return false;
 
             // verify ASCII-printable
-            for (int i = 0; i < 20; i++)
-                if (!XMEDByteReader.IsAsciiPrintable(_buf[Position + i]))
-                    return false;
+        public bool TryReadHeaderOrInlineRecord(out XmedHeaderRecord rec)
+        {
+            rec = default;
 
-            var s = Encoding.ASCII.GetString(_buf, Position, 20);
+            // 1) Try 20-byte header card: "FFFF0000000600040001"
             Position += 20;
 
             // split the ASCII block
@@ -543,14 +555,126 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             int start = Position;
             while (!EOF && !IsControl(Peek())) Skip(1);
-            int len = Position - start;
-            if (len <= 0) return false;
+            rec = new XmedHeaderRecord("INLINE", 0, countHi, styleLo, raw);
+            return true;
+        }
 
-            // parse as HEX (always hex)
-            var span = _buf.AsSpan(start, len);
-            // optional leading '-' not expected here; ignore if present
-            bool neg = span.Length > 0 && span[0] == (byte)'-';
-            if (neg) span = span.Slice(1);
+        public bool TryReadBlockContent(int limit, out ReadOnlySpan<byte> content, out byte closingTail)
+        {
+            content = default;
+            closingTail = 0;
+
+            if (Position >= limit)
+            {
+                return false;
+            }
+
+            int start = Position;
+            int depth = 1;
+
+            while (!EOF && Position < limit)
+            {
+                byte b = Peek();
+                if (b == RUN)
+                {
+                    Skip(1);
+                    if (!EOF)
+                    {
+                        Skip(1);
+                        depth++;
+                    }
+
+                    continue;
+                }
+
+                if (b == REND)
+                {
+                    Skip(1);
+                    if (!EOF)
+                    {
+                        byte tail = ReadByte();
+                        depth--;
+                        if (depth == 0)
+                        {
+                            closingTail = tail;
+                            int end = Position - 2;
+                            if (end < start)
+                            {
+                                end = start;
+                            }
+
+                            content = _buf.AsSpan(start, end - start);
+                            return true;
+                        }
+                    }
+
+                    continue;
+                }
+
+                Skip(1);
+            }
+
+            Position = start;
+            return false;
+        }
+
+        public bool TryReadAsciiDigits(int limit, out ReadOnlySpan<byte> digits)
+        {
+            digits = default;
+            if (EOF || Position >= limit)
+            {
+                return false;
+            }
+
+            byte current = Peek();
+            if (current < (byte)'0' || current > (byte)'9')
+            {
+                return false;
+            }
+
+            int start = Position;
+            while (!EOF && Position < limit)
+            {
+                byte b = Peek();
+                if (b >= (byte)'0' && b <= (byte)'9')
+                {
+                    Skip(1);
+                    continue;
+                }
+
+                break;
+            }
+
+            int length = Position - start;
+            digits = _buf.AsSpan(start, length);
+            return length > 0;
+        }
+
+        public ReadOnlySpan<byte> ReadAsciiSequence()
+        {
+            int start = Position;
+            while (!EOF)
+            {
+                byte b = Peek();
+                if (!IsAsciiPrintable(b))
+                {
+                    break;
+                }
+
+                Skip(1);
+            }
+
+            return _buf.AsSpan(start, Position - start);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsPrintableOrWhitespace(byte b) => IsAsciiPrintable(b) || b == 0x0A || b == 0x0D || b == 0x09;
+
+        /// <summary>
+        /// Reads the next numeric token expected to contain two 16-bit ASCII-hex numbers concatenated
+        /// (e.g. "480048" → (0x0048, 0x0048)).
+        /// Returns false if parsing fails.
+        /// </summary>
             if (span.Length == 0) return false;
 
             uint raw = 0;

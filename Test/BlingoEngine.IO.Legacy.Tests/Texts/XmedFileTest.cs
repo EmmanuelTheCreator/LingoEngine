@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
@@ -19,6 +21,9 @@ public class XmedFileTest
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo");
         document.Runs.Should().HaveCount(1);
+        document.Styles.Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals("Vivaldi", StringComparison.OrdinalIgnoreCase));
     }
     [Fact]
     public void Text_Hallo()
@@ -28,6 +33,9 @@ public class XmedFileTest
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo");
         document.Runs.Should().HaveCount(1);
+        document.Styles.Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals("Arcade *", StringComparison.OrdinalIgnoreCase));
     }
     [Fact]
     public void Text_3_Paragraps_13()
@@ -37,6 +45,8 @@ public class XmedFileTest
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         //textFromRuns.ShouldMatchNormalized("My first paragraph centered");
         document.Runs.Should().HaveCount(1);
+        document.Text.Should().Contain("Paragraph with align Left");
+        document.Text.Count(c => c == '\r').Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
@@ -47,6 +57,12 @@ public class XmedFileTest
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo");
         document.Runs.Should().HaveCount(1);
+        document.Styles.Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals("Trajan Pro", StringComparison.OrdinalIgnoreCase));
+        document.Styles.Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals("Arcade *", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -56,6 +72,8 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo\rmulti line\ris longer\rYES!");
+        document.Text.Should().Contain("\r");
+        document.Text.Split('\r', StringSplitOptions.RemoveEmptyEntries).Should().HaveCountGreaterThan(1);
     }
 
     [Fact]
@@ -65,6 +83,7 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("This text is red, Arial,12px,  The text is yellow, Tahoma, 9px, , bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again");
+        GetNormalizedFonts(document).Should().Contain(new[] { "arial", "tahoma", "terminal" });
     }
     [Fact]
     public void Text_Multi_Line_Multi_Style_file_should_read_long_text_and_runs()
@@ -73,6 +92,8 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         //textFromRuns.ShouldMatchNormalized("This text is red, Arial,12px,  The text is yellow, Tahoma, 9px, , bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again");
+        GetNormalizedFonts(document).Should().Contain(new[] { "arial", "tahoma", "terminal" });
+        document.Text.Should().Contain("\r");
     }
 
     [Fact]
@@ -82,6 +103,7 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo");
+        document.Styles.Should().Contain(style => style.Italic && style.Underline);
     }
 
     private static XmedDocument ReadDocument(string fileName)
@@ -90,5 +112,14 @@ public class XmedFileTest
         var bytes = File.ReadAllBytes(path);
         var reader = new BlXmedTextReader();
         return reader.Read(bytes);
+    }
+
+    private static IReadOnlyCollection<string> GetNormalizedFonts(XmedDocument document)
+    {
+        return document.Styles
+            .Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Select(name => name.ToLowerInvariant())
+            .ToArray();
     }
 }
