@@ -66,7 +66,8 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
         // Update methods to use AsSpan() for slicing:
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public byte Peek(int rel = 0)
         {
             int i = Position + rel;
@@ -421,51 +422,12 @@ namespace BlingoEngine.IO.Legacy.Texts
             while (!EOF)
             {
                 var b = Peek();
-                if (b == SEP || b == BND || b == RUN || b == REND) break;
-                if (!IsAsciiPrintable(b)) break;
-                Skip(1);
-            }
-            return _buf.AsSpan(start, Position - start);
-        }
-
-        /// <summary>
-        /// Try to read a small "01 31 01 30" (literal '1','0') parameter block commonly used around style toggles.
-        /// Returns the parsed integer when present. Method: <c>TryReadSmallParam</c>.
-        /// </summary>
-        public bool TryReadSmallParam(out int param)
-        {
-            param = 0;
-            int save = Position;
-            if (!TryReadValueAscii(out var a)) { Position = save; return false; }
-            if (a.Length == 0) { Position = save; return false; }
-
-            // If a second VAL follows, read it and merge as ASCII
-            if (Peek() == VAL)
-            {
-                if (!TryReadValueAscii(out var b)) { Position = save; return false; }
-                var s = Encoding.ASCII.GetString(a) + Encoding.ASCII.GetString(b);
-                if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out param)) return true;
-            }
 
             // Fallback: single chunk parse
             if (int.TryParse(Encoding.ASCII.GetString(a), NumberStyles.Integer, CultureInfo.InvariantCulture, out param))
+            {
                 return true;
-
-            Position = save;
-            return false;
-        }
-
-
-        /// <summary>
-        /// Reads an inline numeric token (starting with 0x02) representing a 32-bit sentinel (e.g., "40001").
-        /// Returns true and fills a <see cref="XmedHeaderRecord"/> with Type="INLINE" if successful.
-        /// </summary>
-        public bool TryReadInlineHeaderRecord(out XmedHeaderRecord rec)
-        {
-            rec = default;
-
-            if (Peek() != NUM) // must start with 0x02
-                return false;
+            }
 
         /// <summary>
         /// Reads one 20-byte ASCII header record (e.g., "FFFF0000000600040001").
@@ -577,6 +539,51 @@ namespace BlingoEngine.IO.Legacy.Texts
             // split into count/style like 0x00040001 → count=0x0004, style=0x0001
             int countHi = (int)(raw >> 16);
             int styleLo = (int)(raw & 0xFFFF);
+
+
+            Position += 20;
+
+            // split the ASCII block
+            string type = s[..4];
+            string offStr = s.Substring(4, 8);
+            string cntStr = s.Substring(12, 4);
+            string styStr = s.Substring(16, 4);
+
+            // parse all as hex
+            int offset = int.Parse(offStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            int count = int.Parse(cntStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            int style = int.Parse(styStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+
+            // compose sentinel (Count|StyleId)
+            uint raw = (uint)((count << 16) | (style & 0xFFFF));
+
+            rec = new XmedHeaderRecord(type, offset, count, style, raw);
+            return true;
+        }
+
+        // XMEDByteReader method (unified): TryReadHeaderOrInlineRecord
+        public bool TryReadHeaderOrInlineRecord(out XmedHeaderRecord rec)
+        {
+            rec = default;
+
+            // 1) Try 20-byte header card: "FFFF0000000600040001"
+            if (!EOF && Position + 20 <= _buf.Length)
+            {
+                bool allAscii = true;
+                for (int i = 0; i < 20; i++)
+                {
+                    byte b = _buf[Position + i];
+                    if (b < 0x20 || b > 0x7E) { allAscii = false; break; }
+                }
+
+                if (allAscii)
+                {
+                    var s = Encoding.ASCII.GetString(_buf, Position, 20);
+                    // quick sanity: first 4 must be hex
+                    bool hex4 =
+                        s.Length >= 4 &&
+                        int.TryParse(s.AsSpan(0, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _);
+
 
                     if (hex4)
                     {
