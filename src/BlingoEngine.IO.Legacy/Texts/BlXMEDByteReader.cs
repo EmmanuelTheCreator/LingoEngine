@@ -213,13 +213,39 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             value = 0;
             if (!TryReadAsciiHexByte(out var hi)) return false;
-            if (!TryReadAsciiHexByte(out var lo)) return false;
-            value = (hi << 8) | lo;
+            var span = _buf.AsSpan(start, len);
+            var s = Encoding.ASCII.GetString(span);
+
+            // Detect hex if contains A–F, otherwise decimal
+            bool hasHex = false;
+            int offset = 0;
+            if (s.StartsWith("-", StringComparison.Ordinal))
+            {
+                offset = 1;
+            }
+
+            for (int i = offset; i < s.Length; i++)
+            {
+                char c = s[i];
+                if ((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
+                {
+                    hasHex = true;
+                    break;
+                }
+            }
+
+            if (hasHex)
+            {
+                var spanToParse = s.AsSpan(offset);
+                int parsed = int.Parse(spanToParse, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                value = offset == 1 ? -parsed : parsed;
+            }
+            else
+            {
+                value = int.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            }
+
             return true;
-        }
-        /// <summary>
-        /// Reads an integer encoded as ASCII digits/hex following a 0x01 (value marker).
-        /// Reads until a control byte (<0x20 or ≥0x80) is encountered.
         /// </summary>
         public bool TryReadAsciiInt(out int value)
         {
@@ -441,30 +467,6 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (Peek() != NUM) // must start with 0x02
                 return false;
 
-            Skip(1); // consume 0x02
-
-            // collect ASCII digits until control or non-digit
-            int start = Position;
-            while (!EOF && !IsControl(Peek()))
-                Skip(1);
-
-            int len = Position - start;
-            if (len <= 0) return false;
-
-            var ascii = Encoding.ASCII.GetString(_buf, start, len);
-
-            // parse as hex (Director always uses ASCII hex even for pure digits)
-            if (!int.TryParse(ascii, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int rawInt))
-                return false;
-
-            // interpret as composite sentinel if 5 digits or more
-            int count = rawInt >> 16;
-            int style = rawInt & 0xFFFF;
-
-            rec = new XmedHeaderRecord("INLINE", 0, count, style, (uint)rawInt);
-            return true;
-        }
-
         /// <summary>
         /// Reads one 20-byte ASCII header record (e.g., "FFFF0000000600040001").
         /// Returns true if a valid record was read.
@@ -478,11 +480,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return false;
 
             // verify ASCII-printable
-        public bool TryReadHeaderOrInlineRecord(out XmedHeaderRecord rec)
-        {
-            rec = default;
+            for (int i = 0; i < 20; i++)
+                if (!IsAsciiPrintable(_buf[Position + i]))
+                    return false;
 
-            // 1) Try 20-byte header card: "FFFF0000000600040001"
+            var s = Encoding.ASCII.GetString(_buf, Position, 20);
             Position += 20;
 
             // split the ASCII block
@@ -504,11 +506,6 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
         // XMEDByteReader method (unified): TryReadHeaderOrInlineRecord
-        public bool TryReadHeaderOrInlineRecord(out XmedHeaderRecord rec)
-        {
-            rec = default;
-
-            // 1) Try 20-byte header card: "FFFF0000000600040001"
             if (!EOF && Position + 20 <= _buf.Length)
             {
                 bool allAscii = true;
@@ -525,6 +522,61 @@ namespace BlingoEngine.IO.Legacy.Texts
                     bool hex4 =
                         s.Length >= 4 &&
                         int.TryParse(s.AsSpan(0, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _);
+
+                    if (hex4)
+                    {
+                        string type = s[..4];
+                        string offStr = s.Substring(4, 8);
+                        string cntStr = s.Substring(12, 4);
+                        string styStr = s.Substring(16, 4);
+
+                        if (int.TryParse(offStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int offset) &&
+                            int.TryParse(cntStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int count) &&
+                            int.TryParse(styStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int style))
+                        {
+                            Position += 20;
+                            uint raw2 = (uint)((count << 16) | (style & 0xFFFF));
+                            rec = new XmedHeaderRecord(type, offset, count, style, raw2);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // 2) Fallback to inline numeric sentinel: 0x02 "40001" (or 0x01 "40001")
+            if (EOF) return false;
+
+            byte prefix = Peek();
+            if (prefix != NUM && prefix != VAL) return false; // must be 0x02 or 0x01
+            Skip(1);
+
+            int start = Position;
+            while (!EOF && !IsControl(Peek())) Skip(1);
+            int len = Position - start;
+            if (len <= 0) return false;
+
+            // parse as HEX (always hex)
+            var span = _buf.AsSpan(start, len);
+            // optional leading '-' not expected here; ignore if present
+            bool neg = span.Length > 0 && span[0] == (byte)'-';
+            if (neg) span = span.Slice(1);
+            if (span.Length == 0) return false;
+
+            uint raw = 0;
+            for (int i = 0; i < span.Length; i++)
+            {
+                byte c = span[i];
+                int d =
+                    (c >= (byte)'0' && c <= (byte)'9') ? c - '0' :
+                    (c >= (byte)'A' && c <= (byte)'F') ? c - 'A' + 10 :
+                    (c >= (byte)'a' && c <= (byte)'f') ? c - 'a' + 10 : -1;
+                if (d < 0) return false;
+                unchecked { raw = (raw << 4) | (uint)d; }
+            }
+
+            // split into count/style like 0x00040001 → count=0x0004, style=0x0001
+            int countHi = (int)(raw >> 16);
+            int styleLo = (int)(raw & 0xFFFF);
 
                     if (hex4)
                     {
@@ -650,33 +702,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             return length > 0;
         }
 
-        public ReadOnlySpan<byte> ReadAsciiSequence()
-        {
-            int start = Position;
-            while (!EOF)
-            {
-                byte b = Peek();
-                if (!IsAsciiPrintable(b))
-                {
-                    break;
-                }
-
-                Skip(1);
-            }
-
-            return _buf.AsSpan(start, Position - start);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsPrintableOrWhitespace(byte b) => IsAsciiPrintable(b) || b == 0x0A || b == 0x0D || b == 0x09;
-
-        /// <summary>
-        /// Reads the next numeric token expected to contain two 16-bit ASCII-hex numbers concatenated
-        /// (e.g. "480048" → (0x0048, 0x0048)).
-        /// Returns false if parsing fails.
-        /// </summary>
-            if (span.Length == 0) return false;
-
+        public bool TryReadAsciiHexPair(out (int high, int low) pair)
             uint raw = 0;
             for (int i = 0; i < span.Length; i++)
             {
