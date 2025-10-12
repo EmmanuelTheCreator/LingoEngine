@@ -66,7 +66,8 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
         // Update methods to use AsSpan() for slicing:
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public byte Peek(int rel = 0)
         {
             int i = Position + rel;
@@ -421,11 +422,13 @@ namespace BlingoEngine.IO.Legacy.Texts
             while (!EOF)
             {
                 var b = Peek();
+
             // Fallback: single chunk parse
             if (int.TryParse(Encoding.ASCII.GetString(a), NumberStyles.Integer, CultureInfo.InvariantCulture, out param))
             {
                 return true;
             }
+
         /// <summary>
         /// Reads one 20-byte ASCII header record (e.g., "FFFF0000000600040001").
         /// Returns true if a valid record was read.
@@ -537,6 +540,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             int countHi = (int)(raw >> 16);
             int styleLo = (int)(raw & 0xFFFF);
 
+
             Position += 20;
 
             // split the ASCII block
@@ -579,6 +583,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     bool hex4 =
                         s.Length >= 4 &&
                         int.TryParse(s.AsSpan(0, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _);
+
 
                     if (hex4)
                     {
