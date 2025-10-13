@@ -210,12 +210,10 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Modern XMED (v13+) parse.</summary>
         private XmedDocument ReadModernXmed(byte[] buffer, int directorVersion)
         {
-            var doc = new XmedDocument();
-            var tokens = new BlXmedTokenizer().Tokenize(buffer);
-            // todo : start from here
-            // Create new class : BlXmedTokenParser
-            // that takes the tokens and produces the XmedDocument with runs , styles, etc.
-            return doc;
+            var tokenizer = new BlXmedTokenizer();
+            var (tokens, lastNumbers) = tokenizer.Tokenize(buffer);
+            var parser = new BlXmedTokenParser(_logger, tokens, lastNumbers);
+            return parser.Parse(directorVersion);
         }
         private XmedDocument ReadModernXmedOld(byte[] buffer, int directorVersion)
         {
