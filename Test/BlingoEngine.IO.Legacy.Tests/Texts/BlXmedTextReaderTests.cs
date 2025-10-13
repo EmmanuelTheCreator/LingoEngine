@@ -1,15 +1,28 @@
-using System.Collections.Generic;
-using System.IO;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
-using FluentAssertions;
 using BlingoEngine.IO.Legacy.Texts;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.IO;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
 public class BlXmedTextReaderTests
 {
+    private readonly ILogger<XmedFileTest> _logger;
+
+    public BlXmedTextReaderTests(ITestOutputHelper output)
+    {
+        var factory = LoggerFactory.Create(builder =>
+        {
+            builder.AddProvider(new XunitLoggerProvider(output));
+        });
+
+        _logger = factory.CreateLogger<XmedFileTest>();
+    }
     [Fact]
     public void Read_SingleRunText_ParsesHeaderAndText()
     {
@@ -48,7 +61,7 @@ public class BlXmedTextReaderTests
     public void Read_LegacyVersion_ParsesRichTextHeader()
     {
         var buffer = BuildLegacyRichTextBuffer();
-        var reader = new BlXmedTextReader();
+        var reader = new BlXmedTextReader(_logger);
 
         var document = reader.Read(buffer, directorVersion: 5);
 
@@ -78,11 +91,11 @@ public class BlXmedTextReaderTests
         metadata.BoundingRect.Right.Should().Be(8);
     }
 
-    private static XmedDocument ReadDocument(string asset)
+    private XmedDocument ReadDocument(string asset)
     {
         var path = TestContextHarness.GetAssetPath(asset);
         var bytes = File.ReadAllBytes(path);
-        var reader = new BlXmedTextReader();
+        var reader = new BlXmedTextReader(_logger);
         return reader.Read(bytes);
     }
 

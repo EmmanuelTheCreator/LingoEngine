@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -54,16 +52,6 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Advance by <paramref name="count"/> bytes if possible.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Skip(int count) => Position = Math.Min(Length, Position + Math.Max(0, count));
-
-        /// <summary>Move the cursor backwards by <paramref name="count"/> bytes.</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Rewind(int count)
-        {
-            if (count <= 0) return;
-            int target = Position - count;
-            if (target < 0) target = 0;
-            Position = target;
-        }
 
         // Update methods to use AsSpan() for slicing:
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -198,7 +186,8 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             numbers = new List<int>();
 
-            if (preFixByte != null) { 
+            if (preFixByte != null)
+            {
                 // must start with 0x03
                 if (Peek() != preFixByte)
                     return false;
@@ -214,39 +203,28 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             value = 0;
             if (!TryReadAsciiHexByte(out var hi)) return false;
-            var span = _buf.AsSpan(start, len);
-            var s = Encoding.ASCII.GetString(span);
-
-            // Detect hex if contains A–F, otherwise decimal
-            bool hasHex = false;
-            int offset = 0;
-            if (s.StartsWith("-", StringComparison.Ordinal))
-            {
-                offset = 1;
-            }
-
-            for (int i = offset; i < s.Length; i++)
-            {
-                char c = s[i];
-                if ((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
-                {
-                    hasHex = true;
-                    break;
-                }
-            }
-
-            if (hasHex)
-            {
-                var spanToParse = s.AsSpan(offset);
-                int parsed = int.Parse(spanToParse, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                value = offset == 1 ? -parsed : parsed;
-            }
-            else
-            {
-                value = int.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
-            }
-
+            if (!TryReadAsciiHexByte(out var lo)) return false;
+            value = (hi << 8) | lo;
             return true;
+        }
+        /// <summary>
+        /// Reads ASCII bytes until a control or delimiter (≤0x20 or ≥0x80),
+        /// returning the literal string.
+        /// </summary>
+        public string ReadAsciiUntilControl()
+        {
+            var sb = new StringBuilder();
+            while (!EOF)
+            {
+                byte b = Peek();
+                if (b <= 0x20 || b >= 0x80) break;
+                sb.Append((char)ReadByte());
+            }
+            return sb.ToString();
+        }
+        /// <summary>
+        /// Reads an integer encoded as ASCII digits/hex following a 0x01 (value marker).
+        /// Reads until a control byte (<0x20 or ≥0x80) is encountered.
         /// </summary>
         public bool TryReadAsciiInt(out int value)
         {
@@ -270,7 +248,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             var s = Encoding.ASCII.GetString(span);
 
             // Detect hex if contains A–F, otherwise decimal
-                value = int.Parse(s, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            value = int.Parse(s, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 
             return true;
         }
@@ -422,13 +400,44 @@ namespace BlingoEngine.IO.Legacy.Texts
             while (!EOF)
             {
                 var b = Peek();
+                if (b == SEP || b == BND || b == RUN || b == REND) break;
+                if (!IsAsciiPrintable(b)) break;
+                Skip(1);
+            }
+            return _buf.AsSpan(start, Position - start);
+        }
+
+        /// <summary>
+        /// Try to read a small "01 31 01 30" (literal '1','0') parameter block commonly used around style toggles.
+        /// Returns the parsed integer when present. Method: <c>TryReadSmallParam</c>.
+        /// </summary>
+        public bool TryReadSmallParam(out int param)
+        {
+            param = 0;
+            int save = Position;
+            if (!TryReadValueAscii(out var a)) { Position = save; return false; }
+            if (a.Length == 0) { Position = save; return false; }
+
+            // If a second VAL follows, read it and merge as ASCII
+            if (Peek() == VAL)
+            {
+                if (!TryReadValueAscii(out var b)) { Position = save; return false; }
+                var s = Encoding.ASCII.GetString(a) + Encoding.ASCII.GetString(b);
+                if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out param)) return true;
+            }
 
             // Fallback: single chunk parse
             if (int.TryParse(Encoding.ASCII.GetString(a), NumberStyles.Integer, CultureInfo.InvariantCulture, out param))
-            {
                 return true;
-            }
 
+            Position = save;
+            return false;
+        }
+
+
+       
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsPrintableOrWhitespace(byte b) => IsAsciiPrintable(b) || b == 0x0A || b == 0x0D || b == 0x09;
         /// <summary>
         /// Reads one 20-byte ASCII header record (e.g., "FFFF0000000600040001").
         /// Returns true if a valid record was read.
@@ -437,37 +446,171 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             rec = default;
 
-            // need 20 ASCII bytes minimum
             if (EOF || Position + 20 > _buf.Length)
                 return false;
 
-            // verify ASCII-printable
+            int pos = Position;
+
+            // 1) Quick printable check (do NOT advance)
             for (int i = 0; i < 20; i++)
-                if (!IsAsciiPrintable(_buf[Position + i]))
+                if (!XMEDByteReader.IsAsciiPrintable(_buf[pos + i]))
                     return false;
 
-            var s = Encoding.ASCII.GetString(_buf, Position, 20);
-            Position += 20;
+            // 2) Slice without moving Position
+            var s = Encoding.ASCII.GetString(_buf, pos, 20);
 
-            // split the ASCII block
+            // 3) Split fields
             string type = s[..4];
             string offStr = s.Substring(4, 8);
             string cntStr = s.Substring(12, 4);
             string styStr = s.Substring(16, 4);
 
-            // parse all as hex
+            // 4) Validate strict hex shape BEFORE consuming
+            static bool IsHex(string t)
+            {
+                if (t.Length == 0) return false;
+                for (int i = 0; i < t.Length; i++)
+                    if (!Uri.IsHexDigit(t[i])) return false;
+                return true;
+            }
+
+            if (!IsHex(type) || !IsHex(offStr) || !IsHex(cntStr) || !IsHex(styStr))
+                return false; // it's not a header card (likely plaintext like "My first")
+
+            // 5) Now it’s safe to advance and parse
+            Position += 20;
+
             int offset = int.Parse(offStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             int count = int.Parse(cntStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             int style = int.Parse(styStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 
-            // compose sentinel (Count|StyleId)
             uint raw = (uint)((count << 16) | (style & 0xFFFF));
-
             rec = new XmedHeaderRecord(type, offset, count, style, raw);
             return true;
         }
 
+        public ReadOnlySpan<byte> ReadAsciiSequence()
+        {
+            int start = Position;
+            while (!EOF)
+            {
+                byte b = Peek();
+                if (!IsAsciiPrintable(b))
+                {
+                    break;
+                }
+
+                Skip(1);
+            }
+
+            return _buf.AsSpan(start, Position - start);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Rewind(int count)
+        {
+            if (count <= 0) return;
+            int target = Position - count;
+            if (target < 0) target = 0;
+            Position = target;
+        }
+
+        public bool TryReadAsciiDigits(int limit, out ReadOnlySpan<byte> digits)
+        {
+            digits = default;
+            if (EOF || Position >= limit)
+            {
+                return false;
+            }
+
+            byte current = Peek();
+            if (current < (byte)'0' || current > (byte)'9')
+            {
+                return false;
+            }
+
+            int start = Position;
+            while (!EOF && Position < limit)
+            {
+                byte b = Peek();
+                if (b >= (byte)'0' && b <= (byte)'9')
+                {
+                    Skip(1);
+                    continue;
+                }
+
+                break;
+            }
+
+            int length = Position - start;
+            digits = _buf.AsSpan(start, length);
+            return length > 0;
+        }
+
+        public bool TryReadBlockContent(int limit, out ReadOnlySpan<byte> content, out byte closingTail)
+        {
+            content = default;
+            closingTail = 0;
+
+            if (Position >= limit)
+            {
+                return false;
+            }
+
+            int start = Position;
+            int depth = 1;
+
+            while (!EOF && Position < limit)
+            {
+                byte b = Peek();
+                if (b == RUN)
+                {
+                    Skip(1);
+                    if (!EOF)
+                    {
+                        Skip(1);
+                        depth++;
+                    }
+
+                    continue;
+                }
+
+                if (b == REND)
+                {
+                    Skip(1);
+                    if (!EOF)
+                    {
+                        byte tail = ReadByte();
+                        depth--;
+                        if (depth == 0)
+                        {
+                            closingTail = tail;
+                            int end = Position - 2;
+                            if (end < start)
+                            {
+                                end = start;
+                            }
+
+                            content = _buf.AsSpan(start, end - start);
+                            return true;
+                        }
+                    }
+
+                    continue;
+                }
+
+                Skip(1);
+            }
+
+            Position = start;
+            return false;
+        }
+
         // XMEDByteReader method (unified): TryReadHeaderOrInlineRecord
+        public bool TryReadHeaderOrInlineRecord(out XmedHeaderRecord rec)
+        {
+            rec = default;
+
+            // 1) Try 20-byte header card: "FFFF0000000600040001"
             if (!EOF && Position + 20 <= _buf.Length)
             {
                 bool allAscii = true;
@@ -540,192 +683,6 @@ namespace BlingoEngine.IO.Legacy.Texts
             int countHi = (int)(raw >> 16);
             int styleLo = (int)(raw & 0xFFFF);
 
-
-            Position += 20;
-
-            // split the ASCII block
-            string type = s[..4];
-            string offStr = s.Substring(4, 8);
-            string cntStr = s.Substring(12, 4);
-            string styStr = s.Substring(16, 4);
-
-            // parse all as hex
-            int offset = int.Parse(offStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-            int count = int.Parse(cntStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-            int style = int.Parse(styStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-
-            // compose sentinel (Count|StyleId)
-            uint raw = (uint)((count << 16) | (style & 0xFFFF));
-
-            rec = new XmedHeaderRecord(type, offset, count, style, raw);
-            return true;
-        }
-
-        // XMEDByteReader method (unified): TryReadHeaderOrInlineRecord
-        public bool TryReadHeaderOrInlineRecord(out XmedHeaderRecord rec)
-        {
-            rec = default;
-
-            // 1) Try 20-byte header card: "FFFF0000000600040001"
-            if (!EOF && Position + 20 <= _buf.Length)
-            {
-                bool allAscii = true;
-                for (int i = 0; i < 20; i++)
-                {
-                    byte b = _buf[Position + i];
-                    if (b < 0x20 || b > 0x7E) { allAscii = false; break; }
-                }
-
-                if (allAscii)
-                {
-                    var s = Encoding.ASCII.GetString(_buf, Position, 20);
-                    // quick sanity: first 4 must be hex
-                    bool hex4 =
-                        s.Length >= 4 &&
-                        int.TryParse(s.AsSpan(0, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _);
-
-
-                    if (hex4)
-                    {
-                        string type = s[..4];
-                        string offStr = s.Substring(4, 8);
-                        string cntStr = s.Substring(12, 4);
-                        string styStr = s.Substring(16, 4);
-
-                        if (int.TryParse(offStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int offset) &&
-                            int.TryParse(cntStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int count) &&
-                            int.TryParse(styStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int style))
-                        {
-                            Position += 20;
-                            uint raw2 = (uint)((count << 16) | (style & 0xFFFF));
-                            rec = new XmedHeaderRecord(type, offset, count, style, raw2);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            // 2) Fallback to inline numeric sentinel: 0x02 "40001" (or 0x01 "40001")
-            if (EOF) return false;
-
-            byte prefix = Peek();
-            if (prefix != NUM && prefix != VAL) return false; // must be 0x02 or 0x01
-            Skip(1);
-
-            int start = Position;
-            while (!EOF && !IsControl(Peek())) Skip(1);
-            rec = new XmedHeaderRecord("INLINE", 0, countHi, styleLo, raw);
-            return true;
-        }
-
-        public bool TryReadBlockContent(int limit, out ReadOnlySpan<byte> content, out byte closingTail)
-        {
-            content = default;
-            closingTail = 0;
-
-            if (Position >= limit)
-            {
-                return false;
-            }
-
-            int start = Position;
-            int depth = 1;
-
-            while (!EOF && Position < limit)
-            {
-                byte b = Peek();
-                if (b == RUN)
-                {
-                    Skip(1);
-                    if (!EOF)
-                    {
-                        Skip(1);
-                        depth++;
-                    }
-
-                    continue;
-                }
-
-                if (b == REND)
-                {
-                    Skip(1);
-                    if (!EOF)
-                    {
-                        byte tail = ReadByte();
-                        depth--;
-                        if (depth == 0)
-                        {
-                            closingTail = tail;
-                            int end = Position - 2;
-                            if (end < start)
-                            {
-                                end = start;
-                            }
-
-                            content = _buf.AsSpan(start, end - start);
-                            return true;
-                        }
-                    }
-
-                    continue;
-                }
-
-                Skip(1);
-            }
-
-            Position = start;
-            return false;
-        }
-
-        public bool TryReadAsciiDigits(int limit, out ReadOnlySpan<byte> digits)
-        {
-            digits = default;
-            if (EOF || Position >= limit)
-            {
-                return false;
-            }
-
-            byte current = Peek();
-            if (current < (byte)'0' || current > (byte)'9')
-            {
-                return false;
-            }
-
-            int start = Position;
-            while (!EOF && Position < limit)
-            {
-                byte b = Peek();
-                if (b >= (byte)'0' && b <= (byte)'9')
-                {
-                    Skip(1);
-                    continue;
-                }
-
-                break;
-            }
-
-            int length = Position - start;
-            digits = _buf.AsSpan(start, length);
-            return length > 0;
-        }
-
-        public bool TryReadAsciiHexPair(out (int high, int low) pair)
-            uint raw = 0;
-            for (int i = 0; i < span.Length; i++)
-            {
-                byte c = span[i];
-                int d =
-                    (c >= (byte)'0' && c <= (byte)'9') ? c - '0' :
-                    (c >= (byte)'A' && c <= (byte)'F') ? c - 'A' + 10 :
-                    (c >= (byte)'a' && c <= (byte)'f') ? c - 'a' + 10 : -1;
-                if (d < 0) return false;
-                unchecked { raw = (raw << 4) | (uint)d; }
-            }
-
-            // split into count/style like 0x00040001 → count=0x0004, style=0x0001
-            int countHi = (int)(raw >> 16);
-            int styleLo = (int)(raw & 0xFFFF);
-
             rec = new XmedHeaderRecord("INLINE", 0, countHi, styleLo, raw);
             return true;
         }
@@ -734,7 +691,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// (e.g. "480048" → (0x0048, 0x0048)).
         /// Returns false if parsing fails.
         /// </summary>
-        public bool TryReadAsciiHexPair(out (int high, int low) pair)
+        public bool TryReadAsciiHexPair(out (int High, int Low) pair)
         {
             pair = default;
 

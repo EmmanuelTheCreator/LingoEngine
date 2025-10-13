@@ -1,7 +1,6 @@
-using System;
-using System.IO;
 
 using BlingoEngine.IO.Data.DTO;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.IO.Legacy.Director;
 
@@ -12,15 +11,18 @@ namespace BlingoEngine.IO.Legacy.Director;
 public sealed class BlLegacyMovieImporter
 {
     private readonly BlLegacyMovieReader _reader;
+    private readonly ILogger _logger;
 
-    public BlLegacyMovieImporter()
-        : this(new BlLegacyMovieReader())
+    public BlLegacyMovieImporter(ILogger logger)
+        : this(logger, new BlLegacyMovieReader())
     {
+        
     }
 
-    public BlLegacyMovieImporter(BlLegacyMovieReader reader)
+    public BlLegacyMovieImporter(ILogger logger, BlLegacyMovieReader reader)
     {
         _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+        _logger = logger;
     }
 
     public (BlingoStageDTO Stage, BlingoMovieDTO Movie, DirFilesContainerDTO Resources) Import(string filePath)
@@ -55,7 +57,7 @@ public sealed class BlLegacyMovieImporter
         return ConvertArchive(archive, movieName);
     }
 
-    private static (BlingoStageDTO Stage, BlingoMovieDTO Movie, DirFilesContainerDTO Resources) ConvertArchive(
+    private (BlingoStageDTO Stage, BlingoMovieDTO Movie, DirFilesContainerDTO Resources) ConvertArchive(
         BlLegacyMovieArchive archive,
         string movieName)
     {
@@ -71,7 +73,7 @@ public sealed class BlLegacyMovieImporter
         }
 
         var stage = archive.ToBlingoStage();
-        var movie = archive.ToBlingo(movieName, resources);
+        var movie = archive.ToBlingo(movieName, resources,_logger);
         return (stage, movie, resources);
     }
 }

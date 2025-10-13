@@ -184,7 +184,7 @@ namespace BlingoEngine.IO.Legacy.Tools
             var text =  builder.ToString();
             return text;
         }
-
+       
         /// <summary>
         /// Formats bytes as a hexadecimal string, optionally prefixing addresses on each line.
         /// </summary>

@@ -7,17 +7,17 @@ Handy tool and docs : https://imhex.werwolv.net/  : https://docs.werwolv.net/imh
 ---
 
 ## 1) Header Directory (ASCII)
-It seems The XMED header starts with ASCII **directory rows**: 
+It seems The XMED header starts with ASCII **directory rows**: PERHAPS
 ```
 <TYPE:4>,<OFFSET:8>,<COUNT:8>
 ```
 
 - All three numbers are **hex strings** (ASCII).  
 - Rows continue **until the first 0x00 byte** (no explicit header length).  
-- Example: `0008,000005B0,00000010` → Type **0008** at offset **0x05B0** with **16** entries capacity. STILL WRONG
+- Example: `0008,000005B0,00000010` → PERHAPS: Type **0008** at offset **0x05B0** with **16** entries capacity. STILL WRONG
 
 
-blocks starting with 
+Perhaps blocks starting with 
 0x00 [XX XX: is the length of the content] [COMMA]
 - First block is the text
 - Next blocks are always the font name
@@ -41,7 +41,7 @@ Found later in the file for multi‑style texts; each block carries:
 - Font link (font id/name),
 - Optional color index and metric overrides (size/spacing).
 
-Descriptors are referenced by **F5** in the run map. Single‑style files still use the same structure but only one descriptor is effective.
+Descriptors are referenced by **F5** perhaps in the run map. Single‑style files still use the same structure but only one descriptor is effective.
 
 ---
 
@@ -75,7 +75,7 @@ Two adjacent bytes encode styles and alignment/layout:
 
 ---
 
-## 7) Metrics & Pointers (fixed offsets in member header)
+## 7) Metrics & Pointers (fixed offsets in member header perhaps) perhaps
 
 | Offset | Size | Meaning |
 |------:|-----:|---------|
@@ -109,7 +109,7 @@ Two adjacent bytes encode styles and alignment/layout:
 # Assumptions
 plain ASCII bytes for readable data, and non-ASCII bytes (≤ 0x20 or ≥ 0x80) as control flags.
 
-### 🧩 1. Two intertwined layers
+### 🧩 1. Two intertwined layers we think
 | Layer	          | What it carries	                                                               | Byte range      |
 |-----------------|--------------------------------------------------------------------------------|---------------- |
 | Data layer	  | Anything you can type — text, hex digits for RGB, font names, numbers, etc.	   | 0x20–0x7E (normal printable ASCII) |
@@ -117,7 +117,7 @@ plain ASCII bytes for readable data, and non-ASCII bytes (≤ 0x20 or ≥ 0x80) 
 
 Director’s text system reuses Apple’s TextEdit style runs (moaTEStyles / ScrpSTElement) where high-bit markers signal “this is not literal text”.
 
-### 🧠 2. Common control families already seeing
+### 🧠 2. Common control families already seeing Perhaps
 | Byte(s) | Binary | Typical meaning (from pattern analysis) |
 |----------|---------|-----------------------------------------|
 | **01**			 | 0000 0001			 | Start/value marker — next bytes are literal ASCII data (digits, hex pairs, etc.) |
@@ -137,7 +137,7 @@ Director’s text system reuses Apple’s TextEdit style runs (moaTEStyles / Scr
 
 All other bytes (30–39, 41–46, etc.) are literal characters used in property data — text, numbers, “FF00”, etc.
 
-### 🧩 3. Why this design
+### 🧩 3. Why this design perhaps
 
 Director had to store styled text inline with the actual characters but still survive on both Mac (Big-Endian, resource-fork) and Windows (flat files).
 ASCII-safe encoding made it portable, so any byte outside printable range was reserved for control signals — a bit-flagged mini-language marking:
@@ -148,7 +148,7 @@ property ID (font, size, color, alignment, etc.)
 
 sub-field separators (for multi-value props like RGB)
 
-### Colors bytes
+### Colors bytes discovered
 Color Blue      : #0000ff : 01 30 82 82 81 01 46 46 30 30  81 01 30        01 46 46 46 46 81 81 01 30 82 02 
 Color Yellow    : #ffff00 : 01 30 82 82    01 46 46 30 30  81 01 30 81     01 46 46 46 46 81 81 01 30 82 02 
 Color Pink      : #ff00ff : 01 30 82 82    01 46 46 30 30  01 30           01 46 46 30 30 01 30 01 46 46 46 46 81
@@ -158,9 +158,7 @@ Color Bordeau   : #880000 : 01 30 82 82    01 38 38 30 30  01 30 81 81     01 46
 
 ### style maps?
 
-Observed at 0x0050
-
-[ 02 30 02 <font size key> 01 ] [ 02 ?? ?? <line height key> 01 ]
+Perhaps: [ 02 30 02 <font size key> 01 ] [ 02 ?? ?? <line height key> 01 ]
 font size, line height, bytes
 |------:|---------|
 | 09	|	11	|	02 30 02 39 32 01 30 C1 03 02 2D 31 82 02 35 42		| 
@@ -200,8 +198,6 @@ font size, line height, bytes
 | 200	|	241	|	02 30 02 32 44 42 37 01 30 C1 03 02 2D 31 82 02		| 
 
 ## AI proposition
-
-Yep—same control/data scheme shows up for text styling. Here’s what’s consistent across your variants, plus the specific markers I can see toggling each style:
 
 What stays constant
 
@@ -244,4 +240,123 @@ Small ASCII numbers after the toggle (01 31, 01 33 = ‘1’, ‘3’) are the s
 
 A later C1 yy often closes or confirms the same style (paired markers).
 
-If you want, I can produce a compact CSV listing all C1,xx occurrences per file with byte offsets for quick diffing.
+
+
+
+
+# XMED Tokens & Block Structure (revised, neutral version)
+
+> **Note:** Nothing below is called a “fact” unless confirmed by a direct action in Director’s UI that changes the same bytes.  
+> Entries are marked as **ASSUMPTION** (likely interpretation) or **OBSERVATION** (repeated pattern only).
+
+---
+
+## 1) Tokens & Separators
+
+| Byte(s) | Status | Description |
+|---|---|---|
+| `01` | **OBSERVATION** | Starts a literal ASCII-hex value; often used for short constants or toggles. |
+| `02` | **OBSERVATION** | Starts a numeric ASCII-hex value (may include `2D` `'-'` for negative). Appears in size, spacing, and header data. |
+| `81` | **OBSERVATION** | Separator between sub-fields inside one property (e.g., between RGB parts). |
+| `82` | **OBSERVATION** | Terminator for a composite property group. |
+
+---
+
+## 2) Structural Markers
+
+| Byte(s) | Status | Description |
+|---|---|---|
+| `C1 xx` | **OBSERVATION** | Opens a property/run/paragraph segment. |
+| `C2 yy` | **OBSERVATION** | Closes the most recent open block; subtype (`yy`) varies with context. |
+| `C3 yy` | **NOT SEEN** | No occurrences found in provided samples. |
+
+---
+
+## 3) Common C1→C2 Block Pairs
+
+| Open → Close | Status | Internal Token Pattern | Working Hypothesis |
+|---|---|---|---|
+| `C1 03 → C2 07 / 0A` | **OBSERVATION** | Sequence: `VAL VAL VAL` (RGB) → `NUM` → small numerics | Likely a core **style run** for a text range. |
+| `C1 04 → C2 20` | **OBSERVATION** | `NUM (NUM?)` | Appears related to **alignment** or paragraph layout. |
+| `C1 05 → C2 04 / 05` | **ASSUMPTION** | Several `NUM` tokens | Possibly tab/spacing settings. |
+| `C1 0A → C2 12` | **OBSERVATION** | `VAL VAL` | Appears to toggle superscript. |
+| `C1 0B → C2 13` | **OBSERVATION** | `VAL VAL` | Appears to toggle subscript. |
+| `C1 1C → C2 13 / 0F` | **OBSERVATION** | `VAL VAL` | Appears to toggle underline or strikeout. |
+| `C1 03 → C2 03` | **ASSUMPTION** | Several `NUM` tokens near file start | Possible **header preamble** section. |
+| `C1 20 → C2 07 / 0A / 20` | **ASSUMPTION** | Few or no numerics | Possible paragraph or grouping wrapper. |
+
+---
+
+## 4) Alignment & Flags
+
+| Item | Status | Notes |
+|---|---|---|
+| First numeric inside `C1 04 → C2 20` | **ASSUMPTION** | May indicate alignment mode (`0=center`, `1=right`, `2=left`, `3=justify`). |
+| Additional small numerics | **ASSUMPTION** | Possibly wrap or tab options, not yet mapped. |
+
+---
+
+## 5) Decoration Toggles
+
+| Decoration | Block | Status | Internal Shape |
+|---|---|---|---|
+| Superscript | `C1 0A → C2 12` | **OBSERVATION** | `01 33` then `01 30`. |
+| Subscript | `C1 0B → C2 13` | **OBSERVATION** | `01 33` then `01 30`. |
+| Underline / Strike | `C1 1C → C2 13 / 0F` | **OBSERVATION** | `01 31` then `01 30`. |
+
+---
+
+## 6) Run Map Records
+
+| Element | Status | Description |
+|---|---|---|
+| 20-character ASCII-hex entries (`0004…0129`) | **OBSERVATION** | Describe text slices and link them to style IDs. |
+| Offset / Length fields | **ASSUMPTION** | Likely mark start/length of visible text spans. |
+| Type / StyleId | **ASSUMPTION** | Identify which C1→C2 block applies to that run. |
+
+---
+
+## 7) Color Encoding (inside style runs)
+
+| Pattern | Status | Description |
+|---|---|---|
+| `01 <RR...> 81 81  01 <GG...> 81 81  01 <BB...> (82)` | **OBSERVATION** | RGB sequence; 81 separates channels; 82 ends the composite. |
+| Channel length | **ASSUMPTION** | Each color value appears as 16-bit hex words (not yet verified for endianness). |
+
+---
+
+## 8) Header Preamble Perhaps (early C2 blocks)
+
+| Field order | Status | Description |
+|---|---|---|
+| First few `02` values | **OBSERVATION** | Appear before any style runs; may contain schema/version and base address info. |
+| Repeating `02` numerics | **ASSUMPTION** | Could include offsets, dimensions, or baseline defaults. |
+| `C2 03` | **OBSERVATION** | Appears at start and sometimes mid-stream; acts as a section boundary, not necessarily a terminator. |
+
+_No field in this section has yet been confirmed to match any Director UI property (e.g., width, height, baseline)._
+
+---
+
+## 9) Unobserved or Uncertain Areas
+
+| Topic | Status | Notes |
+|---|---|---|
+| Any `C3` markers | **NOT SEEN** | No example across all test files. |
+| Decimal-encoded numbers | **NOT SEEN** | All numeric fields look hexadecimal so far. |
+| Proven mapping to Director UI controls | **NOT CONFIRMED** | Pending controlled UI experiments. |
+
+---
+
+## 10) Current Research Questions
+
+1. Which field in the header corresponds to editable / locked state of the text member?  
+2. Which numeric pair controls line spacing or paragraph spacing?  
+3. Are there per-paragraph structures nested under `C1 20` that correspond to alignment settings?  
+4. What exactly do `C2 07`, `C2 0A`, and `C2 20` delimit semantically (soft vs. hard block ends)?  
+
+---
+
+### Summary
+
+At this stage, all interpretations are **tentative** until verified by live Director edits.  
+Use these patterns for decoding structure and token boundaries only — **not** for semantic binding to UI fields.
