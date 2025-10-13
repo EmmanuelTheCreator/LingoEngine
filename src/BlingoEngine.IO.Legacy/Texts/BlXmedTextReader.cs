@@ -210,35 +210,16 @@ namespace BlingoEngine.IO.Legacy.Texts
         /// <summary>Modern XMED (v13+) parse.</summary>
         private XmedDocument ReadModernXmed(byte[] buffer, int directorVersion)
         {
-
-
-            //var bytesReader = new XMEDByteReader(buffer);
-            //bytesReader.TryReadHeaderRecord(out var tableIndexRoot);       // 262145     :    : FFFF 0000 0006 0004 0001    Root directory card (table 4, entry 1).
-            //bytesReader.TryReadAsciiInt(out var something2);               // 30634      : 01 : 77AA
-            //var bytes0 = bytesReader.ReadByte();                           //            : 03 :
-            //bytesReader.TryReadHeaderOrInlineRecord(out var tableIndex2);  //                   0000 0000 004F 0000 0000    Directory card pointing to the first header/data block at offset 0x4F.
-            //bytesReader.TryReadHeaderOrInlineRecord(out var tableIndex3);  // 262145     : 02 : 40001                       Inline sentinel = (table 4, entry 1) → Fonts/Styles table anchor.
-            //bytesReader.TryReadNumericToken(out var perhapsVersion);       // 257        : 02 : 101                         XMED/Style schema version (major=1, minor=1).
-            //bytesReader.TryReadNumericToken(out var someNumber);           // -2147315680: 02 : -7FFD 6FE0                  Signed base pointer / rel delta used by the run indexer.
-            //bytesReader.TryReadNumericToken(out var someNumber2);          // 0          : 02 : 0
-            //var cReader = new BlXmedCReader(_logger);
-            //var header = cReader.ReadHeaderPreamble(bytesReader);
-            
-
-            //// C1 03 : ?????
-            ////var blocks = cReader.ReadRuns(buffer);
-            ////foreach (var block in blocks)
-            ////{
-            ////    _logger.LogInformation(block.GetDebuggerDisplay());
-            ////}
-            //var slices = cReader.ReadTextSpansWithAlignment(buffer);
-            //foreach (var block in slices)
-            //{
-            //    _logger.LogInformation(block.GetDebuggerDisplay());
-            //}
-            //var bytes = bytesReader.ReadBytes(50);
-            //throw new NotImplementedException("Modern XMED parse not yet implemented.");
-            // OLD to be removed
+            var doc = new XmedDocument();
+            var tokens = new BlXmedTokenizer().Tokenize(buffer);
+            // todo : start from here
+            // Create new class : BlXmedTokenParser
+            // that takes the tokens and produces the XmedDocument with runs , styles, etc.
+            return doc;
+        }
+        private XmedDocument ReadModernXmedOld(byte[] buffer, int directorVersion)
+        {
+            // Old code below, to be removed 
             (var styles, string text, List<byte> somting) = ReadBlocks(buffer);
             var doc = new XmedDocument();
             doc.Styles = styles;

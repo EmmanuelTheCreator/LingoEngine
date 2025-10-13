@@ -339,3 +339,34 @@ C2(0B) true 02:0      ← Editable field
 - 00(44) tail meaning
 - Header: 02:40001, 02:-7FFD6FE0
 - Repeated 01:FFFF usage
+
+---
+
+## ❓ Open Questions / Uncertain Parts
+
+- **03:0007** — block purpose unknown (likely run/link meta?).  
+- **03:0013** — flags/feature matrix; semantics unclear.  
+- **00(44)** — trailing byte table: exact meaning unresolved.  
+- **Header fields** — `02:40001`, `02:-7FFF6FE0`: need definitive mapping.  
+- **01:FFFF** — repeated marker; context-dependent meaning not fixed.  
+- **C1(20), C2(06), C2(12), C2(0F)** — suspected flow/group/meta; verify roles and ordering.  
+
+*Notes:* keep captures from diverse samples; confirm with round‑trip edits.
+
+## 🔎 Additional Findings 
+
+- **Tab Stops**
+  - In `C1(03)`, sequential `02:<pos>` pairs define tab-stop positions per paragraph.
+  - Seen as `02:7 02:C …` in *MultiLine_Tabs*.
+
+- **Run Maps**
+  - `03:0004/0005/0006` consistent for 5-run samples; use as validation.
+
+- **Per-Line Metrics**
+  - Multi-line headers show repeating pairs (e.g., `02:11 02:17`), acting as per-line metric slots.
+
+- **Text Length Index**
+  - `03:0128` and `03:0129` carry the final text end offset (e.g., `0x1E/0x22/0x26`).
+
+- **Still Uncertain**
+  - `03:0013`, `C2(06)`, `C2(12)`, `C2(0F)`, `C2(08)` → flow/meta/cache (TBD).

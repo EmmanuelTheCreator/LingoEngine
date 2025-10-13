@@ -31,9 +31,9 @@ public class BlLegacyTextReaderTests
                     if (textItem.Format == BlLegacyTextFormatKind.Xmed)
                     {
                         var path = TestContextHarness.GetAssetPath(folder+"/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.txt");
-                        //if (File.Exists(path))
-                        //    continue;
-                        
+                        if (File.Exists(path))
+                            continue;
+
                         File.WriteAllText(path, textItem.Bytes.ToHexString());
                         var pathBin = TestContextHarness.GetAssetPath(folder+"/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.bin");
                         File.WriteAllBytes(pathBin, textItem.Bytes);
