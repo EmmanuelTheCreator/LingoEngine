@@ -53,6 +53,29 @@ namespace BlingoEngine.IO.Legacy.Texts
         public int SpacingAfter { get; set; }
         public XmedAlignment Alignment { get; set; } = XmedAlignment.Left;
         public List<int> TabStops { get; } = new();
+
+        public XmedParagraphDescriptor Clone()
+        {
+            var copy = new XmedParagraphDescriptor
+            {
+                Start = Start,
+                Length = Length,
+                LeftMargin = LeftMargin,
+                RightMargin = RightMargin,
+                FirstLineIndent = FirstLineIndent,
+                AdditionalIndent = AdditionalIndent,
+                SpacingBefore = SpacingBefore,
+                SpacingAfter = SpacingAfter,
+                Alignment = Alignment
+            };
+
+            if (TabStops.Count > 0)
+            {
+                copy.TabStops.AddRange(TabStops);
+            }
+
+            return copy;
+        }
     }
 
     /// <summary>Legacy rect for old rich text streams.</summary>

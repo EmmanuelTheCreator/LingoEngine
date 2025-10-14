@@ -43,10 +43,9 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadRuns(ref int index)
+        public void ReadRuns(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             int? pendingEnd = null;
 
             foreach (var token in reader.GetFlatValues())
@@ -75,14 +74,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                     pendingEnd = null;
                 }
             }
-
-            index = reader.Position;
         }
 
-        public void ReadParagraphFlags(ref int index)
+        public void ReadParagraphFlags(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             int? pendingEnd = null;
 
             foreach (var token in reader.GetFlatValues())
@@ -104,19 +100,15 @@ namespace BlingoEngine.IO.Legacy.Texts
                     pendingEnd = null;
                 }
             }
-
-            index = reader.Position;
         }
 
-        public void ReadParagraphSpacing(ref int index)
+        public void ReadParagraphSpacing(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
-            ReadParagraphSpacing(reader);
-            index = reader.Position;
+            reader.Skip();
+            ReadParagraphSpacingInternal(reader);
         }
 
-        private void ReadParagraphSpacing(BlXmedTokenReader reader)
+        private void ReadParagraphSpacingInternal(BlXmedTokenReader reader)
         {
             var values = reader.GetNumericValues();
             if (values.Count == 0)
@@ -133,23 +125,19 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadSpacing(ref int index)
+        public void ReadSpacing(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             var values = reader.GetNumericValues();
             if (values.Count > 0 && values[0] >= 0)
             {
                 _document.LineSpacing = (uint)values[0];
             }
-
-            index = reader.Position;
         }
 
-        public void ReadBox(ref int index)
+        public void ReadBox(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             var numbers = new List<int>();
             int depth = 0;
 
@@ -209,8 +197,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                 reader.Skip();
             }
 
-            index = reader.Position;
-
             if (numbers.Count >= 2)
             {
                 long width = numbers[1] - numbers[0];
@@ -223,21 +209,25 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadParagraphDescriptor(ref int index)
+        public void ReadParagraphDescriptor(BlXmedTokenReader reader)
         {
-            index++;
-            ParseParagraphBlock(ref index, 0);
+            reader.Skip();
+            ParseParagraphBlock(reader, 0);
         }
 
-        private void ParseParagraphBlock(ref int index, int depth)
+        private void ParseParagraphBlock(BlXmedTokenReader reader, int depth)
         {
             var values = new List<int>();
             var tabStops = new List<int>();
             int fieldIndex = 0;
 
-            while (index < _tokens.Count)
+            while (!reader.IsAtEnd)
             {
-                var token = _tokens[index];
+                var token = reader.Peek();
+                if (token is null)
+                {
+                    break;
+                }
 
                 if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
                 {
@@ -250,34 +240,35 @@ namespace BlingoEngine.IO.Legacy.Texts
                         tabStops.Add(numeric);
                     }
 
-                    index++;
+                    reader.Skip();
                     continue;
                 }
 
                 if (token.IsFieldSeparator())
                 {
                     fieldIndex++;
-                    index++;
+                    reader.Skip();
                     continue;
                 }
 
                 if (token.IsFieldTerminator())
                 {
-                    index++;
+                    reader.Skip();
                     FinalizeParagraphDescriptor(values, tabStops);
                     return;
                 }
 
                 if (token.IsC1())
                 {
+                    _styleParser.TrackStyleMarker(token);
+                    reader.Skip();
+
                     if (token.TypeValue == 0x03)
                     {
-                        index++;
-                        ParseParagraphBlock(ref index, depth + 1);
+                        ParseParagraphBlock(reader, depth + 1);
                         continue;
                     }
 
-                    _styleParser.TrackStyleMarker(token);
                     if (token.TypeValue == 0x1C)
                     {
                         _styleParser.MarkStyleFlag(style =>
@@ -295,7 +286,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                         });
                     }
 
-                    index++;
                     continue;
                 }
 
@@ -303,21 +293,24 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     if (token.TypeValue == 0x03)
                     {
-                        ReadParagraphSpacing(ref index);
+                        ReadParagraphSpacing(reader);
                         continue;
                     }
 
-                    index++;
+                    reader.Skip();
                     continue;
                 }
 
                 if (token.IsBlockBoundary())
                 {
-                    FinalizeParagraphDescriptor(values, tabStops);
+                    if (depth == 0)
+                    {
+                        FinalizeParagraphDescriptor(values, tabStops);
+                    }
                     return;
                 }
 
-                index++;
+                reader.Skip();
             }
 
             FinalizeParagraphDescriptor(values, tabStops);
@@ -369,21 +362,6 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             values.Clear();
             tabStops.Clear();
-        }
-
-        public void ReadEditable(ref int index)
-        {
-            _styleParser.ReadEditable(ref index);
-        }
-
-        public void ReadTabs(ref int index)
-        {
-            _styleParser.ReadTabs(ref index);
-        }
-
-        public void ReadColor(ref int index)
-        {
-            _styleParser.ReadColor(ref index);
         }
 
         public void CollectParagraphDescriptorsFromTokens()
@@ -757,7 +735,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         private void BuildParagraphs(List<ParagraphSlice> paragraphSlices, XmedStyleDescriptor baseStyle)
         {
             var descriptors = _paragraphDescriptors
-                .Select(CloneParagraphDescriptor)
+                .Select(descriptor => descriptor.Clone())
                 .ToList();
 
             if (descriptors.Count < paragraphSlices.Count)
@@ -933,27 +911,6 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
 
             return spans;
-        }
-
-        private static XmedParagraphDescriptor CloneParagraphDescriptor(XmedParagraphDescriptor source)
-        {
-            var descriptor = new XmedParagraphDescriptor
-            {
-                LeftMargin = source.LeftMargin,
-                RightMargin = source.RightMargin,
-                FirstLineIndent = source.FirstLineIndent,
-                AdditionalIndent = source.AdditionalIndent,
-                SpacingBefore = source.SpacingBefore,
-                SpacingAfter = source.SpacingAfter,
-                Alignment = source.Alignment
-            };
-
-            if (source.TabStops.Count > 0)
-            {
-                descriptor.TabStops.AddRange(source.TabStops);
-            }
-
-            return descriptor;
         }
 
         private readonly struct ParagraphSlice

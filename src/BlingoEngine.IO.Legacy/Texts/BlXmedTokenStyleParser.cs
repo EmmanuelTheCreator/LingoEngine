@@ -91,21 +91,31 @@ namespace BlingoEngine.IO.Legacy.Texts
             return false;
         }
 
-        public void ReadStyles(ref int index)
+        public void ReadStyles(BlXmedTokenReader reader)
         {
-            index++;
+            reader.Skip();
             XmedStyleDescriptor? current = null;
             int boolIndex = 0;
             int fieldIndex = 0;
             int blockDepth = 1;
 
-            while (index < _tokens.Count && blockDepth > 0)
+            while (!reader.IsAtEnd && blockDepth > 0)
             {
-                var token = _tokens[index];
+                var lookahead = reader.Peek();
+                if (lookahead is null)
+                {
+                    break;
+                }
 
-                if (token.Type == BlXmedTokenizer.TokenType.Block00 ||
-                    (token.IsPrefixedHex03() && fieldIndex > 0) ||
-                    token.IsCompositeOpen())
+                if (lookahead.Type == BlXmedTokenizer.TokenType.Block00 ||
+                    (lookahead.IsPrefixedHex03() && fieldIndex > 0) ||
+                    lookahead.IsCompositeOpen())
+                {
+                    break;
+                }
+
+                var token = reader.ReadNext();
+                if (token is null)
                 {
                     break;
                 }
@@ -118,36 +128,34 @@ namespace BlingoEngine.IO.Legacy.Texts
                         boolIndex = 0;
                         fieldIndex = 0;
                     }
-                    index++;
+
                     continue;
                 }
 
                 if (token.IsBoolean() && current != null && fieldIndex == 0)
                 {
-                    ApplyBooleanStyle(current, ref boolIndex, token.BoolValue ?? false);
-                    index++;
+                    boolIndex = ApplyBooleanStyle(current, boolIndex, token.BoolValue ?? false);
                     continue;
                 }
 
                 if (token.IsFieldSeparator())
                 {
                     fieldIndex++;
-                    index++;
                     continue;
                 }
 
                 if (token.IsFieldTerminator())
                 {
                     blockDepth--;
-                    index++;
                     if (blockDepth <= 0)
                     {
                         break;
                     }
+
                     continue;
                 }
 
-                if (current != null)
+                if (current is { } descriptor)
                 {
                     if (token.IsPrefixedHex01())
                     {
@@ -155,9 +163,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                         {
                             if (token.TryGetNumericValue(out var parent) && parent >= 0)
                             {
-                                _styleParents[current.StyleId] = parent;
+                                _styleParents[descriptor.StyleId] = parent;
                             }
-                            index++;
+
                             continue;
                         }
 
@@ -165,9 +173,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                         {
                             if (token.TryGetNumericValue(out var color) && color >= 0 && color <= 0xFF)
                             {
-                                current.ColorIndex = (byte)color;
+                                descriptor.ColorIndex = (byte)color;
                             }
-                            index++;
+
                             continue;
                         }
 
@@ -175,22 +183,19 @@ namespace BlingoEngine.IO.Legacy.Texts
                         {
                             if (token.TryGetNumericValue(out var size) && size >= 0)
                             {
-                                current.FontSize = (ushort)Math.Clamp(size, 0, ushort.MaxValue);
+                                descriptor.FontSize = (ushort)Math.Clamp(size, 0, ushort.MaxValue);
                             }
-                            index++;
+
                             continue;
                         }
                     }
 
                     if (token.IsBoolean())
                     {
-                        ApplyBooleanStyle(current, ref boolIndex, token.BoolValue ?? false);
-                        index++;
+                        boolIndex = ApplyBooleanStyle(descriptor, boolIndex, token.BoolValue ?? false);
                         continue;
                     }
                 }
-
-                index++;
             }
 
             if (current != null)
@@ -199,14 +204,14 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadFonts(ref int index)
+        public void ReadFonts(BlXmedTokenReader reader)
         {
-            if (index >= _tokens.Count)
+            var token = reader.Peek();
+            if (token is null)
             {
                 return;
             }
 
-            var token = _tokens[index];
             string name = token.Ascii ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(name) && _fontNames.Add(name))
             {
@@ -224,7 +229,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 descriptor.FontName = name;
             }
 
-            index++;
+            reader.Skip();
         }
 
         public void CollectFontsFromTokens()
@@ -253,12 +258,10 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadTabs(ref int index)
+        public void ReadTabs(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             var values = reader.GetBooleanValues();
-            index = reader.Position;
 
             var baseStyle = GetOrCreateStyle(0);
             if (values.Count > 0)
@@ -272,12 +275,10 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadEditable(ref int index)
+        public void ReadEditable(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             var values = reader.GetBooleanValues();
-            index = reader.Position;
 
             if (values.Count > 0)
             {
@@ -286,12 +287,10 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadColor(ref int index)
+        public void ReadColor(BlXmedTokenReader reader)
         {
-            index++;
-            var reader = new BlXmedTokenReader(_tokens, index);
+            reader.Skip();
             var components = reader.GetColorComponents();
-            index = reader.Position;
 
             byte r = components.Count > 0 ? components[0] : (byte)0;
             byte g = components.Count > 1 ? components[1] : (byte)0;
@@ -364,7 +363,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             return null;
         }
 
-        private static void ApplyBooleanStyle(XmedStyleDescriptor style, ref int index, bool value)
+        private static int ApplyBooleanStyle(XmedStyleDescriptor style, int index, bool value)
         {
             switch (index)
             {
@@ -394,7 +393,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     break;
             }
 
-            index++;
+            return index + 1;
         }
 
         private void ApplyParentChain(int styleId, HashSet<int> visited)

@@ -2,20 +2,31 @@ using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Texts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
 // Each test targets a specific XMED sample under Texts_Fields.
 // The assertions reconstruct the member text exclusively from the parsed runs.
+
 public class XmedFileTest
 {
-    private readonly ILogger _logger = NullLogger.Instance;
+    private readonly ILogger<XmedFileTest> _logger;
+
+    public XmedFileTest(ITestOutputHelper output)
+    {
+        var factory = LoggerFactory.Create(builder =>
+        {
+            builder.AddProvider(new XunitLoggerProvider(output));
+        });
+
+        _logger = factory.CreateLogger<XmedFileTest>();
+    }
 
     [Fact]
     public void Text_Hallo_tab_true_file_should_report_tabs()

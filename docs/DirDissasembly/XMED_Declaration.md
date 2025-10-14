@@ -99,25 +99,33 @@ Color indices appear as short tokens near style entries; examples seen:
 
 **Examples:**
 - Bordeau: mixed ASCII/binary; missing G,B ⇒ **880000**.
+- Binary tokens use two hex bytes per channel: `01:FF00` ⇒ value `0xFF` (ignore the padding `00`).
+- Mixed stream: `01:FF00 81 01:CC00 81 01:6600` ⇒ RGB `#FFCC66`.
 
 ### Color channels: missing values
 
 Rule:
 - Colors are inside `C1(04) … 82`.
 - Channels come as `01:<R> [81] 01:<G> [81] 01:<B>`.
-- When a channel token is **absent**, its value is **0** (default). No padding step needed.
-- Numeric tokens can be ASCII (`01:FF`) or two-byte hex (`01:FF00` → `0xFF`). Always take the **high byte**.
+- When a channel token is **absent**, its value is **0** (default).
+- Numeric tokens can be ASCII (`01:FF`) or two-byte hex (`01:FF00`). Always take the **high byte** and ignore the padding byte.
 
 Pseudocode:
 ```
 (r,g,b) = (0,0,0)
-read until 82:
-  if token == 01:<v> and expecting R then r=v
-  else if token == 01:<v> and expecting G then g=v
-  else if token == 01:<v> and expecting B then b=v
-  if token == 81 continue
+channel = 0
+while token != 82:
+  if token == 01:<v>:
+    component = high_byte(v)
+    if channel == 0: r = component
+    elif channel == 1: g = component
+    elif channel == 2: b = component
+    channel = min(channel + 1, 2)
+  elif token == 81:
+    continue
+  token = next_token()
 ```
-Works for ASCII-hex and binary forms.
+Works for ASCII-hex and binary forms; missing channels stay at zero.
 
 ## Line/Paragraph Metrics (observed)
 `03:000C` varies in the 2-line/line-space sample. Treat as paragraph metrics (line spacing, before/after).
