@@ -46,223 +46,170 @@ namespace BlingoEngine.IO.Legacy.Texts
         public void ReadRuns(ref int index)
         {
             index++;
+            var reader = new BlXmedTokenReader(_tokens, index);
             int? pendingEnd = null;
-            while (index < _tokens.Count)
+
+            foreach (var token in reader.GetFlatValues())
             {
-                var token = _tokens[index];
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03)
-                {
-                    break;
-                }
-
-                if (token.IsBlockBoundary())
-                {
-                    break;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x02 &&
-                    token.TryGetNumericValue(out var end))
+                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var end))
                 {
                     pendingEnd = end;
-                    index++;
                     continue;
                 }
 
-                if (pendingEnd.HasValue)
+                if (!pendingEnd.HasValue)
                 {
-                    if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x01 &&
-                        token.TryGetNumericValue(out var styleId))
-                    {
-                        _runBoundaries.Add((pendingEnd.Value, styleId));
-                        pendingEnd = null;
-                        index++;
-                        continue;
-                    }
-
-                    if (token.Type == BlXmedTokenizer.TokenType.Boolean)
-                    {
-                        int boolStyle = token.BoolValue == true ? 1 : 0;
-                        _runBoundaries.Add((pendingEnd.Value, boolStyle));
-                        pendingEnd = null;
-                        index++;
-                        continue;
-                    }
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_81 || token.Type == BlXmedTokenizer.TokenType.B_82)
-                {
-                    index++;
                     continue;
                 }
 
-                index++;
+                if (token.IsPrefixedHex01() && token.TryGetNumericValue(out var styleId))
+                {
+                    _runBoundaries.Add((pendingEnd.Value, styleId));
+                    pendingEnd = null;
+                    continue;
+                }
+
+                if (token.IsBoolean() && token.TryGetBoolean(out var boolValue))
+                {
+                    _runBoundaries.Add((pendingEnd.Value, boolValue ? 1 : 0));
+                    pendingEnd = null;
+                }
             }
+
+            index = reader.Position;
         }
 
         public void ReadParagraphFlags(ref int index)
         {
             index++;
+            var reader = new BlXmedTokenReader(_tokens, index);
             int? pendingEnd = null;
-            while (index < _tokens.Count)
+
+            foreach (var token in reader.GetFlatValues())
             {
-                var token = _tokens[index];
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03)
-                {
-                    break;
-                }
-
-                if (token.IsBlockBoundary())
-                {
-                    break;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x02 &&
-                    token.TryGetNumericValue(out var end))
+                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var end))
                 {
                     pendingEnd = end;
-                    index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.Boolean && pendingEnd.HasValue)
+                if (!pendingEnd.HasValue)
                 {
-                    bool flag = token.BoolValue ?? false;
+                    continue;
+                }
+
+                if (token.IsBoolean() && token.TryGetBoolean(out var flag))
+                {
                     _paragraphFlags.Add((pendingEnd.Value, flag));
                     pendingEnd = null;
-                    index++;
-                    continue;
                 }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_81 || token.Type == BlXmedTokenizer.TokenType.B_82)
-                {
-                    index++;
-                    continue;
-                }
-
-                index++;
             }
+
+            index = reader.Position;
         }
 
         public void ReadParagraphSpacing(ref int index)
         {
             index++;
-            var values = new List<int>();
-            while (index < _tokens.Count)
-            {
-                var token = _tokens[index];
+            var reader = new BlXmedTokenReader(_tokens, index);
+            ReadParagraphSpacing(reader);
+            index = reader.Position;
+        }
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
-                    token.TypeValue == 0x02 &&
-                    token.TryGetNumericValue(out var numeric))
-                {
-                    values.Add(numeric);
-                    index++;
-                    continue;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
-                {
-                    index++;
-                    continue;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
-                {
-                    index++;
-                    break;
-                }
-
-                if (token.IsBlockBoundary())
-                {
-                    break;
-                }
-
-                index++;
-            }
-
+        private void ReadParagraphSpacing(BlXmedTokenReader reader)
+        {
+            var values = reader.GetNumericValues();
             if (values.Count == 0)
             {
                 return;
             }
 
-            if (values[0] >= -512 && values[0] <= 0x2000 &&
-                values.ElementAtOrDefault(1) >= -512 && values.ElementAtOrDefault(1) <= 0x2000)
+            int before = values.Count > 0 ? values[0] : 0;
+            int after = values.Count > 1 ? values[1] : 0;
+
+            if (before >= -512 && before <= 0x2000 && after >= -512 && after <= 0x2000)
             {
-                _paragraphSpacing.Add((values.ElementAtOrDefault(0), values.ElementAtOrDefault(1)));
+                _paragraphSpacing.Add((before, after));
             }
         }
 
         public void ReadSpacing(ref int index)
         {
             index++;
-            if (index < _tokens.Count &&
-                _tokens[index].Type == BlXmedTokenizer.TokenType.PrefixedHex &&
-                _tokens[index].TypeValue == 0x02 &&
-                _tokens[index].TryGetNumericValue(out var spacing) && spacing >= 0)
+            var reader = new BlXmedTokenReader(_tokens, index);
+            var values = reader.GetNumericValues();
+            if (values.Count > 0 && values[0] >= 0)
             {
-                _document.LineSpacing = (uint)spacing;
+                _document.LineSpacing = (uint)values[0];
             }
 
-            while (index < _tokens.Count)
-            {
-                var token = _tokens[index];
-                if (token.IsBlockBoundary())
-                {
-                    break;
-                }
-
-                index++;
-            }
+            index = reader.Position;
         }
 
         public void ReadBox(ref int index)
         {
             index++;
+            var reader = new BlXmedTokenReader(_tokens, index);
             var numbers = new List<int>();
             int depth = 0;
-            while (index < _tokens.Count)
+
+            while (!reader.IsAtEnd)
             {
-                var token = _tokens[index];
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x02 &&
-                    token.TryGetNumericValue(out var value))
+                var token = reader.Peek();
+                if (token is null)
+                {
+                    break;
+                }
+
+                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var value))
                 {
                     numbers.Add(value);
-                    index++;
+                    reader.Skip();
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C1 || token.Type == BlXmedTokenizer.TokenType.C2)
+                if (token.IsC1())
                 {
-                    if (token.Type == BlXmedTokenizer.TokenType.C1)
-                    {
-                        _styleParser.TrackStyleMarker(token);
-                    }
+                    _styleParser.TrackStyleMarker(token);
                     depth++;
-                    index++;
+                    reader.Skip();
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                if (token.IsC2())
                 {
+                    depth++;
+                    reader.Skip();
+                    continue;
+                }
+
+                if (token.IsFieldTerminator())
+                {
+                    reader.Skip();
                     if (depth == 0)
                     {
-                        index++;
                         break;
                     }
 
                     depth--;
-                    index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81 || token.Type == BlXmedTokenizer.TokenType.Boolean)
+                if (token.IsFieldSeparator() || token.IsBoolean())
                 {
-                    index++;
+                    reader.Skip();
                     continue;
                 }
 
-                index++;
+                if (token.IsBlockBoundary())
+                {
+                    break;
+                }
+
+                reader.Skip();
             }
+
+            index = reader.Position;
 
             if (numbers.Count >= 2)
             {
@@ -292,9 +239,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var token = _tokens[index];
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
-                    token.TypeValue == 0x02 &&
-                    token.TryGetNumericValue(out var numeric))
+                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
                 {
                     if (fieldIndex < 4)
                     {
@@ -309,21 +254,21 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                if (token.IsFieldSeparator())
                 {
                     fieldIndex++;
                     index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                if (token.IsFieldTerminator())
                 {
                     index++;
                     FinalizeParagraphDescriptor(values, tabStops);
                     return;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C1)
+                if (token.IsC1())
                 {
                     if (token.TypeValue == 0x03)
                     {
@@ -354,7 +299,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C2)
+                if (token.IsC2())
                 {
                     if (token.TypeValue == 0x03)
                     {
@@ -387,17 +332,37 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return;
             }
 
+            bool IsWithinRange(int value) => value >= -512 && value <= 0x2000;
+
+            int leftRaw = values.ElementAtOrDefault(0);
+            int rightRaw = values.ElementAtOrDefault(1);
+            int firstLineRaw = values.ElementAtOrDefault(2);
+
+            if (!IsWithinRange(leftRaw) || !IsWithinRange(rightRaw) || !IsWithinRange(firstLineRaw))
+            {
+                values.Clear();
+                tabStops.Clear();
+                return;
+            }
+
+            static int Normalize(int value) => value < 0 ? 0 : Math.Min(value, 0x2000);
+
             var descriptor = new XmedParagraphDescriptor
             {
-                LeftMargin = values.ElementAtOrDefault(0),
-                RightMargin = values.ElementAtOrDefault(1),
-                FirstLineIndent = values.ElementAtOrDefault(2),
-                AdditionalIndent = values.Count > 3 ? values[3] : null
+                LeftMargin = Normalize(leftRaw),
+                RightMargin = Normalize(rightRaw),
+                FirstLineIndent = Normalize(firstLineRaw),
+                AdditionalIndent = values.Count > 3 && IsWithinRange(values[3])
+                    ? Normalize(values[3])
+                    : null
             };
 
             if (tabStops.Count > 0)
             {
-                descriptor.TabStops.AddRange(tabStops);
+                foreach (int stop in tabStops.Where(IsWithinRange))
+                {
+                    descriptor.TabStops.Add(Normalize(stop));
+                }
             }
 
             _paragraphDescriptors.Add(descriptor);
@@ -434,7 +399,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             for (int i = 0; i < _tokens.Count; i++)
             {
                 var token = _tokens[i];
-                if (token.Type == BlXmedTokenizer.TokenType.C1 && token.TypeValue == 0x03)
+                if (token.IsCompositeC1(0x03))
                 {
                     if (TryExtractParagraphDescriptor(i, out var descriptor, out var endIndex) && descriptor != null)
                     {
@@ -494,7 +459,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
 
             var token = _tokens[startIndex];
-            if (token.Type != BlXmedTokenizer.TokenType.C2 || token.TypeValue != 0x03)
+            if (!token.IsCompositeC2(0x03))
             {
                 return false;
             }
@@ -506,22 +471,20 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var current = _tokens[index];
 
-                if (current.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
-                    current.TypeValue == 0x02 &&
-                    current.TryGetNumericValue(out var numeric))
+                if (current.IsPrefixedHex02() && current.TryGetNumericValue(out var numeric))
                 {
                     values.Add(numeric);
                     index++;
                     continue;
                 }
 
-                if (current.Type == BlXmedTokenizer.TokenType.B_81)
+                if (current.IsFieldSeparator())
                 {
                     index++;
                     continue;
                 }
 
-                if (current.Type == BlXmedTokenizer.TokenType.B_82)
+                if (current.IsFieldTerminator())
                 {
                     index++;
                     break;
@@ -560,20 +523,20 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var token = _tokens[index];
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                if (token.IsFieldSeparator())
                 {
                     index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C1 && token.TypeValue == 0x03)
+                if (token.IsCompositeC1(0x03))
                 {
                     depth++;
                     index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                if (token.IsFieldTerminator())
                 {
                     if (depth == 0)
                     {
@@ -586,7 +549,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C2)
+                if (token.IsC2())
                 {
                     if (depth == 0 &&
                         token.TypeValue == 0x03 &&
@@ -605,9 +568,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
-                    token.TypeValue == 0x02 &&
-                    token.TryGetNumericValue(out var numeric))
+                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
                 {
                     if (depth == 0)
                     {

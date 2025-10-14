@@ -90,6 +90,35 @@ Order matches style references (e.g., Arial, Tahoma, Terminal, Vivaldi, Arcade*)
 Color indices appear as short tokens near style entries; examples seen:
 `01:FF00` (red), `01:CC00`, `01:6600`. Use alongside 0006 to apply per run.
 
+## 🎨 Color Parsing
+
+**Location:** inside a style composite `C1(04) … 82`.
+
+**Grammar (tokens):**
+- `C1(xx)` = open; `81` = next field; `82` = close; `01:<v>` = value.
+
+**Examples:**
+- Bordeau: mixed ASCII/binary; missing G,B ⇒ **880000**.
+
+### Color channels: missing values
+
+Rule:
+- Colors are inside `C1(04) … 82`.
+- Channels come as `01:<R> [81] 01:<G> [81] 01:<B>`.
+- When a channel token is **absent**, its value is **0** (default). No padding step needed.
+- Numeric tokens can be ASCII (`01:FF`) or two-byte hex (`01:FF00` → `0xFF`). Always take the **high byte**.
+
+Pseudocode:
+```
+(r,g,b) = (0,0,0)
+read until 82:
+  if token == 01:<v> and expecting R then r=v
+  else if token == 01:<v> and expecting G then g=v
+  else if token == 01:<v> and expecting B then b=v
+  if token == 81 continue
+```
+Works for ASCII-hex and binary forms.
+
 ## Line/Paragraph Metrics (observed)
 `03:000C` varies in the 2-line/line-space sample. Treat as paragraph metrics (line spacing, before/after).
 

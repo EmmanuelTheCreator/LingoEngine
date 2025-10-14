@@ -104,14 +104,13 @@ namespace BlingoEngine.IO.Legacy.Texts
                 var token = _tokens[index];
 
                 if (token.Type == BlXmedTokenizer.TokenType.Block00 ||
-                    (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03 && fieldIndex > 0) ||
-                    token.Type == BlXmedTokenizer.TokenType.C1 ||
-                    token.Type == BlXmedTokenizer.TokenType.C2)
+                    (token.IsPrefixedHex03() && fieldIndex > 0) ||
+                    token.IsCompositeOpen())
                 {
                     break;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x01 && current == null)
+                if (token.IsPrefixedHex01() && current == null)
                 {
                     if (token.TryGetNumericValue(out var styleId))
                     {
@@ -123,21 +122,21 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.Boolean && current != null && fieldIndex == 0)
+                if (token.IsBoolean() && current != null && fieldIndex == 0)
                 {
                     ApplyBooleanStyle(current, ref boolIndex, token.BoolValue ?? false);
                     index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                if (token.IsFieldSeparator())
                 {
                     fieldIndex++;
                     index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                if (token.IsFieldTerminator())
                 {
                     blockDepth--;
                     index++;
@@ -150,7 +149,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 if (current != null)
                 {
-                    if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x01)
+                    if (token.IsPrefixedHex01())
                     {
                         if (fieldIndex == 1)
                         {
@@ -183,7 +182,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         }
                     }
 
-                    if (token.Type == BlXmedTokenizer.TokenType.Boolean)
+                    if (token.IsBoolean())
                     {
                         ApplyBooleanStyle(current, ref boolIndex, token.BoolValue ?? false);
                         index++;
@@ -257,130 +256,48 @@ namespace BlingoEngine.IO.Legacy.Texts
         public void ReadTabs(ref int index)
         {
             index++;
-            bool? tabsEnabled = null;
-            bool? wrapEnabled = null;
-
-            while (index < _tokens.Count)
-            {
-                var token = _tokens[index];
-                if (token.Type == BlXmedTokenizer.TokenType.Boolean)
-                {
-                    if (tabsEnabled == null)
-                    {
-                        tabsEnabled = token.BoolValue;
-                    }
-                    else if (wrapEnabled == null)
-                    {
-                        wrapEnabled = token.BoolValue;
-                    }
-
-                    index++;
-                    continue;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
-                {
-                    index++;
-                    continue;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_82 ||
-                    token.Type == BlXmedTokenizer.TokenType.Block00 ||
-                    token.Type == BlXmedTokenizer.TokenType.C1 ||
-                    token.Type == BlXmedTokenizer.TokenType.C2 ||
-                    (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03))
-                {
-                    break;
-                }
-
-                index++;
-            }
+            var reader = new BlXmedTokenReader(_tokens, index);
+            var values = reader.GetBooleanValues();
+            index = reader.Position;
 
             var baseStyle = GetOrCreateStyle(0);
-            if (tabsEnabled.HasValue)
+            if (values.Count > 0)
             {
-                baseStyle.HasTabs = tabsEnabled.Value;
+                baseStyle.HasTabs = values[0];
             }
 
-            if (wrapEnabled.HasValue)
+            if (values.Count > 1)
             {
-                baseStyle.WrapOff = !wrapEnabled.Value;
+                baseStyle.WrapOff = !values[1];
             }
         }
 
         public void ReadEditable(ref int index)
         {
             index++;
-            bool? editable = null;
-            while (index < _tokens.Count)
-            {
-                var token = _tokens[index];
-                if (token.Type == BlXmedTokenizer.TokenType.Boolean)
-                {
-                    editable = token.BoolValue;
-                    index++;
-                    continue;
-                }
+            var reader = new BlXmedTokenReader(_tokens, index);
+            var values = reader.GetBooleanValues();
+            index = reader.Position;
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
-                {
-                    index++;
-                    continue;
-                }
-
-                if (token.Type == BlXmedTokenizer.TokenType.B_82 ||
-                    token.Type == BlXmedTokenizer.TokenType.Block00 ||
-                    token.Type == BlXmedTokenizer.TokenType.C1 ||
-                    token.Type == BlXmedTokenizer.TokenType.C2 ||
-                    (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03))
-                {
-                    break;
-                }
-
-                index++;
-            }
-
-            if (editable.HasValue)
+            if (values.Count > 0)
             {
                 var baseStyle = GetOrCreateStyle(0);
-                baseStyle.EditableField = editable.Value;
+                baseStyle.EditableField = values[0];
             }
         }
 
         public void ReadColor(ref int index)
         {
             index++;
-            var components = new List<byte>();
-            while (index < _tokens.Count)
-            {
-                var token = _tokens[index];
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
-                {
-                    index++;
-                    break;
-                }
+            var reader = new BlXmedTokenReader(_tokens, index);
+            var components = reader.GetColorComponents();
+            index = reader.Position;
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
-                {
-                    index++;
-                    continue;
-                }
+            byte r = components.Count > 0 ? components[0] : (byte)0;
+            byte g = components.Count > 1 ? components[1] : (byte)0;
+            byte b = components.Count > 2 ? components[2] : (byte)0;
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x01 &&
-                    token.TryGetColorComponent(out var component))
-                {
-                    components.Add(component);
-                    index++;
-                    continue;
-                }
-
-                index++;
-            }
-
-            if (components.Count >= 3)
-            {
-                ActiveColor = new BlLegacyColor(components[0], components[1], components[2]);
-            }
+            ActiveColor = new BlLegacyColor(r, g, b);
         }
 
         public void FinalizeStyles(XmedDocument document)

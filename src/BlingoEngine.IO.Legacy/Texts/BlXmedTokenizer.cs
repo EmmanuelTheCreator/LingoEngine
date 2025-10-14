@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -14,10 +16,45 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             public bool IsBlockBoundary()
             {
-                return Type == TokenType.Block00 ||
-                       (Type == TokenType.PrefixedHex && TypeValue == 0x03) ||
-                       Type == TokenType.C1 ||
-                       Type == TokenType.C2;
+                return Type == TokenType.Block00 || IsPrefixedHex(0x03) || Type == TokenType.C1 || Type == TokenType.C2;
+            }
+
+            public bool IsFieldSeparator() => Type == TokenType.B_81;
+
+            public bool IsFieldTerminator() => Type == TokenType.B_82;
+
+            public bool IsBoolean() => Type == TokenType.Boolean;
+
+            public bool IsPrefixedHex(byte expectedType) => Type == TokenType.PrefixedHex && TypeValue == expectedType;
+
+            public bool IsPrefixedHex01() => IsPrefixedHex(0x01);
+
+            public bool IsPrefixedHex02() => IsPrefixedHex(0x02);
+
+            public bool IsPrefixedHex03() => IsPrefixedHex(0x03);
+
+            public bool IsCompositeC1(byte id) => Type == TokenType.C1 && TypeValue == id;
+
+            public bool IsCompositeC2(byte id) => Type == TokenType.C2 && TypeValue == id;
+
+            public bool IsCompositeOpen() => Type == TokenType.C1 || Type == TokenType.C2 || Type == TokenType.C3;
+
+            public bool IsC1() => Type == TokenType.C1;
+
+            public bool IsC2() => Type == TokenType.C2;
+
+            public bool IsAsciiValue(string value) => Type == TokenType.Ascii && string.Equals(Ascii, value, StringComparison.OrdinalIgnoreCase);
+
+            public bool TryGetBoolean(out bool value)
+            {
+                if (!IsBoolean() || BoolValue is null)
+                {
+                    value = false;
+                    return false;
+                }
+
+                value = BoolValue.Value;
+                return true;
             }
 
             public bool TryGetNumericValue(out int value)
@@ -70,6 +107,36 @@ namespace BlingoEngine.IO.Legacy.Texts
                 }
 
                 return byte.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out component);
+            }
+
+            public IReadOnlyList<int> ReadBlock00Numbers()
+            {
+                if (Type != TokenType.Block00)
+                {
+                    return Array.Empty<int>();
+                }
+
+                var payload = Data ?? Array.Empty<byte>();
+                if (payload.Length == 0)
+                {
+                    return Array.Empty<int>();
+                }
+
+                var values = new List<int>();
+                int offset = 0;
+                while (offset + 3 < payload.Length)
+                {
+                    if (payload[offset] != 0x01)
+                    {
+                        offset++;
+                        continue;
+                    }
+
+                    values.Add(payload[offset + 1]);
+                    offset += 4;
+                }
+
+                return values;
             }
         }
 
@@ -202,7 +269,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 tokens.Add(new Token(TokenType.Byte, i, 1));
                 i++;
             }
-            var lastNumbers = ParseLastBlock00Numbers(a00Tokens.Last());
+            var lastNumbers = a00Tokens.LastOrDefault()?.ReadBlock00Numbers()?.ToList() ?? new List<int>();
             return (tokens, lastNumbers);
         }
 
@@ -278,20 +345,6 @@ namespace BlingoEngine.IO.Legacy.Texts
             return (texts, lastBlock);
         }
 
-        public static List<int> ParseLastBlock00Numbers(Token token)
-        {
-            var last = token.Data ?? Array.Empty<byte>();
-            var list = new List<int>();
-            int i = 0;
-            while (i + 3 < last.Length)
-            {
-                if (last[i] != 0x01) { i++; continue; }   // skip noise
-                list.Add(last[i + 1]);                    // code byte
-                i += 4;                                   // 01 XX 00 00
-            }
-            return list;
-        }
-
         public static string DumpTokensCompact(List<BlXmedTokenizer.Token> tokens)
         {
             var sb = new StringBuilder();
@@ -348,7 +401,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         }
                         else
                         {
-                            var lastNumbers = ParseLastBlock00Numbers(t);
+                            var lastNumbers = t.ReadBlock00Numbers();
                             sb.Append($"00({t.Value}):{string.Join(',', lastNumbers)}");
                             sb.AppendLine();
                         }

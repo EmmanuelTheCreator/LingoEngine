@@ -57,7 +57,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     break;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x02 && token.Ascii is { } numeric)
+                if (token.IsPrefixedHex02() && token.Ascii is { } numeric)
                 {
                     if (numeric.Equals("40001", StringComparison.OrdinalIgnoreCase) || numeric.Equals("40000", StringComparison.OrdinalIgnoreCase))
                     {
@@ -83,7 +83,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x01 &&
+                if (token.IsPrefixedHex01() &&
                     token.Ascii is { } literal && literal.Equals("FFFF", StringComparison.OrdinalIgnoreCase))
                 {
                     LogUnknown("Header", "01:FFFF");
@@ -91,7 +91,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C2)
+                if (token.IsC2())
                 {
                     switch (token.TypeValue)
                     {
@@ -129,7 +129,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     }
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C1)
+                if (token.IsC1())
                 {
                     _styleParser.TrackStyleMarker(token);
                     switch (token.TypeValue)
@@ -189,7 +189,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03)
+                if (token.IsPrefixedHex03())
                 {
                     var ascii = token.Ascii ?? string.Empty;
                     var type = ascii.Length >= 4 ? ascii.Substring(0, 4) : string.Empty;
@@ -215,7 +215,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     }
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C2)
+                if (token.IsC2())
                 {
                     switch (token.TypeValue)
                     {
@@ -253,7 +253,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     }
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.C1)
+                if (token.IsC1())
                 {
                     _styleParser.TrackStyleMarker(token);
                     switch (token.TypeValue)
