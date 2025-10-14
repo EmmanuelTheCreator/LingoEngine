@@ -57,11 +57,24 @@ public class XmedFileTest
     {
         var document = ReadDocument("Text_3_Paragraps_13.xmed.bin");
 
-        //string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
-        ////textFromRuns.ShouldMatchNormalized("My first paragraph centered");
-        //document.Runs.Should().HaveCount(1);
-        //document.Text.Should().Contain("Paragraph with align Left");
-        //document.Text.Count(c => c == '\r').Should().BeGreaterThanOrEqualTo(2);
+        var textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
+        textFromRuns.Should().Be(document.Text);
+
+        var paragraphs = document.Text.Split('\r', StringSplitOptions.None);
+        paragraphs.Should().HaveCount(3);
+        paragraphs[0].Should().Be("My first paragraph centered with all 0");
+        paragraphs[1].Should().Contain("Margin Left 4");
+        paragraphs[1].Should().Contain("Margin Right 5");
+        paragraphs[1].Should().Contain("Spacing Before 9");
+        paragraphs[1].Should().Contain("spacing after 7");
+        paragraphs[2].Should().Contain("Margin Left 1");
+        paragraphs[2].Should().Contain("Margin Right 2");
+        paragraphs[2].Should().Contain("First Indent 0.3inch");
+        paragraphs[2].Should().Contain("Spacing Before 4");
+        paragraphs[2].Should().Contain("spacing after 5");
+
+        document.Text.Count(c => c == '\r').Should().Be(2);
+        document.Runs.Should().HaveCount(1);
     }
 
     [Fact]
