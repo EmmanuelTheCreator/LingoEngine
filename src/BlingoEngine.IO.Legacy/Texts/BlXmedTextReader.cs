@@ -29,13 +29,30 @@ namespace BlingoEngine.IO.Legacy.Texts
     {
         public string Text { get; set; } = string.Empty;
         public List<XmedTextRun> Runs { get; set; } = new();
-        public List<XmedStyleDescriptor> Styles { get; set; } = new(); 
+        public List<XmedStyleDescriptor> Styles { get; set; } = new();
         public List<XmedRunMapEntry> RunMap { get; set; } = new();
+        public List<XmedParagraphDescriptor> Paragraphs { get; set; } = new();
         public uint Width { get; set; }
         public uint LineSpacing { get; set; }
         public int TextLength { get; set; }
         public int DirectorVersion { get; set; }
         public XmedRichTextMetadata? RichText { get; set; }
+    }
+
+    /// <summary>Paragraph-level formatting descriptor.</summary>
+    public sealed class XmedParagraphDescriptor
+    {
+        public int Start { get; set; }
+        public int Length { get; set; }
+        public int End => Start + Length;
+        public int LeftMargin { get; set; }
+        public int RightMargin { get; set; }
+        public int FirstLineIndent { get; set; }
+        public int? AdditionalIndent { get; set; }
+        public int SpacingBefore { get; set; }
+        public int SpacingAfter { get; set; }
+        public XmedAlignment Alignment { get; set; } = XmedAlignment.Left;
+        public List<int> TabStops { get; } = new();
     }
 
     /// <summary>Legacy rect for old rich text streams.</summary>

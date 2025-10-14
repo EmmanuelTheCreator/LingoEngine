@@ -2,12 +2,12 @@ using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Texts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
@@ -15,17 +15,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts;
 // The assertions reconstruct the member text exclusively from the parsed runs.
 public class XmedFileTest
 {
-    private readonly ILogger<XmedFileTest> _logger;
-
-    public XmedFileTest(ITestOutputHelper output)
-    {
-        var factory = LoggerFactory.Create(builder =>
-        {
-            builder.AddProvider(new XunitLoggerProvider(output));
-        });
-
-        _logger = factory.CreateLogger<XmedFileTest>();
-    }
+    private readonly ILogger _logger = NullLogger.Instance;
 
     [Fact]
     public void Text_Hallo_tab_true_file_should_report_tabs()
@@ -57,24 +47,35 @@ public class XmedFileTest
     {
         var document = ReadDocument("Text_3_Paragraps_13.xmed.bin");
 
-        var textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
-        textFromRuns.Should().Be(document.Text);
+        document.Text.Should().Be(string.Concat(document.Runs.Select(run => run.Text)));
 
-        var paragraphs = document.Text.Split('\r', StringSplitOptions.None);
-        paragraphs.Should().HaveCount(3);
-        paragraphs[0].Should().Be("My first paragraph centered with all 0");
-        paragraphs[1].Should().Contain("Margin Left 4");
-        paragraphs[1].Should().Contain("Margin Right 5");
-        paragraphs[1].Should().Contain("Spacing Before 9");
-        paragraphs[1].Should().Contain("spacing after 7");
-        paragraphs[2].Should().Contain("Margin Left 1");
-        paragraphs[2].Should().Contain("Margin Right 2");
-        paragraphs[2].Should().Contain("First Indent 0.3inch");
-        paragraphs[2].Should().Contain("Spacing Before 4");
-        paragraphs[2].Should().Contain("spacing after 5");
+        document.Paragraphs.Should().HaveCount(3);
 
-        document.Text.Count(c => c == '\r').Should().Be(2);
-        document.Runs.Should().HaveCount(1);
+        var paragraphTexts = document.Paragraphs
+            .Select(paragraph => GetParagraphText(document, paragraph))
+            .ToArray();
+
+        paragraphTexts[0].Should().Be("My first paragraph centered with all 0");
+        paragraphTexts[1].Should().Be("Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7");
+        paragraphTexts[2].Should().Be("Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5");
+
+        document.Paragraphs[0].LeftMargin.Should().Be(0);
+        document.Paragraphs[0].RightMargin.Should().Be(0);
+        document.Paragraphs[0].FirstLineIndent.Should().Be(0);
+        document.Paragraphs[0].SpacingBefore.Should().Be(0);
+        document.Paragraphs[0].SpacingAfter.Should().Be(0);
+
+        document.Paragraphs[1].LeftMargin.Should().Be(288);
+        document.Paragraphs[1].RightMargin.Should().Be(360);
+        document.Paragraphs[1].FirstLineIndent.Should().Be(28);
+        document.Paragraphs[1].SpacingBefore.Should().Be(9);
+        document.Paragraphs[1].SpacingAfter.Should().Be(7);
+
+        document.Paragraphs[2].LeftMargin.Should().Be(72);
+        document.Paragraphs[2].RightMargin.Should().Be(144);
+        document.Paragraphs[2].FirstLineIndent.Should().Be(21);
+        document.Paragraphs[2].SpacingBefore.Should().Be(4);
+        document.Paragraphs[2].SpacingAfter.Should().Be(5);
     }
 
     [Fact]
@@ -149,5 +150,21 @@ public class XmedFileTest
             .Where(name => !string.IsNullOrEmpty(name))
             .Select(name => name.ToLowerInvariant())
             .ToArray();
+    }
+
+    private static string GetParagraphText(XmedDocument document, XmedParagraphDescriptor paragraph)
+    {
+        if (string.IsNullOrEmpty(document.Text) || paragraph.Length <= 0 || paragraph.Start < 0)
+        {
+            return string.Empty;
+        }
+
+        if (paragraph.Start >= document.Text.Length)
+        {
+            return string.Empty;
+        }
+
+        int length = Math.Min(paragraph.Length, document.Text.Length - paragraph.Start);
+        return length > 0 ? document.Text.Substring(paragraph.Start, length) : string.Empty;
     }
 }

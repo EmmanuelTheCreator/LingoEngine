@@ -17,6 +17,8 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly List<string> _textBlocks = new();
         private readonly List<(int End, int StyleId)> _runBoundaries = new();
         private readonly List<(int End, bool Flag)> _paragraphFlags = new();
+        private readonly List<XmedParagraphDescriptor> _paragraphDescriptors = new();
+        private readonly List<(int Before, int After)> _paragraphSpacing = new();
         private readonly HashSet<string> _fontNames = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, XmedStyleDescriptor> _stylesById = new();
         private readonly Dictionary<int, int> _styleParents = new();
@@ -45,6 +47,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 _stylesById[0] = new XmedStyleDescriptor { StyleId = 0 };
             }
             ParseBody();
+            CollectParagraphDescriptorsFromTokens();
             CollectFontsFromTokens();
             FinalizeDocument();
 
@@ -101,7 +104,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     switch (token.TypeValue)
                     {
                         case 0x03:
-                            _index++;
+                            ReadParagraphSpacing_C203();
                             continue;
                         case 0x04:
                             ReadSpacing_C204();
@@ -228,6 +231,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     switch (token.TypeValue)
                     {
+                        case 0x03:
+                            ReadParagraphSpacing_C203();
+                            continue;
                         case 0x0A:
                             ReadBox_C20A();
                             continue;
@@ -624,12 +630,111 @@ namespace BlingoEngine.IO.Legacy.Texts
         private void ReadPara_C003()
         {
             _index++;
-            int depth = 0;
+            ParseParagraphBlock(0);
+        }
+
+        private void ReadParagraphSpacing_C203()
+        {
+            _index++;
+            var values = new List<int>();
             while (_index < _tokens.Count)
             {
                 var token = _tokens[_index];
+
+                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
+                    token.TypeValue == 0x02 &&
+                    TryParseTokenValue(token, out var numeric))
+                {
+                    values.Add(numeric);
+                    _index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                {
+                    _index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                {
+                    _index++;
+                    break;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.C1 ||
+                    token.Type == BlXmedTokenizer.TokenType.C2 ||
+                    token.Type == BlXmedTokenizer.TokenType.Block00 ||
+                    (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03))
+                {
+                    break;
+                }
+
+                _index++;
+            }
+
+            if (values.Count == 0)
+            {
+                return;
+            }
+
+            if (values[0] >= -512 && values[0] <= 0x2000 &&
+                values.ElementAtOrDefault(1) >= -512 && values.ElementAtOrDefault(1) <= 0x2000)
+            {
+                _paragraphSpacing.Add((values.ElementAtOrDefault(0), values.ElementAtOrDefault(1)));
+            }
+        }
+
+        private void ParseParagraphBlock(int depth)
+        {
+            var values = new List<int>();
+            var tabStops = new List<int>();
+            int fieldIndex = 0;
+
+            while (_index < _tokens.Count)
+            {
+                var token = _tokens[_index];
+
+                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
+                    token.TypeValue == 0x02 &&
+                    TryParseTokenValue(token, out var numeric))
+                {
+                    if (fieldIndex < 4)
+                    {
+                        values.Add(numeric);
+                    }
+                    else
+                    {
+                        tabStops.Add(numeric);
+                    }
+
+                    _index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                {
+                    fieldIndex++;
+                    _index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                {
+                    _index++;
+                    FinalizeParagraphDescriptor(values, tabStops);
+                    return;
+                }
+
                 if (token.Type == BlXmedTokenizer.TokenType.C1)
                 {
+                    if (token.TypeValue == 0x03)
+                    {
+                        _index++;
+                        ParseParagraphBlock(depth + 1);
+                        continue;
+                    }
+
                     TrackStyleMarker(token);
                     if (token.TypeValue == 0x1C)
                     {
@@ -648,32 +753,61 @@ namespace BlingoEngine.IO.Legacy.Texts
                         });
                     }
 
-                    depth++;
                     _index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                if (token.Type == BlXmedTokenizer.TokenType.C2)
                 {
-                    if (depth == 0)
+                    if (token.TypeValue == 0x03)
                     {
-                        _index++;
-                        break;
+                        ReadParagraphSpacing_C203();
+                        continue;
                     }
 
-                    depth--;
                     _index++;
                     continue;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                if (token.Type == BlXmedTokenizer.TokenType.Block00 ||
+                    (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03))
                 {
-                    _index++;
-                    continue;
+                    FinalizeParagraphDescriptor(values, tabStops);
+                    return;
                 }
 
                 _index++;
             }
+
+            FinalizeParagraphDescriptor(values, tabStops);
+        }
+
+        private void FinalizeParagraphDescriptor(List<int> values, List<int> tabStops)
+        {
+            if (values.Count == 0)
+            {
+                values.Clear();
+                tabStops.Clear();
+                return;
+            }
+
+            var descriptor = new XmedParagraphDescriptor
+            {
+                LeftMargin = values.ElementAtOrDefault(0),
+                RightMargin = values.ElementAtOrDefault(1),
+                FirstLineIndent = values.ElementAtOrDefault(2),
+                AdditionalIndent = values.Count > 3 ? values[3] : null
+            };
+
+            if (tabStops.Count > 0)
+            {
+                descriptor.TabStops.AddRange(tabStops);
+            }
+
+            _paragraphDescriptors.Add(descriptor);
+
+            values.Clear();
+            tabStops.Clear();
         }
 
         private void ReadSpacing_C204()
@@ -913,10 +1047,99 @@ namespace BlingoEngine.IO.Legacy.Texts
             _document.RunMap.AddRange(runEntries);
 
             _document.Runs.Clear();
-            int primaryStyleId = runEntries.Count > 0 ? runEntries[0].StyleId : 0;
-            var primaryDescriptor = _stylesById.TryGetValue(primaryStyleId, out var primary) ? primary : baseStyle;
-            var mergedRun = CreateRun(0, _document.TextLength, _document.Text, primaryDescriptor, baseStyle);
-            _document.Runs.Add(mergedRun);
+            foreach (var entry in runEntries)
+            {
+                if (entry.Length <= 0)
+                {
+                    continue;
+                }
+
+                var descriptor = _stylesById.TryGetValue(entry.StyleId, out var style)
+                    ? style
+                    : baseStyle;
+
+                var run = CreateRun((int)entry.Position, entry.Length, descriptor, baseStyle);
+                _document.Runs.Add(run);
+            }
+
+            if (_document.Runs.Count == 0)
+            {
+                var fallbackRun = CreateRun(0, _document.TextLength, baseStyle, baseStyle);
+                if (fallbackRun.Length > 0)
+                {
+                    _document.Runs.Add(fallbackRun);
+                }
+            }
+
+            var paragraphFlags = new Dictionary<int, bool>();
+            foreach (var (end, flag) in _paragraphFlags)
+            {
+                int clampedEnd = Math.Clamp(end, 0, _document.TextLength);
+                paragraphFlags[clampedEnd] = flag;
+            }
+
+            var spans = ExtractParagraphSpans(_document.Text);
+            if (spans.Count == 0 && _document.TextLength > 0)
+            {
+                spans = new List<(int Start, int Length)> { (0, _document.TextLength) };
+            }
+
+            var descriptorList = _paragraphDescriptors
+                .Select(CloneParagraphDescriptor)
+                .ToList();
+
+            if (descriptorList.Count < spans.Count)
+            {
+                int missing = spans.Count - descriptorList.Count;
+                descriptorList.InsertRange(0, Enumerable.Repeat(new XmedParagraphDescriptor(), missing));
+            }
+            else if (descriptorList.Count > spans.Count)
+            {
+                descriptorList = descriptorList.Skip(descriptorList.Count - spans.Count).ToList();
+            }
+
+            var paragraphQueue = new Queue<XmedParagraphDescriptor>(descriptorList);
+
+            _document.Paragraphs.Clear();
+
+            foreach (var span in spans)
+            {
+                var paragraph = paragraphQueue.Count > 0
+                    ? paragraphQueue.Dequeue()
+                    : new XmedParagraphDescriptor();
+
+                paragraph.Start = span.Start;
+                paragraph.Length = Math.Clamp(span.Length, 0, Math.Max(0, _document.TextLength - span.Start));
+
+                int paragraphEnd = paragraph.Start + paragraph.Length;
+                if (paragraphFlags.TryGetValue(paragraphEnd, out var alignmentFlag))
+                {
+                    paragraph.Alignment = alignmentFlag ? XmedAlignment.Center : XmedAlignment.Left;
+                }
+
+                _document.Paragraphs.Add(paragraph);
+            }
+
+            if (_paragraphSpacing.Count > 0)
+            {
+                var spacing = _paragraphSpacing.ToList();
+                if (spacing.Count < _document.Paragraphs.Count)
+                {
+                    int missing = _document.Paragraphs.Count - spacing.Count;
+                    spacing.InsertRange(0, Enumerable.Repeat((0, 0), missing));
+                }
+                else if (spacing.Count > _document.Paragraphs.Count)
+                {
+                    spacing = spacing.Skip(spacing.Count - _document.Paragraphs.Count).ToList();
+                }
+
+                for (int i = 0; i < _document.Paragraphs.Count && i < spacing.Count; i++)
+                {
+                    var (before, after) = spacing[i];
+                    _document.Paragraphs[i].SpacingBefore = before;
+                    _document.Paragraphs[i].SpacingAfter = after;
+                }
+            }
         }
 
         private void ApplyParentChain(int styleId, HashSet<int> visited)
@@ -971,13 +1194,47 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (child.ColorIndex == 0) child.ColorIndex = parent.ColorIndex;
         }
 
-        private XmedTextRun CreateRun(int start, int length, string text, XmedStyleDescriptor descriptor, XmedStyleDescriptor baseStyle)
+        private static XmedParagraphDescriptor CloneParagraphDescriptor(XmedParagraphDescriptor source)
         {
+            var descriptor = new XmedParagraphDescriptor
+            {
+                LeftMargin = source.LeftMargin,
+                RightMargin = source.RightMargin,
+                FirstLineIndent = source.FirstLineIndent,
+                AdditionalIndent = source.AdditionalIndent,
+                SpacingBefore = source.SpacingBefore,
+                SpacingAfter = source.SpacingAfter,
+                Alignment = source.Alignment
+            };
+
+            if (source.TabStops.Count > 0)
+            {
+                descriptor.TabStops.AddRange(source.TabStops);
+            }
+
+            return descriptor;
+        }
+
+        private XmedTextRun CreateRun(int start, int length, XmedStyleDescriptor descriptor, XmedStyleDescriptor baseStyle)
+        {
+            string runText;
+            if (length <= 0 || start < 0 || start >= _document.Text.Length)
+            {
+                runText = string.Empty;
+                length = 0;
+            }
+            else
+            {
+                int available = Math.Min(length, _document.Text.Length - start);
+                runText = _document.Text.Substring(start, available);
+                length = available;
+            }
+
             return new XmedTextRun
             {
                 Start = start,
                 Length = length,
-                Text = text,
+                Text = runText,
                 FontName = !string.IsNullOrEmpty(descriptor.FontName) ? descriptor.FontName : baseStyle.FontName,
                 FontSize = descriptor.FontSize != 0 ? descriptor.FontSize : baseStyle.FontSize,
                 Bold = descriptor.Bold || baseStyle.Bold,
@@ -1096,6 +1353,273 @@ namespace BlingoEngine.IO.Legacy.Texts
             index++;
         }
 
+        private static List<(int Start, int Length)> ExtractParagraphSpans(string text)
+        {
+            var spans = new List<(int Start, int Length)>();
+            if (string.IsNullOrEmpty(text))
+            {
+                return spans;
+            }
+
+            int start = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\r')
+                {
+                    spans.Add((start, i - start));
+                    start = i + 1;
+                }
+            }
+
+            if (start <= text.Length)
+            {
+                spans.Add((start, text.Length - start));
+            }
+
+            return spans;
+        }
+
+        private void CollectParagraphDescriptorsFromTokens()
+        {
+            if (_tokens.Count == 0)
+            {
+                return;
+            }
+
+            _paragraphSpacing.Clear();
+
+            var descriptors = new List<XmedParagraphDescriptor>();
+            for (int i = 0; i < _tokens.Count; i++)
+            {
+                var token = _tokens[i];
+                if (token.Type == BlXmedTokenizer.TokenType.C1 && token.TypeValue == 0x03)
+                {
+                    if (TryExtractParagraphDescriptor(i, out var descriptor, out var endIndex) && descriptor != null)
+                    {
+                        descriptors.Add(descriptor);
+                        i = endIndex;
+                    }
+                }
+            }
+
+            if (descriptors.Count == 0)
+            {
+                return;
+            }
+
+            if (_paragraphDescriptors.Count < descriptors.Count)
+            {
+                int missing = descriptors.Count - _paragraphDescriptors.Count;
+                for (int i = 0; i < missing; i++)
+                {
+                    _paragraphDescriptors.Insert(0, new XmedParagraphDescriptor());
+                }
+            }
+
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                int targetIndex = _paragraphDescriptors.Count - descriptors.Count + i;
+                if (targetIndex < 0 || targetIndex >= _paragraphDescriptors.Count)
+                {
+                    continue;
+                }
+
+                var target = _paragraphDescriptors[targetIndex];
+                var source = descriptors[i];
+
+                target.LeftMargin = source.LeftMargin;
+                target.RightMargin = source.RightMargin;
+                target.FirstLineIndent = source.FirstLineIndent;
+                target.AdditionalIndent = source.AdditionalIndent;
+                target.Alignment = source.Alignment;
+
+                if (source.TabStops.Count > 0)
+                {
+                    target.TabStops.Clear();
+                    target.TabStops.AddRange(source.TabStops);
+                }
+            }
+        }
+
+        private bool TryExtractParagraphSpacing(int startIndex, out int endIndex, out (int Before, int After)? spacing)
+        {
+            spacing = null;
+            endIndex = startIndex;
+
+            if (startIndex < 0 || startIndex >= _tokens.Count)
+            {
+                return false;
+            }
+
+            var token = _tokens[startIndex];
+            if (token.Type != BlXmedTokenizer.TokenType.C2 || token.TypeValue != 0x03)
+            {
+                return false;
+            }
+
+            var values = new List<int>();
+            int index = startIndex + 1;
+
+            while (index < _tokens.Count)
+            {
+                var current = _tokens[index];
+
+                if (current.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
+                    current.TypeValue == 0x02 &&
+                    TryParseTokenValue(current, out var numeric))
+                {
+                    values.Add(numeric);
+                    index++;
+                    continue;
+                }
+
+                if (current.Type == BlXmedTokenizer.TokenType.B_81)
+                {
+                    index++;
+                    continue;
+                }
+
+                if (current.Type == BlXmedTokenizer.TokenType.B_82)
+                {
+                    index++;
+                    break;
+                }
+
+                if (current.Type == BlXmedTokenizer.TokenType.C1 ||
+                    current.Type == BlXmedTokenizer.TokenType.C2 ||
+                    current.Type == BlXmedTokenizer.TokenType.Block00 ||
+                    (current.Type == BlXmedTokenizer.TokenType.PrefixedHex && current.TypeValue == 0x03))
+                {
+                    break;
+                }
+
+                index++;
+            }
+
+            endIndex = Math.Max(startIndex, index - 1);
+
+            if (values.Count > 0 &&
+                values[0] >= -512 && values[0] <= 0x2000 &&
+                values.ElementAtOrDefault(1) >= -512 && values.ElementAtOrDefault(1) <= 0x2000)
+            {
+                spacing = (values.ElementAtOrDefault(0), values.ElementAtOrDefault(1));
+            }
+
+            return true;
+        }
+
+        private bool TryExtractParagraphDescriptor(int startIndex, out XmedParagraphDescriptor? descriptor, out int endIndex)
+        {
+            descriptor = null;
+            endIndex = startIndex;
+            var values = new List<int>();
+            var tabStops = new List<int>();
+            int depth = 0;
+            int index = startIndex + 1;
+
+            while (index < _tokens.Count)
+            {
+                var token = _tokens[index];
+
+                if (token.Type == BlXmedTokenizer.TokenType.B_81)
+                {
+                    index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.C1 && token.TypeValue == 0x03)
+                {
+                    depth++;
+                    index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.B_82)
+                {
+                    if (depth == 0)
+                    {
+                        index++;
+                        break;
+                    }
+
+                    depth--;
+                    index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.C2)
+                {
+                    if (depth == 0 &&
+                        token.TypeValue == 0x03 &&
+                        TryExtractParagraphSpacing(index, out var spacingEndIndex, out var spacing))
+                    {
+                        if (spacing.HasValue)
+                        {
+                            _paragraphSpacing.Add(spacing.Value);
+                        }
+
+                        index = spacingEndIndex + 1;
+                        continue;
+                    }
+
+                    index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.PrefixedHex &&
+                    token.TypeValue == 0x02 &&
+                    TryParseTokenValue(token, out var numeric))
+                {
+                    if (depth == 0)
+                    {
+                        if (values.Count < 4)
+                        {
+                            values.Add(numeric);
+                        }
+                        else
+                        {
+                            tabStops.Add(numeric);
+                        }
+                    }
+
+                    index++;
+                    continue;
+                }
+
+                if (token.Type == BlXmedTokenizer.TokenType.Block00 ||
+                    (token.Type == BlXmedTokenizer.TokenType.PrefixedHex && token.TypeValue == 0x03))
+                {
+                    break;
+                }
+
+                index++;
+            }
+
+            endIndex = Math.Max(startIndex, index - 1);
+
+            if (values.Count >= 3 &&
+                values[0] >= -512 && values[0] <= 0x2000 &&
+                values[2] >= -512 && values[2] <= 0x2000)
+            {
+                descriptor = new XmedParagraphDescriptor
+                {
+                    LeftMargin = values.ElementAtOrDefault(0),
+                    RightMargin = values.ElementAtOrDefault(1),
+                    FirstLineIndent = values.ElementAtOrDefault(2),
+                    AdditionalIndent = values.Count > 3 ? values[3] : null
+                };
+
+                if (tabStops.Count > 0)
+                {
+                    descriptor.TabStops.AddRange(tabStops);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         private void LogUnknown(string category, string token)
         {
             _logger?.LogDebug("XMED: {Category} unknown token {Token}", category, token);
@@ -1161,4 +1685,3 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
     }
 }
-
