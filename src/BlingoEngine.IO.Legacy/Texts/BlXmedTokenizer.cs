@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -7,7 +8,70 @@ namespace BlingoEngine.IO.Legacy.Texts
     {
 
         public enum TokenType { Split01, Split02, Split03, C1, C2, C3, B_81, B_82, PrefixedHex, Ascii, Boolean, Block00, Byte }
-        public sealed record Token(TokenType Type, int Start, int Length, string? Ascii = null, int? Value = null, bool? BoolValue = null, int? TypeValue = null, bool LinkToPrevious = false, byte[]? Data = null);
+        public sealed record Token(TokenType Type, int Start, int Length, string? Ascii = null, int? Value = null, bool? BoolValue = null, int? TypeValue = null, bool LinkToPrevious = false, byte[]? Data = null)
+        {
+            public bool IsTextBlock() => Type == TokenType.Block00 && Value != 40 && Value != 44;
+
+            public bool IsBlockBoundary()
+            {
+                return Type == TokenType.Block00 ||
+                       (Type == TokenType.PrefixedHex && TypeValue == 0x03) ||
+                       Type == TokenType.C1 ||
+                       Type == TokenType.C2;
+            }
+
+            public bool TryGetNumericValue(out int value)
+            {
+                if (Value.HasValue)
+                {
+                    value = Value.Value;
+                    return true;
+                }
+
+                value = 0;
+                if (Ascii is not { } ascii || ascii.Length == 0)
+                {
+                    return false;
+                }
+
+                var text = ascii.Trim();
+                bool negative = text.StartsWith("-", StringComparison.Ordinal);
+                if (negative)
+                {
+                    text = text[1..];
+                }
+
+                if (text.Length == 0)
+                {
+                    return false;
+                }
+
+                if (!int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    return false;
+                }
+
+                value = negative ? -parsed : parsed;
+                return true;
+            }
+
+            public bool TryGetColorComponent(out byte component)
+            {
+                component = 0;
+                if (string.IsNullOrWhiteSpace(Ascii))
+                {
+                    return false;
+                }
+
+                string text = Ascii.Trim();
+                if (text.Length > 2)
+                {
+                    text = text[..2];
+                }
+
+                return byte.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out component);
+            }
+        }
 
         public (List<Token> Tokens, List<int> LastNumbers) Tokenize(byte[] buf) => Tokenize(buf.AsSpan());
 
@@ -160,7 +224,6 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             int declared = 0;
             if (!int.TryParse(Encoding.ASCII.GetString(buf.Slice(i, j - i)), out declared)) declared = -1;
-            var ascii = "";
             int dataStart = j + 1;
             int k = dataStart;
             // Special-case: Font family block (declared "40", fixed 58 bytes, 1-byte length + ASCII + zero pad)

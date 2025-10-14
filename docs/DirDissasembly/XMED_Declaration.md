@@ -44,6 +44,31 @@ Example (Multi_Line_Multi_Style):
 Same boundary list as 0004. Each boundary has a boolean flag (center/left etc.).
 E.g. at 0xB7 → false, 0xFE → true. Use to set alignment per run/paragraph.
 
+## Text slice record
+
+Tuple: `(start, end, styleId, paragraphId)`
+
+Derive:
+- From `03:0004`: pairs `02:<end> 01:<styleId>`.
+- Starts: `s0=0`, `s(i)=end(i-1)+1` (0-based).
+- Final `E`: last `02:<end>` (or `03:0128/0129`).
+
+Paragraphs:
+- From `03:0005`: same `02:<end>` boundaries + booleans.
+- Build paragraph spans between boundaries; assign ordinal = `paragraphId`.
+
+Pseudocode:
+```
+B = [(e1,id1),(e2,id2),...(E,idN)]
+runs = []
+s = 0; p = paragraph_index_map_from_0005()
+for k,(ek,idk) in enumerate(B):
+    runs += [(s, ek, idk, p.span_of(s,ek))]
+    s = ek+1
+```
+
+Style details: map `idk` via `03:0006`.
+
 ## Style Table — 03:0006 (required)
 Maps styleId → concrete attributes:
 - FontRef (index into Font Table)

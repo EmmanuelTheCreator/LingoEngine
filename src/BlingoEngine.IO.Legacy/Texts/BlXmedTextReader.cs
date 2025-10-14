@@ -229,7 +229,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             var tokenizer = new BlXmedTokenizer();
             var (tokens, lastNumbers) = tokenizer.Tokenize(buffer);
-            var parser = new BlXmedTokenParser(_logger, tokens, lastNumbers);
+            var parser = new BlXmedTokenParser(_logger, buffer, tokens, lastNumbers);
             return parser.Parse(directorVersion);
         }
         private XmedDocument ReadModernXmedOld(byte[] buffer, int directorVersion)
