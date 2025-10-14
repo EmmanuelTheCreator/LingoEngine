@@ -13,6 +13,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
 // Each test targets a specific XMED sample under Texts_Fields.
 // The assertions reconstruct the member text exclusively from the parsed runs.
+
 public class XmedFileTest
 {
     private readonly ILogger<XmedFileTest> _logger;
@@ -57,11 +58,35 @@ public class XmedFileTest
     {
         var document = ReadDocument("Text_3_Paragraps_13.xmed.bin");
 
-        //string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
-        ////textFromRuns.ShouldMatchNormalized("My first paragraph centered");
-        //document.Runs.Should().HaveCount(1);
-        //document.Text.Should().Contain("Paragraph with align Left");
-        //document.Text.Count(c => c == '\r').Should().BeGreaterThanOrEqualTo(2);
+        document.Text.Should().Be(string.Concat(document.Runs.Select(run => run.Text)));
+
+        document.Paragraphs.Should().HaveCount(3);
+
+        var paragraphTexts = document.Paragraphs
+            .Select(paragraph => GetParagraphText(document, paragraph))
+            .ToArray();
+
+        paragraphTexts[0].Should().Be("My first paragraph centered with all 0");
+        paragraphTexts[1].Should().Be("Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7");
+        paragraphTexts[2].Should().Be("Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5");
+
+        document.Paragraphs[0].LeftMargin.Should().Be(0);
+        document.Paragraphs[0].RightMargin.Should().Be(0);
+        document.Paragraphs[0].FirstLineIndent.Should().Be(0);
+        document.Paragraphs[0].SpacingBefore.Should().Be(0);
+        document.Paragraphs[0].SpacingAfter.Should().Be(0);
+
+        document.Paragraphs[1].LeftMargin.Should().Be(288);
+        document.Paragraphs[1].RightMargin.Should().Be(360);
+        document.Paragraphs[1].FirstLineIndent.Should().Be(28);
+        document.Paragraphs[1].SpacingBefore.Should().Be(9);
+        document.Paragraphs[1].SpacingAfter.Should().Be(7);
+
+        document.Paragraphs[2].LeftMargin.Should().Be(72);
+        document.Paragraphs[2].RightMargin.Should().Be(144);
+        document.Paragraphs[2].FirstLineIndent.Should().Be(21);
+        document.Paragraphs[2].SpacingBefore.Should().Be(4);
+        document.Paragraphs[2].SpacingAfter.Should().Be(5);
     }
 
     [Fact]
@@ -136,5 +161,21 @@ public class XmedFileTest
             .Where(name => !string.IsNullOrEmpty(name))
             .Select(name => name.ToLowerInvariant())
             .ToArray();
+    }
+
+    private static string GetParagraphText(XmedDocument document, XmedParagraphDescriptor paragraph)
+    {
+        if (string.IsNullOrEmpty(document.Text) || paragraph.Length <= 0 || paragraph.Start < 0)
+        {
+            return string.Empty;
+        }
+
+        if (paragraph.Start >= document.Text.Length)
+        {
+            return string.Empty;
+        }
+
+        int length = Math.Min(paragraph.Length, document.Text.Length - paragraph.Start);
+        return length > 0 ? document.Text.Substring(paragraph.Start, length) : string.Empty;
     }
 }

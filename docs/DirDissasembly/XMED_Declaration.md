@@ -44,6 +44,31 @@ Example (Multi_Line_Multi_Style):
 Same boundary list as 0004. Each boundary has a boolean flag (center/left etc.).
 E.g. at 0xB7 → false, 0xFE → true. Use to set alignment per run/paragraph.
 
+## Text slice record
+
+Tuple: `(start, end, styleId, paragraphId)`
+
+Derive:
+- From `03:0004`: pairs `02:<end> 01:<styleId>`.
+- Starts: `s0=0`, `s(i)=end(i-1)+1` (0-based).
+- Final `E`: last `02:<end>` (or `03:0128/0129`).
+
+Paragraphs:
+- From `03:0005`: same `02:<end>` boundaries + booleans.
+- Build paragraph spans between boundaries; assign ordinal = `paragraphId`.
+
+Pseudocode:
+```
+B = [(e1,id1),(e2,id2),...(E,idN)]
+runs = []
+s = 0; p = paragraph_index_map_from_0005()
+for k,(ek,idk) in enumerate(B):
+    runs += [(s, ek, idk, p.span_of(s,ek))]
+    s = ek+1
+```
+
+Style details: map `idk` via `03:0006`.
+
 ## Style Table — 03:0006 (required)
 Maps styleId → concrete attributes:
 - FontRef (index into Font Table)
@@ -64,6 +89,43 @@ Order matches style references (e.g., Arial, Tahoma, Terminal, Vivaldi, Arcade*)
 ## Colors (observed tokens)
 Color indices appear as short tokens near style entries; examples seen:
 `01:FF00` (red), `01:CC00`, `01:6600`. Use alongside 0006 to apply per run.
+
+## 🎨 Color Parsing
+
+**Location:** inside a style composite `C1(04) … 82`.
+
+**Grammar (tokens):**
+- `C1(xx)` = open; `81` = next field; `82` = close; `01:<v>` = value.
+
+**Examples:**
+- Bordeau: mixed ASCII/binary; missing G,B ⇒ **880000**.
+- Binary tokens use two hex bytes per channel: `01:FF00` ⇒ value `0xFF` (ignore the padding `00`).
+- Mixed stream: `01:FF00 81 01:CC00 81 01:6600` ⇒ RGB `#FFCC66`.
+
+### Color channels: missing values
+
+Rule:
+- Colors are inside `C1(04) … 82`.
+- Channels come as `01:<R> [81] 01:<G> [81] 01:<B>`.
+- When a channel token is **absent**, its value is **0** (default).
+- Numeric tokens can be ASCII (`01:FF`) or two-byte hex (`01:FF00`). Always take the **high byte** and ignore the padding byte.
+
+Pseudocode:
+```
+(r,g,b) = (0,0,0)
+channel = 0
+while token != 82:
+  if token == 01:<v>:
+    component = high_byte(v)
+    if channel == 0: r = component
+    elif channel == 1: g = component
+    elif channel == 2: b = component
+    channel = min(channel + 1, 2)
+  elif token == 81:
+    continue
+  token = next_token()
+```
+Works for ASCII-hex and binary forms; missing channels stay at zero.
 
 ## Line/Paragraph Metrics (observed)
 `03:000C` varies in the 2-line/line-space sample. Treat as paragraph metrics (line spacing, before/after).
