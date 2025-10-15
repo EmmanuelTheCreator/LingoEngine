@@ -12,8 +12,9 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int? AdditionalIndent { get; set; }
         public int SpacingBefore { get; set; }
         public int SpacingAfter { get; set; }
+        public int LineSpacing { get; set; }
         public XmedAlignment Alignment { get; set; } = XmedAlignment.Left;
-        public List<int> TabStops { get; } = new();
+        public List<int> TabStops { get; set; } = new();
         public string Text { get; set; } = "";
 
         public XmedParagraphDescriptor Clone()
@@ -28,7 +29,10 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
                 AdditionalIndent = AdditionalIndent,
                 SpacingBefore = SpacingBefore,
                 SpacingAfter = SpacingAfter,
-                Alignment = Alignment
+                Alignment = Alignment,
+                LineSpacing = LineSpacing,
+                TabStops = [.. TabStops],
+                Text = Text
             };
 
             if (TabStops.Count > 0)

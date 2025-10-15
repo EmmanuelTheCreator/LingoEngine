@@ -127,5 +127,14 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
 
         public bool IsFontTable00() => Type == TokenType.Block00 && Value == 40;
         public bool IsTail00() => Type == TokenType.Block00 && Value == 44;
+
+        public override string ToString()
+        {
+            if (!string.IsNullOrEmpty(Ascii))
+                return $"{PrefixedHex:X2}:{Ascii}";
+            if (IsC1() || IsC2())
+                return $"{PrefixedHex:X2}({TypeValue:X2})";
+            return $"{PrefixedHex:X2}";
+        }
     }
 }

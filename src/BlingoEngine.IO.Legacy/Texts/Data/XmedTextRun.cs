@@ -13,6 +13,11 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public bool Bold { get; set; }
         public bool Italic { get; set; }
         public bool Underline { get; set; }
+        public bool Strikeout { get; set; }
+        public bool Subscript { get; set; }
+        public bool Superscript { get; set; }
+        public bool TabbedField { get; set; }
+        public XmedAlignment Alignment { get; set; }
         public BlLegacyColor ForeColor { get; set; }
     }
 }

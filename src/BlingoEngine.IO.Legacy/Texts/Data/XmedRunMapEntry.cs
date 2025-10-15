@@ -12,6 +12,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public ushort Length { get; }
         public ushort F4 { get; }
         public ushort StyleId { get; }
+        public int End => (int)Position + Length;
         public long Position { get; }
     }
 }

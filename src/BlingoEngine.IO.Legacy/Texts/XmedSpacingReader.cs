@@ -1,19 +1,33 @@
 ﻿
+using Microsoft.Extensions.Logging;
+
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal class XmedSpacingReader
     {
         private readonly XmedDocument _document;
+        private readonly ILogger _logger;
         private readonly List<(int Before, int After)> _paragraphSpacing = new();
 
-        public XmedSpacingReader(XmedDocument document)
+        public XmedSpacingReader(XmedDocument document, ILogger logger)
         {
             _document = document;
+            _logger = logger;
         }
         internal void Reset()
         {
             _paragraphSpacing.Clear();
         }
+
+        #region Header
+        public void ReadHeaderSpacing(BlXmedTokenReader reader)
+        {
+            if (!TryReadPair(reader, 0x04, out var line, out var extra)) return;
+            if (line >= 0) _document.LineSpacing = line;
+            // if needed later: _document.ExtraSpacing = extra;
+        } 
+        #endregion
+
 
         public void InjectSpacings()
         {
@@ -37,31 +51,17 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadSpacing(BlXmedTokenReader reader)
-        {
-            reader.Skip();
-            var values = reader.GetNumericValues();
-            if (values.Count > 0 && values[0] >= 0)
-                _document.LineSpacing = (uint)values[0];
-        }
+        private bool TryReadPair(BlXmedTokenReader reader, byte type, out int a, out int b)
+                => reader.TryReadNumericPairInC2(type, out a, out b, tok => LogUnknown($"C2({type:X2})", $"{(tok?.IsPrefixedHex02() == true ? "02" : "..")}:{tok?.Ascii ?? "?"}"));
 
         public void ReadParagraphSpacing(BlXmedTokenReader reader)
         {
-            reader.Skip();
-            ReadParagraphSpacingInternal(reader);
-        }
-
-        private void ReadParagraphSpacingInternal(BlXmedTokenReader reader)
-        {
-            var values = reader.GetNumericValues();
-            if (values.Count == 0) return;
-
-            int before = values.ElementAtOrDefault(0);
-            int after = values.ElementAtOrDefault(1);
-
+            if (!TryReadPair(reader, 0x03, out var before, out var after)) return;
             if (before >= -512 && before <= 0x2000 && after >= -512 && after <= 0x2000)
                 _paragraphSpacing.Add((before, after));
         }
+
+       
 
         public bool TryReadParagraphSpacing(BlXmedTokenReader reader, out (int Before, int After)? spacing)
         {
@@ -104,6 +104,9 @@ namespace BlingoEngine.IO.Legacy.Texts
             return true;
         }
 
-       
+        private void LogUnknown(string category, string token)
+        {
+            _logger.LogDebug("XMED: {Category} unknown spacingReader token {Token}", category, token);
+        }
     }
 }

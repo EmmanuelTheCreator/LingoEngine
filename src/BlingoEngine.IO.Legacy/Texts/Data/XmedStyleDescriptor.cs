@@ -27,14 +27,11 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public bool Strikeout { get; set; }
         public bool Subscript { get; set; }
         public bool Superscript { get; set; }
-        public bool TabbedField { get; set; }
-        public bool EditableField { get; set; }
         public XmedAlignment Alignment { get; set; } = XmedAlignment.Center;
-        public XmedAlignment AlignmentFromFlags { get; set; } = XmedAlignment.Center;
-        public bool WrapOff { get; set; }
-        public bool HasTabs { get; set; }
-        public byte AlignmentRaw { get; set; }
+       
         public byte StyleFlags { get; set; }
+        public int LineSpacing { get; set; }
+        public int BaseLineOffset { get; set; }
 
         public XmedStyleFlags Flags { get; set; }
         public BlLegacyColor Color { get; internal set; }

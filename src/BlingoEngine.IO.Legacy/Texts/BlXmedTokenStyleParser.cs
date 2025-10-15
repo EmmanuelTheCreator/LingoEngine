@@ -1,4 +1,4 @@
-using BlingoEngine.IO.Legacy.Core;
+﻿using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
@@ -8,11 +8,12 @@ namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class BlXmedTokenStyleParser
     {
-        private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly HashSet<string> _fontNames = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, XmedStyleDescriptor> _stylesById = new();
         private readonly Dictionary<int, int> _styleParents = new();
         private readonly Queue<int> _styleOrder = new();
+        private readonly ILogger _logger;
+        private readonly XmedDocument _document;
         private int _nextStyleId = 1;
         private BlLegacyColor _activeColor = new(0, 0, 0);
 
@@ -20,11 +21,47 @@ namespace BlingoEngine.IO.Legacy.Texts
         public bool UnderlineMarkerSeen { get; private set; }
         public IReadOnlyDictionary<int, XmedStyleDescriptor> StylesById => _stylesById;
 
-        public BlXmedTokenStyleParser(ILogger logger, IReadOnlyList<BlXmedToken> tokens)
+        public BlXmedTokenStyleParser(ILogger logger, XmedDocument document)
         {
-            _ = logger;
-            _tokens = tokens;
+            _logger = logger;
+            _document = document;
         }
+
+        #region Header
+
+        public void ReadTabs(BlXmedTokenReader reader)
+        {
+            if (!reader.TryReadBooleansInC2(0x07, out var hasTabs, out var wrapOn,
+                    tok => LogUnknown("Tabs", tok.ToString())))
+                return;
+
+            _document.AllowTabs = hasTabs;
+            _document.IsWrapOff = !wrapOn; // Director: wrapOn → invert
+        }
+
+        public void ReadEditable(BlXmedTokenReader reader)
+        {
+            if (!reader.TryReadBooleanInC2(0x0B, out var editable, tok => LogUnknown("Editable", tok.ToString())))
+                return;
+
+            _document.IsEditable = editable;
+        }
+        internal void ReadHeaderColor(BlXmedTokenReader reader)
+        {
+            if (reader.TryGetColor(out var color))
+            {
+                var baseStyle = GetOrCreateStyle(0);
+                baseStyle.Color = color!.Value;
+            }
+        }
+        public void MarkHeaderStyleFlag(Action<XmedStyleDescriptor> mutator)
+        {
+            var target = GetOrCreateStyle(0);
+            mutator(target);
+        }
+        #endregion
+
+
 
 
         public void TrackStyleMarker(BlXmedToken token)
@@ -46,11 +83,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void MarkStyleFlag(Action<XmedStyleDescriptor> mutator)
-        {
-            var target = GetOrCreateStyle(0);
-            mutator(target);
-        }
+        
 
         public XmedStyleDescriptor GetOrCreateStyle(int styleId)
         {
@@ -227,30 +260,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadTabs(BlXmedTokenReader reader)
-        {
-            reader.Skip();
-            var values = reader.GetBoolValues();
-
-            var baseStyle = GetOrCreateStyle(0);
-            if (values.Count > 0)
-                baseStyle.HasTabs = values[0];
-
-            if (values.Count > 1)
-                baseStyle.WrapOff = !values[1];
-        }
-
-        public void ReadEditable(BlXmedTokenReader reader)
-        {
-            reader.Skip();
-            var values = reader.GetBoolValues();
-
-            if (values.Count > 0)
-            {
-                var baseStyle = GetOrCreateStyle(0);
-                baseStyle.EditableField = values[0];
-            }
-        }
+      
 
         //public BlLegacyColor ReadColor(BlXmedTokenReader reader)
         //{
@@ -368,15 +378,18 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (!child.Strikeout && parent.Strikeout) child.Strikeout = true;
             if (!child.Subscript && parent.Subscript) child.Subscript = true;
             if (!child.Superscript && parent.Superscript) child.Superscript = true;
-            if (!child.TabbedField && parent.TabbedField) child.TabbedField = true;
-            if (!child.EditableField && parent.EditableField) child.EditableField = true;
-            if (!child.HasTabs && parent.HasTabs) child.HasTabs = true;
-            if (!child.WrapOff && parent.WrapOff) child.WrapOff = true;
             if (child.Alignment == XmedAlignment.Center && parent.Alignment != XmedAlignment.Center)
             {
                 child.Alignment = parent.Alignment;
             }
             if (child.ColorIndex == 0) child.ColorIndex = parent.ColorIndex;
         }
+
+        private void LogUnknown(string category, string token)
+        {
+            _logger.LogDebug("XMED: {Category} unknown style parsing token {Token}", category, token);
+        }
+
+       
     }
 }

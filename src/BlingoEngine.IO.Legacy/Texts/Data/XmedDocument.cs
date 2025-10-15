@@ -3,13 +3,7 @@ using BlingoEngine.IO.Legacy.Texts.Data.Pre10;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
-    public enum XmedEntryKind
-    {
-        Unknown, Text, TokenList, StyleRuns, Fonts, Sizes, Colors, Weights, Italics, Underlines, Spacing, Align, Justify,
-        Index
-    }
-
-
+   
     /// <summary>Parsed XMED document.</summary>
     public sealed class XmedDocument
     {
@@ -18,11 +12,14 @@ namespace BlingoEngine.IO.Legacy.Texts
         public List<XmedStyleDescriptor> Styles { get; set; } = new();
         public List<XmedRunMapEntry> RunMap { get; set; } = new();
         public List<XmedParagraphDescriptor> Paragraphs { get; set; } = new();
-        public uint Width { get; set; }
-        public uint LineSpacing { get; set; }
+        public int Width { get; set; }
+        public int Height { get; internal set; }
+        public int LineSpacing { get; set; }
+        public bool AllowTabs { get; set; }
+        public bool IsEditable { get; set; }
+        public bool IsWrapOff { get; set; }
         public int TextLength { get; set; }
         public int DirectorVersion { get; set; }
         public XmedRichTextMetadata? RichText { get; set; }
-        public uint Height { get; internal set; }
     }
 }
