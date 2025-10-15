@@ -20,6 +20,14 @@ public struct BlLegacyColor
         B = indexColor;
     }
   
+    public BlLegacyColor(byte r, byte g, byte b)
+    {
+        IsIndex = false;
+        R = r;
+        G = g;
+        B = b;
+    }
+  
 
     /// <summary>
     /// Converts the color to a 24-bit packed RGB value (0xRRGGBB).

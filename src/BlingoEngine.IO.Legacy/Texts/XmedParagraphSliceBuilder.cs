@@ -91,9 +91,7 @@
             }
 
             if (start <= text.Length)
-            {
                 spans.Add((start, text.Length - start));
-            }
 
             return spans;
         }

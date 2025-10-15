@@ -1,10 +1,5 @@
-using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
-using BlingoEngine.IO.Legacy.Core;
-using BlingoEngine.IO.Legacy.Texts.Data;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {

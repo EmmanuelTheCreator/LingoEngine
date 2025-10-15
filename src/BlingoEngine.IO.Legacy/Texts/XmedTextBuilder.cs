@@ -13,6 +13,10 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             _document = document;
         }
+        public void Reset()
+        {
+            _textTokens.Clear();
+        }
 
         public void AddTextToken(BlXmedToken token)
         {
@@ -44,6 +48,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             _document.Text = builder.ToString();
             _document.TextLength = _document.Text.Length;
+            _textTokens.Clear();
         }
     }
 }

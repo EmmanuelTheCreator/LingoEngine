@@ -20,6 +20,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             _logger = logger;
         }
 
+
         public void Reset()
         {
             _paragraphDescriptors.Clear();
@@ -60,19 +61,21 @@ namespace BlingoEngine.IO.Legacy.Texts
             bool InRange(int v) => v >= -512 && v <= 0x2000;
             if (values.Count >= 3 && InRange(values[0]) && InRange(values[2]))
             {
-                
-                descriptor = new XmedParagraphDescriptor
+                var d = new XmedParagraphDescriptor
                 {
                     LeftMargin = Norm(values.ElementAtOrDefault(0)),
                     RightMargin = Norm(values.ElementAtOrDefault(1)),
                     FirstLineIndent = Norm(values.ElementAtOrDefault(2)),
                     AdditionalIndent = values.Count > 3 && InRange(values[3]) ? Norm(values[3]) : null
                 };
+                descriptor = d;
                 if (tabStops.Count > 0) descriptor.TabStops.AddRange(tabStops.Where(InRange).Select(Norm));
+                _paragraphDescriptors.Add(descriptor);
                 return true;
             }
             return false;
         }
+
 
         private static int Norm(int v) => v < 0 ? 0 : Math.Min(v, 0x2000);
 

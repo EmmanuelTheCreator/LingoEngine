@@ -131,10 +131,13 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public override string ToString()
         {
             if (!string.IsNullOrEmpty(Ascii))
-                return $"{PrefixedHex:X2}:{Ascii}";
+                return $"{(int)PrefixedHex:X2}:{Ascii}";
+
             if (IsC1() || IsC2())
-                return $"{PrefixedHex:X2}({TypeValue:X2})";
-            return $"{PrefixedHex:X2}";
+                return $"{(int)PrefixedHex:X2}({TypeValue.GetValueOrDefault():X2})";
+
+            return $"{(int)PrefixedHex:X2}";
         }
+
     }
 }
