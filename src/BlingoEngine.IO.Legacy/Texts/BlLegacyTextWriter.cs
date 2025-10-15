@@ -85,19 +85,19 @@ internal sealed class BlLegacyTextWriter
 /// </summary>
 public static class BlLegacyTextLibraryBuilder
 {
-    private const uint KeyResourceIndex = 0;
-    private const uint CastTableResourceIndex = 1;
-    private const uint CastMemberResourceIndex = 2;
-    private const uint TextResourceIndex = 3;
+    private const uint _keyResourceIndex = 0;
+    private const uint _castTableResourceIndex = 1;
+    private const uint _castMemberResourceIndex = 2;
+    private const uint _textResourceIndex = 3;
 
-    private const uint KeyResourceId = KeyResourceIndex + 1;
-    private const uint CastTableResourceId = CastTableResourceIndex + 1;
-    private const uint CastMemberResourceId = CastMemberResourceIndex + 1;
-    private const uint TextResourceId = TextResourceIndex + 1;
+    private const uint _keyResourceId = _keyResourceIndex + 1;
+    private const uint _castTableResourceId = _castTableResourceIndex + 1;
+    private const uint _castMemberResourceId = _castMemberResourceIndex + 1;
+    private const uint _textResourceId = _textResourceIndex + 1;
 
-    private static readonly BlTag StxtTag = BlTag.Get("STXT");
+    private static readonly BlTag _stxtTag = BlTag.Get("STXT");
 
-    private static readonly Encoding TextEncoding = Encoding.Latin1;
+    private static readonly Encoding _textEncoding = Encoding.Latin1;
 
     /// <summary>
     /// Builds a <see cref="DirFilesContainerDTO"/> containing a single text cast member backed by an STXT resource.
@@ -111,22 +111,22 @@ public static class BlLegacyTextLibraryBuilder
 
         container.Files.Add(new DirFileResourceDTO
         {
-            FileName = $"{BlTag.KeyStar.Value}_{KeyResourceId:D4}.bin",
+            FileName = $"{BlTag.KeyStar.Value}_{_keyResourceId:D4}.bin",
             Bytes = BlLegacyCastLibraryBuilderHelpers.BuildKeyTable(new[]
             {
-                new BlLegacyCastLibraryBuilderHelpers.KeyTableEntry(TextResourceIndex, CastMemberResourceIndex, StxtTag)
+                new BlLegacyCastLibraryBuilderHelpers.KeyTableEntry(_textResourceIndex, _castMemberResourceIndex, _stxtTag)
             })
         });
 
         container.Files.Add(new DirFileResourceDTO
         {
-            FileName = $"{BlTag.CasStar.Value}_{CastTableResourceId:D4}.bin",
-            Bytes = BlLegacyCastLibraryBuilderHelpers.BuildCastTable(CastMemberResourceIndex)
+            FileName = $"{BlTag.CasStar.Value}_{_castTableResourceId:D4}.bin",
+            Bytes = BlLegacyCastLibraryBuilderHelpers.BuildCastTable(_castMemberResourceIndex)
         });
 
         container.Files.Add(new DirFileResourceDTO
         {
-            FileName = $"CASt_{CastMemberResourceId:D4}.bin",
+            FileName = $"CASt_{_castMemberResourceId:D4}.bin",
             Bytes = BlLegacyCastLibraryBuilderHelpers.BuildModernCastMetadata(
                 BlLegacyCastMemberType.Text,
                 memberName,
@@ -135,7 +135,7 @@ public static class BlLegacyTextLibraryBuilder
 
         container.Files.Add(new DirFileResourceDTO
         {
-            FileName = $"{StxtTag.Value}_{TextResourceId:D4}.bin",
+            FileName = $"{_stxtTag.Value}_{_textResourceId:D4}.bin",
             Bytes = BuildStxtPayload(text)
         });
 
@@ -145,11 +145,9 @@ public static class BlLegacyTextLibraryBuilder
     private static byte[] BuildStxtPayload(string? text)
     {
         if (string.IsNullOrEmpty(text))
-        {
             return Array.Empty<byte>();
-        }
 
         var normalized = text.Replace("\r\n", "\n").Replace('\r', '\n').Replace('\n', '\r');
-        return TextEncoding.GetBytes(normalized);
+        return _textEncoding.GetBytes(normalized);
     }
 }

@@ -1,9 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
-using static BlingoEngine.IO.Legacy.Texts.BlXmedToken;
+using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
+using static BlingoEngine.IO.Legacy.Texts.Data.XmedStyleDescriptor;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -14,8 +13,12 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly Dictionary<int, XmedStyleDescriptor> _stylesById = new();
         private readonly Dictionary<int, int> _styleParents = new();
         private readonly Queue<int> _styleOrder = new();
-
         private int _nextStyleId = 1;
+        private BlLegacyColor _activeColor = new(0, 0, 0);
+
+        public bool ItalicMarkerSeen { get; private set; }
+        public bool UnderlineMarkerSeen { get; private set; }
+        public IReadOnlyDictionary<int, XmedStyleDescriptor> StylesById => _stylesById;
 
         public BlXmedTokenStyleParser(ILogger logger, IReadOnlyList<BlXmedToken> tokens)
         {
@@ -23,18 +26,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             _tokens = tokens;
         }
 
-        public BlLegacyColor ActiveColor { get; private set; } = new(0, 0, 0);
-        public bool ItalicMarkerSeen { get; private set; }
-        public bool UnderlineMarkerSeen { get; private set; }
-
-        public IReadOnlyDictionary<int, XmedStyleDescriptor> StylesById => _stylesById;
 
         public void TrackStyleMarker(BlXmedToken token)
         {
             if (token.Type != TokenType.C1)
-            {
                 return;
-            }
 
             switch (token.TypeValue)
             {
@@ -91,12 +87,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             descriptor = null;
             return false;
         }
-
+        
         public void ReadStyles(BlXmedTokenReader reader)
         {
             reader.Skip();
             XmedStyleDescriptor? current = null;
-            int boolIndex = 0;
             int fieldIndex = 0;
             int blockDepth = 1;
 
@@ -104,38 +99,32 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var lookahead = reader.Peek();
                 if (lookahead is null)
-                {
                     break;
-                }
 
-                if (lookahead.Type == TokenType.Block00 ||
-                    (lookahead.IsPrefixedHex03() && fieldIndex > 0) ||
-                    lookahead.IsCompositeOpen())
-                {
-                    break;
-                }
+                if (lookahead.Type == TokenType.Block00 || (lookahead.IsPrefixedHex03() && fieldIndex > 0) || lookahead.IsCompositeOpen()) break;
+                if (lookahead.Type == TokenType.Block00 || (lookahead.IsPrefixedHex03() && fieldIndex > 0)) break;
+                if (lookahead.IsCompositeC1(0x04)) {
+
+                    if (reader.TryGetColor(out var color))
+                        _activeColor = color!.Value;
+                    if (current != null) current.Color = _activeColor;
+                    continue; 
+                } // color triplet
+                if (lookahead.IsCompositeOpen()) { reader.Skip(); continue; } // ignore other composites
+
 
                 var token = reader.ReadNext();
                 if (token is null)
-                {
                     break;
-                }
 
                 if (token.IsPrefixedHex01() && current == null)
                 {
                     if (token.TryGetNumericValue(out var styleId))
                     {
                         current = GetOrCreateStyle(styleId);
-                        boolIndex = 0;
                         fieldIndex = 0;
                     }
 
-                    continue;
-                }
-
-                if (token.IsBoolean() && current != null && fieldIndex == 0)
-                {
-                    boolIndex = ApplyBooleanStyle(current, boolIndex, token.BoolValue ?? false);
                     continue;
                 }
 
@@ -149,10 +138,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     blockDepth--;
                     if (blockDepth <= 0)
-                    {
                         break;
-                    }
-
                     continue;
                 }
 
@@ -163,55 +149,41 @@ namespace BlingoEngine.IO.Legacy.Texts
                         if (fieldIndex == 1)
                         {
                             if (token.TryGetNumericValue(out var parent) && parent >= 0)
-                            {
                                 _styleParents[descriptor.StyleId] = parent;
-                            }
-
                             continue;
                         }
 
                         if (fieldIndex == 2)
                         {
                             if (token.TryGetNumericValue(out var color) && color >= 0 && color <= 0xFF)
-                            {
                                 descriptor.ColorIndex = (byte)color;
-                            }
-
                             continue;
                         }
 
                         if (fieldIndex == 3)
                         {
                             if (token.TryGetNumericValue(out var size) && size >= 0)
-                            {
                                 descriptor.FontSize = (ushort)Math.Clamp(size, 0, ushort.MaxValue);
-                            }
-
                             continue;
                         }
                     }
 
-                    if (token.IsBoolean())
-                    {
-                        boolIndex = ApplyBooleanStyle(descriptor, boolIndex, token.BoolValue ?? false);
-                        continue;
+                    if (token.IsBoolean()) {
+                        ApplyStyleFlag(descriptor, XmedStyleFlags.Bold, token.GetBool());
+                        continue; 
                     }
                 }
             }
 
             if (current != null)
-            {
                 _stylesById[current.StyleId] = current;
-            }
         }
 
         public void ReadFonts(BlXmedTokenReader reader)
         {
             var token = reader.Peek();
             if (token is null)
-            {
                 return;
-            }
 
             string name = token.Ascii ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(name) && _fontNames.Add(name))
@@ -243,15 +215,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             foreach (var token in _tokens)
             {
                 if (token.Type != TokenType.Block00 || token.Value != 40)
-                {
                     continue;
-                }
 
                 string name = token.Ascii ?? string.Empty;
                 if (string.IsNullOrWhiteSpace(name) || !_fontNames.Add(name))
-                {
                     continue;
-                }
 
                 int styleId = pending.Count > 0 ? pending.Dequeue() : _nextStyleId++;
                 var descriptor = GetOrCreateStyle(styleId);
@@ -262,24 +230,20 @@ namespace BlingoEngine.IO.Legacy.Texts
         public void ReadTabs(BlXmedTokenReader reader)
         {
             reader.Skip();
-            var values = reader.GetBooleanValues();
+            var values = reader.GetBoolValues();
 
             var baseStyle = GetOrCreateStyle(0);
             if (values.Count > 0)
-            {
                 baseStyle.HasTabs = values[0];
-            }
 
             if (values.Count > 1)
-            {
                 baseStyle.WrapOff = !values[1];
-            }
         }
 
         public void ReadEditable(BlXmedTokenReader reader)
         {
             reader.Skip();
-            var values = reader.GetBooleanValues();
+            var values = reader.GetBoolValues();
 
             if (values.Count > 0)
             {
@@ -288,17 +252,17 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        public void ReadColor(BlXmedTokenReader reader)
-        {
-            reader.Skip();
-            var components = reader.GetColorComponents();
+        //public BlLegacyColor ReadColor(BlXmedTokenReader reader)
+        //{
+        //    reader.Skip();
+        //    var components = reader.GetColorComponents();
 
-            byte r = components.Count > 0 ? components[0] : (byte)0;
-            byte g = components.Count > 1 ? components[1] : (byte)0;
-            byte b = components.Count > 2 ? components[2] : (byte)0;
+        //    byte r = components.Count > 0 ? components[0] : (byte)0;
+        //    byte g = components.Count > 1 ? components[1] : (byte)0;
+        //    byte b = components.Count > 2 ? components[2] : (byte)0;
 
-            ActiveColor = new BlLegacyColor(r, g, b);
-        }
+        //    return new BlLegacyColor(r, g, b);
+        //}
 
         public void FinalizeStyles(XmedDocument document)
         {
@@ -323,14 +287,10 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             document.Styles.Clear();
             foreach (var descriptor in _stylesById.Values.OrderBy(s => s.StyleId))
-            {
                 document.Styles.Add(descriptor);
-            }
 
             if (document.Styles.Count == 0)
-            {
                 document.Styles.Add(baseStyle);
-            }
         }
 
         public BlLegacyColor ResolveColor(XmedStyleDescriptor descriptor, XmedStyleDescriptor baseStyle)
@@ -347,7 +307,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return new BlLegacyColor(c, c, c);
             }
 
-            return ActiveColor;
+            return _activeColor;
         }
 
         private int? TakeNextStyleNeedingFont()
@@ -356,68 +316,38 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 int styleId = _styleOrder.Dequeue();
                 if (_stylesById.TryGetValue(styleId, out var descriptor) && string.IsNullOrEmpty(descriptor.FontName))
-                {
                     return styleId;
-                }
             }
 
             return null;
         }
 
-        private static int ApplyBooleanStyle(XmedStyleDescriptor style, int index, bool value)
+        public static void ApplyStyleFlag(XmedStyleDescriptor style, XmedStyleFlags flag, bool enabled)
         {
-            switch (index)
-            {
-                case 0:
-                    style.Bold = value;
-                    break;
-                case 1:
-                    style.Italic = value;
-                    break;
-                case 2:
-                    style.Underline = value;
-                    break;
-                case 3:
-                    style.Strikeout = value;
-                    break;
-                case 4:
-                    style.Subscript = value;
-                    break;
-                case 5:
-                    style.Superscript = value;
-                    break;
-                case 6:
-                    style.TabbedField = value;
-                    break;
-                case 7:
-                    style.EditableField = value;
-                    break;
-            }
+            style.Flags = enabled ? style.Flags | flag : style.Flags & ~flag;
 
-            return index + 1;
+            style.Bold = style.Flags.HasFlag(XmedStyleFlags.Bold);
+            style.Italic = style.Flags.HasFlag(XmedStyleFlags.Italic);
+            style.Underline = style.Flags.HasFlag(XmedStyleFlags.Underline);
+            style.Strikeout = style.Flags.HasFlag(XmedStyleFlags.Strikeout);
+            style.Subscript = style.Flags.HasFlag(XmedStyleFlags.Subscript);
+            style.Superscript = style.Flags.HasFlag(XmedStyleFlags.Superscript);
+            style.TabbedField = style.Flags.HasFlag(XmedStyleFlags.TabbedField);
         }
 
         private void ApplyParentChain(int styleId, HashSet<int> visited)
         {
             if (!_styleParents.TryGetValue(styleId, out var parentId))
-            {
                 return;
-            }
 
             if (parentId == styleId)
-            {
                 return;
-            }
 
             if (!visited.Add(styleId))
-            {
                 return;
-            }
 
             if (!_stylesById.TryGetValue(parentId, out var parent))
-            {
                 return;
-            }
 
             ApplyParentChain(parentId, visited);
 

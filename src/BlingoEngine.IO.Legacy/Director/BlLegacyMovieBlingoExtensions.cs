@@ -10,6 +10,7 @@ using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Fields;
 using BlingoEngine.IO.Legacy.Sounds;
 using BlingoEngine.IO.Legacy.Texts;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.IO.Legacy.Director;

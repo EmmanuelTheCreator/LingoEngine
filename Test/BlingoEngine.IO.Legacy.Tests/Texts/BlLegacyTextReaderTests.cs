@@ -3,6 +3,7 @@ using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Texts;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using BlingoEngine.IO.Legacy.Tools;
 using FluentAssertions;
 using System.IO;

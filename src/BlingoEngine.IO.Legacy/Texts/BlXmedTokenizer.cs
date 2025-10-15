@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BlingoEngine.IO.Legacy.Texts.Data;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using static BlingoEngine.IO.Legacy.Texts.BlXmedToken;
+using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal class BlXmedTokenizer
     {
-
-        
-        
-
         public (List<BlXmedToken> Tokens, List<int> LastNumbers) Tokenize(byte[] buf) => Tokenize(buf.AsSpan());
 
         // In BlXmedTokenizer: add helper
@@ -29,29 +23,18 @@ namespace BlingoEngine.IO.Legacy.Texts
             bool IsCtrl(byte b) => b is 0x01 or 0x02 or 0x03;
             bool IsHexOrDash(byte b) => (b >= '0' && b <= '9') || (b >= 'A' && b <= 'F') || b == '-';
             var compositeStack = new Stack<(byte Token, int TypeValue)>();
-            int colorCompositeDepth = 0;
 
             void PushComposite(byte token, int typeValue)
             {
                 compositeStack.Push((token, typeValue));
-                if (token == 0xC1 && typeValue == 0x04)
-                {
-                    colorCompositeDepth++;
-                }
             }
 
             void PopComposite()
             {
                 if (compositeStack.Count == 0)
-                {
                     return;
-                }
 
                 var (token, typeValue) = compositeStack.Pop();
-                if (token == 0xC1 && typeValue == 0x04 && colorCompositeDepth > 0)
-                {
-                    colorCompositeDepth--;
-                }
             }
 
             var a00Tokens = new List<BlXmedToken>();
@@ -103,23 +86,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (IsCtrl(b))
                 {
                     int start = i++;
-
-                    // Boolean: 01 30 or 01 31
-                    //if (colorCompositeDepth == 0 && b == 0x01 && i < n && (buffer[i] == '0' || buffer[i] == '1'))
-                    //{
-                    //    bool bv = buffer[i] == '1';
-                    //    tokens.Add(new BlXmedToken(
-                    //        TokenType.Boolean,
-                    //        start,
-                    //        2,
-                    //        Ascii: bv ? "1" : "0",
-                    //        Value: bv ? 1 : 0,
-                    //        BoolValue: bv
-                    //    ));
-                    //    i++;
-                    //    continue;
-                    //}
-
+                   
                     // Prefixed hex/string block
                     int j = i;
                     while (j < n && !IsCtrl(buffer[j]) && !IsC(buffer[j]) && !IsB(buffer[j]) && IsHexOrDash(buffer[j]))
@@ -160,9 +127,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     while (i < n &&
                            buffer[i] >= 0x20 && buffer[i] <= 0x7E &&
                            !IsC(buffer[i]) && !IsB(buffer[i]) && !IsCtrl(buffer[i]))
-                    {
                         i++;
-                    }
 
                     var str = Encoding.ASCII.GetString(buffer.Slice(start, i - start));
                     tokens.Add(new BlXmedToken(TokenType.Ascii, start, i - start, str));
@@ -228,9 +193,6 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
 
-
-
-
         /// <summary>
         /// After tokenizing, this extracts the content of all 0x00 blocks.
         /// All but the last are ASCII strings. The last one is a list of numbers.
@@ -241,9 +203,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             var texts = new List<string>();
 
             for (int k = 0; k < blocks.Count - 1; k++)
-            {
                 texts.Add(Encoding.ASCII.GetString(blocks[k].Data!));
-            }
 
             var lastBlock = blocks.Count > 0 ? blocks[^1].Data! : Array.Empty<byte>();
             return (texts, lastBlock);
@@ -257,7 +217,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                 sb.Append($"{t.Start:X6} {t.Type,-9} L={t.Length}");
                 if (t.Ascii is { Length: > 0 }) sb.Append($" a=\"{t.Ascii}\"");
                 if (t.Value.HasValue) sb.Append($" v={t.Value}");
-                if (t.BoolValue.HasValue) sb.Append($" b={(t.BoolValue.Value ? 1 : 0)}");
                 if (t.TypeValue is > 0) sb.Append($" t={t.TypeValue:X2}");
                 if (t.LinkToPrevious) sb.Append(" <-");
                 if (t.Data is { Length: > 0 })
@@ -274,7 +233,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         public static string DumpTokensUltraCompact(List<BlXmedToken> tokens)
         {
             var sb = new StringBuilder();
-            int last00 = tokens.FindLastIndex(t => t.Type == BlXmedToken.TokenType.Block00);
+            int last00 = tokens.FindLastIndex(t => t.Type == TokenType.Block00);
             int onLine = 0;
 
             void NL() { if (onLine > 0) { sb.Append('\n'); onLine = 0; } }
@@ -285,17 +244,17 @@ namespace BlingoEngine.IO.Legacy.Texts
                 var t = tokens[i];
                 switch (t.Type)
                 {
-                    case BlXmedToken.TokenType.Ascii:
-                        NL(); sb.Append($"{(t.TypeValue ?? 0):X2}:{(t.Ascii ?? "<empty>")} "); break;
+                    case TokenType.Ascii:
+                        NL(); sb.Append($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} "); break;
 
 
 
-                    case BlXmedToken.TokenType.C1:
-                    case BlXmedToken.TokenType.C2:
-                    case BlXmedToken.TokenType.C3:
-                        NL(); sb.Append($"{t.Type}({(t.TypeValue ?? 0):X2}) ");  break;
+                    case TokenType.C1:
+                    case TokenType.C2:
+                    case TokenType.C3:
+                        NL(); sb.Append($"{t.Type}({t.TypeValue ?? 0:X2}) ");  break;
 
-                    case BlXmedToken.TokenType.Block00:
+                    case TokenType.Block00:
                         NL();
                         if (i != last00)
                         {
@@ -312,17 +271,17 @@ namespace BlingoEngine.IO.Legacy.Texts
                         NL();
                         break;
 
-                    //case BlXmedToken.TokenType.Boolean:
+                    //case TokenType.Boolean:
                     //    Add(t.BoolValue == true ? "true" : "false");
                     //    break;
 
-                    case BlXmedToken.TokenType.B_81:
+                    case TokenType.B_81:
                         Add("<81 "); break;
-                    case BlXmedToken.TokenType.B_82:
+                    case TokenType.B_82:
                         Add("<82 "); break;
 
-                    case BlXmedToken.TokenType.PrefixedHex:
-                        Add($"{(t.TypeValue ?? 0):X2}:{(t.Ascii ?? "<empty>")} "); break;
+                    case TokenType.PrefixedHex:
+                        Add($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} "); break;
 
 
                     default:

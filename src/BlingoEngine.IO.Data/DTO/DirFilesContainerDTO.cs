@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace BlingoEngine.IO.Data.DTO;
 
 public class DirFilesContainerDTO

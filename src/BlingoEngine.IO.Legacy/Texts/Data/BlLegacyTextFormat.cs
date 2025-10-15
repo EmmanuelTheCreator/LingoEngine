@@ -1,6 +1,6 @@
 using System;
 
-namespace BlingoEngine.IO.Legacy.Texts;
+namespace BlingoEngine.IO.Legacy.Texts.Data;
 
 /// <summary>
 /// Describes the byte layout stored inside a text cast payload. Director encodes styled text

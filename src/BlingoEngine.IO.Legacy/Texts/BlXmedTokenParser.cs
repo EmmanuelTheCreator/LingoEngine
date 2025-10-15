@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
-using static BlingoEngine.IO.Legacy.Texts.BlXmedToken;
+using System.Reflection.Metadata;
+using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -16,7 +14,12 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly XmedDocument _document = new();
 
         private readonly BlXmedTokenStyleParser _styleParser;
-        private readonly BlXmedTokenRunParser _runParser;
+        private readonly XmedSpacingReader _spacingReader;
+        private readonly XmedTextBuilder _textBuilder;
+        private readonly XmedParagraphSliceBuilder _paragraphSliceBuilder;
+        private readonly XmedParagraphDescriptorReader _descriptorReader;
+        private readonly XmedRunSliceBuilder _slicerBuilder;
+        private readonly XmedBoundingRectangleReader _boundingRectangleReader;
         private readonly BlXmedTokenReader _reader;
 
         public BlXmedTokenParser(ILogger logger, byte[] buffer, IReadOnlyList<BlXmedToken> tokens, IReadOnlyList<int> lastNumbers)
@@ -27,7 +30,12 @@ namespace BlingoEngine.IO.Legacy.Texts
             _lastNumbers = lastNumbers ?? Array.Empty<int>();
             _reader = new BlXmedTokenReader(_tokens);
             _styleParser = new BlXmedTokenStyleParser(logger, _tokens);
-            _runParser = new BlXmedTokenRunParser(logger, _tokens, buffer, _document, _styleParser, _lastNumbers);
+            _spacingReader = new XmedSpacingReader(_document);
+            _textBuilder = new XmedTextBuilder(_document);
+            _paragraphSliceBuilder = new XmedParagraphSliceBuilder();
+            _descriptorReader = new XmedParagraphDescriptorReader(_document, _styleParser, _spacingReader);
+            _slicerBuilder = new XmedRunSliceBuilder(_document, _styleParser, _descriptorReader);
+            _boundingRectangleReader = new XmedBoundingRectangleReader(_document, _styleParser);
         }
 
         public XmedDocument Parse(int directorVersion)
@@ -37,12 +45,12 @@ namespace BlingoEngine.IO.Legacy.Texts
             ReadHeader();
             _styleParser.GetOrCreateStyle(0);
             ParseBody();
-
-            _runParser.BuildText();
-            _runParser.CollectParagraphDescriptorsFromTokens();
+            var textBuilder = new XmedTextBuilder(_document);
+            textBuilder.BuildText();
+            _descriptorReader.CollectParagraphDescriptorsFromTokens(_reader);
             _styleParser.CollectFontsFromTokens();
             _styleParser.FinalizeStyles(_document);
-            _runParser.FinalizeRunsAndParagraphs();
+            _slicerBuilder.FinalizeRunsAndParagraphs();
 
             return _document;
         }
@@ -53,36 +61,24 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var token = _reader.Peek();
                 if (token is null)
-                {
                     break;
-                }
 
                 if (token.IsTextBlock())
-                {
                     break;
-                }
 
                 if (token.IsPrefixedHex02() && token.Ascii is { } numeric)
                 {
                     if (numeric.Equals("40001", StringComparison.OrdinalIgnoreCase) || numeric.Equals("40000", StringComparison.OrdinalIgnoreCase))
-                    {
                         LogUnknown("Header", "02:40001");
-                    }
                     else if (numeric.Equals("-7FFF6FE0", StringComparison.OrdinalIgnoreCase))
-                    {
                         LogUnknown("Header", "02:-7FFF6FE0");
-                    }
                     else if (numeric.Equals("101", StringComparison.OrdinalIgnoreCase) && _document.LineSpacing == 0)
                     {
                         if (token.TryGetNumericValue(out var spacing) && spacing > 0)
-                        {
                             _document.LineSpacing = (uint)spacing;
-                        }
                     }
                     else if (_document.Width == 0 && token.TryGetNumericValue(out var widthValue) && widthValue > 0)
-                    {
                         _document.Width = (uint)widthValue;
-                    }
 
                     _reader.Skip();
                     continue;
@@ -100,10 +96,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                     switch (token.TypeValue)
                     {
                         case 0x03:
-                            _runParser.ReadParagraphSpacing(_reader);
+                            _spacingReader.ReadParagraphSpacing(_reader);
                             continue;
                         case 0x04:
-                            _runParser.ReadSpacing(_reader);
+                            _spacingReader.ReadSpacing(_reader);
                             continue;
                         case 0x06:
                             LogUnknown("Header", "C206");
@@ -117,7 +113,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                             _reader.Skip();
                             continue;
                         case 0x0A:
-                            _runParser.ReadBox(_reader);
+                            _boundingRectangleReader.ReadBox(_reader);
                             continue;
                         case 0x0B:
                             _styleParser.ReadEditable(_reader);
@@ -139,10 +135,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                     switch (token.TypeValue)
                     {
                         case 0x03:
-                            _runParser.ReadParagraphDescriptor(_reader);
+                            _descriptorReader.ReadParagraphDescriptor(_reader);
                             continue;
                         case 0x04:
-                            _styleParser.ReadColor(_reader);
+                            //_styleParser.ReadColor(_reader);
+                            // TODO
                             continue;
                         case 0x1C:
                             _styleParser.MarkStyleFlag(style =>
@@ -192,7 +189,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         continue;
                     }
 
-                    _runParser.AddTextToken(token);
+                    _textBuilder.AddTextToken(token);
                     _reader.Skip();
                     continue;
                 }
@@ -204,10 +201,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                     switch (type)
                     {
                         case "0004":
-                            _runParser.ReadRuns(_reader);
+                            _slicerBuilder.ReadRuns(_reader);
                             continue;
                         case "0005":
-                            _runParser.ReadParagraphFlags(_reader);
+                            _paragraphSliceBuilder.ReadParagraphFlags(_reader);
                             continue;
                         case "0006":
                             _styleParser.ReadStyles(_reader);
@@ -228,10 +225,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                     switch (token.TypeValue)
                     {
                         case 0x03:
-                            _runParser.ReadParagraphSpacing(_reader);
+                            _spacingReader.ReadParagraphSpacing(_reader);
                             continue;
                         case 0x04:
-                            _runParser.ReadSpacing(_reader);
+                            _spacingReader.ReadSpacing(_reader);
                             continue;
                         case 0x06:
                             LogUnknown("Block", "C206");
@@ -245,7 +242,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                             _reader.Skip();
                             continue;
                         case 0x0A:
-                            _runParser.ReadBox(_reader);
+                            _boundingRectangleReader.ReadBox(_reader);
                             continue;
                         case 0x0B:
                             _styleParser.ReadEditable(_reader);
@@ -267,10 +264,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                     switch (token.TypeValue)
                     {
                         case 0x03:
-                            _runParser.ReadParagraphDescriptor(_reader);
+                            _descriptorReader.ReadParagraphDescriptor(_reader);
                             continue;
                         case 0x04:
-                            _styleParser.ReadColor(_reader);
+                            //_styleParser.ReadColor(_reader);
+                            // TODO
                             continue;
                         case 0x1C:
                             _styleParser.MarkStyleFlag(style =>

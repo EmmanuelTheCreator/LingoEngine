@@ -145,7 +145,8 @@ public class XmedFileTest
     [InlineData("Text_Hallo_col_yellow_13.xmed.bin", 0xFF, 0xFF, 0x00)]
     public void Text_color_samples_should_BeRead(string fileName, byte expectedR, byte expectedG, byte expectedB)
     {
-        var path = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
+        var doc = ReadDocument($"{fileName}");
+
         // TODO
     }
 

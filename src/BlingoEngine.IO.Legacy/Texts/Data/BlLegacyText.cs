@@ -1,6 +1,6 @@
 using System;
 
-namespace BlingoEngine.IO.Legacy.Texts;
+namespace BlingoEngine.IO.Legacy.Texts.Data;
 
 /// <summary>
 /// Represents the decoded payload of a legacy Director text resource. The reader exposes both the

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BlingoEngine.IO.Legacy.Texts.Data;
 
 
 namespace BlingoEngine.IO.Legacy.Tests.Helpers;

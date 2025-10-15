@@ -19,6 +19,7 @@ using BlingoEngine.IO.Legacy.Fields;
 using FluentAssertions;
 
 using Xunit;
+using BlingoEngine.IO.Legacy.Texts.Data;
 
 namespace BlingoEngine.IO.Legacy.Tests.Files;
 

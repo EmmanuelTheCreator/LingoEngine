@@ -68,7 +68,24 @@ These instructions apply to the entire repository.
 - Avoid adding business logic or default implementations inside interfaces to preserve .NET Framework 4.8 compatibility.
 - When introducing new reusable test utilities or fakes, place their implementations under the test project's `/Fakes/` directory so future tests can consume them.
 - When adding reusable fakes or reflection helpers for tests, place deterministic sources under the owning test project's `Fakes/` directory and shared helpers under its `TestUtilities/` directory so future tests can reuse them rather than redefining copies.
+- 
+# VERY IMPORTANT
 - If there is only one code line after an `if`, `for`, or similar statement, you may omit the braces `{}`.
+This is VERY IMPORTANT.
+
+
+NEVER DO THIS:
+```csharp
+if (condition) 
+{
+      DoSomething();
+}
+  ```
+  ALWAYS DO THIS
+```csharp
+if (condition) 
+      DoSomething();
+  ```
 
 ## Troubleshooting & Known Issues
 - "Framework not found" errors usually mean the setup script has not been run.
