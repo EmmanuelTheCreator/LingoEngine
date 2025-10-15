@@ -12,13 +12,13 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly ILogger _logger;
         private readonly XmedParagraphSliceBuilder _paragraphSliceBuilder;
 
-        public XmedRunSliceBuilder(XmedDocument document, BlXmedTokenStyleParser styleParser, XmedParagraphDescriptorReader paraDescriptorReader, ILogger logger)
+        public XmedRunSliceBuilder(XmedDocument document, BlXmedTokenStyleParser styleParser, XmedParagraphDescriptorReader paraDescriptorReader, XmedParagraphSliceBuilder paragraphSliceBuilder, ILogger logger)
         {
             _document = document;
             _styleParser = styleParser;
             _paraDescriptorReader = paraDescriptorReader;
             _logger = logger;
-            _paragraphSliceBuilder = new XmedParagraphSliceBuilder();
+            _paragraphSliceBuilder = paragraphSliceBuilder;
         }
 
 
@@ -115,6 +115,8 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (paraBounds.Count == 0) paraBounds.Add((textLength, false));
 
             var paraSlices = _paragraphSliceBuilder.BuildParagraphSlices(paraBounds, textLength);
+            if (paraSlices.Count <= 1 && _document.TextLength > 0 && _document.Text.Contains('\r'))
+                paraSlices = _paragraphSliceBuilder.BuildParagraphSlicesFromText(_document.Text);
             var runSlices = BuildRunSlices(runBounds, textLength);
 
             if (runSlices.Sum(s => s.Length) != textLength)

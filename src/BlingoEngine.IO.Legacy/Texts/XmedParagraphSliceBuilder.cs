@@ -72,6 +72,7 @@
                 slices.Add(new ParagraphSlice(start, start + length, false, slices.Count));
             }
 
+            _paragraphs = slices;
             return slices;
         }
         private static List<(int Start, int Length)> ExtractParagraphSpans(string text)
