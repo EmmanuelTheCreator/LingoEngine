@@ -85,11 +85,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 .Select(descriptor => descriptor.Clone())
                 .ToList();
 
-            if (!EnsureAndAddMissingDescriptors(descriptors))
-            {
-                if (descriptors.Count > paragraphSlices.Count)
-                    descriptors = descriptors.Skip(descriptors.Count - paragraphSlices.Count).ToList();
-            }
+            AlignDescriptorsToParagraphs(descriptors, paragraphSlices.Count);
 
             var paragraphQueue = new Queue<XmedParagraphDescriptor>(descriptors);
 
@@ -110,16 +106,24 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             _spacingReader.InjectSpacings();
         }
-        private bool EnsureAndAddMissingDescriptors(List<XmedParagraphDescriptor> descriptors)
+        private static void AlignDescriptorsToParagraphs(List<XmedParagraphDescriptor> descriptors, int paragraphCount)
         {
-            if (_paragraphDescriptors.Count < descriptors.Count)
+            if (paragraphCount <= 0)
+                return;
+
+            if (descriptors.Count < paragraphCount)
             {
-                int missing = descriptors.Count - _paragraphDescriptors.Count;
+                int missing = paragraphCount - descriptors.Count;
                 for (int i = 0; i < missing; i++)
-                    _paragraphDescriptors.Insert(0, new XmedParagraphDescriptor());
-                return true;
+                    descriptors.Insert(0, new XmedParagraphDescriptor());
+                return;
             }
-            return false;
+
+            if (descriptors.Count > paragraphCount)
+            {
+                int excess = descriptors.Count - paragraphCount;
+                descriptors.RemoveRange(0, excess);
+            }
         }
         private void LogUnknown(string category, string token)
         {

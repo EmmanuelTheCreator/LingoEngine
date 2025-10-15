@@ -29,7 +29,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             _textBuilder = new XmedTextBuilder(_document);
             _paragraphSliceBuilder = new XmedParagraphSliceBuilder();
             _descriptorReader = new XmedParagraphDescriptorReader(_document, _styleParser, _spacingReader, logger);
-            _slicerBuilder = new XmedRunSliceBuilder(_document, _styleParser, _descriptorReader,logger);
+            _slicerBuilder = new XmedRunSliceBuilder(_document, _styleParser, _descriptorReader, _paragraphSliceBuilder, logger);
             _headerReader = new XmedHeaderReader(_document, _styleParser, _spacingReader, _reader, logger);
         }
 
@@ -40,8 +40,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             
             _styleParser.GetOrCreateStyle(0);
             ParseBody();
-            var textBuilder = new XmedTextBuilder(_document);
-            textBuilder.BuildText();
+            _textBuilder.BuildText();
             _styleParser.FinalizeStyles(_document);
             _slicerBuilder.FinalizeRunsAndParagraphs();
 
