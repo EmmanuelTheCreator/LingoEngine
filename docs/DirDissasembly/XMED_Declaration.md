@@ -317,13 +317,13 @@ Font styling attributes appear in the **`03:0006` style descriptor** and are ref
 
 ### Identified Style Bits
 | Style | Example File | Marker | Description |
-|--------|---------------|---------|--------------|
-| **Bold** | *(absent in NoBold)* | `C1(1E)` missing | Style weight normal (Bold disabled) |
-| **Italic** | `Text_Hallo_italic_13` | `C1(1D)` | Activates italic rendering |
-| **Underline** | `Text_Hallo_underline_13` | `C1(1C)` | Adds underline line |
-| **Strikeout** | `Text_Hallo_strikeout_13` | `C1(13)` | Draws horizontal strike line |
-| **Superscript** | `Text_Hallo_superscript_13` | `C1(0A)` / `C1(12)` | Raises baseline |
-| **Subscript** | `Text_Hallo_subscript_13` | `C1(0B)` / `C1(11)` | Lowers baseline |
+|:-----------------|:----------------------------|:--------------------|:-------------|
+| **Bold**         | `Text_Hallo_bold_13`        | `C1(0C)` / `C1(12)` | On / Off     |
+| **Italic**       | `Text_Hallo_italic_13`      | `C1(0D)` / `C1(11)` | On / Off     |
+| **Underline**    | `Text_Hallo_underline_13`   | `C1(1E)`            | Toggle underline |
+| **Superscript**  | `Text_Hallo_superscript_13` | `C1(1C)`            | Raises baseline  |
+| **Subscript**    | `Text_Hallo_subscript_13`   | `C1(1D)`            | Lowers baseline  |
+| **Strikeout**    | `Text_Hallo_strikeout_13`   | `C1(13)`            | Adds strike line through text |
 
 ### Notes
 - Each `C1(xx)` control appears after the run’s `C2(07)` group, applying to that run only.  

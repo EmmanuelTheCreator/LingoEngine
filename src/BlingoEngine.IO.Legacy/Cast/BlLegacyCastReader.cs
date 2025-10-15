@@ -5,6 +5,7 @@ using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tools;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Xml;
 
 namespace BlingoEngine.IO.Legacy.Cast;
 
@@ -98,7 +99,7 @@ internal sealed class BlLegacyCastReader
                 memberInfo = memberInfo1!;
         }
 
-        return new BlLegacyCastMemberSlot(slot, resourceId, memberInfo!.MemberType, memberInfo.Name, memberInfo.Flags, memberInfo.TextFraming, memberInfo.AntiAlias, memberInfo.AntiAliasThreashold, memberInfo.Kerning, memberInfo.KerningThreashold, memberInfo.Ink, memberInfo.UseHyperlinkStyles);
+        return new BlLegacyCastMemberSlot(slot, resourceId, memberInfo!.MemberType, memberInfo.Name, memberInfo.Flags, memberInfo.TextFraming, memberInfo.AntiAlias, memberInfo.AntiAliasThreashold, memberInfo.Kerning, memberInfo.KerningThreashold, memberInfo.Ink, memberInfo.UseHyperlinkStyles, memberInfo.IsEditable);
     }
 
     private static bool TryParseMemberChunk(byte[] payload, out CastMemberInfo? castMemberInfo)
@@ -133,6 +134,7 @@ internal sealed class BlLegacyCastReader
         var (kerning, kerningThreshold) = ReadKerning(infoData);
         var ink = ReadInk(infoData);
         var useHyperlinkStyles = ReadUseHyperlinkStyles(infoData);
+        var isEditable = ReadIsEditable(infoData);
         if (specificLength > 0)
         {
             var skip = Math.Min((int)specificLength, payload.Length - (int)reader.Position);
@@ -141,7 +143,7 @@ internal sealed class BlLegacyCastReader
         }
 
         var name = ReadMemberName(infoData);
-        castMemberInfo = new CastMemberInfo(memberType, name, flags, textFraming, antiAlias, antiAliasThreashold, kerning, kerningThreshold, ink, useHyperlinkStyles);
+        castMemberInfo = new CastMemberInfo(memberType, name, flags, textFraming, antiAlias, antiAliasThreashold, kerning, kerningThreshold, ink, useHyperlinkStyles, isEditable);
         return true;
     }
 
@@ -153,53 +155,38 @@ internal sealed class BlLegacyCastReader
         return !string.IsNullOrEmpty(extracted) ? extracted : string.Empty;
     }
     /// <summary>Reads DTS (Default Text Style) flag from Cinf.</summary>
-    private static BlLegacyCastInfoFlags ReadCastInfoFlags(byte[] infoData)
-    {
-        if (infoData == null || infoData.Length <= 0x44)
-            return BlLegacyCastInfoFlags.None;
+    private static BlLegacyCastInfoFlags ReadCastInfoFlags(byte[] info) => (BlLegacyCastInfoFlags)Get(info, 0x44);
 
-        return (BlLegacyCastInfoFlags)infoData[0x44];
-    }
-    private static BlLegacyTextFraming ReadTextFraming(byte[] infoData)
-    {
-        if (infoData == null || infoData.Length <= 0x46)
-            return BlLegacyTextFraming.Fixed;
+    private static BlLegacyTextFraming ReadTextFraming(byte[] info) => (BlLegacyTextFraming)Get(info, 0x46);
 
-        return (BlLegacyTextFraming)infoData[0x46];
-    }
     private static (BlLegacyTextAntiAlias Mode, byte ThresholdPt) ReadAntiAlias(byte[] info)
     {
-        var raw = info.Length > 0x8E ? info[0x8E] : (byte)0;
-        var thr = info.Length > 0xBA ? info[0xBA] : (byte)0;
-        var mode = (raw & 0x0F) switch
-        {
-            0x06 => BlLegacyTextAntiAlias.None,
-            0x04 => BlLegacyTextAntiAlias.AllText,
-            0x02 => BlLegacyTextAntiAlias.LargerThan,
-            _ => BlLegacyTextAntiAlias.None
-        };
+        var raw = Get(info, 0x8E);
+        var thr = Get(info, 0xBA);
+        var mode = (raw & 0x0F) switch { 0x06 => BlLegacyTextAntiAlias.None, 0x04 => BlLegacyTextAntiAlias.AllText, 0x02 => BlLegacyTextAntiAlias.LargerThan, _ => BlLegacyTextAntiAlias.None };
         return (mode, thr);
     }
 
+    // ReadKerning
     private static (BlLegacyTextKerningMode Mode, byte ThresholdPt) ReadKerning(byte[] info)
     {
-        var raw = info.Length > 0x8E ? info[0x8E] : (byte)0;
-        var thr = info.Length > 0xD2 ? info[0xD2] : (byte)0;
-        var enabled = info.Length > 0xCE && (info[0xCE] & 0x01) != 0;
-        var mode = (raw & 0xF0) switch
-        {
-            0x40 => BlLegacyTextKerningMode.None,
-            0x30 => BlLegacyTextKerningMode.AllText,
-            0x70 => BlLegacyTextKerningMode.LargerThan,
-            _ => BlLegacyTextKerningMode.None
-        };
-        return (mode, thr);
+        var raw = Get(info, 0x8E);
+        var thr = Get(info, 0xD2);
+        var enabled = (Get(info, 0xCE) & 0x01) != 0;
+        var mode = (raw & 0xF0) switch { 0x40 => BlLegacyTextKerningMode.None, 0x30 => BlLegacyTextKerningMode.AllText, 0x70 => BlLegacyTextKerningMode.LargerThan, _ => BlLegacyTextKerningMode.None };
+        return (enabled ? mode : BlLegacyTextKerningMode.None, thr);
     }
-    public static bool ReadUseHyperlinkStyles(byte[] infoData)
-     => infoData.Length > 0xD6 && infoData[0xD6] != 0;
-    public static byte ReadInk(byte[] cinf)
-      => cinf[0xE6];
-    private record CastMemberInfo(BlLegacyCastMemberType MemberType = BlLegacyCastMemberType.Null, string Name = "", BlLegacyCastInfoFlags Flags = BlLegacyCastInfoFlags.None, BlLegacyTextFraming TextFraming = BlLegacyTextFraming.Fixed, BlLegacyTextAntiAlias AntiAlias = BlLegacyTextAntiAlias.None, byte AntiAliasThreashold = 0, BlLegacyTextKerningMode Kerning = BlLegacyTextKerningMode.None, byte KerningThreashold = 0, byte Ink = 0, bool UseHyperlinkStyles = true);
+
+    // ReadUseHyperlinkStyles
+    public static bool ReadUseHyperlinkStyles(byte[] info) => Get(info, 0xD6) != 0;
+
+    // ReadInk
+    public static byte ReadInk(byte[] info) => Get(info, 0xE6);
+
+    // ReadIsEditable
+    private static bool ReadIsEditable(byte[] info) => Get(info, 0xA2) != 0;
+    private static byte Get(byte[] a, int off, byte def = 0) => (a != null && a.Length > off) ? a[off] : def;
+    private record CastMemberInfo(BlLegacyCastMemberType MemberType = BlLegacyCastMemberType.Null, string Name = "", BlLegacyCastInfoFlags Flags = BlLegacyCastInfoFlags.None, BlLegacyTextFraming TextFraming = BlLegacyTextFraming.Fixed, BlLegacyTextAntiAlias AntiAlias = BlLegacyTextAntiAlias.None, byte AntiAliasThreashold = 0, BlLegacyTextKerningMode Kerning = BlLegacyTextKerningMode.None, byte KerningThreashold = 0, byte Ink = 0, bool UseHyperlinkStyles = true, bool IsEditable = false);
 }
 
 /// <summary>

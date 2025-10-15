@@ -149,6 +149,13 @@ public class XmedFileTest
 
         // TODO
     }
+    [Fact]
+    public void Multi_Text_color_samples_should_BeRead()
+    {
+        var doc = ReadDocument($"MemberTests/Text_Multi_Style_Size_Color_13.bin");
+
+        // TODO
+    }
 
    
 

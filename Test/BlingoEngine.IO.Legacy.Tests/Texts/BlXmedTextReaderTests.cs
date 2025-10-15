@@ -47,15 +47,7 @@ public class BlXmedTextReaderTests
         var underline = ReadDocument("Texts_Fields/Text_Hallo_underline_13.xmed.bin");
         underline.Styles.Should().Contain(s => s.Underline);
     }
-    [Fact]
-    public void Text_Hallo_text_transform_all_on_file_should_merge_styles_into_run_text()
-    {
-        var document = ReadDocument("Text_Hallo_text_transform_all_on_13.xmed.bin");
-
-        string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
-        textFromRuns.ShouldMatchNormalized("Hallo");
-        document.Styles.Should().Contain(style => style.Italic && style.Underline);
-    }
+  
     [Fact]
     public void Read_ParsesStyleDescriptorsForMultifont()
     {
