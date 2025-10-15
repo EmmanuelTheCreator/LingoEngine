@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using BlingoEngine.IO.Legacy.Core;
 using Microsoft.Extensions.Logging;
+using static BlingoEngine.IO.Legacy.Texts.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class BlXmedTokenStyleParser
     {
-        private readonly IReadOnlyList<BlXmedTokenizer.Token> _tokens;
+        private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly HashSet<string> _fontNames = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, XmedStyleDescriptor> _stylesById = new();
         private readonly Dictionary<int, int> _styleParents = new();
@@ -16,7 +17,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private int _nextStyleId = 1;
 
-        public BlXmedTokenStyleParser(ILogger logger, IReadOnlyList<BlXmedTokenizer.Token> tokens)
+        public BlXmedTokenStyleParser(ILogger logger, IReadOnlyList<BlXmedToken> tokens)
         {
             _ = logger;
             _tokens = tokens;
@@ -28,9 +29,9 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public IReadOnlyDictionary<int, XmedStyleDescriptor> StylesById => _stylesById;
 
-        public void TrackStyleMarker(BlXmedTokenizer.Token token)
+        public void TrackStyleMarker(BlXmedToken token)
         {
-            if (token.Type != BlXmedTokenizer.TokenType.C1)
+            if (token.Type != TokenType.C1)
             {
                 return;
             }
@@ -107,7 +108,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     break;
                 }
 
-                if (lookahead.Type == BlXmedTokenizer.TokenType.Block00 ||
+                if (lookahead.Type == TokenType.Block00 ||
                     (lookahead.IsPrefixedHex03() && fieldIndex > 0) ||
                     lookahead.IsCompositeOpen())
                 {
@@ -241,7 +242,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             foreach (var token in _tokens)
             {
-                if (token.Type != BlXmedTokenizer.TokenType.Block00 || token.Value != 40)
+                if (token.Type != TokenType.Block00 || token.Value != 40)
                 {
                     continue;
                 }

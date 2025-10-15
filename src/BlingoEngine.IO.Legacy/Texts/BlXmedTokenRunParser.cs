@@ -8,12 +8,12 @@ namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class BlXmedTokenRunParser
     {
-        private readonly IReadOnlyList<BlXmedTokenizer.Token> _tokens;
+        private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly byte[] _buffer;
         private readonly XmedDocument _document;
         private readonly BlXmedTokenStyleParser _styleParser;
 
-        private readonly List<BlXmedTokenizer.Token> _textTokens = new();
+        private readonly List<BlXmedToken> _textTokens = new();
         private readonly List<(int End, int StyleId)> _runBoundaries = new();
         private readonly List<(int End, bool Flag)> _paragraphFlags = new();
         private readonly List<XmedParagraphDescriptor> _paragraphDescriptors = new();
@@ -21,7 +21,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public BlXmedTokenRunParser(
             ILogger logger,
-            IReadOnlyList<BlXmedTokenizer.Token> tokens,
+            IReadOnlyList<BlXmedToken> tokens,
             byte[] buffer,
             XmedDocument document,
             BlXmedTokenStyleParser styleParser,
@@ -35,7 +35,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             _ = lastNumbers;
         }
 
-        public void AddTextToken(BlXmedTokenizer.Token token)
+        public void AddTextToken(BlXmedToken token)
         {
             if (token.IsTextBlock())
             {

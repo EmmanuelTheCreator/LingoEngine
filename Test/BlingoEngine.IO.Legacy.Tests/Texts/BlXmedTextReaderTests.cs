@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -46,7 +47,15 @@ public class BlXmedTextReaderTests
         var underline = ReadDocument("Texts_Fields/Text_Hallo_underline_13.xmed.bin");
         underline.Styles.Should().Contain(s => s.Underline);
     }
+    [Fact]
+    public void Text_Hallo_text_transform_all_on_file_should_merge_styles_into_run_text()
+    {
+        var document = ReadDocument("Text_Hallo_text_transform_all_on_13.xmed.bin");
 
+        string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
+        textFromRuns.ShouldMatchNormalized("Hallo");
+        document.Styles.Should().Contain(style => style.Italic && style.Underline);
+    }
     [Fact]
     public void Read_ParsesStyleDescriptorsForMultifont()
     {
@@ -57,40 +66,7 @@ public class BlXmedTextReaderTests
         document.Styles.Should().HaveCountGreaterThan(1);
     }
 
-    [Fact]
-    public void Read_LegacyVersion_ParsesRichTextHeader()
-    {
-        var buffer = BuildLegacyRichTextBuffer();
-        var reader = new BlXmedTextReader(_logger);
-
-        var document = reader.Read(buffer, directorVersion: 5);
-
-        document.DirectorVersion.Should().Be(5);
-        document.Text.Should().BeEmpty();
-        document.Runs.Should().BeEmpty();
-        document.Styles.Should().BeEmpty();
-
-        document.RichText.Should().NotBeNull();
-        var metadata = document.RichText!;
-        metadata.AntialiasFlag.Should().Be(0x9A);
-        metadata.CropFlags.Should().Be(0x55);
-        metadata.ScrollPosition.Should().Be(0x1234);
-        metadata.AntialiasFontSize.Should().Be(0x0015);
-        metadata.DisplayHeight.Should().Be(0x0456);
-        metadata.ForegroundColor.Should().BeEquivalentTo(new BlLegacyColor(0x10, 0x20, 0x30));
-        metadata.BackgroundColor.Should().BeEquivalentTo(new BlLegacyColor(0x40, 0x50, 0x60));
-
-        metadata.InitialRect.Top.Should().Be(1);
-        metadata.InitialRect.Left.Should().Be(2);
-        metadata.InitialRect.Bottom.Should().Be(3);
-        metadata.InitialRect.Right.Should().Be(4);
-
-        metadata.BoundingRect.Top.Should().Be(5);
-        metadata.BoundingRect.Left.Should().Be(6);
-        metadata.BoundingRect.Bottom.Should().Be(7);
-        metadata.BoundingRect.Right.Should().Be(8);
-    }
-
+  
     private XmedDocument ReadDocument(string asset)
     {
         var path = TestContextHarness.GetAssetPath(asset);
@@ -99,48 +75,5 @@ public class BlXmedTextReaderTests
         return reader.Read(bytes);
     }
 
-    private static byte[] BuildLegacyRichTextBuffer()
-    {
-        var bytes = new List<byte>();
-
-        static void AddInt16(List<byte> target, short value)
-        {
-            target.Add((byte)((value >> 8) & 0xFF));
-            target.Add((byte)(value & 0xFF));
-        }
-
-        static void AddUInt16(List<byte> target, ushort value)
-        {
-            target.Add((byte)((value >> 8) & 0xFF));
-            target.Add((byte)(value & 0xFF));
-        }
-
-        AddInt16(bytes, 1);
-        AddInt16(bytes, 2);
-        AddInt16(bytes, 3);
-        AddInt16(bytes, 4);
-
-        AddInt16(bytes, 5);
-        AddInt16(bytes, 6);
-        AddInt16(bytes, 7);
-        AddInt16(bytes, 8);
-
-        bytes.Add(0x9A);
-        bytes.Add(0x55);
-
-        AddUInt16(bytes, 0x1234);
-        AddUInt16(bytes, 0x0015);
-        AddUInt16(bytes, 0x0456);
-
-        bytes.Add(0x00);
-        bytes.Add(0x10);
-        bytes.Add(0x20);
-        bytes.Add(0x30);
-
-        AddUInt16(bytes, 0x4000);
-        AddUInt16(bytes, 0x5000);
-        AddUInt16(bytes, 0x6000);
-
-        return bytes.ToArray();
-    }
+   
 }

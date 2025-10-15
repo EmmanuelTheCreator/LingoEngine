@@ -17,8 +17,9 @@ public class BlLegacyTextReaderTests
     [Fact]
     public void GenerateXmedText()
     {
-        var folder = "Texts_Fields";
+        //var folder = "Texts_Fields";
         //var folder = "Texts_Fields/Tests2";
+        var folder = "Texts_Fields/MemberTests";
         var cstFiles = TestContextHarness.GetAllFilesFromFolder(folder, "*.cst");
         foreach (var item in cstFiles)
         {

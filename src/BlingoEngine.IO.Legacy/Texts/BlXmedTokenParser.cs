@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using BlingoEngine.IO.Legacy.Core;
 using Microsoft.Extensions.Logging;
+using static BlingoEngine.IO.Legacy.Texts.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class BlXmedTokenParser
     {
         private readonly ILogger _logger;
-        private readonly IReadOnlyList<BlXmedTokenizer.Token> _tokens;
+        private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly IReadOnlyList<int> _lastNumbers;
         private readonly byte[] _buffer;
         private readonly XmedDocument _document = new();
@@ -18,11 +19,11 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly BlXmedTokenRunParser _runParser;
         private readonly BlXmedTokenReader _reader;
 
-        public BlXmedTokenParser(ILogger logger, byte[] buffer, IReadOnlyList<BlXmedTokenizer.Token> tokens, IReadOnlyList<int> lastNumbers)
+        public BlXmedTokenParser(ILogger logger, byte[] buffer, IReadOnlyList<BlXmedToken> tokens, IReadOnlyList<int> lastNumbers)
         {
             _logger = logger;
             _buffer = buffer;
-            _tokens = tokens ?? Array.Empty<BlXmedTokenizer.Token>();
+            _tokens = tokens ?? Array.Empty<BlXmedToken>();
             _lastNumbers = lastNumbers ?? Array.Empty<int>();
             _reader = new BlXmedTokenReader(_tokens);
             _styleParser = new BlXmedTokenStyleParser(logger, _tokens);
@@ -176,7 +177,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     break;
                 }
 
-                if (token.Type == BlXmedTokenizer.TokenType.Block00)
+                if (token.Type == TokenType.Block00)
                 {
                     if (token.Value == 40)
                     {

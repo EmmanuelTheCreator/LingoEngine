@@ -6,13 +6,13 @@ namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class BlXmedTokenReader
     {
-        private static readonly IReadOnlyList<BlXmedTokenizer.Token> EmptyTokenList = Array.Empty<BlXmedTokenizer.Token>();
+        private static readonly IReadOnlyList<BlXmedToken> _emptyTokenList = Array.Empty<BlXmedToken>();
 
-        private readonly IReadOnlyList<BlXmedTokenizer.Token> _tokens;
+        private readonly IReadOnlyList<BlXmedToken> _tokens;
 
-        public BlXmedTokenReader(IReadOnlyList<BlXmedTokenizer.Token>? tokens, int position = 0)
+        public BlXmedTokenReader(IReadOnlyList<BlXmedToken>? tokens, int position = 0)
         {
-            _tokens = tokens ?? EmptyTokenList;
+            _tokens = tokens ?? _emptyTokenList;
             Position = Math.Clamp(position, 0, _tokens.Count);
         }
 
@@ -22,7 +22,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public bool IsAtEnd => Position >= Count;
 
-        public BlXmedTokenizer.Token? Peek(int offset = 0)
+        public BlXmedToken? Peek(int offset = 0)
         {
             int index = Position + offset;
             if (index < 0 || index >= Count)
@@ -33,7 +33,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             return _tokens[index];
         }
 
-        public BlXmedTokenizer.Token? ReadNext()
+        public BlXmedToken? ReadNext()
         {
             var token = Peek();
             if (token != null)
@@ -59,15 +59,15 @@ namespace BlingoEngine.IO.Legacy.Texts
             Position = Math.Clamp(position, 0, Count);
         }
 
-        public IReadOnlyList<IReadOnlyList<BlXmedTokenizer.Token>> GetValues(bool includeEmpty = false, bool consumeTerminator = true)
+        public IReadOnlyList<IReadOnlyList<BlXmedToken>> GetValues(bool includeEmpty = false, bool consumeTerminator = true)
         {
             if (IsAtEnd)
             {
-                return Array.Empty<IReadOnlyList<BlXmedTokenizer.Token>>();
+                return Array.Empty<IReadOnlyList<BlXmedToken>>();
             }
 
-            var segments = new List<IReadOnlyList<BlXmedTokenizer.Token>>();
-            var current = new List<BlXmedTokenizer.Token>();
+            var segments = new List<IReadOnlyList<BlXmedToken>>();
+            var current = new List<BlXmedToken>();
 
             while (!IsAtEnd)
             {
@@ -81,7 +81,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         segments.Add(current);
                     }
 
-                    current = new List<BlXmedTokenizer.Token>();
+                    current = new List<BlXmedToken>();
                     continue;
                 }
 
@@ -112,12 +112,12 @@ namespace BlingoEngine.IO.Legacy.Texts
             return segments;
         }
 
-        public IReadOnlyList<BlXmedTokenizer.Token> GetFlatValues(bool includeEmpty = false, bool consumeTerminator = true)
+        public IReadOnlyList<BlXmedToken> GetFlatValues(bool includeEmpty = false, bool consumeTerminator = true)
         {
             var segments = GetValues(includeEmpty, consumeTerminator);
             if (segments.Count == 0)
             {
-                return Array.Empty<BlXmedTokenizer.Token>();
+                return Array.Empty<BlXmedToken>();
             }
 
             if (segments.Count == 1)

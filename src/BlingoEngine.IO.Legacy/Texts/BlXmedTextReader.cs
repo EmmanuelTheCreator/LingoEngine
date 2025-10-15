@@ -53,6 +53,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         public int SpacingAfter { get; set; }
         public XmedAlignment Alignment { get; set; } = XmedAlignment.Left;
         public List<int> TabStops { get; } = new();
+        public object Text { get; internal set; }
 
         public XmedParagraphDescriptor Clone()
         {
@@ -253,8 +254,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             var tokenizer = new BlXmedTokenizer();
             var (tokens, lastNumbers) = tokenizer.Tokenize(buffer);
             var parser = new BlXmedTokenParser(_logger, buffer, tokens, lastNumbers);
-            return parser.Parse(directorVersion);
+            var doc = parser.Parse(directorVersion);
+            FillParagraphTexts(doc);
+            return doc;
         }
+
         private XmedDocument ReadModernXmedOld(byte[] buffer, int directorVersion)
         {
             // Old code below, to be removed 
@@ -893,7 +897,23 @@ namespace BlingoEngine.IO.Legacy.Texts
                 _ => XmedAlignment.Center
             };
         }
+        private static void FillParagraphTexts(XmedDocument document)
+        {
+            if (document.Paragraphs.Count == 0) return;
+            foreach (var p in document.Paragraphs)
+                p.Text = GetParagraphText(document.Text, p);
+        }
+        private static string GetParagraphText(string text, XmedParagraphDescriptor paragraph)
+        {
+            if (string.IsNullOrEmpty(text) || paragraph.Length <= 0 || paragraph.Start < 0)
+                return string.Empty;
 
+            if (paragraph.Start >= text.Length)
+                return string.Empty;
+
+            int length = Math.Min(paragraph.Length, text.Length - paragraph.Start);
+            return length > 0 ? text.Substring(paragraph.Start, length) : string.Empty;
+        }
         private static bool TryGetDescriptor(IReadOnlyList<XmedStyleDescriptor> descriptors, int id, out XmedStyleDescriptor descriptor)
         {
             for (int i = 0; i < descriptors.Count; i++)
