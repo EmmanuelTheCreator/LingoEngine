@@ -147,22 +147,8 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
 
-        public IReadOnlyList<byte> GetColorComponents()
-        {
-            var tokens = GetFlatValues();
-            if (tokens.Count == 0)
-                return Array.Empty<byte>();
-
-            var values = new List<byte>(tokens.Count);
-            foreach (var token in tokens)
-            {
-                if (token.TryGetColorComponent(out var component))
-                    values.Add(component);
-            }
-
-            return values;
-        }
-
+       
+       
         public bool TryGetBool(out bool value)
         {
             value = false;
@@ -205,17 +191,95 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public bool IsNext(TokenType type) => Peek()?.Type == type;
 
+      
+       
+        public bool TryReadBooleansInC2(byte type, out bool first, out bool second, Action<BlXmedToken> onSkip)
+        {
+            first = second = false;
+            var t = Peek();
+            if (t is null || !t.IsCompositeC2(type)) return false;
+
+            ReadNext(); // consume C2(type)
+            int count = 0;
+
+            while (!IsAtEnd)
+            {
+                t = Peek(); if (t is null) break;
+                if (t.IsFieldTerminator()) { ReadNext(); break; }
+
+                if (t.IsPrefixedHex02() && t.TryGetNumericValue(out var v))
+                {
+                    if (count == 0) first = v != 0;
+                    else if (count == 1) second = v != 0;
+                    count++;
+                    ReadNext();
+                    continue;
+                }
+
+                onSkip(t);
+                ReadNext();
+            }
+
+            return count > 0;
+        }
+
+     
+        public bool TryReadNumericPairInC2(byte type, out int a, out int b, Action<BlXmedToken> onSkip)
+        {
+            a = b = 0;
+            var t = Peek(); if (t is null || !t.IsCompositeC2(type)) return false;
+            ReadNext();
+            int? x = null, y = null;
+            while (!IsAtEnd)
+            {
+                t = Peek(); if (t is null) break;
+                if (t.IsFieldTerminator()) { ReadNext(); break; }
+                if (t.IsPrefixedHex02() && t.TryGetNumericValue(out var v))
+                { if (x is null) x = v; else if (y is null) y = v; ReadNext(); continue; }
+                onSkip(t); ReadNext();
+            }
+            if (x is { } xx && y is { } yy) { a = xx; b = yy; return true; }
+            return false;
+        }
+
+        public bool TryReadBooleanInC2(byte type, out bool value, Action<BlXmedToken> onSkip)
+        {
+            value = false;
+            var t = Peek(); if (t is null || !t.IsCompositeC2(type)) return false;
+            ReadNext();
+            while (!IsAtEnd)
+            {
+                t = Peek(); if (t is null) break;
+                if (t.IsFieldTerminator()) { ReadNext(); break; }
+                if (t.IsPrefixedHex02() && t.TryGetNumericValue(out var v))
+                { value = v != 0; ReadNext(); return true; }
+                onSkip(t); ReadNext();
+            }
+            return false;
+        }
+
         public bool TryGetColor(out BlLegacyColor? color)
         {
             color = null;
-            if (!Peek()?.IsCompositeC1(0x04) ?? true) return false;
-            var components = GetColorComponents();
-            if (components.Count == 0) return false;
-            var r = components.ElementAtOrDefault(0);
-            var g = components.ElementAtOrDefault(1);
-            var b = components.ElementAtOrDefault(2);
-            color = new BlLegacyColor(r, g, b);
+            var comps = GetColorComponents();
+            if (comps.Count == 0) return false;
+            color = new BlLegacyColor(comps.ElementAtOrDefault(0), comps.ElementAtOrDefault(1), comps.ElementAtOrDefault(2));
             return true;
+        }
+
+        public IReadOnlyList<byte> GetColorComponents()
+        {
+            var t = Peek(); if (t is null || !t.IsCompositeC1(0x04)) return Array.Empty<byte>();
+            ReadNext();
+            var vals = new List<byte>(3);
+            while (!IsAtEnd)
+            {
+                t = Peek(); if (t is null) break;
+                if (t.IsFieldTerminator()) { ReadNext(); break; }
+                if (t.TryGetColorComponent(out var c)) { vals.Add(c); ReadNext(); continue; }
+                ReadNext();
+            }
+            return vals;
         }
 
     }

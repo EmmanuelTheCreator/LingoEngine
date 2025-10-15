@@ -1,4 +1,5 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
+using Microsoft.Extensions.Logging;
 using static BlingoEngine.IO.Legacy.Texts.XmedParagraphSliceBuilder;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -9,158 +10,22 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly XmedDocument _document;
         private readonly BlXmedTokenStyleParser _styleParser;
         private readonly XmedSpacingReader _spacingReader;
+        private readonly ILogger _logger;
 
-        public XmedParagraphDescriptorReader(XmedDocument document, BlXmedTokenStyleParser styleParser, XmedSpacingReader spacingReader)
+        public XmedParagraphDescriptorReader(XmedDocument document, BlXmedTokenStyleParser styleParser, XmedSpacingReader spacingReader, ILogger logger)
         {
             _document = document;
             _styleParser = styleParser;
             _spacingReader = spacingReader;
+            _logger = logger;
         }
 
-        public void ReadParagraphDescriptor(BlXmedTokenReader reader)
+        public void Reset()
         {
-            reader.Skip();
-            ParseParagraphBlock(reader, 0);
+            _paragraphDescriptors.Clear();
         }
 
-        public void CollectParagraphDescriptorsFromTokens(BlXmedTokenReader reader)
-        {
-            if (reader.IsAtEnd)
-                return;
-
-            _spacingReader.Reset();
-
-            var descriptors = ReadDescriptors(reader);
-
-            if (descriptors.Count == 0)
-                return;
-
-            EnsureAndAddMissingDescriptors(descriptors);
-
-            for (int i = 0; i < descriptors.Count; i++)
-            {
-                int targetIndex = _paragraphDescriptors.Count - descriptors.Count + i;
-                if (targetIndex < 0 || targetIndex >= _paragraphDescriptors.Count)
-                    continue;
-
-                var target = _paragraphDescriptors[targetIndex];
-                var source = descriptors[i];
-                target.ParseValuesFrom(source);
-            }
-        }
-
-        private List<XmedParagraphDescriptor> ReadDescriptors(BlXmedTokenReader reader)
-        {
-            var descriptors = new List<XmedParagraphDescriptor>();
-            while (!reader.IsAtEnd)
-            {
-                var token = reader.ReadNext();
-                if (token == null) break;
-                if (token.IsCompositeC1(0x03))
-                {
-                    if (TryExtractParagraphDescriptor(reader, out var descriptor))
-                        descriptors.Add(descriptor!);
-                }
-            }
-
-            return descriptors;
-        }
-
-        private void ParseParagraphBlock(BlXmedTokenReader reader, int depth)
-        {
-            var values = new List<int>();
-            var tabStops = new List<int>();
-            int fieldIndex = 0;
-
-            while (!reader.IsAtEnd)
-            {
-                var token = reader.Peek();
-                if (token is null)
-                    break;
-
-                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
-                {
-                    if (fieldIndex < 4)
-                        values.Add(numeric);
-                    else
-                        tabStops.Add(numeric);
-
-                    reader.Skip();
-                    continue;
-                }
-
-                if (token.IsFieldSeparator())
-                {
-                    fieldIndex++;
-                    reader.Skip();
-                    continue;
-                }
-
-                if (token.IsFieldTerminator())
-                {
-                    reader.Skip();
-                    FinalizeParagraphDescriptor(values, tabStops);
-                    return;
-                }
-
-                if (token.IsC1())
-                {
-                    _styleParser.TrackStyleMarker(token);
-                    reader.Skip();
-
-                    if (token.TypeValue == 0x03)
-                    {
-                        ParseParagraphBlock(reader, depth + 1);
-                        continue;
-                    }
-
-                    if (token.TypeValue == 0x1C)
-                    {
-                        _styleParser.MarkStyleFlag(style =>
-                        {
-                            style.Underline = true;
-                            style.StyleFlags = (byte)(style.StyleFlags | 0x04);
-                        });
-                    }
-                    else if (token.TypeValue == 0x1D)
-                    {
-                        _styleParser.MarkStyleFlag(style =>
-                        {
-                            style.Italic = true;
-                            style.StyleFlags = (byte)(style.StyleFlags | 0x02);
-                        });
-                    }
-
-                    continue;
-                }
-
-                if (token.IsC2())
-                {
-                    if (token.TypeValue == 0x03)
-                    {
-                        _spacingReader.ReadParagraphSpacing(reader);
-                        continue;
-                    }
-
-                    reader.Skip();
-                    continue;
-                }
-
-                if (token.IsBlockBoundary())
-                {
-                    if (depth == 0)
-                    {
-                        FinalizeParagraphDescriptor(values, tabStops);
-                    }
-                    return;
-                }
-
-                reader.Skip();
-            }
-
-            FinalizeParagraphDescriptor(values, tabStops);
-        }
-        private bool TryExtractParagraphDescriptor(BlXmedTokenReader reader, out XmedParagraphDescriptor? descriptor)
+        public bool TryExtractParagraphDescriptor(BlXmedTokenReader reader, out XmedParagraphDescriptor? descriptor)
         {
             descriptor = null;
             if (!reader.Peek()?.IsCompositeC1(0x03) ?? true) return false;
@@ -186,15 +51,16 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (t.IsFieldTerminator()) { reader.ReadNext(); if (depth == 0) break; depth--; continue; }
                 if (t.IsCompositeC1(0x03)) { depth++; reader.ReadNext(); continue; }
                 if (t.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(reader); continue; }
-                if (t.IsBlockBoundary()) break;
+                if (t.IsBlockBoundary()) { LogUnknown("Paragraph", "<block-boundary>"); break; }
 
+                LogUnknown("Paragraph", t.ToString());
                 reader.ReadNext();
             }
 
             bool InRange(int v) => v >= -512 && v <= 0x2000;
             if (values.Count >= 3 && InRange(values[0]) && InRange(values[2]))
             {
-                int Norm(int v) => v < 0 ? 0 : Math.Min(v, 0x2000);
+                
                 descriptor = new XmedParagraphDescriptor
                 {
                     LeftMargin = Norm(values.ElementAtOrDefault(0)),
@@ -208,51 +74,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             return false;
         }
 
-        private void FinalizeParagraphDescriptor(List<int> values, List<int> tabStops)
-        {
-            if (values.Count == 0)
-            {
-                values.Clear();
-                tabStops.Clear();
-                return;
-            }
-
-            bool IsWithinRange(int value) => value >= -512 && value <= 0x2000;
-
-            int leftRaw = values.ElementAtOrDefault(0);
-            int rightRaw = values.ElementAtOrDefault(1);
-            int firstLineRaw = values.ElementAtOrDefault(2);
-
-            if (!IsWithinRange(leftRaw) || !IsWithinRange(rightRaw) || !IsWithinRange(firstLineRaw))
-            {
-                values.Clear();
-                tabStops.Clear();
-                return;
-            }
-
-            static int Normalize(int value) => value < 0 ? 0 : Math.Min(value, 0x2000);
-
-            var descriptor = new XmedParagraphDescriptor
-            {
-                LeftMargin = Normalize(leftRaw),
-                RightMargin = Normalize(rightRaw),
-                FirstLineIndent = Normalize(firstLineRaw),
-                AdditionalIndent = values.Count > 3 && IsWithinRange(values[3])
-                    ? Normalize(values[3])
-                    : null
-            };
-
-            if (tabStops.Count > 0)
-            {
-                foreach (int stop in tabStops.Where(IsWithinRange))
-                    descriptor.TabStops.Add(Normalize(stop));
-            }
-
-            _paragraphDescriptors.Add(descriptor);
-
-            values.Clear();
-            tabStops.Clear();
-        }
+        private static int Norm(int v) => v < 0 ? 0 : Math.Min(v, 0x2000);
 
         public void BuildParagraphs(List<ParagraphSlice> paragraphSlices, XmedStyleDescriptor baseStyle)
         {
@@ -282,7 +104,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 _document.Paragraphs.Add(paragraph);
             }
-            
+
             _spacingReader.InjectSpacings();
         }
         private bool EnsureAndAddMissingDescriptors(List<XmedParagraphDescriptor> descriptors)
@@ -296,6 +118,198 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
             return false;
         }
+        private void LogUnknown(string category, string token)
+        {
+            _logger.LogDebug("XMED: {Category} unknown paragraph token {Token}", category, token);
+        }
+
+
+        #region OLD
+        //public void CollectParagraphDescriptorsFromTokens(BlXmedTokenReader reader)
+        //{
+        //    if (reader.IsAtEnd)
+        //        return;
+
+        //    _spacingReader.Reset();
+
+        //    var descriptors = ReadDescriptors(reader);
+
+        //    if (descriptors.Count == 0)
+        //        return;
+
+        //    EnsureAndAddMissingDescriptors(descriptors);
+
+        //    for (int i = 0; i < descriptors.Count; i++)
+        //    {
+        //        int targetIndex = _paragraphDescriptors.Count - descriptors.Count + i;
+        //        if (targetIndex < 0 || targetIndex >= _paragraphDescriptors.Count)
+        //            continue;
+
+        //        var target = _paragraphDescriptors[targetIndex];
+        //        var source = descriptors[i];
+        //        target.ParseValuesFrom(source);
+        //    }
+        //}
+
+        //private List<XmedParagraphDescriptor> ReadDescriptors(BlXmedTokenReader reader)
+        //{
+        //    var descriptors = new List<XmedParagraphDescriptor>();
+        //    while (!reader.IsAtEnd)
+        //    {
+        //        var token = reader.ReadNext();
+        //        if (token == null) break;
+        //        if (token.IsCompositeC1(0x03))
+        //        {
+        //            if (TryExtractParagraphDescriptor(reader, out var descriptor))
+        //                descriptors.Add(descriptor!);
+        //        }
+        //    }
+
+        //    return descriptors;
+        //}
+
+        //private void ParseParagraphBlock(BlXmedTokenReader reader, int depth)
+        //{
+        //    var values = new List<int>();
+        //    var tabStops = new List<int>();
+        //    int fieldIndex = 0;
+
+        //    while (!reader.IsAtEnd)
+        //    {
+        //        var token = reader.Peek();
+        //        if (token is null)
+        //            break;
+
+        //        if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
+        //        {
+        //            if (fieldIndex < 4)
+        //                values.Add(numeric);
+        //            else
+        //                tabStops.Add(numeric);
+
+        //            reader.Skip();
+        //            continue;
+        //        }
+
+        //        if (token.IsFieldSeparator())
+        //        {
+        //            fieldIndex++;
+        //            reader.Skip();
+        //            continue;
+        //        }
+
+        //        if (token.IsFieldTerminator())
+        //        {
+        //            reader.Skip();
+        //            FinalizeParagraphDescriptor(values, tabStops);
+        //            return;
+        //        }
+
+        //        if (token.IsC1())
+        //        {
+        //            // old TODO
+        //            //_styleParser.TrackStyleMarker(token);
+        //            var styleIndex = ????
+        //            reader.Skip();
+
+        //            if (token.TypeValue == 0x03)
+        //            {
+        //                ParseParagraphBlock(reader, depth + 1);
+        //                continue;
+        //            }
+
+        //            if (token.TypeValue == 0x1C)
+        //            {
+        //                _styleParser.MarkStyleFlag(styleIndex, style =>
+        //                {
+        //                    style.Underline = true;
+        //                    style.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Underline,true);
+        //                });
+        //            }
+        //            else if (token.TypeValue == 0x1D)
+        //            {
+        //                _styleParser.MarkStyleFlag(styleIndex, style =>
+        //                {
+        //                    style.Italic = true;
+        //                    style.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Italic, true);
+        //                });
+        //            }
+
+        //            continue;
+        //        }
+
+        //        if (token.IsC2())
+        //        {
+        //            if (token.TypeValue == 0x03)
+        //            {
+        //                _spacingReader.ReadParagraphSpacing(reader);
+        //                continue;
+        //            }
+
+        //            reader.Skip();
+        //            continue;
+        //        }
+
+        //        if (token.IsBlockBoundary())
+        //        {
+        //            if (depth == 0)
+        //            {
+        //                FinalizeParagraphDescriptor(values, tabStops);
+        //            }
+        //            return;
+        //        }
+
+        //        reader.Skip();
+        //    }
+
+        //    FinalizeParagraphDescriptor(values, tabStops);
+        //} 
+        //private void FinalizeParagraphDescriptor(List<int> values, List<int> tabStops)
+        //{
+        //    if (values.Count == 0)
+        //    {
+        //        values.Clear();
+        //        tabStops.Clear();
+        //        return;
+        //    }
+
+        //    bool IsWithinRange(int value) => value >= -512 && value <= 0x2000;
+
+        //    int leftRaw = values.ElementAtOrDefault(0);
+        //    int rightRaw = values.ElementAtOrDefault(1);
+        //    int firstLineRaw = values.ElementAtOrDefault(2);
+
+        //    if (!IsWithinRange(leftRaw) || !IsWithinRange(rightRaw) || !IsWithinRange(firstLineRaw))
+        //    {
+        //        values.Clear();
+        //        tabStops.Clear();
+        //        return;
+        //    }
+
+        //    static int Normalize(int value) => value < 0 ? 0 : Math.Min(value, 0x2000);
+
+        //    var descriptor = new XmedParagraphDescriptor
+        //    {
+        //        LeftMargin = Normalize(leftRaw),
+        //        RightMargin = Normalize(rightRaw),
+        //        FirstLineIndent = Normalize(firstLineRaw),
+        //        AdditionalIndent = values.Count > 3 && IsWithinRange(values[3])
+        //            ? Normalize(values[3])
+        //            : null
+        //    };
+
+        //    if (tabStops.Count > 0)
+        //    {
+        //        foreach (int stop in tabStops.Where(IsWithinRange))
+        //            descriptor.TabStops.Add(Normalize(stop));
+        //    }
+
+        //    _paragraphDescriptors.Add(descriptor);
+
+        //    values.Clear();
+        //    tabStops.Clear();
+        //}
+        #endregion
     }
     internal static class ParagraphExtensions
     {
@@ -317,5 +331,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             int length = Math.Min(paragraph.Length, text.Length - paragraph.Start);
             return length > 0 ? text.Substring(paragraph.Start, length) : string.Empty;
         }
+
     }
+
 }

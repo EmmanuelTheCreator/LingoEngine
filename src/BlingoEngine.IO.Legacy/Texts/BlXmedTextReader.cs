@@ -1,4 +1,5 @@
 using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using BlingoEngine.IO.Legacy.Texts.Data.Pre10;
 using BlingoEngine.IO.Legacy.Tools;
 using Microsoft.Extensions.Logging;
@@ -138,7 +139,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             sreader.Position = saved;
             return result;
         }
-       
+
 
 
         #region OLD Directory reading
@@ -368,6 +369,11 @@ namespace BlingoEngine.IO.Legacy.Texts
 
 
         #region OLD
+        //public enum XmedEntryKind
+        //{
+        //    Unknown, Text, TokenList, StyleRuns, Fonts, Sizes, Colors, Weights, Italics, Underlines, Spacing, Align, Justify,
+        //    Index
+        //}
         ///// <summary>Single directory token.</summary>
         //[DebuggerDisplay("DirEntry:{Kind}:{Type}:offset={Offset}:count={Count}:position={Position}:dataOffset={dataOffset}:Terminator={Terminator}")]
         //public sealed class XmedDirEntry

@@ -10,23 +10,16 @@ public struct BlLegacyColor
 
     /// <summary>Blue component (0–255)</summary>
     public byte B { get; }
+    public bool IsIndex{ get; }
 
-    public BlLegacyColor(byte r, byte g, byte b)
+    public BlLegacyColor(byte indexColor)
     {
-        R = r;
-        G = g;
-        B = b;
+        IsIndex = true;
+        R = indexColor;
+        G = indexColor;
+        B = indexColor;
     }
-    /// <summary>
-    /// Constructs a BlingoColor from a 24-bit packed RGB value (0xRRGGBB).
-    /// </summary>
-    /// <param name="rgb24">Packed 24-bit value.</param>
-    public BlLegacyColor(uint rgb24)
-    {
-        R = (byte)(rgb24 >> 16 & 0xFF);
-        G = (byte)(rgb24 >> 8 & 0xFF);
-        B = (byte)(rgb24 & 0xFF);
-    }
+  
 
     /// <summary>
     /// Converts the color to a 24-bit packed RGB value (0xRRGGBB).
