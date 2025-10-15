@@ -155,6 +155,32 @@ namespace BlingoEngine.IO.Legacy.Texts
             bool IsB(byte b) => b is 0x81 or 0x82;
             bool IsCtrl(byte b) => b is 0x01 or 0x02 or 0x03;
             bool IsHexOrDash(byte b) => (b >= '0' && b <= '9') || (b >= 'A' && b <= 'F') || b == '-';
+            var compositeStack = new Stack<(byte Token, int TypeValue)>();
+            int colorCompositeDepth = 0;
+
+            void PushComposite(byte token, int typeValue)
+            {
+                compositeStack.Push((token, typeValue));
+                if (token == 0xC1 && typeValue == 0x04)
+                {
+                    colorCompositeDepth++;
+                }
+            }
+
+            void PopComposite()
+            {
+                if (compositeStack.Count == 0)
+                {
+                    return;
+                }
+
+                var (token, typeValue) = compositeStack.Pop();
+                if (token == 0xC1 && typeValue == 0x04 && colorCompositeDepth > 0)
+                {
+                    colorCompositeDepth--;
+                }
+            }
+
             var a00Tokens = new List<Token>();
             while (i < n)
             {
@@ -182,6 +208,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     int len = Math.Min(2, n - i);
 
                     tokens.Add(new Token(type, i, len, TypeValue: typeVal));
+                    PushComposite(b, typeVal);
                     i += len;
                     continue;
                 }
@@ -191,6 +218,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     var type = b == 0x81 ? TokenType.B_81 : TokenType.B_82;
                     tokens.Add(new Token(type, i, 1, LinkToPrevious: true));
+                    if (type == TokenType.B_82)
+                    {
+                        PopComposite();
+                    }
                     i++;
                     continue;
                 }
@@ -201,7 +232,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     int start = i++;
 
                     // Boolean: 01 30 or 01 31
-                    if (b == 0x01 && i < n && (buffer[i] == '0' || buffer[i] == '1'))
+                    if (colorCompositeDepth == 0 && b == 0x01 && i < n && (buffer[i] == '0' || buffer[i] == '1'))
                     {
                         bool bv = buffer[i] == '1';
                         tokens.Add(new Token(
