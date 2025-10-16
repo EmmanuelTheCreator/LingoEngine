@@ -119,6 +119,15 @@ internal sealed class TestContextHarness : IDisposable
         var log = BlXmedTokenizer.DumpTokensUltraCompact(tokens);
         return log;
     }
+    public static string XmedDumpCompactLogGrouped(string fileName)
+    {
+        var item = GetAssetPath($"Texts_Fields/{fileName}");
+        var bytes = File.ReadAllBytes(item);
+        var tokens = BlXmedTokenizer.Tokenize(bytes).Tokens;
+        var groups = BlXmedTokenizer.CreateGroups(tokens);
+        var log = XmedTokenGrouper.DumpGroupedTokens(groups);
+        return log;
+    }
 
     public void Dispose()
     {

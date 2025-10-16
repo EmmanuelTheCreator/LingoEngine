@@ -2,7 +2,7 @@
 
 namespace BlingoEngine.IO.Legacy.Texts.Data
 {
-    public sealed class BlXmedToken
+    public class BlXmedToken
     {
         public enum TokenType { Split01, Split02, Split03, C1, C2, C3, B_81, B_82, PrefixedHex, Ascii, Block00, Byte }
         public TokenType Type { get; }

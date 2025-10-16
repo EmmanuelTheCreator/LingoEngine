@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
+using static BlingoEngine.IO.Legacy.Texts.XmedTokenGroup;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -86,7 +87,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (IsCtrl(b))
                 {
                     int start = i++;
-                   
+
                     // Prefixed hex/string block
                     int j = i;
                     while (j < n && !IsCtrl(buffer[j]) && !IsC(buffer[j]) && !IsB(buffer[j]) && IsHexOrDash(buffer[j]))
@@ -143,7 +144,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
 
-        
+
         private static bool TryReadBlock00(ReadOnlySpan<byte> buf, int start, out BlXmedToken tok, out int next)
         {
             tok = default!; next = start;
@@ -184,7 +185,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
 
             // Fallback: ASCII until next control
-            
+
             while (k < n && !IsControl(buf[k])) k++;
             var fallback = buf.Slice(dataStart, k - dataStart).ToArray();
             tok = new BlXmedToken(TokenType.Block00, start, k - start, value: declared, data: fallback, ascii: Encoding.ASCII.GetString(fallback));
@@ -209,6 +210,19 @@ namespace BlingoEngine.IO.Legacy.Texts
             return (texts, lastBlock);
         }
 
+
+        public static List<XmedTokenGroup> CreateGroups(List<BlXmedToken> tokens)
+        {
+            return new XmedTokenGrouper().CreateGroups(tokens);
+        }
+
+           
+     
+
+
+
+
+        #region Log/Dump
         public static string DumpTokensCompact(List<BlXmedToken> tokens)
         {
             var sb = new StringBuilder();
@@ -230,69 +244,101 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
             return sb.ToString();
         }
-        public static string DumpTokensUltraCompact(List<BlXmedToken> tokens)
+      
+
+
+      
+        public static string DumpTokensUltraCompact(List<BlXmedToken> tokens, int startIndent = 0)
         {
             var sb = new StringBuilder();
             int last00 = tokens.FindLastIndex(t => t.Type == TokenType.Block00);
             int onLine = 0;
-
-            void NL() { if (onLine > 0) { sb.Append('\n'); onLine = 0; } }
-            void Add(string s) { if (onLine == 16) NL(); if (onLine > 0) sb.Append(' '); sb.Append(s); onLine++; }
+            int depth = startIndent;
 
             for (int i = 0; i < tokens.Count; i++)
             {
                 var t = tokens[i];
-                switch (t.Type)
-                {
-                    case TokenType.Ascii:
-                        NL(); sb.Append($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} "); break;
-
-
-
-                    case TokenType.C1:
-                    case TokenType.C2:
-                    case TokenType.C3:
-                        NL(); sb.Append($"{t.Type}({t.TypeValue ?? 0:X2}) ");  break;
-
-                    case TokenType.Block00:
-                        NL();
-                        if (i != last00)
-                        {
-                            sb.Append($"00({t.Value}):\"");
-                            sb.Append(t.Ascii);
-                            sb.Append('"'+Environment.NewLine);
-                        }
-                        else
-                        {
-                            var lastNumbers = t.ReadBlock00Numbers();
-                            sb.Append($"00({t.Value}):{string.Join(',', lastNumbers)}");
-                            sb.AppendLine();
-                        }
-                        NL();
-                        break;
-
-                    //case TokenType.Boolean:
-                    //    Add(t.BoolValue == true ? "true" : "false");
-                    //    break;
-
-                    case TokenType.B_81:
-                        Add("<81 "); break;
-                    case TokenType.B_82:
-                        Add("<82 "); break;
-
-                    case TokenType.PrefixedHex:
-                        Add($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} "); break;
-
-
-                    default:
-                        if (!string.IsNullOrEmpty(t.Ascii)) Add(t.Ascii!);
-                        break;
-                }
+                onLine = WriteToken(sb, last00, onLine, i, t, ref depth, startIndent);
             }
             return sb.ToString().TrimEnd();
         }
 
+        private static int Add(int onLine, StringBuilder sb, string s, int depth)
+        {
+            if (onLine == 64) onLine = NL(onLine, sb);
+            if (onLine == 0 && depth > 0) sb.Append(new string(' ', Math.Max(0, depth) * 2));
+            else if (onLine > 0) sb.Append(' ');
+            sb.Append(s);
+            return onLine + 1;
+        }
 
+        private static int NL(int onLine, StringBuilder sb)
+        {
+            if (onLine > 0) { sb.Append('\n'); onLine = 0; }
+            return onLine;
+        }
+
+        public static int WriteToken(StringBuilder sb, int last00, int onLine, int i, BlXmedToken t, ref int depth, int startIndent)
+        {
+            if (depth < 0) { sb.AppendLine($"! Depth<0 error ! {depth}"); depth = 0; }
+
+            int padDepth = startIndent > 0 ? startIndent : depth;
+
+            switch (t.Type)
+            {
+                case TokenType.Ascii:
+                    onLine = NL(onLine, sb);
+                    sb.Append(new string(' ', Math.Max(0, padDepth) * 2));
+                    sb.Append($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} ");
+                    break;
+
+                case TokenType.C1:
+                case TokenType.C2:
+                case TokenType.C3:
+                    onLine = NL(onLine, sb);
+                    sb.Append(new string(' ', Math.Max(0, padDepth) * 2));
+                    sb.Append($"{t.Type}({t.TypeValue ?? 0:X2}) ");
+                    if (startIndent == 0) depth++; // fixed indent mode: do not grow
+                    break;
+
+                case TokenType.B_82:
+                    onLine = Add(onLine, sb, "<82 ", padDepth);
+                    break;
+
+                case TokenType.Block00:
+                    onLine = NL(onLine, sb);
+                    sb.Append(new string(' ', Math.Max(0, padDepth) * 2));
+                    if (i != last00)
+                    {
+                        sb.Append($"00({t.Value}):\""); sb.Append(t.Ascii); sb.Append('"' + Environment.NewLine);
+                    }
+                    else
+                    {
+                        var lastNumbers = t.ReadBlock00Numbers();
+                        sb.Append($"00({t.Value}):{string.Join(',', lastNumbers)}"); sb.AppendLine();
+                    }
+                    onLine = NL(onLine, sb);
+                    break;
+
+                case TokenType.B_81:
+                    onLine = Add(onLine, sb, "<81 ", padDepth);
+                    break;
+
+                case TokenType.PrefixedHex:
+                    onLine = Add(onLine, sb, $"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} ", padDepth);
+                    break;
+
+                default:
+                    if (!string.IsNullOrEmpty(t.Ascii))
+                        onLine = Add(onLine, sb, t.Ascii!, padDepth);
+                    break;
+            }
+            return onLine;
+        }
+
+
+
+        #endregion
     }
 
 
