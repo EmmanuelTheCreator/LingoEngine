@@ -2,7 +2,7 @@
 
 This log tracks approaches we attempted while investigating the failing XMED text color scenarios. Each entry lists the method we exercised, the outcome, and why the attempt failed so future passes can pick up where we left off.
 
-## 2024-07-14 Investigation Pass
+## Investigation Pass 1
 
 ### `XmedFileTest.Multi_Text_color_samples_should_BeRead`
 - **How we exercised it:** Ran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Text_color"` to reach the multi-color scenario.
@@ -31,7 +31,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 ### Command Logging Notes
 - The `dotnet test` invocation printed a `TerminalLogger` `ArgumentOutOfRangeException` after the `FileNotFoundException`. This appears to be a known SDK console logger quirk and did not mask the real failure, but re-running with `DOTNET_CLI_UI_LANGUAGE=en` or `DOTNET_CLI_TELEMETRY_OPTOUT=1` may keep the output cleaner on future passes.
 
-## 2024-07-15 Investigation Pass
+## Investigation Pass 2
 
 ### `XmedFileTest.Multi_Text_color_samples_should_BeRead`
 - **How we exercised it:** Pointed the fixture at `MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin` and re-ran the filtered unit tests with verbose console logging (`dotnet test ... --logger "console;verbosity=detailed" --filter FullyQualifiedName~Multi_Text_color`).
@@ -39,7 +39,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Why it failed:** No style descriptors were materialized for the colored spans—the run fell back to the base style (`styleId = 0`). Because `ResolveColor` only consults `ColorIndex` or `_activeColor`, the run inherits the default black color instead of the RGB values encoded in the file.
 - **Follow-up ideas:** Trace how `XmedRunSliceBuilder` populates `_runBoundaries` for style IDs > 0. We likely need to inspect the `03:0006` style table tokens and ensure `BlXmedTokenStyleParser` hydrates both the palette index and the inline RGB triple so runs can bind to the correct descriptor.
 
-## 2024-07-16 Investigation Pass
+## Investigation Pass 3
 
 ### Instrumenting `03:0006` style tokens and run boundaries
 - **How we exercised it:** Augmented `BlXmedTokenStyleParser` and `XmedRunSliceBuilder` with diagnostic logging, then re-ran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to capture the token stream for `MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin`.
@@ -49,7 +49,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
   - Adjust the style parser so field `0` captures the parent id and handle multi-value color slots (possibly the first non-zero entry should win instead of the last).
   - Inspect the raw `03:0004` block and confirm why the run slicer never observes `02:<end>` pairs—the `pending end` log never fires, implying our reader is skipping the numeric tokens entirely. Extracting a token dump for `03:0004` should reveal whether we're missing a composite wrapper or using the wrong reader in `ParseBody`.
 
-## 2024-07-17 Investigation Pass
+## Investigation Pass 4
 
 ### Token windows for `03:0004` and `03:0006`
 - **How we exercised it:** Added a `DumpTokenWindows` helper to `XmedFileTest.Multi_Text_color_samples_should_BeRead` that tokenizes `MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin` and logs focused windows around the `03:0004` run map and `03:0006` style table entries. Re-ran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to capture the expanded dump.
@@ -64,7 +64,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
   - Extend the color reader to process the `C1(03)` composite that follows the style entry—`TryGetColor` likely needs a variant that understands both 0x03 and 0x04 composites so inline RGB triples reach `XmedStyleDescriptor.Color`.
   - Reconcile the `03:0004` map with `_runBoundaries`: the data shows five explicit endpoints, so instrument the builder to dump the `_runBoundaries` list and diagnose why `BuildRunSlices` fails the length check and falls back to `style 0`.
 
-## 2024-07-18 Investigation Pass
+## Investigation Pass 5
 
 ### `XmedRunSliceBuilder.ReadRuns`
 - **How we exercised it:** Ran the multi-color regression test with the new block preview logging enabled to watch how the slice builder walks `03:0004` tokens.
@@ -79,7 +79,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Follow-up ideas:** Extend the color reader so `C1(03)` composites feed into the descriptor, and verify whether the surrounding `FFFF`/`0` tokens represent alpha or flags we need to preserve.
 
 
-## 2024-07-19 Investigation Pass
+## Investigation Pass 6
 
 ### `XmedRunSliceBuilder.ReadRuns`
 - **How we exercised it:** Replaced the C1(04)-specific loop with a `ReadRunMapEntries` helper that consumes the `03:0004` header and walks the alternating `02:<end>` / `01:<styleId>` pairs while running `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"`.
@@ -99,7 +99,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Why it failed:** Filtering out `<= 0xFF` tokens prevents palette metadata from polluting the color tuple, but the upstream parser does not request those values yet. Once `ReadStyles` keeps the composite in scope, the conversion should start returning non-zero RGB bytes.
 - **Follow-up ideas:** After fixing the style-finalization timing, add a one-off log inside `TryGetColor` to print the decoded RGB triple so we can confirm the helper returns `#F7204A` and similar hues before we wire the result into `ResolveColor`.
 
-## 2024-07-20 Investigation Pass
+## Investigation Pass 7
 
 ### `XmedRunSliceBuilder.ReadRuns`
 - **How we exercised it:** Continued running `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` while watching the new run-map logs.
@@ -113,7 +113,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Why it failed:** The style reader needs a dedicated phase for trailing composites; interleaving them with the primary field loop makes it too easy to lose track of where the style entry ends and the color payload begins.
 - **Follow-up ideas:** Finalize the style immediately when the terminator arrives, then delegate to a helper that scans the subsequent tokens for `C1(03)`/`C1(04)` payloads before allowing the next `03:0006` entry to begin.
 
-## 2024-07-21 Investigation Pass
+## Investigation Pass 8
 
 ### `BlXmedTokenReader.TryGetColor`
 - **How we exercised it:** Re-ran the multi-color regression test after teaching the helper to tolerate early `B_82` terminators and to stop after three inline components while walking `C1(03)` composites.
@@ -127,7 +127,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Why it still fails:** The helper always targets the style that triggered it, so the later composites that describe the green and blue runs (style ids `1` and `2`) are still ignored. The run map therefore resolves everything back to the base descriptor even though the color data is now visible in the token dump.
 - **Follow-up ideas:** Detect when a trailing `C1(03)` payload starts with `01:<styleId>`/`01:0` pairs, retarget the color assignment to that style, and leave breadcrumbs in the logs so we can verify that styles `1`, `2`, and `4` also pick up their inline RGB triples.
 
-## 2024-07-22 Investigation Pass
+## Investigation Pass 9
 
 ### `BlXmedTokenParser` body readers
 - **How we exercised it:** Reworked the parser so the body is processed in sequential slices (`ReadTextSection`, `ReadRunSection`, `ReadStyleSection`, `ReadFooterSection`) and re-ran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to ensure the new flow still walks the sample without throwing.
@@ -135,7 +135,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Why it still fails:** Even with deterministic block ordering, the inline color composites past the style table continue to target multiple style ids. Until we decode those intra-footer hints, only style `3` gains an inline color and the other runs still inherit black.
 - **Follow-up ideas:** Extend the footer pass to dispatch `01:<styleId>` references to the style parser so that inline RGB triples emitted after the table can hydrate styles `1`, `2`, and `4` without breaking the sequential read contract.
 
-## 2024-07-23 Investigation Pass
+## Investigation Pass 10
 
 ### `BlXmedTokenParser` block readers
 - **How we exercised it:** Tightened each reader to only accept its designated token families (text → fonts/text/paragraph descriptors, runs → `03:0004`/`03:0005`, styles → `03:0006`, footer → `03:0008` + trailing inline colors) and reran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to confirm the sequential walk still succeeds.
@@ -155,7 +155,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Why it still fails:** The stubs inherit font and decoration data but they do not yet surface the footer colors inside the rendered runs, so the UI still paints the default black swatch.
 - **Follow-up ideas:** Wire the stub descriptors into the color resolver so that footer-sourced inline colors propagate into `_document.Runs` once we decode every RGB composite.
 
-## 2024-07-24 Investigation Pass
+## Investigation Pass 11
 
 ### Footer-trailing inline colors
 - **How we exercised it:** Tightened `TryConsumeFooterStyleColors` so it only dispatches footer trails that start with `01:<styleId>` (0–255) immediately followed by `C1(03|04)` and re-ran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to capture the new behavior.
@@ -168,7 +168,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **What happened:** The run-map retains the original style ids, and the slice builder now resolves styles `1`, `2`, and `4` without collapsing them to `0`. However, every run still resolves to the base inline color `#600000`, confirming that the footer trails never populate the per-style inline colors.
 - **Follow-up ideas:** Once footer dispatch can retarget the RGB triples correctly, extend the run assertions (or add a new regression test) to verify that styles `1`, `2`, and `4` inherit the expected red/green/blue values instead of the shared fallback.
 
-## 2024-07-25 Investigation Utilities
+## Investigation Pass 12 - Investigation Utilities
 
 ### Trace-level instrumentation switches
 - **What changed:** Introduced `XmedDiagnostics` to centralize trace logging with per-area toggles for the token parser, token reader, style parser, and run slice builder. Migrated the detailed instrumentation we added earlier to `LogTrace` so we can selectively enable the verbose output without overwhelming higher log levels.
@@ -176,7 +176,7 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **Logger control:** Updated `XunitLoggerProvider` so tests can set `MinimumLevel` and `Detailed` formatting, letting future debugging passes raise or lower the verbosity without code changes.
 - **Next steps:** Now that logging is isolatable, we can focus each test run on a single pipeline stage (e.g., style parser only) while we decode the remaining inline color retargeting rules.
 
-## 2024-07-26 Composite mask experiments
+## Investigation Pass 13 - Composite mask experiments
 
 ### `BlXmedTokenReader.TryGetColor`
 - **How we exercised it:** Reinterpreted the `C1` subtype byte as a field mask, taught the reader to ingest both `0x03` (16-bit) and `0x04` (8-bit) composites sequentially, and added byte-level helpers that respect control prefixes (`Split01`/`Split02`) when decoding inline color payloads.

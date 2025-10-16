@@ -14,21 +14,25 @@ public class BlXmedTokenReaderColorTests
 
     public static IEnumerable<object[]> InlineColorPayloads()
     {
+        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 04 02 FF 02 00 02 00 82",
             "#FF0000"
         };
+        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 02 F7 00 02 20 00 02 4A 00 82",
             "#F7204A"
         };
+        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 02 1E 00 02 F0 00 02 2E 00 82",
             "#1EF02E"
         };
+        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 02 27 00 02 02 00 02 FD 00 82",
@@ -50,6 +54,7 @@ public class BlXmedTokenReaderColorTests
     [Fact]
     public void TryGetColor_should_parse_sequential_inline_composites()
     {
+        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         const string hex = "C1 04 02 FF 02 00 02 00 82 C1 03 02 F7 00 02 20 00 02 4A 00 82";
         var reader = CreateReader(hex);
 
@@ -64,21 +69,25 @@ public class BlXmedTokenReaderColorTests
 
     public static IEnumerable<object[]> PaletteCompositePayloads()
     {
+        // Source: Requested Text_Hallo_col_orange_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 01 FF 00 01 CC 00 01 66 00 82",
             "#FFCC66"
         };
+        // Source: Requested Text_Hallo_col_pink_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 01 FF 00 01 00 00 01 FF 00 82",
             "#FF00FF"
         };
+        // Source: Requested Text_Hallo_col_green_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 01 00 00 01 FF 00 01 00 00 82",
             "#00FF00"
         };
+        // Source: Requested Text_Hallo_col_lightgreen_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
             "C1 03 01 CC 00 01 FF 00 01 99 00 82",
@@ -100,6 +109,7 @@ public class BlXmedTokenReaderColorTests
     [Fact]
     public void TryGetColor_should_fail_when_payload_is_interrupted()
     {
+        // Source: Requested Text_Single_Line_Multi_Style4_size39_13.xmed.bin sequence (raw data not found in Test/TestData *.bin; retained from investigative notes).
         const string hex = "C1 03 81 82 01 FF 00 01 FF 00";
         var reader = CreateReader(hex);
 
