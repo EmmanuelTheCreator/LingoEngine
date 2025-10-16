@@ -1,6 +1,8 @@
+using System;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
+using static BlingoEngine.IO.Legacy.Texts.XmedDiagnostics;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -10,6 +12,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly XmedDocument _document = new();
 
+        private const XmedDiagnosticArea DiagnosticArea = XmedDiagnosticArea.TokenParser;
         private readonly BlXmedTokenStyleParser _styleParser;
         private readonly XmedSpacingReader _spacingReader;
         private readonly XmedTextBuilder _textBuilder;
@@ -39,7 +42,10 @@ namespace BlingoEngine.IO.Legacy.Texts
             _headerReader.ReadHeader();
             
             _styleParser.GetOrCreateStyle(0);
-            ParseBody();
+            ReadTextSection();
+            ReadRunSection();
+            ReadStyleSection();
+            ReadFooterSection();
             _textBuilder.BuildText();
             _styleParser.FinalizeStyles(_document);
             _slicerBuilder.FinalizeRunsAndParagraphs();
@@ -47,128 +53,208 @@ namespace BlingoEngine.IO.Legacy.Texts
             return _document;
         }
 
-
-        private void ParseBody()
+        private void ReadTextSection()
         {
             while (!_reader.IsAtEnd)
             {
-                var t = _reader.Peek();
-                if (t is null) break;
+                var token = _reader.Peek();
+                if (token is null)
+                    break;
 
-                // Text
-                if (t.Type == TokenType.Block00)
+                if (IsRunBlock(token) || IsStyleBlock(token) || IsFooterBlock(token))
+                    return;
+
+                if (token.Type == TokenType.Block00)
                 {
-                    if (t.Value == 40) { _styleParser.ReadFonts(_reader); continue; }
-                    if (t.Value == 44) { LogUnknown("Block", "0044"); _reader.Skip(); continue; }
-                    _textBuilder.AddTextToken(t); _reader.Skip(); continue;
+                    if (token.Value == 40) { _styleParser.ReadFonts(_reader); continue; }
+                    if (token.Value == 44) { LogUnknown("Text", "0044"); _reader.Skip(); continue; }
+                    _textBuilder.AddTextToken(token); _reader.Skip(); continue;
                 }
 
-                // Routed by 03-prefixed ids
-                if (t.IsPrefixedHex03())
+                if (token.IsCompositeC1(0x03)) { _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); continue; }
+                if (token.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(_reader); continue; }
+
+                if (token.IsC2())
                 {
-                    var s = t.Ascii ?? string.Empty;
-                    var id = s.Length >= 4 ? s[..4] : string.Empty;
-                    if (id == "0004") { _slicerBuilder.ReadRuns(_reader); continue; }
-                    if (id == "0005") { _paragraphSliceBuilder.ReadParagraphFlags(_reader); continue; }
-                    if (id == "0006") { _styleParser.ReadStyles(_reader); continue; }
-                    LogUnknown("Block", id); _reader.Skip(); continue;
+                    LogC2Fallback(token, "Text");
+                    continue;
                 }
 
-                // Direct composites
-                if (t.IsCompositeC1(0x03)) { _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); continue; }
-                if (t.IsCompositeC1(0x04)) { _slicerBuilder.ReadRuns(_reader); continue; }
-                if (t.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(_reader); continue; }
-
-                // Fallback handlers
-                if (t.IsC2() && !ParseC2(t)) continue;
-                if (t.IsC1() && !ParseC1(t)) continue;
-
-                LogUnknown("Body", $"Skipped token {_reader.Peek()}");
+                LogUnknown("Text", $"Skipped token {token}");
                 _reader.Skip();
             }
         }
 
-
-        private bool ParseC1(BlXmedToken t)
+        private void ReadRunSection()
         {
-            if (t == null) return false;
-
-            if (t.IsCompositeC1(0x03))
+            while (!_reader.IsAtEnd)
             {
-                _descriptorReader.TryExtractParagraphDescriptor(_reader, out _);
-                return true;
-            }
+                var token = _reader.Peek();
+                if (token is null)
+                    break;
 
-            if (t.IsCompositeC1(0x04))
-            {
-                _slicerBuilder.ReadRuns(_reader);
-                return true;
-            }
-            switch (t.TypeValue)
-            {
-                case 0x03: _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); return false;
-                case 0x04: _slicerBuilder.ReadRuns(_reader); return false;
-            }
+                if (IsStyleBlock(token) || IsFooterBlock(token))
+                    return;
 
-            LogUnknown("C1", t.ToString());
-            _reader.Skip();
+                if (IsRunBlock(token))
+                {
+                    _slicerBuilder.ReadRuns(_reader);
+                    continue;
+                }
+
+                if (token.IsPrefixedHex03())
+                {
+                    var id = token.Ascii ?? string.Empty;
+                    if (id.StartsWith("0005", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _paragraphSliceBuilder.ReadParagraphFlags(_reader);
+                        continue;
+                    }
+
+                    LogUnknown("Runs", id.Length >= 4 ? id[..4] : id);
+                    _reader.Skip();
+                    continue;
+                }
+
+                LogUnknown("Runs", $"Skipped token {token}");
+                _reader.Skip();
+            }
+        }
+
+        private void ReadStyleSection()
+        {
+            while (!_reader.IsAtEnd)
+            {
+                var token = _reader.Peek();
+                if (token is null)
+                    break;
+
+                if (IsFooterBlock(token))
+                    return;
+
+                if (IsStyleBlock(token))
+                {
+                    _styleParser.ReadStyles(_reader);
+                    continue;
+                }
+
+                if (token.IsPrefixedHex03())
+                {
+                    var id = token.Ascii ?? string.Empty;
+                    LogUnknown("Styles", id.Length >= 4 ? id[..4] : id);
+                    _reader.Skip();
+                    continue;
+                }
+
+                LogUnknown("Styles", $"Skipped token {token}");
+                _reader.Skip();
+            }
+        }
+
+        private void ReadFooterSection()
+        {
+            while (!_reader.IsAtEnd)
+            {
+                var token = _reader.Peek();
+                if (token is null)
+                    break;
+
+                if (IsFooterBlock(token))
+                {
+                    _reader.Skip();
+                    continue;
+                }
+
+                if (TryConsumeFooterStyleColors())
+                    continue;
+
+                LogUnknown("Footer", $"Skipped token {token}");
+                _reader.Skip();
+            }
+        }
+
+        private bool TryConsumeFooterStyleColors()
+        {
+            var token = _reader.Peek();
+            if (token is null)
+                return false;
+
+            if (!token.IsPrefixedHex01() || !token.TryGetNumericValue(out var styleId) || styleId < 0 || styleId > byte.MaxValue)
+                return false;
+
+            var next = _reader.Peek(1);
+            if (next is null || !next.IsCompositeC1(0x03) && !next.IsCompositeC1(0x04))
+                return false;
+
+            LogTrace(DiagnosticArea, _logger, "XMED footer: dispatching trailing inline colors for style {StyleId}", styleId);
+            _styleParser.GetOrCreateStyle(styleId);
+            _styleParser.ConsumeTrailingInlineColors(_reader, styleId);
             return true;
         }
 
-
-        private bool ParseC2(BlXmedToken token)
+        private void LogC2Fallback(BlXmedToken token, string section)
         {
             switch (token.TypeValue)
             {
                 case 0x03:
                     _spacingReader.ReadParagraphSpacing(_reader);
-                    return false; // handled
-
+                    return;
                 case 0x04:
-                    LogUnknown("C2", "04 (unused spacing)");
-                    return true;
-
+                    LogUnknown(section, "C2:04 (unused spacing)");
+                    _reader.Skip();
+                    return;
                 case 0x06:
-                    LogUnknown("C2", "06");
+                    LogUnknown(section, "C2:06");
                     _reader.Skip();
-                    return false;
-
+                    return;
                 case 0x07:
-                    LogUnknown("C2", "07 (tabs not implemented)");
-                    return true;
-
+                    LogUnknown(section, "C2:07 (tabs not implemented)");
+                    _reader.Skip();
+                    return;
                 case 0x08:
-                    LogUnknown("C2", "08");
+                    LogUnknown(section, "C2:08");
                     _reader.Skip();
-                    return false;
-
+                    return;
                 case 0x0A:
-                    LogUnknown("C2", "0A (header box not implemented)");
-                    return true;
-
+                    LogUnknown(section, "C2:0A (header box not implemented)");
+                    _reader.Skip();
+                    return;
                 case 0x0B:
-                    LogUnknown("C2", "0B (editable flag not implemented)");
-                    return true;
-
+                    LogUnknown(section, "C2:0B (editable flag not implemented)");
+                    _reader.Skip();
+                    return;
                 case 0x0F:
-                    LogUnknown("C2", "0F");
+                    LogUnknown(section, "C2:0F");
                     _reader.Skip();
-                    return false;
-
+                    return;
                 case 0x12:
-                    LogUnknown("C2", "12");
+                    LogUnknown(section, "C2:12");
                     _reader.Skip();
-                    return false;
+                    return;
             }
 
-            LogUnknown("C2", $"Unhandled {token}");
-            return true;
+            LogUnknown(section, $"Unhandled C2 {token}");
+            _reader.Skip();
         }
 
+        private static bool IsRunBlock(BlXmedToken token)
+        {
+            return token.IsPrefixedHex03() && token.Ascii is { Length: > 0 } ascii && ascii.StartsWith("0004", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsStyleBlock(BlXmedToken token)
+        {
+            return token.IsPrefixedHex03() && token.Ascii is { Length: > 0 } ascii && ascii.StartsWith("0006", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsFooterBlock(BlXmedToken token)
+        {
+            return token.IsPrefixedHex03() && token.Ascii is { Length: > 0 } ascii && ascii.StartsWith("0008", StringComparison.OrdinalIgnoreCase);
+        }
 
         private void LogUnknown(string category, string token)
         {
-            _logger?.LogDebug("XMED: {Category} unknown token {Token}", category, token);
+            LogTrace(DiagnosticArea, _logger, "XMED: {Category} unknown token {Token}", category, token);
         }
     }
 }

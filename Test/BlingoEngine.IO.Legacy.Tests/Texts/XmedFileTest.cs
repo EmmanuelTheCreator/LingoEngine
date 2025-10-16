@@ -1,10 +1,12 @@
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Texts;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -18,9 +20,11 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts;
 public class XmedFileTest
 {
     private readonly ILogger<XmedFileTest> _logger;
+    private readonly ITestOutputHelper _output;
 
     public XmedFileTest(ITestOutputHelper output)
     {
+        _output = output;
         var factory = LoggerFactory.Create(builder =>
         {
             builder.AddProvider(new XunitLoggerProvider(output));
@@ -152,9 +156,49 @@ public class XmedFileTest
     [Fact]
     public void Multi_Text_color_samples_should_BeRead()
     {
-        var doc = ReadDocument($"MemberTests/Text_Multi_Style_Size_Color_13.bin");
+        var doc = ReadDocument("MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin");
 
-        // TODO
+        doc.Runs.Should().NotBeEmpty();
+
+        _logger.LogInformation("Document has {StyleCount} styles", doc.Styles.Count);
+        foreach (var style in doc.Styles.OrderBy(s => s.StyleId))
+        {
+            string colorIndex = style.ColorIndex.HasValue ? $"0x{style.ColorIndex.Value:X2}" : "<null>";
+            string inlineColor = style.Color.ToHex();
+            _logger.LogInformation(
+                "Style {StyleId}: font '{Font}' size {Size} colorIndex {ColorIndex} inline {InlineColor} flags {Flags}",
+                style.StyleId,
+                style.FontName,
+                style.FontSize,
+                colorIndex,
+                inlineColor,
+                style.Flags);
+            _output.WriteLine(
+                $"Style {style.StyleId}: font '{style.FontName}' size {style.FontSize} colorIndex {colorIndex} inline {inlineColor} flags {style.Flags}");
+        }
+
+        for (int i = 0; i < doc.Runs.Count; i++)
+        {
+            var run = doc.Runs[i];
+            ushort styleId = i < doc.RunMap.Count ? doc.RunMap[i].StyleId : (ushort)0;
+            var style = doc.Styles.FirstOrDefault(s => s.StyleId == styleId);
+            var styleColorIndex = style?.ColorIndex;
+            var styleInlineColor = style?.Color.ToHex();
+            
+            _logger.LogInformation(
+                "Run {Index}: style {StyleId}, colorIndex {ColorIndex}, inline {InlineColor}, resolved {ResolvedColor}, text '{Text}'",
+                i,
+                styleId,
+                styleColorIndex.HasValue ? $"0x{styleColorIndex.Value:X2}" : "<null>",
+                styleInlineColor ?? "<null>",
+                run.ForeColor.ToHex(),
+                run.Text.Replace("\r", "\\r"));
+
+            _output.WriteLine(
+                $"Run {i}: style {styleId}, colorIndex {(styleColorIndex.HasValue ? $"0x{styleColorIndex.Value:X2}" : "<null>")} inline {styleInlineColor ?? "<null>"} resolved {run.ForeColor.ToHex()} text '{run.Text.Replace("\r", "\\r")}'");
+        }
+
+        DumpTokenWindows("MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin");
     }
 
    
@@ -166,6 +210,71 @@ public class XmedFileTest
         var bytes = File.ReadAllBytes(path);
         var reader = new BlXmedTextReader(_logger);
         return reader.Read(bytes);
+    }
+
+    private void DumpTokenWindows(string relativePath)
+    {
+        var assetPath = TestContextHarness.GetAssetPath($"Texts_Fields/{relativePath}");
+        var bytes = File.ReadAllBytes(assetPath);
+        var tokenizer = new BlXmedTokenizer();
+        var (tokens, _) = tokenizer.Tokenize(bytes);
+
+        foreach (var index in FindTokenIndices(tokens, 0x03, "0004"))
+            DumpTokens(tokens, index, 32, $"03:0004@{index}");
+
+        foreach (var index in FindTokenIndices(tokens, 0x03, "0006"))
+            DumpTokens(tokens, index, 160, $"03:0006@{index}");
+    }
+
+    private static IReadOnlyList<int> FindTokenIndices(IReadOnlyList<BlXmedToken> tokens, int typeValue, string ascii)
+    {
+        var matches = new List<int>();
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            var token = tokens[i];
+            if (token.Type != BlXmedToken.TokenType.PrefixedHex)
+                continue;
+            if (token.TypeValue != typeValue)
+                continue;
+            if (string.IsNullOrEmpty(token.Ascii))
+                continue;
+            if (!token.Ascii.StartsWith(ascii, StringComparison.OrdinalIgnoreCase))
+                continue;
+            matches.Add(i);
+        }
+        return matches;
+    }
+
+    private void DumpTokens(IReadOnlyList<BlXmedToken> tokens, int startIndex, int count, string label)
+    {
+        _logger.LogInformation("Token window {Label} starting at {StartIndex}", label, startIndex);
+        _output.WriteLine($"Token window {label} starting at index {startIndex}");
+
+        var windowTokens = tokens.Skip(startIndex).Take(count).ToList();
+
+        for (int offset = 0; offset < windowTokens.Count; offset++)
+        {
+            var token = windowTokens[offset];
+            string ascii = token.Ascii ?? "<null>";
+            string value = token.Value.HasValue ? token.Value.Value.ToString(CultureInfo.InvariantCulture) : "<null>";
+            string type = token.TypeValue.HasValue ? $"0x{token.TypeValue.Value:X2}" : "<null>";
+            string line = $"  [{startIndex + offset:D4}] {token.Type,-12} ascii={ascii} value={value} type={type}";
+            _logger.LogInformation("{TokenLine}", line);
+            _output.WriteLine(line);
+            if (offset > 0 && token.Type == BlXmedToken.TokenType.PrefixedHex && token.TypeValue == 0x03)
+                break;
+            if (token.Type == BlXmedToken.TokenType.Block00)
+                break;
+        }
+
+        string compact = BlXmedTokenizer.DumpTokensCompact(windowTokens);
+        string ultra = BlXmedTokenizer.DumpTokensUltraCompact(windowTokens);
+
+        _logger.LogInformation("Token window {Label} compact dump:{NewLine}{Dump}", label, Environment.NewLine, compact);
+        _output.WriteLine($"Token window {label} compact dump:\n{compact}");
+
+        _logger.LogInformation("Token window {Label} ultra-compact dump:{NewLine}{Dump}", label, Environment.NewLine, ultra);
+        _output.WriteLine($"Token window {label} ultra-compact dump:\n{ultra}");
     }
 
     private static IReadOnlyCollection<string> GetNormalizedFonts(XmedDocument document)

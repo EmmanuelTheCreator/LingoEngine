@@ -135,7 +135,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 }
 
                 // Fallback byte
-                tokens.Add(new BlXmedToken(TokenType.Byte, i, 1));
+                tokens.Add(new BlXmedToken(TokenType.Byte, i, 1, value: buffer[i]));
                 i++;
             }
             var lastNumbers = a00Tokens.LastOrDefault()?.ReadBlock00Numbers()?.ToList() ?? new List<int>();
