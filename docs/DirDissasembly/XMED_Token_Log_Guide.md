@@ -14,11 +14,7 @@ This document defines a **neutral, assumption‑free** notation for inspecting X
   - Examples: `01:77AA`, `02:40001`, `03:00000000005C00000000`.
 
 ### B. Booleans
-- **Form:** `true` or `false`
 - **Source bytes:** `01 31` → `true`, `01 30` → `false`.
-- **Rationale:** Shorthand to visually group boolean toggles during diffs.
-- **Conversion for experiments (optional):**
-  - Replace in text: `true → "01 31"`, `false → "01 30"`.
 
 ### C. Tag Bytes
 - **Form:** `C1(xx)`, `C2(xx)`, `C3(xx)`
@@ -30,18 +26,18 @@ This document defines a **neutral, assumption‑free** notation for inspecting X
 - **Meaning:** Raw bytes `81` / `82`. Perhaps “link/relate” to the previous logical token. No transformation applied.
 
 ### E. 0x00 Blocks (Text or Structured Bytes)
-- **Generic Form:** `00(len):…`
+- **Generic Form:** `00(perhaps len):…`
 - **Perhaps Declared length:** The decimal number **as written in the file** immediately after `0x00`, then a ASCII comma. Len is perhaps not a len but a controlbyte
 - **Two variants are logged:**
 
 1. **Text block**
-   - **Form:** `00(len):"…"`
+   - **Form:** `00(perhaps len):"…"`
    - **Meaning:** A block that is logged as ASCII text **verbatim**, including embedded newlines.
    - **Use:** Free text content (paragraphs, labels, etc.).
    - **Note:** The logger does **not** enforce `len`. len is perhaps not a len but a controlbyte; it preserves the file’s bytes and prints the text exactly as read until the next token begins.
 
 2. **Numbers/Tail block**
-   - **Form:** `00(len):b0,b1,b2,…`
+   - **Form:** `00(perhaps len):b0,b1,b2,…`
    - **Meaning:** Hex bytes printed as a **comma‑separated list**. Typically used by the **final** 0x00 block (e.g., run codes).
 
 ### F. Font Name Pair (Observed Pattern)
@@ -109,13 +105,4 @@ Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch S
 
 ---
 
-## 6) FAQ
 
-**Q: Why `true/false` instead of raw `01:31/01:30`?**  
-A: To visually cluster toggles. For byte‑exact needs, replace `true→01 31`, `false→01 30` after the fact.
-
-**Q: Are `00(len)` values trusted?**  
-A: They are logged, not validated. Treat them as **declared** by the file, useful for comparisons only. They are perhaps not length at all.
-
-**Q: What about encodings?**  
-A: The log prints ASCII. If non‑ASCII is detected, bytes are emitted via the CSV form in a `00(len):…` numeric block.

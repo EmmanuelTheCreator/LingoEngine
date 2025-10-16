@@ -177,20 +177,7 @@ public class XmedFileTest
             .ToArray();
     }
 
-    [Fact]
-    public void DumpLongLog()
-    {
-        //var fileName = "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin";
-        //var fileName = "Text_Hallo_col_blue1_13.xmed.bin";
-        //var fileName = "Text_Hallo_col_bordeau_13.xmed.bin";
-        //var fileName = "Text_Hallo_col_green_13.xmed.bin";
-        //var fileName = "Text_Hallo_col_lightgreen_13.xmed.bin";
-        //var fileName = "Text_Hallo_col_orange_13.xmed.bin";
-        //var fileName = "Text_Hallo_col_pink_13.xmed.bin";
-        var fileName = "Text_Hallo_col_yellow_13.xmed.bin";
-        var item = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
-        var log = TestContextHarness.XmedDumpLongLog(fileName);
-        var resultFileName = item.Replace(".xmed.bin", ".xmedllog.txt");
-        File.WriteAllText(resultFileName, log);
-    }
+   
+
+    
 }
