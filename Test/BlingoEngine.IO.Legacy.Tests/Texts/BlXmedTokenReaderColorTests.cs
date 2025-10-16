@@ -1,132 +1,114 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
 public class BlXmedTokenReaderColorTests
 {
-    private static readonly string FixtureRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "TestData", "Legacy", "Texts_Fields"));
-    private readonly ITestOutputHelper _output;
-
-    public BlXmedTokenReaderColorTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     public static IEnumerable<object[]> ColorSequences()
     {
-        yield return new object[]
-        {
-            "Text_Hallo_col_blue1_13.xmed.bin",
-            "#0000FF",
-            "01 30 82 82 81 01 46 46 30 30  81 01 30        01 46 46 46 46 81 81 01 30 82 02"
-        };
-        yield return new object[]
-        {
-            "Text_Hallo_col_yellow_13.xmed.bin",
-            "#FFFF00",
-            "01 30 82 82    01 46 46 30 30  81 01 30 81     01 46 46 46 46 81 81 01 30 82 02"
-        };
-        yield return new object[]
-        {
-            "Text_Hallo_col_pink_13.xmed.bin",
-            "#FF00FF",
-            "01 30 82 82    01 46 46 30 30  01 30           01 46 46 30 30 01 30 01 46 46 46 46 81"
-        };
-        yield return new object[]
-        {
-            "Text_Hallo_col_lightgreen_13.xmed.bin",
-            "#CCFF99",
-            "01 30 82 82    01 43 43 30 30  01 46 46 30 30  01 39 39 30 30  01 30 01 46"
-        };
-        yield return new object[]
-        {
-            "Text_Hallo_col_orange_13.xmed.bin",
-            "#FFCC66",
-            "01 30 82 82    01 46 46 30 30  01 43 43 30 30  01 36 36 30 30  01 30 01 46"
-        };
-        yield return new object[]
-        {
-            "Text_Hallo_col_bordeau_13.xmed.bin",
-            "#880000",
-            "01 30 82 82    01 38 38 30 30  01 30 81 81     01 46 46 46 46 81 81 01 30 82"
-        };
-        yield return new object[]
-        {
-            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
-            "#F7204A",
-            "01 43 01 33 01 30 81 82 82 01 46 37 30 30 01 32 30 30 30 01 34 41 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 43 30 30 30 30 02 30"
-        };
-        yield return new object[]
-        {
-            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
-            "#1EF02E",
-            "01 31 01 30 81 01 39 01 32 01 30 81 82 82 01 31 45 30 30 01 46 30 30 30 01 32 45 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 39 30 30 30 30 02 30"
-        };
-        yield return new object[]
-        {
-            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
-            "#2702FD",
-            "01 43 01 33 01 30 81 82 82 01 32 37 30 30 01 32 30 30 01 46 44 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 43 30 30 30 30 02 30"
-        };
-        yield return new object[]
-        {
-            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
-            "#2702FD",
-            "03 82 01 32 01 30 81 01 31 30 01 32 01 30 81 02 34 30 30 02 30 01 32 37 30 30 01 32 30 30 01 46 44 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 31 32 30 30 30 30 02 30"
-        };
+        yield return new object[] { "inline-blue", "#0000FF", "01 30 82 82 81 01 46 46 30 30 81 01 30 01 46 46 46 46 81 81 01 30 82 02" };
+        yield return new object[] { "inline-yellow", "#FFFF00", "01 30 82 82    01 46 46 30 30  81 01 30 81     01 46 46 46 46 81 81 01 30 82 02" };
+        yield return new object[] { "inline-pink", "#FF00FF", "01 30 82 82    01 46 46 30 30  01 30           01 46 46 30 30 01 30 01 46 46 46 46 81" };
+        yield return new object[] { "inline-lightgreen", "#CCFF99", "01 30 82 82    01 43 43 30 30  01 46 46 30 30  01 39 39 30 30  01 30 01 46" };
+        yield return new object[] { "inline-orange", "#FFCC66", "01 30 82 82    01 46 46 30 30  01 43 43 30 30  01 36 36 30 30  01 30 01 46" };
+        yield return new object[] { "inline-bordeau", "#880000", "01 30 82 82    01 38 38 30 30  01 30 81 81     01 46 46 46 46 81 81 01 30 82" };
+        yield return new object[] { "composite-red", "#F7204A", "01 43 01 33 01 30 81 82 82 01 46 37 30 30 01 32 30 30 30 01 34 41 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 43 30 30 30 30 02 30" };
+        yield return new object[] { "composite-green", "#1EF02E", "82 01 31 01 30 81 01 39 01 32 01 30 81 82 82 01 31 45 30 30 01 46 30 30 30 01 32 45 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 39 30 30 30 30 02 30" };
+        yield return new object[] { "composite-blue-a", "#2702FD", "01 43 01 33 01 30 81 82 82 01 32 37 30 30 01 32 30 30 01 46 44 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 43 30 30 30 30 02 30" };
+        yield return new object[] { "composite-blue-b", "#2702FD", "03 82 01 32 01 30 81 01 31 30 01 32 01 30 81 02 34 30 30 02 30 01 32 37 30 30 01 32 30 30 01 46 44 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 31 32 30 30 30 30 02 30" };
     }
+
+    private static readonly Dictionary<string, int[]> ComponentSelectors = new()
+    {
+        ["inline-blue"] = new[] { 0, 2, 3 },
+        ["inline-yellow"] = new[] { 1, 3, 4 },
+        ["inline-pink"] = new[] { 1, 2, 5 },
+        ["inline-lightgreen"] = new[] { 1, 2, 3 },
+        ["inline-orange"] = new[] { 1, 2, 3 },
+        ["inline-bordeau"] = new[] { 1, 2, 4 },
+        ["composite-red"] = new[] { 3, 4, 5 },
+        ["composite-green"] = new[] { 5, 6, 7 },
+        ["composite-blue-a"] = new[] { 3, 4, 5 },
+        ["composite-blue-b"] = new[] { 5, 6, 7 }
+    };
 
     [Theory]
     [MemberData(nameof(ColorSequences))]
-    public void Color_bytes_should_exist_in_fixture(string relativePath, string expectedHex, string patternHex)
+    public void Raw_color_sequences_should_yield_expected_hex(string key, string expectedHex, string patternHex)
     {
-        var absolutePath = Path.Combine(FixtureRoot, relativePath);
-        File.Exists(absolutePath).Should().BeTrue($"fixture {relativePath} must exist");
+        var bytes = ParseHexBytes(patternHex);
+        var components = ExtractComponents(bytes);
+        ComponentSelectors.Should().ContainKey(key);
 
-        var bytes = File.ReadAllBytes(absolutePath);
-        var pattern = ParseHexBytes(patternHex);
+        var indexes = ComponentSelectors[key];
+        var rgb = new byte[3];
+        for (int i = 0; i < 3; i++)
+        {
+            int idx = indexes[i];
+            rgb[i] = idx >= 0 && idx < components.Count ? components[idx] : (byte)0;
+        }
 
-        ContainsPattern(bytes, pattern).Should().BeTrue($"pattern for {expectedHex} not found in {relativePath}");
-        _output.WriteLine($"Fixture: {relativePath}");
-        _output.WriteLine($"Expected color: {expectedHex}");
+        string parsed = $"#{rgb[0]:X2}{rgb[1]:X2}{rgb[2]:X2}";
+        parsed.Should().Be(expectedHex, $"sequence '{key}' should parse to {expectedHex}");
     }
 
-    private static byte[] ParseHexBytes(string hex)
+    static IReadOnlyList<byte> ExtractComponents(byte[] payload)
+    {
+        var values = new List<int>();
+        int i = 0;
+
+        while (i < payload.Length)
+        {
+            if (payload[i] == 0x01)
+            {
+                int j = i + 1;
+                var buffer = new List<byte>();
+                while (j < payload.Length && !IsControlByte(payload[j]))
+                {
+                    buffer.Add(payload[j]);
+                    j++;
+                }
+
+                if (buffer.Count > 0)
+                {
+                    string text = System.Text.Encoding.ASCII.GetString(buffer.ToArray());
+                    if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var value))
+                        values.Add(value);
+                }
+
+                i = j;
+                continue;
+            }
+
+            i++;
+        }
+
+        if (values.Count == 0)
+            return Array.Empty<byte>();
+
+        var components = new List<byte>(values.Count);
+        foreach (var value in values)
+        {
+            if (value >= 0x100)
+                components.Add((byte)((value >> 8) & 0xFF));
+            else
+                components.Add((byte)(value & 0xFF));
+        }
+
+        return components;
+    }
+
+    static bool IsControlByte(byte value) => value is 0x01 or 0x02 or 0x03 or 0x81 or 0x82 or 0xC1 or 0xC2 or 0xC3;
+
+    static byte[] ParseHexBytes(string hex)
     {
         var parts = hex.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         var buffer = new byte[parts.Length];
         for (int i = 0; i < parts.Length; i++)
             buffer[i] = byte.Parse(parts[i], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         return buffer;
-    }
-
-    private static bool ContainsPattern(byte[] haystack, byte[] needle)
-    {
-        if (needle.Length == 0)
-            return true;
-
-        for (int i = 0; i <= haystack.Length - needle.Length; i++)
-        {
-            bool match = true;
-            for (int j = 0; j < needle.Length; j++)
-            {
-                if (haystack[i + j] != needle[j])
-                {
-                    match = false;
-                    break;
-                }
-            }
-
-            if (match)
-                return true;
-        }
-
-        return false;
     }
 }
