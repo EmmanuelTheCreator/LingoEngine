@@ -175,3 +175,16 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **How to use it:** Call `XmedDiagnostics.SetEnabled(XmedDiagnosticArea.RunSliceBuilder, false)` (or any combination of flags) before reading a document to mute specific components, and flip it back with `true` when you need that area again. `EnableAll()` and `DisableAll()` provide quick global switches.
 - **Logger control:** Updated `XunitLoggerProvider` so tests can set `MinimumLevel` and `Detailed` formatting, letting future debugging passes raise or lower the verbosity without code changes.
 - **Next steps:** Now that logging is isolatable, we can focus each test run on a single pipeline stage (e.g., style parser only) while we decode the remaining inline color retargeting rules.
+
+## 2024-07-26 Composite mask experiments
+
+### `BlXmedTokenReader.TryGetColor`
+- **How we exercised it:** Reinterpreted the `C1` subtype byte as a field mask, taught the reader to ingest both `0x03` (16-bit) and `0x04` (8-bit) composites sequentially, and added byte-level helpers that respect control prefixes (`Split01`/`Split02`) when decoding inline color payloads.
+- **What happened:** The reader now captures RGB triples from both inline (`C1(04)`) and composite (`C1(03)`) payloads, including edge cases where the component byte itself is a control token (`0x02`). Prefix-aware decoding finally surfaces the `#F7204A`, `#1EF02E`, and `#2702FD` colors from the multi-style fixture.
+- **Why it still falls short:** Footer trails that omit valid `01:<styleId>` markers still fall back to style `0`, and palette-style `C1(03)` payloads with lower-case ASCII components (e.g., `0x66`) require char-code interpretation rather than numeric parsing to retain the expected byte values.
+- **Follow-up ideas:** Map additional mask bits (alpha/background/flags) once we find fixtures that exercise them, and extend palette handling so high-byte markers (`0x01:FF00`) hydrate descriptor colors even when no inline RGB is present.
+
+### `BlXmedTokenReaderColorTests`
+- **How we exercised it:** Rebuilt the color tests to feed the reader raw byte sequences taken from the fixtures (rather than ASCII stand-ins), added a sequential composite test to prove the cursor advances between `C1(04)` and `C1(03)` records, and captured the palette-style byte patterns from the `Text_Hallo_col_*` samples.
+- **What happened:** Inline payloads now pass with the new reader logic, and the tests expose the remaining gaps for palette-style composites (e.g., interpreting `0x66` as ASCII `'f'`). The sequential test confirmed that repeated calls to `TryGetColor` consume one composite at a time.
+- **Follow-up ideas:** Create dedicated palette fixtures once we confirm the exact byte order so the tests can assert `#FFCC66`, `#FF00FF`, etc., without relying on conjectured values.

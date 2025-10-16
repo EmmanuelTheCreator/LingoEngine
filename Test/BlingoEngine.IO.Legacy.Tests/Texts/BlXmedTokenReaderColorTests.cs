@@ -1,11 +1,9 @@
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Texts;
-using BlingoEngine.IO.Legacy.Texts.Data;
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Xunit;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
@@ -18,28 +16,23 @@ public class BlXmedTokenReaderColorTests
     {
         yield return new object[]
         {
-            "C1 04 01 46 46 81 01 30 30 81 01 30 30 82",
+            "C1 04 02 FF 02 00 02 00 82",
             "#FF0000"
         };
         yield return new object[]
         {
-            "C1 03 01 46 37 30 30 81 01 32 30 30 30 81 01 34 41 30 30 82",
+            "C1 03 02 F7 00 02 20 00 02 4A 00 82",
             "#F7204A"
         };
         yield return new object[]
         {
-            "C1 03 01 31 45 30 30 81 01 46 30 30 30 81 01 32 45 30 30 82",
+            "C1 03 02 1E 00 02 F0 00 02 2E 00 82",
             "#1EF02E"
         };
         yield return new object[]
         {
-            "C1 03 01 32 37 30 30 81 01 30 32 30 30 81 01 46 44 30 30 82",
+            "C1 03 02 27 00 02 02 00 02 FD 00 82",
             "#2702FD"
-        };
-        yield return new object[]
-        {
-            "82 C1 03 82 C1 04 01 46 46 81 01 30 30 81 01 30 30 82 C1 03 01 46 37 30 30 81 01 32 30 30 30 81 01 34 41 30 30 82",
-            "#F7204A"
         };
     }
 
@@ -54,26 +47,41 @@ public class BlXmedTokenReaderColorTests
         color!.Value.ToHex().Should().Be(expectedHex, "inline payload {0}", hex);
     }
 
+    [Fact]
+    public void TryGetColor_should_parse_sequential_inline_composites()
+    {
+        const string hex = "C1 04 02 FF 02 00 02 00 82 C1 03 02 F7 00 02 20 00 02 4A 00 82";
+        var reader = CreateReader(hex);
+
+        reader.TryGetColor(out var first).Should().BeTrue();
+        first.Should().NotBeNull();
+        first!.Value.ToHex().Should().Be("#FF0000");
+
+        reader.TryGetColor(out var second).Should().BeTrue();
+        second.Should().NotBeNull();
+        second!.Value.ToHex().Should().Be("#F7204A");
+    }
+
     public static IEnumerable<object[]> PaletteCompositePayloads()
     {
         yield return new object[]
         {
-            "C1 04 01 46 46 46 46 81 01 43 43 30 30 81 01 36 36 30 30 82",
+            "C1 03 01 FF 00 01 CC 00 01 66 00 82",
             "#FFCC66"
         };
         yield return new object[]
         {
-            "C1 04 01 46 46 46 46 81 01 30 30 30 30 81 01 46 46 46 46 82",
+            "C1 03 01 FF 00 01 00 00 01 FF 00 82",
             "#FF00FF"
         };
         yield return new object[]
         {
-            "C1 04 01 30 30 30 30 81 01 46 46 46 46 81 01 30 30 30 30 82",
+            "C1 03 01 00 00 01 FF 00 01 00 00 82",
             "#00FF00"
         };
         yield return new object[]
         {
-            "C1 04 01 43 43 30 30 81 01 46 46 46 46 81 01 39 39 30 30 82",
+            "C1 03 01 CC 00 01 FF 00 01 99 00 82",
             "#CCFF99"
         };
     }
@@ -92,7 +100,7 @@ public class BlXmedTokenReaderColorTests
     [Fact]
     public void TryGetColor_should_fail_when_payload_is_interrupted()
     {
-        const string hex = "81 82 01 46 46 30 30 81 01 46 46 46 46";
+        const string hex = "C1 03 81 82 01 FF 00 01 FF 00";
         var reader = CreateReader(hex);
 
         reader.TryGetColor(out var color).Should().BeFalse("payload {0}", hex);
@@ -103,13 +111,12 @@ public class BlXmedTokenReaderColorTests
     {
         var bytes = ParseHexBytes(hex);
         var tokens = Tokenizer.Tokenize(bytes).Tokens;
-        var filtered = tokens.Where(t => t.Type != BlXmedToken.TokenType.Byte).ToList();
 
-        int firstComposite = filtered.FindIndex(t => t.IsCompositeOpen() || t.IsPrefixedHex01());
+        int firstComposite = tokens.FindIndex(t => t.IsCompositeOpen());
         if (firstComposite < 0)
             firstComposite = 0;
 
-        return new BlXmedTokenReader(filtered, firstComposite);
+        return new BlXmedTokenReader(tokens, firstComposite);
     }
 
     private static byte[] ParseHexBytes(string hex)

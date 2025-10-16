@@ -1,7 +1,6 @@
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using System.Collections.Generic;
-using System.Linq;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -263,83 +262,248 @@ namespace BlingoEngine.IO.Legacy.Texts
         public bool TryGetColor(out BlLegacyColor? color)
         {
             color = null;
-            if (TryGetColorComponentsInternal(0x04, out var inlineComponents))
+            var token = Peek();
+            if (token is null || !token.IsC1())
+                return false;
+
+            byte mask = (byte)token.TypeValue.GetValueOrDefault();
+            if (!IsColorCompositeMask(mask))
+                return false;
+
+            int start = Position;
+            ReadNext();
+
+            if (TryReadCompositeColorComponents(mask, out var components))
             {
-                color = new BlLegacyColor(
-                    inlineComponents.ElementAtOrDefault(0),
-                    inlineComponents.ElementAtOrDefault(1),
-                    inlineComponents.ElementAtOrDefault(2));
+                color = new BlLegacyColor(components.R, components.G, components.B);
                 return true;
             }
 
-            if (TryGetColorComponentsInternal(0x03, out var compositeComponents))
+            Rewind(start);
+            return false;
+        }
+
+        public IReadOnlyList<byte> GetColorComponents()
+        {
+            var token = Peek();
+            if (token is null || !token.IsC1())
+                return Array.Empty<byte>();
+
+            byte mask = (byte)token.TypeValue.GetValueOrDefault();
+            if (!IsColorCompositeMask(mask))
+                return Array.Empty<byte>();
+
+            int start = Position;
+            ReadNext();
+
+            if (TryReadCompositeColorComponents(mask, out var components))
             {
-                color = new BlLegacyColor(
-                    compositeComponents.ElementAtOrDefault(0),
-                    compositeComponents.ElementAtOrDefault(1),
-                    compositeComponents.ElementAtOrDefault(2));
+                Rewind(start);
+                return new[] { components.R, components.G, components.B };
+            }
+
+            Rewind(start);
+            return Array.Empty<byte>();
+        }
+
+        private bool TryReadCompositeColorComponents(byte mask, out (byte R, byte G, byte B) components)
+        {
+            components = default;
+
+            byte? r = null;
+            byte? g = null;
+            byte? b = null;
+
+            bool readAny = false;
+
+            if ((mask & 0x01) != 0)
+            {
+                if (!TryReadWordLowByte(out var r16) ||
+                    !TryReadWordLowByte(out var g16) ||
+                    !TryReadWordLowByte(out var b16))
+                {
+                    return false;
+                }
+
+                r = r16;
+                g = g16;
+                b = b16;
+                readAny = true;
+            }
+
+            if ((mask & 0x04) != 0)
+            {
+                if (!TryReadCompositeByte(out var r8) ||
+                    !TryReadCompositeByte(out var g8) ||
+                    !TryReadCompositeByte(out var b8))
+                {
+                    return false;
+                }
+
+                r = r8;
+                g = g8;
+                b = b8;
+                readAny = true;
+            }
+
+            if ((mask & 0x02) != 0)
+                TryReadCompositeByte(out _);
+
+            if ((mask & 0x08) != 0)
+            {
+                TryReadWordLowByte(out _);
+                TryReadWordLowByte(out _);
+                TryReadWordLowByte(out _);
+            }
+
+            if ((mask & 0x10) != 0)
+            {
+                TryReadCompositeByte(out _);
+                TryReadCompositeByte(out _);
+            }
+
+            SkipCompositeRemainder();
+
+            if (readAny && r.HasValue && g.HasValue && b.HasValue)
+            {
+                components = (r.Value, g.Value, b.Value);
                 return true;
             }
 
             return false;
         }
 
-        public IReadOnlyList<byte> GetColorComponents()
+        private static bool IsColorCompositeMask(byte mask)
         {
-            return TryGetColorComponentsInternal(0x04, out var values) ? values : Array.Empty<byte>();
+            return (mask & 0x01) != 0 || (mask & 0x02) != 0 || (mask & 0x04) != 0 || (mask & 0x08) != 0 || (mask & 0x10) != 0;
         }
 
-        private bool TryGetColorComponentsInternal(byte compositeId, out List<byte> components)
+        private bool TryReadCompositeByte(out byte value, out byte? prefix)
         {
-            components = new List<byte>(3);
-            var token = Peek();
-            if (token is null || !token.IsCompositeC1(compositeId))
-                return false;
+            value = 0;
+            prefix = null;
+            byte? pendingSplit = null;
 
-            ReadNext();
             while (!IsAtEnd)
             {
-                token = Peek(); if (token is null) break;
+                var token = Peek();
+                if (token is null)
+                    break;
+
                 if (token.IsFieldTerminator())
+                    return false;
+
+                if (token.IsFieldSeparator())
                 {
                     ReadNext();
-                    if (components.Count > 0)
-                        break;
                     continue;
                 }
 
-                if (compositeId == 0x03)
+                if (token.Type is BlXmedToken.TokenType.Split01 or BlXmedToken.TokenType.Split02 or BlXmedToken.TokenType.Split03)
                 {
-                    if (token.IsPrefixedHex01() && token.TryGetNumericValue(out var numeric))
+                    byte splitValue = token.Type switch
                     {
-                        if (numeric > 0xFF)
-                        {
-                            byte component = (byte)((numeric >> 8) & 0xFF);
-                            components.Add(component);
-                            if (components.Count >= 3)
-                                break;
-                        }
-                        ReadNext();
-                        continue;
+                        BlXmedToken.TokenType.Split01 => (byte)0x01,
+                        BlXmedToken.TokenType.Split02 => (byte)0x02,
+                        _ => (byte)0x03
+                    };
+
+                    ReadNext();
+
+                    if (pendingSplit.HasValue)
+                    {
+                        value = pendingSplit.Value;
+                        prefix = pendingSplit;
+                        pendingSplit = splitValue;
+                        return true;
                     }
 
-                    ReadNext();
+                    pendingSplit = splitValue;
                     continue;
                 }
 
-                if (token.TryGetColorComponent(out var c))
+                if (token.Type == BlXmedToken.TokenType.Byte && token.Value.HasValue)
                 {
-                    components.Add(c);
+                    value = (byte)token.Value.Value;
+                    prefix = pendingSplit;
+                    pendingSplit = null;
                     ReadNext();
-                    if (components.Count >= 3)
-                        break;
-                    continue;
+                    return true;
+                }
+
+                if (!string.IsNullOrEmpty(token.Ascii))
+                {
+                    var ascii = token.Ascii!;
+                    if (ascii.Length >= 2 && token.TryGetNumericValue(out var numeric))
+                        value = (byte)(numeric & 0xFF);
+                    else
+                        value = (byte)ascii[0];
+
+                    prefix = pendingSplit;
+                    pendingSplit = null;
+                    ReadNext();
+                    return true;
+                }
+
+                if (token.TryGetNumericValue(out var raw))
+                {
+                    value = (byte)(raw & 0xFF);
+                    prefix = pendingSplit;
+                    pendingSplit = null;
+                    ReadNext();
+                    return true;
                 }
 
                 ReadNext();
             }
 
-            return components.Count > 0;
+            return false;
+        }
+
+        private bool TryReadCompositeByte(out byte value)
+        {
+            return TryReadCompositeByte(out value, out _);
+        }
+
+        private bool TryReadWordLowByte(out byte component)
+        {
+            component = 0;
+            if (!TryReadCompositeByte(out var first, out var prefix))
+                return false;
+
+            byte second = 0;
+            bool hasSecond = TryReadCompositeByte(out second, out _);
+
+            if (prefix == 0x01)
+            {
+                int value16 = (first << 8) | (hasSecond ? second : 0);
+                component = (byte)((value16 >> 8) & 0xFF);
+                return true;
+            }
+
+            component = first;
+            return true;
+        }
+
+        private void SkipCompositeRemainder()
+        {
+            while (!IsAtEnd)
+            {
+                var token = Peek();
+                if (token is null)
+                    break;
+
+                if (token.IsFieldTerminator())
+                {
+                    ReadNext();
+                    break;
+                }
+
+                if (token.IsBlockBoundary())
+                    break;
+
+                ReadNext();
+            }
         }
 
     }
