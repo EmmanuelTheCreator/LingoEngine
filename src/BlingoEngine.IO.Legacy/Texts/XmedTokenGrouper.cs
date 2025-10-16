@@ -322,7 +322,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         int tokenDepth = baseTokenDepth; // keep constant indent inside this group
                         onLine = BlXmedTokenizer.WriteToken(sb, last00, onLine, i, g.Items[i], ref tokenDepth, baseTokenDepth);
                     }
-                    if (onLine > 0) sb.Append('\n');
+                    if (onLine > 0) sb.AppendLine();
                 }
             }
 
