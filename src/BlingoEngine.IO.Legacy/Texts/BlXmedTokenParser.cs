@@ -78,13 +78,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.IsC1())
-                {
-                    LogUnknown("Text", token.ToString());
-                    _reader.Skip();
-                    continue;
-                }
-
                 LogUnknown("Text", $"Skipped token {token}");
                 _reader.Skip();
             }
@@ -121,23 +114,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.IsCompositeC1(0x03)) { _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); continue; }
-                if (token.IsCompositeC1(0x04)) { _slicerBuilder.ReadRuns(_reader); continue; }
-                if (token.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(_reader); continue; }
-
-                if (token.IsC2())
-                {
-                    LogC2Fallback(token, "Runs");
-                    continue;
-                }
-
-                if (token.Type == TokenType.Block00)
-                {
-                    LogUnknown("Runs", token.ToString());
-                    _reader.Skip();
-                    continue;
-                }
-
                 LogUnknown("Runs", $"Skipped token {token}");
                 _reader.Skip();
             }
@@ -157,16 +133,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (IsStyleBlock(token))
                 {
                     _styleParser.ReadStyles(_reader);
-                    continue;
-                }
-
-                if (token.IsCompositeC1(0x03)) { _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); continue; }
-                if (token.IsCompositeC1(0x04)) { _slicerBuilder.ReadRuns(_reader); continue; }
-                if (token.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(_reader); continue; }
-
-                if (token.IsC2())
-                {
-                    LogC2Fallback(token, "Styles");
                     continue;
                 }
 
@@ -197,19 +163,27 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.IsCompositeC1(0x03)) { _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); continue; }
-                if (token.IsCompositeC1(0x04)) { _slicerBuilder.ReadRuns(_reader); continue; }
-                if (token.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(_reader); continue; }
-
-                if (token.IsC2())
-                {
-                    LogC2Fallback(token, "Footer");
+                if (TryConsumeFooterStyleColors())
                     continue;
-                }
 
                 LogUnknown("Footer", $"Skipped token {token}");
                 _reader.Skip();
             }
+        }
+
+        private bool TryConsumeFooterStyleColors()
+        {
+            var token = _reader.Peek();
+            if (token is null)
+                return false;
+
+            if (!token.IsPrefixedHex01() || !token.TryGetNumericValue(out var styleId) || styleId < 0)
+                return false;
+
+            _logger?.LogDebug("XMED footer: dispatching trailing inline colors for style {StyleId}", styleId);
+            _styleParser.GetOrCreateStyle(styleId);
+            _styleParser.ConsumeTrailingInlineColors(_reader, styleId);
+            return true;
         }
 
         private void LogC2Fallback(BlXmedToken token, string section)

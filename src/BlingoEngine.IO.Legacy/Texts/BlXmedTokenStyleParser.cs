@@ -321,8 +321,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             return false;
         }
 
-        private void ConsumeTrailingInlineColors(BlXmedTokenReader reader, int styleId)
+        internal void ConsumeTrailingInlineColors(BlXmedTokenReader reader, int styleId)
         {
+            int currentStyleId = styleId;
+            bool consumed = false;
+
             while (!reader.IsAtEnd)
             {
                 var token = reader.Peek();
@@ -341,19 +344,73 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
-                if (token.IsPrefixedHex03())
+                if (token.IsPrefixedHex03() || token.Type == BlXmedToken.TokenType.Block00)
                     break;
 
-                if (token.Type == BlXmedToken.TokenType.Block00)
-                    break;
-
-                if (token.Type == BlXmedToken.TokenType.C1 && !token.IsCompositeC1(0x03) && !token.IsCompositeC1(0x04))
+                if (token.IsPrefixedHex01() && token.TryGetNumericValue(out var retargetStyle))
                 {
+                    reader.ReadNext();
+
+                    if (retargetStyle < 0 || retargetStyle > byte.MaxValue)
+                    {
+                        _logger.LogInformation(
+                            "XMED style {StyleId}: ignoring trailing style retarget 0x{RawValue:X4}",
+                            currentStyleId,
+                            retargetStyle);
+                        continue;
+                    }
+
+                    int previousStyleId = currentStyleId;
+                    currentStyleId = retargetStyle;
+                    GetOrCreateStyle(currentStyleId);
+                    _logger.LogInformation(
+                        "XMED style {StyleId}: retargeting trailing inline colors to style {TargetStyleId}",
+                        previousStyleId,
+                        currentStyleId);
+                    continue;
+                }
+
+                if (token.Type == BlXmedToken.TokenType.C1)
+                {
+                    if (token.IsCompositeC1(0x04))
+                    {
+                        _logger.LogInformation(
+                            "XMED style {StyleId}: skipping trailing sentinel C1(04)",
+                            currentStyleId);
+                        reader.ReadNext();
+                        consumed = true;
+                        continue;
+                    }
+
+                    if (token.IsCompositeC1(0x03))
+                    {
+                        var descriptor = GetOrCreateStyle(currentStyleId);
+                        if (reader.TryGetColor(out var color) && color.HasValue)
+                        {
+                            descriptor.Color = color.Value;
+                            _inlineColorStyles.Add(descriptor.StyleId);
+                            _logger.LogInformation(
+                                "XMED style {StyleId}: trailing inline color {InlineColor} from C1(03)",
+                                currentStyleId,
+                                descriptor.Color.ToHex());
+                        }
+                        else
+                        {
+                            _logger.LogInformation(
+                                "XMED style {StyleId}: trailing C1(03) without usable color",
+                                currentStyleId);
+                        }
+
+                        consumed = true;
+                        continue;
+                    }
+
                     _logger.LogInformation(
                         "XMED style {StyleId}: skipping trailing composite C1({CompositeId:X2})",
-                        styleId,
+                        currentStyleId,
                         token.TypeValue.GetValueOrDefault());
                     reader.ReadNext();
+                    consumed = true;
                     continue;
                 }
 
@@ -361,57 +418,36 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     _logger.LogInformation(
                         "XMED style {StyleId}: skipping trailing composite C2({CompositeId:X2})",
-                        styleId,
+                        currentStyleId,
                         token.TypeValue.GetValueOrDefault());
                     reader.ReadNext();
+                    consumed = true;
                     continue;
                 }
-
-                if (token.IsPrefixedHex01())
-                    break;
 
                 if (token.Type == BlXmedToken.TokenType.PrefixedHex)
                 {
                     _logger.LogInformation(
                         "XMED style {StyleId}: skipping trailing prefixed hex token {Token}",
-                        styleId,
+                        currentStyleId,
                         token.ToString());
                     reader.ReadNext();
+                    consumed = true;
                     continue;
                 }
 
                 if (token.Type == BlXmedToken.TokenType.Ascii || token.Type == BlXmedToken.TokenType.Byte)
                 {
                     reader.ReadNext();
+                    consumed = true;
                     continue;
                 }
 
-                if (!token.IsCompositeC1(0x03) && !token.IsCompositeC1(0x04))
-                    break;
-
-                var descriptor = GetOrCreateStyle(styleId);
-                byte compositeId = (byte)token.TypeValue.GetValueOrDefault();
-                _logger.LogInformation(
-                    "XMED style {StyleId}: probing trailing composite C1({CompositeId:X2})",
-                    styleId,
-                    compositeId);
-                if (reader.TryGetColor(out var color) && color.HasValue)
-                {
-                    descriptor.Color = color.Value;
-                    _inlineColorStyles.Add(styleId);
-                    _logger.LogInformation(
-                        "XMED style {StyleId}: trailing inline color {InlineColor} from C1({CompositeId:X2})",
-                        styleId,
-                        descriptor.Color.ToHex(),
-                        compositeId);
-                    continue;
-                }
-
-                _logger.LogInformation(
-                    "XMED style {StyleId}: trailing composite C1({CompositeId:X2}) without usable color",
-                    styleId,
-                    compositeId);
+                break;
             }
+
+            if (!consumed)
+                _logger.LogInformation("XMED style {StyleId}: no trailing inline colors consumed", styleId);
         }
 
         private void LogInlineColorPreview(BlXmedTokenReader reader, int styleId)

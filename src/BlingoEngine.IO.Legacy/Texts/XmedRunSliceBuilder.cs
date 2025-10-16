@@ -247,32 +247,40 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (slice.Length <= 0) return false;
 
             _styleParser.TryGetStyle(slice.StyleId, out var style);
-            var d = style ?? baseStyle;
+            XmedStyleDescriptor descriptor;
+            if (style is null)
+            {
+                descriptor = _styleParser.GetOrCreateStyle(slice.StyleId);
+                baseStyle.ApplyStyleInheritanceToChild(descriptor);
+                _logger.LogInformation("XMED run slice: created stub style {StyleId} from base", slice.StyleId);
+            }
+            else
+                descriptor = style;
 
             int len = Math.Clamp(slice.Length, 0, Math.Max(0, _document.TextLength - slice.Start));
             _document.RunMap.Add(new XmedRunMapEntry(0, 0, (ushort)Math.Min(len, ushort.MaxValue), 0,
-                (ushort)Math.Min((int)d.StyleId, ushort.MaxValue), slice.Start));
+                (ushort)Math.Min(slice.StyleId, ushort.MaxValue), slice.Start));
 
             var textSpan = len > 0 ? _document.Text.AsSpan(slice.Start, len) : ReadOnlySpan<char>.Empty;
-            var resolvedColor = _styleParser.ResolveColor(d, baseStyle);
+            var resolvedColor = _styleParser.ResolveColor(descriptor, baseStyle);
             _document.Runs.Add(new XmedTextRun
             {
                 Start = slice.Start,
                 Length = len,
                 Text = textSpan.ToString(),
-                FontName = string.IsNullOrEmpty(d.FontName) ? baseStyle.FontName : d.FontName,
-                FontSize = d.FontSize != 0 ? d.FontSize : baseStyle.FontSize,
-                Bold = d.Bold || baseStyle.Bold,
-                Italic = d.Italic || baseStyle.Italic,
-                Underline = d.Underline || baseStyle.Underline,
+                FontName = string.IsNullOrEmpty(descriptor.FontName) ? baseStyle.FontName : descriptor.FontName,
+                FontSize = descriptor.FontSize != 0 ? descriptor.FontSize : baseStyle.FontSize,
+                Bold = descriptor.Bold || baseStyle.Bold,
+                Italic = descriptor.Italic || baseStyle.Italic,
+                Underline = descriptor.Underline || baseStyle.Underline,
                 ForeColor = resolvedColor
             });
             _logger.LogInformation(
                 "XMED run slice resolved: start {Start} len {Length} style {StyleId} colorIndex {ColorIndex} resolved {Resolved} baseColorIndex {BaseIndex}",
                 slice.Start,
                 len,
-                d.StyleId,
-                d.ColorIndex is { } colorIdx ? $"0x{colorIdx:X2}" : "<null>",
+                descriptor.StyleId,
+                descriptor.ColorIndex is { } colorIdx ? $"0x{colorIdx:X2}" : "<null>",
                 resolvedColor.ToHex(),
                 baseStyle.ColorIndex is { } baseIdx ? $"0x{baseIdx:X2}" : "<null>");
             return true;

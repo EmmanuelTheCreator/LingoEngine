@@ -134,3 +134,23 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **What happened:** The text block now consumes the font table and raw characters before yielding to the run reader, which in turn stops as soon as the `03:0006` style table begins. The style reader then processes trailing composites before the footer skips the remaining `03:0008` payloads. The logs confirm that each stage advances monotonically through the token stream.
 - **Why it still fails:** Even with deterministic block ordering, the inline color composites past the style table continue to target multiple style ids. Until we decode those intra-footer hints, only style `3` gains an inline color and the other runs still inherit black.
 - **Follow-up ideas:** Extend the footer pass to dispatch `01:<styleId>` references to the style parser so that inline RGB triples emitted after the table can hydrate styles `1`, `2`, and `4` without breaking the sequential read contract.
+
+## 2024-07-23 Investigation Pass
+
+### `BlXmedTokenParser` block readers
+- **How we exercised it:** Tightened each reader to only accept its designated token families (text → fonts/text/paragraph descriptors, runs → `03:0004`/`03:0005`, styles → `03:0006`, footer → `03:0008` + trailing inline colors) and reran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to confirm the sequential walk still succeeds.
+- **What happened:** The token stream now advances deterministically through the header, text, run map, style table, and footer without opportunistically consuming `C1`/`C2` composites in the wrong phase. The footer pass detects footer-level `01:<styleId>` markers and hands control to the style parser before logging unknown tokens, so the trailing color composites stay scoped to the footer.
+- **Why it still matters:** Keeping the readers strict stops us from skipping the inline color trails or paragraph descriptors by accident while still providing debug output whenever unexpected tokens appear in a block.
+- **Follow-up ideas:** If we later discover additional footer payloads we can add dedicated helpers without weakening the block-level guards.
+
+### `BlXmedTokenStyleParser.ConsumeTrailingInlineColors`
+- **How we exercised it:** Reused the trailing-color helper from both the style and footer passes so it can retarget `C1(03)` payloads whenever a footer emits `01:<styleId>` markers before the RGB triple. Logged the retargeting steps while rerunning the multi-color regression test.
+- **What happened:** The helper now consumes sentinel `C1(04)` tokens and ignores out-of-range `01:<value>` markers (anything above `0x00FF`). The sample still lacks low-range style ids before the RGB triples, so every inline color remains associated with style `0` for now.
+- **Why it still falls short:** Without a legitimate `01:<styleId>` marker the helper has nothing to retarget to, so the decoded RGB values continue to land on style `0`.
+- **Follow-up ideas:** Inspect the token dump to see whether the footer encodes the style mapping through another mechanism (e.g., prefixed-hex blocks) and add a higher-level dispatcher that can convert those hints into explicit `01:<styleId>` signals for the helper.
+
+### `XmedRunSliceBuilder.ReadSlice`
+- **How we exercised it:** Allowed the run builder to create stub descriptors for unresolved style ids instead of collapsing them to style `0`, then re-ran the focused test to check the run-map logs.
+- **What happened:** When the run map references style ids that are missing from the style table, the builder now creates a stub descriptor seeded from the base style. This keeps the run-map entries aligned with the source style ids so the footer-level inline colors have a target to hydrate.
+- **Why it still fails:** The stubs inherit font and decoration data but they do not yet surface the footer colors inside the rendered runs, so the UI still paints the default black swatch.
+- **Follow-up ideas:** Wire the stub descriptors into the color resolver so that footer-sourced inline colors propagate into `_document.Runs` once we decode every RGB composite.
