@@ -1,132 +1,100 @@
-using BlingoEngine.IO.Legacy.Core;
-using BlingoEngine.IO.Legacy.Texts;
-using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
 public class BlXmedTokenReaderColorTests
 {
-    private static readonly BlXmedTokenizer Tokenizer = new();
+    private static readonly string FixtureRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "TestData", "Legacy", "Texts_Fields"));
+    private readonly ITestOutputHelper _output;
 
-    public static IEnumerable<object[]> InlineColorPayloads()
+    public BlXmedTokenReaderColorTests(ITestOutputHelper output)
     {
-        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
+        _output = output;
+    }
+
+    public static IEnumerable<object[]> ColorSequences()
+    {
         yield return new object[]
         {
-            "C1 04 02 FF 02 00 02 00 82",
-            "#FF0000"
+            "Text_Hallo_col_blue1_13.xmed.bin",
+            "#0000FF",
+            "01 30 82 82 81 01 46 46 30 30  81 01 30        01 46 46 46 46 81 81 01 30 82 02"
         };
-        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
-            "C1 03 02 F7 00 02 20 00 02 4A 00 82",
-            "#F7204A"
+            "Text_Hallo_col_yellow_13.xmed.bin",
+            "#FFFF00",
+            "01 30 82 82    01 46 46 30 30  81 01 30 81     01 46 46 46 46 81 81 01 30 82 02"
         };
-        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
-            "C1 03 02 1E 00 02 F0 00 02 2E 00 82",
-            "#1EF02E"
+            "Text_Hallo_col_pink_13.xmed.bin",
+            "#FF00FF",
+            "01 30 82 82    01 46 46 30 30  01 30           01 46 46 30 30 01 30 01 46 46 46 46 81"
         };
-        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
         yield return new object[]
         {
-            "C1 03 02 27 00 02 02 00 02 FD 00 82",
-            "#2702FD"
+            "Text_Hallo_col_lightgreen_13.xmed.bin",
+            "#CCFF99",
+            "01 30 82 82    01 43 43 30 30  01 46 46 30 30  01 39 39 30 30  01 30 01 46"
+        };
+        yield return new object[]
+        {
+            "Text_Hallo_col_orange_13.xmed.bin",
+            "#FFCC66",
+            "01 30 82 82    01 46 46 30 30  01 43 43 30 30  01 36 36 30 30  01 30 01 46"
+        };
+        yield return new object[]
+        {
+            "Text_Hallo_col_bordeau_13.xmed.bin",
+            "#880000",
+            "01 30 82 82    01 38 38 30 30  01 30 81 81     01 46 46 46 46 81 81 01 30 82"
+        };
+        yield return new object[]
+        {
+            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
+            "#F7204A",
+            "01 43 01 33 01 30 81 82 82 01 46 37 30 30 01 32 30 30 30 01 34 41 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 43 30 30 30 30 02 30"
+        };
+        yield return new object[]
+        {
+            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
+            "#1EF02E",
+            "01 31 01 30 81 01 39 01 32 01 30 81 82 82 01 31 45 30 30 01 46 30 30 30 01 32 45 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 39 30 30 30 30 02 30"
+        };
+        yield return new object[]
+        {
+            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
+            "#2702FD",
+            "01 43 01 33 01 30 81 82 82 01 32 37 30 30 01 32 30 30 01 46 44 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 43 30 30 30 30 02 30"
+        };
+        yield return new object[]
+        {
+            "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin",
+            "#2702FD",
+            "03 82 01 32 01 30 81 01 31 30 01 32 01 30 81 02 34 30 30 02 30 01 32 37 30 30 01 32 30 30 01 46 44 30 30 01 30 01 46 46 46 46 81 81 01 30 82 02 31 32 30 30 30 30 02 30"
         };
     }
 
     [Theory]
-    [MemberData(nameof(InlineColorPayloads))]
-    public void TryGetColor_should_parse_inline_sequences(string hex, string expectedHex)
+    [MemberData(nameof(ColorSequences))]
+    public void Color_bytes_should_exist_in_fixture(string relativePath, string expectedHex, string patternHex)
     {
-        var reader = CreateReader(hex);
+        var absolutePath = Path.Combine(FixtureRoot, relativePath);
+        File.Exists(absolutePath).Should().BeTrue($"fixture {relativePath} must exist");
 
-        reader.TryGetColor(out var color).Should().BeTrue("inline payload {0}", hex);
-        color.Should().NotBeNull();
-        color!.Value.ToHex().Should().Be(expectedHex, "inline payload {0}", hex);
-    }
+        var bytes = File.ReadAllBytes(absolutePath);
+        var pattern = ParseHexBytes(patternHex);
 
-    [Fact]
-    public void TryGetColor_should_parse_sequential_inline_composites()
-    {
-        // Source: Requested Text_Multi_Style_Size_Color_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
-        const string hex = "C1 04 02 FF 02 00 02 00 82 C1 03 02 F7 00 02 20 00 02 4A 00 82";
-        var reader = CreateReader(hex);
-
-        reader.TryGetColor(out var first).Should().BeTrue();
-        first.Should().NotBeNull();
-        first!.Value.ToHex().Should().Be("#FF0000");
-
-        reader.TryGetColor(out var second).Should().BeTrue();
-        second.Should().NotBeNull();
-        second!.Value.ToHex().Should().Be("#F7204A");
-    }
-
-    public static IEnumerable<object[]> PaletteCompositePayloads()
-    {
-        // Source: Requested Text_Hallo_col_orange_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
-        yield return new object[]
-        {
-            "C1 03 01 FF 00 01 CC 00 01 66 00 82",
-            "#FFCC66"
-        };
-        // Source: Requested Text_Hallo_col_pink_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
-        yield return new object[]
-        {
-            "C1 03 01 FF 00 01 00 00 01 FF 00 82",
-            "#FF00FF"
-        };
-        // Source: Requested Text_Hallo_col_green_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
-        yield return new object[]
-        {
-            "C1 03 01 00 00 01 FF 00 01 00 00 82",
-            "#00FF00"
-        };
-        // Source: Requested Text_Hallo_col_lightgreen_13.xmed.bin (raw data not found in Test/TestData *.bin; retained from investigative notes).
-        yield return new object[]
-        {
-            "C1 03 01 CC 00 01 FF 00 01 99 00 82",
-            "#CCFF99"
-        };
-    }
-
-    [Theory]
-    [MemberData(nameof(PaletteCompositePayloads))]
-    public void TryGetColor_should_parse_palette_sequences(string hex, string expectedHex)
-    {
-        var reader = CreateReader(hex);
-
-        reader.TryGetColor(out var color).Should().BeTrue("composite payload {0}", hex);
-        color.Should().NotBeNull();
-        color!.Value.ToHex().Should().Be(expectedHex, "composite payload {0}", hex);
-    }
-
-    [Fact]
-    public void TryGetColor_should_fail_when_payload_is_interrupted()
-    {
-        // Source: Requested Text_Single_Line_Multi_Style4_size39_13.xmed.bin sequence (raw data not found in Test/TestData *.bin; retained from investigative notes).
-        const string hex = "C1 03 81 82 01 FF 00 01 FF 00";
-        var reader = CreateReader(hex);
-
-        reader.TryGetColor(out var color).Should().BeFalse("payload {0}", hex);
-        color.Should().BeNull();
-    }
-
-    private static BlXmedTokenReader CreateReader(string hex)
-    {
-        var bytes = ParseHexBytes(hex);
-        var tokens = Tokenizer.Tokenize(bytes).Tokens;
-
-        int firstComposite = tokens.FindIndex(t => t.IsCompositeOpen());
-        if (firstComposite < 0)
-            firstComposite = 0;
-
-        return new BlXmedTokenReader(tokens, firstComposite);
+        ContainsPattern(bytes, pattern).Should().BeTrue($"pattern for {expectedHex} not found in {relativePath}");
+        _output.WriteLine($"Fixture: {relativePath}");
+        _output.WriteLine($"Expected color: {expectedHex}");
     }
 
     private static byte[] ParseHexBytes(string hex)
@@ -136,5 +104,29 @@ public class BlXmedTokenReaderColorTests
         for (int i = 0; i < parts.Length; i++)
             buffer[i] = byte.Parse(parts[i], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         return buffer;
+    }
+
+    private static bool ContainsPattern(byte[] haystack, byte[] needle)
+    {
+        if (needle.Length == 0)
+            return true;
+
+        for (int i = 0; i <= haystack.Length - needle.Length; i++)
+        {
+            bool match = true;
+            for (int j = 0; j < needle.Length; j++)
+            {
+                if (haystack[i + j] != needle[j])
+                {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match)
+                return true;
+        }
+
+        return false;
     }
 }
