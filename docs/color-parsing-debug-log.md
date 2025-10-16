@@ -154,3 +154,16 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **What happened:** When the run map references style ids that are missing from the style table, the builder now creates a stub descriptor seeded from the base style. This keeps the run-map entries aligned with the source style ids so the footer-level inline colors have a target to hydrate.
 - **Why it still fails:** The stubs inherit font and decoration data but they do not yet surface the footer colors inside the rendered runs, so the UI still paints the default black swatch.
 - **Follow-up ideas:** Wire the stub descriptors into the color resolver so that footer-sourced inline colors propagate into `_document.Runs` once we decode every RGB composite.
+
+## 2024-07-24 Investigation Pass
+
+### Footer-trailing inline colors
+- **How we exercised it:** Tightened `TryConsumeFooterStyleColors` so it only dispatches footer trails that start with `01:<styleId>` (0–255) immediately followed by `C1(03|04)` and re-ran `dotnet test Test/BlingoEngine.IO.Legacy.Tests/BlingoEngine.IO.Legacy.Tests.csproj --filter "FullyQualifiedName~Multi_Text_color" --logger "console;verbosity=detailed"` to capture the new behavior.
+- **What happened:** Footer retargets that are followed by unrelated composites now short-circuit instead of misrouting to the style parser, and legitimate trails continue to flow into `ConsumeTrailingInlineColors`. The logs show the helper still retargeting the RGB payloads back to style `0`, so the trailing colors remain bound to the base descriptor.
+- **Why it still fails:** The multi-color fixture never emits a low-range `01:<styleId>` just before the RGB bytes—it only surfaces high-byte palette values such as `01:2700`. With the tighter guard in place those markers are ignored, so the footer still lacks a reliable way to retarget colors onto styles `1`, `2`, and `4`.
+- **Follow-up ideas:** Look for alternate footer hints (e.g., the surrounding prefixed-hex blocks) that might encode the intended style ids and extend the parser to translate them into explicit `01:<styleId>` breadcrumbs before invoking the trailing-color helper.
+
+### Run-style hydration
+- **How we exercised it:** Seeded style descriptors for every distinct run-map entry before constructing run slices so the color resolver has placeholders for styles `1`, `2`, and `4`, then replayed the focused test to check the run diagnostics.
+- **What happened:** The run-map retains the original style ids, and the slice builder now resolves styles `1`, `2`, and `4` without collapsing them to `0`. However, every run still resolves to the base inline color `#600000`, confirming that the footer trails never populate the per-style inline colors.
+- **Follow-up ideas:** Once footer dispatch can retarget the RGB triples correctly, extend the run assertions (or add a new regression test) to verify that styles `1`, `2`, and `4` inherit the expected red/green/blue values instead of the shared fallback.

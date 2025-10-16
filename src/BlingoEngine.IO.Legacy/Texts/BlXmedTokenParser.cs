@@ -177,7 +177,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (token is null)
                 return false;
 
-            if (!token.IsPrefixedHex01() || !token.TryGetNumericValue(out var styleId) || styleId < 0)
+            if (!token.IsPrefixedHex01() || !token.TryGetNumericValue(out var styleId) || styleId < 0 || styleId > byte.MaxValue)
+                return false;
+
+            var next = _reader.Peek(1);
+            if (next is null || !next.IsCompositeC1(0x03) && !next.IsCompositeC1(0x04))
                 return false;
 
             _logger?.LogDebug("XMED footer: dispatching trailing inline colors for style {StyleId}", styleId);

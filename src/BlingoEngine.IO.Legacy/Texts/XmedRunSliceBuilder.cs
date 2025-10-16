@@ -228,6 +228,10 @@ namespace BlingoEngine.IO.Legacy.Texts
             var paraSlices = _paragraphSliceBuilder.BuildParagraphSlices(paraBounds, textLength);
             if (paraSlices.Count <= 1 && _document.TextLength > 0 && _document.Text.Contains('\r'))
                 paraSlices = _paragraphSliceBuilder.BuildParagraphSlicesFromText(_document.Text);
+
+            foreach (var styleId in _runBoundaries.Select(b => b.StyleId).Where(id => id >= 0).Distinct())
+                _styleParser.GetOrCreateStyle(styleId);
+
             var runSlices = BuildRunSlices(runBounds, textLength);
             foreach (var slice in runSlices)
                 _logger.LogInformation("XMED run slice computed: start {Start} end {End} style {StyleId}", slice.Start, slice.End, slice.StyleId);
