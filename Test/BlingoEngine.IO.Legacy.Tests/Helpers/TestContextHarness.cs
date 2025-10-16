@@ -103,6 +103,23 @@ internal sealed class TestContextHarness : IDisposable
         Context.ReadDirFilesContainer();
     }
 
+    public static string XmedDumpLongLog(string fileName)
+    {
+        var item = GetAssetPath($"Texts_Fields/{fileName}");
+        var bytes = File.ReadAllBytes(item);
+        var tokens = BlXmedTokenizer.Tokenize(bytes).Tokens;
+        var log = BlXmedTokenizer.DumpTokensCompact(tokens);
+        return log;
+    }
+    public static string XmedDumpCompactLog(string fileName)
+    {
+        var item = GetAssetPath($"Texts_Fields/{fileName}");
+        var bytes = File.ReadAllBytes(item);
+        var tokens = BlXmedTokenizer.Tokenize(bytes).Tokens;
+        var log = BlXmedTokenizer.DumpTokensUltraCompact(tokens);
+        return log;
+    }
+
     public void Dispose()
     {
         Context.Dispose();
