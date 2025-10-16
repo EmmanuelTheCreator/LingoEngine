@@ -1,5 +1,7 @@
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Texts.Data;
+using System.Collections.Generic;
+using System.Linq;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -261,25 +263,83 @@ namespace BlingoEngine.IO.Legacy.Texts
         public bool TryGetColor(out BlLegacyColor? color)
         {
             color = null;
-            var comps = GetColorComponents();
-            if (comps.Count == 0) return false;
-            color = new BlLegacyColor(comps.ElementAtOrDefault(0), comps.ElementAtOrDefault(1), comps.ElementAtOrDefault(2));
-            return true;
+            if (TryGetColorComponentsInternal(0x04, out var inlineComponents))
+            {
+                color = new BlLegacyColor(
+                    inlineComponents.ElementAtOrDefault(0),
+                    inlineComponents.ElementAtOrDefault(1),
+                    inlineComponents.ElementAtOrDefault(2));
+                return true;
+            }
+
+            if (TryGetColorComponentsInternal(0x03, out var compositeComponents))
+            {
+                color = new BlLegacyColor(
+                    compositeComponents.ElementAtOrDefault(0),
+                    compositeComponents.ElementAtOrDefault(1),
+                    compositeComponents.ElementAtOrDefault(2));
+                return true;
+            }
+
+            return false;
         }
 
         public IReadOnlyList<byte> GetColorComponents()
         {
-            var t = Peek(); if (t is null || !t.IsCompositeC1(0x04)) return Array.Empty<byte>();
+            return TryGetColorComponentsInternal(0x04, out var values) ? values : Array.Empty<byte>();
+        }
+
+        private bool TryGetColorComponentsInternal(byte compositeId, out List<byte> components)
+        {
+            components = new List<byte>(3);
+            var token = Peek();
+            if (token is null || !token.IsCompositeC1(compositeId))
+                return false;
+
             ReadNext();
-            var vals = new List<byte>(3);
             while (!IsAtEnd)
             {
-                t = Peek(); if (t is null) break;
-                if (t.IsFieldTerminator()) { ReadNext(); break; }
-                if (t.TryGetColorComponent(out var c)) { vals.Add(c); ReadNext(); continue; }
+                token = Peek(); if (token is null) break;
+                if (token.IsFieldTerminator())
+                {
+                    ReadNext();
+                    if (components.Count > 0)
+                        break;
+                    continue;
+                }
+
+                if (compositeId == 0x03)
+                {
+                    if (token.IsPrefixedHex01() && token.TryGetNumericValue(out var numeric))
+                    {
+                        if (numeric > 0xFF)
+                        {
+                            byte component = (byte)((numeric >> 8) & 0xFF);
+                            components.Add(component);
+                            if (components.Count >= 3)
+                                break;
+                        }
+                        ReadNext();
+                        continue;
+                    }
+
+                    ReadNext();
+                    continue;
+                }
+
+                if (token.TryGetColorComponent(out var c))
+                {
+                    components.Add(c);
+                    ReadNext();
+                    if (components.Count >= 3)
+                        break;
+                    continue;
+                }
+
                 ReadNext();
             }
-            return vals;
+
+            return components.Count > 0;
         }
 
     }

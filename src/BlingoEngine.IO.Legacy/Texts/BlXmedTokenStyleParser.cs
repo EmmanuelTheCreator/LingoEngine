@@ -1,6 +1,8 @@
-﻿using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Globalization;
 using static BlingoEngine.IO.Legacy.Texts.Data.XmedStyleDescriptor;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -13,6 +15,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly Queue<int> _styleOrder = new();
         private readonly ILogger _logger;
         private readonly XmedDocument _document;
+        private readonly HashSet<int> _inlineColorStyles = new();
         private int _nextStyleId = 1;
         private BlLegacyColor _activeColor = new(0);
 
@@ -32,6 +35,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var baseStyle = GetOrCreateStyle(0);
                 baseStyle.Color = color!.Value;
+                _inlineColorStyles.Add(baseStyle.StyleId);
             }
         }
         public void MarkHeaderStyleFlag(Action<XmedStyleDescriptor> mutator)
@@ -54,67 +58,163 @@ namespace BlingoEngine.IO.Legacy.Texts
             XmedStyleDescriptor? current = null;
             int fieldIndex = 0, depth = 1;
             var prevColor = _activeColor;
+            bool inlineColorRead = false;
+            bool parentCaptured = false;
+            byte? firstPaletteIndex = null;
+            byte? selectedPaletteIndex = null;
+
+            void FinalizeCurrentStyle()
+            {
+                if (current == null)
+                    return;
+
+                if (selectedPaletteIndex is null && firstPaletteIndex.HasValue && current.ColorIndex is null)
+                    current.ColorIndex = firstPaletteIndex;
+
+                _stylesById[current.StyleId] = current;
+                string inlineHex = inlineColorRead ? current.Color.ToHex() : "<null>";
+                string colorIndexText = current.ColorIndex is { } colorIdx ? $"0x{colorIdx:X2}" : "<null>";
+                _logger.LogInformation(
+                    "XMED style {StyleId}: finalize colorIndex {ColorIndex} inline {InlineColor} font '{FontName}'",
+                    current.StyleId,
+                    colorIndexText,
+                    inlineHex,
+                    current.FontName);
+
+                if (inlineColorRead)
+                    _inlineColorStyles.Add(current.StyleId);
+                else
+                    _inlineColorStyles.Remove(current.StyleId);
+
+                current = null;
+                fieldIndex = 0;
+                inlineColorRead = false;
+                parentCaptured = false;
+                firstPaletteIndex = null;
+                selectedPaletteIndex = null;
+            }
 
             while (!reader.IsAtEnd && depth > 0)
             {
                 var t = reader.Peek(); if (t is null) break;
 
-                if (t.IsCompositeC1(0x04))
+                if (current != null && t.IsCompositeC1(0x03))
+                    LogInlineColorPreview(reader, current.StyleId);
+
+                if (current != null && (t.IsCompositeC1(0x04) || t.IsCompositeC1(0x03)))
                 {
-                    if (reader.TryGetColor(out var col) && current != null)
-                        current.Color = col.Value;
+                    if (reader.TryGetColor(out var col))
+                    {
+                        current.Color = col.GetValueOrDefault();
+                        inlineColorRead = true;
+                        _logger.LogInformation(
+                            "XMED style {StyleId}: inline color {InlineColor} from C1({CompositeId:X2})",
+                            current.StyleId,
+                            current.Color.ToHex(),
+                            t.TypeValue.GetValueOrDefault());
+                    }
+                    else
+                        _logger.LogInformation(
+                            "XMED style {StyleId}: encountered color composite C1({CompositeId:X2}) without components",
+                            current.StyleId,
+                            t.TypeValue.GetValueOrDefault());
                     continue;
                 }
 
-                if (t.IsFieldTerminator()) { reader.ReadNext(); depth--; continue; }
-                if (t.IsFieldSeparator()) { reader.ReadNext(); fieldIndex++; continue; }
+                if (t.IsFieldTerminator())
+                {
+                    reader.ReadNext();
+                    depth--;
+
+                    int? finalizedStyleId = current?.StyleId;
+                    FinalizeCurrentStyle();
+                    if (finalizedStyleId.HasValue)
+                        ConsumeTrailingInlineColors(reader, finalizedStyleId.Value);
+
+                    if (depth <= 0)
+                        break;
+                    continue;
+                }
+                if (t.IsFieldSeparator())
+                {
+                    reader.ReadNext();
+                    fieldIndex++;
+                    continue;
+                }
 
                 var tok = reader.ReadNext(); if (tok is null) break;
+
+                if (current != null)
+                    _logger.LogInformation("XMED style {StyleId}: field {FieldIndex} tokenType {TokenType} token {Token}", current.StyleId, fieldIndex, tok.Type, tok.ToString());
 
                 if (tok.IsPrefixedHex01() && current == null && tok.TryGetNumericValue(out var sid))
                 {
                     current = GetOrCreateStyle(sid);
                     fieldIndex = 0;
+                    inlineColorRead = false;
+                    parentCaptured = false;
+                    firstPaletteIndex = null;
+                    selectedPaletteIndex = null;
+                    _logger.LogInformation("XMED style {StyleId}: begin 03:0006 entry", sid);
                     continue;
                 }
-                if (current is null) continue;
+                if (current is null)
+                    continue;
 
-                if (tok.IsPrefixedHex01() && fieldIndex == 1 && tok.TryGetNumericValue(out var parent) && parent >= 0)
+                if (!parentCaptured && fieldIndex == 0 && tok.IsPrefixedHex01() && tok.TryGetNumericValue(out var parent) && parent >= 0)
                 {
                     _styleParents[current.StyleId] = parent;
+                    parentCaptured = true;
+                    _logger.LogInformation("XMED style {StyleId}: parent {ParentStyleId}", current.StyleId, parent);
                     continue;
                 }
 
                 if (tok.IsPrefixedHex01() && fieldIndex == 2 && tok.TryGetNumericValue(out var ci) && ci >= 0 && ci <= 0xFF)
                 {
-                    current.ColorIndex = (byte?)ci;
+                    byte paletteCandidate = (byte)ci;
+                    if (!firstPaletteIndex.HasValue)
+                        firstPaletteIndex = paletteCandidate;
+
+                    if (paletteCandidate != 0 && selectedPaletteIndex is null)
+                    {
+                        selectedPaletteIndex = paletteCandidate;
+                        current.ColorIndex = paletteCandidate;
+                        _logger.LogInformation("XMED style {StyleId}: color index 0x{ColorIndex:X2} (selected)", current.StyleId, paletteCandidate);
+                    }
+                    else if (selectedPaletteIndex is null)
+                    {
+                        current.ColorIndex = paletteCandidate;
+                        _logger.LogInformation("XMED style {StyleId}: color index candidate 0x{ColorIndex:X2}", current.StyleId, paletteCandidate);
+                    }
+                    else
+                        _logger.LogInformation("XMED style {StyleId}: ignoring color index candidate 0x{ColorIndex:X2} (selected 0x{Selected:X2})", current.StyleId, paletteCandidate, selectedPaletteIndex.Value);
                     continue;
                 }
 
                 if (tok.IsPrefixedHex01() && fieldIndex == 3 && tok.TryGetNumericValue(out var fs) && fs >= 0)
                 {
                     current.FontSize = (ushort)Math.Clamp(fs, 0, ushort.MaxValue);
+                    _logger.LogInformation("XMED style {StyleId}: font size {FontSize}", current.StyleId, current.FontSize);
                     continue;
                 }
 
-                // handle style booleans
                 if (tok.IsBoolean())
                 {
                     switch (fieldIndex)
                     {
-                        case 4: current.ApplyStyleFlag(XmedStyleFlags.Bold, tok.GetBool()); break;
-                        case 5: current.ApplyStyleFlag(XmedStyleFlags.Italic, tok.GetBool()); break;
-                        case 6: current.ApplyStyleFlag(XmedStyleFlags.Underline, tok.GetBool()); break;
-                        case 7: current.ApplyStyleFlag(XmedStyleFlags.Strikeout, tok.GetBool()); break;
-                        case 8: current.ApplyStyleFlag(XmedStyleFlags.Subscript, tok.GetBool()); break;
-                        case 9: current.ApplyStyleFlag(XmedStyleFlags.Superscript, tok.GetBool()); break;
+                        case 4: current.ApplyStyleFlag(XmedStyleFlags.Bold, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: bold {Value}", current.StyleId, current.Bold); break;
+                        case 5: current.ApplyStyleFlag(XmedStyleFlags.Italic, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: italic {Value}", current.StyleId, current.Italic); break;
+                        case 6: current.ApplyStyleFlag(XmedStyleFlags.Underline, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: underline {Value}", current.StyleId, current.Underline); break;
+                        case 7: current.ApplyStyleFlag(XmedStyleFlags.Strikeout, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: strikeout {Value}", current.StyleId, current.Strikeout); break;
+                        case 8: current.ApplyStyleFlag(XmedStyleFlags.Subscript, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: subscript {Value}", current.StyleId, current.Subscript); break;
+                        case 9: current.ApplyStyleFlag(XmedStyleFlags.Superscript, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: superscript {Value}", current.StyleId, current.Superscript); break;
                     }
                     continue;
                 }
             }
 
+            FinalizeCurrentStyle();
             _activeColor = prevColor;
-            if (current != null) _stylesById[current.StyleId] = current;
         }
 
 
@@ -159,11 +259,17 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public BlLegacyColor ResolveColor(XmedStyleDescriptor descriptor, XmedStyleDescriptor baseStyle)
         {
-            if (descriptor.ColorIndex.HasValue && descriptor.ColorIndex != 0)
-                return new BlLegacyColor(descriptor.ColorIndex!.Value);
+            if (_inlineColorStyles.Contains(descriptor.StyleId))
+                return descriptor.Color;
 
-            if (descriptor.ColorIndex.HasValue && baseStyle.ColorIndex != 0)
-                return new BlLegacyColor(baseStyle.ColorIndex!.Value);
+            if (descriptor.ColorIndex.HasValue)
+                return new BlLegacyColor(descriptor.ColorIndex.Value);
+
+            if (_inlineColorStyles.Contains(baseStyle.StyleId))
+                return baseStyle.Color;
+
+            if (baseStyle.ColorIndex.HasValue)
+                return new BlLegacyColor(baseStyle.ColorIndex.Value);
 
             return _activeColor;
         }
@@ -213,6 +319,131 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             descriptor = null;
             return false;
+        }
+
+        private void ConsumeTrailingInlineColors(BlXmedTokenReader reader, int styleId)
+        {
+            while (!reader.IsAtEnd)
+            {
+                var token = reader.Peek();
+                if (token == null)
+                    break;
+
+                if (token.IsFieldSeparator())
+                {
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.IsFieldTerminator())
+                {
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.IsPrefixedHex03())
+                    break;
+
+                if (token.Type == BlXmedToken.TokenType.Block00)
+                    break;
+
+                if (token.Type == BlXmedToken.TokenType.C1 && !token.IsCompositeC1(0x03) && !token.IsCompositeC1(0x04))
+                {
+                    _logger.LogInformation(
+                        "XMED style {StyleId}: skipping trailing composite C1({CompositeId:X2})",
+                        styleId,
+                        token.TypeValue.GetValueOrDefault());
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.Type == BlXmedToken.TokenType.C2)
+                {
+                    _logger.LogInformation(
+                        "XMED style {StyleId}: skipping trailing composite C2({CompositeId:X2})",
+                        styleId,
+                        token.TypeValue.GetValueOrDefault());
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.IsPrefixedHex01())
+                    break;
+
+                if (token.Type == BlXmedToken.TokenType.PrefixedHex)
+                {
+                    _logger.LogInformation(
+                        "XMED style {StyleId}: skipping trailing prefixed hex token {Token}",
+                        styleId,
+                        token.ToString());
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.Type == BlXmedToken.TokenType.Ascii || token.Type == BlXmedToken.TokenType.Byte)
+                {
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (!token.IsCompositeC1(0x03) && !token.IsCompositeC1(0x04))
+                    break;
+
+                var descriptor = GetOrCreateStyle(styleId);
+                byte compositeId = (byte)token.TypeValue.GetValueOrDefault();
+                _logger.LogInformation(
+                    "XMED style {StyleId}: probing trailing composite C1({CompositeId:X2})",
+                    styleId,
+                    compositeId);
+                if (reader.TryGetColor(out var color) && color.HasValue)
+                {
+                    descriptor.Color = color.Value;
+                    _inlineColorStyles.Add(styleId);
+                    _logger.LogInformation(
+                        "XMED style {StyleId}: trailing inline color {InlineColor} from C1({CompositeId:X2})",
+                        styleId,
+                        descriptor.Color.ToHex(),
+                        compositeId);
+                    continue;
+                }
+
+                _logger.LogInformation(
+                    "XMED style {StyleId}: trailing composite C1({CompositeId:X2}) without usable color",
+                    styleId,
+                    compositeId);
+            }
+        }
+
+        private void LogInlineColorPreview(BlXmedTokenReader reader, int styleId)
+        {
+            var token = reader.Peek();
+            if (token == null)
+                return;
+
+            _logger.LogInformation("XMED style {StyleId}: inspecting C1(03) inline color composite", styleId);
+
+            for (int offset = 0; offset < 16; offset++)
+            {
+                var preview = reader.Peek(offset);
+                if (preview == null)
+                    break;
+
+                string ascii = preview.Ascii ?? "<null>";
+                string value = preview.Value.HasValue ? preview.Value.Value.ToString(CultureInfo.InvariantCulture) : "<null>";
+                string typeValue = preview.TypeValue.HasValue ? $"0x{preview.TypeValue.Value:X2}" : "<null>";
+
+                _logger.LogInformation(
+                    "XMED style {StyleId}: C1(03) preview[{Offset:D2}] type {TokenType} ascii {Ascii} value {Value} typeValue {TypeValue}",
+                    styleId,
+                    offset,
+                    preview.Type,
+                    ascii,
+                    value,
+                    typeValue);
+
+                if (offset > 0 && preview.IsBlockBoundary())
+                    break;
+            }
         }
 
         

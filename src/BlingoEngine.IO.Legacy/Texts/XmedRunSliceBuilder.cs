@@ -1,5 +1,6 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -24,49 +25,157 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public void ReadRuns(BlXmedTokenReader reader)
         {
-            _runBoundaries.Clear();
-            int? pendingEnd = null;
+            var token = reader.Peek();
+            if (token == null)
+                return;
+
+            bool clearedForRunMap = false;
+
+            LogRunBlockPreview(reader);
 
             while (!reader.IsAtEnd)
             {
                 var t = reader.Peek();
-                if (t == null) break;
-                if (t.IsBlockBoundary()) { reader.ReadNext(); break; }
+                if (t == null)
+                    break;
+
+                if (t.IsPrefixedHex03() && t.Ascii is { Length: >= 4 } ascii && ascii.StartsWith("0004", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!clearedForRunMap)
+                    {
+                        _runBoundaries.Clear();
+                        clearedForRunMap = true;
+                    }
+
+                    reader.ReadNext();
+                    _logger.LogInformation("XMED run reader: begin 03:0004 run map at token {Position}", reader.Position - 1);
+                    ReadRunMapEntries(reader);
+                    continue;
+                }
+
+                if (t.IsBlockBoundary())
+                {
+                    _logger.LogInformation("XMED run reader encountered boundary token {Token} at position {Position}", t, reader.Position);
+                    reader.ReadNext();
+                    break;
+                }
 
                 if (_paraDescriptorReader.TryExtractParagraphDescriptor(reader, out _))
                     continue;
-
-                if (t.IsCompositeC1(0x04))
-                {
-                    reader.ReadNext();
-                    int depth = 1;
-                    pendingEnd = null;
-
-                    while (!reader.IsAtEnd && depth > 0)
-                    {
-                        var s = reader.Peek();
-                        if (s.IsCompositeC1(0x04)) { depth++; reader.ReadNext(); continue; }
-                        if (s.IsFieldSeparator()) { reader.ReadNext(); continue; }
-                        if (s.IsFieldTerminator()) { reader.ReadNext(); depth--; continue; }
-
-                        if (s.IsPrefixedHex02() && s.TryGetNumericValue(out var end))
-                        { pendingEnd = end; reader.ReadNext(); continue; }
-
-                        if (pendingEnd.HasValue && s.IsPrefixedHex01() && s.TryGetNumericValue(out var styleId))
-                        { _runBoundaries.Add((pendingEnd.Value, styleId)); pendingEnd = null; reader.ReadNext(); continue; }
-
-                        reader.ReadNext();
-                    }
-                    pendingEnd = null;
-                    continue;
-                }
 
                 reader.ReadNext();
             }
         }
 
+        private void LogRunBlockPreview(BlXmedTokenReader reader)
+        {
+            var token = reader.Peek();
+            if (token == null)
+                return;
+
+            if (!token.IsPrefixedHex03())
+                return;
+
+            string blockId = token.Ascii is { Length: >= 4 } blockAscii ? blockAscii[..4] : "<null>";
+            _logger.LogInformation("XMED run reader inspecting 03 block {BlockId} at token index {Index}", blockId, reader.Position);
+
+            bool headerLogged = false;
+            for (int offset = 0; offset < 32; offset++)
+            {
+                var preview = reader.Peek(offset);
+                if (preview == null)
+                    break;
+
+                string ascii = preview.Ascii ?? "<null>";
+                string value = preview.Value.HasValue ? preview.Value.Value.ToString(CultureInfo.InvariantCulture) : "<null>";
+                string typeValue = preview.TypeValue.HasValue ? $"0x{preview.TypeValue.Value:X2}" : "<null>";
+
+                _logger.LogInformation(
+                    "XMED run 03:{BlockId} preview[{Offset:D2}]: type {TokenType} ascii {Ascii} value {Value} typeValue {TypeValue}",
+                    blockId,
+                    offset,
+                    preview.Type,
+                    ascii,
+                    value,
+                    typeValue);
+
+                if (!headerLogged)
+                {
+                    headerLogged = true;
+                    continue;
+                }
+
+                if (preview.IsPrefixedHex03())
+                    break;
+            }
+        }
 
 
+
+
+        private void ReadRunMapEntries(BlXmedTokenReader reader)
+        {
+            int? pendingEnd = null;
+
+            while (!reader.IsAtEnd)
+            {
+                var token = reader.Peek();
+                if (token == null)
+                    break;
+
+                if (token.IsPrefixedHex03())
+                    break;
+
+                if (token.IsBlockBoundary())
+                {
+                    reader.ReadNext();
+                    break;
+                }
+
+                if (token.IsFieldSeparator())
+                {
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.IsFieldTerminator())
+                {
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (_paraDescriptorReader.TryExtractParagraphDescriptor(reader, out _))
+                    continue;
+
+                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var end))
+                {
+                    pendingEnd = end;
+                    _logger.LogInformation("XMED run reader: pending run end {End}", end);
+                    reader.ReadNext();
+                    continue;
+                }
+
+                if (token.IsPrefixedHex01() && token.TryGetNumericValue(out var styleId))
+                {
+                    if (pendingEnd.HasValue)
+                    {
+                        _runBoundaries.Add((pendingEnd.Value, styleId));
+                        _logger.LogInformation("XMED run reader: boundary end {End} style {StyleId}", pendingEnd.Value, styleId);
+                        pendingEnd = null;
+                    }
+                    else
+                        _logger.LogInformation("XMED run reader: encountered style {StyleId} without pending end", styleId);
+
+                    reader.ReadNext();
+                    continue;
+                }
+
+                reader.ReadNext();
+            }
+
+            if (pendingEnd.HasValue)
+                _logger.LogInformation("XMED run reader: trailing end {End} without style", pendingEnd.Value);
+        }
 
         private List<TextSlice> BuildRunSlices(List<(int End, int StyleId)> boundaries, int textLength)
         {
@@ -109,6 +218,8 @@ namespace BlingoEngine.IO.Legacy.Texts
             var runBounds = _runBoundaries.Select(b => (End: Math.Clamp(b.End, 0, textLength), b.StyleId))
                                           .Where(b => b.End > 0)
                                           .OrderBy(b => b.End).ToList();
+            foreach (var boundary in runBounds)
+                _logger.LogInformation("XMED run boundary normalized: end {End} style {StyleId}", boundary.End, boundary.StyleId);
             if (runBounds.Count == 0) runBounds.Add((textLength, 0));
 
             var paraBounds = _paragraphSliceBuilder.GetOrderedParagraphBoundaries();
@@ -118,6 +229,8 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (paraSlices.Count <= 1 && _document.TextLength > 0 && _document.Text.Contains('\r'))
                 paraSlices = _paragraphSliceBuilder.BuildParagraphSlicesFromText(_document.Text);
             var runSlices = BuildRunSlices(runBounds, textLength);
+            foreach (var slice in runSlices)
+                _logger.LogInformation("XMED run slice computed: start {Start} end {End} style {StyleId}", slice.Start, slice.End, slice.StyleId);
 
             if (runSlices.Sum(s => s.Length) != textLength)
                 runSlices = new List<TextSlice> { new TextSlice(0, textLength, 0, 0) };
@@ -141,6 +254,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 (ushort)Math.Min((int)d.StyleId, ushort.MaxValue), slice.Start));
 
             var textSpan = len > 0 ? _document.Text.AsSpan(slice.Start, len) : ReadOnlySpan<char>.Empty;
+            var resolvedColor = _styleParser.ResolveColor(d, baseStyle);
             _document.Runs.Add(new XmedTextRun
             {
                 Start = slice.Start,
@@ -151,8 +265,16 @@ namespace BlingoEngine.IO.Legacy.Texts
                 Bold = d.Bold || baseStyle.Bold,
                 Italic = d.Italic || baseStyle.Italic,
                 Underline = d.Underline || baseStyle.Underline,
-                ForeColor = _styleParser.ResolveColor(d, baseStyle)
+                ForeColor = resolvedColor
             });
+            _logger.LogInformation(
+                "XMED run slice resolved: start {Start} len {Length} style {StyleId} colorIndex {ColorIndex} resolved {Resolved} baseColorIndex {BaseIndex}",
+                slice.Start,
+                len,
+                d.StyleId,
+                d.ColorIndex is { } colorIdx ? $"0x{colorIdx:X2}" : "<null>",
+                resolvedColor.ToHex(),
+                baseStyle.ColorIndex is { } baseIdx ? $"0x{baseIdx:X2}" : "<null>");
             return true;
         }
 
