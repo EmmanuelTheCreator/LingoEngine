@@ -4,11 +4,13 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Globalization;
 using static BlingoEngine.IO.Legacy.Texts.Data.XmedStyleDescriptor;
+using static BlingoEngine.IO.Legacy.Texts.XmedDiagnostics;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class BlXmedTokenStyleParser
     {
+        private const XmedDiagnosticArea DiagnosticArea = XmedDiagnosticArea.StyleParser;
         private readonly HashSet<string> _fontNames = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, XmedStyleDescriptor> _stylesById = new();
         private readonly Dictionary<int, int> _styleParents = new();
@@ -74,7 +76,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 _stylesById[current.StyleId] = current;
                 string inlineHex = inlineColorRead ? current.Color.ToHex() : "<null>";
                 string colorIndexText = current.ColorIndex is { } colorIdx ? $"0x{colorIdx:X2}" : "<null>";
-                _logger.LogInformation(
+                LogTrace(DiagnosticArea, _logger, 
                     "XMED style {StyleId}: finalize colorIndex {ColorIndex} inline {InlineColor} font '{FontName}'",
                     current.StyleId,
                     colorIndexText,
@@ -107,14 +109,14 @@ namespace BlingoEngine.IO.Legacy.Texts
                     {
                         current.Color = col.GetValueOrDefault();
                         inlineColorRead = true;
-                        _logger.LogInformation(
+                        LogTrace(DiagnosticArea, _logger, 
                             "XMED style {StyleId}: inline color {InlineColor} from C1({CompositeId:X2})",
                             current.StyleId,
                             current.Color.ToHex(),
                             t.TypeValue.GetValueOrDefault());
                     }
                     else
-                        _logger.LogInformation(
+                        LogTrace(DiagnosticArea, _logger, 
                             "XMED style {StyleId}: encountered color composite C1({CompositeId:X2}) without components",
                             current.StyleId,
                             t.TypeValue.GetValueOrDefault());
@@ -145,7 +147,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 var tok = reader.ReadNext(); if (tok is null) break;
 
                 if (current != null)
-                    _logger.LogInformation("XMED style {StyleId}: field {FieldIndex} tokenType {TokenType} token {Token}", current.StyleId, fieldIndex, tok.Type, tok.ToString());
+                    LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: field {FieldIndex} tokenType {TokenType} token {Token}", current.StyleId, fieldIndex, tok.Type, tok.ToString());
 
                 if (tok.IsPrefixedHex01() && current == null && tok.TryGetNumericValue(out var sid))
                 {
@@ -155,7 +157,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     parentCaptured = false;
                     firstPaletteIndex = null;
                     selectedPaletteIndex = null;
-                    _logger.LogInformation("XMED style {StyleId}: begin 03:0006 entry", sid);
+                    LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: begin 03:0006 entry", sid);
                     continue;
                 }
                 if (current is null)
@@ -165,7 +167,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     _styleParents[current.StyleId] = parent;
                     parentCaptured = true;
-                    _logger.LogInformation("XMED style {StyleId}: parent {ParentStyleId}", current.StyleId, parent);
+                    LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: parent {ParentStyleId}", current.StyleId, parent);
                     continue;
                 }
 
@@ -179,22 +181,22 @@ namespace BlingoEngine.IO.Legacy.Texts
                     {
                         selectedPaletteIndex = paletteCandidate;
                         current.ColorIndex = paletteCandidate;
-                        _logger.LogInformation("XMED style {StyleId}: color index 0x{ColorIndex:X2} (selected)", current.StyleId, paletteCandidate);
+                        LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: color index 0x{ColorIndex:X2} (selected)", current.StyleId, paletteCandidate);
                     }
                     else if (selectedPaletteIndex is null)
                     {
                         current.ColorIndex = paletteCandidate;
-                        _logger.LogInformation("XMED style {StyleId}: color index candidate 0x{ColorIndex:X2}", current.StyleId, paletteCandidate);
+                        LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: color index candidate 0x{ColorIndex:X2}", current.StyleId, paletteCandidate);
                     }
                     else
-                        _logger.LogInformation("XMED style {StyleId}: ignoring color index candidate 0x{ColorIndex:X2} (selected 0x{Selected:X2})", current.StyleId, paletteCandidate, selectedPaletteIndex.Value);
+                        LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: ignoring color index candidate 0x{ColorIndex:X2} (selected 0x{Selected:X2})", current.StyleId, paletteCandidate, selectedPaletteIndex.Value);
                     continue;
                 }
 
                 if (tok.IsPrefixedHex01() && fieldIndex == 3 && tok.TryGetNumericValue(out var fs) && fs >= 0)
                 {
                     current.FontSize = (ushort)Math.Clamp(fs, 0, ushort.MaxValue);
-                    _logger.LogInformation("XMED style {StyleId}: font size {FontSize}", current.StyleId, current.FontSize);
+                    LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: font size {FontSize}", current.StyleId, current.FontSize);
                     continue;
                 }
 
@@ -202,12 +204,12 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     switch (fieldIndex)
                     {
-                        case 4: current.ApplyStyleFlag(XmedStyleFlags.Bold, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: bold {Value}", current.StyleId, current.Bold); break;
-                        case 5: current.ApplyStyleFlag(XmedStyleFlags.Italic, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: italic {Value}", current.StyleId, current.Italic); break;
-                        case 6: current.ApplyStyleFlag(XmedStyleFlags.Underline, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: underline {Value}", current.StyleId, current.Underline); break;
-                        case 7: current.ApplyStyleFlag(XmedStyleFlags.Strikeout, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: strikeout {Value}", current.StyleId, current.Strikeout); break;
-                        case 8: current.ApplyStyleFlag(XmedStyleFlags.Subscript, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: subscript {Value}", current.StyleId, current.Subscript); break;
-                        case 9: current.ApplyStyleFlag(XmedStyleFlags.Superscript, tok.GetBool()); _logger.LogInformation("XMED style {StyleId}: superscript {Value}", current.StyleId, current.Superscript); break;
+                        case 4: current.ApplyStyleFlag(XmedStyleFlags.Bold, tok.GetBool()); LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: bold {Value}", current.StyleId, current.Bold); break;
+                        case 5: current.ApplyStyleFlag(XmedStyleFlags.Italic, tok.GetBool()); LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: italic {Value}", current.StyleId, current.Italic); break;
+                        case 6: current.ApplyStyleFlag(XmedStyleFlags.Underline, tok.GetBool()); LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: underline {Value}", current.StyleId, current.Underline); break;
+                        case 7: current.ApplyStyleFlag(XmedStyleFlags.Strikeout, tok.GetBool()); LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: strikeout {Value}", current.StyleId, current.Strikeout); break;
+                        case 8: current.ApplyStyleFlag(XmedStyleFlags.Subscript, tok.GetBool()); LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: subscript {Value}", current.StyleId, current.Subscript); break;
+                        case 9: current.ApplyStyleFlag(XmedStyleFlags.Superscript, tok.GetBool()); LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: superscript {Value}", current.StyleId, current.Superscript); break;
                     }
                     continue;
                 }
@@ -353,7 +355,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                     if (retargetStyle < 0 || retargetStyle > byte.MaxValue)
                     {
-                        _logger.LogInformation(
+                        LogTrace(DiagnosticArea, _logger, 
                             "XMED style {StyleId}: ignoring trailing style retarget 0x{RawValue:X4}",
                             currentStyleId,
                             retargetStyle);
@@ -363,7 +365,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     int previousStyleId = currentStyleId;
                     currentStyleId = retargetStyle;
                     GetOrCreateStyle(currentStyleId);
-                    _logger.LogInformation(
+                    LogTrace(DiagnosticArea, _logger, 
                         "XMED style {StyleId}: retargeting trailing inline colors to style {TargetStyleId}",
                         previousStyleId,
                         currentStyleId);
@@ -374,7 +376,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 {
                     if (token.IsCompositeC1(0x04))
                     {
-                        _logger.LogInformation(
+                        LogTrace(DiagnosticArea, _logger, 
                             "XMED style {StyleId}: skipping trailing sentinel C1(04)",
                             currentStyleId);
                         reader.ReadNext();
@@ -389,14 +391,14 @@ namespace BlingoEngine.IO.Legacy.Texts
                         {
                             descriptor.Color = color.Value;
                             _inlineColorStyles.Add(descriptor.StyleId);
-                            _logger.LogInformation(
+                            LogTrace(DiagnosticArea, _logger, 
                                 "XMED style {StyleId}: trailing inline color {InlineColor} from C1(03)",
                                 currentStyleId,
                                 descriptor.Color.ToHex());
                         }
                         else
                         {
-                            _logger.LogInformation(
+                            LogTrace(DiagnosticArea, _logger, 
                                 "XMED style {StyleId}: trailing C1(03) without usable color",
                                 currentStyleId);
                         }
@@ -405,7 +407,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         continue;
                     }
 
-                    _logger.LogInformation(
+                    LogTrace(DiagnosticArea, _logger, 
                         "XMED style {StyleId}: skipping trailing composite C1({CompositeId:X2})",
                         currentStyleId,
                         token.TypeValue.GetValueOrDefault());
@@ -416,7 +418,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 if (token.Type == BlXmedToken.TokenType.C2)
                 {
-                    _logger.LogInformation(
+                    LogTrace(DiagnosticArea, _logger, 
                         "XMED style {StyleId}: skipping trailing composite C2({CompositeId:X2})",
                         currentStyleId,
                         token.TypeValue.GetValueOrDefault());
@@ -427,7 +429,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 if (token.Type == BlXmedToken.TokenType.PrefixedHex)
                 {
-                    _logger.LogInformation(
+                    LogTrace(DiagnosticArea, _logger, 
                         "XMED style {StyleId}: skipping trailing prefixed hex token {Token}",
                         currentStyleId,
                         token.ToString());
@@ -447,16 +449,19 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
 
             if (!consumed)
-                _logger.LogInformation("XMED style {StyleId}: no trailing inline colors consumed", styleId);
+                LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: no trailing inline colors consumed", styleId);
         }
 
         private void LogInlineColorPreview(BlXmedTokenReader reader, int styleId)
         {
+            if (!IsTraceEnabled(DiagnosticArea, _logger))
+                return;
+
             var token = reader.Peek();
             if (token == null)
                 return;
 
-            _logger.LogInformation("XMED style {StyleId}: inspecting C1(03) inline color composite", styleId);
+            LogTrace(DiagnosticArea, _logger, "XMED style {StyleId}: inspecting C1(03) inline color composite", styleId);
 
             for (int offset = 0; offset < 16; offset++)
             {
@@ -468,7 +473,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 string value = preview.Value.HasValue ? preview.Value.Value.ToString(CultureInfo.InvariantCulture) : "<null>";
                 string typeValue = preview.TypeValue.HasValue ? $"0x{preview.TypeValue.Value:X2}" : "<null>";
 
-                _logger.LogInformation(
+                LogTrace(DiagnosticArea, _logger, 
                     "XMED style {StyleId}: C1(03) preview[{Offset:D2}] type {TokenType} ascii {Ascii} value {Value} typeValue {TypeValue}",
                     styleId,
                     offset,

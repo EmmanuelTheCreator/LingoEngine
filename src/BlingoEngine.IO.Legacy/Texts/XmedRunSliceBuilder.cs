@@ -1,11 +1,13 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
+using static BlingoEngine.IO.Legacy.Texts.XmedDiagnostics;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal class XmedRunSliceBuilder
     {
+        private const XmedDiagnosticArea DiagnosticArea = XmedDiagnosticArea.RunSliceBuilder;
         private readonly XmedDocument _document;
         private readonly List<(int End, int StyleId)> _runBoundaries = new();
         private readonly BlXmedTokenStyleParser _styleParser;
@@ -48,14 +50,14 @@ namespace BlingoEngine.IO.Legacy.Texts
                     }
 
                     reader.ReadNext();
-                    _logger.LogInformation("XMED run reader: begin 03:0004 run map at token {Position}", reader.Position - 1);
+                    LogTrace(DiagnosticArea, _logger, "XMED run reader: begin 03:0004 run map at token {Position}", reader.Position - 1);
                     ReadRunMapEntries(reader);
                     continue;
                 }
 
                 if (t.IsBlockBoundary())
                 {
-                    _logger.LogInformation("XMED run reader encountered boundary token {Token} at position {Position}", t, reader.Position);
+                    LogTrace(DiagnosticArea, _logger, "XMED run reader encountered boundary token {Token} at position {Position}", t, reader.Position);
                     reader.ReadNext();
                     break;
                 }
@@ -69,6 +71,9 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private void LogRunBlockPreview(BlXmedTokenReader reader)
         {
+            if (!IsTraceEnabled(DiagnosticArea, _logger))
+                return;
+
             var token = reader.Peek();
             if (token == null)
                 return;
@@ -77,7 +82,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return;
 
             string blockId = token.Ascii is { Length: >= 4 } blockAscii ? blockAscii[..4] : "<null>";
-            _logger.LogInformation("XMED run reader inspecting 03 block {BlockId} at token index {Index}", blockId, reader.Position);
+            LogTrace(DiagnosticArea, _logger, "XMED run reader inspecting 03 block {BlockId} at token index {Index}", blockId, reader.Position);
 
             bool headerLogged = false;
             for (int offset = 0; offset < 32; offset++)
@@ -90,7 +95,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                 string value = preview.Value.HasValue ? preview.Value.Value.ToString(CultureInfo.InvariantCulture) : "<null>";
                 string typeValue = preview.TypeValue.HasValue ? $"0x{preview.TypeValue.Value:X2}" : "<null>";
 
-                _logger.LogInformation(
+                LogTrace(
+                    DiagnosticArea,
+                    _logger,
                     "XMED run 03:{BlockId} preview[{Offset:D2}]: type {TokenType} ascii {Ascii} value {Value} typeValue {TypeValue}",
                     blockId,
                     offset,
@@ -150,7 +157,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var end))
                 {
                     pendingEnd = end;
-                    _logger.LogInformation("XMED run reader: pending run end {End}", end);
+                    LogTrace(DiagnosticArea, _logger, "XMED run reader: pending run end {End}", end);
                     reader.ReadNext();
                     continue;
                 }
@@ -160,11 +167,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                     if (pendingEnd.HasValue)
                     {
                         _runBoundaries.Add((pendingEnd.Value, styleId));
-                        _logger.LogInformation("XMED run reader: boundary end {End} style {StyleId}", pendingEnd.Value, styleId);
+                        LogTrace(DiagnosticArea, _logger, "XMED run reader: boundary end {End} style {StyleId}", pendingEnd.Value, styleId);
                         pendingEnd = null;
                     }
                     else
-                        _logger.LogInformation("XMED run reader: encountered style {StyleId} without pending end", styleId);
+                        LogTrace(DiagnosticArea, _logger, "XMED run reader: encountered style {StyleId} without pending end", styleId);
 
                     reader.ReadNext();
                     continue;
@@ -174,7 +181,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
 
             if (pendingEnd.HasValue)
-                _logger.LogInformation("XMED run reader: trailing end {End} without style", pendingEnd.Value);
+                LogTrace(DiagnosticArea, _logger, "XMED run reader: trailing end {End} without style", pendingEnd.Value);
         }
 
         private List<TextSlice> BuildRunSlices(List<(int End, int StyleId)> boundaries, int textLength)
@@ -219,7 +226,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                                           .Where(b => b.End > 0)
                                           .OrderBy(b => b.End).ToList();
             foreach (var boundary in runBounds)
-                _logger.LogInformation("XMED run boundary normalized: end {End} style {StyleId}", boundary.End, boundary.StyleId);
+                LogTrace(DiagnosticArea, _logger, "XMED run boundary normalized: end {End} style {StyleId}", boundary.End, boundary.StyleId);
             if (runBounds.Count == 0) runBounds.Add((textLength, 0));
 
             var paraBounds = _paragraphSliceBuilder.GetOrderedParagraphBoundaries();
@@ -234,7 +241,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             var runSlices = BuildRunSlices(runBounds, textLength);
             foreach (var slice in runSlices)
-                _logger.LogInformation("XMED run slice computed: start {Start} end {End} style {StyleId}", slice.Start, slice.End, slice.StyleId);
+                LogTrace(DiagnosticArea, _logger, "XMED run slice computed: start {Start} end {End} style {StyleId}", slice.Start, slice.End, slice.StyleId);
 
             if (runSlices.Sum(s => s.Length) != textLength)
                 runSlices = new List<TextSlice> { new TextSlice(0, textLength, 0, 0) };
@@ -256,7 +263,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 descriptor = _styleParser.GetOrCreateStyle(slice.StyleId);
                 baseStyle.ApplyStyleInheritanceToChild(descriptor);
-                _logger.LogInformation("XMED run slice: created stub style {StyleId} from base", slice.StyleId);
+                LogTrace(DiagnosticArea, _logger, "XMED run slice: created stub style {StyleId} from base", slice.StyleId);
             }
             else
                 descriptor = style;
@@ -279,7 +286,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                 Underline = descriptor.Underline || baseStyle.Underline,
                 ForeColor = resolvedColor
             });
-            _logger.LogInformation(
+            LogTrace(
+                DiagnosticArea,
+                _logger,
                 "XMED run slice resolved: start {Start} len {Length} style {StyleId} colorIndex {ColorIndex} resolved {Resolved} baseColorIndex {BaseIndex}",
                 slice.Start,
                 len,

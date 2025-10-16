@@ -167,3 +167,11 @@ This log tracks approaches we attempted while investigating the failing XMED tex
 - **How we exercised it:** Seeded style descriptors for every distinct run-map entry before constructing run slices so the color resolver has placeholders for styles `1`, `2`, and `4`, then replayed the focused test to check the run diagnostics.
 - **What happened:** The run-map retains the original style ids, and the slice builder now resolves styles `1`, `2`, and `4` without collapsing them to `0`. However, every run still resolves to the base inline color `#600000`, confirming that the footer trails never populate the per-style inline colors.
 - **Follow-up ideas:** Once footer dispatch can retarget the RGB triples correctly, extend the run assertions (or add a new regression test) to verify that styles `1`, `2`, and `4` inherit the expected red/green/blue values instead of the shared fallback.
+
+## 2024-07-25 Investigation Utilities
+
+### Trace-level instrumentation switches
+- **What changed:** Introduced `XmedDiagnostics` to centralize trace logging with per-area toggles for the token parser, token reader, style parser, and run slice builder. Migrated the detailed instrumentation we added earlier to `LogTrace` so we can selectively enable the verbose output without overwhelming higher log levels.
+- **How to use it:** Call `XmedDiagnostics.SetEnabled(XmedDiagnosticArea.RunSliceBuilder, false)` (or any combination of flags) before reading a document to mute specific components, and flip it back with `true` when you need that area again. `EnableAll()` and `DisableAll()` provide quick global switches.
+- **Logger control:** Updated `XunitLoggerProvider` so tests can set `MinimumLevel` and `Detailed` formatting, letting future debugging passes raise or lower the verbosity without code changes.
+- **Next steps:** Now that logging is isolatable, we can focus each test run on a single pipeline stage (e.g., style parser only) while we decode the remaining inline color retargeting rules.

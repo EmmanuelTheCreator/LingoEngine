@@ -2,6 +2,7 @@ using System;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
+using static BlingoEngine.IO.Legacy.Texts.XmedDiagnostics;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -11,6 +12,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly XmedDocument _document = new();
 
+        private const XmedDiagnosticArea DiagnosticArea = XmedDiagnosticArea.TokenParser;
         private readonly BlXmedTokenStyleParser _styleParser;
         private readonly XmedSpacingReader _spacingReader;
         private readonly XmedTextBuilder _textBuilder;
@@ -184,7 +186,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (next is null || !next.IsCompositeC1(0x03) && !next.IsCompositeC1(0x04))
                 return false;
 
-            _logger?.LogDebug("XMED footer: dispatching trailing inline colors for style {StyleId}", styleId);
+            LogTrace(DiagnosticArea, _logger, "XMED footer: dispatching trailing inline colors for style {StyleId}", styleId);
             _styleParser.GetOrCreateStyle(styleId);
             _styleParser.ConsumeTrailingInlineColors(_reader, styleId);
             return true;
@@ -252,7 +254,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private void LogUnknown(string category, string token)
         {
-            _logger?.LogDebug("XMED: {Category} unknown token {Token}", category, token);
+            LogTrace(DiagnosticArea, _logger, "XMED: {Category} unknown token {Token}", category, token);
         }
     }
 }
