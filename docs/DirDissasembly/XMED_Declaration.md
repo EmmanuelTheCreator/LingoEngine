@@ -77,6 +77,25 @@ Starts with 03, then
       C1(03) 
       C2(12) 
 
+### Tab stops
+
+#### No tab stops defined:
+  C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82  
+ - C2(06) 
+ - 02:6A03E2AE : Identifier
+ - 01:0        : Number of defined styles
+ - 02:18       : Default Tab width 24 px
+ - 01:0 <82    : EOF
+
+#### With Tabs defined
+C2(06) 02:6A03E2AE 01:4 
+		02:1 02:96 02:0 <82   // Tab Stop Left 150 px
+		02:1 02:D8 02:0 <82   // Tab Stop Left 216 px
+		02:1 02:120 02:0 <82  // Tab Stop Left 288 px
+		02:1 02:169 02:0 <82  // Tab Stop Left 361 px
+		02:18 01:0 <82        // Default Tab width 24 px
+
+
 
 ## Header (stable)
 `00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
