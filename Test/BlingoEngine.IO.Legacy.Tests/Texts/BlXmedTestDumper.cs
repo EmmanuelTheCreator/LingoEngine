@@ -19,31 +19,39 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
         [Fact]
         public void GenerateXmedText()
         {
-            var folder = "Texts_Fields";
-            //var folder = "Texts_Fields/Tests2";
-            //var folder = "Texts_Fields/MemberTests";
-            var cstFiles = TestContextHarness.GetAllFilesFromFolder(folder, "*.cst");
-            foreach (var item in cstFiles)
+
+            List<string> folders =
+            [
+                //"Texts_Fields",
+                //"Texts_Fields/Tests2",
+                //"Texts_Fields/MemberTests",
+                "Texts_Fields/Paragraphs",
+            ];
+            foreach (var folder in folders)
             {
-                var texts = TestContextHarness.LoadTexts(item);
-                if (texts.Count > 0)
+                var cstFiles = TestContextHarness.GetAllFilesFromFolder(folder, "*.cst");
+                foreach (var item in cstFiles)
                 {
-                    foreach (var textItem in texts)
+                    var texts = TestContextHarness.LoadTexts(item);
+                    if (texts.Count > 0)
                     {
-
-                        if (textItem.Format == BlLegacyTextFormatKind.Xmed)
+                        foreach (var textItem in texts)
                         {
-                            var path = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + "_" + textItem.ResourceId + ".xmed.txt");
-                            if (File.Exists(path))
-                                continue;
 
-                            File.WriteAllText(path, textItem.Bytes.ToHexString());
-                            var pathBin = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + "_" + textItem.ResourceId + ".xmed.bin");
-                            File.WriteAllBytes(pathBin, textItem.Bytes);
-                            var pathLog = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + "_" + textItem.ResourceId + ".xmedlog.txt");
-                            var tokens = BlXmedTokenizer.Tokenize(textItem.Bytes).Tokens;
-                            var log = BlXmedTokenizer.DumpTokensUltraCompact(tokens);
-                            File.WriteAllText(pathLog, log);
+                            if (textItem.Format == BlLegacyTextFormatKind.Xmed)
+                            {
+                                var path = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + "_" + textItem.ResourceId + ".xmed.txt");
+                                //if (File.Exists(path))
+                                //  continue;
+
+                                File.WriteAllText(path, textItem.Bytes.ToHexString());
+                                var pathBin = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + "_" + textItem.ResourceId + ".xmed.bin");
+                                File.WriteAllBytes(pathBin, textItem.Bytes);
+                                var pathLog = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + "_" + textItem.ResourceId + ".xmedlog.txt");
+                                var tokens = BlXmedTokenizer.Tokenize(textItem.Bytes).Tokens;
+                                var log = BlXmedTokenizer.DumpTokensUltraCompact(tokens);
+                                File.WriteAllText(pathLog, log);
+                            }
                         }
                     }
                 }
@@ -64,6 +72,22 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
             var item = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
             var log = TestContextHarness.XmedDumpCompactLogGrouped(fileName);
             var resultFileName = item.Replace(".xmed.bin", ".xmedglog.txt");
+            File.WriteAllText(resultFileName, log);
+        }
+        [Fact]
+        public void DumpLog()
+        {
+            var fileName = "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_blue1_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_bordeau_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_green_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_lightgreen_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_orange_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_pink_13.xmed.bin";
+            //var fileName = "Text_Hallo_col_yellow_13.xmed.bin";
+            var item = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
+            var log = TestContextHarness.XmedDumpCompactLog(fileName);
+            var resultFileName = item.Replace(".xmed.bin", ".xmedlog.txt");
             File.WriteAllText(resultFileName, log);
         }
 

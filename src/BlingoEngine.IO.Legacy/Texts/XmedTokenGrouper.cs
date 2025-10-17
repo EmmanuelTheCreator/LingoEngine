@@ -21,7 +21,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             {
                 var t = tokens[i];
 
-                // Open Cx and run immediate lookahead for C1(03|04|1E)
+                // OPEN C*
                 if (t.Type is BlXmedToken.TokenType.C1 or BlXmedToken.TokenType.C2 or BlXmedToken.TokenType.C3)
                 {
                     if (cur != null && cur.GroupEnd == 0) cur.GroupEnd = t.Start;
@@ -35,6 +35,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     fieldIdx = 0;
                     i++;
 
+                    // immediate lookahead for C1(03|04|1E)
                     if (t.Type == BlXmedToken.TokenType.C1 && (t.TypeValue == 0x03 || t.TypeValue == 0x04 || t.TypeValue == 0x1E) && i < tokens.Count)
                     {
                         var ctx0 = new SliceContext(t.Type, t.TypeValue ?? 0, fieldIdx);
@@ -43,8 +44,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                     continue;
                 }
 
+                // PREAMBLE (before first C*)
                 if (cur == null) { preamble.Items.Add(t); i++; continue; }
 
+                // typed slices in context
                 var ctx = new SliceContext(
                     cur.GroupType == XmedTokenGroup.TokenGroupType.C1Group ? BlXmedToken.TokenType.C1 :
                     cur.GroupType == XmedTokenGroup.TokenGroupType.C2Group ? BlXmedToken.TokenType.C2 :
@@ -53,18 +56,24 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 if (TryReadGroupType(tokens, i, in ctx, cur, out int nextIndex)) { i = nextIndex; continue; }
 
+                // fallback: store token
                 cur.Items.Add(t);
 
+                // FIELD SEP: advance fieldIdx and lookahead for new field start
                 if (t.Type == BlXmedToken.TokenType.B_81)
                 {
                     fieldIdx++;
-                    var ctxF = new SliceContext(ctx.Tag, ctx.Sub, fieldIdx);
-                    if (TryReadGroupType(tokens, i + 1, in ctxF, cur, out int nextF)) { i = nextF; continue; }
+                    if (i + 1 < tokens.Count)
+                    {
+                        var ctxF = new SliceContext(ctx.Tag, ctx.Sub, fieldIdx);
+                        if (TryReadGroupType(tokens, i + 1, in ctxF, cur, out int nextF)) { i = nextF; continue; }
+                    }
                 }
 
                 i++;
             }
 
+            // close tails
             int end = tokens.Count > 0 ? tokens[^1].Start + tokens[^1].Length : 0;
             if (cur != null && cur.GroupEnd == 0) cur.GroupEnd = end;
             if (preamble.GroupEnd == 0) preamble.GroupEnd = end;
@@ -73,11 +82,14 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
 
+
+
         private static bool TryReadGroupType(List<BlXmedToken> tokens, int i, in SliceContext ctx, XmedTokenGroup cur, out int nextIndex)
         {
             // Text slice
             if (TrySliceTextSlice(tokens, i, in ctx, out int jText))
             {
+                
                 var g = NewGroupFromRange(cur, tokens[i], tokens[jText], XmedTokenGroup.TokenGroupType.FFFFGroup, XmedTokenGroup.SliceKind.TextSlice);
                 for (int k = i; k <= jText; k++) g.Items.Add(tokens[k]);
                 cur.Items.Add(g); nextIndex = jText + 1; return true;
@@ -296,33 +308,29 @@ namespace BlingoEngine.IO.Legacy.Texts
 
 
 
-        public static string DumpGroupedTokens(List<XmedTokenGroup> groups, int startIndent = 5)
+        public static string DumpGroupedTokens(List<XmedTokenGroup> groups, int startIndent = 0)
         {
             var sb = new StringBuilder();
-
             void Dump(List<XmedTokenGroup> list, int depth)
             {
                 foreach (var g in list)
                 {
-                    sb.Append(new string(' ', depth * 2));
-                    sb.AppendLine($"{g.GroupType.ToString().Replace("Group", "")}({g.TypeValue ?? 0:X2})");
-
+                    //sb.Append(new string(' ', depth * 2));
+                    //BlXmedTokenizer.WriteTab(sb, 1, depth);
+                    //sb.Append($"*{g.GroupType.ToString().Replace("Group", "")}({g.TypeValue ?? 0:X2})");
                     int last00 = g.Items.FindLastIndex(t => t.Type == TokenType.Block00);
-                    int onLine = 0;
-                    int baseTokenDepth = depth + 1;
+                        BlXmedTokenizer.WriteToken(sb, false, g, startIndent, true);
 
                     for (int i = 0; i < g.Items.Count; i++)
                     {
-                        if (g.Items[i] is XmedTokenGroup child)
+                        var childItem = g.Items[i];
+                        if (childItem is XmedTokenGroup child)
                         {
-                            Dump(new List<XmedTokenGroup> { child }, depth + 1);
+                            Dump(new List<XmedTokenGroup> { child }, depth);
                             continue;
                         }
-
-                        int tokenDepth = baseTokenDepth; // keep constant indent inside this group
-                        onLine = BlXmedTokenizer.WriteToken(sb, last00, onLine, i, g.Items[i], ref tokenDepth, baseTokenDepth);
+                        BlXmedTokenizer.WriteToken(sb, last00== i, childItem, startIndent, true);
                     }
-                    if (onLine > 0) sb.AppendLine();
                 }
             }
 

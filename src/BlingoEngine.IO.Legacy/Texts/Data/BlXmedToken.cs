@@ -5,7 +5,33 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
     public class BlXmedToken
     {
         public enum TokenType { Split01, Split02, Split03, C1, C2, C3, B_81, B_82, PrefixedHex, Ascii, Block00, Byte }
+        public enum TokenSubType
+        {
+            Unkown,
+            Bold,
+            Italic,
+            Underline,
+            Superscript,
+            Subscript,
+            Strikeout,
+
+            LeftMargin,
+            RightMargin,
+            FirstLineIndent,
+            leftMargin,
+            rightMargin,
+            FirstIndent,
+            SpaceAboveParagraph,
+            SpaceBelowParagraph,
+
+            TabWrapping,
+            Editable,
+            HeaderLineHeight,
+            BoxLRTB,
+            CharacterSpacing,
+        }
         public TokenType Type { get; }
+        public TokenSubType SubType { get; set; }
         public int Start { get; }
         public int Length { get; }
         public string? Ascii { get; }

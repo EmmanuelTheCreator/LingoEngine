@@ -9,20 +9,74 @@ Tokens are printed in read order.
 - `01:xxxx` → literal/value.
 - `02:xxxx` → number (often twips or offsets).
 - `C1(xx)` / `C2(xx)` → open a composite block.
-- `81` → next field in the same block.
+- `81` → Repeat last value, if new field then 00, and defines a new value/component
 - `82` → end of current block.
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
 
-Example (RGB color in a style block):
-```
-C1(04) 01:FF00 81 01:CC00 81 01:6600 82
-```
 
-## Layout
-```
-Header → Text → Run Maps (03:0004/0005/0006) → Font Table (00(40)) → Tail (00(44))
-```
+# Main blocks
+Identifier: 03:00020000013000000000 
+Starts with 03, then 
+- 0002    : BlockType 
+- 0000130 : Length
+- 0000    : items in the block’s payload
+
+  :FFFF0000000600040001   // Header
+03:00020000013000000000  	// Block Full Text 
+03:00040000002900000008 	// Run styles
+03:00050000001F00000006 	// Run paragraphs 
+03:00070000004D00000002 	// Paragraphs 
+
+
+## Run styles
+03:00040000002900000008 	// Run styles
+    02:0 
+		01:6 02:26 	 	// Style=6, 38,	"This text is... 	red		,... 	Arial,12px, centered" 		
+		01:5 02:27 	 	// Style=5, 39,	"This text is... 	???		,...	Arial,12px, centered\r"  
+		01:9 02:6D 	 	// Style=9, 109,"This text is... 	Yellow	...		bold, italic, underline"  
+		01:7 02:6E 	 	// Style=7, 110,"This text is... 	Yellow	...		bold, italic, underline\r"   
+		01:8 02:B7 	 	// Style=8, 183,"This text is... 	green	...		aligned, with spacing of 39"   
+		01:A 02:FE 	 	// Style=10,254,"This text is... 	orange	...		bold, italic, underline"   
+		01:6 02:12C 	// Style=6, 300,"This text is... 	red		...		centered again"   
+		01:6 
+## Run Paragraphs		
+03:00050000001F00000006 	// Run paragraphs  
+    02:0 
+		01:1 02:27 	 	// Run=1, 39, "This text is... 	red		,... 	Arial,12px, centered" 	 
+		01:0 02:6E 	 	// Run=0, 110,"This text is... 	Yellow	...		bold, italic, underline\r" 
+		01:2 02:B7 	 	// Run=2, 183,"This text is... 	green	...		aligned, with spacing of 39"  
+		01:0 02:FE 		// Run=0, 254,"This text is... 	orange	...		bold, italic, underline"
+		01:1 02:12C 	// Run=1, 300,"This text is... 	red		...		centered again"
+		01:0 
+
+
+## Paragraphs
+03:00070000004D00000002 		// Paragraphs 
+// Block
+    01:0 <81 <81 
+      C2(0F) <81 <82 02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82 
+      C1(03) 
+      C2(12) 
+// Block	  
+	01:1 01:0 <81 
+      C2(0F) <81 <82 02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82 
+      C1(03) 
+      C2(12) 
+// Block
+      C1(03) 
+		02:48 			// 72,	Margin Left 
+		02:90 			// 144,	Margin Right 
+		02:15 			// 21,	Indent from Left margin    
+		02:0 
+      C2(03) 02:4 02:5 02:0 		// Link to 4,5
+      C2(05) <81 <82 02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82 
+      C1(03) 
+      C2(12) 
+
 
 ## Header (stable)
 `00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
@@ -89,6 +143,17 @@ Order matches style references (e.g., Arial, Tahoma, Terminal, Vivaldi, Arcade*)
 ## Colors (observed tokens)
 Color indices appear as short tokens near style entries; examples seen:
 `01:FF00` (red), `01:CC00`, `01:6600`. Use alongside 0006 to apply per run.
+
+01:F700 01:2000 01:4A00 01:0 	// Red       #F7204A
+01:2700 01:200 01:FD00 01:0   // Blue: 	  #2702FD
+01:1E00 01:F000 01:2E00 01:0 	// Green :   #1EF02E
+01:FF00 01:0 <81 <81 				  // red       #FF0000
+01:FF00 <81 01:0 <81 				  // Yellow    #FFFF00
+<81 01:FF00 01:0 <81 			    // Green     #00FF00
+01:FF00 01:9900 01:0 <81 		  // Orange    #FF9900
+C1(04) 						    	      // Black ??
+
+
 
 ## 🎨 Color Parsing
 
@@ -432,3 +497,18 @@ C2(0B) true 02:0      ← Editable field
 
 - **Still Uncertain**
   - `03:0013`, `C2(06)`, `C2(12)`, `C2(0F)`, `C2(08)` → flow/meta/cache (TBD).
+
+
+# Runs
+<02:End, 01:Value>
+```
+03:00040000002700000008 					// runs
+    02:0 <81 
+		02:14 01:1 		//Value=1 ,20, End = "One line, 3 styles ("
+		02:28 01:0		//Value=0 ,40, End = "One line, 3 styles (Arial 12 red #F7204A" 		
+		02:2A 01:2		//Value=2 ,42, End = "One line, 3 styles (Arial 12 red #F7204A, " 			
+		02:40 01:0		//Value=0 ,64, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E" 
+		02:42 01:4		//Value=4 ,66, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, "		
+		02:5A 01:0		//Value=0 ,90, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)"		
+		02:5D 01:0		//Value=0 ,93, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)" 
+```
