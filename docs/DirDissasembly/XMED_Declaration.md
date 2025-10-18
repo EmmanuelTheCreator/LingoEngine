@@ -5,14 +5,34 @@
 This document uses the **token log** format.
 Tokens are printed in read order.
 
-- `00(len):"text"` → literal text block.
+- `00(some number):"text"` → literal text block.
 - `01:xxxx` → literal/value.
 - `02:xxxx` → number (often twips or offsets).
-- `C1(xx)` / `C2(xx)` → open a composite block.
-- `81` → Repeat last value, if new field then 00, and defines a new value/component
-- `82` → end of current block.
+- `C1(xx)` → Padding, number of '0' values
+- `<81` → Repeat last token value, if new field then 00, and defines a new value/component
+- `82` → end of current block/struct.
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
+
+## To investigate C2 values in Font styles:
+
+| C2(Tag) | Example Occurrences | Confirmed / Suspected Meaning | Notes | Found In Block |
+|----------|---------------------|-------------------------------|--------|----------------|
+| **C2(0F)** | seen in older files | Unknown | Placeholder-like behaviour | **Header** |
+| **C2(0A)** | `C2(0A) 02:5 02:0` | Font Link (Font Slot / Index) | Always follows `02:<fontID> 02:0` | **Run Styles / Fonts Block** |
+| **C2(04)** | `C2(04) 02:55 01:0` | Possibly Text Length / Tab Info | Appears near run or paragraph metrics | **Paragraph Definitions** |
+| **C2(06)** | `C2(06) 02:6A03E2AE 01:4 ...` | Tab Stop List | First number = tab count, followed by `02:1 02:<pos>` pairs | **Paragraph Definitions** |
+| **C2(0B)** | rare, `C2(0B)` | Possibly paragraph justification flags | Only seen in long text blocks, unconfirmed | **Paragraph Definitions** |
+| **C2(0D)** | rare, `C2(0D)` | Unknown metric (padding?) | Always isolated, no data | **Paragraph Definitions** |
+| **C2(20)** | `C2(20)` | Possibly paragraph block header | Seen around large run sets | **Paragraph Definitions** |
+| **C2(23)** | `C2(23)` | Unknown, single occurrence | May mark paragraph group boundary | **Paragraph Definitions** |
+| **C2(26)** | `C2(26)` | Unknown | Possibly internal reference ID | **Paragraph Definitions** |
+| **C2(07)** | `C2(07) 01:1 <81 <81 01:0` | Font Style Flags (Bold/Italic/Underline) | Also stores alignment and spacing info | **Run Styles** |
+| **C2(13)** | `C2(13)` | Continuation / Line-wrap marker | Found when a style restarts mid-text or new line | **Run Styles** |
+| **C2(0E)** | `C2(0E)` | Unknown (possibly spacing-related) | Similar area as (0A)/(07) | **Run Styles** |
+| **C2(0C)** | `C2(0C) 02:400 02:0` | Width / pitch or scaling | Seen in font entries, may hold Win32 lfWidth | **Fonts Block** |
+| **C2(03)** | Font blocks → `C2(03) 02:101 01:0` | Script / Charset ID | Always ends font entry, e.g. `257 = Western` | **Fonts Block** |
+
 
 
 # Main blocks
@@ -22,16 +42,21 @@ Starts with 03, then
 - 0000130 : Length
 - 0000    : items in the block’s payload
 
-  :FFFF0000000600040001   // Header
-03:00020000013000000000  	// Block Full Text 
-03:00040000002900000008 	// Run styles
-03:00050000001F00000006 	// Run paragraphs 
-03:00070000004D00000002 	// Paragraphs 
+  :FFFF0000000600040001     // Header
+03:00020000013000000000     // Block Full Text 
+03:00040000002900000008     // Run styles
+03:00050000001F00000006     // Run paragraphs 
+03:00070000004D00000002 		// Paragraphs Definitions
+03:00080000020A00000003			// Fonts  Block 
+03:00090000001500000002 	  // Line-height spacing descriptor
+03:000A0000001500000002 	  // Identical as Line-height spacing
 
+## Run styles — 03:0004 (required)
+starting with 02:0
+Payload: alternating pairs `styleId endOffset`.
 
-## Run styles
 03:00040000002900000008 	// Run styles
-    02:0 
+  02:0 
 		01:6 02:26 	 	// Style=6, 38,	"This text is... 	red		,... 	Arial,12px, centered" 		
 		01:5 02:27 	 	// Style=5, 39,	"This text is... 	???		,...	Arial,12px, centered\r"  
 		01:9 02:6D 	 	// Style=9, 109,"This text is... 	Yellow	...		bold, italic, underline"  
@@ -40,9 +65,10 @@ Starts with 03, then
 		01:A 02:FE 	 	// Style=10,254,"This text is... 	orange	...		bold, italic, underline"   
 		01:6 02:12C 	// Style=6, 300,"This text is... 	red		...		centered again"   
 		01:6 
+
 ## Run Paragraphs		
 03:00050000001F00000006 	// Run paragraphs  
-    02:0 
+  02:0 
 		01:1 02:27 	 	// Run=1, 39, "This text is... 	red		,... 	Arial,12px, centered" 	 
 		01:0 02:6E 	 	// Run=0, 110,"This text is... 	Yellow	...		bold, italic, underline\r" 
 		01:2 02:B7 	 	// Run=2, 183,"This text is... 	green	...		aligned, with spacing of 39"  
@@ -53,103 +79,121 @@ Starts with 03, then
 
 ## Paragraphs
 03:00070000004D00000002 		// Paragraphs 
-// Block
-    01:0 <81 <81 
-      C2(0F) <81 <82 02:1 02:0 
-      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82 
-      C1(03) 
+- Struct 1
+      01:0 
+      <81 
+      <81 
+      C2(0F) <81 
+    <82                     // End of struct  
+- Struct 2      
+      02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0  						// Tab stops with only default Tab width of 24px 
+    <82                     // End of struct  
+- Struct 3    
+      C1(03)                 // padding 3 unknown values          
       C2(12) 
-// Block	  
-	01:1 01:0 <81 
-      C2(0F) <81 <82 02:1 02:0 
-      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82 
-      C1(03) 
-      C2(12) 
-// Block
-      C1(03) 
-		02:48 			// 72,	Margin Left 
-		02:90 			// 144,	Margin Right 
-		02:15 			// 21,	Indent from Left margin    
-		02:0 
-      C2(03) 02:4 02:5 02:0 		// Link to 4,5
-      C2(05) <81 <82 02:1 02:0 
-      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82 
-      C1(03) 
-      C2(12) 
+
+
+
+
+## Style blocks — 03:0006 (required)
+
+03:00060000012B00000005 	// Block Styles
+- Struct 1
+    01:0 
+    <81 
+    <81 
+    01:C 										// Font Descent 
+    01:3 										// Font Ascendent
+    01:0 
+    <81 
+  <82                     // End of struct
+- Struct 2
+	<82                     // End of struct 
+- Struct 3  
+    C1(04) 								  // Foreground RGBA: Black #000000
+    01:FFFF <81 <81 01:0 	  // Background RGBA : White #FFFFFF
+  <82                     // End of struct
+- Struct 4
+	  0000 02:0  				    // 12,	Font-size
+    C2(0A) 02:6 02:0      // Font style index
+    C2(07)                // Font style : bold, italic, underline
+    C1(20)                // padding 20 unknown values
+  <82                     // End of struct 
+- Struct 5       
+  <82                     // End of struct
+- Struct 6        
+    C1(03)                 // padding 3 unknown values
+  <82                     // End of struct
+
+
+
+
+
+### Colors 
+Are always 4 values : RGBA
+Examples:
+- 01:F700 01:2000 01:4A00 01:0 	// Red       #F7204A
+- 01:2700 01:200 01:FD00 01:0   // Blue: 	  #2702FD
+- 01:1E00 01:F000 01:2E00 01:0 	// Green :   #1EF02E
+- 01:FF00 01:0 <81 <81 				  // red       #FF0000
+- 01:FF00 <81 01:0 <81 				  // Yellow    #FFFF00
+- <81 01:FF00 01:0 <81 			    // Green     #00FF00
+- 01:FF00 01:9900 01:0 <81 		  // Orange    #FF9900
+- C1(04) 						    	      // Black     #000000    Pad 4 x 0 values
+
+
+### Identified Style Bits
+C2(07) 01:1 01:0		 		    // Bold	  
+C2(07) <81 01:1 01:0	 		  // Italic  
+C2(07) <81 <81 01:1 01:0 		// Underline
+C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline	
+
+
+### Font Size <- to validate yet
+- Actual point size is stored per style in `03:0006`.  
+- Sometimes the header repeats an approximate pixel value (`pt × 1.333 × 10`).  
+- Conversion back to points:  
+  ```
+  pt ≈ headerValue / 13.33
+  ```
 
 ### Tab stops
 
 #### No tab stops defined:
   C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82  
- - C2(06) 
- - 02:6A03E2AE : Identifier
- - 01:0        : Number of defined styles
- - 02:18       : Default Tab width 24 px
- - 01:0 <82    : EOF
+Description:
+  - C2(06)      : C2 definition Fix
+  - 02:6A03E2AE : Identifier
+  - 01:0        : Number of defined styles
+  - 02:18       : Default Tab width 24 px
+  - 01:0        : 
+  - <82        : End of struct
 
-#### With Tabs defined
+  #### With Tabs defined
 C2(06) 02:6A03E2AE 01:4 
-		02:1 02:96 02:0 <82   // Tab Stop Left 150 px
-		02:1 02:D8 02:0 <82   // Tab Stop Left 216 px
-		02:1 02:120 02:0 <82  // Tab Stop Left 288 px
-		02:1 02:169 02:0 <82  // Tab Stop Left 361 px
-		02:18 01:0 <82        // Default Tab width 24 px
+Description:
+  - 02:1 02:96 02:0 <82   // Tab Stop Left 150 px
+  - 02:1 02:D8 02:0 <82   // Tab Stop Left 216 px
+  - 02:1 02:120 02:0 <82  // Tab Stop Left 288 px
+  - 02:1 02:169 02:0 <82  // Tab Stop Left 361 px
+  - 02:18 01:0 <82        // Default Tab width 24 px
 
 
 
-## Header (stable)
+## Header 
 `00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
-`C2(03)` + `C1(03)` sequences carry layout/metrics. Values vary per file but shape is fixed.
 
-## Text
-`00(-1):"…"` contains the full text, including CR/LF. Offsets in maps are 0-based into this text.
+TODO
 
-## Run Map — 03:0004 (required)
-Payload: alternating pairs `(02:<endOffset>) (01:<styleId>)`.
-Runs = pairCount + 1. The last pair closes the final run.
-Example (Multi_Line_Multi_Style):
-```
-… 02:26 01:6  02:6D 01:9  02:B7 01:8  02:FE 01:A  02:12C 01:6
-```
-→ Runs: [0–0x26)=6, [0x27–0x6D)=9, [0x6E–0xB7)=8, [0xB7–0xFE)=A, [0xFE–0x12C)=6.
 
-## Paragraph Flags — 03:0005 (required)
-Same boundary list as 0004. Each boundary has a boolean flag (center/left etc.).
-E.g. at 0xB7 → false, 0xFE → true. Use to set alignment per run/paragraph.
 
-## Text slice record
 
-Tuple: `(start, end, styleId, paragraphId)`
 
-Derive:
-- From `03:0004`: pairs `02:<end> 01:<styleId>`.
-- Starts: `s0=0`, `s(i)=end(i-1)+1` (0-based).
-- Final `E`: last `02:<end>` (or `03:0128/0129`).
 
-Paragraphs:
-- From `03:0005`: same `02:<end>` boundaries + booleans.
-- Build paragraph spans between boundaries; assign ordinal = `paragraphId`.
 
-Pseudocode:
-```
-B = [(e1,id1),(e2,id2),...(E,idN)]
-runs = []
-s = 0; p = paragraph_index_map_from_0005()
-for k,(ek,idk) in enumerate(B):
-    runs += [(s, ek, idk, p.span_of(s,ek))]
-    s = ek+1
-```
 
-Style details: map `idk` via `03:0006`.
 
-## Style Table — 03:0006 (required)
-Maps styleId → concrete attributes:
-- FontRef (index into Font Table)
-- Size (pt)
-- Bold / Italic / Underline
-- ForeColor / BackColor
-- Optional spacing/leading overrides
-Observed across: Single-Line, Multi-Line, NoBold, Multicolor, Multifont files.
 
 ## Font Table — 00(40) pairs (required)
 Sequence of pairs per font used:
@@ -159,160 +203,23 @@ Sequence of pairs per font used:
 ```
 Order matches style references (e.g., Arial, Tahoma, Terminal, Vivaldi, Arcade*).
 
-## Colors (observed tokens)
-Color indices appear as short tokens near style entries; examples seen:
-`01:FF00` (red), `01:CC00`, `01:6600`. Use alongside 0006 to apply per run.
-
-01:F700 01:2000 01:4A00 01:0 	// Red       #F7204A
-01:2700 01:200 01:FD00 01:0   // Blue: 	  #2702FD
-01:1E00 01:F000 01:2E00 01:0 	// Green :   #1EF02E
-01:FF00 01:0 <81 <81 				  // red       #FF0000
-01:FF00 <81 01:0 <81 				  // Yellow    #FFFF00
-<81 01:FF00 01:0 <81 			    // Green     #00FF00
-01:FF00 01:9900 01:0 <81 		  // Orange    #FF9900
-C1(04) 						    	      // Black ??
 
 
 
-## 🎨 Color Parsing
 
-**Location:** inside a style composite `C1(04) … 82`.
-
-**Grammar (tokens):**
-- `C1(xx)` = open; `81` = next field; `82` = close; `01:<v>` = value.
-
-**Examples:**
-- Bordeau: mixed ASCII/binary; missing G,B ⇒ **880000**.
-- Binary tokens use two hex bytes per channel: `01:FF00` ⇒ value `0xFF` (ignore the padding `00`).
-- Mixed stream: `01:FF00 81 01:CC00 81 01:6600` ⇒ RGB `#FFCC66`.
-
-### Color channels: missing values
-
-Rule:
-- Colors are inside `C1(04) … 82`.
-- Channels come as `01:<R> [81] 01:<G> [81] 01:<B>`.
-- When a channel token is **absent**, its value is **0** (default).
-- Numeric tokens can be ASCII (`01:FF`) or two-byte hex (`01:FF00`). Always take the **high byte** and ignore the padding byte.
-
-Pseudocode:
-```
-(r,g,b) = (0,0,0)
-channel = 0
-while token != 82:
-  if token == 01:<v>:
-    component = high_byte(v)
-    if channel == 0: r = component
-    elif channel == 1: g = component
-    elif channel == 2: b = component
-    channel = min(channel + 1, 2)
-  elif token == 81:
-    continue
-  token = next_token()
-```
-Works for ASCII-hex and binary forms; missing channels stay at zero.
-
-## Line/Paragraph Metrics (observed)
-`03:000C` varies in the 2-line/line-space sample. Treat as paragraph metrics (line spacing, before/after).
-
-## Tail — 00(44) (stable)
+## Tail — 00(44) Seems
 Always present and identical in samples:
 `00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131`
 Treat as a global lookup/palette table.
 
-## Token Roles (recap)
-- `01` literal/styleId marker
-- `02` numeric (positions/sizes)
-- `81` continuation within a composite
-- `82` composite terminator
-- `C1/C2` block open/close (style/paragraph groups)
 
 
-## 🔗 Composite Tokens: `81` / `82` (incl. Colors)
-
-- **Blocks:** `C1(xx)` / `C2(xx)` start a **composite**.
-- **Continue:** `81` = another field in the **current** composite.
-- **End:** `82` = **close** current composite (stack-based; multiple `82` can close nested blocks).
-
-### Color triplet (inside style)
-```
-C1(04) …            ← style composite
-  01:FF00 81        ← R
-  01:CC00 81        ← G
-  01:6600           ← B
-82                  ← end style composite
-```
-- Read **R,G,B** values between `C1/C2` … `82`.
-- Apply to the run referenced by `03:0006` (style id).
-
-
-
-
-
-
-
-## 🧮 Font Size & Line Height Mapping
-
-### Source
-Values appear in the **header (`C2(03)` block)** and in **style descriptors (`03:0006`)**.
-
-### Line Height
-- Found in early `C2(03)` numeric pairs (`02:<value>`).  
-- Matches filename numbers directly (e.g. `13`, `16`, `20`, `39`).  
-- Encoding: stored as `value × 10` (e.g. `13 → 0x82`, `20 → 0xC8`, `39 → 0x186`).
-
-### Font Size
-- Actual point size is stored per style in `03:0006`.  
-- Sometimes the header repeats an approximate pixel value (`pt × 1.333 × 10`).  
-- Conversion back to points:  
-  ```
-  pt ≈ headerValue / 13.33
-  ```
-
-### Rule of Thumb
-- Use `03:0006` for **true font size**.  
-- Use `C2(03)` for **baseline and line height defaults** shared by all runs.
 
 
 ## 📐 Text Box Size (Width & Height)
 
-### Location
-Bounding dimensions are stored in the **`C2(0A)`** block near the start of each XMED member.
 
-### Pattern
-```
-C2(0A) 02:<Left>  02:<Right>  ...  02:<Top>  02:<Bottom>  ...
-```
-Typical form:
-```
-C2(0A) 02:18  02:B2  ...      ← Normal width  
-C2(0A) 02:1E  02:120 ...      ← Wider field  
-```
 
-### Width
-- Calculated as `Right - Left` (in **twips**, 1/20 pt).  
-- Increasing these values enlarges the horizontal span of the text area.  
-- Example:
-  - `0x18–0xB2` → width ≈ 146 twips  
-  - `0x1E–0x120` → width ≈ 258 twips
-
-### Height
-- Height derives from the **Top–Bottom** pair inside the same block (if present).  
-- If omitted, use line-based reconstruction:
-  ```
-  Height ≈ LineCount × LineHeight
-  ```
-- `LineHeight` originates from the **header (`C2(03)`)** or per-style values in **`03:0006`**.
-- Optional extra leading or paragraph spacing appears in **`03:000C`**.
-
-### Summary
-| Field | Source | Unit | Description |
-|--------|---------|------|-------------|
-| Left / Right | `C2(0A)` | twips | Horizontal bounds |
-| Top / Bottom | `C2(0A)` | twips | Vertical bounds |
-| LineHeight | `C2(03)` / `03:0006` | twips | Line spacing |
-| Paragraph spacing | `03:000C` | twips | Additional before/after offset |
-
-Together these fields define the complete **text box size and placement** used by Director.
 
 
 ## 🧾 Paragraph Layout: Margins, Indents & Spacing
@@ -320,11 +227,7 @@ Together these fields define the complete **text box size and placement** used b
 ### Location
 Paragraph metrics appear mainly in the **`C2(03)`** and **`03:000C`** blocks.
 
-### Observed Patterns
-```
-C1(03) 02:120  02:168  02:1C  02:0     ← Paragraph 1
-C1(03) 02:48   02:90   02:15  02:0     ← Paragraph 2
-```
+
 
 ### Field Mapping
 | Field | Example (hex) | Decimal | Meaning |
@@ -346,15 +249,11 @@ C2(03) 02:9  02:7  02:0
 ### Summary Table
 | Property | Source Block | Example | Unit | Description |
 |-----------|---------------|----------|-------|--------------|
-| Left Margin | `C1(03)` | `02:120` | twips | Paragraph left offset |
-| Right Margin | `C1(03)` | `02:168` | twips | Paragraph right offset |
-| First Indent | `C1(03)` | `02:1C` | twips | Indent for first line |
-| Spacing Before | `C2(03)` | `02:9` | pt/twips | Space above paragraph |
-| Spacing After | `C2(03)` | `02:7` | pt/twips | Space below paragraph |
-
-### Meaning
-Each paragraph has its own `C1(03)` block defining margins/indent and a following `C2(03)` block for vertical spacing.  
-These parameters perfectly match the Director UI: margin-left/right, first indent, and spacing before/after.
+| Left Margin |  | `02:120` | twips | Paragraph left offset |
+| Right Margin | | `02:168` | twips | Paragraph right offset |
+| First Indent | | `02:1C` | twips | Indent for first line |
+| Spacing Before |  | `02:9` | pt/twips | Space above paragraph |
+| Spacing After |  | `02:7` | pt/twips | Space below paragraph |
 
 
 ## 🔠 Kerning & Character Spacing
@@ -394,35 +293,10 @@ C2(04) 02:1  02:0
 - `Font_Kerning_Pos2_13.xmedlog` adds positional kerning correction without changing font metrics.
 
 
-## ✍️ Font Style Flags
 
-### Location
-Font styling attributes appear in the **`03:0006` style descriptor** and are reflected by control bytes like `C1(1C–1E)` and `C1(0A–0B)` inside each text run.
+ 
 
-### Identified Style Bits
-| Style | Example File | Marker | Description |
-|:-----------------|:----------------------------|:--------------------|:-------------|
-| **Bold**         | `Text_Hallo_bold_13`        | `C1(0C)` / `C1(12)` | On / Off     |
-| **Italic**       | `Text_Hallo_italic_13`      | `C1(0D)` / `C1(11)` | On / Off     |
-| **Underline**    | `Text_Hallo_underline_13`   | `C1(1E)`            | Toggle underline |
-| **Superscript**  | `Text_Hallo_superscript_13` | `C1(1C)`            | Raises baseline  |
-| **Subscript**    | `Text_Hallo_subscript_13`   | `C1(1D)`            | Lowers baseline  |
-| **Strikeout**    | `Text_Hallo_strikeout_13`   | `C1(13)`            | Adds strike line through text |
 
-### Notes
-- Each `C1(xx)` control appears after the run’s `C2(07)` group, applying to that run only.  
-- Combination of multiple flags (e.g., Bold + Underline) stacks within the same style entry of `03:0006`.  
-- These flags correspond directly to Director’s text inspector checkboxes.
-
-### Example
-```
-C1(1C) <82> <82>       ← Underline  
-C1(13) <82> <82>       ← Strikeout  
-C1(0A)/C1(12) <82> <82> ← Superscript  
-C1(0B)/C1(11) <82> <82> ← Subscript
-```
-
-Together with color and font references, these bits define the full per-run style in XMED.
 
 
 ## ⚙️ Field Properties (Tabs, Wrapping, Editable)
@@ -459,75 +333,3 @@ C2(0B) true 02:0      ← Editable field
 
 
 
-
-# XMED Status (quick map)
-
-## ✅ Known (parse now)
-- C2(03): header, lineheight
-- C2(0A): box Left/Right/(Top/Bottom)
-- C2(04): character spacing (tracking)
-- 03:0004: run boundaries
-- 03:0005: paragraph align flags
-- 03:0006: style table (font,size,b/i/u,s/u,strike,color)
-- 00(40): font table
-- C1(04)+81/82: RGB triplet
-- 03:000C: spacing before/after
-- C2(07): tabs/wrap
-- C2(0B): editable
-
-## 🟧 Probable
-- C1(20): group delimiter
-- C2(06), C2(12), C2(0F): flow/meta
-
-## ⬜ Unknown (todo)
-- 03:0007 role
-- 03:0013 flags matrix
-- 00(44) tail meaning
-- Header: 02:40001, 02:-7FFD6FE0
-- Repeated 01:FFFF usage
-
----
-
-## ❓ Open Questions / Uncertain Parts
-
-- **03:0007** — block purpose unknown (likely run/link meta?).  
-- **03:0013** — flags/feature matrix; semantics unclear.  
-- **00(44)** — trailing byte table: exact meaning unresolved.  
-- **Header fields** — `02:40001`, `02:-7FFF6FE0`: need definitive mapping.  
-- **01:FFFF** — repeated marker; context-dependent meaning not fixed.  
-- **C1(20), C2(06), C2(12), C2(0F)** — suspected flow/group/meta; verify roles and ordering.  
-
-*Notes:* keep captures from diverse samples; confirm with round‑trip edits.
-
-## 🔎 Additional Findings 
-
-- **Tab Stops**
-  - In `C1(03)`, sequential `02:<pos>` pairs define tab-stop positions per paragraph.
-  - Seen as `02:7 02:C …` in *MultiLine_Tabs*.
-
-- **Run Maps**
-  - `03:0004/0005/0006` consistent for 5-run samples; use as validation.
-
-- **Per-Line Metrics**
-  - Multi-line headers show repeating pairs (e.g., `02:11 02:17`), acting as per-line metric slots.
-
-- **Text Length Index**
-  - `03:0128` and `03:0129` carry the final text end offset (e.g., `0x1E/0x22/0x26`).
-
-- **Still Uncertain**
-  - `03:0013`, `C2(06)`, `C2(12)`, `C2(0F)`, `C2(08)` → flow/meta/cache (TBD).
-
-
-# Runs
-<02:End, 01:Value>
-```
-03:00040000002700000008 					// runs
-    02:0 <81 
-		02:14 01:1 		//Value=1 ,20, End = "One line, 3 styles ("
-		02:28 01:0		//Value=0 ,40, End = "One line, 3 styles (Arial 12 red #F7204A" 		
-		02:2A 01:2		//Value=2 ,42, End = "One line, 3 styles (Arial 12 red #F7204A, " 			
-		02:40 01:0		//Value=0 ,64, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E" 
-		02:42 01:4		//Value=4 ,66, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, "		
-		02:5A 01:0		//Value=0 ,90, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)"		
-		02:5D 01:0		//Value=0 ,93, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)" 
-```

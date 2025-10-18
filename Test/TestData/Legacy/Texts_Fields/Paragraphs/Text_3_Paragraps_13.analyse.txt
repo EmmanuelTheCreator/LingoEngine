@@ -50,16 +50,18 @@
 	
 03:00050000001500000004 	// Run paragraphs 
     02:0  	 	
-		01:1 02:27 	 	// Run=1, 39,	"My first paragraph centered with all 0\r"
+		01:1 02:27 	 	// Run=1, 39, "My first paragraph centered with all 0\r"
 		01:2 02:98 	 	// Run=2, 152,"My first paragraph centered with all 0\rParagraph with align Left...spacing after 7\r" 
-		01:3 02:10A 	// Run=3, 152,"My first paragraph centered with all 0\rParagraph with align Left...spacing after 7\r"  
+		01:3 02:10A 	// Run=3, 266,"My first paragraph centered with all 0\r...spacing after 5\r"  
 		01:0
 	
 03:00060000010F00000005 	// Block Styles
+    01:4 
 // Style 0
-    01:4 01:0 <81 <81 
-	01:C 						// Follow Font-size
-	01:3 01:0 <81 <82 <82 
+	01:0 <81 <81 
+	01:C 						// Font Descent 
+	01:3                        // Font Ascendent
+	01:0 <81 <82 <82 
       C1(04) 					// End color black
   01:FFFF <81 <81 01:0 <82 
 	02:C0000 					// Font-size
@@ -93,7 +95,8 @@
       C1(1E) <82 <82 
       C1(03) <82 
 // Style 4
-	  01:1 01:0 <81 01:17 01:6 01:1 01:0 <82 <82 01:FF00 01:0 <81 <81 
+	  01:1 01:0 <81 01:17 01:6 01:1 01:0 <82 <82 
+		01:FF00 01:0 <81 <81 
   01:FFFF <81 <81 01:0 <82 02:180000 02:0 
       C2(0A) 02:6 02:0 
       C2(07) 01:1 01:0 
@@ -136,13 +139,35 @@
       C1(03) 
       C2(12) 
 	  
-03:00080000015D00000002 
-            00(40):"Arial"
-        00(40):""
-01:4 01:0 <81 <81 02:4E4 02:400 02:0 <82 <82 02:1 02:0 <82 02:40008 02:0 <82 02:101 01:0 
-        00(40):"Arcade *"
-        00(40):""
-01:A 01:0 <81 <81 02:4E4 02:400 02:0 <82 <82 02:1 02:0 <82 02:40008 02:0 <82 02:101 01:0 
+03:00080000015D00000002			// Fonts  Block 
+    00(40):"Arial"				// Font Name
+    00(40):""                   // Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400  		// Font weight
+			02:0 <82 <82
+			02:1 
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008 
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+    00(40):"Arcade *"			// Font Name
+    00(40):""                   // Style name (Empty = Regular)
+		01:A 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400 			// Font weight
+			02:0 <82 <82 
+			02:1 
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008 
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
 
 03:00090000001700000002 	// Line-height spacing descriptor 
     02:0 <82 
@@ -152,7 +177,7 @@
 		02:140 			// Line-height 
 		02:37F 			// paragraph spacing / baseline offset 
 	
-03:000A0000001700000002  	// identical
+03:000A0000001700000002  	// Identical as Line-height spacing
     02:0 <82 02:140 02:37F 02:0 <82 02:140 02:37F 
 	
 03:000B0000000500000002 
@@ -174,7 +199,7 @@
       C2(20) 
 	  
 03:00130000007E00000000 
-    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0 
+    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0 // D A 9 1F 8 C E 1C 1D 1F 7F 1B 0
         00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
   01:FFFF <81 <81 01:0 
   01:FFFF <81 <81 01:0 

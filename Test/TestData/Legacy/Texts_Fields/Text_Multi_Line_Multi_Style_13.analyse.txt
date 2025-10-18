@@ -63,99 +63,100 @@
 		01:1 02:12C 	// Run=1, 300,"This text is... 	red		...		centered again"
 		01:0 
 	
-03:0006000002730000000B 
+03:0006000002730000000B 	// Block Styles 
+    01:8 
 *Style	0
-    01:8 01:0 <81 <81 01:C 01:3 01:0 <81 <82 <82 
+	01:0 <81 <81 01:C 01:3 01:0 <81 <82 <82 
       C1(04) 						    	// color: Black? 
   01:FFFF <81 <81 01:0 <82 
 		02:C0000 02:0 						// X,	Font-Size
       C2(0A) 02:1 02:0 
       C2(07) 
       C1(20) <82 <82 
-      C1(03) <82 01:1 01:0 <81 
+      C1(03) <82 
 *Style	1	  
-	  01:C 01:3 01:0 <81 <82 <82 
+	01:1 01:0 <81 01:C 01:3 01:0 <81 <82 <82 
       C1(04) 						    	// color: Black? 
   01:FFFF <81 <81 01:0 <82 
 		02:C0000 02:0 						// X,	Font-Size 
       C2(0A) 02:2 02:0 
       C2(07) 
       C1(20) <82 <82 
-      C1(03) <82 01:1 01:0 <81 
+      C1(03) <82  
 *Style	2	  
-	  01:15 01:6 01:1 01:0 <82 <82 
+	01:1 01:0 <81 01:15 01:6 01:1 01:0 <82 <82 
       C1(04) 						    	// color: Black? 
   01:FFFF <81 <81 01:0 <82 
 		02:180000 02:0 						// X,	Font-Size 
       C2(0A) 02:3 02:0 
       C2(07) 
       C1(20) <82 <82 
-      C1(03) <82 01:1 01:0 <81 
+      C1(03) <82  
 *Style	3	  
-	  01:17 01:6 01:1 01:0 <82 <82 
+	01:1 01:0 <81 01:17 01:6 01:1 01:0 <82 <82 
       C1(04) 						    	// color: Black?
   01:FFFF <81 <81 01:0 <82 
 		02:180000 02:0 						// X,	Font-Size 
       C2(0A) 02:4 02:0 
       C2(07) 01:1 01:0 
       C1(1E) <82 <82 
-      C1(03) <82 01:1 01:0 <81 
+      C1(03) <82  
 *Style	4	  
-	  01:17 01:6 01:1 01:0 <82 <82 
+	01:1 01:0 <81 01:17 01:6 01:1 01:0 <82 <82 
 		01:FF00 01:0 <81 <81 				// color: red
   01:FFFF <81 <81 01:0 <82 
 		02:180000 02:0 						// X,	Font-Size 
       C2(0A) 02:5 02:0 
       C2(07) 01:1 01:0 
       C1(1E) <82 <82 
-      C1(03) <82 01:2 01:0 <81 
+      C1(03) <82 
 *Style	5	  
-	  01:C 01:3 01:0 <81 <82 <82 
+	01:2 01:0 <81 01:C 01:3 01:0 <81 <82 <82 
 		01:FF00 01:0 <81 <81 				// Color: red
   01:FFFF <81 <81 01:0 <82 
 		02:C0000 02:0 						// X,	Font-Size 
       C2(0A) 02:1 02:0 
       C2(07) 01:1 01:0 
       C1(1E) <82 <82 
-      C1(03) <82 01:2 01:0 <81 
+      C1(03) <82  
 *Style	6	  
-	  01:C 01:3 01:0 <81 <82 <82 
+	01:2 01:0 <81 01:C 01:3 01:0 <81 <82 <82 
 		01:FF00 01:0 <81 <81 				// Color: red
   01:FFFF <81 <81 01:0 <82 
 		02:C0000 02:0 						// X,	Font-Size 
       C2(0A) 02:2 02:0 
       C2(07) 
       C1(20) <82 <82 
-      C1(03) <82 01:3 01:0 <81 
+      C1(03) <82  
 *Style	7	  
-	  01:9 01:2 01:0 <81 <82 <82 
+	01:3 01:0 <81 01:9 01:2 01:0 <81 <82 <82 
 		01:FF00 <81 01:0 <81 				// Color: Yellow
   01:FFFF <81 <81 01:0 <82 
 		02:90000 02:0 						// X,	Font-Size 
       C2(0A) 02:1 02:0 
       C2(07) 
       C1(20) <82 <82 
-      C1(03) <82 01:4 01:0 <81 
+      C1(03) <82 
 *Style	8	  
-	  01:10 01:2 01:0 <81 02:400 02:0 
+	01:4 01:0 <81 01:10 01:2 01:0 <81 02:400 02:0 
 		 <81 01:FF00 01:0 <81 				// Color: Green
   01:FFFF <81 <81 01:0 <82 
 		02:120000 02:0 						// X,	Font-Size 
       C2(0A) 02:1 02:0 
       C2(07) 
       C1(20) <82 <82 
-      C1(03) <82 01:3 01:0 <81 
+      C1(03) <82  
 *Style	9	  
-	  01:9 01:2 01:0 <81 <82 <82 
+	01:3 01:0 <81 01:9 01:2 01:0 <81 <82 <82 
 		01:FF00 <81 01:0 <81 				// Color: Yellow
   01:FFFF <81 <81 01:0 <82 
 		02:90000 02:0 						// X,	Font-Size 
       C2(0A) 02:1 02:0 
       C2(07) 01:1 <81 <81 01:0 
       C1(1C) <82 <82 
-      C1(03) <82 01:3 01:0 <81 
+      C1(03) <82  
 *Style 10		  
-	  01:9 01:2 01:0 <81 <82 <82 
+	01:3 01:0 <81 01:9 01:2 01:0 <81 <82 <82 
 		01:FF00 01:9900 01:0 <81 			// Color: Orange
   01:FFFF <81 <81 01:0 <82 
 		02:90000 02:0 						// X,	Font-Size 
@@ -181,23 +182,78 @@
       C1(03) 
       C2(12) 
 	  
-03:00080000036600000005 
-            00(40):"Arial"
-        00(40):""
-01:4 01:0 <81 <81 02:4E4 02:400 02:0 <82 <82 02:1 02:0 <82 02:40008 02:0 <82 02:101 01:0 
-        00(40):"Arcade *"
-        00(40):""
-01:A 01:0 <81 <81 02:4E4 02:400 02:0 <82 <82 02:1 02:0 <82 02:40008 02:0 <82 02:101 01:0 
-        00(40):"arial"
-        00(40):""
-01:4 01:0 <81 <81 02:4E4 02:400 02:0 <82 <82 02:1 02:0 <82 02:40008 02:0 <82 02:101 01:0 
-        00(40):"Tahoma"
-        00(40):""
-01:4 01:0 <81 <81 02:4E4 02:400 02:0 <82 <82 02:1 02:0 <82 02:40008 02:0 <82 02:101 01:0 
-        00(40):"Terminal"
-        00(40):""
-01:4 01:0 <81 01:60FF 02:4E4 02:400 02:0 <82 <82 02:1 02:FF 02:0 
-      C2(03) 02:101 01:0 
+03:00080000036600000005			// Fonts  Block
+	00(40):"Arial"				// Font Name
+	00(40):""					// Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400  		// Font weight  
+			02:0 <82 <82 
+			02:1
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008 
+			02:0 <82 
+				02:101 
+				01:0 			// Font Name
+	00(40):"Arcade *"           // Style name (Empty = Regular)
+	00(40):""
+		01:A 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag. 
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400  		// Font weight  
+			02:0 <82 <82 
+			02:1
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008		// lfPitchAndFamily and flag bits from the Win32 LOGFONT structure. = underline/italic bits  
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+	00(40):"arial"				// Font Name
+	00(40):""                   // Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag. 
+				02:4E4 			// Windows code page / charset (Latin-1)
+				02:400  		// Font weight  
+			02:0 <82 <82 
+			02:1 
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008		// lfPitchAndFamily and flag bits from the Win32 LOGFONT structure. = underline/italic bits  
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+	00(40):"Tahoma"				// Font Name
+	00(40):""                   // Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag. RASTER  
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400  		// Font weight  
+			02:0 <82 <82 
+			02:1 
+				02:0 <82 		// Character cell height or raster-font index  
+				02:40008		// lfPitchAndFamily and flag bits from the Win32 LOGFONT structure. = underline/italic bits 
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+	00(40):"Terminal"			// Font Name
+	00(40):""                   // Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				01:60FF 		// RASTER Font ID / OEM charset flag. In old Windows metrics tables, 0xFF60–0xFF62 marked OEM fixed-pitch raster fonts (Terminal, VGA437). 
+								// Director likely stores this as FF60 reverse
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400   		// Font weight 
+			02:0 <82 <82 
+			02:1 
+				02:FF 			// Character cell height or raster-font index. For Terminal this matches typical cell height (≈8×8 or 8×12 font → 0xFF sentinel).
+			02:0 
+		C2(03) 
+			02:101				// 257, Western / Latin I, Standard Windows 1252 fonts 
+			01:0 
 	  
 03:00090000001500000002  	// Line-height spacing descriptor
     02:0 <82
@@ -207,7 +263,7 @@
 		02:152 			// Line-height 
 		02:B2 			// paragraph spacing / baseline offset 
 	
-03:000A0000001500000002 	// identical 
+03:000A0000001500000002 	// Identical as Line-height spacing
     02:0 <82 02:152 02:B2 02:0 <82 02:152 02:B2 
 	
 03:000B0000000500000002 
@@ -226,7 +282,7 @@
       C1(03) 
       C2(20) 
 03:00130000007E00000000 
-    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0 
+    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0  // D A 9 1F 8 C E 1C 1D 1F 7F 1B 0
         00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
   01:FFFF <81 <81 01:0 
   01:FFFF <81 <81 01:0 

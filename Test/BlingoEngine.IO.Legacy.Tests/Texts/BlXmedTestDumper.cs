@@ -24,8 +24,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
             [
                 //"Texts_Fields",
                 //"Texts_Fields/Tests2",
-                //"Texts_Fields/MemberTests",
-                "Texts_Fields/Paragraphs",
+                "Texts_Fields/MemberTests",
+                //"Texts_Fields/Paragraphs",
             ];
             foreach (var folder in folders)
             {
