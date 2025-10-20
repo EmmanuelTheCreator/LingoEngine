@@ -278,7 +278,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return null;
 
             var child = new XmedTokenGroup(TokenType.Font,0,0);
-            child.Items.AddRange(tokens);
+            ExtractStructs(tokens, child);
 
             return child;
         }
@@ -316,6 +316,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         DumpGroupWithSubGroups(sb, mainGroup, 1, lastWasNewLine);
                         break;
                     case XmedMainTokenGroup.MainGroupType.Fonts:
+                        DumpGroupWithSubGroups(sb, mainGroup, 1, lastWasNewLine);
                         break;
                     case XmedMainTokenGroup.MainGroupType.SpacingDescriptor:
                     case XmedMainTokenGroup.MainGroupType.SpacingDescriptor2:
