@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
@@ -20,6 +22,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         private readonly XmedParagraphDescriptorReader _descriptorReader;
         private readonly XmedRunSliceBuilder _slicerBuilder;
         private readonly XmedHeaderReader _headerReader;
+        private readonly XmedFontTableReader _fontTableReader;
         private readonly BlXmedTokenReader _reader;
 
         public BlXmedTokenParser(ILogger logger, byte[] buffer, IReadOnlyList<BlXmedToken> tokens, IReadOnlyList<int> lastNumbers)
@@ -31,22 +34,51 @@ namespace BlingoEngine.IO.Legacy.Texts
             _spacingReader = new XmedSpacingReader(_document,logger);
             _textBuilder = new XmedTextBuilder(_document);
             _paragraphSliceBuilder = new XmedParagraphSliceBuilder();
-            _descriptorReader = new XmedParagraphDescriptorReader(_document, _styleParser, _spacingReader, logger);
+            _descriptorReader = new XmedParagraphDescriptorReader(_document, _spacingReader, logger);
             _slicerBuilder = new XmedRunSliceBuilder(_document, _styleParser, _descriptorReader, _paragraphSliceBuilder, logger);
             _headerReader = new XmedHeaderReader(_document, _styleParser, _spacingReader, _reader, logger);
+            _fontTableReader = new XmedFontTableReader(_document);
         }
 
         public XmedDocument Parse(int directorVersion)
         {
             _document.DirectorVersion = directorVersion;
+            _fontTableReader.Reset();
+
+            var tokenList = _tokens as List<BlXmedToken> ?? _tokens.ToList();
+            var groups = BlXmedTokenizer.CreateGroups(tokenList);
+            var index = new XmedTokenGroupIndex(groups);
+
+            _reader.Rewind(0);
             _headerReader.ReadHeader();
-            
+
             _styleParser.GetOrCreateStyle(0);
+
+            _reader.Rewind(0);
             ReadTextSection();
+
+            _reader.Rewind(0);
             ReadRunSection();
+
+            _reader.Rewind(0);
             ReadStyleSection();
+
+            _reader.Rewind(0);
             ReadFooterSection();
+
+            _fontTableReader.ReadFontTable(index.FindFirst("0008"));
+
             _textBuilder.BuildText();
+
+            _paragraphSliceBuilder.Reset();
+            _paragraphSliceBuilder.LoadParagraphBoundaries(index.FindFirst("0005"));
+
+            _descriptorReader.Reset();
+            _descriptorReader.LoadParagraphDescriptors(index.FindFirst("0007"));
+
+            _slicerBuilder.Reset();
+            _slicerBuilder.LoadRunBoundaries(index.FindFirst("0004"));
+
             _styleParser.FinalizeStyles(_document);
             _slicerBuilder.FinalizeRunsAndParagraphs();
 
@@ -71,7 +103,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                     _textBuilder.AddTextToken(token); _reader.Skip(); continue;
                 }
 
-                if (token.IsCompositeC1(0x03)) { _descriptorReader.TryExtractParagraphDescriptor(_reader, out _); continue; }
                 if (token.IsCompositeC2(0x03)) { _spacingReader.ReadParagraphSpacing(_reader); continue; }
 
                 if (token.IsC2())
@@ -95,28 +126,6 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 if (IsStyleBlock(token) || IsFooterBlock(token))
                     return;
-
-                if (IsRunBlock(token))
-                {
-                    _slicerBuilder.ReadRuns(_reader);
-                    continue;
-                }
-
-                if (token.IsPrefixedHex03())
-                {
-                    var id = token.Ascii ?? string.Empty;
-                    if (id.StartsWith("0005", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _paragraphSliceBuilder.ReadParagraphFlags(_reader);
-                        continue;
-                    }
-
-                    LogUnknown("Runs", id.Length >= 4 ? id[..4] : id);
-                    _reader.Skip();
-                    continue;
-                }
-
-                LogUnknown("Runs", $"Skipped token {token}");
                 _reader.Skip();
             }
         }

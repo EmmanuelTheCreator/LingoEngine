@@ -1,6 +1,5 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
 using static BlingoEngine.IO.Legacy.Texts.XmedDiagnostics;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -25,163 +24,46 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
 
-        public void ReadRuns(BlXmedTokenReader reader)
+        public void Reset()
         {
-            var token = reader.Peek();
-            if (token == null)
-                return;
-
-            bool clearedForRunMap = false;
-
-            LogRunBlockPreview(reader);
-
-            while (!reader.IsAtEnd)
-            {
-                var t = reader.Peek();
-                if (t == null)
-                    break;
-
-                if (t.IsPrefixedHex03() && t.Ascii is { Length: >= 4 } ascii && ascii.StartsWith("0004", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!clearedForRunMap)
-                    {
-                        _runBoundaries.Clear();
-                        clearedForRunMap = true;
-                    }
-
-                    reader.ReadNext();
-                    LogTrace(DiagnosticArea, _logger, "XMED run reader: begin 03:0004 run map at token {Position}", reader.Position - 1);
-                    ReadRunMapEntries(reader);
-                    continue;
-                }
-
-                if (t.IsBlockBoundary())
-                {
-                    LogTrace(DiagnosticArea, _logger, "XMED run reader encountered boundary token {Token} at position {Position}", t, reader.Position);
-                    reader.ReadNext();
-                    break;
-                }
-
-                if (_paraDescriptorReader.TryExtractParagraphDescriptor(reader, out _))
-                    continue;
-
-                reader.ReadNext();
-            }
+            _runBoundaries.Clear();
         }
 
-        private void LogRunBlockPreview(BlXmedTokenReader reader)
+        public void LoadRunBoundaries(XmedTokenGroup? block)
         {
-            if (!IsTraceEnabled(DiagnosticArea, _logger))
+            _runBoundaries.Clear();
+            if (block == null)
                 return;
 
-            var token = reader.Peek();
-            if (token == null)
-                return;
-
-            if (!token.IsPrefixedHex03())
-                return;
-
-            string blockId = token.Ascii is { Length: >= 4 } blockAscii ? blockAscii[..4] : "<null>";
-            LogTrace(DiagnosticArea, _logger, "XMED run reader inspecting 03 block {BlockId} at token index {Index}", blockId, reader.Position);
-
-            bool headerLogged = false;
-            for (int offset = 0; offset < 32; offset++)
+            foreach (var item in block.Items)
             {
-                var preview = reader.Peek(offset);
-                if (preview == null)
-                    break;
-
-                string ascii = preview.Ascii ?? "<null>";
-                string value = preview.Value.HasValue ? preview.Value.Value.ToString(CultureInfo.InvariantCulture) : "<null>";
-                string typeValue = preview.TypeValue.HasValue ? $"0x{preview.TypeValue.Value:X2}" : "<null>";
-
-                LogTrace(
-                    DiagnosticArea,
-                    _logger,
-                    "XMED run 03:{BlockId} preview[{Offset:D2}]: type {TokenType} ascii {Ascii} value {Value} typeValue {TypeValue}",
-                    blockId,
-                    offset,
-                    preview.Type,
-                    ascii,
-                    value,
-                    typeValue);
-
-                if (!headerLogged)
-                {
-                    headerLogged = true;
-                    continue;
-                }
-
-                if (preview.IsPrefixedHex03())
-                    break;
-            }
-        }
-
-
-
-
-        private void ReadRunMapEntries(BlXmedTokenReader reader)
-        {
-            int? pendingEnd = null;
-
-            while (!reader.IsAtEnd)
-            {
-                var token = reader.Peek();
-                if (token == null)
-                    break;
-
-                if (token.IsPrefixedHex03())
-                    break;
-
-                if (token.IsBlockBoundary())
-                {
-                    reader.ReadNext();
-                    break;
-                }
-
-                if (token.IsFieldSeparator())
-                {
-                    reader.ReadNext();
-                    continue;
-                }
-
-                if (token.IsFieldTerminator())
-                {
-                    reader.ReadNext();
-                    continue;
-                }
-
-                if (_paraDescriptorReader.TryExtractParagraphDescriptor(reader, out _))
+                if (item is not XmedTokenGroup segment)
                     continue;
 
-                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var end))
-                {
-                    pendingEnd = end;
-                    LogTrace(DiagnosticArea, _logger, "XMED run reader: pending run end {End}", end);
-                    reader.ReadNext();
-                    continue;
-                }
+                int? end = null;
+                int? styleId = null;
 
-                if (token.IsPrefixedHex01() && token.TryGetNumericValue(out var styleId))
+                foreach (var token in segment.CollectTokens())
                 {
-                    if (pendingEnd.HasValue)
+                    if (styleId is null && token.IsPrefixedHex01() && token.TryGetNumericValue(out var style))
                     {
-                        _runBoundaries.Add((pendingEnd.Value, styleId));
-                        LogTrace(DiagnosticArea, _logger, "XMED run reader: boundary end {End} style {StyleId}", pendingEnd.Value, styleId);
-                        pendingEnd = null;
+                        styleId = style;
+                        continue;
                     }
-                    else
-                        LogTrace(DiagnosticArea, _logger, "XMED run reader: encountered style {StyleId} without pending end", styleId);
 
-                    reader.ReadNext();
-                    continue;
+                    if (end is null && token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
+                    {
+                        end = numeric;
+                        continue;
+                    }
                 }
 
-                reader.ReadNext();
+                if (end.HasValue)
+                {
+                    _runBoundaries.Add((end.Value, styleId ?? 0));
+                    LogTrace(DiagnosticArea, _logger, "XMED run boundary parsed: end {End} style {StyleId}", end.Value, styleId ?? 0);
+                }
             }
-
-            if (pendingEnd.HasValue)
-                LogTrace(DiagnosticArea, _logger, "XMED run reader: trailing end {End} without style", pendingEnd.Value);
         }
 
         private List<TextSlice> BuildRunSlices(List<(int End, int StyleId)> boundaries, int textLength)

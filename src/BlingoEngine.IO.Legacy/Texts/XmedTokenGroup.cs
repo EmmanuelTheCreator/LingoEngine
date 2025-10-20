@@ -1,5 +1,7 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
 
+using System.Collections.Generic;
+
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal class XmedTokenGroup : BlXmedToken
@@ -14,6 +16,8 @@ namespace BlingoEngine.IO.Legacy.Texts
         public enum SliceKind { FFFF, TextSlice, RunMap, ParaLayout, Record, Unknown }
 
         public TokenGroupType GroupType { get; set; }
+        public List<BlXmedToken> PreTokens { get; } = new ();
+        public List<BlXmedToken> PostTokens { get; } = new ();
         public List<BlXmedToken> Items { get; set; } = new ();
         public XmedTokenGroup? Parent { get; set; }
         public int GroupEnd { get; set; }

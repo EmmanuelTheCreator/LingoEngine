@@ -314,7 +314,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
         private static bool _lastWrittenWasNewLine;
         internal static void WriteTab(StringBuilder s, int num, int depth) => s.Append(new string (' ', (depth + num) * 2));
-        public static void WriteToken(StringBuilder sb, bool isLast00,BlXmedToken t, int depth, bool byGroup = false)
+        public static void WriteToken(StringBuilder sb, bool isLast00,BlXmedToken t, int depth, bool byGroup = false, string? comment = null)
         {
             var lastWrittenWasNewLine = _lastWrittenWasNewLine;
             _lastWrittenWasNewLine = false;
@@ -354,6 +354,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         break;
                 }
             }
+            int startLength = sb.Length;
             switch (t.Type)
             {
                 case TokenType.Ascii:
@@ -438,6 +439,39 @@ namespace BlingoEngine.IO.Legacy.Texts
                         sb.Append(t.Ascii! + " ");
                     break;
             }
+
+            bool wroteNewline = sb.Length > startLength && sb[^1] == '\n';
+
+            if (!string.IsNullOrEmpty(comment))
+                wroteNewline = AppendComment(sb, startLength, comment!, wroteNewline);
+
+            if (wroteNewline)
+                _lastWrittenWasNewLine = true;
+        }
+
+        private static bool AppendComment(StringBuilder sb, int startLength, string comment, bool hadTrailingNewline)
+        {
+            if (hadTrailingNewline)
+            {
+                sb.Length--;
+                if (sb.Length > startLength && sb[^1] == '\r')
+                    sb.Length--;
+
+                if (sb.Length > startLength && sb[^1] != ' ')
+                    sb.Append(' ');
+
+                sb.Append("// ");
+                sb.Append(comment);
+                sb.AppendLine();
+                return true;
+            }
+
+            if (sb.Length > startLength && sb[^1] != ' ')
+                sb.Append(' ');
+
+            sb.Append("// ");
+            sb.Append(comment);
+            return false;
         }
 
 

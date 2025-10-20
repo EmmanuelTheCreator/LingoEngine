@@ -14,6 +14,26 @@ Tokens are printed in read order.
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
 
+### Token grouping hierarchy
+
+The grouper emits four nested levels so the debug dump mirrors the `.analyse.txt` snapshots:
+
+1. **Blocks (`03:xxxx`)** – detected from the 12-digit header and annotated with the declared entry count.
+2. **Structures** – payload slices separated by `<82` markers.
+3. **Field segments** – inner collections for style, paragraph, and font payloads.
+4. **`C2` sequences** – each `C2(nn)` token becomes its own group and captures every token until the next `C2`, a `C1` marker, or another terminator.
+
+Comments in the dump now include short descriptions (e.g. `C2(06)` → tab stops, `C2(0A)` → font link).
+
+### Fixed-length payloads
+
+Some `C2` groups expose a constant number of numeric slots. The grouper normalizes those payloads by trimming excess padding and inserting zero tokens when the source omits trailing values.
+
+| Tag | Expected Count | Notes |
+|-----|----------------|-------|
+| `C2(07)` | 4 | Bold, italic, underline, strikethrough boolean flags. `<81>` repeat markers are expanded so each slot is explicit. |
+| `C2(0A)` | 2 | Font slot reference (`fontIndex`, `0`). |
+
 ## To investigate C2 values in Font styles:
 
 | C2(Tag) | Example Occurrences | Confirmed / Suspected Meaning | Notes | Found In Block |
@@ -195,13 +215,39 @@ TODO
 
 
 
-## Font Table — 00(40) pairs (required)
-Sequence of pairs per font used:
+## Font Table — 03:0008 (required)
+Each entry begins with a pair of `00(40)` strings (font family + style name) followed by a fixed set of numeric fields. Tokens are split by `<82` separators, with `<81` repeating the previous value.
+
+### Parsed descriptor fields
+
+| Field | Notes |
+|-------|-------|
+| `TableIndex` | Declared slot in the font table. |
+| `FontId` | Raster/vector identifier (`0x60FF` for Terminal). |
+| `CodePage` | Windows code page; resolved to an `Encoding` via `Encoding.GetEncodings()` (for example `0x4E4 → windows-1252`). |
+| `PitchFlags` / `FamilyClass` | Low-byte projection of `lfPitchAndFamily` surfaced as enums (`Fixed`, `Variable`, `Swiss`, `Modern`, …). |
+| `PitchDecorations` | Remaining high bits, currently observed as `0x40000` for underline/italic hints. |
+| `ScriptId` | Matches the trailing `C2(03)` payload within the font entry. |
+
+`CodePagesEncodingProvider` is registered lazily inside `XmedFontDescriptor`, so legacy encodings are available even if the hosting application has not registered the provider beforehand.
+
 ```
-00(40):"FontName"
-00(40):""
+00(40):"FontName"      ← Family
+00(40):"Style"         ← Style name (empty = Regular)
+01:<index>             ← Table index used by style records
+01:<0> … 01:<fontId>   ← OEM/raster font identifier (0 for vector fonts, 0xFF60+ for Terminal)
+02:4E4                 ← Windows code page (1252 = Western Latin)
+02:400                 ← LOGFONT weight (400 = normal)
+02:0                   ← Flags (reserved in observed samples)
+02:1                   ← Font kind marker (1 = scalable/vector)
+02:<cellHeight>        ← Raster cell height (0 for vector fonts, 0xFF for Terminal)
+02:40008               ← LOGFONT pitch & family bits (0x00040008 = variable pitch, Swiss)
+02:0                   ← Reserved slot (always 0 so far)
+02:101 / C2(03)…       ← Script identifier (257 = Western/Latin I)
+01:0                   ← Name index (references the inline string, currently 0)
 ```
-Order matches style references (e.g., Arial, Tahoma, Terminal, Vivaldi, Arcade*).
+
+Values were confirmed against `Test/TestData/Legacy/Texts_Fields/Text_Multi_Line_Multi_Style_13.analyse.txt`, which includes the full table with the Terminal raster font (FontId `0x60FF` and cell height `0xFF`).
 
 
 
