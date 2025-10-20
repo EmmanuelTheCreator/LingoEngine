@@ -1,4 +1,8 @@
-﻿namespace BlingoEngine.IO.Legacy.Texts
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace BlingoEngine.IO.Legacy.Texts
 {
     internal class XmedParagraphSliceBuilder
     {
@@ -7,27 +11,43 @@
 
         public List<(int End, bool Flag)> GetOrderedParagraphBoundaries() => _paragraphFlags.OrderBy(p => p.End).ToList();
 
-        public void ReadParagraphFlags(BlXmedTokenReader reader)
+        public void Reset()
         {
-            reader.Skip();
-            int? pendingEnd = null;
+            _paragraphFlags.Clear();
+            _paragraphs = new List<ParagraphSlice>();
+        }
 
-            foreach (var token in reader.GetFlatValues())
+        public void LoadParagraphBoundaries(XmedTokenGroup? block)
+        {
+            _paragraphFlags.Clear();
+            if (block == null)
+                return;
+
+            foreach (var item in block.Items)
             {
-                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var end))
-                {
-                    pendingEnd = end;
-                    continue;
-                }
-
-                if (!pendingEnd.HasValue)
+                if (item is not XmedTokenGroup child)
                     continue;
 
-                if (token.IsBoolean() && token.TryGetBool(out var flag))
+                int? end = null;
+                bool? flag = null;
+
+                foreach (var token in child.CollectTokens())
                 {
-                    _paragraphFlags.Add((pendingEnd.Value, flag));
-                    pendingEnd = null;
+                    if (end is null && token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
+                    {
+                        end = numeric;
+                        continue;
+                    }
+
+                    if (flag is null && token.TryGetBool(out var boolValue))
+                    {
+                        flag = boolValue;
+                        continue;
+                    }
                 }
+
+                if (end.HasValue)
+                    _paragraphFlags.Add((end.Value, flag ?? false));
             }
         }
 
