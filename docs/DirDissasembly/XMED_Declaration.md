@@ -14,27 +14,10 @@ Tokens are printed in read order.
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
 
-### Token grouping hierarchy
 
-The grouper emits four nested levels so the debug dump mirrors the `.analyse.txt` snapshots:
+## To investigate C2 values
+This is pure observarion. Due that multiple C2(0C) where found in different blocks we are completly unsure about this structure.
 
-1. **Blocks (`03:xxxx`)** – detected from the 12-digit header and annotated with the declared entry count.
-2. **Structures** – payload slices separated by `<82` markers.
-3. **Field segments** – inner collections for style, paragraph, and font payloads.
-4. **`C2` sequences** – each `C2(nn)` token becomes its own group and captures every token until the next `C2`, a `C1` marker, or another terminator.
-
-Comments in the dump now include short descriptions (e.g. `C2(06)` → tab stops, `C2(0A)` → font link).
-
-### Fixed-length payloads
-
-Some `C2` groups expose a constant number of numeric slots. The grouper normalizes those payloads by trimming excess padding and inserting zero tokens when the source omits trailing values.
-
-| Tag | Expected Count | Notes |
-|-----|----------------|-------|
-| `C2(07)` | 4 | Bold, italic, underline, strikethrough boolean flags. `<81>` repeat markers are expanded so each slot is explicit. |
-| `C2(0A)` | 2 | Font slot reference (`fontIndex`, `0`). |
-
-## To investigate C2 values in Font styles:
 
 | C2(Tag) | Example Occurrences | Confirmed / Suspected Meaning | Notes | Found In Block |
 |----------|---------------------|-------------------------------|--------|----------------|
@@ -56,11 +39,12 @@ Some `C2` groups expose a constant number of numeric slots. The grouper normaliz
 
 
 # Main blocks
-Identifier: 03:00020000013000000000 
+Identifier: 03:00020000013000040003 
 Starts with 03, then 
 - 0002    : BlockType 
-- 0000130 : Length
-- 0000    : items in the block’s payload
+- 0000130 : unknown Value, perhaps length
+- 0004    : unknown Value
+- 0003    : items in the block’s payload
 
   :FFFF0000000600040001     // Header
 03:00020000013000000000     // Block Full Text 
@@ -84,7 +68,7 @@ Payload: alternating pairs `styleId endOffset`.
 		01:8 02:B7 	 	// Style=8, 183,"This text is... 	green	...		aligned, with spacing of 39"   
 		01:A 02:FE 	 	// Style=10,254,"This text is... 	orange	...		bold, italic, underline"   
 		01:6 02:12C 	// Style=6, 300,"This text is... 	red		...		centered again"   
-		01:6 
+		01:6          // Empty style
 
 ## Run Paragraphs		
 03:00050000001F00000006 	// Run paragraphs  
@@ -94,7 +78,7 @@ Payload: alternating pairs `styleId endOffset`.
 		01:2 02:B7 	 	// Run=2, 183,"This text is... 	green	...		aligned, with spacing of 39"  
 		01:0 02:FE 		// Run=0, 254,"This text is... 	orange	...		bold, italic, underline"
 		01:1 02:12C 	// Run=1, 300,"This text is... 	red		...		centered again"
-		01:0 
+		01:0          // Empty run
 
 
 ## Paragraphs

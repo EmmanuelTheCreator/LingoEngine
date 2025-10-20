@@ -43,26 +43,26 @@ namespace BlingoEngine.IO.Legacy.Texts
                 int? end = null;
                 int? styleId = null;
 
-                foreach (var token in segment.CollectTokens())
-                {
-                    if (styleId is null && token.IsPrefixedHex01() && token.TryGetNumericValue(out var style))
-                    {
-                        styleId = style;
-                        continue;
-                    }
+                //foreach (var token in segment.CollectTokens())
+                //{
+                //    if (styleId is null && token.IsPrefixedHex01() && token.TryGetNumericValue(out var style))
+                //    {
+                //        styleId = style;
+                //        continue;
+                //    }
 
-                    if (end is null && token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
-                    {
-                        end = numeric;
-                        continue;
-                    }
-                }
+                //    if (end is null && token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
+                //    {
+                //        end = numeric;
+                //        continue;
+                //    }
+                //}
 
-                if (end.HasValue)
-                {
-                    _runBoundaries.Add((end.Value, styleId ?? 0));
-                    LogTrace(DiagnosticArea, _logger, "XMED run boundary parsed: end {End} style {StyleId}", end.Value, styleId ?? 0);
-                }
+                //if (end.HasValue)
+                //{
+                //    _runBoundaries.Add((end.Value, styleId ?? 0));
+                //    LogTrace(DiagnosticArea, _logger, "XMED run boundary parsed: end {End} style {StyleId}", end.Value, styleId ?? 0);
+                //}
             }
         }
 

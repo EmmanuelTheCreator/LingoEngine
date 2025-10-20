@@ -1,203 +1,151 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
 using BlingoEngine.IO.Legacy.Texts.Data;
+using System.Globalization;
+using System.Text;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
     internal sealed class XmedTokenGrouper
     {
-        public List<XmedTokenGroup> CreateGroups(List<BlXmedToken> tokens)
+        private int _readIndex = 0;
+        private List<BlXmedToken> _tokens = new List<BlXmedToken>();
+
+        public List<XmedMainTokenGroup> CreateGroups(List<BlXmedToken> compressedTokens)
         {
-            if (tokens == null)
-                throw new ArgumentNullException(nameof(tokens));
+            if (compressedTokens == null)
+                throw new ArgumentNullException(nameof(compressedTokens));
 
-            if (tokens.Count == 0)
-                return new List<XmedTokenGroup>();
+            if (compressedTokens.Count == 0)
+                return new List<XmedMainTokenGroup>();
 
-            var expanded = ExpandPadding(tokens);
-            var normalized = ExpandRepeats(expanded);
+            var expanded = ExpandPadding(compressedTokens);
+            _tokens = ExpandRepeats(expanded);
 
-            var groups = new List<XmedTokenGroup>();
-            int index = 0;
+            List<XmedMainTokenGroup> groups = CreateMainGroups();
+            //firstGroup.RawTokens.AddRange(payload);
+            foreach (var group in groups)
+                BuildMainGroup(group);
 
-            while (index < normalized.Count)
+            return groups;
+        }
+
+        #region Main blocks
+        private List<XmedMainTokenGroup> CreateMainGroups()
+        {
+            var groups = new List<XmedMainTokenGroup>();
+            XmedMainTokenGroup? mainGroup = ReadMainBlockToken(ReadNext(), true);
+            if (mainGroup == null) return groups;
+            groups.Add(mainGroup);
+            while (_readIndex < _tokens.Count)
             {
-                var candidate = normalized[index];
-                if (!TryParseHeader(candidate, out string? blockId, out int tokenCount, out int itemCount))
+                var token = ReadNext();
+                if (token.Type == TokenType.PrefixedHex && token.Length >= 12)
                 {
-                    index++;
-                    continue;
+                    mainGroup = ReadMainBlockToken(token, true);
+                    if (mainGroup == null) break;
+                    groups.Add(mainGroup);
                 }
-
-                index++;
-                var payload = new List<BlXmedToken>();
-                int consumed = 0;
-
-                while (index < normalized.Count)
-                {
-                    var next = normalized[index];
-                    if (TryParseHeader(next, out _, out _, out _))
-                        break;
-
-                    payload.Add(next);
-                    index++;
-                    consumed++;
-
-                    if (consumed >= tokenCount && tokenCount > 0)
-                        break;
-                }
-
-                var main = new XmedMainTokenGroup(candidate, blockId!, tokenCount, itemCount);
-                main.RawTokens.AddRange(payload);
-                BuildMainGroup(main);
-                groups.Add(main);
+                else
+                    mainGroup.RawTokens.Add(token);
             }
 
             return groups;
         }
 
-        private static List<BlXmedToken> ExpandPadding(List<BlXmedToken> tokens)
+
+        private static XmedMainTokenGroup? ReadMainBlockToken(BlXmedToken token, bool isFirst = false)
         {
-            var expanded = new List<BlXmedToken>();
-
-            foreach (var token in tokens)
-            {
-                if (token.Type == TokenType.C1)
-                {
-                    int repeat = Math.Max(0, token.TypeValue ?? 0);
-                    for (int i = 0; i < repeat; i++)
-                        expanded.Add(CreateZeroToken(token));
-                    continue;
-                }
-
-                expanded.Add(token);
-            }
-
-            return expanded;
-        }
-
-        private static List<BlXmedToken> ExpandRepeats(List<BlXmedToken> tokens)
-        {
-            var normalized = new List<BlXmedToken>();
-            BlXmedToken? lastValue = null;
-
-            foreach (var token in tokens)
-            {
-                if (token.Type == TokenType.B_81)
-                {
-                    var clone = lastValue != null && lastValue.Type != TokenType.C2 && lastValue.Type != TokenType.B_82
-                        ? CloneToken(lastValue)
-                        : CreateZeroToken(token);
-                    normalized.Add(clone);
-                    lastValue = clone;
-                    continue;
-                }
-
-                normalized.Add(token);
-
-                if (token.Type != TokenType.C2 && token.Type != TokenType.B_82)
-                    lastValue = token;
-            }
-
-            return normalized;
-        }
-
-        private static bool TryParseHeader(BlXmedToken token, out string? blockId, out int tokenCount, out int itemCount)
-        {
-            blockId = null;
-            tokenCount = 0;
-            itemCount = 0;
-
-            if (token.Type != TokenType.PrefixedHex || token.TypeValue != 0x03 || string.IsNullOrEmpty(token.Ascii))
-                return false;
+            if ((token.Type != TokenType.PrefixedHex && token.Type != TokenType.Ascii) || (!isFirst && token.TypeValue != 0x03) || string.IsNullOrEmpty(token.Ascii))
+                return null;
 
             if (token.Ascii.Length < 20)
-                return false;
+                return null;
 
-            blockId = token.Ascii[..4];
-            tokenCount = ParseHex(token.Ascii[4..12]);
-            itemCount = ParseHex(token.Ascii[12..20]);
-            return true;
+            var blockId = token.Ascii[..4];
+            var tokenCount = ParseHex(token.Ascii[4..12]);
+            var anId = ParseHex(token.Ascii[12..16]);
+            var itemCount = ParseHex(token.Ascii[16..20]);
+            var block = new XmedMainTokenGroup(token, blockId, tokenCount, itemCount);
+            block.UnknownValue2 = anId;
+            return block;
         }
-
-        private static int ParseHex(string value)
-        {
-            if (int.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int parsed))
-                return parsed;
-            return 0;
-        }
-
         private static void BuildMainGroup(XmedMainTokenGroup group)
         {
             group.PreTokens.Clear();
             group.Items.Clear();
             group.PostTokens.Clear();
 
-            if (group.RawTokens.Count == 0)
+            switch (group.MainType)
             {
-                group.GroupEnd = group.Start + group.Length;
-                return;
-            }
-
-            switch (group.BlockId)
-            {
-                case "0004":
-                case "0005":
+                case XmedMainTokenGroup.MainGroupType.RunHeaderFFFF:
+                    ExtractC2Tokens(group.RawTokens, group);
+                    break;
+                case XmedMainTokenGroup.MainGroupType.RunHeader:
+                case XmedMainTokenGroup.MainGroupType.Layout:
+                    ExtractStructs(group.RawTokens, group);
+                    break;
+                case XmedMainTokenGroup.MainGroupType.FullText:
+                    break;
+                case XmedMainTokenGroup.MainGroupType.RunStyles:
+                case XmedMainTokenGroup.MainGroupType.RunParagraphs:
                     BuildRunPairGroup(group);
                     break;
-                case "0006":
+                case XmedMainTokenGroup.MainGroupType.Styles:
                     BuildStyleGroup(group);
                     break;
-                case "0007":
+                case XmedMainTokenGroup.MainGroupType.Paragraphs:
                     BuildParagraphGroup(group);
                     break;
-                case "0008":
+                case XmedMainTokenGroup.MainGroupType.Fonts:
                     BuildFontGroup(group);
                     break;
+                case XmedMainTokenGroup.MainGroupType.SpacingDescriptor:
+                case XmedMainTokenGroup.MainGroupType.SpacingDescriptor2:
+                case XmedMainTokenGroup.MainGroupType.UnknownB:
+                case XmedMainTokenGroup.MainGroupType.UnknownC:
+                case XmedMainTokenGroup.MainGroupType.UnknownF:
+                case XmedMainTokenGroup.MainGroupType.Unknown13:
+                case XmedMainTokenGroup.MainGroupType.Unknown128:
+                case XmedMainTokenGroup.MainGroupType.Unknown129:
+                    ExtractStructs(group.RawTokens, group);
+                    break;
                 default:
-                    group.PreTokens.AddRange(group.RawTokens);
                     break;
             }
 
-            SetGroupEndFromRaw(group);
         }
+        #endregion
+
+
+     
 
         private static void BuildRunPairGroup(XmedMainTokenGroup group)
         {
             if (group.RawTokens.Count == 0)
                 return;
-
+            group.Items.Clear();
             group.PreTokens.Add(group.RawTokens[0]);
 
-            var body = new List<BlXmedToken>();
-            for (int i = 1; i < group.RawTokens.Count; i++)
-            {
-                var token = group.RawTokens[i];
-                if (token.Type != TokenType.B_82)
-                    body.Add(token);
-            }
+            var body = group.RawTokens.Skip(1).ToList();
 
             int pairCount = body.Count / 2;
-            for (int i = 0; i < pairCount; i++)
+            for (int i = 0; i < group.DeclaredItemCount; i++)
             {
                 int firstIndex = i * 2;
                 var first = body[firstIndex];
+                if (firstIndex + 1 >= body.Count)
+                {
+                    // The last style is empty
+                    group.Items.Add(new XmedTokenGroup(TokenType.Run, 0, 0) { Items = [first], GroupType = XmedTokenGroup.TokenGroupType.Run });
+                    break;
+                }
                 var second = body[firstIndex + 1];
 
-                var child = new XmedChildTokenGroup(first);
+                var child = new XmedTokenGroup(TokenType.Run, 0, 0) { GroupType = XmedTokenGroup.TokenGroupType.Run };
                 child.Items.Add(first);
                 child.Items.Add(second);
-                child.GroupEnd = second.Start + second.Length;
-                child.Parent = group;
                 group.Items.Add(child);
             }
-
-            if (body.Count % 2 == 1)
-                group.PostTokens.Add(body[^1]);
         }
 
         private static void BuildStyleGroup(XmedMainTokenGroup group)
@@ -208,286 +156,71 @@ namespace BlingoEngine.IO.Legacy.Texts
             group.PreTokens.Add(group.RawTokens[0]);
             if (group.RawTokens.Count == 1)
                 return;
-
-            var segments = SplitOn82(group.RawTokens.Skip(1).ToList());
+            group.Items.Clear();
+            var structs = SplitOn82(group.RawTokens.Skip(1).ToList());
             var collector = new List<BlXmedToken>();
             int target = Math.Max(0, group.DeclaredItemCount);
-            int created = 0;
-
-            foreach (var segment in segments)
+            var structCount = 6;
+            var styleTokenGroups = structs.Select((x, i) => new { Key = i / structCount, Value = x })
+                       .GroupBy(x => x.Key, x => x.Value, (k, g) => g.ToArray())
+                       .ToArray();
+            if (styleTokenGroups.Length != group.DeclaredItemCount)
+                throw new Exception("Error creating style groups. Incorrect parsing");
+            foreach (var styleTokenGroup in styleTokenGroups)
             {
-                if (segment.Count == 0)
-                    continue;
-
-                collector.AddRange(segment);
-
-                bool shouldClose = IsStyleTerminator(segment);
-                if (target > 0 && created + 1 == target)
-                    shouldClose = true;
-
-                if (!shouldClose)
-                    continue;
-
-                var child = BuildStyleChild(new List<BlXmedToken>(collector));
-                collector.Clear();
-
-                if (child == null)
-                    continue;
-
-                child.Parent = group;
-                group.Items.Add(child);
-                created++;
-            }
-
-            if (collector.Count > 0)
-            {
-                if (target > 0 && created < target)
+                var style = new XmedTokenGroup(TokenType.Style, 0, 0);
+                group.Items.Add(style);
+                foreach (var styleTokenGroupList in styleTokenGroup)
                 {
-                    var child = BuildStyleChild(new List<BlXmedToken>(collector));
-                    if (child != null)
-                    {
-                        child.Parent = group;
-                        group.Items.Add(child);
-                    }
-                    else
-                        group.PostTokens.AddRange(collector);
+                    XmedTokenGroup styleStruct = ExtractC2TokensFromStruct(styleTokenGroupList);
+
+                    styleStruct.Items.AddRange(styleTokenGroupList);
+                    style.Items.Add(styleStruct);
                 }
-                else
-                    group.PostTokens.AddRange(collector);
             }
+            if (group.Items.Count != group.DeclaredItemCount)
+                throw new Exception("Error creating style groups. Incorrect parsing groups");
         }
-
-        private static bool IsStyleTerminator(List<BlXmedToken> segment)
-        {
-            if (segment.Count == 0)
-                return false;
-
-            foreach (var token in segment)
-            {
-                if (token.Type == TokenType.C2)
-                    return false;
-
-                if (!token.TryGetNumericValue(out var numeric) || numeric != 0)
-                    return false;
-            }
-
-            return true;
-        }
-
-        private static XmedChildTokenGroup? BuildStyleChild(List<BlXmedToken> tokens)
-        {
-            if (tokens.Count == 0)
-                return null;
-
-            var child = new XmedChildTokenGroup(tokens[0]);
-
-            int tailIndex = tokens.Count;
-            while (tailIndex > 0)
-            {
-                var token = tokens[tailIndex - 1];
-                if (token.Type == TokenType.C2)
-                    break;
-
-                if (!token.TryGetNumericValue(out var numeric) || numeric != 0)
-                    break;
-
-                tailIndex--;
-            }
-
-            for (int i = tailIndex; i < tokens.Count; i++)
-                child.PostTokens.Add(tokens[i]);
-
-            tokens.RemoveRange(tailIndex, tokens.Count - tailIndex);
-
-            int index = 0;
-            if (index < tokens.Count)
-            {
-                child.PreTokens.Add(tokens[index]);
-                index++;
-            }
-
-            while (index < tokens.Count && tokens[index].Type != TokenType.C2)
-            {
-                child.Items.Add(tokens[index]);
-                child.GroupEnd = tokens[index].Start + tokens[index].Length;
-                index++;
-            }
-
-            while (index < tokens.Count)
-            {
-                var token = tokens[index];
-
-                if (token.Type == TokenType.C2)
-                {
-                    var c2 = new XmedC2TokenGroup(token);
-                    index++;
-
-                    while (index < tokens.Count && tokens[index].Type != TokenType.C2)
-                    {
-                        c2.Items.Add(tokens[index]);
-                        c2.GroupEnd = tokens[index].Start + tokens[index].Length;
-                        index++;
-                    }
-
-                    c2.Parent = child;
-                    child.Items.Add(c2);
-                    child.GroupEnd = c2.GroupEnd;
-                    continue;
-                }
-
-                child.Items.Add(token);
-                child.GroupEnd = token.Start + token.Length;
-                index++;
-            }
-
-            if (child.GroupEnd == 0)
-            {
-                var last = child.PostTokens.LastOrDefault()
-                    ?? child.PreTokens.LastOrDefault();
-
-                if (last != null)
-                    child.GroupEnd = last.Start + last.Length;
-            }
-
-            return child;
-        }
+       
 
         private static void BuildParagraphGroup(XmedMainTokenGroup group)
         {
-            if (group.RawTokens.Count == 0)
+            group.PreTokens.Add(group.RawTokens[0]);
+            if (group.RawTokens.Count == 1)
                 return;
-
-            int index = 0;
-            while (index < group.RawTokens.Count && group.RawTokens[index].Type != TokenType.C2)
+            group.Items.Clear();
+            var paragraphsRaws = SplitOnC2_12(group.RawTokens.Skip(1).ToList());
+            if (paragraphsRaws.Count != group.DeclaredItemCount)
+                throw new Exception("Error creating style groups. Incorrect parsing");
+            foreach (var paragraphsRaw in paragraphsRaws)
             {
-                if (group.RawTokens[index].Type != TokenType.B_82)
-                    group.PreTokens.Add(group.RawTokens[index]);
-                index++;
-            }
+                var paragraph = new XmedTokenGroup(TokenType.Paragraph, 0, 0);
+                group.Items.Add(paragraph);
 
-            int remaining = group.RawTokens.Count - index;
-            int itemCount = Math.Max(0, group.DeclaredItemCount);
-
-            if (remaining <= 0 || itemCount <= 0)
-                return;
-
-            int baseLength = remaining / itemCount;
-            int extra = remaining % itemCount;
-
-            for (int i = 0; i < itemCount && index < group.RawTokens.Count; i++)
-            {
-                int length = baseLength + (i < extra ? 1 : 0);
-                length = Math.Clamp(length, 0, group.RawTokens.Count - index);
-
-                if (length == 0)
-                    break;
-
-                var slice = new List<BlXmedToken>();
-                for (int j = 0; j < length; j++)
-                    slice.Add(group.RawTokens[index + j]);
-
-                index += length;
-
-                var child = BuildParagraphChild(slice);
-                if (child == null)
-                    continue;
-
-                child.Parent = group;
-                group.Items.Add(child);
-            }
-
-            while (index < group.RawTokens.Count)
-            {
-                if (group.RawTokens[index].Type != TokenType.B_82)
-                    group.PostTokens.Add(group.RawTokens[index]);
-                index++;
+                // first we need to split the tabs in a separated group:
+                // 6A03E2AE => is tab stops
+                var indexC2_6 = paragraphsRaw.FindIndex(x => x.Type == TokenType.C2 && x.TypeValue == 0x6);
+                var partsStart = paragraphsRaw.GetRange(0, indexC2_6);
+                var partTabStops = paragraphsRaw.GetRange(indexC2_6 , paragraphsRaw.Count - (indexC2_6 + 1));
+                
+                var structsRaws = SplitOn82(partsStart);
+                foreach (var structsRaw in structsRaws)
+                {
+                    XmedTokenGroup styleStruct = ExtractC2TokensFromStruct(structsRaw);
+                    paragraph.Items.Add(styleStruct);
+                }
+                //var tabStops = new XmedTokenGroup(TokenType.TabStops,0,0);
+                //paragraph.Items.Add(tabStops);
+                //var structsRawsTabs = SplitOn82(partTabStops);
+                //foreach (var structsRaw in structsRaws)
+                //{
+                //    XmedTokenGroup styleStruct = ExtractC2TokensFromStruct(structsRaw);
+                //    tabStops.Items.Add(styleStruct);
+                //}
             }
         }
 
-        private static XmedChildTokenGroup? BuildParagraphChild(List<BlXmedToken> tokens)
-        {
-            if (tokens.Count == 0)
-                return null;
-
-            var child = new XmedChildTokenGroup(tokens[0]);
-            int index = 0;
-            bool firstGroupCaptured = false;
-
-            while (index < tokens.Count && tokens[index].Type != TokenType.C2)
-            {
-                if (tokens[index].Type != TokenType.B_82)
-                    child.PreTokens.Add(tokens[index]);
-                index++;
-            }
-
-            while (index < tokens.Count)
-            {
-                var token = tokens[index];
-
-                if (token.Type == TokenType.B_82)
-                {
-                    index++;
-                    continue;
-                }
-
-                if (token.Type == TokenType.C2)
-                {
-                    var collected = new List<BlXmedToken> { token };
-                    index++;
-
-                    while (index < tokens.Count)
-                    {
-                        var next = tokens[index];
-
-                        if (next.Type == TokenType.C2)
-                            break;
-
-                        if (next.Type == TokenType.B_82)
-                        {
-                            index++;
-                            break;
-                        }
-
-                        collected.Add(next);
-                        index++;
-                    }
-
-                    if (!firstGroupCaptured)
-                    {
-                        child.PreTokens.AddRange(collected);
-                        firstGroupCaptured = true;
-                        continue;
-                    }
-
-                    var c2 = new XmedC2TokenGroup(collected[0]);
-                    for (int i = 1; i < collected.Count; i++)
-                    {
-                        var value = collected[i];
-                        c2.Items.Add(value);
-                        c2.GroupEnd = value.Start + value.Length;
-                    }
-
-                    c2.Parent = child;
-                    child.Items.Add(c2);
-                    child.GroupEnd = c2.GroupEnd;
-                    continue;
-                }
-
-                child.Items.Add(token);
-                child.GroupEnd = token.Start + token.Length;
-                index++;
-            }
-
-            if (child.GroupEnd == 0)
-            {
-                var last = child.PreTokens.LastOrDefault();
-                if (last != null)
-                    child.GroupEnd = last.Start + last.Length;
-            }
-
-            return child;
-        }
-
+      
         private static void BuildFontGroup(XmedMainTokenGroup group)
         {
             if (group.RawTokens.Count == 0)
@@ -527,7 +260,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (child == null)
                     continue;
 
-                child.Parent = group;
                 group.Items.Add(child);
                 remaining--;
             }
@@ -540,66 +272,279 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
         }
 
-        private static XmedChildTokenGroup? BuildFontChild(List<BlXmedToken> tokens)
+        private static XmedTokenGroup? BuildFontChild(List<BlXmedToken> tokens)
         {
             if (tokens.Count == 0)
                 return null;
 
-            var child = new XmedChildTokenGroup(tokens[0]);
-            int index = 0;
-
-            while (index < tokens.Count && tokens[index].Type == TokenType.Block00)
-            {
-                child.PreTokens.Add(tokens[index]);
-                index++;
-            }
-
-            while (index < tokens.Count)
-            {
-                var token = tokens[index];
-
-                if (token.Type == TokenType.C2)
-                {
-                    var c2 = new XmedC2TokenGroup(token);
-                    index++;
-
-                    while (index < tokens.Count && tokens[index].Type != TokenType.C2)
-                    {
-                        c2.Items.Add(tokens[index]);
-                        c2.GroupEnd = tokens[index].Start + tokens[index].Length;
-                        index++;
-                    }
-
-                    c2.Parent = child;
-                    child.Items.Add(c2);
-                    child.GroupEnd = c2.GroupEnd;
-                    continue;
-                }
-
-                child.Items.Add(token);
-                child.GroupEnd = token.Start + token.Length;
-                index++;
-            }
-
-            if (child.GroupEnd == 0)
-            {
-                var last = child.PreTokens.LastOrDefault();
-                if (last != null)
-                    child.GroupEnd = last.Start + last.Length;
-            }
+            var child = new XmedTokenGroup(TokenType.Font,0,0);
+            child.Items.AddRange(tokens);
 
             return child;
         }
 
-        private static void SetGroupEndFromRaw(XmedMainTokenGroup group)
+
+
+
+        #region Dump/log
+
+
+        public static string DumpGroupedTokens(List<XmedMainTokenGroup> groups, int startIndent = 0)
         {
-            var last = group.RawTokens.LastOrDefault();
-            if (last != null)
-                group.GroupEnd = last.Start + last.Length;
-            else
-                group.GroupEnd = group.Start + group.Length;
+            var sb = new StringBuilder();
+            foreach (var mainGroup in groups)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"{mainGroup.TypeValue:X2}:{mainGroup.Ascii}\t\t // {mainGroup.MainType.ToString()}");
+                var lastWasNewLine = true;
+                switch (mainGroup.MainType)
+                {
+                    case XmedMainTokenGroup.MainGroupType.RunHeaderFFFF:
+                    case XmedMainTokenGroup.MainGroupType.RunHeader:
+                    case XmedMainTokenGroup.MainGroupType.Layout:
+                        lastWasNewLine = DumpGroupRaw(sb, mainGroup, 1, lastWasNewLine);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.FullText:
+                        DumpTokenValue(sb, mainGroup.RawTokens[0], 1);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.RunStyles:
+                    case XmedMainTokenGroup.MainGroupType.RunParagraphs:
+                        DumpRunGroup(sb, mainGroup, 1, lastWasNewLine);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.Styles:
+                    case XmedMainTokenGroup.MainGroupType.Paragraphs:
+                        DumpGroupWithSubGroups(sb, mainGroup, 1, lastWasNewLine);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.Fonts:
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.SpacingDescriptor:
+                    case XmedMainTokenGroup.MainGroupType.SpacingDescriptor2:
+                    case XmedMainTokenGroup.MainGroupType.UnknownB:
+                    case XmedMainTokenGroup.MainGroupType.UnknownC:
+                    case XmedMainTokenGroup.MainGroupType.UnknownF:
+                    case XmedMainTokenGroup.MainGroupType.Unknown13:
+                    case XmedMainTokenGroup.MainGroupType.Unknown128:
+                    case XmedMainTokenGroup.MainGroupType.Unknown129:
+                        lastWasNewLine = DumpGroupRaw(sb, mainGroup, 1, lastWasNewLine);
+                        break;
+                }
+                sb.AppendLine();
+
+            }
+            return sb.ToString().TrimEnd();
         }
 
+        private static bool DumpRunGroup(StringBuilder sb, XmedMainTokenGroup group, int depth, bool lastWasNewLine)
+        {
+            BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
+            foreach (var preToken in group.PreTokens)
+                DumpTokenValue(sb, preToken, depth + 1);
+            sb.AppendLine();
+            BlXmedTokenizer.WriteTab(sb, 0, depth + 2);
+            foreach (XmedTokenGroup groupItem in group.Items)
+            {
+                foreach (var groupTokenItem in groupItem.Items)
+                    DumpTokenValue(sb, groupTokenItem, depth + 1);
+                sb.Append(" ");
+            }
+            return lastWasNewLine;
+        }
+        private static bool DumpGroupWithSubGroups(StringBuilder sb, XmedMainTokenGroup group, int depth, bool lastWasNewLine)
+        {
+            BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
+            foreach (var preToken in group.PreTokens)
+                DumpTokenValue(sb, preToken, depth + 1);
+            sb.AppendLine();
+            BlXmedTokenizer.WriteTab(sb, 0, depth + 2);
+            foreach (XmedTokenGroup groupItem in group.Items)
+            {
+                lastWasNewLine = DumpGroupRaw(sb, groupItem, depth + 1, lastWasNewLine);
+            }
+            return lastWasNewLine;
+        }
+        private static bool DumpGroupRaw(StringBuilder sb, XmedTokenGroup group, int depth, bool lastWasNewLine)
+        {
+            var lastWasNewLine2 = lastWasNewLine;
+            foreach (var token in group.Items)
+            {
+                if (token is XmedC2TokenGroup)
+                {
+                    if (!lastWasNewLine2)
+                        sb.AppendLine();
+                    BlXmedTokenizer.WriteTab(sb, 0, depth + 2);
+                    sb.Append($"{token.Type}({token.TypeValue ?? 0:X2}) ");
+                }
+                else if (token is XmedTokenGroup structItem)
+                {
+                    if (token.Type != TokenType.B_82)
+                        throw new Exception("Wrong struct type");
+                    if (!lastWasNewLine2)
+                        sb.AppendLine();
+                    if (!structItem.NoStructEndingToken)
+                        sb.AppendLine("// {");
+                    BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
+                    foreach (var groupToken in structItem.Items)
+                        DumpTokenValue(sb, groupToken, depth + 1);
+                    if (!structItem.NoStructEndingToken)
+                    {
+                        sb.Append("<82 ");
+                        sb.AppendLine();
+                        sb.AppendLine("// }");
+                    }
+                    else
+                        sb.AppendLine();
+                    lastWasNewLine2 = true;
+                }
+                else
+                {
+                    BlXmedTokenizer.WriteTab(sb, 0, depth);
+                    lastWasNewLine2 = DumpTokenValue(sb, token, depth);
+                }
+            }
+            return lastWasNewLine2;
+        }
+
+        private static bool DumpTokenValue(StringBuilder sb, BlXmedToken t, int depth)
+        {
+            switch (t.Type)
+            {
+                case TokenType.PrefixedHex:
+                    sb.Append($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} ");
+                    break;
+                case TokenType.Block00:
+                    sb.AppendLine();
+                    BlXmedTokenizer.WriteTab(sb, 0, 3);
+                    if (t.Value == 44)
+                    {
+                        var lastNumbers = t.ReadBlock00Numbers();
+                        sb.Append($"00({t.Value}):{string.Join(',', lastNumbers)}");
+                        sb.AppendLine();
+                        return true;
+                    }
+                    else
+                    {
+                        sb.Append($"00({t.Value}):\"");
+                        sb.Append(t.Ascii);
+                        sb.Append('"' + Environment.NewLine);
+                        return true;
+                    }
+                case TokenType.C2:
+                    sb.AppendLine();
+                    BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
+                    sb.Append($"C2({t.TypeValue:X2})");
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        }
+
+        #endregion
+
+
+
+        #region Helpers
+        private static void ExtractStructs(List<BlXmedToken> tokens, XmedTokenGroup parent)
+        {
+            var structsRaw = SplitOn82(tokens);
+            var structs = new List<XmedTokenGroup>();
+            foreach (var structRawItem in structsRaw)
+            {
+                XmedTokenGroup structItem = ExtractC2TokensFromStruct(structRawItem);
+                structs.Add(structItem);
+            }
+            if (tokens.Last().Type != TokenType.B_82)
+                structs.Last().HasNoB82Token();
+            parent.Items.AddRange(structs);
+        }
+        private static XmedTokenGroup ExtractC2TokensFromStruct(List<BlXmedToken> tokens)
+        {
+            var theStruct = new XmedTokenGroup(TokenType.B_82, 0, 0);
+            ExtractC2Tokens(tokens, theStruct);
+            return theStruct;
+        }
+
+        private static void ExtractC2Tokens(List<BlXmedToken> tokens, XmedTokenGroup parent)
+        {
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                var token = tokens[i];
+                if (!token.IsC2())
+                {
+                    parent.Items.Add(token);
+                    continue;
+                }
+                var c2Group = new XmedC2TokenGroup(token);
+                parent.Items.Add(c2Group);
+                while (i < tokens.Count)
+                {
+                    var c2itemToken = tokens[i];
+                    if (c2itemToken.IsC2()) break;
+                    c2Group.Items.Add(c2itemToken);
+                    i++;
+                }
+            }
+        }
+        private BlXmedToken ReadNext()
+        {
+            var token = _tokens[_readIndex];
+            _readIndex++;
+            return token;
+        }
+        private static List<BlXmedToken> ExpandPadding(List<BlXmedToken> tokens)
+        {
+            var expanded = new List<BlXmedToken>();
+
+            foreach (var token in tokens)
+            {
+                if (token.Type == TokenType.C1)
+                {
+                    int repeat = Math.Max(0, token.TypeValue ?? 0);
+                    for (int i = 0; i < repeat; i++)
+                        expanded.Add(CreateZeroToken(token));
+                    continue;
+                }
+
+                expanded.Add(token);
+            }
+
+            return expanded;
+        }
+
+        private static List<BlXmedToken> ExpandRepeats(List<BlXmedToken> tokens)
+        {
+            var normalized = new List<BlXmedToken>();
+            BlXmedToken? lastValue = null;
+
+            foreach (var token in tokens)
+            {
+                if (token.Type == TokenType.B_81)
+                {
+                    var clone = lastValue != null && lastValue.Type != TokenType.C2 && lastValue.Type != TokenType.B_82
+                        ? lastValue.Clone()
+                        : CreateZeroToken(token);
+                    normalized.Add(clone);
+                    lastValue = clone;
+                    continue;
+                }
+
+                normalized.Add(token);
+
+                if (token.Type != TokenType.C2 && token.Type != TokenType.B_82)
+                    lastValue = token;
+            }
+
+            return normalized;
+        }
+
+
+
+        private static int ParseHex(string value)
+        {
+            if (int.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int parsed))
+                return parsed;
+            return 0;
+        }
         private static List<List<BlXmedToken>> SplitOn82(List<BlXmedToken> tokens)
         {
             var segments = new List<List<BlXmedToken>>();
@@ -620,42 +565,31 @@ namespace BlingoEngine.IO.Legacy.Texts
             segments.Add(current);
             return segments;
         }
-
-        private static BlXmedToken CloneToken(BlXmedToken token)
+        private static List<List<BlXmedToken>> SplitOnC2_12(List<BlXmedToken> tokens)
         {
-            return new BlXmedToken(token.Type, token.Start, token.Length, token.Ascii, token.Value, token.TypeValue, token.LinkToPrevious, token.Data);
-        }
+            var segments = new List<List<BlXmedToken>>();
+            var current = new List<BlXmedToken>();
 
-        private static BlXmedToken CreateZeroToken(BlXmedToken reference)
-        {
-            return new BlXmedToken(TokenType.PrefixedHex, reference.Start, 0, "0000", 0, 0x01);
-        }
-
-        public static string DumpGroupedTokens(List<XmedTokenGroup> groups, int startIndent = 0)
-        {
-            var sb = new StringBuilder();
-            foreach (var group in groups)
-                DumpGroup(sb, group, startIndent);
-            return sb.ToString().TrimEnd();
-        }
-
-        private static void DumpGroup(StringBuilder sb, XmedTokenGroup group, int depth)
-        {
-            BlXmedTokenizer.WriteToken(sb, false, group, depth, true);
-
-            foreach (var token in group.PreTokens)
-                BlXmedTokenizer.WriteToken(sb, false, token, depth + 1, true);
-
-            foreach (var item in group.Items)
+            foreach (var token in tokens)
             {
-                if (item is XmedTokenGroup child)
-                    DumpGroup(sb, child, depth + 1);
-                else
-                    BlXmedTokenizer.WriteToken(sb, false, item, depth + 1, true);
-            }
+                if (token.Type == TokenType.C2)
+                {
+                    if (token.TypeValue == 0x12)
+                    {
+                        segments.Add(current);
+                        current = new List<BlXmedToken>();
+                        continue;
+                    }
+                }
 
-            foreach (var token in group.PostTokens)
-                BlXmedTokenizer.WriteToken(sb, false, token, depth + 1, true);
+                current.Add(token);
+            }
+            if (current.Count >0)
+                segments.Add(current);
+            return segments;
         }
+        #endregion
+
+
     }
 }

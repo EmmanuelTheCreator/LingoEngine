@@ -4,7 +4,11 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
 {
     public class BlXmedToken
     {
-        public enum TokenType { Split01, Split02, Split03, C1, C2, C3, B_81, B_82, PrefixedHex, Ascii, Block00, Byte }
+        public enum TokenType { Split01, Split02, Split03, C1, C2, C3, B_81, B_82, PrefixedHex, Ascii, Block00, Byte, Style, Paragraph,
+            Font,
+            Run,
+            TabStops
+        }
         public enum TokenSubType
         {
             Unkown,
@@ -29,6 +33,9 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
             HeaderLineHeight,
             BoxLRTB,
             CharacterSpacing,
+            FontLink,
+            TabStopList,
+            FontStyle,
         }
         public TokenType Type { get; }
         public TokenSubType SubType { get; set; }
@@ -165,5 +172,14 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
             return $"{(int)PrefixedHex:X2}";
         }
 
+        public static BlXmedToken CreateZeroToken(int start) 
+            => new BlXmedToken(TokenType.PrefixedHex, start, 0, "00", 0, 0x01);
+        public static BlXmedToken CreateZeroToken(BlXmedToken reference) 
+            => new BlXmedToken(TokenType.PrefixedHex, reference.Start, 0, "00", 0, 0x01);
+
+        public BlXmedToken Clone() 
+            => new BlXmedToken(Type, Start, Length, Ascii, Value, TypeValue, LinkToPrevious, Data);
+
+       
     }
 }

@@ -9,11 +9,13 @@
 		02:0 
 		02:26			// 38,	changes with more paragraphs, and Margin left change, probably height related with wrapping  
 			01:0 
-      C1(03) 02:-1 <82 02:0 
+      C1(03) 02:-1 <82 
+	02:0 
       C2(0A) 
 		02:26			// 38,	changes with more paragraphs, and Margin left change, probably height related with wrapping 
 		02:1F4 
-			01:FF00 <81 <81 01:0 <82 <82 02:1 02:0 
+			01:FF00 <81 <81 01:0 <82 <82 
+	02:1 02:0 
       C2(04) 
 		02:55			// Text length   or sub-thing with 'tab-stops'
 			01:0 

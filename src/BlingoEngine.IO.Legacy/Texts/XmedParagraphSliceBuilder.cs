@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlingoEngine.IO.Legacy.Texts.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,23 +32,23 @@ namespace BlingoEngine.IO.Legacy.Texts
                 int? end = null;
                 bool? flag = null;
 
-                foreach (var token in child.CollectTokens())
-                {
-                    if (end is null && token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
-                    {
-                        end = numeric;
-                        continue;
-                    }
+                //foreach (var token in child.CollectTokens())
+                //{
+                //    if (end is null && token.IsPrefixedHex02() && token.TryGetNumericValue(out var numeric))
+                //    {
+                //        end = numeric;
+                //        continue;
+                //    }
 
-                    if (flag is null && token.TryGetBool(out var boolValue))
-                    {
-                        flag = boolValue;
-                        continue;
-                    }
-                }
+                //    if (flag is null && token.TryGetBool(out var boolValue))
+                //    {
+                //        flag = boolValue;
+                //        continue;
+                //    }
+                //}
 
-                if (end.HasValue)
-                    _paragraphFlags.Add((end.Value, flag ?? false));
+                //if (end.HasValue)
+                //    _paragraphFlags.Add((end.Value, flag ?? false));
             }
         }
 

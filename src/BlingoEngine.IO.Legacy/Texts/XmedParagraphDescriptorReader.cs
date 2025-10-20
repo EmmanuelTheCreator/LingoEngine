@@ -53,60 +53,60 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private void ParseMargins(XmedTokenGroup group, XmedParagraphDescriptor descriptor)
         {
-            var numericValues = new List<int>();
-            foreach (var token in group.CollectTokens())
-            {
-                if (!token.IsPrefixedHex02())
-                    continue;
+            //var numericValues = new List<int>();
+            //foreach (var token in group.CollectTokens())
+            //{
+            //    if (!token.IsPrefixedHex02())
+            //        continue;
 
-                if (token.TryGetNumericValue(out var numeric))
-                    numericValues.Add(numeric);
-            }
+            //    if (token.TryGetNumericValue(out var numeric))
+            //        numericValues.Add(numeric);
+            //}
 
-            if (numericValues.Count > 0)
-                descriptor.LeftMargin = NormalizeMargin(numericValues.ElementAtOrDefault(0));
-            if (numericValues.Count > 1)
-                descriptor.RightMargin = NormalizeMargin(numericValues.ElementAtOrDefault(1));
-            if (numericValues.Count > 2)
-                descriptor.FirstLineIndent = NormalizeMargin(numericValues.ElementAtOrDefault(2));
-            if (numericValues.Count > 3)
-                descriptor.AdditionalIndent = NormalizeMargin(numericValues.ElementAtOrDefault(3));
+            //if (numericValues.Count > 0)
+            //    descriptor.LeftMargin = NormalizeMargin(numericValues.ElementAtOrDefault(0));
+            //if (numericValues.Count > 1)
+            //    descriptor.RightMargin = NormalizeMargin(numericValues.ElementAtOrDefault(1));
+            //if (numericValues.Count > 2)
+            //    descriptor.FirstLineIndent = NormalizeMargin(numericValues.ElementAtOrDefault(2));
+            //if (numericValues.Count > 3)
+            //    descriptor.AdditionalIndent = NormalizeMargin(numericValues.ElementAtOrDefault(3));
         }
 
         private void ParseSpacing(XmedTokenGroup group, XmedParagraphDescriptor descriptor)
         {
-            foreach (var c2 in group.EnumerateC2Groups().Where(g => g.TypeValue == 0x03))
-            {
-                int before = c2.ReadNumericAt(0);
-                int after = c2.ReadNumericAt(1);
+            //foreach (var c2 in group.EnumerateC2Groups().Where(g => g.TypeValue == 0x03))
+            //{
+            //    int before = c2.ReadNumericAt(0);
+            //    int after = c2.ReadNumericAt(1);
 
-                if (before >= 0)
-                    descriptor.SpacingBefore = before;
-                if (after >= 0)
-                    descriptor.SpacingAfter = after;
-            }
+            //    if (before >= 0)
+            //        descriptor.SpacingBefore = before;
+            //    if (after >= 0)
+            //        descriptor.SpacingAfter = after;
+            //}
         }
 
         private void ParseTabStops(XmedTokenGroup group, XmedParagraphDescriptor descriptor)
         {
-            foreach (var c2 in group.EnumerateC2Groups().Where(g => g.TypeValue == 0x06))
-            {
-                var tokens = c2.Items.OfType<BlXmedToken>().ToList();
-                for (int i = 0; i < tokens.Count; i++)
-                {
-                    var candidate = tokens[i];
-                    if (!candidate.IsPrefixedHex02())
-                        continue;
+            //foreach (var c2 in group.EnumerateC2Groups().Where(g => g.TypeValue == 0x06))
+            //{
+            //    var tokens = c2.Items.OfType<BlXmedToken>().ToList();
+            //    for (int i = 0; i < tokens.Count; i++)
+            //    {
+            //        var candidate = tokens[i];
+            //        if (!candidate.IsPrefixedHex02())
+            //            continue;
 
-                    if (!candidate.TryGetNumericValue(out var numeric))
-                        continue;
+            //        if (!candidate.TryGetNumericValue(out var numeric))
+            //            continue;
 
-                    if (numeric <= 0)
-                        continue;
+            //        if (numeric <= 0)
+            //            continue;
 
-                    descriptor.TabStops.Add(NormalizeMargin(numeric));
-                }
-            }
+            //        descriptor.TabStops.Add(NormalizeMargin(numeric));
+            //    }
+            //}
         }
 
         private static int NormalizeMargin(int value)

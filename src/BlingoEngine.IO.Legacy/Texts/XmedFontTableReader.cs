@@ -37,18 +37,18 @@ namespace BlingoEngine.IO.Legacy.Texts
             string familyName = string.Empty;
             string styleName = string.Empty;
 
-            if (entry.PreTokens.Count > 0)
-            {
-                var nameToken = entry.PreTokens.FirstOrDefault(t => t.Type == TokenType.Block00);
-                if (nameToken != null)
-                    familyName = nameToken.Ascii ?? string.Empty;
+            //if (entry.PreTokens.Count > 0)
+            //{
+            //    var nameToken = entry.PreTokens.FirstOrDefault(t => t.Type == TokenType.Block00);
+            //    if (nameToken != null)
+            //        familyName = nameToken.Ascii ?? string.Empty;
 
-                var styleToken = entry.PreTokens.SkipWhile(t => t.Type != TokenType.Block00)
-                    .Skip(1)
-                    .FirstOrDefault(t => t.Type == TokenType.Block00);
-                if (styleToken != null)
-                    styleName = styleToken.Ascii ?? string.Empty;
-            }
+            //    var styleToken = entry.PreTokens.SkipWhile(t => t.Type != TokenType.Block00)
+            //        .Skip(1)
+            //        .FirstOrDefault(t => t.Type == TokenType.Block00);
+            //    if (styleToken != null)
+            //        styleName = styleToken.Ascii ?? string.Empty;
+            //}
 
             var descriptor = new XmedFontDescriptor
             {
@@ -56,29 +56,29 @@ namespace BlingoEngine.IO.Legacy.Texts
                 StyleName = styleName
             };
 
-            var tokens = entry.EnumerateTokens()
-                .Where(t => t.Type != TokenType.Block00)
-                .ToList();
+            //var tokens = entry.EnumerateTokens()
+            //    .Where(t => t.Type != TokenType.Block00)
+            //    .ToList();
 
-            int index = 0;
+            //int index = 0;
 
-            descriptor.TableIndex = ReadNext01(tokens, ref index, descriptor.TableIndex);
-            int reserved = ReadNext01(tokens, ref index, 0);
-            descriptor.FontId = ReadRemaining01(tokens, ref index, reserved);
+            //descriptor.TableIndex = ReadNext01(tokens, ref index, descriptor.TableIndex);
+            //int reserved = ReadNext01(tokens, ref index, 0);
+            //descriptor.FontId = ReadRemaining01(tokens, ref index, reserved);
 
-            descriptor.CodePage = ReadNext02(tokens, ref index, descriptor.CodePage);
-            descriptor.Weight = ReadNext02(tokens, ref index, descriptor.Weight);
-            descriptor.Flags = ReadNext02(tokens, ref index, descriptor.Flags);
-            descriptor.FontKind = ReadNext02(tokens, ref index, descriptor.FontKind);
-            descriptor.CellHeight = ReadNext02(tokens, ref index, descriptor.CellHeight);
-            descriptor.PitchAndFamily = ReadNext02(tokens, ref index, descriptor.PitchAndFamily);
-            descriptor.Reserved = ReadNext02(tokens, ref index, descriptor.Reserved);
+            //descriptor.CodePage = ReadNext02(tokens, ref index, descriptor.CodePage);
+            //descriptor.Weight = ReadNext02(tokens, ref index, descriptor.Weight);
+            //descriptor.Flags = ReadNext02(tokens, ref index, descriptor.Flags);
+            //descriptor.FontKind = ReadNext02(tokens, ref index, descriptor.FontKind);
+            //descriptor.CellHeight = ReadNext02(tokens, ref index, descriptor.CellHeight);
+            //descriptor.PitchAndFamily = ReadNext02(tokens, ref index, descriptor.PitchAndFamily);
+            //descriptor.Reserved = ReadNext02(tokens, ref index, descriptor.Reserved);
 
-            if (index < tokens.Count && tokens[index].Type == TokenType.C2 && tokens[index].TypeValue == 0x03)
-                index++;
+            //if (index < tokens.Count && tokens[index].Type == TokenType.C2 && tokens[index].TypeValue == 0x03)
+            //    index++;
 
-            descriptor.ScriptId = ReadNext02(tokens, ref index, descriptor.ScriptId);
-            descriptor.NameIndex = ReadNext01(tokens, ref index, descriptor.NameIndex);
+            //descriptor.ScriptId = ReadNext02(tokens, ref index, descriptor.ScriptId);
+            //descriptor.NameIndex = ReadNext01(tokens, ref index, descriptor.NameIndex);
 
             return descriptor;
         }

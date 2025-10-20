@@ -95,7 +95,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
         static readonly Regex RxComp = new(@"^C([1234])\(([0-9A-Fa-f]{2})\)$", RegexOptions.Compiled);
         static readonly Regex RxKV = new(@"^(00\(\d+\)|\d{2}:[0-9A-Fa-f\-]+)$", RegexOptions.Compiled);
 
-        [Fact]
+        //[Fact]
         public void GenerateXmedComponents()
         {
             var root = TestContextHarness.GetAssetPath($"Texts_Fields/");

@@ -1,8 +1,13 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
-using static BlingoEngine.IO.Legacy.Texts.XmedTokenGroup;
+using static BlingoEngine.IO.Legacy.Texts.Data.XmedTokenGroup;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -150,42 +155,12 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             switch (t.Type)
             {
-                case TokenType.C1:
-                    switch (t.TypeValue)
-                    {
-                        case 0x07: t.SubType = TokenSubType.TabWrapping; break; 
-                        case 0x08: t.SubType = TokenSubType.Editable; break; 
-                    }
-                    break;
                 case TokenType.C2:
                     switch (t.TypeValue)
                     {
-                        case 0x03: t.SubType = TokenSubType.HeaderLineHeight; break; 
-                        case 0x04: t.SubType = TokenSubType.CharacterSpacing; break; 
-                        case 0x0A: t.SubType = TokenSubType.BoxLRTB; break; 
-
-                        case 0x0C: t.SubType = TokenSubType.Bold; break; // Bold
-                        case 0x0D: t.SubType = TokenSubType.Italic; break; // Italic
-                        case 0x1E: t.SubType = TokenSubType.Underline; break; // Underline
-                        case 0x1C: t.SubType = TokenSubType.Superscript; break; // Superscript
-                        case 0x1D: t.SubType = TokenSubType.Subscript; break; // Subscript
-                        case 0x13: t.SubType = TokenSubType.Strikeout; break; // Strikeout
-                        default:
-                            break;
-                    }
-                    break;
-                case TokenType.Split01:
-                case TokenType.Split02:
-                    switch (t.TypeValue)
-                    {
-                        case 0x120: t.SubType = TokenSubType.LeftMargin; break;// twips | Left margin |
-                        case 0x168: t.SubType = TokenSubType.RightMargin; break;// twips | Right margin |
-                        case 0x1C: t.SubType = TokenSubType.FirstLineIndent; break; // twips | First line indent |
-                        case 0x48: t.SubType = TokenSubType.leftMargin; break; // Smaller left margin |
-                        case 0x90: t.SubType = TokenSubType.rightMargin; break; // Smaller right margin |
-                        case 0x15: t.SubType = TokenSubType.FirstIndent; break; // First indent (0.3–0.4 inch range) |
-                        case 0x9: t.SubType = TokenSubType.SpaceAboveParagraph; break; //  pt/twips | Space above paragraph |
-                        case 0x7: t.SubType = TokenSubType.SpaceBelowParagraph; break; //  pt/twips | Space below paragraph |
+                        case 0x0A: break;
+                        case 0x06: break;
+                        case 0x07:  break;
                         default:
                             break;
                     }
@@ -262,7 +237,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         }
 
 
-        public static List<XmedTokenGroup> CreateGroups(List<BlXmedToken> tokens)
+        public static List<XmedMainTokenGroup> CreateGroups(List<BlXmedToken> tokens)
         {
             return new XmedTokenGrouper().CreateGroups(tokens);
         }
@@ -322,38 +297,10 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (t is XmedTokenGroup group1)
             {
                 sb.AppendLine();
-                switch (group1.GroupType)
-                {
-                    case TokenGroupType.FFFFGroup:
-                        switch (group1.SliceType)
-                        {
-                            case SliceKind.FFFF:
-                                sb.Append($"*FFFF:");
-                                break;
-                            case SliceKind.TextSlice:
-                                sb.Append($"*TXT:");
-                                break;
-                            case SliceKind.RunMap:
-                                sb.Append($"*RUN:");
-                                break;
-                            case SliceKind.ParaLayout:
-                                sb.Append($"*P:");
-                                break;
-                            case SliceKind.Record:
-                                sb.Append($"*REC:");
-                                break;
-                            case SliceKind.Unknown:
-                            default:
-                                sb.Append($"*{t.TypeValue ?? 0:X2}");
-                                break;
-                        }
-                        
-                        break;
-                    default:
-                        sb.Append($"*{t.TypeValue ?? 0:X2}");
-                        break;
-                }
+              
+                sb.Append($"*{t.TypeValue ?? 0:X2}");
             }
+               
             int startLength = sb.Length;
             switch (t.Type)
             {
