@@ -15,16 +15,13 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public TokenGroupType GroupType { get; set; }
        
         public List<BlXmedToken> Items { get; set; } = new ();
-        public bool NoStructEndingToken { get; private set; }
+
 
         public XmedTokenGroup(TokenType type, int start, int length, string? ascii = null, int? value = null, int? typeValue = null, bool linkToPrevious = false, byte[]? data = null) : base(type, start, length, ascii, value, typeValue, linkToPrevious, data)
         {
         }
 
-        internal void HasNoB82Token()
-        {
-            NoStructEndingToken = true;
-        }
+   
     }
     internal sealed class XmedC2TokenGroup : XmedTokenGroup
     {

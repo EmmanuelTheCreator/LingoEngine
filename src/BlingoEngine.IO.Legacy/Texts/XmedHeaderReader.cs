@@ -24,105 +24,105 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public void ReadHeader()
         {
-            while (!_reader.IsAtEnd)
-            {
-                var token = _reader.Peek();
-                if (token is null)
-                    break;
+            //while (!_reader.IsAtEnd)
+            //{
+            //    var token = _reader.Peek();
+            //    if (token is null)
+            //        break;
 
-                if (token.IsTextBlock())
-                    break;
+            //    if (token.IsTextBlock())
+            //        break;
 
-                if (token.IsPrefixedHex02() && token.Ascii is { } numeric)
-                {
-                    if (numeric.Equals("40001", StringComparison.OrdinalIgnoreCase) || numeric.Equals("40000", StringComparison.OrdinalIgnoreCase))
-                        LogUnknown("Header", "02:40001");
-                    else if (numeric.Equals("-7FFF6FE0", StringComparison.OrdinalIgnoreCase))
-                        LogUnknown("Header", "02:-7FFF6FE0");
+            //    if (token.IsPrefixedHex02() && token.Ascii is { } numeric)
+            //    {
+            //        if (numeric.Equals("40001", StringComparison.OrdinalIgnoreCase) || numeric.Equals("40000", StringComparison.OrdinalIgnoreCase))
+            //            LogUnknown("Header", "02:40001");
+            //        else if (numeric.Equals("-7FFF6FE0", StringComparison.OrdinalIgnoreCase))
+            //            LogUnknown("Header", "02:-7FFF6FE0");
 
-                    _reader.Skip();
-                    continue;
-                }
+            //        _reader.Skip();
+            //        continue;
+            //    }
 
-                if (token.IsPrefixedHex01() && token.Ascii is { } literal && literal.Equals("FFFF", StringComparison.OrdinalIgnoreCase))
-                {
-                    LogUnknown("Header", "01:FFFF");
-                    _reader.Skip();
-                    continue;
-                }
+            //    if (token.IsPrefixedHex01() && token.Ascii is { } literal && literal.Equals("FFFF", StringComparison.OrdinalIgnoreCase))
+            //    {
+            //        LogUnknown("Header", "01:FFFF");
+            //        _reader.Skip();
+            //        continue;
+            //    }
 
-                if (token.IsC2())
-                {
-                    switch (token.TypeValue)
-                    {
-                        case 0x03:
-                            _spacingReader.ReadParagraphSpacing(_reader);
-                            continue;
-                        case 0x04:
-                            ReadHeaderSpacing(_reader);
-                            continue;
-                        case 0x06:
-                            LogUnknown("Header", "C206");
-                            _reader.Skip();
-                            continue;
-                        case 0x07:
-                            ReadTabs(_reader);
-                            continue;
-                        case 0x08:
-                            LogUnknown("Header", "C208");
-                            _reader.Skip();
-                            continue;
-                        case 0x0A:
-                            TryReadSize(_reader);
-                            continue;
-                        case 0x0B:
-                            ReadEditable(_reader);
-                            continue;
-                        case 0x0F:
-                            LogUnknown("Header", "C20F");
-                            _reader.Skip();
-                            continue;
-                        case 0x12:
-                            LogUnknown("Header", "C212");
-                            _reader.Skip();
-                            continue;
-                    }
-                }
+            //    if (token.IsC2())
+            //    {
+            //        switch (token.TypeValue)
+            //        {
+            //            case 0x03:
+            //                _spacingReader.ReadParagraphSpacing(_reader);
+            //                continue;
+            //            case 0x04:
+            //                ReadHeaderSpacing(_reader);
+            //                continue;
+            //            case 0x06:
+            //                LogUnknown("Header", "C206");
+            //                _reader.Skip();
+            //                continue;
+            //            case 0x07:
+            //                ReadTabs(_reader);
+            //                continue;
+            //            case 0x08:
+            //                LogUnknown("Header", "C208");
+            //                _reader.Skip();
+            //                continue;
+            //            case 0x0A:
+            //                TryReadSize(_reader);
+            //                continue;
+            //            case 0x0B:
+            //                ReadEditable(_reader);
+            //                continue;
+            //            case 0x0F:
+            //                LogUnknown("Header", "C20F");
+            //                _reader.Skip();
+            //                continue;
+            //            case 0x12:
+            //                LogUnknown("Header", "C212");
+            //                _reader.Skip();
+            //                continue;
+            //        }
+            //    }
 
-                if (token.IsC1())
-                {
-                    switch (token.TypeValue)
-                    {
-                        case 0x03:
-                            LogUnknown("Header", "C1C3");
-                            _reader.Skip();
-                            continue;
-                        case 0x04:
+            //    if (token.IsC1())
+            //    {
+            //        switch (token.TypeValue)
+            //        {
+            //            case 0x03:
+            //                LogUnknown("Header", "C1C3");
+            //                _reader.Skip();
+            //                continue;
+            //            case 0x04:
                             
-                            _styleParser.ReadHeaderColor(_reader);
-                            continue;
-                        case 0x1C:
-                            _styleParser.MarkHeaderStyleFlag(style =>
-                            {
-                                style.Underline = true;
-                                style.ApplyStyleFlag(XmedStyleFlags.Underline, true);
-                            });
-                            _reader.Skip();
-                            continue;
-                        case 0x1D:
-                            _styleParser.MarkHeaderStyleFlag(style =>
-                            {
-                                style.Italic = true;
-                                style.ApplyStyleFlag(XmedStyleFlags.Italic, true);
-                            });
-                            _reader.Skip();
-                            continue;
-                    }
-                }
+            //                _styleParser.ReadHeaderColor(_reader);
+            //                continue;
+            //            case 0x1C:
+            //                _styleParser.MarkHeaderStyleFlag(style =>
+            //                {
+            //                    style.Underline = true;
+            //                    style.ApplyStyleFlag(XmedStyleFlags.Underline, true);
+            //                });
+            //                _reader.Skip();
+            //                continue;
+            //            case 0x1D:
+            //                _styleParser.MarkHeaderStyleFlag(style =>
+            //                {
+            //                    style.Italic = true;
+            //                    style.ApplyStyleFlag(XmedStyleFlags.Italic, true);
+            //                });
+            //                _reader.Skip();
+            //                continue;
+            //        }
+            //    }
 
-                LogUnknown("Header", $"Skipped token {_reader.Peek()}");
-                _reader.Skip();
-            }
+            //    LogUnknown("Header", $"Skipped token {_reader.Peek()}");
+            //    _reader.Skip();
+            //}
         }
 
 

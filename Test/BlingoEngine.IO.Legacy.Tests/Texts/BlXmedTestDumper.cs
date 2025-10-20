@@ -62,6 +62,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
         public void DumpLongLog()
         {
             var fileName = "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin";
+            //var fileName = "Paragraphs/Text_3_Paragraps_4T_13.xmed.bin";
             //var fileName = "Text_Hallo_col_blue1_13.xmed.bin";
             //var fileName = "Text_Hallo_col_bordeau_13.xmed.bin";
             //var fileName = "Text_Hallo_col_green_13.xmed.bin";
