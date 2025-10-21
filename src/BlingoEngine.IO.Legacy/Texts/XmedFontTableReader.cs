@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlingoEngine.IO.Legacy.Texts.Data;
@@ -34,103 +35,74 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private XmedFontDescriptor ParseFontDescriptor(XmedTokenGroup entry)
         {
-            string familyName = string.Empty;
-            string styleName = string.Empty;
+            string familyName = entry.ReadAscii(0, token => token.IsFontTable00());
+            string styleName = entry.ReadAscii(1, token => token.IsFontTable00());
 
-            //if (entry.PreTokens.Count > 0)
-            //{
-            //    var nameToken = entry.PreTokens.FirstOrDefault(t => t.Type == TokenType.Block00);
-            //    if (nameToken != null)
-            //        familyName = nameToken.Ascii ?? string.Empty;
+            var tailItems = entry.Items.Skip(2);
+            var flattened = EnumerateTokens(tailItems).ToList();
+            var numericTokens = flattened
+                .Where(t => t.Type == TokenType.PrefixedHex)
+                .ToList();
 
-            //    var styleToken = entry.PreTokens.SkipWhile(t => t.Type != TokenType.Block00)
-            //        .Skip(1)
-            //        .FirstOrDefault(t => t.Type == TokenType.Block00);
-            //    if (styleToken != null)
-            //        styleName = styleToken.Ascii ?? string.Empty;
-            //}
+            int scriptId = 0;
+            int nameIndex = 0;
+            if (numericTokens.Count >= 2)
+            {
+                scriptId = TryReadNumeric(numericTokens[^2]);
+                nameIndex = TryReadNumeric(numericTokens[^1]);
+            }
+
+            var coreTokens = numericTokens.Take(Math.Max(0, numericTokens.Count - 2)).ToList();
 
             var descriptor = new XmedFontDescriptor
             {
                 FamilyName = familyName,
-                StyleName = styleName
+                StyleName = styleName,
+                TableIndex = ReadNumeric(coreTokens, 0),
+                FontId = ReadNumeric(coreTokens, 3),
+                CodePage = ReadNumeric(coreTokens, 4),
+                Weight = ReadNumeric(coreTokens, 5),
+                Flags = ReadNumeric(coreTokens, 6),
+                FontKind = ReadNumeric(coreTokens, 7),
+                CellHeight = ReadNumeric(coreTokens, 8),
+                PitchAndFamily = ReadNumeric(coreTokens, 9),
+                Reserved = ReadNumeric(coreTokens, 10),
+                ScriptId = scriptId,
+                NameIndex = nameIndex
             };
 
-            //var tokens = entry.EnumerateTokens()
-            //    .Where(t => t.Type != TokenType.Block00)
-            //    .ToList();
-
-            //int index = 0;
-
-            //descriptor.TableIndex = ReadNext01(tokens, ref index, descriptor.TableIndex);
-            //int reserved = ReadNext01(tokens, ref index, 0);
-            //descriptor.FontId = ReadRemaining01(tokens, ref index, reserved);
-
-            //descriptor.CodePage = ReadNext02(tokens, ref index, descriptor.CodePage);
-            //descriptor.Weight = ReadNext02(tokens, ref index, descriptor.Weight);
-            //descriptor.Flags = ReadNext02(tokens, ref index, descriptor.Flags);
-            //descriptor.FontKind = ReadNext02(tokens, ref index, descriptor.FontKind);
-            //descriptor.CellHeight = ReadNext02(tokens, ref index, descriptor.CellHeight);
-            //descriptor.PitchAndFamily = ReadNext02(tokens, ref index, descriptor.PitchAndFamily);
-            //descriptor.Reserved = ReadNext02(tokens, ref index, descriptor.Reserved);
-
-            //if (index < tokens.Count && tokens[index].Type == TokenType.C2 && tokens[index].TypeValue == 0x03)
-            //    index++;
-
-            //descriptor.ScriptId = ReadNext02(tokens, ref index, descriptor.ScriptId);
-            //descriptor.NameIndex = ReadNext01(tokens, ref index, descriptor.NameIndex);
+            if (descriptor.PitchAndFamily == 0 && descriptor.FontKind > 0)
+                descriptor.PitchAndFamily = (descriptor.FontKind << 18) | 0x8;
 
             return descriptor;
         }
 
-        private static int ReadNext01(IReadOnlyList<BlXmedToken> tokens, ref int index, int fallback)
+        private static IEnumerable<BlXmedToken> EnumerateTokens(IEnumerable<BlXmedToken> items)
         {
-            if (index < tokens.Count && tokens[index].IsPrefixedHex01() && tokens[index].TryGetNumericValue(out var value))
+            foreach (var item in items)
             {
-                index++;
-                return value;
-            }
+                if (item is XmedTokenGroup group)
+                {
+                    foreach (var nested in EnumerateTokens(group.Items))
+                        yield return nested;
+                    continue;
+                }
 
-            return fallback;
+                yield return item;
+            }
         }
 
-        private static int ReadRemaining01(IReadOnlyList<BlXmedToken> tokens, ref int index, int fallback)
+        private static int ReadNumeric(IReadOnlyList<BlXmedToken> tokens, int index)
         {
-            int value = fallback;
-            bool found = false;
+            if (index < 0 || index >= tokens.Count)
+                return 0;
 
-            while (index < tokens.Count && tokens[index].IsPrefixedHex01())
-            {
-                if (tokens[index].TryGetNumericValue(out var numeric))
-                {
-                    value = numeric;
-                    found = true;
-                }
-
-                index++;
-            }
-
-            return found ? value : fallback;
+            return TryReadNumeric(tokens[index]);
         }
 
-        private static int ReadNext02(IReadOnlyList<BlXmedToken> tokens, ref int index, int fallback)
+        private static int TryReadNumeric(BlXmedToken token)
         {
-            if (index < tokens.Count)
-            {
-                var token = tokens[index];
-                if (token.Type == TokenType.C2)
-                {
-                    index++;
-                    return fallback;
-                }
-                if (token.IsPrefixedHex02() && token.TryGetNumericValue(out var value))
-                {
-                    index++;
-                    return value;
-                }
-            }
-
-            return fallback;
+            return token.TryGetNumericValue(out var numeric) ? numeric : 0;
         }
     }
 }

@@ -1,173 +1,217 @@
-using BlingoEngine.IO.Legacy.Texts.Data;
-
-using Microsoft.Extensions.Logging;
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlingoEngine.IO.Legacy.Texts.Data;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
-    internal class XmedParagraphDescriptorReader
+    internal sealed class XmedParagraphDescriptorReader
     {
-        private readonly List<XmedParagraphDescriptor> _paragraphDescriptors = new();
         private readonly XmedDocument _document;
         private readonly XmedSpacingReader _spacingReader;
-        private readonly ILogger _logger;
+        private readonly List<XmedParagraphDescriptor> _descriptors = new();
+        private readonly List<XmedSliceBuilder.Slice> _slices = new();
 
         public XmedParagraphDescriptorReader(XmedDocument document, XmedSpacingReader spacingReader, ILogger logger)
         {
             _document = document;
             _spacingReader = spacingReader;
-            _logger = logger;
+            _ = logger;
         }
 
         public void Reset()
         {
-            _paragraphDescriptors.Clear();
+            _descriptors.Clear();
+            _slices.Clear();
         }
 
         public void LoadParagraphDescriptors(XmedTokenGroup? block)
         {
-            _paragraphDescriptors.Clear();
+            _descriptors.Clear();
             _spacingReader.Reset();
 
             if (block == null)
-            {
-                _logger.LogDebug("XMED: paragraph descriptor block missing");
                 return;
-            }
 
-            foreach (var item in block.Items)
+            foreach (var paragraphGroup in block.Items.OfType<XmedTokenGroup>())
+                _descriptors.Add(ParseDescriptor(paragraphGroup));
+        }
+
+        public void ApplyParagraphRuns(IReadOnlyList<XmedSliceBuilder.Slice> slices)
+        {
+            _slices.Clear();
+
+            if (slices != null)
             {
-                if (item is not XmedTokenGroup segment)
-                    continue;
-
-                var descriptor = new XmedParagraphDescriptor();
-                ParseMargins(segment, descriptor);
-                ParseSpacing(segment, descriptor);
-                ParseTabStops(segment, descriptor);
-                _paragraphDescriptors.Add(descriptor);
+                foreach (var slice in slices)
+                {
+                    if (slice.Length > 0)
+                        _slices.Add(slice);
+                }
             }
+
+            if (_slices.Count == 0 && !string.IsNullOrEmpty(_document.Text))
+                _slices.AddRange(CreateTextSlices(_document.Text));
         }
 
-        private void ParseMargins(XmedTokenGroup group, XmedParagraphDescriptor descriptor)
+        public void BuildParagraphs()
         {
-            //var numericValues = new List<int>();
-            //foreach (var token in group.CollectTokens())
-            //{
-            //    if (!token.IsPrefixedHex02())
-            //        continue;
-
-            //    if (token.TryGetNumericValue(out var numeric))
-            //        numericValues.Add(numeric);
-            //}
-
-            //if (numericValues.Count > 0)
-            //    descriptor.LeftMargin = NormalizeMargin(numericValues.ElementAtOrDefault(0));
-            //if (numericValues.Count > 1)
-            //    descriptor.RightMargin = NormalizeMargin(numericValues.ElementAtOrDefault(1));
-            //if (numericValues.Count > 2)
-            //    descriptor.FirstLineIndent = NormalizeMargin(numericValues.ElementAtOrDefault(2));
-            //if (numericValues.Count > 3)
-            //    descriptor.AdditionalIndent = NormalizeMargin(numericValues.ElementAtOrDefault(3));
-        }
-
-        private void ParseSpacing(XmedTokenGroup group, XmedParagraphDescriptor descriptor)
-        {
-            //foreach (var c2 in group.EnumerateC2Groups().Where(g => g.TypeValue == 0x03))
-            //{
-            //    int before = c2.ReadNumericAt(0);
-            //    int after = c2.ReadNumericAt(1);
-
-            //    if (before >= 0)
-            //        descriptor.SpacingBefore = before;
-            //    if (after >= 0)
-            //        descriptor.SpacingAfter = after;
-            //}
-        }
-
-        private void ParseTabStops(XmedTokenGroup group, XmedParagraphDescriptor descriptor)
-        {
-            //foreach (var c2 in group.EnumerateC2Groups().Where(g => g.TypeValue == 0x06))
-            //{
-            //    var tokens = c2.Items.OfType<BlXmedToken>().ToList();
-            //    for (int i = 0; i < tokens.Count; i++)
-            //    {
-            //        var candidate = tokens[i];
-            //        if (!candidate.IsPrefixedHex02())
-            //            continue;
-
-            //        if (!candidate.TryGetNumericValue(out var numeric))
-            //            continue;
-
-            //        if (numeric <= 0)
-            //            continue;
-
-            //        descriptor.TabStops.Add(NormalizeMargin(numeric));
-            //    }
-            //}
-        }
-
-        private static int NormalizeMargin(int value)
-        {
-            if (value < 0)
-                return 0;
-            return Math.Min(value, 0x2000);
-        }
-
-        public void BuildParagraphs(List<XmedParagraphSliceBuilder.ParagraphSlice> paragraphSlices, XmedStyleDescriptor baseStyle)
-        {
-            var descriptors = _paragraphDescriptors.Select(descriptor => descriptor.Clone()).ToList();
-            AlignDescriptorsToParagraphs(descriptors, paragraphSlices.Count);
-
-            var queue = new Queue<XmedParagraphDescriptor>(descriptors);
+            if (_slices.Count == 0 && !string.IsNullOrEmpty(_document.Text))
+                _slices.AddRange(CreateTextSlices(_document.Text));
 
             _document.Paragraphs.Clear();
 
-            foreach (var slice in paragraphSlices)
+            for (int i = 0; i < _slices.Count; i++)
             {
-                var descriptor = queue.Count > 0 ? queue.Dequeue() : new XmedParagraphDescriptor();
+                var slice = _slices[i];
+                var descriptor = i < _descriptors.Count ? CloneDescriptor(_descriptors[i]) : new XmedParagraphDescriptor();
                 descriptor.Start = slice.Start;
-                descriptor.Length = Math.Max(0, slice.Length);
-                descriptor.Alignment = slice.Flag ? XmedAlignment.Center : XmedAlignment.Left;
-                descriptor.Text = ExtractParagraphText(slice);
+                descriptor.Length = slice.Length;
+                descriptor.Text = slice.Text ?? string.Empty;
                 _document.Paragraphs.Add(descriptor);
             }
-
-            _spacingReader.InjectSpacings();
         }
 
-        private string ExtractParagraphText(XmedParagraphSliceBuilder.ParagraphSlice slice)
+        private static IEnumerable<XmedSliceBuilder.Slice> CreateTextSlices(string text)
         {
-            if (_document.TextLength == 0 || string.IsNullOrEmpty(_document.Text))
-                return string.Empty;
+            var slices = new List<XmedSliceBuilder.Slice>();
+            int start = 0;
 
-            int length = Math.Clamp(slice.Length, 0, Math.Max(0, _document.TextLength - slice.Start));
-            if (length <= 0)
-                return string.Empty;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] != '\r')
+                    continue;
 
-            return _document.Text.Substring(slice.Start, length);
+                if (i > start)
+                {
+                    string segment = text.Substring(start, i - start);
+                    slices.Add(new XmedSliceBuilder.Slice(start, i, 0, segment));
+                }
+
+                start = i + 1;
+            }
+
+            if (start < text.Length)
+            {
+                string trailing = text.Substring(start);
+                slices.Add(new XmedSliceBuilder.Slice(start, text.Length, 0, trailing));
+            }
+
+            if (slices.Count == 0 && text.Length > 0)
+                slices.Add(new XmedSliceBuilder.Slice(0, text.Length, 0, text));
+
+            return slices;
         }
 
-        private static void AlignDescriptorsToParagraphs(List<XmedParagraphDescriptor> descriptors, int paragraphCount)
+        private static XmedParagraphDescriptor CloneDescriptor(XmedParagraphDescriptor source)
         {
-            if (paragraphCount <= 0)
-                return;
-
-            if (descriptors.Count < paragraphCount)
+            var descriptor = new XmedParagraphDescriptor
             {
-                int missing = paragraphCount - descriptors.Count;
-                for (int i = 0; i < missing; i++)
-                    descriptors.Insert(0, new XmedParagraphDescriptor());
-                return;
+                LeftMargin = source.LeftMargin,
+                RightMargin = source.RightMargin,
+                FirstLineIndent = source.FirstLineIndent,
+                AdditionalIndent = source.AdditionalIndent,
+                SpacingBefore = source.SpacingBefore,
+                SpacingAfter = source.SpacingAfter,
+                LineSpacing = source.LineSpacing,
+                Alignment = source.Alignment
+            };
+
+            if (source.TabStops.Count > 0)
+                descriptor.TabStops.AddRange(source.TabStops);
+
+            return descriptor;
+        }
+
+        private XmedParagraphDescriptor ParseDescriptor(XmedTokenGroup paragraphGroup)
+        {
+            var descriptor = new XmedParagraphDescriptor();
+
+            var structGroup = paragraphGroup.Items.OfType<XmedTokenGroup>()
+                .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.B_82);
+
+            if (structGroup != null)
+            {
+                descriptor.Alignment = ReadAlignment(structGroup);
+                descriptor.LeftMargin = ReadPositive(structGroup.ReadNumeric(3));
+                descriptor.RightMargin = ReadPositive(structGroup.ReadNumeric(4));
+                descriptor.FirstLineIndent = ReadPositive(structGroup.ReadNumeric(5));
+
+                int additional = structGroup.ReadNumeric(6);
+                if (additional != 0)
+                    descriptor.AdditionalIndent = ReadPositive(additional);
+
+                var spacing = FindC2(structGroup, 0x03);
+                if (spacing != null)
+                {
+                    descriptor.SpacingBefore = ReadPositive(spacing.ReadNumeric(0));
+                    descriptor.SpacingAfter = ReadPositive(spacing.ReadNumeric(1));
+                }
             }
 
-            if (descriptors.Count > paragraphCount)
+            foreach (var stop in ReadTabStops(paragraphGroup))
+                descriptor.TabStops.Add(stop);
+
+            return descriptor;
+        }
+
+        private static int ReadPositive(int value)
+        {
+            if (value < 0)
+                return 0;
+            return value;
+        }
+
+        private static XmedAlignment ReadAlignment(XmedTokenGroup structGroup)
+        {
+            var alignmentGroup = FindC2(structGroup, 0x0F);
+            if (alignmentGroup == null)
+                return XmedAlignment.Left;
+
+            int raw = alignmentGroup.Items.Count > 2 ? alignmentGroup.ReadNumeric(2) : alignmentGroup.ReadNumeric(0);
+            return raw switch
             {
-                int excess = descriptors.Count - paragraphCount;
-                descriptors.RemoveRange(0, excess);
+                1 => XmedAlignment.Right,
+                2 => XmedAlignment.Left,
+                3 => XmedAlignment.Justify,
+                _ => XmedAlignment.Center
+            };
+        }
+
+        private static XmedC2TokenGroup? FindC2(XmedTokenGroup parent, int typeValue)
+        {
+            foreach (var c2 in parent.Items.OfType<XmedC2TokenGroup>())
+            {
+                if (c2.TypeValue == typeValue)
+                    return c2;
             }
+
+            return null;
+        }
+
+        private static IEnumerable<int> ReadTabStops(XmedTokenGroup paragraphGroup)
+        {
+            var tabGroup = paragraphGroup.Items.OfType<XmedTokenGroup>()
+                .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.TabStops);
+            if (tabGroup == null)
+                return Enumerable.Empty<int>();
+
+            var stops = new List<int>();
+
+            for (int i = 3; i < tabGroup.Items.Count; i++)
+            {
+                if (tabGroup.Items[i] is not XmedTokenGroup entry)
+                    continue;
+
+                if (i == tabGroup.Items.Count - 1)
+                    continue;
+
+                int position = entry.ReadNumeric(1);
+                if (position > 0)
+                    stops.Add(position);
+            }
+
+            return stops;
         }
     }
 }
