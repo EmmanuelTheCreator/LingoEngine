@@ -8,33 +8,13 @@ Tokens are printed in read order.
 - `00(some number):"text"` → literal text block.
 - `01:xxxx` → literal/value.
 - `02:xxxx` → number (often twips or offsets).
+- `03:xxxx` → Block declarations
 - `C1(xx)` → Padding, number of '0' values
+- `C2(xx)` → padding, number of 'NULL' values
 - `<81` → Repeat last token value, if new field then 00, and defines a new value/component
-- `82` → end of current block/struct.
+- `82` → NULL value or default value
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
-
-
-## To investigate C2 values
-This is pure observarion. Due that multiple C2(0C) where found in different blocks we are completly unsure about this structure.
-
-
-| C2(Tag) | Example Occurrences | Confirmed / Suspected Meaning | Notes | Found In Block |
-|----------|---------------------|-------------------------------|--------|----------------|
-| **C2(0F)** | seen in older files | Unknown | Placeholder-like behaviour | **Header** |
-| **C2(0A)** | `C2(0A) 02:5 02:0` | Font Link (Font Slot / Index) | Always follows `02:<fontID> 02:0` | **Run Styles / Fonts Block** |
-| **C2(04)** | `C2(04) 02:55 01:0` | Possibly Text Length / Tab Info | Appears near run or paragraph metrics | **Paragraph Definitions** |
-| **C2(06)** | `C2(06) 02:6A03E2AE 01:4 ...` | Tab Stop List | First number = tab count, followed by `02:1 02:<pos>` pairs | **Paragraph Definitions** |
-| **C2(0B)** | rare, `C2(0B)` | Possibly paragraph justification flags | Only seen in long text blocks, unconfirmed | **Paragraph Definitions** |
-| **C2(0D)** | rare, `C2(0D)` | Unknown metric (padding?) | Always isolated, no data | **Paragraph Definitions** |
-| **C2(20)** | `C2(20)` | Possibly paragraph block header | Seen around large run sets | **Paragraph Definitions** |
-| **C2(23)** | `C2(23)` | Unknown, single occurrence | May mark paragraph group boundary | **Paragraph Definitions** |
-| **C2(26)** | `C2(26)` | Unknown | Possibly internal reference ID | **Paragraph Definitions** |
-| **C2(07)** | `C2(07) 01:1 <81 <81 01:0` | Font Style Flags (Bold/Italic/Underline) | Also stores alignment and spacing info | **Run Styles** |
-| **C2(13)** | `C2(13)` | Continuation / Line-wrap marker | Found when a style restarts mid-text or new line | **Run Styles** |
-| **C2(0E)** | `C2(0E)` | Unknown (possibly spacing-related) | Similar area as (0A)/(07) | **Run Styles** |
-| **C2(0C)** | `C2(0C) 02:400 02:0` | Width / pitch or scaling | Seen in font entries, may hold Win32 lfWidth | **Fonts Block** |
-| **C2(03)** | Font blocks → `C2(03) 02:101 01:0` | Script / Charset ID | Always ends font entry, e.g. `257 = Western` | **Fonts Block** |
 
 
 
@@ -81,29 +61,9 @@ Payload: alternating pairs `styleId endOffset`.
 		01:0          // Empty run
 
 
-## Paragraphs
-03:00070000004D00000002 		// Paragraphs 
-- Struct 1
-      01:0 
-      <81 
-      <81 
-      C2(0F) <81 
-    <82                     // End of struct  
-- Struct 2      
-      02:1 02:0 
-      C2(06) 02:6A03E2AE 01:0 02:18 01:0  						// Tab stops with only default Tab width of 24px 
-    <82                     // End of struct  
-- Struct 3    
-      C1(03)                 // padding 3 unknown values          
-      C2(12) 
-
-
-
-
 ## Style blocks — 03:0006 (required)
 
 03:00060000012B00000005 	// Block Styles
-- Struct 1
     01:0 
     <81 
     <81 
@@ -111,26 +71,37 @@ Payload: alternating pairs `styleId endOffset`.
     01:3 										// Font Ascendent
     01:0 
     <81 
-  <82                     // End of struct
-- Struct 2
-	<82                     // End of struct 
-- Struct 3  
+  <82
+	<82 
     C1(04) 								  // Foreground RGBA: Black #000000
     01:FFFF <81 <81 01:0 	  // Background RGBA : White #FFFFFF
-  <82                     // End of struct
-- Struct 4
+  <82
 	  0000 02:0  				    // 12,	Font-size
-    C2(0A) 02:6 02:0      // Font style index
+    C2(0A) 
+    02:6 02:0             // Font style index
     C2(07)                // Font style : bold, italic, underline
     C1(20)                // padding 20 unknown values
-  <82                     // End of struct 
-- Struct 5       
-  <82                     // End of struct
-- Struct 6        
+  <82 
+  <82
     C1(03)                 // padding 3 unknown values
-  <82                     // End of struct
+  <82
 
+## Paragraphs
+They are composed of 28 tokens and then the tab stop identifier is there:
+02:6A03E2AE
+folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
 
+03:00070000004D00000002 		// Paragraphs 
+      01:0 
+      <81 
+      <81 
+      C2(0F) <81 
+    <82 
+      02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0  						// Tab stops with only default Tab width of 24px 
+    <82 
+      C1(03)                 // padding 3 unknown values          
+      C2(12) 
 
 
 
@@ -165,9 +136,8 @@ C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline
 ### Tab stops
 
 #### No tab stops defined:
-  C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82  
+02:6A03E2AE 01:0 02:18 01:0 <82  
 Description:
-  - C2(06)      : C2 definition Fix
   - 02:6A03E2AE : Identifier
   - 01:0        : Number of defined styles
   - 02:18       : Default Tab width 24 px
@@ -175,7 +145,7 @@ Description:
   - <82        : End of struct
 
   #### With Tabs defined
-C2(06) 02:6A03E2AE 01:4 
+ 02:6A03E2AE 01:4 
 Description:
   - 02:1 02:96 02:0 <82   // Tab Stop Left 150 px
   - 02:1 02:D8 02:0 <82   // Tab Stop Left 216 px
@@ -184,7 +154,8 @@ Description:
   - 02:18 01:0 <82        // Default Tab width 24 px
 
 #### With different tab stop types
- C2(06) 02:6A03E2AE 01:5 
+02:6A03E2AE 01:5 
+Description:
 		02:1 02:63 02:0 <82     // Type 1 : Left align
 		02:3 02:31D 02:0 <82    // Type 3 : Right Align
 		02:2 02:190 02:0 <82    // Type 2 : Center Align  
@@ -267,6 +238,7 @@ Treat as a global lookup/palette table.
 ## 🧾 Paragraph Layout: Margins, Indents & Spacing
 
 ### Location
+C2 is padding
 Paragraph metrics appear mainly in the **`C2(03)`** and **`03:000C`** blocks.
 
 
@@ -282,7 +254,7 @@ Paragraph metrics appear mainly in the **`C2(03)`** and **`03:000C`** blocks.
 | `02:15`  | 21  | First indent (0.3–0.4 inch range) |
 
 ### Spacing Before / After
-Stored in **`C2(03)`** right after each margin group:
+Stored in **`C2(03)`** right after each margin group: C2 is padding
 ```
 C2(03) 02:9  02:7  02:0
 ```
@@ -300,10 +272,12 @@ C2(03) 02:9  02:7  02:0
 
 ## 🔠 Kerning & Character Spacing
 
-### Location
+### Location observations
+C2 is padding
 Kerning and extra letter spacing appear in the **`C2(03)`** and **`C2(04)`** sections following the header.
 
 ### Pattern
+C2 is padding
 ```
 C2(03) 02:20000  <82  02:0 
 C2(04) 02:1  02:0
@@ -335,73 +309,4 @@ C2(04) 02:1  02:0
 - `Font_Kerning_Pos2_13.xmedlog` adds positional kerning correction without changing font metrics.
 
 
-
- 
-
-
-
-
-## ⚙️ Field Properties (Tabs, Wrapping, Editable)
-
-### Location
-Global text-field properties appear in the **header control blocks** (`C2(03)` … `C2(0B)`) and are boolean flags not tied to runs.
-
-### Observed Properties
-
-| Property | Example File | Key Marker | Value | Meaning |
-|-----------|--------------|-------------|--------|----------|
-| **Tabs Enabled** | `Text_Hallo_tab_true_13` | `C2(07)` → followed by `true false` | `true` | Tabulation support active |
-| **Word Wrap** | `Text_Hallo_wrap_off_13` | `C2(07)` near header | `false` | Word wrapping disabled |
-| **Editable** | `Text_Hallo_editable_true_13` | `C2(0B)` followed by `true 02:0` | `true` | Text field is user-editable |
-
-### Meaning
-- `C2(07)` controls text flow behavior (tabs, wrapping).  
-  - First boolean → tab expansion.  
-  - Second boolean → wrapping on/off.  
-- `C2(0B)` defines editability for the field object.  
-  - When `true`, Director allows runtime text input.  
-
-### Example
-```
-C2(07) true false     ← Tabs enabled, wrap disabled
-C2(0B) true 02:0      ← Editable field
-```
-
-### Summary Table
-| Code | Function | Example Value | Description |
-|------|-----------|----------------|-------------|
-| `C2(07)` | Tabs / Wrapping | `true false` | Tabulation and word wrap control |
-| `C2(0B)` | Editable | `true` | Field can be modified by the user |
-
-
-# Reversed C2 hypothese
-
-# 03:0000 (Header)
-- C2(03): box metrics; last two = H,W. 
-- C2(06)/C2(0A): compact/expanded header block tagging (geometry+color); trails numbers. 
-- C2(04): text length hint. 
-
-# 03:0006 (Styles)
-- C2(0A): per-style spacing small numeric + 02:0 terminator. 
-- C2(07): follows C2(0A); grouping marker. 
-- C1 are zeros (padding). (context)
-
-# 03:0007 (Paragraph defs)
-- C2(0F): paragraph-start flags. 
-- C2(06): tab-stop list (count + items + default). 
-- C2(12): section delimiter. 
-- C2(03): small triples (line/spacing tuples). 
-- C2(05): minor flags. 
-
-# 03:0008 (Fonts)
-- C2(03): script/charset id; ends font record. 
-
-# 03:000B
-- C2(07): empty; keeps structure alignment. 
-
-# 03:000F / 03:0013
-- Mixed control groups; C2(0B)/(09)/(03)/(20) as section markers. 
-
-# 03:0128 / 03:0129
-- Small indices; C2(05) follows as trailer. 
 
