@@ -8,7 +8,14 @@
              C2Group,
              MainGroup,
              Struct,
-            Run
+            Run,
+            ParagraphTokens,
+            Paragraph,
+            TabStops,
+            TabStopDefault,
+            Style,
+            Font,
+            ParagraphTabs
         }
 
         public TokenGroupType GroupType { get; set; }
@@ -75,13 +82,6 @@
         }
 
         
-    }
-    internal sealed class XmedC2TokenGroup : XmedTokenGroup
-    {
-        public XmedC2TokenGroup(BlXmedToken token)
-            : base(token.Type, token.Start, token.Length, token.Ascii, token.Value, token.TypeValue, token.LinkToPrevious, token.Data)
-        {
-        }
     }
 
     internal sealed class XmedMainTokenGroup : XmedTokenGroup

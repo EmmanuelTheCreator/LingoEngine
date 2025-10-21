@@ -55,7 +55,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             var descriptor = new XmedParagraphDescriptor();
 
             var structGroup = paragraphGroup.Items.OfType<XmedTokenGroup>()
-                .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.B_82);
+                .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.B_82_NULL);
 
             if (structGroup != null)
             {

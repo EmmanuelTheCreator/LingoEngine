@@ -4,10 +4,14 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
 {
     public class BlXmedToken
     {
-        public enum TokenType { Split01, Split02, Split03, C1, C2, C3, B_81, B_82, PrefixedHex, Ascii, Block00, Byte, Style, Paragraph,
+        public enum TokenType { Split01, Split02, Split03, C1_PAD_0, C2_PAD_NULL, B_81_REP, B_82_NULL, PrefixedHex, Ascii, Block00, Byte, Style, 
+            Paragraph,
+            ParagraphTokens,
+            NULL,Zero,
             Font,
             Run,
-            TabStops
+            TabStops,
+            ParagraphTabs
         }
         public enum TokenSubType
         {
@@ -61,21 +65,21 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public bool IsTextBlock() => Type == TokenType.Block00 && Value != 40 && Value != 44;
         public bool IsAsciiValue(string value) => Type == TokenType.Ascii && string.Equals(Ascii, value, StringComparison.OrdinalIgnoreCase);
 
-        public bool IsBlockBoundary() => Type == TokenType.Block00 || IsPrefixedHex(0x03) || Type == TokenType.C1 || Type == TokenType.C2;
-        public bool IsFieldSeparator() => Type == TokenType.B_81;
-        public bool IsFieldTerminator() => Type == TokenType.B_82;
+        public bool IsBlockBoundary() => Type == TokenType.Block00 || IsPrefixedHex(0x03) || Type == TokenType.C1_PAD_0 || Type == TokenType.C2_PAD_NULL;
+        public bool IsFieldSeparator() => Type == TokenType.B_81_REP;
+        public bool IsFieldTerminator() => Type == TokenType.B_82_NULL;
 
         public bool IsPrefixedHex(byte expectedType) => Type == TokenType.PrefixedHex && TypeValue == expectedType;
         public bool IsPrefixedHex01() => IsPrefixedHex(0x01);
         public bool IsPrefixedHex02() => IsPrefixedHex(0x02);
         public bool IsPrefixedHex03() => IsPrefixedHex(0x03);
 
-        public bool IsCompositeC1(byte id) => Type == TokenType.C1 && TypeValue == id;
-        public bool IsCompositeC2(byte id) => Type == TokenType.C2 && TypeValue == id;
-        public bool IsCompositeOpen() => Type == TokenType.C1 || Type == TokenType.C2 || Type == TokenType.C3;
+        public bool IsCompositeC1(byte id) => Type == TokenType.C1_PAD_0 && TypeValue == id;
+        public bool IsCompositeC2(byte id) => Type == TokenType.C2_PAD_NULL && TypeValue == id;
+        public bool IsCompositeOpen() => Type == TokenType.C1_PAD_0 || Type == TokenType.C2_PAD_NULL;
 
-        public bool IsC1() => Type == TokenType.C1;
-        public bool IsC2() => Type == TokenType.C2;
+        public bool IsC1() => Type == TokenType.C1_PAD_0;
+        public bool IsC2() => Type == TokenType.C2_PAD_NULL;
 
         public bool IsBoolean() =>
              Type == TokenType.PrefixedHex &&
@@ -163,6 +167,8 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
 
         public override string ToString()
         {
+            if (Type == TokenType.NULL) return "NULL";
+            if (Type == TokenType.Zero) return "0";
             if (!string.IsNullOrEmpty(Ascii))
                 return $"{(int)PrefixedHex:X2}:{Ascii}";
 
@@ -173,9 +179,11 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         }
 
         public static BlXmedToken CreateZeroToken(int start) 
-            => new BlXmedToken(TokenType.PrefixedHex, start, 0, "00", 0, 0x01);
+            => new BlXmedToken(TokenType.Zero, start, 0, "00", 0, 0x01);
         public static BlXmedToken CreateZeroToken(BlXmedToken reference) 
-            => new BlXmedToken(TokenType.PrefixedHex, reference.Start, 0, "00", 0, 0x01);
+            => new BlXmedToken(TokenType.Zero, reference.Start, 0, "00", 0, 0x01);
+        public static BlXmedToken CreateNULLToken(BlXmedToken reference) 
+            => new BlXmedToken(TokenType.NULL, reference.Start, 0, "", 0, 0x01);
 
         public BlXmedToken Clone() 
             => new BlXmedToken(Type, Start, Length, Ascii, Value, TypeValue, LinkToPrevious, Data);

@@ -54,11 +54,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                 }
 
 
-                // Handle C1/C2/C3
+                // Handle C1/C2
                 if (IsC(b))
                 {
-                    var type = b == 0xC1 ? TokenType.C1 :
-                               b == 0xC2 ? TokenType.C2 : TokenType.C3;
+                    var type = b == 0xC1 ? TokenType.C1_PAD_0 :
+                               b == 0xC2 ? TokenType.C2_PAD_NULL : TokenType.C2_PAD_NULL;
 
                     int typeVal = (i + 1 < n) ? buffer[i + 1] : -1;
                     int len = Math.Min(2, n - i);
@@ -72,9 +72,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                 // Handle B_81 / B_82
                 if (IsB(b))
                 {
-                    var type = b == 0x81 ? TokenType.B_81 : TokenType.B_82;
+                    var type = b == 0x81 ? TokenType.B_81_REP : TokenType.B_82_NULL;
                     tokens.Add(new BlXmedToken(type, i, 1, linkToPrevious: true));
-                    if (type == TokenType.B_82)
+                    if (type == TokenType.B_82_NULL)
                     {
                         PopComposite();
                     }
@@ -149,7 +149,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             switch (t.Type)
             {
-                case TokenType.C2:
+                case TokenType.C2_PAD_NULL:
                     switch (t.TypeValue)
                     {
                         case 0x0A: break;
@@ -334,9 +334,8 @@ namespace BlingoEngine.IO.Legacy.Texts
                         sb.Append($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} ");
                     break;
                 
-                case TokenType.C1:
-                case TokenType.C2:
-                case TokenType.C3:
+                case TokenType.C1_PAD_0:
+                case TokenType.C2_PAD_NULL:
                     if (!byGroup)
                         sb.AppendLine();
                     WriteTab(sb, 3, depth);
@@ -346,7 +345,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                         sb.Append($"{t.Type}({t.TypeValue ?? 0:X2}) ");
                     break;
 
-                case TokenType.B_82:
+                case TokenType.B_82_NULL:
                     sb.Append("<82 ");
                     break;
 
@@ -369,7 +368,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     _lastWrittenWasNewLine = true;
                     break;
 
-                case TokenType.B_81:
+                case TokenType.B_81_REP:
                     sb.Append("<81 ");
                     break;
                 case TokenType.Split01:

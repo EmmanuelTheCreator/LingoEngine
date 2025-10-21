@@ -62,6 +62,7 @@ Payload: alternating pairs `styleId endOffset`.
 
 
 ## Style blocks — 03:0006 (required)
+A style block has 77 tokens when all padding has been extracted.
 
 03:00060000012B00000005 	// Block Styles
     01:0 
@@ -90,7 +91,7 @@ Payload: alternating pairs `styleId endOffset`.
 They are composed of 28 tokens and then the tab stop identifier is there:
 02:6A03E2AE
 folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
-
+In total : 50 tokens + (4 * tab_stop_count)
 03:00070000004D00000002 		// Paragraphs 
       01:0 
       <81 
@@ -142,7 +143,7 @@ Description:
   - 01:0        : Number of defined styles
   - 02:18       : Default Tab width 24 px
   - 01:0        : 
-  - <82        : End of struct
+  - <82         : NULL
 
   #### With Tabs defined
  02:6A03E2AE 01:4 

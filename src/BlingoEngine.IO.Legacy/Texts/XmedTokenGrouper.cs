@@ -79,11 +79,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             switch (group.MainType)
             {
                 case XmedMainTokenGroup.MainGroupType.RunHeaderFFFF:
-                    ExtractC2Tokens(group.RawTokens, group);
+                    group.Items.AddRange(group.RawTokens);  
                     break;
                 case XmedMainTokenGroup.MainGroupType.RunHeader:
                 case XmedMainTokenGroup.MainGroupType.Layout:
-                    ExtractStructs(group.RawTokens, group);
+                    group.Items.AddRange(group.RawTokens);
                     break;
                 case XmedMainTokenGroup.MainGroupType.FullText:
                     BuildFullTextGroup(group);
@@ -109,7 +109,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 case XmedMainTokenGroup.MainGroupType.Unknown13:
                 case XmedMainTokenGroup.MainGroupType.Unknown128:
                 case XmedMainTokenGroup.MainGroupType.Unknown129:
-                    ExtractStructs(group.RawTokens, group);
+                    group.Items.AddRange(group.RawTokens);
                     break;
                 default:
                     break;
@@ -173,82 +173,64 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (group.RawTokens.Count == 0)
                 return;
 
-            group.PreTokens.Add(group.RawTokens[0]);
-            if (group.RawTokens.Count == 1)
-                return;
             group.Items.Clear();
-            (var structs, var restTokens) = SplitOn82(group.RawTokens.Skip(1).ToList());
-            var collector = new List<BlXmedToken>();
-            int target = Math.Max(0, group.DeclaredItemCount);
-            var structCount = 6;
-            var styleTokenGroups = structs.Select((x, i) => new { Key = i / structCount, Value = x })
-                       .GroupBy(x => x.Key, x => x.Value, (k, g) => g.ToArray()) //.Where(x => x.Length>1)
-                       .ToArray();
-            if (styleTokenGroups.Length != group.DeclaredItemCount)
-                throw new Exception("Error creating style groups. Incorrect parsing");
-            foreach (var styleTokenGroup in styleTokenGroups)
+            var styleLength = 77;
+            for (int i = 0; i < group.DeclaredItemCount; i++)
             {
                 var style = new XmedTokenGroup(TokenType.Style, 0, 0);
+                style.GroupType = XmedTokenGroup.TokenGroupType.Style;
                 group.Items.Add(style);
-                foreach (var styleTokenGroupList in styleTokenGroup)
-                {
-                    XmedTokenGroup styleStruct = ExtractC2TokensFromStruct(styleTokenGroupList);
-
-                    style.Items.Add(styleStruct);
-                }
+                var styleTokens = group.RawTokens.Skip(i * styleLength).Take(styleLength);
+                style.Items.AddRange(styleTokens);
             }
-            if (group.Items.Count != group.DeclaredItemCount)
-                throw new Exception("Error creating style groups. Incorrect parsing groups");
-            group.Items.AddRange(restTokens);
+           
         }
        
 
         private static void BuildParagraphGroup(XmedMainTokenGroup group)
         {
-            group.PreTokens.Add(group.RawTokens[0]);
-            if (group.RawTokens.Count == 1)
-                return;
+            //group.PreTokens.Add(group.RawTokens[0]);
             group.Items.Clear();
-            var paragraphsRaws = SplitOnC2_12(group.RawTokens.Skip(1).ToList());
-            if (paragraphsRaws.Count != group.DeclaredItemCount)
-                throw new Exception("Error creating paragraphs groups. Incorrect parsing");
-            foreach (var paragraphsRaw in paragraphsRaws)
+            var readIndex = 0;
+            for (int i = 0; i < group.DeclaredItemCount; i++)
             {
                 var paragraph = new XmedTokenGroup(TokenType.Paragraph, 0, 0);
+                paragraph.GroupType = XmedTokenGroup.TokenGroupType.Paragraph;
                 group.Items.Add(paragraph);
 
-                // first we need to split the tabs in a separated group:
-                // 6A03E2AE => is tab stops
-                var indexC2_6 = paragraphsRaw.FindIndex(x => x.Type == TokenType.C2 && x.TypeValue == 0x6);
-                var partsStart = paragraphsRaw.GetRange(0, indexC2_6);
-                var partTabStops = paragraphsRaw.GetRange(indexC2_6 , paragraphsRaw.Count - (indexC2_6 ));
-                int tabCount = partTabStops[2].Value.HasValue? partTabStops[2].Value!.Value: 0;
-                if (tabCount>0)
-                {
+                var tokensGroup = new XmedTokenGroup(TokenType.ParagraphTokens, 0, 0);
+                tokensGroup.GroupType = XmedTokenGroup.TokenGroupType.ParagraphTokens;
+                paragraph.Items.Add(tokensGroup);
+                var tokens = group.RawTokens.Skip(readIndex).Take(28).ToList();
+                tokensGroup.Items.AddRange(tokens);
 
-                }
+                // Tabs
+                var tabsMainGroup = new XmedTokenGroup(TokenType.ParagraphTabs, 0, 0);
+                tabsMainGroup.GroupType = XmedTokenGroup.TokenGroupType.ParagraphTabs;
+                paragraph.Items.Add(tabsMainGroup);
 
-                (var structsRaws, var restTokens) = SplitOn82(partsStart);
-                foreach (List<BlXmedToken> structsRaw in structsRaws)
+                var indexC2_6 = readIndex + 28;
+                tabsMainGroup.Items.AddRange(group.RawTokens.Skip(indexC2_6).Take(2));
+
+                int tabCount = group.RawTokens[indexC2_6 + 1].Value.HasValue? group.RawTokens[indexC2_6 + 1].Value!.Value: 0;
+                for (int j = 0; j < tabCount; j++)
                 {
-                    XmedTokenGroup styleStruct = ExtractC2TokensFromStruct(structsRaw);
-                    paragraph.Items.Add(styleStruct);
+                    var indexTab = indexC2_6 + 1 + j * 4;
+                    var tabStops = new XmedTokenGroup(TokenType.TabStops, 0, 0);
+                    tabStops.GroupType = XmedTokenGroup.TokenGroupType.TabStops;
+                    tabsMainGroup.Items.Add(tabStops);
+                    tabStops.Items.Add(group.RawTokens[indexTab + 0]);
+                    tabStops.Items.Add(group.RawTokens[indexTab + 1]);
+                    tabStops.Items.Add(group.RawTokens[indexTab + 2]);
+                    tabStops.Items.Add(group.RawTokens[indexTab + 3]);
                 }
-                paragraph.Items.AddRange(restTokens);
-                var tabStops = new XmedTokenGroup(TokenType.TabStops, 0, 0);
-                paragraph.Items.Add(tabStops);
-                tabStops.Items.Add(partTabStops[0]);
-                tabStops.Items.Add(partTabStops[1]);
-                tabStops.Items.Add(partTabStops[2]);
-                (var structsRaws2, var  restTokens2) = SplitOn82(partTabStops.Skip(3).ToList());
-                foreach (var structsRaw in structsRaws2.Where(x => x.Count > 0))
-                {
-                    XmedTokenGroup styleStruct = ExtractC2TokensFromStruct(structsRaw);
-                    tabStops.Items.Add(styleStruct);
-                }
-                if (structsRaws2.Where(x => x.Count> 0).Count() -1 != tabCount) // minus 1 beacuse thr last is the default tab width
-                    throw new Exception("Error creating paragraphs groups. Incorrect tabs parsing");
-                paragraph.Items.AddRange(restTokens2);
+                // Add default tab
+                var indexTabDef = indexC2_6 + 2 + tabCount * 4;
+                var tabStopsDefault = new XmedTokenGroup(TokenType.TabStops, 0, 0);
+                tabStopsDefault.GroupType = XmedTokenGroup.TokenGroupType.TabStopDefault;
+                tabStopsDefault.Items.AddRange(group.RawTokens.Skip(indexTabDef).Take(6+18)); // Add 3 + 3 0 values most of the time
+                tabsMainGroup.Items.Add(tabStopsDefault);
+                readIndex += 28 + (tabCount * 4) + 6 + 18+2; // 12 * NULL = 28 +(4*tabs) + 26 = 54 + (4  * tabs)
             }
         }
 
@@ -293,8 +275,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             while (index < group.RawTokens.Count)
             {
-                if (group.RawTokens[index].Type != TokenType.B_82)
-                    group.PostTokens.Add(group.RawTokens[index]);
+                group.PostTokens.Add(group.RawTokens[index]);
                 index++;
             }
         }
@@ -305,10 +286,8 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return null;
 
             var child = new XmedTokenGroup(TokenType.Font,0,0);
-            child.Items.Add(tokens[0]);
-            child.Items.Add(tokens[1]);
-            ExtractStructs(tokens.Skip(2).ToList(), child);
-
+            child.GroupType = XmedTokenGroup.TokenGroupType.Font;
+            child.Items.AddRange(tokens);
             return child;
         }
 
@@ -391,7 +370,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             for (int i = 0; i < group.Items.Count; i++)
             {
                 XmedTokenGroup groupItem = (XmedTokenGroup)group.Items[i];
-                if (!lastWasNewLine)
+                //if (!lastWasNewLine)
                     sb.AppendLine();
                 sb.AppendLine($"// {groupItem.Type} {i}");
                 lastWasNewLine = true;
@@ -405,44 +384,20 @@ namespace BlingoEngine.IO.Legacy.Texts
             var lastWasNewLine2 = lastWasNewLine;
             foreach (var token in group.Items)
             {
-                if (token is XmedC2TokenGroup)
-                {
-                    //if (!lastWasNewLine2)
-                        sb.AppendLine();
-                    BlXmedTokenizer.WriteTab(sb, 0, depth + 2);
-                    sb.Append($"{token.Type}({token.TypeValue ?? 0:X2}) ");
-                }
-                else if (token is XmedTokenGroup structItem)
-                {
-                    if (token.Type == TokenType.TabStops)
-                    {
-                        if (!lastWasNewLine2)
-                            sb.AppendLine();
-                        BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
-                        sb.Append("// TabStops ");
-                        DumpGroupRaw(sb, structItem, depth + 1, true);
-                        BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
-                        lastWasNewLine2 = true;
-                        continue;
-                    }
-
-                    if (token.Type != TokenType.B_82)
-                        throw new Exception("Wrong struct type");
-                    if (!lastWasNewLine2)
+               if (token is XmedTokenGroup subGroup1)
+               {
+                        //if (!lastWasNewLine2)
                         sb.AppendLine();
                     BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
-                    sb.Append('[');
-                    foreach (var groupToken in structItem.Items)
-                        DumpTokenValue(sb, groupToken, depth + 1, lastWasNewLine2);
-                    
-                    sb.Append("<82]");
-                    sb.AppendLine();
-                   
+                    if (token.Type == TokenType.TabStops)
+                        sb.AppendLine("// TabStops ");
+                    DumpGroupRaw(sb, subGroup1, depth + 1, true);
+                    BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
                     lastWasNewLine2 = true;
                 }
                 else
                 {
-                    BlXmedTokenizer.WriteTab(sb, 0, depth);
+                    //BlXmedTokenizer.WriteTab(sb, 0, depth);
                     lastWasNewLine2 = DumpTokenValue(sb, token, depth, lastWasNewLine2);
                 }
             }
@@ -456,6 +411,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                 case TokenType.PrefixedHex:
                     sb.Append($"{t.TypeValue ?? 0:X2}:{t.Ascii ?? "<empty>"} ");
                     break;
+                case TokenType.B_82_NULL: 
+                case TokenType.NULL: sb.Append($"NULL "); break;
+                case TokenType.Zero: sb.Append($"0 "); break;
                 case TokenType.Block00:
                     if (!lastWasNewLine)
                         sb.AppendLine();
@@ -474,12 +432,6 @@ namespace BlingoEngine.IO.Legacy.Texts
                         sb.Append('"' + Environment.NewLine);
                         return true;
                     }
-                case TokenType.C2:
-                    //if (!lastWasNewLine)
-                        sb.AppendLine();
-                    BlXmedTokenizer.WriteTab(sb, 0, depth + 1);
-                    sb.Append($"C2({t.TypeValue:X2}) ");
-                    break;
                 default:
                     //sb.AppendLine($"{t.Type}({t.Value}):{t.Ascii} TODO ERROR");
                     break;
@@ -492,49 +444,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
 
         #region Helpers
-        private static void ExtractStructs(List<BlXmedToken> tokens, XmedTokenGroup parent)
-        {
-            (var structsRaw,var  restTokens) = SplitOn82(tokens);
-            var structs = new List<XmedTokenGroup>();
-            foreach (var structRawItem in structsRaw)
-            {
-                XmedTokenGroup structItem = ExtractC2TokensFromStruct(structRawItem);
-                structs.Add(structItem);
-            }
-           
-            parent.Items.AddRange(structs);
-            parent.Items.AddRange(restTokens);
-        }
-        private static XmedTokenGroup ExtractC2TokensFromStruct(List<BlXmedToken> tokens)
-        {
-            var theStruct = new XmedTokenGroup(TokenType.B_82, 0, 0);
-            ExtractC2Tokens(tokens, theStruct);
-            return theStruct;
-        }
-
-        private static void ExtractC2Tokens(List<BlXmedToken> tokens, XmedTokenGroup parent)
-        {
-            for (int i = 0; i < tokens.Count; i++)
-            {
-                var token = tokens[i];
-                if (!token.IsC2())
-                {
-                    parent.Items.Add(token);
-                    continue;
-                }
-                var c2Group = new XmedC2TokenGroup(token);
-                parent.Items.Add(c2Group);
-                i++;
-                while (i < tokens.Count)
-                {
-                    var c2itemToken = tokens[i];
-                    if (c2itemToken.IsC2()) break;
-                    c2Group.Items.Add(c2itemToken);
-                    i++;
-                }
-                i--;
-            }
-        }
+      
         private BlXmedToken ReadNext()
         {
             var token = _tokens[_readIndex];
@@ -547,11 +457,18 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             foreach (var token in tokens)
             {
-                if (token.Type == TokenType.C1)
+                if (token.Type == TokenType.C1_PAD_0)
                 {
                     int repeat = Math.Max(0, token.TypeValue ?? 0);
                     for (int i = 0; i < repeat; i++)
                         expanded.Add(CreateZeroToken(token));
+                    continue;
+                }
+                if (token.Type == TokenType.C2_PAD_NULL)
+                {
+                    int repeat = Math.Max(0, token.TypeValue ?? 0);
+                    for (int i = 0; i < repeat; i++)
+                        expanded.Add(CreateNULLToken(token));
                     continue;
                 }
 
@@ -568,9 +485,9 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             foreach (var token in tokens)
             {
-                if (token.Type == TokenType.B_81)
+                if (token.Type == TokenType.B_81_REP)
                 {
-                    var clone = lastValue != null && lastValue.Type != TokenType.C2 && lastValue.Type != TokenType.B_82
+                    var clone = lastValue != null && lastValue.Type != TokenType.C2_PAD_NULL && lastValue.Type != TokenType.B_82_NULL
                         ? lastValue.Clone()
                         : CreateZeroToken(token);
                     normalized.Add(clone);
@@ -580,7 +497,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
                 normalized.Add(token);
 
-                if (token.Type != TokenType.C2 && token.Type != TokenType.B_82)
+                if (token.Type != TokenType.C2_PAD_NULL && token.Type != TokenType.B_82_NULL)
                     lastValue = token;
             }
 
@@ -595,55 +512,8 @@ namespace BlingoEngine.IO.Legacy.Texts
                 return parsed;
             return 0;
         }
-        private static (List<List<BlXmedToken>> Segments, List<BlXmedToken> RestTokens) SplitOn82(List<BlXmedToken> tokens)
-        {
-            var segments = new List<List<BlXmedToken>>();
-            var current = new List<BlXmedToken>();
-            var restTokens = new List<BlXmedToken>();
-            var hasB_82 = true;
-            foreach (var token in tokens)
-            {
-                if (token.Type == TokenType.B_82)
-                {
-                    segments.Add(current);
-                    current = new List<BlXmedToken>();
-                    hasB_82 = false; // the new list has no 82 token
-                    continue;
-                }
-
-                current.Add(token);
-            }
-            if (hasB_82)
-                segments.Add(current);
-            else
-                restTokens = current;
-            return (segments, current);
-        }
-        private static List<List<BlXmedToken>> SplitOnC2_12(List<BlXmedToken> tokens)
-        {
-            var segments = new List<List<BlXmedToken>>();
-            var current = new List<BlXmedToken>();
-
-            foreach (var token in tokens)
-            {
-                if (token.Type == TokenType.C2)
-                {
-                    if (token.TypeValue == 0x12)
-                    {
-                        current.Add(token);
-                        segments.Add(current);
-                        current = new List<BlXmedToken>();
-                        continue;
-                    }
-                }
-
-                current.Add(token);
-            }
-            if (current.Count > 0) { 
-                segments.Add(current);
-                }
-            return segments;
-        }
+       
+      
         #endregion
 
 
