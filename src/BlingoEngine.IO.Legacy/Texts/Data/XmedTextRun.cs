@@ -19,5 +19,6 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public bool TabbedField { get; set; }
         public XmedAlignment Alignment { get; set; }
         public BlLegacyColor ForeColor { get; set; }
+        public BlLegacyColor BackgroundColor { get; set; }
     }
 }

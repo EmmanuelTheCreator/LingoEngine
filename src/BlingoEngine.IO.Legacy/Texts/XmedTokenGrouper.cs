@@ -86,6 +86,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     ExtractStructs(group.RawTokens, group);
                     break;
                 case XmedMainTokenGroup.MainGroupType.FullText:
+                    BuildFullTextGroup(group);
                     break;
                 case XmedMainTokenGroup.MainGroupType.RunStyles:
                 case XmedMainTokenGroup.MainGroupType.RunParagraphs:
@@ -114,6 +115,24 @@ namespace BlingoEngine.IO.Legacy.Texts
                     break;
             }
 
+        }
+
+        private static void BuildFullTextGroup(XmedMainTokenGroup group)
+        {
+            if (group.RawTokens.Count == 0)
+                return;
+
+            foreach (var token in group.RawTokens)
+            {
+                if (token is XmedTokenGroup nested)
+                {
+                    group.Items.Add(nested);
+                    continue;
+                }
+
+                if (token.Type == TokenType.Block00 || token.Type == TokenType.Ascii)
+                    group.Items.Add(token);
+            }
         }
         #endregion
 
@@ -505,6 +524,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 }
                 var c2Group = new XmedC2TokenGroup(token);
                 parent.Items.Add(c2Group);
+                i++;
                 while (i < tokens.Count)
                 {
                     var c2itemToken = tokens[i];
@@ -512,6 +532,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     c2Group.Items.Add(c2itemToken);
                     i++;
                 }
+                i--;
             }
         }
         private BlXmedToken ReadNext()
