@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 
@@ -39,89 +37,18 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public void ApplyParagraphRuns(IReadOnlyList<XmedSliceBuilder.Slice> slices)
         {
-            _slices.Clear();
-
-            if (slices != null)
-            {
-                foreach (var slice in slices)
-                {
-                    if (slice.Length > 0)
-                        _slices.Add(slice);
-                }
-            }
-
-            if (_slices.Count == 0 && !string.IsNullOrEmpty(_document.Text))
-                _slices.AddRange(CreateTextSlices(_document.Text));
-        }
-
-        public void BuildParagraphs()
-        {
-            if (_slices.Count == 0 && !string.IsNullOrEmpty(_document.Text))
-                _slices.AddRange(CreateTextSlices(_document.Text));
-
             _document.Paragraphs.Clear();
-
             for (int i = 0; i < _slices.Count; i++)
             {
                 var slice = _slices[i];
-                var descriptor = i < _descriptors.Count ? CloneDescriptor(_descriptors[i]) : new XmedParagraphDescriptor();
+                var descriptor = i < _descriptors.Count ? _descriptors[i].Clone() : new XmedParagraphDescriptor();
                 descriptor.Start = slice.Start;
-                descriptor.Length = slice.Length;
                 descriptor.Text = slice.Text ?? string.Empty;
                 _document.Paragraphs.Add(descriptor);
             }
         }
 
-        private static IEnumerable<XmedSliceBuilder.Slice> CreateTextSlices(string text)
-        {
-            var slices = new List<XmedSliceBuilder.Slice>();
-            int start = 0;
 
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] != '\r')
-                    continue;
-
-                if (i > start)
-                {
-                    string segment = text.Substring(start, i - start);
-                    slices.Add(new XmedSliceBuilder.Slice(start, i, 0, segment));
-                }
-
-                start = i + 1;
-            }
-
-            if (start < text.Length)
-            {
-                string trailing = text.Substring(start);
-                slices.Add(new XmedSliceBuilder.Slice(start, text.Length, 0, trailing));
-            }
-
-            if (slices.Count == 0 && text.Length > 0)
-                slices.Add(new XmedSliceBuilder.Slice(0, text.Length, 0, text));
-
-            return slices;
-        }
-
-        private static XmedParagraphDescriptor CloneDescriptor(XmedParagraphDescriptor source)
-        {
-            var descriptor = new XmedParagraphDescriptor
-            {
-                LeftMargin = source.LeftMargin,
-                RightMargin = source.RightMargin,
-                FirstLineIndent = source.FirstLineIndent,
-                AdditionalIndent = source.AdditionalIndent,
-                SpacingBefore = source.SpacingBefore,
-                SpacingAfter = source.SpacingAfter,
-                LineSpacing = source.LineSpacing,
-                Alignment = source.Alignment
-            };
-
-            if (source.TabStops.Count > 0)
-                descriptor.TabStops.AddRange(source.TabStops);
-
-            return descriptor;
-        }
 
         private XmedParagraphDescriptor ParseDescriptor(XmedTokenGroup paragraphGroup)
         {
@@ -141,7 +68,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (additional != 0)
                     descriptor.AdditionalIndent = ReadPositive(additional);
 
-                var spacing = FindC2(structGroup, 0x03);
+                var spacing = structGroup.GetC2Group(0x03);
                 if (spacing != null)
                 {
                     descriptor.SpacingBefore = ReadPositive(spacing.ReadNumeric(0));
@@ -164,11 +91,16 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private static XmedAlignment ReadAlignment(XmedTokenGroup structGroup)
         {
-            var alignmentGroup = FindC2(structGroup, 0x0F);
+            var alignmentGroup = structGroup.GetC2Group(0x0F);
             if (alignmentGroup == null)
                 return XmedAlignment.Left;
 
             int raw = alignmentGroup.Items.Count > 2 ? alignmentGroup.ReadNumeric(2) : alignmentGroup.ReadNumeric(0);
+            return GetAlignment(raw);
+        }
+
+        private static XmedAlignment GetAlignment(int raw)
+        {
             return raw switch
             {
                 1 => XmedAlignment.Right,
@@ -177,26 +109,26 @@ namespace BlingoEngine.IO.Legacy.Texts
                 _ => XmedAlignment.Center
             };
         }
-
-        private static XmedC2TokenGroup? FindC2(XmedTokenGroup parent, int typeValue)
+        private static BlXmedTabAlignment GetTabAlignment(int raw)
         {
-            foreach (var c2 in parent.Items.OfType<XmedC2TokenGroup>())
+            return raw switch
             {
-                if (c2.TypeValue == typeValue)
-                    return c2;
-            }
-
-            return null;
+                1 => BlXmedTabAlignment.Left,
+                2 => BlXmedTabAlignment.Right,
+                3 => BlXmedTabAlignment.Center,
+                _ => BlXmedTabAlignment.Decimal
+            };
         }
 
-        private static IEnumerable<int> ReadTabStops(XmedTokenGroup paragraphGroup)
+
+        private static IEnumerable<(int Position, BlXmedTabAlignment TabAlign)> ReadTabStops(XmedTokenGroup paragraphGroup)
         {
             var tabGroup = paragraphGroup.Items.OfType<XmedTokenGroup>()
                 .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.TabStops);
             if (tabGroup == null)
-                return Enumerable.Empty<int>();
+                return Enumerable.Empty<(int Position, BlXmedTabAlignment TabAlign)>();
 
-            var stops = new List<int>();
+            var stops = new List<(int Position, BlXmedTabAlignment TabAlign)>();
 
             for (int i = 3; i < tabGroup.Items.Count; i++)
             {
@@ -206,9 +138,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                 if (i == tabGroup.Items.Count - 1)
                     continue;
 
+                var tabAlign = GetTabAlignment(entry.ReadNumeric(0));
                 int position = entry.ReadNumeric(1);
                 if (position > 0)
-                    stops.Add(position);
+                    stops.Add((position, tabAlign));
             }
 
             return stops;

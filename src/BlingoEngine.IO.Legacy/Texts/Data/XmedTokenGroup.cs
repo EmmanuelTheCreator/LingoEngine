@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace BlingoEngine.IO.Legacy.Texts.Data
+﻿namespace BlingoEngine.IO.Legacy.Texts.Data
 {
     internal class XmedTokenGroup : BlXmedToken
     {
@@ -37,6 +34,21 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
 
             return token.TryGetNumericValue(out var numeric) ? numeric : 0;
         }
+        public int ReadAsciiNumber(int index, int charCount = 2)
+        {
+            if (index < 0 || index >= Items.Count)
+                return 0;
+
+            if (Items[index] is XmedTokenGroup nested)
+                return nested.ReadNumeric(0);
+
+            if (Items[index] is not BlXmedToken token)
+                return 0;
+
+            if (token.Ascii == null) return 0;
+            var ascii = token.Ascii;
+            return Convert.ToInt32(token.Ascii, 16);
+        }
 
         public string ReadAscii(int index, Func<BlXmedToken, bool>? predicate = null)
         {
@@ -52,7 +64,17 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
             return token.Ascii ?? string.Empty;
         }
 
+        public XmedTokenGroup? GetC2Group(byte typeValue)
+        {
+            foreach (var c2 in Items.OfType<XmedTokenGroup>())
+            {
+                if (c2.TypeValue == typeValue)
+                    return c2;
+            }
+            return null;
+        }
 
+        
     }
     internal sealed class XmedC2TokenGroup : XmedTokenGroup
     {

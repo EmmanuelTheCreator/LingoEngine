@@ -1,9 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {
@@ -42,9 +43,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                 }
 
                 var descriptor = GetOrCreateStyle(styleId);
-                ReadBaseValues(styleGroup, descriptor, styleId);
+                ReadBaseValues0(styleGroup, descriptor, styleId);
                 ReadColors(styleGroup, descriptor);
-                ReadFlags(styleGroup, descriptor);
+                ReadBaseValues3(styleGroup, descriptor);
+                
                 styleId++;
             }
 
@@ -66,42 +68,29 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public void BuildRuns(XmedDocument document, IReadOnlyList<XmedSliceBuilder.Slice> slices)
         {
-            document.RunMap.Clear();
             document.Runs.Clear();
 
-            if (document.TextLength <= 0)
-                return;
 
-            IReadOnlyList<XmedSliceBuilder.Slice> effectiveSlices = slices ?? Array.Empty<XmedSliceBuilder.Slice>();
-            if (effectiveSlices.Count == 0)
-                effectiveSlices = new[] { new XmedSliceBuilder.Slice(0, document.TextLength, 0, document.Text) };
-
-            foreach (var slice in effectiveSlices)
+            foreach (var slice in slices)
             {
-                if (slice.Length <= 0)
+                if (slice.Text!.Length <= 0)
                     continue;
 
                 int styleId = Math.Max(0, slice.Value);
                 var descriptor = GetOrCreateStyle(styleId);
                 string runText = slice.Text ?? string.Empty;
 
-                document.RunMap.Add(new XmedRunMapEntry(0, 0,
-                    (ushort)Math.Clamp(slice.Length, 0, ushort.MaxValue),
-                    0,
-                    (ushort)Math.Clamp(styleId, 0, ushort.MaxValue),
-                    slice.Start));
 
                 document.Runs.Add(new XmedTextRun
                 {
                     Start = slice.Start,
-                    Length = slice.Length,
                     Text = runText,
                     FontName = descriptor.FontName,
                     FontSize = descriptor.FontSize,
                     Bold = descriptor.Bold,
                     Italic = descriptor.Italic,
                     Underline = descriptor.Underline,
-                    ForeColor = descriptor.Color,
+                    ForeColor = descriptor.ForegroundColor,
                     BackgroundColor = descriptor.BackgroundColor
                 });
             }
@@ -109,11 +98,6 @@ namespace BlingoEngine.IO.Legacy.Texts
             if (document.Runs.Count == 0)
             {
                 var baseStyle = GetOrCreateStyle(0);
-                document.RunMap.Add(new XmedRunMapEntry(0, 0,
-                    (ushort)Math.Clamp(document.TextLength, 0, ushort.MaxValue),
-                    0,
-                    0,
-                    0));
 
                 document.Runs.Add(new XmedTextRun
                 {
@@ -125,72 +109,89 @@ namespace BlingoEngine.IO.Legacy.Texts
                     Bold = baseStyle.Bold,
                     Italic = baseStyle.Italic,
                     Underline = baseStyle.Underline,
-                    ForeColor = baseStyle.Color,
+                    ForeColor = baseStyle.ForegroundColor,
                     BackgroundColor = baseStyle.BackgroundColor
                 });
             }
         }
 
-        private void ReadBaseValues(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor, int styleId)
+        private void ReadBaseValues0(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor, int styleId)
         {
             if (styleGroup.Items.Count == 0)
                 return;
-
             if (styleGroup.Items[0] is not XmedTokenGroup baseGroup)
                 return;
 
             int parentId = baseGroup.ReadNumeric(0);
+            //var unknownTodo = baseGroup.ReadNumeric(1);
+            //var unknownTodo = baseGroup.ReadNumeric(2);
+            descriptor.FontDescent = baseGroup.ReadNumeric(3);
+            descriptor.FontAscendent = baseGroup.ReadNumeric(4);
+            //var unknownTodo = baseGroup.ReadNumeric(5);
+            //var unknownTodo = baseGroup.ReadNumeric(6);
+
+            if (descriptor.FontDescent > 500 || descriptor.FontAscendent > 500)
+            {
+
+            }
+
             if (parentId >= 0 && parentId != styleId && parentId < 256)
                 _styleParents[styleId] = parentId;
+        }
+        
+        private void ReadBaseValues3(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
+        {
+            if (styleGroup.Items.Count == 0)
+                return;
+            if (styleGroup.Items[3] is not XmedTokenGroup baseGroup)
+                return;
 
-            int fontSize = baseGroup.ReadNumeric(3);
+            int fontSize = baseGroup.ReadAsciiNumber(0) >>16;
+            //var unknownTodo = baseGroup.ReadNumeric(1);
+            
             if (fontSize > 0)
                 descriptor.FontSize = fontSize;
+
+            var c2_07 = baseGroup.GetC2Group(0x07);
+            if (c2_07 != null) ReadFlags(c2_07, descriptor);
+        }
+        private void ReadFlags(XmedTokenGroup c2, XmedStyleDescriptor descriptor)
+        {
+            bool bold = c2.ReadNumeric(0) != 0;
+            bool italic = c2.ReadNumeric(1) != 0;
+            bool underline = c2.ReadNumeric(2) != 0;
+            descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Bold, bold);
+            descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Italic, italic);
+            descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Underline, underline);
         }
 
         private void ReadColors(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
         {
-            if (TryReadColors(styleGroup.Items.ElementAtOrDefault(2) as XmedTokenGroup, out var foreground, out var background, out var hasBackground))
-            {
-                descriptor.Color = foreground;
-                if (hasBackground)
-                {
-                    descriptor.BackgroundColor = background;
-                    descriptor.HasBackgroundColor = true;
-                }
-                return;
-            }
-
-            if (TryReadColors(styleGroup.Items.ElementAtOrDefault(0) as XmedTokenGroup, out foreground, out background, out hasBackground))
-            {
-                descriptor.Color = foreground;
-                if (hasBackground)
-                {
-                    descriptor.BackgroundColor = background;
-                    descriptor.HasBackgroundColor = true;
-                }
-            }
+            descriptor.ForegroundColor = ReadColor((XmedTokenGroup)styleGroup.Items[2], 0);
+            descriptor.BackgroundColor = ReadColor((XmedTokenGroup)styleGroup.Items[2], 4);
         }
-
-        private void ReadFlags(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
+        private static BlLegacyColor ReadColor(XmedTokenGroup group, int offset)
         {
-            foreach (var container in styleGroup.Items.OfType<XmedTokenGroup>())
-            {
-                foreach (var c2 in container.Items.OfType<XmedTokenGroup>())
-                {
-                    if (c2.TypeValue != 0x07)
-                        continue;
+            byte fr = NormalizeColor(group.ReadNumeric(offset + 0));
+            byte fg = NormalizeColor(group.ReadNumeric(offset + 1));
+            byte fb = NormalizeColor(group.ReadNumeric(offset + 2));
+            byte fa = NormalizeColor(group.ReadNumeric(offset + 3));
 
-                    bool bold = c2.ReadNumeric(0) != 0;
-                    bool italic = c2.ReadNumeric(1) != 0;
-                    bool underline = c2.ReadNumeric(2) != 0;
-                    descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Bold, bold);
-                    descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Italic, italic);
-                    descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Underline, underline);
-                    return;
-                }
-            }
+            var foreground = fa > 0
+                ? new BlLegacyColor(fr, fg, fb, fa)
+                : new BlLegacyColor(fr, fg, fb);
+          
+            return foreground;
         }
+
+        private static byte NormalizeColor(int value)
+        {
+            if (value <= 0)
+                return 0;
+            int component = value >> 8;
+            return (byte)Math.Clamp(component, 0, 255);
+        }
+
 
         private void ApplyParent(int styleId, HashSet<int> visited)
         {
@@ -207,42 +208,7 @@ namespace BlingoEngine.IO.Legacy.Texts
             parent.ApplyStyleInheritanceToChild(child);
         }
 
-        private static bool TryReadColors(XmedTokenGroup? group, out BlLegacyColor foreground, out BlLegacyColor background, out bool hasBackground)
-        {
-            foreground = default;
-            background = default;
-            hasBackground = false;
-            if (group == null)
-                return false;
-
-            int itemCount = group.Items.Count;
-            if (itemCount < 3)
-                return false;
-
-            byte fr = NormalizeColor(group.ReadNumeric(0));
-            byte fg = NormalizeColor(group.ReadNumeric(1));
-            byte fb = NormalizeColor(group.ReadNumeric(2));
-            foreground = new BlLegacyColor(fr, fg, fb);
-
-            if (itemCount > 6)
-            {
-                byte br = NormalizeColor(group.ReadNumeric(4));
-                byte bg = NormalizeColor(group.ReadNumeric(5));
-                byte bb = NormalizeColor(group.ReadNumeric(6));
-                background = new BlLegacyColor(br, bg, bb);
-                hasBackground = true;
-            }
-
-            return true;
-        }
-
-        private static byte NormalizeColor(int value)
-        {
-            if (value <= 0)
-                return 0;
-            int component = value >> 8;
-            return (byte)Math.Clamp(component, 0, 255);
-        }
+       
 
         public XmedStyleDescriptor GetOrCreateStyle(int styleId)
         {
@@ -253,18 +219,6 @@ namespace BlingoEngine.IO.Legacy.Texts
             }
 
             return descriptor;
-        }
-
-        public bool TryGetStyle(int styleId, out XmedStyleDescriptor? descriptor)
-        {
-            if (_stylesById.TryGetValue(styleId, out var existing))
-            {
-                descriptor = existing;
-                return true;
-            }
-
-            descriptor = null;
-            return false;
         }
     }
 }

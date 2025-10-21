@@ -13,7 +13,6 @@ namespace BlingoEngine.IO.Legacy.Texts
         public List<XmedTextRun> Runs { get; set; } = new();
         public List<XmedStyleDescriptor> Styles { get; set; } = new();
         public List<XmedFontDescriptor> Fonts { get; } = new();
-        public List<XmedRunMapEntry> RunMap { get; set; } = new();
         public List<XmedParagraphDescriptor> Paragraphs { get; set; } = new();
         public int Width { get; set; }
         public int Height { get; internal set; }

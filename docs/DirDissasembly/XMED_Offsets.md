@@ -247,11 +247,159 @@ Small ASCII numbers after the toggle (01 31, 01 33 = ‘1’, ‘3’) are the s
 
 A later C1 yy often closes or confirms the same style (paired markers).
 
+# Observered 4 values in 03:0000 Header block
+
+| File                                      | Header quartet after C1(03) |
+|-------------------------------------------|------------------------------|
+| F02_MultiLine_Tabs_V2_13.xmedlog.txt      | 02:7 		02:C 	02:7 	02:C	| 
+| Text_3_Paragraps_3T_13.xmedlog.txt        | 02:0 		02:5 	02:0 	02:5	| 
+| Text_Hallo_margin_spacing_FirstInd_13...  | 02:0 		02:5 	02:0 	02:5	| 
+| Text_Hallo_changed_color_13.xmedlog.txt   | 02:0 		02:5 	02:0 	02:5	|
+| F02_MultiLine_Tabs_13 					| 02:7 		02:C 	02:7 	02:C	|
+| Color_1_13.xmedlog.txt					| NONE								|
+| Color_2_13.xmedlog.txt					| 02:7 		02:D 	02:7 	02:D	|						
+| Color_3_13.xmedlog.txt					| 02:E  	02:14 	02:E 	02:14	|
+| Color_4_13.xmedlog.txt					| 02:15 	02:1B 	02:15 	02:1B	|
+
+# C2 INVESTIGATIONS
+
+Observed C2 tags
+
+### 🎨 Run Styles
+| C2(Tag) | Example | Context |
+|----------|----------|----------|
+| `C2(07)` | `C2(07) 01:1 01:0`, `C2(07) <81 <81 01:1 01:0` | Always appears near text style flags (bold, italic, underline). |
+| `C2(0A)` | `C2(0A) 02:6 02:0`, `C2(0A) 02:5 02:0`, `C2(0A) 02:1 02:0` | Always follows `02:<num> 02:0`, linking to font index. |
+| `C2(13)` | `C2(13)` | Appears when a text run continues across a line or wrap boundary. |
+| `C2(0B)` | Rare; e.g. `C2(0B)` | Appears occasionally after 0A in long runs — unknown but distinct from paragraph data. |
+
+---
+
+### 📏 Paragraph Definitions
+| C2(Tag) | Example | Context |
+|----------|----------|----------|
+| `C2(04)` | `C2(04) 02:55 01:0` | Appears near tabstop and text width definitions. |
+| `C2(06)` | `C2(06) 02:6A03E2AE 01:4 02:1 02:96 02:0 …` | Tab stops list: first byte = tab count, then pairs `02:1 02:<pos>`. |
+| `C2(07)` | `C2(07)` (empty) | Appears after (06) in some files, likely continuation marker. |
+| `C2(0D)` | `C2(0D)` | Single isolated occurrence — possibly margin padding. |
+| `C2(20)` | `C2(20)` | Seen in multi-paragraph layout definitions — unknown struct header. |
+| `C2(23)` | `C2(23)` | Single appearance in paragraph header, maybe alignment flag group. |
+| `C2(26)` | `C2(26)` | Appears once near right-margin values. |
+| `C2(0A)` | `C2(0A)` | Found rarely here too, likely shared field reused for linking to style/font. |
+
+---
+
+### 🔠 Fonts Block
+| C2(Tag) | Example | Context |
+|----------|----------|----------|
+| `C2(03)` | `C2(03) 02:101 01:0` | Script ID (Western/Latin 1252 = 257). Always ends font record. |
+| `C2(0C)` | `C2(0C) 02:400 02:0` | Width/pitch metric; seen after font weight. |
+| `C2(0A)` | `C2(0A)` | Appears rarely in font definitions, same form as run styles, may indicate cross-link to style. |
 
 
+### 🧾 Tab / Wrap Test Files (Paragraph-Layout Related)
+
+| C2(Tag) | Example Snippet | Perhaps  Meaning |
+|----------|-----------------|------------------|
+| `C2(06)` | `C2(06) 02:6A03E2AE 01:4 02:1 02:96 02:0 <82 02:1 02:D8 02:0 <82 02:1 02:120 02:0 <82 02:1 02:169 02:0 <82 02:18 01:0 <82` | Tab-stop list. The first `01:4` = tab count. Each `02:1 02:<val>` pair defines one stop position (e.g. 0x96, 0xD8, 0x120, 0x169 = 150, 216, 288, 361 px). Final `02:18` ≈ tab width (default 24 px). |
+| `C2(07)` | `C2(07)` (often empty) | Wrap or continuation marker immediately after (06). Indicates that text flow respects word-wrap for that paragraph. |
+| `C2(0F)` | `C2(0F) <81 <82 02:1 02:0` | Paragraph-header flag before a tab section. Likely signals paragraph start or block reference. |
+| `C2(12)` | `C2(12)` (appears between paragraph and font blocks) | Connector between paragraph formatting and subsequent font list; seems to delimit the end of paragraph definitions. |
+| `C2(20)` | `C2(20)` | Found in multi-paragraph blocks; probably an alignment or layout flag group. |
+| `C2(26)` | `C2(26)` | Appears once near right-margin region — possible right-margin definition or hanging-indent marker. |
+
+**Notes**
+- Every paragraph-layout block starts with a `C2(06)` list → defines perhaps tab stops.
+- Files without tabs still show a minimal `C2(06) … 02:18 01:0` entry → implies “no tabs, default width = 24 px”.
+- `C2(07)` always follows `C2(06)` → confirms a logical grouping for *tab + wrap* handling.
+- `C2(0F)` and `C2(12)` delimit higher-level paragraph sections or transitions to font/line-height data.
+
+### Paragraphs in different files
+//------------------------------------ File: Text_Multi_Style_Size_Color_13.analyse.txt
+03:00070000004D00000002 		// Paragraphs Definitions
+01:0 
+// Paragraph 0
+		<81 <81       							C2(0F) 
+	<81 <82 02:1 02:0 							C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82  						// Tab stops with only default Tab width of 24px
+      C1(03)       								C2(12) 
+// Paragraph 1	  
+      C1(03) 							       	C2(0F) 
+	  <81 <82 02:1 02:0       					C2(06) 
+	  02:6A03E2AE 01:1 
+		<82 02:17B 02:0 
+		<82 02:18  01:0 
+		<82 C1(03)  							C2(12) 		// Tab stops with 1 tab stop at 397px and default Tab width of 24px
+		
+//------------------------------------ File: Text_3_Paragraps_4T_13.analyse.txt
+03:0007000000D400000004 		// Paragraphs Definitions  
+    01:0 
+// Paragraph 0 	  	
+	  <81 <81  									C2(0F) 
+	  <81 <82 02:1 02:0 						C2(06) 
+	  02:6A03E2AE 01:0 02:18 01:0 <82 C1(03) 	C2(12) 
+// Paragraph 1	  	  
+	  01:1 01:0 <81 							C2(0F) 
+	  <81 <82 02:1 02:0							C2(06) 
+	  02:6A03E2AE 01:0 02:18 01:0 <82 C1(03) 	C2(12) 
+// Paragraph 2	  
+      C1(03) 02:120 02:168 02:1C 02:0 			C2(03) 
+	  02:9 02:7 02:0 							C2(05) 
+	  <81 <82 02:1 02:0 					    C2(06) 
+	  02:6A03E2AE 01:0 02:18 01:0 <82 C1(03) 	C2(12) 
+// Paragraph 3	  	  
+      C1(03) 02:48 02:90 02:15 02:0       		C2(03) 
+	  02:4 02:5 02:0 							C2(05) 
+	  <81 <82 02:1 02:0       					C2(06) 
+	  02:6A03E2AE 01:4 
+		02:1  02:96  02:0 <82 
+		02:1  02:D8  02:0 <82 
+		02:1  02:120 02:0 <82 
+		02:1  02:167 02:0 <82 
+		02:18 01:0   <82 
+      C1(03) 						      		C2(12) 		
+//------------------------------------	  File : F02_MultiLine_Tabs_13.analyse.txt
+03:00070000004B00000002 		// Paragraphs Definitions 
+    01:0 
+// Paragraph 0 	 	
+	<81 <81       								C2(0F) 
+	<81 <82 02:1 02:0       					C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03) 		C2(12) 
+// Paragraph 1 	 	
+    C1(03)       								C2(05) 
+	02:E 02:0       							C2(08) 
+	<81 <82 02:1 02:0       					C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03)      C2(12) 
+	
+//------------------------------------ File: Text_3_Paragraps_13.analyse.txt
+03:0007000000B200000004 	 		// Paragraphs Definitions
+01:0 
+// Paragraph 0
+    <81 <81       							C2(0F) 
+	<81 <82 02:1 02:0       				C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03) 	C2(12) 
+// Paragraph 1
+	01:1 01:0 <81 	      					C2(0F) 
+	<81 <82 02:1 02:0 						C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03)  C2(12)  	// Tab stops with only default Tab width of 24px      
+// Paragraph 2	  
+      C1(03)
+		02:120 											// 288,	Margin Left  
+		02:168  										// 360,	Margin Right 
+		02:1C  											// 28,	Indent from Left margin 
+		02:0								C2(03) 
+	02:9 02:7 02:0 							C2(05)		// Link to 9,7,0
+	<81 <82 02:1 02:0       				C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03)  C2(12) 		// Tab stops with only default Tab width of 24px  
+//------------------------------------	
 
 
-# XMED Tokens & Block Structure (revised, neutral version)
+- C2(0F) 			C2(06) C2(12) 
+- C2(03) C2(05) 	C2(06) C2(12)
+- C2(05) C2(08)		C2(06) C2(12)
+
+
+## XMED Tokens & Block Structure (revised, neutral version)
 
 > **Note:** Nothing below is called a “fact” unless confirmed by a direct action in Director’s UI that changes the same bytes.  
 > Entries are marked as **ASSUMPTION** (likely interpretation) or **OBSERVATION** (repeated pattern only).

@@ -1,13 +1,7 @@
 ﻿using BlingoEngine.IO.Legacy.Texts.Data;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
-using static BlingoEngine.IO.Legacy.Texts.Data.XmedTokenGroup;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BlingoEngine.IO.Legacy.Texts
 {

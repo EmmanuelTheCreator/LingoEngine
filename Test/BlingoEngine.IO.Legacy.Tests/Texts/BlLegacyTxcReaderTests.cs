@@ -5,12 +5,12 @@ using System.IO.Compression;
 using System.Text;
 
 using BlingoEngine.IO.Legacy.Texts;
-using BlingoEngine.IO.Legacy.Texts.Data;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 
 using FluentAssertions;
 
 using Xunit;
+using BlingoEngine.IO.Legacy.Texts.Data.Txc;
 
 namespace BlingoEngine.IO.Legacy.Tests.Texts;
 

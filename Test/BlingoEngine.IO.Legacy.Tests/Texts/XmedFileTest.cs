@@ -188,7 +188,7 @@ public class XmedFileTest
         foreach (var style in doc.Styles.OrderBy(s => s.StyleId))
         {
             string colorIndex = style.ColorIndex.HasValue ? $"0x{style.ColorIndex.Value:X2}" : "<null>";
-            string inlineColor = style.Color.ToHex();
+            string inlineColor = style.ForegroundColor.ToHex();
             _logger.LogInformation(
                 "Style {StyleId}: font '{Font}' size {Size} colorIndex {ColorIndex} inline {InlineColor} flags {Flags}",
                 style.StyleId,
@@ -199,27 +199,6 @@ public class XmedFileTest
                 style.Flags);
             _output.WriteLine(
                 $"Style {style.StyleId}: font '{style.FontName}' size {style.FontSize} colorIndex {colorIndex} inline {inlineColor} flags {style.Flags}");
-        }
-
-        for (int i = 0; i < doc.Runs.Count; i++)
-        {
-            var run = doc.Runs[i];
-            ushort styleId = i < doc.RunMap.Count ? doc.RunMap[i].StyleId : (ushort)0;
-            var style = doc.Styles.FirstOrDefault(s => s.StyleId == styleId);
-            var styleColorIndex = style?.ColorIndex;
-            var styleInlineColor = style?.Color.ToHex();
-            
-            _logger.LogInformation(
-                "Run {Index}: style {StyleId}, colorIndex {ColorIndex}, inline {InlineColor}, resolved {ResolvedColor}, text '{Text}'",
-                i,
-                styleId,
-                styleColorIndex.HasValue ? $"0x{styleColorIndex.Value:X2}" : "<null>",
-                styleInlineColor ?? "<null>",
-                run.ForeColor.ToHex(),
-                run.Text.Replace("\r", "\\r"));
-
-            _output.WriteLine(
-                $"Run {i}: style {styleId}, colorIndex {(styleColorIndex.HasValue ? $"0x{styleColorIndex.Value:X2}" : "<null>")} inline {styleInlineColor ?? "<null>"} resolved {run.ForeColor.ToHex()} text '{run.Text.Replace("\r", "\\r")}'");
         }
 
         DumpTokenWindows("MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin");

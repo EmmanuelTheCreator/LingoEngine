@@ -33,10 +33,10 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int BaseLineOffset { get; set; }
 
         public XmedStyleFlags Flags { get; set; }
-        public BlLegacyColor Color { get; internal set; }
+        public BlLegacyColor ForegroundColor { get; internal set; }
         public BlLegacyColor BackgroundColor { get; internal set; }
-        public bool HasBackgroundColor { get; internal set; }
-
+        public int FontDescent { get; internal set; }
+        public int FontAscendent { get; internal set; }
 
         public void ApplyStyleInheritanceToChild(XmedStyleDescriptor child)
         {
@@ -53,12 +53,8 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
             if (child.Alignment == XmedAlignment.Center && Alignment != XmedAlignment.Center)
                 child.Alignment = Alignment;
 
-            if (child.ColorIndex == 0) { child.ColorIndex = ColorIndex; child.Color = Color; }
-            if (!child.HasBackgroundColor && HasBackgroundColor)
-            {
-                child.BackgroundColor = BackgroundColor;
-                child.HasBackgroundColor = true;
-            }
+            if (child.ColorIndex == 0) { child.ColorIndex = ColorIndex; child.ForegroundColor = ForegroundColor; }
+            child.BackgroundColor = BackgroundColor;
 
             if (child.LineSpacing == 0) child.LineSpacing = LineSpacing;
             if (child.BaseLineOffset == 0) child.BaseLineOffset = BaseLineOffset;

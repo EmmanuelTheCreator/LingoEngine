@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 
 using BlingoEngine.IO.Legacy.Core;
-using BlingoEngine.IO.Legacy.Texts.Data;
+using BlingoEngine.IO.Legacy.Texts.Data.Txc;
 
 namespace BlingoEngine.IO.Legacy.Texts;
 

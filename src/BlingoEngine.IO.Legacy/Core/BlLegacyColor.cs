@@ -10,6 +10,7 @@ public struct BlLegacyColor
 
     /// <summary>Blue component (0–255)</summary>
     public byte B { get; }
+    public byte A { get; }
     public bool IsIndex{ get; }
 
     public BlLegacyColor(byte indexColor)
@@ -18,6 +19,7 @@ public struct BlLegacyColor
         R = indexColor;
         G = indexColor;
         B = indexColor;
+        A = 0xFF;
     }
   
     public BlLegacyColor(byte r, byte g, byte b)
@@ -26,6 +28,15 @@ public struct BlLegacyColor
         R = r;
         G = g;
         B = b;
+        A = 0xFF;
+    }
+    public BlLegacyColor(byte r, byte g, byte b, byte a)
+    {
+        IsIndex = false;
+        R = r;
+        G = g;
+        B = b;
+        A = a;
     }
   
 
@@ -63,14 +74,14 @@ public struct BlLegacyColor
     /// <summary>
     /// Returns a string representation of the color in RGB format.
     /// </summary>
-    public override string ToString() => $"RGB({R}, {G}, {B})";
+    public override string ToString() => $"RGB({R}, {G}, {B}, {A})";
 
 
 
     /// <summary>
     /// Converts the RGB color to a hex string, e.g., "#FF0000".
     /// </summary>
-    public string ToHex() => $"#{R:X2}{G:X2}{B:X2}";
+    public string ToHex() => $"#{R:X2}{G:X2}{B:X2}{A:X2}";
 
 
 

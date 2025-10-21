@@ -183,7 +183,19 @@ Description:
   - 02:1 02:169 02:0 <82  // Tab Stop Left 361 px
   - 02:18 01:0 <82        // Default Tab width 24 px
 
+#### With different tab stop types
+ C2(06) 02:6A03E2AE 01:5 
+		02:1 02:63 02:0 <82     // Type 1 : Left align
+		02:3 02:31D 02:0 <82    // Type 3 : Right Align
+		02:2 02:190 02:0 <82    // Type 2 : Center Align  
+		02:4 02:1F4 02:0 <82    // Type 4 : Decimal align
+		02:4 02:257 02:0 <82    // Type 4 : Decimal align
+		02:18 01:0 <82 
 
+A decimal tab aligns numbers by their decimal point.
+When you type numeric values in text (like 12.3, 4.56, 789.0), a decimal tab ensures that all the . (decimal points) line up vertically—so digits before and after stay neatly aligned.
+It’s a long-standing feature in word processors (Word, PageMaker, Director’s text engine).
+In your files, the 02:4 type marks that tab stop as decimal-aligned, used when displaying columns of numbers.
 
 ## Header 
 `00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
@@ -362,4 +374,34 @@ C2(0B) true 02:0      ← Editable field
 | `C2(0B)` | Editable | `true` | Field can be modified by the user |
 
 
+# Reversed C2 hypothese
+
+# 03:0000 (Header)
+- C2(03): box metrics; last two = H,W. 
+- C2(06)/C2(0A): compact/expanded header block tagging (geometry+color); trails numbers. 
+- C2(04): text length hint. 
+
+# 03:0006 (Styles)
+- C2(0A): per-style spacing small numeric + 02:0 terminator. 
+- C2(07): follows C2(0A); grouping marker. 
+- C1 are zeros (padding). (context)
+
+# 03:0007 (Paragraph defs)
+- C2(0F): paragraph-start flags. 
+- C2(06): tab-stop list (count + items + default). 
+- C2(12): section delimiter. 
+- C2(03): small triples (line/spacing tuples). 
+- C2(05): minor flags. 
+
+# 03:0008 (Fonts)
+- C2(03): script/charset id; ends font record. 
+
+# 03:000B
+- C2(07): empty; keeps structure alignment. 
+
+# 03:000F / 03:0013
+- Mixed control groups; C2(0B)/(09)/(03)/(20) as section markers. 
+
+# 03:0128 / 03:0129
+- Small indices; C2(05) follows as trailer. 
 

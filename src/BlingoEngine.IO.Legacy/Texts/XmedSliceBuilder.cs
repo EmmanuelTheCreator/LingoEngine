@@ -115,14 +115,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                 Start = Math.Max(0, start);
                 Value = value;
                 Text = text ?? string.Empty;
-                End = Start + Text.Length;
             }
 
             public int Start { get; }
-            public int End { get; }
             public int Value { get; }
             public string Text { get; }
-            public int Length => Text.Length;
         }
 
         private readonly struct RunBoundary

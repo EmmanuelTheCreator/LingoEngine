@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using BlingoEngine.IO.Legacy.Texts.Data;
 using static BlingoEngine.IO.Legacy.Texts.Data.BlXmedToken;
 

@@ -24,8 +24,9 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
             [
                 //"Texts_Fields",
                 //"Texts_Fields/Tests2",
-                "Texts_Fields/MemberTests",
-                //"Texts_Fields/Paragraphs",
+                //"Texts_Fields/Colors",
+                //"Texts_Fields/MemberTests",
+                "Texts_Fields/Paragraphs",
             ];
             foreach (var folder in folders)
             {
@@ -61,7 +62,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
         [Fact]
         public void DumpLongLog()
         {
-            var fileName = "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin";
+            //var fileName = "MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin";
+            var fileName = "Text_Single_Line_Multi_Style_13.xmed.bin";
             //var fileName = "Paragraphs/Text_3_Paragraps_4T_13.xmed.bin";
             //var fileName = "Text_Hallo_col_blue1_13.xmed.bin";
             //var fileName = "Text_Hallo_col_bordeau_13.xmed.bin";

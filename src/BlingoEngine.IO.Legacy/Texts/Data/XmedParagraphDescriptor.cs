@@ -1,10 +1,17 @@
 namespace BlingoEngine.IO.Legacy.Texts.Data
 {
+    public enum BlXmedTabAlignment
+    {
+        Left = 0,
+        Center = 1,
+        Right = 2,
+        Decimal = 4
+    }
     /// <summary>Paragraph-level formatting descriptor.</summary>
     public sealed class XmedParagraphDescriptor
     {
         public int Start { get; set; }
-        public int Length { get; set; }
+        public int Length => Text.Length;
         public int End => Start + Length;
         public int LeftMargin { get; set; }
         public int RightMargin { get; set; }
@@ -14,7 +21,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int SpacingAfter { get; set; }
         public int LineSpacing { get; set; }
         public XmedAlignment Alignment { get; set; } = XmedAlignment.Left;
-        public List<int> TabStops { get; set; } = new();
+        public List<(int Position, BlXmedTabAlignment TabAlign)> TabStops { get; set; } = new();
         public string Text { get; set; } = "";
 
         public XmedParagraphDescriptor Clone()
@@ -22,7 +29,6 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
             var copy = new XmedParagraphDescriptor
             {
                 Start = Start,
-                Length = Length,
                 LeftMargin = LeftMargin,
                 RightMargin = RightMargin,
                 FirstLineIndent = FirstLineIndent,
