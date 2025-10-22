@@ -481,5 +481,71 @@ C2(04) 02:1  02:0
 - `Font_Spacing_30_13.xmedlog` raises the spacing offset, confirming scaling.  
 - `Font_Kerning_Pos2_13.xmedlog` adds positional kerning correction without changing font metrics.
 
+---
+
+---
+
+# 🧾 Field Members and XMED Data
+
+Field members (`Type = 0x0F` in CASt chunks) store editable text and use **the same XMED structure** as standard text members.  
+However, the data is split across two locations:
+
+| Component | Source | Description |
+|------------|--------|-------------|
+| **Text** | CASt → Specific Data Block | Raw UTF-16 or ASCII characters of the field content. |
+| **Formatting (XMED)** | Separate `XMED` chunk | Tokenized structure identical to standalone XMED text, referenced through the key table. |
+
+### Structure Overview
+```
+CASt Chunk
+├─ Header (12 bytes)
+│ ├─ Type = 0x0F (Field)
+│ ├─ InfoLen
+│ └─ SpecificDataLen
+├─ Cast Info Block (Cinf)
+│ └─ Name, script link, optional key to XMED
+├─ Specific Data Block
+│ └─ Raw field text ("Hallo", "Score", etc.)
+└─ Linked XMED Chunk → tokenized style data
+```
+
+### Linked XMED Block
+The referenced XMED chunk uses **identical block codes**:
+```
+03:0002 – Full Text
+03:0004 – Run Styles
+03:0005 – Run Paragraphs
+03:0006 – Style Definitions
+03:0007 – Paragraphs
+03:0008 – Font Table
+...
+03:FFFE – Pre-render Bitmap
+```
+
+In field members, the 03:0002 block keeps metadata only, not literal text.
+It acts as a text-run index instead of a text container.
+
+Context	Meaning of 03:0002
+- Text member  :	Holds full tokenized text, including 00(n):"..." strings.
+- Field member :	Empty or minimal block; defines start offsets for runs, linked to raw text in the CASt specific data.
+
+So its structure is different in purpose, but the block header format (03:0002...) remains the same.
+It’s the payload that changes — from “text data” → “offset/placeholder table.”
+
+### Differences from Static Text
+| Aspect | Field Member | Text Member |
+|--------|---------------|-------------|
+| **Editing** | Editable at runtime | Read-only |
+| **Text Storage** | Separate raw bytes | Embedded inside XMED |
+| **Style Data** | External XMED reference | Inline XMED in same chunk |
+| **Rendering** | Merges raw text + XMED formatting | Directly uses XMED text layout |
+
+### Notes
+- Parsing a field requires resolving the **XMED link** via the key table and merging both parts.
+- All C1/C2 token meanings, block sizes, and font descriptors are **identical**.
+- The XMED for field members can be reused interchangeably in other styled-text contexts.
+
+
+
 
 
