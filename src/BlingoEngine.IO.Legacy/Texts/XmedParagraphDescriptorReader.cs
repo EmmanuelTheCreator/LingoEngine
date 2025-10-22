@@ -107,7 +107,8 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             return raw switch
             {
-                1 => XmedAlignment.Left,
+                0 => XmedAlignment.Left,
+                1 => XmedAlignment.Center,
                 2 => XmedAlignment.Right,
                 3 => XmedAlignment.Justify,
                 _ => XmedAlignment.Left

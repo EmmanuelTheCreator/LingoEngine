@@ -81,6 +81,10 @@ public class XmedFileTest
         document.Paragraphs[1].Text.TrimEnd().Should().Be("Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7");
         document.Paragraphs[2].Text.TrimEnd().Should().Be("Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5");
 
+        document.Paragraphs[0].Alignment.Should().Be(XmedAlignment.Center);
+        document.Paragraphs[1].Alignment.Should().Be(XmedAlignment.Left);
+        document.Paragraphs[2].Alignment.Should().Be(XmedAlignment.Left);
+
         document.Paragraphs[0].LeftMargin.Should().Be(0);
         document.Paragraphs[0].RightMargin.Should().Be(0);
         document.Paragraphs[0].FirstLineIndent.Should().Be(0);
@@ -130,6 +134,7 @@ public class XmedFileTest
 
         document.Paragraphs.Should().ContainSingle();
         var paragraph = document.Paragraphs.Single();
+        paragraph.Alignment.Should().Be(XmedAlignment.Right);
         paragraph.FormatRecord.Should().NotBeNull();
         var format = paragraph.FormatRecord!;
         format.EndOffset.Should().Be(paragraph.End);
@@ -138,6 +143,25 @@ public class XmedFileTest
         format.Flags.Should().Be(0);
         format.TrailingValue.Should().Be(0x3B);
         format.FirstLineIndent.Should().Be(45);
+        format.AlignmentCode.Should().Be(1);
+    }
+
+    [Fact]
+    public void Text_Hallo_textAlignLeft_formats_track_alignment()
+    {
+        var document = ReadDocument("Paragraphs/Text_Hallo_textAlignLeft_13.xmed.bin");
+
+        document.Paragraphs.Should().ContainSingle();
+        var paragraph = document.Paragraphs.Single();
+        paragraph.Alignment.Should().Be(XmedAlignment.Left);
+        paragraph.FormatRecord.Should().NotBeNull();
+        var format = paragraph.FormatRecord!;
+        format.EndOffset.Should().Be(paragraph.End);
+        format.LeadingMargin.Should().Be(14);
+        format.Span.Should().Be(0x77);
+        format.Flags.Should().Be(0);
+        format.TrailingValue.Should().Be(0x3B);
+        format.AlignmentCode.Should().Be(1);
     }
 
     [Theory]
