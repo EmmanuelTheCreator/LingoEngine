@@ -105,7 +105,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 case XmedMainTokenGroup.MainGroupType.ParagraphBounds2:
                 case XmedMainTokenGroup.MainGroupType.UnknownB:
                 case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
-                case XmedMainTokenGroup.MainGroupType.UnknownF:
+                case XmedMainTokenGroup.MainGroupType.ParagraphSpacing:
                 case XmedMainTokenGroup.MainGroupType.Unknown13:
                 case XmedMainTokenGroup.MainGroupType.Unknown128:
                 case XmedMainTokenGroup.MainGroupType.Unknown129:
@@ -330,7 +330,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     case XmedMainTokenGroup.MainGroupType.ParagraphBounds2:
                     case XmedMainTokenGroup.MainGroupType.UnknownB:
                     case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
-                    case XmedMainTokenGroup.MainGroupType.UnknownF:
+                    case XmedMainTokenGroup.MainGroupType.ParagraphSpacing:
                     case XmedMainTokenGroup.MainGroupType.Unknown13:
                     case XmedMainTokenGroup.MainGroupType.Unknown128:
                     case XmedMainTokenGroup.MainGroupType.Unknown129:

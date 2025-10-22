@@ -22,6 +22,8 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int LineSpacing { get; set; }
         public int BaselineOffset { get; set; }
         public int ParagraphWidth { get; set; }
+        public int SpacingTopOffset { get; set; }
+        public int SpacingBottomOffset { get; set; }
         public XmedAlignment Alignment { get; set; } = XmedAlignment.Left;
         public List<(int Position, BlXmedTabAlignment TabAlign)> TabStops { get; set; } = new();
         public string Text { get; set; } = "";
@@ -42,6 +44,8 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
                 LineSpacing = LineSpacing,
                 BaselineOffset = BaselineOffset,
                 ParagraphWidth = ParagraphWidth,
+                SpacingTopOffset = SpacingTopOffset,
+                SpacingBottomOffset = SpacingBottomOffset,
                 TabStops = [.. TabStops],
                 Text = Text,
                 FormatRecord = FormatRecord?.Clone()
@@ -63,6 +67,8 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
             Alignment = source.Alignment;
             BaselineOffset = source.BaselineOffset;
             ParagraphWidth = source.ParagraphWidth;
+            SpacingTopOffset = source.SpacingTopOffset;
+            SpacingBottomOffset = source.SpacingBottomOffset;
 
             if (source.TabStops.Count > 0)
             {

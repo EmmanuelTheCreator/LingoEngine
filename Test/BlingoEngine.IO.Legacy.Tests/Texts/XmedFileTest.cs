@@ -284,6 +284,25 @@ public class XmedFileTest
         paragraph.BaselineOffset.Should().Be(expectedBaseline);
         paragraph.ParagraphWidth.Should().Be(expectedWidth);
     }
+
+    [Theory]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh13_13.xmed.bin", 64, 0)]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh20_13.xmed.bin", 64, 0)]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh29_13.xmed.bin", 64, 0)]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh39_13.xmed.bin", 64, 0)]
+    [InlineData("FontSize/D01_LineHeight_18_13.xmed.bin", 64, 0)]
+    [InlineData("FontSize/D02_LineHeight_36_13.xmed.bin", 64, 0)]
+    public void Line_height_samples_should_capture_paragraph_spacing_records(string fileName, int expectedTop, int expectedBottom)
+    {
+        var document = ReadDocument(fileName);
+
+        document.Paragraphs.Should().NotBeEmpty();
+        var paragraph = document.Paragraphs[0];
+        _output.WriteLine($"Spacing offsets: top={paragraph.SpacingTopOffset} bottom={paragraph.SpacingBottomOffset}");
+        paragraph.SpacingTopOffset.Should().Be(expectedTop);
+        paragraph.SpacingBottomOffset.Should().Be(expectedBottom);
+    }
+
     [Fact]
     public void Multi_Text_color_samples_should_BeRead()
     {

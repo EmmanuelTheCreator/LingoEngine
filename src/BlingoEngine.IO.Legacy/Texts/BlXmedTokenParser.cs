@@ -82,8 +82,10 @@ namespace BlingoEngine.IO.Legacy.Texts
                     case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
                         _spacingReader.ReadParagraphFormats(group);
                         break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphSpacing:
+                        _spacingReader.ReadParagraphSpacing(group);
+                        break;
                     case XmedMainTokenGroup.MainGroupType.UnknownB:
-                    case XmedMainTokenGroup.MainGroupType.UnknownF:
                     case XmedMainTokenGroup.MainGroupType.Unknown13:
                     case XmedMainTokenGroup.MainGroupType.Unknown128:
                     case XmedMainTokenGroup.MainGroupType.Unknown129:

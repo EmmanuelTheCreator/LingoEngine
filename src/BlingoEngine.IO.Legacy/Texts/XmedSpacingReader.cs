@@ -8,7 +8,7 @@ namespace BlingoEngine.IO.Legacy.Texts
     {
         private readonly XmedDocument _document;
         private readonly ILogger _logger;
-        private readonly List<(int Before, int After)> _paragraphSpacing = new();
+        private readonly List<ParagraphSpacingRecord> _paragraphSpacing = new();
         private readonly List<(int Baseline, int Width)> _paragraphBounds = new();
         private readonly List<ParagraphFormatRecord> _paragraphFormats = new();
 
@@ -56,6 +56,19 @@ namespace BlingoEngine.IO.Legacy.Texts
             _paragraphFormats.AddRange(records);
         }
 
+        public void ReadParagraphSpacing(XmedMainTokenGroup? group)
+        {
+            if (group == null)
+                return;
+
+            var records = ExtractSpacing(group.RawTokens);
+            if (records.Count == 0)
+                return;
+
+            _paragraphSpacing.Clear();
+            _paragraphSpacing.AddRange(records);
+        }
+
         public void ApplyParagraphBounds(IReadOnlyList<XmedParagraphDescriptor> paragraphs)
         {
             if (paragraphs.Count == 0 || _paragraphBounds.Count == 0)
@@ -98,6 +111,23 @@ namespace BlingoEngine.IO.Legacy.Texts
                 int computedIndent = descriptor.FormatRecord.FirstLineIndent;
                 if (computedIndent > 0 && descriptor.FirstLineIndent == 0)
                     descriptor.FirstLineIndent = computedIndent;
+            }
+        }
+
+        public void ApplyParagraphSpacing(IReadOnlyList<XmedParagraphDescriptor> paragraphs)
+        {
+            if (paragraphs.Count == 0 || _paragraphSpacing.Count == 0)
+                return;
+
+            foreach (var record in _paragraphSpacing)
+            {
+                if (record.ParagraphIndex < 0 || record.ParagraphIndex >= paragraphs.Count)
+                    continue;
+
+                var descriptor = paragraphs[record.ParagraphIndex];
+                descriptor.SpacingTopOffset = record.TopOffset;
+                descriptor.SpacingBottomOffset = record.BottomOffset;
+
             }
         }
 
@@ -169,6 +199,25 @@ namespace BlingoEngine.IO.Legacy.Texts
             return formats;
         }
 
+        private static List<ParagraphSpacingRecord> ExtractSpacing(IReadOnlyList<BlXmedToken> tokens)
+        {
+            var spacing = new List<ParagraphSpacingRecord>();
+            if (tokens == null || tokens.Count == 0)
+                return spacing;
+
+            var values = new List<int>();
+            foreach (var token in tokens)
+            {
+                if (token.Type == BlXmedToken.TokenType.PrefixedHex && token.TypeValue == 0x02 && token.TryGetNumericValue(out var numeric))
+                    values.Add(numeric);
+            }
+
+            for (int i = 0; i + 1 < values.Count; i += 2)
+                spacing.Add(new ParagraphSpacingRecord(i / 2, values[i], values[i + 1]));
+
+            return spacing;
+        }
+
         private static int ReadNumber(IReadOnlyList<BlXmedToken> tokens, ref int index)
         {
             int value = 0;
@@ -203,7 +252,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private static bool IsNull(BlXmedToken token)
         {
-            return token.Type == BlXmedToken.TokenType.B_82_NULL;
+            return token.Type == BlXmedToken.TokenType.B_82_NULL || token.Type == BlXmedToken.TokenType.NULL;
         }
 
         private readonly struct ParagraphFormatRecord
@@ -224,6 +273,20 @@ namespace BlingoEngine.IO.Legacy.Texts
             public int Flags { get; }
             public int Trailing { get; }
             public int Alignment { get; }
+        }
+
+        private readonly struct ParagraphSpacingRecord
+        {
+            public ParagraphSpacingRecord(int paragraphIndex, int topOffset, int bottomOffset)
+            {
+                ParagraphIndex = paragraphIndex;
+                TopOffset = topOffset;
+                BottomOffset = bottomOffset;
+            }
+
+            public int ParagraphIndex { get; }
+            public int TopOffset { get; }
+            public int BottomOffset { get; }
         }
     }
 }

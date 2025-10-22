@@ -102,7 +102,7 @@
             ParagraphBounds2 = 0x00A,
             UnknownB = 0x00B,
             ParagraphFormats = 0x00C,
-            UnknownF = 0x000F,
+            ParagraphSpacing = 0x000F,
             Unknown13 = 0x0013,
             Unknown128 = 0x0128,
             Unknown129 = 0x0129,

@@ -49,6 +49,7 @@ namespace BlingoEngine.IO.Legacy.Texts
 
             _spacingReader.ApplyParagraphBounds(_document.Paragraphs);
             _spacingReader.ApplyParagraphFormats(_document.Paragraphs);
+            _spacingReader.ApplyParagraphSpacing(_document.Paragraphs);
         }
 
 
