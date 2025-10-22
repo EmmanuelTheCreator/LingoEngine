@@ -303,6 +303,7 @@ No explicit line-height token exists — it’s inferred from these bounds.
 **Observations (from your logs):**
 - Structure = records of: `02:<S> <82 <82> 02:<A> 02:<B> 01:<f> [..optional..]` × count.  
 - Count varies (1–2). Values change with **alignment** and **margins**.
+- 82 NULL values still unkown
 
 **Correlations:**
 - **Left**: `02:0 <82 <82> 02:F 02:4 01:0 … 01:1`. 
@@ -329,6 +330,29 @@ Each record configures that paragraph’s layout (margins, width, alignment).
 
 
 ---
+
+### 03:000F — Paragraph Spacing Descriptor
+
+**Structure (per paragraph):**
+`02:<S> <82 <82> 02:<T> 02:<B> C2(0C)`
+
+| Symbol | Meaning | Description |
+|---------|----------|-------------|
+| `02:<S>` | Paragraph index | Sequential number for each paragraph (0, 1, 2…) |
+| `<82 <82>` | Unkown | Unkown |
+| `02:<T>` | Top offset | Derived from line-height or spacing setting |
+| `02:<B>` | Bottom offset | Paragraph end / bounding Y |
+| `C2(0C)` | Padding terminator | Ends record, fixed 12 null bytes |
+
+**Notes:**
+- Appears only in files with explicit line-height settings (e.g., `lh13`, `lh36`, `lh39`).  
+- Not affected by text alignment or margins.  
+- One record per paragraph, paired with index `<S>`.  
+- Effectively defines paragraph **vertical bounds** (top & bottom) used for layout spacing.
+
+---
+
+
 
 ### Tail — 00(44) Seems
 Always present and identical in samples:
