@@ -87,17 +87,17 @@ public class XmedFileTest
         document.Paragraphs[0].SpacingBefore.Should().Be(0);
         document.Paragraphs[0].SpacingAfter.Should().Be(0);
 
-        document.Paragraphs[1].LeftMargin.Should().Be(0);
-        document.Paragraphs[1].RightMargin.Should().Be(0);
-        document.Paragraphs[1].FirstLineIndent.Should().Be(0);
-        document.Paragraphs[1].SpacingBefore.Should().Be(0);
-        document.Paragraphs[1].SpacingAfter.Should().Be(0);
+        document.Paragraphs[1].LeftMargin.Should().Be(288);
+        document.Paragraphs[1].RightMargin.Should().Be(360);
+        document.Paragraphs[1].FirstLineIndent.Should().Be(28);
+        document.Paragraphs[1].SpacingBefore.Should().Be(9);
+        document.Paragraphs[1].SpacingAfter.Should().Be(7);
 
-        document.Paragraphs[2].LeftMargin.Should().Be(288);
-        document.Paragraphs[2].RightMargin.Should().Be(360);
-        document.Paragraphs[2].FirstLineIndent.Should().Be(28);
-        document.Paragraphs[2].SpacingBefore.Should().Be(9);
-        document.Paragraphs[2].SpacingAfter.Should().Be(7);
+        document.Paragraphs[2].LeftMargin.Should().Be(72);
+        document.Paragraphs[2].RightMargin.Should().Be(144);
+        document.Paragraphs[2].FirstLineIndent.Should().Be(21);
+        document.Paragraphs[2].SpacingBefore.Should().Be(4);
+        document.Paragraphs[2].SpacingAfter.Should().Be(5);
 
         int searchIndex = 0;
         foreach (var paragraph in document.Paragraphs)

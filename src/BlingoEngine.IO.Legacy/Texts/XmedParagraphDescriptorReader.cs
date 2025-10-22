@@ -38,10 +38,20 @@ namespace BlingoEngine.IO.Legacy.Texts
         public void ApplyParagraphRuns(IReadOnlyList<XmedSliceBuilder.Slice> slices)
         {
             _document.Paragraphs.Clear();
+            if (slices.Count == 0)
+                return;
+
+            int descriptorOffset = 0;
+            if (_descriptors.Count > slices.Count)
+                descriptorOffset = _descriptors.Count - slices.Count;
+
             for (int i = 0; i < slices.Count; i++)
             {
                 var slice = slices[i];
-                var descriptor = i < _descriptors.Count ? _descriptors[i].Clone() : new XmedParagraphDescriptor();
+                int templateIndex = descriptorOffset + i;
+                var descriptor = templateIndex >= 0 && templateIndex < _descriptors.Count
+                    ? _descriptors[templateIndex].Clone()
+                    : new XmedParagraphDescriptor();
                 descriptor.Start = slice.Start;
                 descriptor.Text = slice.Text ?? string.Empty;
                 _document.Paragraphs.Add(descriptor);
