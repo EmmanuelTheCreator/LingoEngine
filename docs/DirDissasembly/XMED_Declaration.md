@@ -64,8 +64,8 @@ TODO
 ---
 
 ## 03:0004 - Run styles 
-starting with 02:0
-Payload: alternating pairs `styleId endOffset`.
+Starting with 02:0
+Payload slices: alternating pairs `StyleId end-Offset`.
 ``` 
 03:00040000002900000008 	// Run styles
   02:0 
@@ -83,6 +83,8 @@ Payload: alternating pairs `styleId endOffset`.
 
 
 ## 03:0005 - Run Paragraphs	
+Starting with 02:0
+Payload slices: alternating pairs `RunId end-Offset`.
 ``` 
 03:00050000001F00000006 	// Run paragraphs  
   02:0 
@@ -98,7 +100,7 @@ Payload: alternating pairs `styleId endOffset`.
 
 
 ## 03:0006 - Style blocks 
-A style block has 77 tokens when all padding has been extracted.
+A style block has 77 tokens when all padding(C1 + C2) has been extracted.
 ``` 
 03:00060000012B00000005 	// Block Styles
     01:0 
@@ -161,7 +163,7 @@ C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline
 They are composed of 28 tokens and then the tab stop identifier is there:
 02:6A03E2AE
 folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
-In total : 50 tokens + 4 +(4 * tab_stop_count)
+In total : 50 tokens + 4 + (4 * tab_stop_count)
 ``` 
 03:00070000004D00000002 		// Paragraphs 
       01:0 
@@ -234,7 +236,7 @@ In your files, the 02:4 type marks that tab stop as decimal-aligned, used when d
 
 
 ## 03:0008 - Font Table
-Each entry begins with a pair of `00(40)` strings (font family + style name) followed by a fixed set of numeric fields. Tokens are split by `<82` separators, with `<81` repeating the previous value.
+Each entry begins with a pair of `00(40)` strings (font family + style name) followed by a fixed set of numeric fields. 
 
 ### Parsed descriptor fields
 
@@ -261,11 +263,12 @@ Each entry begins with a pair of `00(40)` strings (font family + style name) fol
 02:<cellHeight>        ← Raster cell height (0 for vector fonts, 0xFF for Terminal)
 02:40008               ← LOGFONT pitch & family bits (0x00040008 = variable pitch, Swiss)
 02:0                   ← Reserved slot (always 0 so far)
-02:101 / C2(03)…       ← Script identifier (257 = Western/Latin I)
+02:101			       ← Script identifier (257 = Western/Latin I)
+C2(03)
 01:0                   ← Name index (references the inline string, currently 0)
 ```
 
-Values were confirmed against `Test/TestData/Legacy/Texts_Fields/Text_Multi_Line_Multi_Style_13.analyse.txt`, which includes the full table with the Terminal raster font (FontId `0x60FF` and cell height `0xFF`).
+Values were confirmed against `Text_Multi_Line_Multi_Style_13.analyse.txt`, which includes the full table with the Terminal raster font (FontId `0x60FF` and cell height `0xFF`).
 
 ---
 
@@ -290,11 +293,8 @@ No explicit line-height token exists — it’s inferred from these bounds.
 ---
 
 
-
-
 ## 03:000B - Some static List of 8 values 
 03:000B always holds 8 total values — one literal 0 followed by 7 NULLs (82) — acting as a static padding or reset field block.
-
 
 ---
 
@@ -344,7 +344,7 @@ Each record configures that paragraph’s layout (margins, width, alignment).
 | Symbol | Meaning | Description |
 |---------|----------|-------------|
 | `02:<S>` | Paragraph index | Sequential number for each paragraph (0, 1, 2…) |
-| `<82 <82>` | Unkown | Unkown |
+| `<82 <82>` | Unknown | NULL, NULL : Unknown |
 | `02:<T>` | Top offset | Derived from line-height or spacing setting |
 | `02:<B>` | Bottom offset | Paragraph end / bounding Y |
 | `C2(0C)` | Padding terminator | Ends record, fixed 12 null bytes |
