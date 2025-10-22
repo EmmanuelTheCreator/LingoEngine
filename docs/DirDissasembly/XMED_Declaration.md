@@ -25,20 +25,22 @@ Starts with 03, then
 - 0000130 : unknown Value, perhaps length
 - 0004    : unknown Value
 - 0003    : items in the block’s payload
-
+``` 
   :FFFF0000000600040001     // Header
 03:00020000013000000000     // Block Full Text 
 03:00040000002900000008     // Run styles
 03:00050000001F00000006     // Run paragraphs 
-03:00070000004D00000002 		// Paragraphs Definitions
-03:00080000020A00000003			// Fonts  Block 
-03:00090000001500000002 	  // Line-height spacing descriptor
-03:000A0000001500000002 	  // Identical as Line-height spacing
+03:00070000004D00000002 	// Paragraphs Definitions
+03:00080000020A00000003		// Fonts  Block 
+03:00090000001500000002 	 // Line-height Paragraph Bounds
+03:000A0000001500000002 	 // Identical as Paragraph Bounds
+03:000B0000000500000002  	// Some static List of 8 values 
+```
 
 ## Run styles — 03:0004 (required)
 starting with 02:0
 Payload: alternating pairs `styleId endOffset`.
-
+``` 
 03:00040000002900000008 	// Run styles
   02:0 
 		01:6 02:26 	 	// Style=6, 38,	"This text is... 	red		,... 	Arial,12px, centered" 		
@@ -49,8 +51,11 @@ Payload: alternating pairs `styleId endOffset`.
 		01:A 02:FE 	 	// Style=10,254,"This text is... 	orange	...		bold, italic, underline"   
 		01:6 02:12C 	// Style=6, 300,"This text is... 	red		...		centered again"   
 		01:6          // Empty style
+```
 
-## Run Paragraphs		
+
+## 03:0005 - Run Paragraphs	
+``` 
 03:00050000001F00000006 	// Run paragraphs  
   02:0 
 		01:1 02:27 	 	// Run=1, 39, "This text is... 	red		,... 	Arial,12px, centered" 	 
@@ -59,11 +64,11 @@ Payload: alternating pairs `styleId endOffset`.
 		01:0 02:FE 		// Run=0, 254,"This text is... 	orange	...		bold, italic, underline"
 		01:1 02:12C 	// Run=1, 300,"This text is... 	red		...		centered again"
 		01:0          // Empty run
+``` 
 
-
-## Style blocks — 03:0006 (required)
+## 03:0006 - Style blocks 
 A style block has 77 tokens when all padding has been extracted.
-
+``` 
 03:00060000012B00000005 	// Block Styles
     01:0 
     <81 
@@ -86,12 +91,15 @@ A style block has 77 tokens when all padding has been extracted.
   <82
     C1(03)                 // padding 3 unknown values
   <82
+```
 
-## Paragraphs
+
+## 03:0007 - Paragraphs
 They are composed of 28 tokens and then the tab stop identifier is there:
 02:6A03E2AE
 folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
-In total : 50 tokens + (4 * tab_stop_count)
+In total : 50 tokens + 4 +(4 * tab_stop_count)
+``` 
 03:00070000004D00000002 		// Paragraphs 
       01:0 
       <81 
@@ -103,12 +111,13 @@ In total : 50 tokens + (4 * tab_stop_count)
     <82 
       C1(03)                 // padding 3 unknown values          
       C2(12) 
-
+``` 
 
 
 ### Colors 
 Are always 4 values : RGBA
 Examples:
+``` 
 - 01:F700 01:2000 01:4A00 01:0 	// Red       #F7204A
 - 01:2700 01:200 01:FD00 01:0   // Blue: 	  #2702FD
 - 01:1E00 01:F000 01:2E00 01:0 	// Green :   #1EF02E
@@ -117,14 +126,15 @@ Examples:
 - <81 01:FF00 01:0 <81 			    // Green     #00FF00
 - 01:FF00 01:9900 01:0 <81 		  // Orange    #FF9900
 - C1(04) 						    	      // Black     #000000    Pad 4 x 0 values
-
+``` 
 
 ### Identified Style Bits
+``` 
 C2(07) 01:1 01:0		 		    // Bold	  
 C2(07) <81 01:1 01:0	 		  // Italic  
 C2(07) <81 <81 01:1 01:0 		// Underline
 C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline	
-
+``` 
 
 ### Font Size <- to validate yet
 - Actual point size is stored per style in `03:0006`.  
@@ -139,30 +149,37 @@ C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline
 #### No tab stops defined:
 02:6A03E2AE 01:0 02:18 01:0 <82  
 Description:
+``` 
   - 02:6A03E2AE : Identifier
   - 01:0        : Number of defined styles
   - 02:18       : Default Tab width 24 px
   - 01:0        : 
   - <82         : NULL
+```
 
   #### With Tabs defined
  02:6A03E2AE 01:4 
 Description:
+``` 
   - 02:1 02:96 02:0 <82   // Tab Stop Left 150 px
   - 02:1 02:D8 02:0 <82   // Tab Stop Left 216 px
   - 02:1 02:120 02:0 <82  // Tab Stop Left 288 px
   - 02:1 02:169 02:0 <82  // Tab Stop Left 361 px
   - 02:18 01:0 <82        // Default Tab width 24 px
+```
 
 #### With different tab stop types
 02:6A03E2AE 01:5 
 Description:
+``` 
 		02:1 02:63 02:0 <82     // Type 1 : Left align
 		02:3 02:31D 02:0 <82    // Type 3 : Right Align
 		02:2 02:190 02:0 <82    // Type 2 : Center Align  
 		02:4 02:1F4 02:0 <82    // Type 4 : Decimal align
 		02:4 02:257 02:0 <82    // Type 4 : Decimal align
 		02:18 01:0 <82 
+```
+
 
 A decimal tab aligns numbers by their decimal point.
 When you type numeric values in text (like 12.3, 4.56, 789.0), a decimal tab ensures that all the . (decimal points) line up vertically—so digits before and after stay neatly aligned.
@@ -220,7 +237,7 @@ Values were confirmed against `Test/TestData/Legacy/Texts_Fields/Text_Multi_Line
 
 
 
-### 🧩 Blocks 03:0009 / 03:000A — Paragraph Bounds
+## 03:0009 / 03:000A — 🧩 Paragraph Bounds
 
 **Type:** Layout geometry list (identical structure)  
 **Form:** `02:0 <82 02:X 02:Y 02:0 <82 02:X 02:Y` × paragraphCount  
@@ -237,6 +254,8 @@ No explicit line-height token exists — it’s inferred from these bounds.
 
 
 
+## 03:000B - Some static List of 8 values 
+03:000B always holds 8 total values — one literal 0 followed by 7 NULLs (82) — acting as a static padding or reset field block.
 
 ## Tail — 00(44) Seems
 Always present and identical in samples:
