@@ -1,0 +1,20 @@
+| Label            | Value                          |
+|------------------|--------------------------------|
+| Camera Pos (XYZ) | [0.00, 0.00, 250.00]          |
+| Rotation (XYZ)   | [0.00, 0.00, 0.00]            |
+| Face: Front      | ✓                              |
+| Face: Back       | ✓                              |
+| Face: Tunnel     | ✓                              |
+| Smoothness       | 5                              |
+| Tunnel Depth     | 50.00                          |
+| Bevel Amount     | 1.00                           |
+| Bevel Edge       | None                           |
+| Light            | Top Center                     |
+| Directional      | White |
+| Ambient          | White |
+| Background       | White |
+| Shader Texture   | None                           |
+| Texture Name     | NoTexture (disabled)           |
+| Diffuse          | Red                            |
+| Specular         | White |
+| Reflectivity     | 30                             |
