@@ -32,12 +32,33 @@ Starts with 03, then
 03:00050000001F00000006     // Run paragraphs 
 03:00070000004D00000002 	// Paragraphs Definitions
 03:00080000020A00000003		// Fonts  Block 
-03:00090000001500000002 	 // Line-height Paragraph Bounds
-03:000A0000001500000002 	 // Identical as Paragraph Bounds
-03:000B0000000500000002  	// Some static List of 8 values 
+03:00090000001500000002 	// Line-height Paragraph Bounds
+03:000A0000001500000002 	// Identical as Paragraph Bounds
+03:000B0000000500000002  	// Some static List of 8 values
+03:000C0000002A00000002   	// Paragraph format records
 ```
 
-## Run styles — 03:0004 (required)
+
+---
+
+
+## FFFF / 0000 - Header 
+`00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
+
+TODO
+
+
+---
+
+## 0001 - Layout 
+
+
+TODO
+
+
+---
+
+## 03:0004 - Run styles 
 starting with 02:0
 Payload: alternating pairs `styleId endOffset`.
 ``` 
@@ -53,6 +74,8 @@ Payload: alternating pairs `styleId endOffset`.
 		01:6          // Empty style
 ```
 
+---
+
 
 ## 03:0005 - Run Paragraphs	
 ``` 
@@ -65,6 +88,9 @@ Payload: alternating pairs `styleId endOffset`.
 		01:1 02:12C 	// Run=1, 300,"This text is... 	red		...		centered again"
 		01:0          // Empty run
 ``` 
+
+---
+
 
 ## 03:0006 - Style blocks 
 A style block has 77 tokens when all padding has been extracted.
@@ -92,27 +118,6 @@ A style block has 77 tokens when all padding has been extracted.
     C1(03)                 // padding 3 unknown values
   <82
 ```
-
-
-## 03:0007 - Paragraphs
-They are composed of 28 tokens and then the tab stop identifier is there:
-02:6A03E2AE
-folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
-In total : 50 tokens + 4 +(4 * tab_stop_count)
-``` 
-03:00070000004D00000002 		// Paragraphs 
-      01:0 
-      <81 
-      <81 
-      C2(0F) <81 
-    <82 
-      02:1 02:0 
-      C2(06) 02:6A03E2AE 01:0 02:18 01:0  						// Tab stops with only default Tab width of 24px 
-    <82 
-      C1(03)                 // padding 3 unknown values          
-      C2(12) 
-``` 
-
 
 ### Colors 
 Are always 4 values : RGBA
@@ -143,6 +148,30 @@ C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline
   ```
   pt ≈ headerValue / 13.33
   ```
+  
+---
+
+
+## 03:0007 - Paragraphs
+They are composed of 28 tokens and then the tab stop identifier is there:
+02:6A03E2AE
+folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
+In total : 50 tokens + 4 +(4 * tab_stop_count)
+``` 
+03:00070000004D00000002 		// Paragraphs 
+      01:0 
+      <81 
+      <81 
+      C2(0F) <81 
+    <82 
+      02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0  						// Tab stops with only default Tab width of 24px 
+    <82 
+      C1(03)                 // padding 3 unknown values          
+      C2(12) 
+``` 
+
+
 
 ### Tab stops
 
@@ -186,10 +215,6 @@ When you type numeric values in text (like 12.3, 4.56, 789.0), a decimal tab ens
 It’s a long-standing feature in word processors (Word, PageMaker, Director’s text engine).
 In your files, the 02:4 type marks that tab stop as decimal-aligned, used when displaying columns of numbers.
 
-## Header 
-`00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
-
-TODO
 
 
 
@@ -199,8 +224,11 @@ TODO
 
 
 
+---
 
-## Font Table — 03:0008 (required)
+
+
+## 03:0008 - Font Table
 Each entry begins with a pair of `00(40)` strings (font family + style name) followed by a fixed set of numeric fields. Tokens are split by `<82` separators, with `<81` repeating the previous value.
 
 ### Parsed descriptor fields
@@ -234,6 +262,8 @@ Each entry begins with a pair of `00(40)` strings (font family + style name) fol
 
 Values were confirmed against `Test/TestData/Legacy/Texts_Fields/Text_Multi_Line_Multi_Style_13.analyse.txt`, which includes the full table with the Terminal raster font (FontId `0x60FF` and cell height `0xFF`).
 
+---
+
 
 
 
@@ -252,18 +282,62 @@ Values were confirmed against `Test/TestData/Legacy/Texts_Fields/Text_Multi_Line
 Defines bounding boxes per paragraph; X encodes vertical spacing (line-height derived), Y the visual width.  
 No explicit line-height token exists — it’s inferred from these bounds.  
 
+---
+
+
 
 
 ## 03:000B - Some static List of 8 values 
 03:000B always holds 8 total values — one literal 0 followed by 7 NULLs (82) — acting as a static padding or reset field block.
 
-## Tail — 00(44) Seems
+
+---
+
+
+
+
+
+
+## 03:000C — 🧩 Paragraph format records
+
+**Observations (from your logs):**
+- Structure = records of: `02:<S> <82 <82> 02:<A> 02:<B> 01:<f> [..optional..]` × count.  
+- Count varies (1–2). Values change with **alignment** and **margins**.
+
+**Correlations:**
+- **Left**: `02:0 <82 <82> 02:F 02:4 01:0 … 01:1`. :contentReference[oaicite:0]{index=0}  
+- **Right**: `02:5 <82 <82> 02:E 02:77 01:0 02:3B <82 01:1`. :contentReference[oaicite:1]{index=1}  
+- **Center**: `02:0 <82 <82> 02:9 02:7 01:0 … 01:1`. :contentReference[oaicite:2]{index=2}  
+- **LineHeight 18/36**: count=2, includes constants `02:E3`, `02:6F`. 
+
+**Conclusion:** 03:000C encodes per-paragraph formatting (alignment/indents/margins), not text runs.
+
+### Structure (per paragraph)
+02:<S> <82 <82> 02:<A> 02:<B> 01:<f> …
+
+| Symbol | Meaning | Notes |
+|---------|----------|-------|
+| `<S>` | Paragraph index | Increases sequentially per paragraph |
+| `<A>` | Left or right margin | Changes with alignment and margin tests |
+| `<B>` | Width / bounding span | Matches paragraph box width from 03:0009 |
+| `<f>` | Flags byte | 0=normal, 1=justify or alignment flag |
+
+**Link:**  
+The `<S>` field directly maps to paragraph order — `S=0` → first paragraph, `S=1` → second, etc.  
+Each record configures that paragraph’s layout (margins, width, alignment).  
+
+
+---
+
+### Tail — 00(44) Seems
 Always present and identical in samples:
 `00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131`
 Treat as a global lookup/palette table.
 
 
 
+
+---
 
 
 ## 📐 Text Box Size (Width & Height)
