@@ -19,6 +19,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         }
         public int StyleId { get; set; }
         public string FontName { get; set; } = string.Empty;
+        public int? FontTableIndex { get; set; }
         public byte? ColorIndex { get; set; }
         public int? FontSize { get; set; }
         public bool Bold { get; set; }

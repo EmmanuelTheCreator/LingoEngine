@@ -3,7 +3,6 @@ using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 
 namespace BlingoEngine.IO.Legacy.Texts
@@ -55,6 +54,9 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         public void FinalizeStyles(XmedDocument document)
         {
+            foreach (var descriptor in _stylesById.Values)
+                ApplyFont(descriptor, document.Fonts);
+
             foreach (var styleId in _styleParents.Keys.ToList())
                 ApplyParent(styleId, new HashSet<int>());
 
@@ -84,6 +86,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                 document.Runs.Add(new XmedTextRun
                 {
                     Start = slice.Start,
+                    Length = runText.Length,
                     Text = runText,
                     FontName = descriptor.FontName,
                     FontSize = descriptor.FontSize,
@@ -117,49 +120,34 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private void ReadBaseValues0(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor, int styleId)
         {
-            if (styleGroup.Items.Count == 0)
-                return;
-            if (styleGroup.Items[0] is not XmedTokenGroup baseGroup)
-                return;
+            int parentId = styleGroup.ReadNumeric(1);
+            descriptor.FontDescent = styleGroup.ReadNumeric(4);
+            descriptor.FontAscendent = styleGroup.ReadNumeric(5);
 
-            int parentId = baseGroup.ReadNumeric(0);
-            //var unknownTodo = baseGroup.ReadNumeric(1);
-            //var unknownTodo = baseGroup.ReadNumeric(2);
-            descriptor.FontDescent = baseGroup.ReadNumeric(3);
-            descriptor.FontAscendent = baseGroup.ReadNumeric(4);
-            //var unknownTodo = baseGroup.ReadNumeric(5);
-            //var unknownTodo = baseGroup.ReadNumeric(6);
-
-            if (descriptor.FontDescent > 500 || descriptor.FontAscendent > 500)
-            {
-
-            }
+            int fontSlot = styleGroup.ReadNumeric(31);
+            if (fontSlot > 0)
+                descriptor.FontTableIndex = fontSlot;
 
             if (parentId >= 0 && parentId != styleId && parentId < 256)
                 _styleParents[styleId] = parentId;
         }
-        
+
         private void ReadBaseValues3(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
         {
-            if (styleGroup.Items.Count == 0)
-                return;
-            if (styleGroup.Items[3] is not XmedTokenGroup baseGroup)
-                return;
-
-            int fontSize = baseGroup.ReadAsciiNumber(0) >>16;
-            //var unknownTodo = baseGroup.ReadNumeric(1);
-            
+            int rawFontSize = styleGroup.ReadNumeric(19);
+            int fontSize = rawFontSize >> 16;
             if (fontSize > 0)
                 descriptor.FontSize = fontSize;
 
-            var c2_07 = baseGroup.GetC2Group(0x07);
-            if (c2_07 != null) ReadFlags(c2_07, descriptor);
+            ReadFlags(styleGroup, descriptor);
         }
-        private void ReadFlags(XmedTokenGroup c2, XmedStyleDescriptor descriptor)
+
+        private void ReadFlags(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
         {
-            bool bold = c2.ReadNumeric(0) != 0;
-            bool italic = c2.ReadNumeric(1) != 0;
-            bool underline = c2.ReadNumeric(2) != 0;
+            bool bold = styleGroup.ReadNumeric(40) != 0;
+            bool italic = styleGroup.ReadNumeric(41) != 0;
+            bool underline = styleGroup.ReadNumeric(42) != 0;
+
             descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Bold, bold);
             descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Italic, italic);
             descriptor.ApplyStyleFlag(XmedStyleDescriptor.XmedStyleFlags.Underline, underline);
@@ -167,9 +155,28 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private void ReadColors(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
         {
-            descriptor.ForegroundColor = ReadColor((XmedTokenGroup)styleGroup.Items[2], 0);
-            descriptor.BackgroundColor = ReadColor((XmedTokenGroup)styleGroup.Items[2], 4);
+            descriptor.ForegroundColor = ReadColor(styleGroup, 10);
+            descriptor.BackgroundColor = ReadColor(styleGroup, 14);
         }
+
+        private static void ApplyFont(XmedStyleDescriptor descriptor, IReadOnlyList<XmedFontDescriptor> fonts)
+        {
+            if (descriptor.FontTableIndex is not int fontSlot || fontSlot <= 0)
+                return;
+
+            int index = fontSlot - 1;
+            if ((uint)index >= fonts.Count)
+                return;
+
+            var font = fonts[index];
+            string family = font.FamilyName ?? string.Empty;
+            string style = font.StyleName ?? string.Empty;
+
+            descriptor.FontName = string.IsNullOrWhiteSpace(style)
+                ? family
+                : string.Concat(family, " ", style).Trim();
+        }
+
         private static BlLegacyColor ReadColor(XmedTokenGroup group, int offset)
         {
             byte fr = NormalizeColor(group.ReadNumeric(offset + 0));
@@ -177,11 +184,9 @@ namespace BlingoEngine.IO.Legacy.Texts
             byte fb = NormalizeColor(group.ReadNumeric(offset + 2));
             byte fa = NormalizeColor(group.ReadNumeric(offset + 3));
 
-            var foreground = fa > 0
+            return fa > 0
                 ? new BlLegacyColor(fr, fg, fb, fa)
                 : new BlLegacyColor(fr, fg, fb);
-          
-            return foreground;
         }
 
         private static byte NormalizeColor(int value)

@@ -69,14 +69,20 @@ namespace BlingoEngine.IO.Legacy.Texts
                         _styleParser.LoadStyles(group);
                         break;
                     case XmedMainTokenGroup.MainGroupType.Paragraphs:
+                        _descriptorReader.LoadParagraphDescriptors(group);
                         break;
                     case XmedMainTokenGroup.MainGroupType.Fonts:
                         _fontTableReader.ReadFontTable(group);
                         break;
-                    case XmedMainTokenGroup.MainGroupType.SpacingDescriptor:
-                    case XmedMainTokenGroup.MainGroupType.SpacingDescriptor2:
+                    case XmedMainTokenGroup.MainGroupType.ParagraphBounds:
+                        _spacingReader.ReadParagraphBounds(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphBounds2:
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
+                        _spacingReader.ReadParagraphFormats(group);
+                        break;
                     case XmedMainTokenGroup.MainGroupType.UnknownB:
-                    case XmedMainTokenGroup.MainGroupType.UnknownC:
                     case XmedMainTokenGroup.MainGroupType.UnknownF:
                     case XmedMainTokenGroup.MainGroupType.Unknown13:
                     case XmedMainTokenGroup.MainGroupType.Unknown128:

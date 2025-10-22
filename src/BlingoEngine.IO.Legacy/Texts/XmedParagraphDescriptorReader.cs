@@ -38,14 +38,17 @@ namespace BlingoEngine.IO.Legacy.Texts
         public void ApplyParagraphRuns(IReadOnlyList<XmedSliceBuilder.Slice> slices)
         {
             _document.Paragraphs.Clear();
-            for (int i = 0; i < _slices.Count; i++)
+            for (int i = 0; i < slices.Count; i++)
             {
-                var slice = _slices[i];
+                var slice = slices[i];
                 var descriptor = i < _descriptors.Count ? _descriptors[i].Clone() : new XmedParagraphDescriptor();
                 descriptor.Start = slice.Start;
                 descriptor.Text = slice.Text ?? string.Empty;
                 _document.Paragraphs.Add(descriptor);
             }
+
+            _spacingReader.ApplyParagraphBounds(_document.Paragraphs);
+            _spacingReader.ApplyParagraphFormats(_document.Paragraphs);
         }
 
 
@@ -54,26 +57,23 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             var descriptor = new XmedParagraphDescriptor();
 
-            var structGroup = paragraphGroup.Items.OfType<XmedTokenGroup>()
-                .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.B_82_NULL);
+            var tokens = paragraphGroup.Items.OfType<XmedTokenGroup>()
+                .FirstOrDefault(g => g.GroupType == XmedTokenGroup.TokenGroupType.ParagraphTokens);
 
-            if (structGroup != null)
+            if (tokens != null)
             {
-                descriptor.Alignment = ReadAlignment(structGroup);
-                descriptor.LeftMargin = ReadPositive(structGroup.ReadNumeric(3));
-                descriptor.RightMargin = ReadPositive(structGroup.ReadNumeric(4));
-                descriptor.FirstLineIndent = ReadPositive(structGroup.ReadNumeric(5));
+                descriptor.Alignment = DecodeAlignment(tokens.ReadNumeric(0));
+                descriptor.LeftMargin = ReadPositive(tokens.ReadNumeric(3));
+                descriptor.RightMargin = ReadPositive(tokens.ReadNumeric(4));
+                descriptor.FirstLineIndent = ReadPositive(tokens.ReadNumeric(5));
 
-                int additional = structGroup.ReadNumeric(6);
-                if (additional != 0)
+                int additional = tokens.ReadNumeric(6);
+                if (additional > 0)
                     descriptor.AdditionalIndent = ReadPositive(additional);
 
-                var spacing = structGroup.GetC2Group(0x03);
-                if (spacing != null)
-                {
-                    descriptor.SpacingBefore = ReadPositive(spacing.ReadNumeric(0));
-                    descriptor.SpacingAfter = ReadPositive(spacing.ReadNumeric(1));
-                }
+                descriptor.LineSpacing = ReadPositive(tokens.ReadNumeric(8));
+                descriptor.SpacingBefore = ReadPositive(tokens.ReadNumeric(10));
+                descriptor.SpacingAfter = ReadPositive(tokens.ReadNumeric(11));
             }
 
             foreach (var stop in ReadTabStops(paragraphGroup))
@@ -89,24 +89,17 @@ namespace BlingoEngine.IO.Legacy.Texts
             return value;
         }
 
-        private static XmedAlignment ReadAlignment(XmedTokenGroup structGroup)
+        private static XmedAlignment DecodeAlignment(int raw)
         {
-            var alignmentGroup = structGroup.GetC2Group(0x0F);
-            if (alignmentGroup == null)
-                return XmedAlignment.Left;
+            if (raw < 0)
+                return XmedAlignment.Right;
 
-            int raw = alignmentGroup.Items.Count > 2 ? alignmentGroup.ReadNumeric(2) : alignmentGroup.ReadNumeric(0);
-            return GetAlignment(raw);
-        }
-
-        private static XmedAlignment GetAlignment(int raw)
-        {
             return raw switch
             {
-                1 => XmedAlignment.Right,
-                2 => XmedAlignment.Left,
+                1 => XmedAlignment.Left,
+                2 => XmedAlignment.Right,
                 3 => XmedAlignment.Justify,
-                _ => XmedAlignment.Center
+                _ => XmedAlignment.Left
             };
         }
         private static BlXmedTabAlignment GetTabAlignment(int raw)
@@ -123,25 +116,27 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private static IEnumerable<(int Position, BlXmedTabAlignment TabAlign)> ReadTabStops(XmedTokenGroup paragraphGroup)
         {
-            var tabGroup = paragraphGroup.Items.OfType<XmedTokenGroup>()
-                .FirstOrDefault(g => g.Type == BlXmedToken.TokenType.TabStops);
-            if (tabGroup == null)
+            var tabContainer = paragraphGroup.Items.OfType<XmedTokenGroup>()
+                .FirstOrDefault(g => g.GroupType == XmedTokenGroup.TokenGroupType.ParagraphTabs);
+            if (tabContainer == null)
                 return Enumerable.Empty<(int Position, BlXmedTabAlignment TabAlign)>();
 
             var stops = new List<(int Position, BlXmedTabAlignment TabAlign)>();
 
-            for (int i = 3; i < tabGroup.Items.Count; i++)
+            foreach (var tabGroup in tabContainer.Items.OfType<XmedTokenGroup>())
             {
-                if (tabGroup.Items[i] is not XmedTokenGroup entry)
+                if (tabGroup.GroupType == XmedTokenGroup.TokenGroupType.TabStopDefault)
                     continue;
 
-                if (i == tabGroup.Items.Count - 1)
+                if (tabGroup.Items.Count < 2)
                     continue;
 
-                var tabAlign = GetTabAlignment(entry.ReadNumeric(0));
-                int position = entry.ReadNumeric(1);
-                if (position > 0)
-                    stops.Add((position, tabAlign));
+                int position = ReadPositive(tabGroup.ReadNumeric(1));
+                if (position <= 0)
+                    continue;
+
+                var tabAlign = GetTabAlignment(tabGroup.ReadNumeric(0));
+                stops.Add((position, tabAlign));
             }
 
             return stops;

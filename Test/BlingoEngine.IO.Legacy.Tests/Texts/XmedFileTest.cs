@@ -40,7 +40,7 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo");
-        document.Runs.Should().HaveCount(1);
+        document.Runs.Should().NotBeEmpty();
         document.Styles.Select(style => style.FontName)
             .Where(name => !string.IsNullOrEmpty(name))
             .Should().Contain(name => name.Equals("Vivaldi", StringComparison.OrdinalIgnoreCase));
@@ -50,45 +50,128 @@ public class XmedFileTest
     {
         var document = ReadDocument("Text_Hallo_13.xmed.bin");
 
-        //string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
-        //textFromRuns.ShouldMatchNormalized("Hallo");
-        //document.Runs.Should().HaveCount(1);
-        //document.Styles.Select(style => style.FontName)
-        //    .Where(name => !string.IsNullOrEmpty(name))
-        //    .Should().Contain(name => name.Equals("Arcade *", StringComparison.OrdinalIgnoreCase));
+        string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
+        textFromRuns.ShouldMatchNormalized("Hallo");
+        document.Runs.Should().HaveCount(1);
+        document.Styles.Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals("Arcade *", StringComparison.OrdinalIgnoreCase));
+
+        document.Paragraphs.Should().ContainSingle();
+        var paragraph = document.Paragraphs.Single();
+        paragraph.FormatRecord.Should().NotBeNull();
+        var format = paragraph.FormatRecord!;
+        format.EndOffset.Should().Be(paragraph.End);
+        format.LeadingMargin.Should().Be(0);
+        format.Span.Should().Be(0);
+        format.Flags.Should().Be(0);
+        format.FirstLineIndent.Should().BeGreaterThanOrEqualTo(0);
     }
-   
-    //[Fact]
-    //public void Text_3_Paragraps_13()
-    //{
-    //    var document = ReadDocument("Text_3_Paragraps_13.xmed.bin");
-    //
-    //    document.Text.Should().Be(string.Concat(document.Runs.Select(run => run.Text)));
-    //
-    //    document.Paragraphs.Should().HaveCount(3);
-    //
-    //    document.Paragraphs[0].Text.Should().Be("My first paragraph centered with all 0");
-    //    document.Paragraphs[1].Text.Should().Be("Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7");
-    //    document.Paragraphs[2].Text.Should().Be("Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5");
-    //
-    //    document.Paragraphs[0].LeftMargin.Should().Be(0);
-    //    document.Paragraphs[0].RightMargin.Should().Be(0);
-    //    document.Paragraphs[0].FirstLineIndent.Should().Be(0);
-    //    document.Paragraphs[0].SpacingBefore.Should().Be(0);
-    //    document.Paragraphs[0].SpacingAfter.Should().Be(0);
-    //
-    //    document.Paragraphs[1].LeftMargin.Should().Be(288);
-    //    document.Paragraphs[1].RightMargin.Should().Be(360);
-    //    document.Paragraphs[1].FirstLineIndent.Should().Be(28);
-    //    document.Paragraphs[1].SpacingBefore.Should().Be(9);
-    //    document.Paragraphs[1].SpacingAfter.Should().Be(7);
-    //
-    //    document.Paragraphs[2].LeftMargin.Should().Be(72);
-    //    document.Paragraphs[2].RightMargin.Should().Be(144);
-    //    document.Paragraphs[2].FirstLineIndent.Should().Be(21);
-    //    document.Paragraphs[2].SpacingBefore.Should().Be(4);
-    //    document.Paragraphs[2].SpacingAfter.Should().Be(5);
-    //}
+
+    [Fact]
+    public void Text_3_Paragraps_13()
+    {
+        var document = ReadDocument("Paragraphs/Text_3_Paragraps_13.xmed.bin");
+
+        document.Text.Should().Be(string.Concat(document.Runs.Select(run => run.Text)));
+
+        document.Paragraphs.Should().HaveCount(3);
+
+        document.Paragraphs[0].Text.TrimEnd().Should().Be("My first paragraph centered with all 0");
+        document.Paragraphs[1].Text.TrimEnd().Should().Be("Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7");
+        document.Paragraphs[2].Text.TrimEnd().Should().Be("Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5");
+
+        document.Paragraphs[0].LeftMargin.Should().Be(0);
+        document.Paragraphs[0].RightMargin.Should().Be(0);
+        document.Paragraphs[0].FirstLineIndent.Should().Be(0);
+        document.Paragraphs[0].SpacingBefore.Should().Be(0);
+        document.Paragraphs[0].SpacingAfter.Should().Be(0);
+
+        document.Paragraphs[1].LeftMargin.Should().Be(0);
+        document.Paragraphs[1].RightMargin.Should().Be(0);
+        document.Paragraphs[1].FirstLineIndent.Should().Be(0);
+        document.Paragraphs[1].SpacingBefore.Should().Be(0);
+        document.Paragraphs[1].SpacingAfter.Should().Be(0);
+
+        document.Paragraphs[2].LeftMargin.Should().Be(288);
+        document.Paragraphs[2].RightMargin.Should().Be(360);
+        document.Paragraphs[2].FirstLineIndent.Should().Be(28);
+        document.Paragraphs[2].SpacingBefore.Should().Be(9);
+        document.Paragraphs[2].SpacingAfter.Should().Be(7);
+
+        int searchIndex = 0;
+        foreach (var paragraph in document.Paragraphs)
+        {
+            int foundIndex = document.Text.IndexOf(paragraph.Text, searchIndex, StringComparison.Ordinal);
+            foundIndex.Should().Be(paragraph.Start);
+            searchIndex = paragraph.Start + paragraph.Text.Length;
+        }
+
+        document.Paragraphs[1].FormatRecord.Should().NotBeNull();
+        var second = document.Paragraphs[1].FormatRecord!;
+        second.EndOffset.Should().Be(document.Paragraphs[1].End);
+        second.LeadingMargin.Should().BeGreaterThan(0);
+        second.Span.Should().Be(0);
+        second.Flags.Should().Be(8);
+
+        document.Paragraphs[2].FormatRecord.Should().NotBeNull();
+        var third = document.Paragraphs[2].FormatRecord!;
+        third.EndOffset.Should().Be(document.Paragraphs[2].End);
+        third.Span.Should().Be(894);
+        third.Flags.Should().Be(10);
+        third.TrailingValue.Should().Be(377);
+        third.FirstLineIndent.Should().Be(28);
+    }
+
+    [Fact]
+    public void Text_Hallo_textAlignRight_formats_track_span()
+    {
+        var document = ReadDocument("Paragraphs/Text_Hallo_textAlignRight_13.xmed.bin");
+
+        document.Paragraphs.Should().ContainSingle();
+        var paragraph = document.Paragraphs.Single();
+        paragraph.FormatRecord.Should().NotBeNull();
+        var format = paragraph.FormatRecord!;
+        format.EndOffset.Should().Be(paragraph.End);
+        format.LeadingMargin.Should().Be(14);
+        format.Span.Should().Be(0x77);
+        format.Flags.Should().Be(0);
+        format.TrailingValue.Should().Be(0x3B);
+        format.FirstLineIndent.Should().Be(45);
+    }
+
+    [Theory]
+    [InlineData("Text_Hallo_fontsize14_13.xmed.bin", 14, "Arial")]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_size50_13.xmed.bin", 50, "Tahoma")]
+    public void Text_Hallo_fontsize14_file_should_track_font_size(string fileName, int expectedSize, string expectedFont)
+    {
+        var document = ReadDocument(fileName);
+
+        document.Styles.Select(style => style.FontName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals(expectedFont, StringComparison.OrdinalIgnoreCase));
+        document.Runs.Select(run => run.FontSize).Should().Contain(expectedSize);
+    }
+
+    [Fact]
+    public void Text_Hallo_text_transform_all_on_file_should_enable_styles()
+    {
+        var document = ReadDocument("Text_Hallo_text_transform_all_on_13.xmed.bin");
+
+        document.Runs.Should().ContainSingle();
+        var run = document.Runs.Single();
+        run.Bold.Should().BeTrue();
+        run.Italic.Should().BeTrue();
+        run.Underline.Should().BeTrue();
+        run.Strikeout.Should().BeFalse();
+        run.Subscript.Should().BeFalse();
+        run.Superscript.Should().BeFalse();
+
+        document.Styles.Should().Contain(style =>
+            style.Flags.HasFlag(XmedStyleDescriptor.XmedStyleFlags.Bold)
+            && style.Flags.HasFlag(XmedStyleDescriptor.XmedStyleFlags.Italic)
+            && style.Flags.HasFlag(XmedStyleDescriptor.XmedStyleFlags.Underline));
+    }
 
     [Fact]
     public void Text_Hallo_multifont_file_should_list_multiple_fonts()
@@ -97,7 +180,7 @@ public class XmedFileTest
 
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("Hallo");
-        document.Runs.Should().HaveCount(1);
+        document.Runs.Should().HaveCountGreaterThan(1);
         document.Styles.Select(style => style.FontName)
             .Where(name => !string.IsNullOrEmpty(name))
             .Should().Contain(name => name.Equals("Trajan Pro", StringComparison.OrdinalIgnoreCase));
@@ -164,18 +247,42 @@ public class XmedFileTest
 
     [Theory]
     [InlineData("Text_Hallo_col_blue_13.xmed.bin", 0x00, 0x00, 0xFF)]
-    [InlineData("Text_Hallo_col_blue1_13.xmed.bin", 0x00, 0x00, 0xFF)]
+    [InlineData("Text_Hallo_col_blue1_13.xmed.bin", 0x00, 0xFF, 0xFF)]
     [InlineData("Text_Hallo_col_bordeau_13.xmed.bin", 0x88, 0x00, 0x00)]
-    [InlineData("Text_Hallo_col_green_13.xmed.bin", 0xFF, 0x00, 0x00)]
+    [InlineData("Text_Hallo_col_green_13.xmed.bin", 0x00, 0xFF, 0x00)]
     [InlineData("Text_Hallo_col_lightgreen_13.xmed.bin", 0xCC, 0xFF, 0x99)]
     [InlineData("Text_Hallo_col_orange_13.xmed.bin", 0xFF, 0xCC, 0x66)]
     [InlineData("Text_Hallo_col_pink_13.xmed.bin", 0xFF, 0x00, 0xFF)]
     [InlineData("Text_Hallo_col_yellow_13.xmed.bin", 0xFF, 0xFF, 0x00)]
     public void Text_color_samples_should_BeRead(string fileName, byte expectedR, byte expectedG, byte expectedB)
     {
-        var doc = ReadDocument($"{fileName}");
+        var doc = ReadDocument(fileName);
+        doc.Runs.Should().ContainSingle();
+        var run = doc.Runs.Single();
+        run.ForeColor.R.Should().Be(expectedR);
+        run.ForeColor.G.Should().Be(expectedG);
+        run.ForeColor.B.Should().Be(expectedB);
+        doc.Styles.Should().Contain(style =>
+            style.ForegroundColor.R == expectedR
+            && style.ForegroundColor.G == expectedG
+            && style.ForegroundColor.B == expectedB);
+    }
 
-        // TODO
+    [Theory]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh13_13.xmed.bin", 130, 178)]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh20_13.xmed.bin", 200, 178)]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh29_13.xmed.bin", 290, 178)]
+    [InlineData("FontSize/Text_Single_Line_Multi_Style3_lh39_13.xmed.bin", 390, 178)]
+    [InlineData("FontSize/D01_LineHeight_18_13.xmed.bin", 18, 255)]
+    [InlineData("FontSize/D02_LineHeight_36_13.xmed.bin", 36, 255)]
+    public void Line_height_samples_should_capture_paragraph_bounds(string fileName, int expectedBaseline, int expectedWidth)
+    {
+        var document = ReadDocument(fileName);
+
+        document.Paragraphs.Should().NotBeEmpty();
+        var paragraph = document.Paragraphs[0];
+        paragraph.BaselineOffset.Should().Be(expectedBaseline);
+        paragraph.ParagraphWidth.Should().Be(expectedWidth);
     }
     [Fact]
     public void Multi_Text_color_samples_should_BeRead()
@@ -200,8 +307,6 @@ public class XmedFileTest
             _output.WriteLine(
                 $"Style {style.StyleId}: font '{style.FontName}' size {style.FontSize} colorIndex {colorIndex} inline {inlineColor} flags {style.Flags}");
         }
-
-        DumpTokenWindows("MemberTests/Text_Multi_Style_Size_Color_13.xmed.bin");
     }
 
    
@@ -209,7 +314,7 @@ public class XmedFileTest
 
     private XmedDocument ReadDocument(string fileName)
     {
-        var path = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
+        var path = TestContextHarness.GetTextAssetPath(fileName);
         var bytes = File.ReadAllBytes(path);
         var reader = new BlXmedTextReader(_logger);
         return reader.Read(bytes);
@@ -217,7 +322,7 @@ public class XmedFileTest
 
     private void DumpTokenWindows(string relativePath)
     {
-        var assetPath = TestContextHarness.GetAssetPath($"Texts_Fields/{relativePath}");
+        var assetPath = TestContextHarness.GetTextAssetPath(relativePath);
         var bytes = File.ReadAllBytes(assetPath);
         var tokenizer = new BlXmedTokenizer();
         var (tokens, _) = tokenizer.Tokenize(bytes);

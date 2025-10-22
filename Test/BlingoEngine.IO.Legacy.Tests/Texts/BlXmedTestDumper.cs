@@ -73,7 +73,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
             //var fileName = "Text_Hallo_col_orange_13.xmed.bin";
             //var fileName = "Text_Hallo_col_pink_13.xmed.bin";
             //var fileName = "Text_Hallo_col_yellow_13.xmed.bin";
-            var item = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
+            var item = TestContextHarness.GetTextAssetPath(fileName);
             var log = TestContextHarness.XmedDumpCompactLogGrouped(fileName);
             var resultFileName = item.Replace(".xmed.bin", ".xmedglog.txt");
             File.WriteAllText(resultFileName, log);
@@ -89,7 +89,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
             //var fileName = "Text_Hallo_col_orange_13.xmed.bin";
             //var fileName = "Text_Hallo_col_pink_13.xmed.bin";
             //var fileName = "Text_Hallo_col_yellow_13.xmed.bin";
-            var item = TestContextHarness.GetAssetPath($"Texts_Fields/{fileName}");
+            var item = TestContextHarness.GetTextAssetPath(fileName);
             var log = TestContextHarness.XmedDumpCompactLog(fileName);
             var resultFileName = item.Replace(".xmed.bin", ".xmedlog.txt");
             File.WriteAllText(resultFileName, log);
