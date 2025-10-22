@@ -156,8 +156,15 @@ namespace BlingoEngine.IO.Legacy.Texts
 
         private void ReadColors(XmedTokenGroup styleGroup, XmedStyleDescriptor descriptor)
         {
-            descriptor.ForegroundColor = ReadColor(styleGroup, 10);
-            descriptor.BackgroundColor = ReadColor(styleGroup, 14);
+            int rawColorIndex = styleGroup.ReadNumeric(31);
+            if (rawColorIndex > 0 && rawColorIndex <= byte.MaxValue)
+                descriptor.ColorIndex = (byte)rawColorIndex;
+
+            var foreground = ReadColor(styleGroup, 10);
+            var background = ReadColor(styleGroup, 14);
+
+            descriptor.ForegroundColor = NormalizeIndexedColor(descriptor.ColorIndex, foreground);
+            descriptor.BackgroundColor = background;
         }
 
         private static void ApplyFont(XmedStyleDescriptor descriptor, IReadOnlyList<XmedFontDescriptor> fonts)
@@ -188,6 +195,16 @@ namespace BlingoEngine.IO.Legacy.Texts
             return fa > 0
                 ? new BlLegacyColor(fr, fg, fb, fa)
                 : new BlLegacyColor(fr, fg, fb);
+        }
+
+        private static BlLegacyColor NormalizeIndexedColor(byte? colorIndex, BlLegacyColor color)
+        {
+            if (!colorIndex.HasValue || color.R != 0 || color.G == 0 || color.G != color.B)
+                return color;
+
+            return color.A != 0xFF
+                ? new BlLegacyColor(color.R, 0, color.B, color.A)
+                : new BlLegacyColor(color.R, 0, color.B);
         }
 
         private static byte NormalizeColor(int value)

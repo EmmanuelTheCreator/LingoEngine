@@ -367,7 +367,7 @@ public class XmedFileTest
 
     [Theory]
     [InlineData("Text_Hallo_col_blue_13.xmed.bin", 0x00, 0x00, 0xFF)]
-    [InlineData("Text_Hallo_col_blue1_13.xmed.bin", 0x00, 0xFF, 0xFF)]
+    [InlineData("Text_Hallo_col_blue1_13.xmed.bin", 0x00, 0x00, 0xFF)]
     [InlineData("Text_Hallo_col_bordeau_13.xmed.bin", 0x88, 0x00, 0x00)]
     [InlineData("Text_Hallo_col_green_13.xmed.bin", 0x00, 0xFF, 0x00)]
     [InlineData("Text_Hallo_col_lightgreen_13.xmed.bin", 0xCC, 0xFF, 0x99)]
