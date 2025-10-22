@@ -88,6 +88,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     Start = slice.Start,
                     Length = runText.Length,
                     Text = runText,
+                    StyleId = styleId,
                     FontName = descriptor.FontName,
                     FontSize = descriptor.FontSize,
                     Bold = descriptor.Bold,

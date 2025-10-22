@@ -245,6 +245,102 @@ public class XmedFileTest
     }
 
     [Fact]
+    public void Text_Multi_Line_Multi_Style_file_should_match_paragraph_annotations()
+    {
+        var document = ReadDocument("Text_Multi_Line_Multi_Style_13.xmed.bin");
+
+        document.Paragraphs.Should().HaveCount(5);
+
+        var expectations = new[]
+        {
+            new ParagraphExpectation(
+                "This text is red, Arial,12px, centered",
+                FontName: "Arial",
+                FontSize: 12,
+                Color: (0xFF, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false,
+                Alignment: null),
+            new ParagraphExpectation(
+                "The text is yellow, Tahoma, 9px, left aligned, bold, italic, underline",
+                FontName: "Tahoma",
+                FontSize: 9,
+                Color: (0xFF, 0xFF, 0x00),
+                Bold: true,
+                Italic: true,
+                Underline: true,
+                Alignment: null),
+            new ParagraphExpectation(
+                "The text is green, font Terminal, 18px, left aligned, with spacing of 39",
+                FontName: "Terminal",
+                FontSize: 18,
+                Color: (0x00, 0xFF, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false,
+                Alignment: XmedAlignment.Left,
+                LineSpacing: 39),
+            new ParagraphExpectation(
+                "The text is orange, Tahoma, 9px, left aligned, bold, italic, underline",
+                FontName: "Tahoma",
+                FontSize: 9,
+                Color: (0xFF, 0x99, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false,
+                Alignment: XmedAlignment.Left),
+            new ParagraphExpectation(
+                "This text is red, Arial,12px, centered again",
+                FontName: "Arial",
+                FontSize: 12,
+                Color: (0xFF, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false,
+                Alignment: null)
+        };
+
+        var normalizedParagraphs = document.Paragraphs
+            .Select(p => p.Text.TrimEnd('\r'))
+            .ToArray();
+
+        normalizedParagraphs.Should().Equal(expectations.Select(e => e.Text));
+
+        var normalizedFontFamilies = document.Fonts
+            .Select(f => f.FamilyName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Select(name => name.ToLowerInvariant())
+            .ToArray();
+
+        normalizedFontFamilies.Should().Contain(new[] { "arial", "tahoma", "terminal" });
+
+        for (int index = 0; index < expectations.Length; index++)
+        {
+            var paragraph = document.Paragraphs[index];
+            var expectation = expectations[index];
+
+            var run = GetRunsWithinParagraph(document, paragraph)
+                .First(r => !string.IsNullOrWhiteSpace(r.Text.Trim('\r')));
+
+            run.FontSize.Should().Be(expectation.FontSize);
+            run.ForeColor.R.Should().Be(expectation.Color.R);
+            run.ForeColor.G.Should().Be(expectation.Color.G);
+            run.ForeColor.B.Should().Be(expectation.Color.B);
+            run.Bold.Should().Be(expectation.Bold);
+            run.Italic.Should().Be(expectation.Italic);
+            run.Underline.Should().Be(expectation.Underline);
+
+            if (expectation.Alignment.HasValue)
+                paragraph.Alignment.Should().Be(expectation.Alignment.Value);
+
+            if (expectation.LineSpacing.HasValue)
+                paragraph.LineSpacing.Should().Be(expectation.LineSpacing.Value);
+
+        }
+    }
+
+    [Fact]
     public void Font_table_should_decode_font_metadata()
     {
         var document = ReadDocument("Text_Multi_Line_Multi_Style_13.xmed.bin");
@@ -428,6 +524,16 @@ public class XmedFileTest
         _output.WriteLine($"Token window {label} ultra-compact dump:\n{ultra}");
     }
 
+    private static IReadOnlyList<XmedTextRun> GetRunsWithinParagraph(XmedDocument document, XmedParagraphDescriptor paragraph)
+    {
+        int paragraphStart = paragraph.Start;
+        int paragraphEnd = paragraph.End;
+
+        return document.Runs
+            .Where(run => run.Start < paragraphEnd && run.Start + run.Length > paragraphStart)
+            .ToList();
+    }
+
     private static IReadOnlyCollection<string> GetNormalizedFonts(XmedDocument document)
     {
         return document.Styles
@@ -436,6 +542,18 @@ public class XmedFileTest
             .Select(name => name.ToLowerInvariant())
             .ToArray();
     }
+
+    private sealed record ParagraphExpectation(
+        string Text,
+        string FontName,
+        int FontSize,
+        (byte R, byte G, byte B) Color,
+        bool Bold,
+        bool Italic,
+        bool Underline,
+        XmedAlignment? Alignment,
+        int? LineSpacing = null
+    );
 
    
 

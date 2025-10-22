@@ -8,6 +8,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int Start { get; set; }
         public int Length { get; set; }
         public string Text { get; set; } = string.Empty;
+        public int StyleId { get; set; }
         public string FontName { get; set; } = string.Empty;
         public int? FontSize { get; set; }
         public bool Bold { get; set; }
