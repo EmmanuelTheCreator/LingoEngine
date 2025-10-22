@@ -273,30 +273,50 @@ Part2 bytes
 | 33 54 45 58 	| 						| 3TEX or XET3						|
 | 00 00 01 64 	| 						| 356								|
 | FF FF FF FF 	| 						| White								|
-| 00 32		 	| 						| 50								|
-| 00 00 00 00 	| 						| 									|
+| 00 53 21 47 	| Tunnel Depth			| 50 or 83.13, 16.16 fixed-point, big-endian. 0x00532147 / 65536 = 83.13								|
 | 00 00 00 01 	| 						| 1									|
-| 00 00      	| 						| 									|
+| 00 02 CC CC	| Bevel Amount			| 2.80 = 16.16 fixed (big-endian).	0x0002CCCC / 65536 = 2.8027 ≈ 2.80								|
 | 00 00 00 01 	| 						| 1									|
 | 00 00 00 05 	| 						| 5									|
 | 00 00 00 01 	| 						| 1									|
 | 00 00 00 00 	| 						| 									|
-| 00 00 00 02 	| 						| 2									|
+| 00 00 00 02 	| Perhaps light dir		| 2									|
 | 00 00 00 00 	| 						| 									|
-| 00 00 00 1E  	| 						| 30								|
-| FF FF FF 00 	| 						| White	Alpa 0						|
-| FF FF FF 00 	| 						| White	Alpa 0						|
-| FF FF FF 00 	| 						| White	Alpa 0						|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 3F 80		 	| 						| 16.256							|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 3F 80		 	| 						| 16.256							|
+| 00 00 00 1E  	| Reflectivity     		| 30								|
+| 99 66 33 00  	| Directional			| ≈ #A0522D	16-bit RGB				|
+| 99 33 66 00  	| Ambient				| ≈ #DA70D6	16-bit RGB				|
+| 00 99 66 00 	| Background			| ≈ #008080	16-bit RGB				|
+| 41 40 00 00  	| Camera Pos X			| IEEE-754 32-bit floating-point	|
+| 42 08 00 00  	| Camera Pos Y			| IEEE-754 32-bit floating-point	|
+| 42 60 00 00 	| Camera Pos Z			| IEEE-754 32-bit floating-point	|
+| 02 19 F6 10 	| Distance?				| 0x0219F610 / 65536 = 537.9612		|
+| 42 9C 00 00  	| Camera Rot X			| IEEE-754 32-bit floating-point	|
+| 42 C4 00 00  	| Camera Rot Y			| IEEE-754 32-bit floating-point	|
+| 42 98 00 00 	| Camera Rot Z			| IEEE-754 32-bit floating-point	|
+| 02 19 EF A8	| Focal?				| 0x0219EFA8 / 65536 = 537.9362		|
 | 4E 6F 54 65 78 74 75 72 65 | TextureName | NoTexture						|
  
+-------------
+Enums:
+Enum values Bevel Edge : None/ Mitter / Round
+ 
+Enum values Diretional Light :
+None, 
+Top Left, Top Center, Top Right,
+Middle Left, Middle Center, Middle Right,
+
+
+Shader Texture Enum:
+None
+Default
+Member
+-------------
+ Color:
+ Use 16-bit big-endian RGB → 8-bit per channel.
+Read 6 bytes as three 16-bit words: (R16, G16, B16) big-endian.
+Convert to 8-bit:
+If high bytes are zero (common here): R = R16 & 0xFF; G = G16 & 0xFF; B = B16 & 0xFF.
+Else scale: R = round(R16 / 257), same for G, B.
 ---------------------------------------- 
 Test 
 ----
