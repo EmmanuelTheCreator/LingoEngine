@@ -50,10 +50,51 @@ Starts with 03, then
 ## FFFF / 0000 - Header 
 `00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
 
-TODO
+``` 
+03:00000000005C00000000 
+    02:40001 
+		02:101					// File version or  constant (Western / Latin-1 codepage). 
+		02:-7FFF6FE0            // fix token probably/Version (like in the tab stops where it is 6A03E2AE)
+	02:0                          
+      C2(03)                      
+		02:480048 				// 72×72 DPI                
+		02:-1                     
+	02:0                          
+		02:92                   // Height 320
+		01:0                      
+      C1(03)                      
+		02:-1                     
+		<82                       
+		02:5B 					// Color-table markers  : ForeColor (main text)                     
+		02:5C 					// Color-table markers  : BackColor (fill/background      
+		02:5B 					// Color-table markers  : HiliteColor (selection)                   
+		02:5C 					// Color-table markers  : Shadow/OutlineColor (for 3D or raised text effects)                  
+	02:0                          
+      C2(06)                      
+		02:92                   // Width 320
+		02:B2                   // Height
+		01:FF00 <81 <81 01:0    // Some color
+		<82 
+		<82 
+		02:1 
+	02:0 
+      C2(04) 
+		02:EB 
+		01:0 
+``` 
 
+### Color-table markers
+ (02:5B 02:5C 02:5B 02:5C):
+5B and 5C are palette indices (indexes into the movie’s 256-color table).
+1️⃣ ForeColor  – the main text color (font glyph fill).  
+2️⃣ BackColor  – background behind the text (fill rectangle).  
+3️⃣ HiliteColor – highlight color used when text is selected.  
+4️⃣ ShadowColor – outline or drop-shadow color for embossed / raised text effects.
+Director reused them in pairs for normal text/background combinations.
 
 ---
+
+
 
 ## 0001 - Layout 
 
