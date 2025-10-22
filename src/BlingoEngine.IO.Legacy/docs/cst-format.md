@@ -103,6 +103,22 @@ Director stores the cast-member classification as a big-endian 32-bit word at th
 | `14` | Xtra | Third-party Xtras and internal extensions. |
 | `15` | Field | Editable text fields documented in [Legacy Text and Field Members](./LegacyTextFieldMembers.md). |
 
+### CASt Cinf byte offsets (observed)
+
+| Offset | Field / Meaning                          | Type        | Values / Notes |
+|-------:|------------------------------------------|-------------|----------------|
+| 0x44   | CastInfo Flags (DTS, etc.)               | byte/flags  | `BlLegacyCastInfoFlags` |
+| 0x46   | Text Framing                             | byte/enum   | `BlLegacyTextFraming` |
+| 0x8E   | AntiAlias & Kerning mode nibbles         | byte        | AA: low-nibble {0x06 None, 0x04 All, 0x02 >Threshold}; Kern: high-nibble {0x40 None, 0x30 All, 0x70 >Threshold} |
+| 0xBA   | AntiAlias threshold (pt)                 | byte        | 0–255 |
+| 0xCE   | Kerning enabled flag                     | byte/bit    | bit0: 1=on |
+| 0xD2   | Kerning threshold (pt)                   | byte        | 0–255 |
+| 0xD6   | Use Hyperlink Styles                     | byte/bool   | ≠0 true |
+| 0xE6   | Ink                                      | byte        | mode id |
+| 0xA2   | Is Editable                              | byte/bool   | ≠0 true |
+| var.   | Member Name                              | via Cinf    | Offset table to var-len field :contentReference[oaicite:0]{index=0} |
+
+
 #### Bitmap cast members
 
 Bitmap entries reserve their cast-data length for zero bytes because the actual raster payloads live
