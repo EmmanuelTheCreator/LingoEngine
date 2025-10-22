@@ -101,11 +101,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                 case XmedMainTokenGroup.MainGroupType.Fonts:
                     BuildFontGroup(group);
                     break;
-                case XmedMainTokenGroup.MainGroupType.SpacingDescriptor:
-                case XmedMainTokenGroup.MainGroupType.SpacingDescriptor2:
+                case XmedMainTokenGroup.MainGroupType.ParagraphBounds:
+                case XmedMainTokenGroup.MainGroupType.ParagraphBounds2:
                 case XmedMainTokenGroup.MainGroupType.UnknownB:
-                case XmedMainTokenGroup.MainGroupType.UnknownC:
-                case XmedMainTokenGroup.MainGroupType.UnknownF:
+                case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
+                case XmedMainTokenGroup.MainGroupType.ParagraphSpacing:
                 case XmedMainTokenGroup.MainGroupType.Unknown13:
                 case XmedMainTokenGroup.MainGroupType.Unknown128:
                 case XmedMainTokenGroup.MainGroupType.Unknown129:
@@ -326,11 +326,11 @@ namespace BlingoEngine.IO.Legacy.Texts
                     case XmedMainTokenGroup.MainGroupType.Fonts:
                         DumpGroupWithSubGroups(sb, mainGroup, 1, lastWasNewLine);
                         break;
-                    case XmedMainTokenGroup.MainGroupType.SpacingDescriptor:
-                    case XmedMainTokenGroup.MainGroupType.SpacingDescriptor2:
+                    case XmedMainTokenGroup.MainGroupType.ParagraphBounds:
+                    case XmedMainTokenGroup.MainGroupType.ParagraphBounds2:
                     case XmedMainTokenGroup.MainGroupType.UnknownB:
-                    case XmedMainTokenGroup.MainGroupType.UnknownC:
-                    case XmedMainTokenGroup.MainGroupType.UnknownF:
+                    case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
+                    case XmedMainTokenGroup.MainGroupType.ParagraphSpacing:
                     case XmedMainTokenGroup.MainGroupType.Unknown13:
                     case XmedMainTokenGroup.MainGroupType.Unknown128:
                     case XmedMainTokenGroup.MainGroupType.Unknown129:

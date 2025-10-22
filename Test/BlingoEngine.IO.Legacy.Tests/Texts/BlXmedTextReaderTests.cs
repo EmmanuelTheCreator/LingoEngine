@@ -27,7 +27,7 @@ public class BlXmedTextReaderTests
     [Fact]
     public void Read_SingleRunText_ParsesHeaderAndText()
     {
-        var document = ReadDocument("Texts_Fields/Text_Hallo_13.xmed.bin");
+        var document = ReadDocument("Text_Hallo_13.xmed.bin");
 
         document.Text.Should().Be("Hallo");
         document.Runs.Should().ContainSingle();
@@ -41,17 +41,17 @@ public class BlXmedTextReaderTests
     [Fact]
     public void Read_DecodesStyleFlags()
     {
-        var italic = ReadDocument("Texts_Fields/Text_Hallo_italic_13.xmed.bin");
+        var italic = ReadDocument("Styles/Text_Hallo_italic_13.xmed.bin");
         italic.Styles.Should().Contain(s => s.Italic);
 
-        var underline = ReadDocument("Texts_Fields/Text_Hallo_underline_13.xmed.bin");
+        var underline = ReadDocument("Styles/Text_Hallo_underline_13.xmed.bin");
         underline.Styles.Should().Contain(s => s.Underline);
     }
   
     [Fact]
     public void Read_ParsesStyleDescriptorsForMultifont()
     {
-        var document = ReadDocument("Texts_Fields/Text_Multi_Line_Multi_Style_13.xmed.bin");
+        var document = ReadDocument("Text_Multi_Line_Multi_Style_13.xmed.bin");
 
         document.Text.Should().Contain("This text is red");
         //document.RunMap.Should().NotBeEmpty();
@@ -61,7 +61,7 @@ public class BlXmedTextReaderTests
   
     private XmedDocument ReadDocument(string asset)
     {
-        var path = TestContextHarness.GetAssetPath(asset);
+        var path = TestContextHarness.GetTextAssetPath(asset);
         var bytes = File.ReadAllBytes(path);
         var reader = new BlXmedTextReader(_logger);
         return reader.Read(bytes);
