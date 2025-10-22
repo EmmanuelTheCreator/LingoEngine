@@ -217,15 +217,34 @@ Something = "N/A"
  
  
 ---------------------------------------- 
+Typical bytes : 68 EF 75 86    68    EF 77 75
+4 first are almost identical to next 4.
+Idea: 4 first bytes minus foreach 4 next bytes?
 
+Last 3 bytes changes
 | FileName								| before N/A 	|
 |---------------------------------------|---------------|
-| Text_Default.cst						| 75 AB 	 	|
-| Text_Editable_On.cst					| 				|
-| Text_AntiAlias_None.cst				| 77 24			|
-| Text_AntiAlias_AllText.cst			| 77 12			|
-| Text_AntiAlias_LargerThan_19pt.cst	| 77 86			|
-| Text_Kerning_None.cst					| 77 44			|
+| Text_Default.cst						| EF 75 AB 	 	|
+| Text_Wrap_Off.cst						| EF 75 98		|
+| Text_Editable_On.cst					| EF 76 20 		|
+| Text_Tab_On.cst						| EF 76 03		|
+| Text_DTS_On.cst						| EF EB 86		|
+| Text_Framing_Fixed.cst				| EF 76 E5		|
+| Text_Framing_Scrolling.cst			| EF 76 D4		|
+| Text_AntiAlias_None.cst				| EF 77 24		|
+| Text_AntiAlias_AllText.cst			| EF 77 12		|
+| Text_AntiAlias_LargerThan_19pt.cst	| EF 77 86		|
+| Text_AntiAlias_LargerThan_21pt.cst	| F9 42 9C		|
+| Text_AntiAlias_LargerThan_23pt.cst	| F9 42 FB		|
+| Text_Kerning_None.cst					| EF 77 44		|
+| Text_Kerning_AllText.cst				| EF 77 30		|
+| Text_Kerning_LargerThan_19pt.cst		| EF 77 75		|
+| Text_Kerning_LargerThan_21pt.cst		| F9 42 FB		|
+| Text_PreRender_CopyInk.cst			| EF 77 E7		|
+| Text_PreRender_CopyInk_SaveBitmap.cst	| EF 77 B1		|
+| Text_PreRender_OtherInk.cst			| EF 77 CA		|
+| Text_PreRender_OtherInk_SaveBitmap...	| EF 77 D8		|
+| Text_UseHyperlinkStylesOff.cst		| EF 76 46		|
 |---------------------------------------|---------------|
 
 Part2 bytes
@@ -233,25 +252,24 @@ Part2 bytes
 | 00 00 00 04 	| type length			| 4									|
 | 74 65 78 74 	| type					| text								|
 | 00 00 01 B0	| 						| 432								|
-| 00 00	00 		| 						|   								|
-| 01			| Editable				| ON  								|
+| 00 00	00 01	| Editable				| ON  								|
+| 00 00 00 00 	| Framing				| 1=Scroling, 2=Fixed				|
+| 00 00 00 00 	| Tab on/off			| 1=ON, 0=OFF						|
+| 00 00 00 00 	| DTD on/off			| 1=ON, 0=OFF						|
+| 00 00 00 01 	| Antialias on/off		| 1=ON, 0=OFF						|
+| 00 00 00 0E 	| Antialias Mode		| 0=AllText, E0=Default? ,13=LargetThen		|
+| 00 00 00 00 	| AntaAlias Larger Size	| 15								|
 | 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 01 	| Antialias on/off		| 1=ON,0=OFF						|
-| 00 00 00 0E 	| Antialias Mode		| 0=AllText, E0= ,13=LargetThen		|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 0F 	| 						| 15								|
+| 00 00 00 0F 	| Kerning Larger Size	| 15								|
 | 00 00 1F F4 	| 						| 81.80								|
-| 00 00 00 01 	| Kerning On/Off		| 1=ON,0=OFF						|
-| 00 00 00 0E 	| 						| 14								|
-| 00 00 00 01 	| 						| 1									|
+| 00 00 00 01 	| Kerning On/Off		| 1=ON, 0=OFF						|
+| 00 00 00 0E 	| Kerning Mode			| 0=AllText, E0=Default? ,13=LargetThen		|
+| 00 00 00 01 	| UseHyperlinkStyles	| 1=ON, 0=OFF						|
 | 00 00 00 00 	| 						| 									|
 | 00 00 00 00 	| 						| 									|
 | 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
-| 00 00 00 00 	| 						| 									|
+| 00 00 00 00 	| PreRender Ink			| 1=InkCopy, 2=InkOther				|
+| 00 00 00 00 	| PreRender Save BMP	| 1=ON, 0=OFF						|
 | 33 54 45 58 	| 						| 3TEX or XET3						|
 | 00 00 01 64 	| 						| 356								|
 | FF FF FF FF 	| 						| White								|

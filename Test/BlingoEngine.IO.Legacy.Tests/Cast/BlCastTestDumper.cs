@@ -69,8 +69,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
         {
             var file = fileData.FileName;
             using var harness = TestContextHarness.Open(file);
-            var outPath = Path.Combine(Path.GetDirectoryName(file)!,
-               $"{Path.GetFileNameWithoutExtension(file)}.CASt.txt");
+            var outPath = Path.Combine(Path.GetDirectoryName(file)!,$"{Path.GetFileNameWithoutExtension(file)}.CASt.txt");
+            var outPath2 = Path.Combine(Path.GetDirectoryName(file)!,$"{Path.GetFileNameWithoutExtension(file)}.CASt.bin");
             //if (File.Exists(outPath))
             //    return;
             harness.ReadResources();
@@ -90,6 +90,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 if (!ctx.Resources.TryGetEntry(slot.ResourceId, out var entry)) continue;
                 var bytes = entry.ReadClassicPayload(new BlClassicPayloadLoader(ctx));
                 var info = bytes.ToArray(); 
+                if (!File.Exists(outPath2))
+                    File.WriteAllBytes(outPath2,info);
                 var tokenizer = new BlLegacyCastTokenizer();
                 var tokens = tokenizer.TokenizeInfo(info, addonints);
                 var text1 = tokenizer.TokenListToStringX(tokens); // for debug
