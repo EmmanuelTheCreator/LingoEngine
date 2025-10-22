@@ -32,10 +32,15 @@ Starts with 03, then
 03:00050000001F00000006     // Run paragraphs 
 03:00070000004D00000002 	// Paragraphs Definitions
 03:00080000020A00000003		// Fonts  Block 
-03:00090000001500000002 	// Line-height Paragraph Bounds
-03:000A0000001500000002 	// Identical as Paragraph Bounds
-03:000B0000000500000002  	// Some static List of 8 values
+03:00090000001500000002 	// Paragraph Bounds
+03:000A0000001500000002 	// Unknown: Identical as Paragraph Bounds
+03:000B0000000500000002  	// Unknown: Some static List of 8 values
 03:000C0000002A00000002   	// Paragraph format records
+03:000F0000002100000000 	// Paragraph Spacing Descriptor
+03:00130000007E00000000  	// Unknown: Seems a fix list of numbers inside a 00
+03:01280000000B00000001 	// Unknown: Seems fix values	
+03:01290000000B00000001 	// Unknown: Seems fix values	identical as 0128
+03:FFFE0000000600040001 	// Pre-render Bitmap
 ```
 
 
@@ -354,16 +359,48 @@ Each record configures that paragraph’s layout (margins, width, alignment).
 
 
 
-### Tail — 00(44) Seems
+## 03:0013 - Seems a fix list of numbers inside a 00
 Always present and identical in samples:
 `00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131`
-Treat as a global lookup/palette table.
 
+```
+03:00130000007E00000000 
+    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0 
+        00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
+  01:FFFF <81 <81 01:0 
+  01:FFFF <81 <81 01:0 
+```
 
 
 
 ---
 
+## 03:0128 - Unknown: Seems fix values	
+```
+03:01280000000C00000001 
+    02:10A <82 01:0 
+      C1(03) 
+      C2(05) 
+```
+
+---
+
+## 03:0129 -  Unknown: Seems fix values	identical as 0128
+```
+03:01290000000C00000001 
+    02:10A <82 01:0 
+      C1(03) 
+      C2(05)
+```
+
+
+---
+
+## 03:FFFE - Pre-render Bitmap
+
+TXc(l) : contains all the font glyps perhaps, the encodeing is completly different.
+
+---
 
 ## 📐 Text Box Size (Width & Height)
 
