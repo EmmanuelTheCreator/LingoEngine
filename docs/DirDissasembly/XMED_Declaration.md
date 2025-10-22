@@ -298,23 +298,24 @@ No explicit line-height token exists — it’s inferred from these bounds.
 
 
 
-## 03:000C — 🧩 Paragraph format records
+## 03:000C — Paragraph format records
 
 **Observations (from your logs):**
 - Structure = records of: `02:<S> <82 <82> 02:<A> 02:<B> 01:<f> [..optional..]` × count.  
 - Count varies (1–2). Values change with **alignment** and **margins**.
 
 **Correlations:**
-- **Left**: `02:0 <82 <82> 02:F 02:4 01:0 … 01:1`. :contentReference[oaicite:0]{index=0}  
-- **Right**: `02:5 <82 <82> 02:E 02:77 01:0 02:3B <82 01:1`. :contentReference[oaicite:1]{index=1}  
-- **Center**: `02:0 <82 <82> 02:9 02:7 01:0 … 01:1`. :contentReference[oaicite:2]{index=2}  
+- **Left**: `02:0 <82 <82> 02:F 02:4 01:0 … 01:1`. 
+- **Right**: `02:5 <82 <82> 02:E 02:77 01:0 02:3B <82 01:1`. 
+- **Center**: `02:0 <82 <82> 02:9 02:7 01:0 … 01:1`.
 - **LineHeight 18/36**: count=2, includes constants `02:E3`, `02:6F`. 
 
-**Conclusion:** 03:000C encodes per-paragraph formatting (alignment/indents/margins), not text runs.
+**Conclusion:** 03:000C encodes per-paragraph formatting (alignment/indents/margins)
 
 ### Structure (per paragraph)
+```
 02:<S> <82 <82> 02:<A> 02:<B> 01:<f> …
-
+```
 | Symbol | Meaning | Notes |
 |---------|----------|-------|
 | `<S>` | Paragraph index | Increases sequentially per paragraph |
