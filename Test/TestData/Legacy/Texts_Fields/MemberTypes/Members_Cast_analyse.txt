@@ -1,0 +1,218 @@
+
+----------------------------------------
+ImgCast.cst:
+-------------
+ Int=01(1) Int=9C(156) Int=1C(28) 	
+ Int=14(20) Pad(14) 	
+ Int=16(22) Pad(8) 	
+ Int=0A(10) Int=0A(10) Int=0A(10) Int=0A(10) Int=0A(10) Int=0A(10) Int=0A(10) Int=0A(10) 	
+ Int=0A(10) 	
+ Int=0A(10) Int=0A(10) 	
+ Int=0A(10) Int=0A(10) Int=0A(10) Int=0A(10) Int=1A(26) 	
+ Int=1E(30) Int=22(34) Int=26(38) 	
+ Text=""(0) 	
+ Byte=00(0) 	
+ Text=""(0) 	
+ 
+ 10 - 10 	= 0
+ 10 - 10 	= 0
+ 10 - 10 	= 0
+ 26 - 10 	= 16
+ 30 - 26 	= 4
+ 34 - 4 	= 4
+ 38 - 4 	= 4
+ 
+Name = "46_Block1"
+bytes = 6B 4D 6F 61 43 66
+Type = "Format_PNG"  
+bytes = 68 4F 93 FF 68 4F 94 83
+Something = "N/A"
+----------------------------------------
+MemberButton.cst
+-------------
+ Int=0F(15) Int=AF(175) Int=2AE(686) 	
+ Int=14(20) Pad(14) 	
+ Int=14(20) Pad(8) 	
+ Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) 	
+ Int=19(25) 	
+ Int=29(41) Int=29(41) 	
+ Int=39(57) Int=39(57) Int=39(57) Int=39(57) Int=39(57) 	
+ Int=3D(61) Int=41(65) Int=45(69) 	
+ Text="MyButton"(8) 	
+ Byte=78(120) Byte=E7(231) Byte=E0(224) Byte=D0(208) Byte=0A(10) Byte=7F(127) Byte=11(17) Byte=D1(209) Byte=AD(173) Byte=8D(141) Byte=08(8) Byte=00(0) Byte=07(7) Byte=9F(159) Byte=01(1) 	
+ Text="lFlash Component"(16) 	
+ 
+ 
+ 25 - 9 	= 16
+ 41 - 25	= 16 
+ 57 - 41	= 16
+ 61 - 57	= 16
+ 65 - 61	= 4
+ 59 - 51	= 4
+ 69 - 65	= 4
+ 
+Name = "Button"
+bytes = 78 E7 E0 D0 0A 7F 11 D1 AD 8D 08 00 07 9F 01 6C
+Type = "Flash Component"  (has 00 byte at the end)
+bytes = 00 FF FF FF F5 FF FF FF CE 00 00 00 0B 00 00 00 32 68 F8 D9 BC 68 F8 D9 BC
+Something = "N/A"
+ 
+----------------------------------------
+MemberShape.cst
+-------------
+
+ Int=08(8) Int=7F(127) Int=11(17) 	
+ Int=14(20) Pad(14) 	
+ Int=14(20) Pad(8) 	
+ Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) 	
+ Int=09(9) 	
+ Int=09(9) Int=09(9) 	
+ Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) 	
+ Int=0D(13) Int=11(17) Int=15(21) 	
+ Text="MyShape1"(8) 	
+ Byte=68(104) Byte=F8(248) Byte=D9(217) Byte=87(135) Byte=68(104) Byte=F8(248) Byte=D9(217) Byte=90(144) 	
+ Text="N/A"(3) 	
+ 
+ 9 - 9		= 0
+ 9 - 9		= 0
+ 9 - 9		= 0
+ 9 - 9		= 0
+ 13 - 9 	= 4
+ 17 - 13 	= 4
+ 21 - 17	= 4
+ 
+Name = "MyShape1"
+bytes = 68 F8 D9 87 68 F8 D9 90
+Something = "N/A"
+----------------------------------------
+Text_Hallo.cst
+-------------
+ Int=08(8) Int=7F(127) Int=11(17) 	
+ Int=14(20) Pad(14) 	
+ Int=14(20) Pad(8) 	
+ Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) 	
+ Int=09(9) 	
+ Int=09(9) Int=09(9) 	
+ Int=09(9) Int=09(9) Int=09(9) Int=09(9) Int=09(9) 	
+ Int=0D(13) Int=11(17) Int=15(21) 	
+ Text="MyShape1"(8) 	
+ Byte=68(104) Byte=F8(248) Byte=D9(217) Byte=87(135) Byte=68(104) Byte=F8(248) Byte=D9(217) Byte=90(144) 	
+ Text="N/A"(3) 	
+ 
+ 9 - 9		= 0
+ 9 - 9		= 0
+ 9 - 9		= 0
+ 9 - 9		= 0
+ 13 - 9 	= 4
+ 17 - 13 	= 4
+ 21 - 17	= 4
+ 
+----------------------------------------
+Text_DTS_On.cst
+-------------
+ Int=0F(15) Int=8B(139) Int=1BC(444) 	
+ Int=14(20) Pad(14) 	
+ Int=14(20) Pad(8) 	
+ Int=00(0) Int=00(0) Int=00(0) Int=00(0) Int=00(0) Int=00(0) Int=00(0) Int=00(0) 	
+ Int=10(16) 	
+ Int=15(21) Int=15(21) 	
+ Int=15(21) Int=15(21) Int=15(21) Int=15(21) Int=15(21) 	
+ Int=19(25) Int=1D(29) Int=21(33) 	
+ Text="[NO_NAME]"(9) 	
+ Byte=07(7) Byte=3E(62) Byte=C6(198) Byte=E3(227) Byte=DB(219) Byte=11(17) Byte=D0(208) Byte=BF(191) Byte=B4(180) Byte=01(1) Byte=05(5) Byte=9A(154) Byte=20(32) Byte=6D(109) Byte=9E(158) 	
+ Text="Text"(4) 	
+ 
+ 16 - 0		= 16
+ 21 - 16	= 5
+ 21 - 21	= 0
+ 25 - 21	= 4
+ 29 - 25 	= 4
+ 33 - 29 	= 4
+ 
+
+----------------------------------------
+MemberImage_Gif.cst
+-------------
+ Int=0F(15) Int=9A(154) Int=43(67) 	
+ Int=14(20) Pad(14) 	
+ Int=14(20) Pad(8) 	
+ Int=04(4) Int=04(4) Int=04(4) Int=04(4) Int=04(4) Int=04(4) Int=04(4) Int=04(4) 	
+ Int=14(20) 	
+ Int=24(36) Int=24(36) 	
+ Int=24(36) Int=24(36) Int=24(36) Int=24(36) Int=24(36) 	
+ Int=28(40) Int=2C(44) Int=30(48) 	
+ Text="tut"(3) 	
+ Byte=88(136) Byte=E7(231) Byte=E0(224) Byte=D0(208) Byte=0A(10) Byte=7F(127) Byte=11(17) Byte=D1(209) Byte=AD(173) Byte=8D(141) Byte=08(8) Byte=00(0) Byte=07(7) Byte=9F(159) Byte=01(1) 	
+ Text="lAnimated GIF..."(16) 	
+
+Name = "tut"
+bytes = 88 E7 E0 D0 0A 7F 11 D1 AD 8D 08 00 07 9F 01 6C
+Type = "Animated GIF"
+bytes = 2E 2E 2E 00 68 F8 ED 5D 68 F8 ED 5D
+Something = "N/A"
+ 
+ 
+ 
+ 
+----------------------------------------
+MemberImage_jpg_32bit.cst
+-------------
+ Int=01(1) Int=9B(155) Int=1C(28) 	
+ Int=14(20) Pad(14) 	
+ Int=16(22) Pad(8) 	
+ Int=08(8) Int=08(8) Int=08(8) Int=08(8) Int=08(8) Int=08(8) Int=08(8) Int=08(8) 	
+ Int=08(8) 	
+ Int=08(8) Int=08(8) 	
+ Int=08(8) Int=08(8) Int=08(8) Int=08(8) Int=19(25) 	
+ Int=1D(29) Int=21(33) Int=25(37) 	
+ Text=""(0) 	
+ Byte=00(0) Byte=00(0) Byte=25(37) Byte=00(0) Byte=00(0) Byte=00(0) Byte=29(41) Byte=07(7) Byte=6C(108) Byte=61(97) Byte=63(99) Byte=68(104) Byte=65(101) Byte=6E(110) Byte=53(83) Byte=6B(107) 	
+
+Name = "lachenS"
+bytes = 6B 4D 6F 61 43 66
+Type = "Format_JPEG"
+bytes = 68 F8 ED 98 68 F8 ED 98
+Something = "N/A"
+ 
+ 
+----------------------------------------
+MemberImagePainted.cst
+-------------
+ Int=01(1) Int=8F(143) Int=1C(28) 	
+ Int=14(20) Pad(14) 	
+ Int=16(22) Pad(8) 	
+ Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) 	
+ Int=0D(13) 	
+ Int=0D(13) Int=0D(13) 	
+ Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) Int=0D(13) 	
+ Int=11(17) Int=15(21) Int=19(25) 	
+ Text=""(0) 	
+ Byte=00(0) Byte=00(0) Byte=19(25) Byte=00(0) Byte=00(0) Byte=00(0) Byte=1D(29) Byte=0C(12) Byte=4D(77) Byte=79(121) Byte=50(80) Byte=61(97) Byte=69(105) Byte=6E(110) Byte=74(116) Byte=65(101) 	
+ 	
+
+
+Name = "MyPaintedImg"
+bytes = 68 F8 EC EE 68 F8 ED 0B
+Something = "N/A"
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

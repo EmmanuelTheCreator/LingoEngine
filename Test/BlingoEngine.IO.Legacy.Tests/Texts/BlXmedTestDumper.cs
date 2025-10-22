@@ -27,7 +27,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts
                 //"Texts_Fields/Colors",
                 //"Texts_Fields/MemberTests",
                 //"Texts_Fields/Paragraphs",
-                "Texts_Fields/Content",
+                //"Texts_Fields/Content",
+                "Texts_Fields/3D_Extruder",
             ];
             foreach (var folder in folders)
             {

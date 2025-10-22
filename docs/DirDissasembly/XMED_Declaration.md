@@ -1,4 +1,4 @@
-<img width="2880" height="1920" alt="image" src="https://github.com/user-attachments/assets/e3996c26-638d-47bc-8440-72b4077d4734" /># XMED_Declaration.md 
+# XMED_Declaration.md 
 
 ## XMED Log Format (intro)
 
@@ -38,7 +38,8 @@ Starts with 03, then
 - 0000130 : unknown Value, perhaps length
 - 0004    : unknown Value
 - 0003    : items in the block’s payload
-``` 
+
+```tokens 
   :FFFF0000000600040001     // Header
 03:00020000013000000000     // Block Full Text 
 03:00040000002900000008     // Run styles
@@ -63,7 +64,7 @@ Starts with 03, then
 ## FFFF / 0000 - Header 
 `00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
 
-``` 
+```tokens
 03:00000000005C00000000 
     02:40001 
 		02:101					// File version or  constant (Western / Latin-1 codepage). 
@@ -109,7 +110,7 @@ Director reused them in pairs for normal text/background combinations.
 
 
 
-## 0001 - Layout 
+## 0001 - Layout
 
 
 TODO
@@ -117,20 +118,21 @@ TODO
 
 ---
 
-## 03:0004 - Run styles 
+## 03:0004 - Run styles
 Starting with 02:0
 Payload slices: alternating pairs `StyleId end-Offset`.
-``` 
+
+```tokens 
 03:00040000002900000008 	// Run styles
   02:0 
 		01:6 02:26 	 	// Style=6, 38,	"This text is... 	red		,... 	Arial,12px, centered" 		
-		01:5 02:27 	 	// Style=5, 39,	"This text is... 	???		,...	Arial,12px, centered\r"  
-		01:9 02:6D 	 	// Style=9, 109,"This text is... 	Yellow	...		bold, italic, underline"  
-		01:7 02:6E 	 	// Style=7, 110,"This text is... 	Yellow	...		bold, italic, underline\r"   
-		01:8 02:B7 	 	// Style=8, 183,"This text is... 	green	...		aligned, with spacing of 39"   
-		01:A 02:FE 	 	// Style=10,254,"This text is... 	orange	...		bold, italic, underline"   
-		01:6 02:12C 	// Style=6, 300,"This text is... 	red		...		centered again"   
-		01:6          // Empty style
+      01:5 02:27 	 	// Style=5, 39,	"This text is... 	???		,...	Arial,12px, centered\r"  
+      01:9 02:6D 	 	// Style=9, 109,"This text is... 	Yellow	...		bold, italic, underline"  
+      01:7 02:6E 	 	// Style=7, 110,"This text is... 	Yellow	...		bold, italic, underline\r"   
+      01:8 02:B7 	 	// Style=8, 183,"This text is... 	green	...		aligned, with spacing of 39"   
+      01:A 02:FE 	 	// Style=10,254,"This text is... 	orange	...		bold, italic, underline"   
+      01:6 02:12C 	// Style=6, 300,"This text is... 	red		...		centered again"   
+      01:6          // Empty style
 ```
 
 ---
@@ -139,7 +141,8 @@ Payload slices: alternating pairs `StyleId end-Offset`.
 ## 03:0005 - Run Paragraphs	
 Starting with 02:0
 Payload slices: alternating pairs `RunId end-Offset`.
-``` 
+
+```tokens
 03:00050000001F00000006 	// Run paragraphs  
   02:0 
 		01:1 02:27 	 	// Run=1, 39, "This text is... 	red		,... 	Arial,12px, centered" 	 
@@ -155,7 +158,8 @@ Payload slices: alternating pairs `RunId end-Offset`.
 
 ## 03:0006 - Style blocks 
 A style block has 77 tokens when all padding(C1 + C2) has been extracted.
-``` 
+
+```tokens
 03:00060000012B00000005 	// Block Styles
     01:0 
     <81 
@@ -183,7 +187,8 @@ A style block has 77 tokens when all padding(C1 + C2) has been extracted.
 ### Colors 
 Are always 4 values : RGBA
 Examples:
-``` 
+
+```tokens
 - 01:F700 01:2000 01:4A00 01:0 	// Red       #F7204A
 - 01:2700 01:200 01:FD00 01:0   // Blue: 	  #2702FD
 - 01:1E00 01:F000 01:2E00 01:0 	// Green :   #1EF02E
@@ -195,7 +200,8 @@ Examples:
 ``` 
 
 ### Identified Style Bits
-``` 
+
+```tokens 
 C2(07) 01:1 01:0		 		    // Bold	  
 C2(07) <81 01:1 01:0	 		  // Italic  
 C2(07) <81 <81 01:1 01:0 		// Underline
@@ -206,9 +212,10 @@ C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline
 - Actual point size is stored per style in `03:0006`.  
 - Sometimes the header repeats an approximate pixel value (`pt × 1.333 × 10`).  
 - Conversion back to points:  
-  ```
+
+```tokens
   pt ≈ headerValue / 13.33
-  ```
+```
   
 ---
 
@@ -218,7 +225,8 @@ They are composed of 28 tokens and then the tab stop identifier is there:
 02:6A03E2AE
 folowing by the number tab stops. They are *4 tokens, and then there is the default tab stop and then a padding
 In total : 50 tokens + 4 + (4 * tab_stop_count)
-``` 
+
+```tokens
 03:00070000004D00000002 		// Paragraphs 
       01:0 
       <81 
@@ -239,7 +247,8 @@ In total : 50 tokens + 4 + (4 * tab_stop_count)
 #### No tab stops defined:
 02:6A03E2AE 01:0 02:18 01:0 <82  
 Description:
-``` 
+
+```tokens
   - 02:6A03E2AE : Identifier
   - 01:0        : Number of defined styles
   - 02:18       : Default Tab width 24 px
@@ -248,9 +257,10 @@ Description:
 ```
 
   #### With Tabs defined
- 02:6A03E2AE 01:4 
+ 02:6A03E2AE 01:4
 Description:
-``` 
+
+```tokens
   - 02:1 02:96 02:0 <82   // Tab Stop Left 150 px
   - 02:1 02:D8 02:0 <82   // Tab Stop Left 216 px
   - 02:1 02:120 02:0 <82  // Tab Stop Left 288 px
@@ -259,31 +269,22 @@ Description:
 ```
 
 #### With different tab stop types
-02:6A03E2AE 01:5 
+02:6A03E2AE 01:5
 Description:
-``` 
-		02:1 02:63 02:0 <82     // Type 1 : Left align
-		02:3 02:31D 02:0 <82    // Type 3 : Right Align
-		02:2 02:190 02:0 <82    // Type 2 : Center Align  
-		02:4 02:1F4 02:0 <82    // Type 4 : Decimal align
-		02:4 02:257 02:0 <82    // Type 4 : Decimal align
-		02:18 01:0 <82 
-```
 
+```tokens
+  02:1 02:63 02:0 <82     // Type 1 : Left align
+  02:3 02:31D 02:0 <82    // Type 3 : Right Align
+  02:2 02:190 02:0 <82    // Type 2 : Center Align  
+  02:4 02:1F4 02:0 <82    // Type 4 : Decimal align
+  02:4 02:257 02:0 <82    // Type 4 : Decimal align
+  02:18 01:0 <82 
+```
 
 A decimal tab aligns numbers by their decimal point.
 When you type numeric values in text (like 12.3, 4.56, 789.0), a decimal tab ensures that all the . (decimal points) line up vertically—so digits before and after stay neatly aligned.
-It’s a long-standing feature in word processors (Word, PageMaker, Director’s text engine).
+It's a long-standing feature in word processors (Word, PageMaker, Director's text engine).
 In your files, the 02:4 type marks that tab stop as decimal-aligned, used when displaying columns of numbers.
-
-
-
-
-
-
-
-
-
 
 ---
 
@@ -305,11 +306,11 @@ Each entry begins with a pair of `00(40)` strings (font family + style name) fol
 
 `CodePagesEncodingProvider` is registered lazily inside `XmedFontDescriptor`, so legacy encodings are available even if the hosting application has not registered the provider beforehand.
 
-```
+```tokens
 00(40):"FontName"      ← Family
 00(40):"Style"         ← Style name (empty = Regular)
 01:<index>             ← Table index used by style records
-01:<0> … 01:<fontId>   ← OEM/raster font identifier (0 for vector fonts, 0xFF60+ for Terminal)
+01:<0>... 01:<fontId>  ← OEM/raster font identifier (0 for vector fonts, 0xFF60+ for Terminal)
 02:4E4                 ← Windows code page (1252 = Western Latin)
 02:400                 ← LOGFONT weight (400 = normal)
 02:0                   ← Flags (reserved in observed samples)
@@ -317,7 +318,7 @@ Each entry begins with a pair of `00(40)` strings (font family + style name) fol
 02:<cellHeight>        ← Raster cell height (0 for vector fonts, 0xFF for Terminal)
 02:40008               ← LOGFONT pitch & family bits (0x00040008 = variable pitch, Swiss)
 02:0                   ← Reserved slot (always 0 so far)
-02:101			       ← Script identifier (257 = Western/Latin I)
+02:101                 ← Script identifier (257 = Western/Latin I)
 C2(03)
 01:0                   ← Name index (references the inline string, currently 0)
 ```
@@ -373,9 +374,11 @@ No explicit line-height token exists — it’s inferred from these bounds.
 **Conclusion:** 03:000C encodes per-paragraph formatting (alignment/indents/margins)
 
 ### Structure (per paragraph)
-```
+
+```tokens
 02:<S> <82 <82> 02:<A> 02:<B> 01:<f> …
 ```
+
 | Symbol | Meaning | Notes |
 |---------|----------|-------|
 | `<S>` | Paragraph index | Increases sequentially per paragraph |
@@ -387,10 +390,10 @@ No explicit line-height token exists — it’s inferred from these bounds.
 The `<S>` field directly maps to paragraph order — `S=0` → first paragraph, `S=1` → second, etc.  
 Each record configures that paragraph’s layout (margins, width, alignment).  
 
-
 ---
 
-### 03:000F — Paragraph Spacing Descriptor
+
+## 03:000F — Paragraph Spacing Descriptor
 
 **Structure (per paragraph):**
 `02:<S> <82 <82> 02:<T> 02:<B> C2(0C)`
@@ -417,7 +420,7 @@ Each record configures that paragraph’s layout (margins, width, alignment).
 Always present and identical in samples:
 `00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131`
 
-```
+```tokens
 03:00130000007E00000000 
     01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0 
         00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
@@ -430,7 +433,7 @@ Always present and identical in samples:
 ---
 
 ## 03:0128 - Unknown: Seems fix values	
-```
+```tokens
 03:01280000000C00000001 
     02:10A <82 01:0 
       C1(03) 
@@ -440,7 +443,7 @@ Always present and identical in samples:
 ---
 
 ## 03:0129 -  Unknown: Seems fix values	identical as 0128
-```
+```tokens
 03:01290000000C00000001 
     02:10A <82 01:0 
       C1(03) 
@@ -505,7 +508,7 @@ Kerning and extra letter spacing appear in the **`C2(03)`** and **`C2(04)`** sec
 
 ### Pattern
 C2 is padding
-```
+```tokens
 C2(03) 02:20000  <82  02:0 
 C2(04) 02:1  02:0
 ```
@@ -550,7 +553,7 @@ However, the data is split across two locations:
 | **Formatting (XMED)** | Separate `XMED` chunk | Tokenized structure identical to standalone XMED text, referenced through the key table. |
 
 ### Structure Overview
-```
+```tokens
 CASt Chunk
 ├─ Header (12 bytes)
 │ ├─ Type = 0x0F (Field)
@@ -565,7 +568,8 @@ CASt Chunk
 
 ### Linked XMED Block
 The referenced XMED chunk uses **identical block codes**:
-```
+
+```tokens
 03:0002 – Full Text
 03:0004 – Run Styles
 03:0005 – Run Paragraphs
