@@ -59,7 +59,9 @@ Director 4 introduces explicit `CASt` chunks with a short header:
 | Cast data payload | `cast data size` − consumed bytes | Bytes passed to the cast-specific parser. |
 | Cast info payload | `cast info size` bytes | Optional metadata strings or timestamps. |
 
-### Director 5–10.1 (`CASt` header)
+### Director 5– (`CASt` header)
+
+Note: version 10.1 seem to behave differently
 
 Later versions expand the header and reorder the fields. Director 10 and the final Director 10.1 maintenance release reuse this layout unchanged, so the same parsing rules cover all modern classic exports:
 
@@ -105,6 +107,7 @@ Director stores the cast-member classification as a big-endian 32-bit word at th
 
 ### CASt Cinf byte offsets (observed)
 
+This offsets are for 1 file specific
 | Offset | Field / Meaning                          | Type        | Values / Notes |
 |-------:|------------------------------------------|-------------|----------------|
 | 0x44   | CastInfo Flags (DTS, etc.)               | byte/flags  | `BlLegacyCastInfoFlags` |
@@ -116,7 +119,7 @@ Director stores the cast-member classification as a big-endian 32-bit word at th
 | 0xD6   | Use Hyperlink Styles                     | byte/bool   | ≠0 true |
 | 0xE6   | Ink                                      | byte        | mode id |
 | 0xA2   | Is Editable                              | byte/bool   | ≠0 true |
-| var.   | Member Name                              | via Cinf    | Offset table to var-len field :contentReference[oaicite:0]{index=0} |
+| var.   | Member Name                              | via Cinf    | Offset table to var-len field  |
 
 
 #### Bitmap cast members

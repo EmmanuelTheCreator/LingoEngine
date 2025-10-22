@@ -36,9 +36,9 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 //TestContextHarness.GetTextAssetPath("MemberTypes/MemberButton.cst"),
                 //TestContextHarness.GetTextAssetPath("MemberTypes/MemberShape.cst"),
                 //TestContextHarness.GetTextAssetPath("Styles/Text_Flags_BIUSubSup.cst"),
-               // TestContextHarness.GetTextAssetPath("MemberTypes/ImgCast.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),
-                TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),
+                //TestContextHarness.GetTextAssetPath("MemberTypes/ImgCast.cst"),
+                TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),
+                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),
                 //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),
                 //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_24bit.cst"),
             };

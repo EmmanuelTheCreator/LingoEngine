@@ -119,8 +119,7 @@ namespace BlingoEngine.IO.Legacy.Cast
 
             // Header = 12 bytes
             var typeValue = reader.ReadUInt32();
-            var someOffset = typeValue;
-            //var memberType = BlLegacyCastMemberTypeHelpers.MapMemberType(typeValue);
+            
 
             var infoLength = reader.ReadUInt32();
             var specificLength = reader.ReadUInt32();
@@ -147,10 +146,11 @@ namespace BlingoEngine.IO.Legacy.Cast
             returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32())); 
             returnData.Add(CastToken.NewPadding(reader.Position, reader.ReadBytes(8)));
             returnData.Add(CastToken.NewEmptyBreak());
-            
+
             // 8 identical ints 0x00 or 0x14 unknown values, seems to be some kind of memory offset
-            for (int i = 0; i < 8; i++) 
-                returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
+            var afterNameOffset = reader.ReadInt32(); // its the length of the name + 1
+            for (int i = 0; i < 7; i++) 
+                returnData.Add(CastToken.NewInt32(reader.Position, afterNameOffset));
 
             // The memory off set is name length + 1
             var hasName = returnData.Last().IntValue > 0;
@@ -166,19 +166,30 @@ namespace BlingoEngine.IO.Legacy.Cast
                 returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
             returnData.Add(CastToken.NewEmptyBreak());
 
-            // 5 identical ints 0x15 or 0x17 unknown values
-            var memberTypeTextOffset = reader.ReadInt32();
-            returnData.Add(CastToken.NewInt32(reader.Position, memberTypeTextOffset));
-            for (int i = 0; i < 4; i++)
-                returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
-            returnData.Add(CastToken.NewEmptyBreak());
-
-            // 3 values :  0x19, 0x1D, 0x21 or 0x30, 0x34, 0x38
+            // 4 identical ints 0x15 or 0x17 unknown values
+            var someOffset = reader.ReadInt32();
+            returnData.Add(CastToken.NewInt32(reader.Position, someOffset));
             for (int i = 0; i < 3; i++)
                 returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
             returnData.Add(CastToken.NewEmptyBreak());
 
+            // Mostly identical to previous
+            returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
 
+            // TEMP: temp custom paint bitmap image
+            //for (int i = 0; i < 7; i++)
+            //    returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
+            //returnData.Add(CastToken.NewEmptyBreak());
+
+
+            // 3 values :  0x19, 0x1D, 0x21 or 0x30, 0x34, 0x38
+            // its 5 values when the typeValue == 1
+            var valueCountB = typeValue == 1 ? 5 : 3;
+            for (int i = 0; i < valueCountB; i++)
+                returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
+            returnData.Add(CastToken.NewEmptyBreak());
+
+            
             // Read the name
             var nameLength = reader.ReadByte();
             if (hasName) 
@@ -192,18 +203,36 @@ namespace BlingoEngine.IO.Legacy.Cast
             // Text = 16
             // Flash Component = 16
             // Read X bytes
-            var bytesCounts = 16; // todo
+            var bytesCounts = someOffset - (int)reader.Position;
+            //var bytesCounts = 16; // todo
             for (int i = 0; i < bytesCounts; i++)
                 returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
             returnData.Add(CastToken.NewEmptyBreak());
 
             // member type
+            // Type = "Animated GIF"
+            // Type = "Format_PNG" 
+            // Type = "Format_JPEG"
+            // Type = "Flash Component" 
             returnData.Add(CastToken.NewText(reader.Position, reader.ReadCString()));
             returnData.Add(CastToken.NewEmptyBreak());
 
-            var bytesCounts2 = 6; // todo
+            var bytesCounts2 = 0;
+            // Flash component has more bytes here : 00 FF FF FF F5 FF FF FF CE 00 00 00 0B 00 00 00 32
+            // Animated GIF : 2E 2E 2E 00
             for (int i = 0; i < bytesCounts2; i++)
                 returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            returnData.Add(CastToken.NewEmptyBreak());
+
+            // byte in format of 2 sequences starting with 0x68, the 2 are very similar in numbers
+            // Example
+            //      68 F8 ED 98    68 F8 ED 98
+            //      68 F8 EC EE    68 F8 ED 0B
+            //      68 F8 ED 5D    68 F8 ED 5D
+            //      68 F8 D9 BC    68 F8 D9 BC
+            for (int i = 0; i < 4; i++) returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            returnData.Add(CastToken.NewEmptyBreak());
+            for (int i = 0; i < 4; i++) returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
             returnData.Add(CastToken.NewEmptyBreak());
 
             // read "N/A"
