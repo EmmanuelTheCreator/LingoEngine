@@ -3,6 +3,7 @@ using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Xunit;
 
 namespace BlingoEngine.IO.Legacy.Tests.Cast
@@ -18,36 +19,55 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
 
             foreach (var file in files)
             {
-                DumpCastTokens(file);
+                //DumpCastTokens(file);
             }
         }
 
         [Fact]
         public void DumpSingleCastFile()
         {
-            var files = new string[] {
-                //TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo.cst"),
-                //TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_3DExtruder_Values.cst"),
-                //TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_Display_3DMode.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTests/Text_AntiAlias_LargerThan_19pt.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTests/Text_Kerning_LargerThan_19pt.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTests/Text_DTS_On.cst"),
-                //TestContextHarness.GetTextAssetPath("FontSize/Text_Single_Line_Multi_Style3_lh13.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberButton.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberShape.cst"),
-                //TestContextHarness.GetTextAssetPath("Styles/Text_Flags_BIUSubSup.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/ImgCast.cst"),
-                TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),
-                //TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_24bit.cst"),
+            var files = new (string FileName, string Type)[] {
+                (TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_3DExtruder_Values.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_Display_3DMode.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_AntiAlias_LargerThan_19pt.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_AntiAlias_AllText.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Kerning_LargerThan_19pt.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_DTS_On.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_AntiAlias_None.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Default.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Editable_On.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Framing_AdjustToFit_IsDefault.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Framing_Fixed.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Framing_Scrolling.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Kerning_AllText.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Kerning_LargerThan_19pt.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTests/Text_Kerning_None.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("FontSize/Text_Single_Line_Multi_Style3_lh13.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("Styles/Text_Flags_BIUSubSup.cst"),"Text"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberButton.cst"),"Flash"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberShape.cst"),"Shape"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/ImgCast.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_24bit.cst"),"Bitmap"),
             };
-            foreach (var file in files) 
-                DumpCastTokens(file);
+            var sb = new StringBuilder();
+            foreach (var file in files)
+            {
+                var addon = 0;
+                //if (file.FileName.Contains("MemberImagePainted"))
+                //    addon = 1; // temp fix
+                DumpCastTokens(sb, file, addon);
+                
+            }
+            var result = sb.ToString();
         }
 
-        private static void DumpCastTokens(string file)
+        private static void DumpCastTokens(StringBuilder sb, (string FileName, string Type) fileData, int addonints = 0)
         {
+            var file = fileData.FileName;
             using var harness = TestContextHarness.Open(file);
             var outPath = Path.Combine(Path.GetDirectoryName(file)!,
                $"{Path.GetFileNameWithoutExtension(file)}.CASt.txt");
@@ -71,7 +91,15 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 var bytes = entry.ReadClassicPayload(new BlClassicPayloadLoader(ctx));
                 var info = bytes.ToArray(); 
                 var tokenizer = new BlLegacyCastTokenizer();
-                var tokens = tokenizer.TokenizeInfo(info);
+                var tokens = tokenizer.TokenizeInfo(info, addonints);
+                var text1 = tokenizer.TokenListToStringX(tokens); // for debug
+                var fn = Path.GetFileName(file);
+                var name = fn+" - "+ fileData.Type;
+                sb.AppendLine(name);
+                sb.AppendLine(new string('-', name.Length));
+                sb.AppendLine(text1);
+                sb.AppendLine("--------------------------------------------------");
+
                 Assert.NotNull(tokens);
                 break;
             }

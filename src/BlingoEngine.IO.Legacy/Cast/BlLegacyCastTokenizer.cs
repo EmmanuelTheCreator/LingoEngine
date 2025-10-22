@@ -104,7 +104,7 @@ namespace BlingoEngine.IO.Legacy.Cast
 
 
 
-        public List<CastToken> TokenizeInfo(byte[] info)
+        public List<CastToken> TokenizeInfo(byte[] info, int addonints = 0)
         {
             var returnData = new List<CastToken>();
             using var memory = new MemoryStream(info, writable: false);
@@ -132,7 +132,7 @@ namespace BlingoEngine.IO.Legacy.Cast
                 infoLength = (uint)infoBytesAvailable;
 
             // Add Header tokens
-            returnData.Add(CastToken.NewEmptyBreak("Header : "));
+            returnData.Add(CastToken.NewEmptyBreak()); // "Header : "));
             returnData.Add(CastToken.NewInt32(0,(int)typeValue));
             returnData.Add(CastToken.NewInt32(4,(int)infoLength));
             returnData.Add(CastToken.NewInt32(8,(int)specificLength));
@@ -176,11 +176,12 @@ namespace BlingoEngine.IO.Legacy.Cast
             // Mostly identical to previous
             returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
 
-            // TEMP: temp custom paint bitmap image
-            //for (int i = 0; i < 7; i++)
-            //    returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
-            //returnData.Add(CastToken.NewEmptyBreak());
+            for (int i = 0; i < 6; i++)
+                returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
+            returnData.Add(CastToken.NewEmptyBreak());
 
+            
+            returnData.Add(CastToken.NewInt32(reader.Position, reader.ReadInt32()));
 
             // 3 values :  0x19, 0x1D, 0x21 or 0x30, 0x34, 0x38
             // its 5 values when the typeValue == 1
@@ -198,68 +199,123 @@ namespace BlingoEngine.IO.Legacy.Cast
                 returnData.Add(CastToken.NewText(reader.Position, "[NO_NAME]"));
             returnData.Add(CastToken.NewEmptyBreak());
 
-            // Bitmap = 6
-            // Shape = 8 
-            // Text = 16
-            // Flash Component = 16
-            // Read X bytes
-            var bytesCounts = someOffset - (int)reader.Position;
-            //var bytesCounts = 16; // todo
-            for (int i = 0; i < bytesCounts; i++)
+            var count = infoLength+( 3*4) - (int)reader.Position;
+            for (int i = 0; i < count; i++)
+            {
                 returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            }
+            //// Bitmap = 6
+            //// Shape = 8 
+            //// Text = 16
+            //// Flash Component = 16
+            //// Read X bytes
+            //var bytesCounts = someOffset - (int)reader.Position;
+            ////var bytesCounts = 16; // todo
+            //for (int i = 0; i < bytesCounts; i++)
+            //    returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            //returnData.Add(CastToken.NewEmptyBreak());
+
+            //// member type
+            //// Type = "Animated GIF"
+            //// Type = "Format_PNG" 
+            //// Type = "Format_JPEG"
+            //// Type = "Flash Component" 
+            //returnData.Add(CastToken.NewText(reader.Position, reader.ReadCString()));
+            //returnData.Add(CastToken.NewEmptyBreak());
+
+            //var bytesCounts2 = 0;
+            //// Flash component has more bytes here : 00 FF FF FF F5 FF FF FF CE 00 00 00 0B 00 00 00 32
+            //// Animated GIF : 2E 2E 2E 00
+            //for (int i = 0; i < bytesCounts2; i++)
+            //    returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            //returnData.Add(CastToken.NewEmptyBreak());
+
+            //// byte in format of 2 sequences starting with 0x68, the 2 are very similar in numbers
+            //// Example
+            ////      68 F8 ED 98    68 F8 ED 98
+            ////      68 F8 EC EE    68 F8 ED 0B
+            ////      68 F8 ED 5D    68 F8 ED 5D
+            ////      68 F8 D9 BC    68 F8 D9 BC
+            //for (int i = 0; i < 4; i++) returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            //returnData.Add(CastToken.NewEmptyBreak());
+            //for (int i = 0; i < 4; i++) returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
+            //returnData.Add(CastToken.NewEmptyBreak());
+
+            //// read "N/A"
+            //returnData.Add(CastToken.NewText(reader.Position, reader.ReadCString()));
+            
+            
             returnData.Add(CastToken.NewEmptyBreak());
 
-            // member type
-            // Type = "Animated GIF"
-            // Type = "Format_PNG" 
-            // Type = "Format_JPEG"
-            // Type = "Flash Component" 
-            returnData.Add(CastToken.NewText(reader.Position, reader.ReadCString()));
-            returnData.Add(CastToken.NewEmptyBreak());
-
-            var bytesCounts2 = 0;
-            // Flash component has more bytes here : 00 FF FF FF F5 FF FF FF CE 00 00 00 0B 00 00 00 32
-            // Animated GIF : 2E 2E 2E 00
-            for (int i = 0; i < bytesCounts2; i++)
-                returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
-            returnData.Add(CastToken.NewEmptyBreak());
-
-            // byte in format of 2 sequences starting with 0x68, the 2 are very similar in numbers
-            // Example
-            //      68 F8 ED 98    68 F8 ED 98
-            //      68 F8 EC EE    68 F8 ED 0B
-            //      68 F8 ED 5D    68 F8 ED 5D
-            //      68 F8 D9 BC    68 F8 D9 BC
-            for (int i = 0; i < 4; i++) returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
-            returnData.Add(CastToken.NewEmptyBreak());
-            for (int i = 0; i < 4; i++) returnData.Add(CastToken.NewByte(reader.Position, reader.ReadByte()));
-            returnData.Add(CastToken.NewEmptyBreak());
-
-            // read "N/A"
-            returnData.Add(CastToken.NewText(reader.Position, reader.ReadCString()));
-            returnData.Add(CastToken.NewEmptyBreak());
-
-            var test2 = TokenListToString(returnData); // for debug
+            var text1 = TokenListToStringX(returnData);
 
             return returnData;
         }
+        public string TokenListToStringX(List<CastToken> tokens)
+        {
+            var sb = new StringBuilder();
+            var asciiString = new StringBuilder();
+            var intString = new StringBuilder();
+            int tokenWrite = 0;
+            var addOffsetValues = false;
+            var lastOffSetValue = 0;
+            var lastOffSetDiffValue = 0;
+            CastToken? lastIntToken = null;
+            
+            foreach (var token in tokens)
+            {
+                if (token.Type == CastTokenType.Padding && token.Length == 8)
+                    addOffsetValues = true;
+                if (token.Type == CastTokenType.EmptyBreak || tokenWrite == 8)
+                {
+                    var addon = (addOffsetValues ? " " + new string(' ', 32 - intString.Length) + $" | {lastOffSetValue,3} | {lastOffSetDiffValue,3} | ": " | ");
+                    sb.AppendLine(asciiString.ToString() + new string(' ', 34 - asciiString.Length) + " | " +intString.ToString()+addon);
+                    asciiString.Clear();
+                    intString.Clear();
+                    tokenWrite = 0;
+                }
+                else
+                {
+                    asciiString.Append(GetTokenString(token) + " ");
+                    intString.Append(GetTokenStringToInt(token) + " ");
+                    if (tokenWrite == 0 && addOffsetValues && token.Type == CastTokenType.Int32)
+                    {
+                        lastOffSetValue += token.IntValue!.Value;
+                        lastOffSetDiffValue = lastIntToken != null? token.IntValue!.Value - lastIntToken.IntValue!.Value : token.IntValue!.Value;
+                        lastIntToken = token;
+                    }
+                    tokenWrite++;
+                    if (token.Type == CastTokenType.Text)
+                    {
+                        tokenWrite = 0;
+                        addOffsetValues = false;
+                    }
+                    if (tokenWrite == 4)
+                    {
+                        asciiString.Append(" ");
+                        intString.Append(" ");
+                    }
+                }
+                
+            }
+            return sb.ToString();
+        }
+
         public string TokenListToString(List<CastToken> tokens)
         {
             var sb = new StringBuilder();
             foreach (var token in tokens)
-            {
-                sb.Append(GetTokenString(token)+" ");
-            }
+                sb.Append(GetTokenString(token));
             return sb.ToString();
         }
         private string GetTokenString(CastToken token)
         {
             string val = token.Type switch
             {
-                CastTokenType.Text =>  $"Text=\"{token.StringValue}\"({token.StringValue!.Length})",
-                CastTokenType.Int32 =>  $"Int={token.IntValue:X2}({token.IntValue})",
-                CastTokenType.Int16 =>  $"Int16={token.IntValue:X2}({token.IntValue})",
-                CastTokenType.Byte =>   $"Byte={token.IntValue:X2}({token.IntValue})",
+                CastTokenType.Text =>  $"\"{token.StringValue}\"({token.StringValue!.Length})",
+                CastTokenType.Int32 =>  $"{token.IntValue:X2}",
+                CastTokenType.Int16 =>  $"{token.IntValue:X2}",
+                CastTokenType.Byte =>   $"{token.IntValue:X2}",
 
                 CastTokenType.Padding => $"Pad({token.Length})",
                 CastTokenType.Empty => $" ",
@@ -268,6 +324,22 @@ namespace BlingoEngine.IO.Legacy.Cast
             };
             return val;
         }
+        private string GetTokenStringToInt(CastToken token)
+        {
+            string val = token.Type switch
+            {
+                CastTokenType.Text => $"\"{token.StringValue}\"({token.StringValue!.Length})",
+                CastTokenType.Int32 => $"{token.IntValue,3}",
+                CastTokenType.Int16 => $"{token.IntValue,3}",
+                CastTokenType.Byte =>  $"{token.IntValue,3}",
+
+                CastTokenType.Padding => $"Pad({token.Length})",
+                CastTokenType.Empty => $" ",
+                CastTokenType.EmptyBreak => (token.Description != null ? "\t" + token.Description : "") + Environment.NewLine,
+                _ => ""
+            };
+            return val;
+        }   
     }
 
 }
