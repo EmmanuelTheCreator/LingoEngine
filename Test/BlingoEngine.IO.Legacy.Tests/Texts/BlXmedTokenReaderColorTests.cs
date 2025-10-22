@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using BlingoEngine.IO.Legacy.Texts;
 using FluentAssertions;
 using Xunit;
 
@@ -30,6 +31,22 @@ public class BlXmedTokenReaderColorTests
     {
         var bytes = ParseHexBytes(patternHex);
         // todo : use BlXmedTokenReader to parse the bytes and compare the expected color.
+    }
+
+    [Theory]
+    [InlineData(0x00, 0x00)]
+    [InlineData(0xFF, 0xFF)]
+    [InlineData(0xCC, 0xCC)]
+    [InlineData(0xFF00, 0xFF)]
+    [InlineData(0x9900, 0x99)]
+    [InlineData(0xFFFF, 0xFF)]
+    [InlineData(0x180000, 0x18)]
+    public void NormalizeColor_handles_byte_and_word_components(int raw, byte expected)
+    {
+        var method = typeof(BlXmedTokenStyleParser).GetMethod("NormalizeColor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        method.Should().NotBeNull();
+        var actual = (byte)method!.Invoke(null, new object[] { raw })!;
+        actual.Should().Be(expected);
     }
 
 

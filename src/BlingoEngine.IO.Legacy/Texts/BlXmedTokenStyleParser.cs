@@ -193,8 +193,14 @@ namespace BlingoEngine.IO.Legacy.Texts
         {
             if (value <= 0)
                 return 0;
-            int component = value >> 8;
-            return (byte)Math.Clamp(component, 0, 255);
+
+            if (value <= 0xFF)
+                return (byte)Math.Clamp(value, 0, 255);
+
+            if (value <= 0xFFFF)
+                return (byte)Math.Clamp(value >> 8, 0, 255);
+
+            return (byte)Math.Clamp(value >> 16, 0, 255);
         }
 
 
