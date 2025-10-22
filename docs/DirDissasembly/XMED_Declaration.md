@@ -1,4 +1,4 @@
-# XMED_Declaration.md 
+<img width="2880" height="1920" alt="image" src="https://github.com/user-attachments/assets/e3996c26-638d-47bc-8440-72b4077d4734" /># XMED_Declaration.md 
 
 ## XMED Log Format (intro)
 
@@ -15,6 +15,19 @@ Tokens are printed in read order.
 - `82` → NULL value or default value
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
+
+## TODO : 3D Extruder
+Enum values Bevel Edge : None/ Mitter / Round
+Enum values Diretional :
+None
+Top Left/Center/Right
+Middle L/C/R
+Bottom L/C/R
+
+Shader Texture Enum:
+None
+Default
+Member
 
 
 
