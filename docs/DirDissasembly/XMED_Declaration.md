@@ -220,6 +220,23 @@ Values were confirmed against `Test/TestData/Legacy/Texts_Fields/Text_Multi_Line
 
 
 
+### 🧩 Blocks 03:0009 / 03:000A — Paragraph Bounds
+
+**Type:** Layout geometry list (identical structure)  
+**Form:** `02:0 <82 02:X 02:Y 02:0 <82 02:X 02:Y` × paragraphCount  
+
+| Field | Meaning | Notes |
+|--------|----------|-------|
+| `X` | Baseline / top offset | Scales with line-height or margin |
+| `Y` | Paragraph width / right edge | Matches text span width |
+| Count | Paragraph count | One tuple per paragraph |
+
+**Interpretation:**  
+Defines bounding boxes per paragraph; X encodes vertical spacing (line-height derived), Y the visual width.  
+No explicit line-height token exists — it’s inferred from these bounds.  
+
+
+
 
 ## Tail — 00(44) Seems
 Always present and identical in samples:
