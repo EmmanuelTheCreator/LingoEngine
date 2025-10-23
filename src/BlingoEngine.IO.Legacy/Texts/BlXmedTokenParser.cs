@@ -1,3 +1,5 @@
+using System;
+
 using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging;
 
@@ -6,6 +8,7 @@ namespace BlingoEngine.IO.Legacy.Texts
     internal sealed class BlXmedTokenParser
     {
         private readonly ILogger _logger;
+        private readonly byte[] _buffer;
         private readonly IReadOnlyList<BlXmedToken> _tokens;
         private readonly XmedDocument _document = new();
 
@@ -22,6 +25,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         public BlXmedTokenParser(ILogger logger, byte[] buffer, IReadOnlyList<BlXmedToken> tokens, IReadOnlyList<int> lastNumbers)
         {
             _logger = logger;
+            _buffer = buffer ?? Array.Empty<byte>();
             _tokens = tokens ?? Array.Empty<BlXmedToken>();
             _reader = new BlXmedTokenReader(_tokens);
             _styleParser = new BlXmedTokenStyleParser(logger, _document);
@@ -37,6 +41,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         public XmedDocument Parse(int directorVersion)
         {
             _document.DirectorVersion = directorVersion;
+            _document.PreRenderedImage = null;
             _fontTableReader.Reset();
 
             _descriptorReader.Reset();
@@ -90,6 +95,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                     case XmedMainTokenGroup.MainGroupType.Unknown128:
                     case XmedMainTokenGroup.MainGroupType.Unknown129:
                         break;
+                    case XmedMainTokenGroup.MainGroupType.PreRenderedBitmap:
+                        LoadPreRenderedBitmap(group);
+                        break;
                     default:
                         break;
                 }
@@ -103,6 +111,51 @@ namespace BlingoEngine.IO.Legacy.Texts
             _styleParser.FinalizeStyles(_document);
 
             return _document;
+        }
+
+        private void LoadPreRenderedBitmap(XmedMainTokenGroup group)
+        {
+            if (_buffer.Length == 0 || group.RawTokens.Count == 0)
+                return;
+
+            BlXmedToken? txcToken = null;
+            foreach (var token in group.RawTokens)
+            {
+                if (token.Type == BlXmedToken.TokenType.Ascii && token.Ascii is { Length: > 0 } ascii && ascii.StartsWith("TXc", StringComparison.Ordinal))
+                {
+                    txcToken = token;
+                    break;
+                }
+            }
+
+            if (txcToken == null)
+                return;
+
+            int start = txcToken.Start;
+            foreach (var token in group.RawTokens)
+            {
+                if (token.Start < start)
+                    start = token.Start;
+            }
+
+            if (start < 0 || start >= _buffer.Length)
+                return;
+
+            int lengthBytes = _buffer.Length - start;
+            if (lengthBytes <= 0)
+                return;
+
+            var data = new byte[lengthBytes];
+            Array.Copy(_buffer, start, data, 0, lengthBytes);
+
+            try
+            {
+                _document.PreRenderedImage = BlLegacyTxcReader.Read(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse pre-rendered TXc block from XMED document.");
+            }
         }
 
       
