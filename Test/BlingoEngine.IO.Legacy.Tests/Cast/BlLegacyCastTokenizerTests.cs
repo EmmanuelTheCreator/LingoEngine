@@ -35,9 +35,9 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             Assert.Equal(BlCastTextDirectionalLight.TopLeft, member.LightSetting);
             Assert.Equal(BlCastTextShaderTexture.Default, member.ShaderTexture);
             Assert.Equal(53, member.Reflectivity);
-            Assert.Equal("#99663300", member.DirectionalColor.ToHex());
-            Assert.Equal("#99336600", member.AmbientColor.ToHex());
-            Assert.Equal("#00996600", member.BackgroundColor.ToHex());
+            Assert.Equal("#9C6531FF", member.DirectionalColor.ToHex());
+            Assert.Equal("#9C3163FF", member.AmbientColor.ToHex());
+            Assert.Equal("#009A63FF", member.BackgroundColor.ToHex());
             Assert.Equal(83.13, member.TunnelDepth, 2);
             Assert.Equal(12f, member.CameraPosition.X, 3);
             Assert.Equal(34f, member.CameraPosition.Y, 3);
@@ -66,9 +66,9 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             Assert.Equal(5, member.Smoothness);
             Assert.Equal(BlCastTextDirectionalLight.TopLeft, member.LightSetting);
             Assert.Equal(BlCastTextShaderTexture.Default, member.ShaderTexture);
-            Assert.Equal("#FFFFFF00", member.DirectionalColor.ToHex());
-            Assert.Equal("#FFFFFF00", member.AmbientColor.ToHex());
-            Assert.Equal("#FFFFFF00", member.BackgroundColor.ToHex());
+            Assert.Equal("#FFFFFFFF", member.DirectionalColor.ToHex());
+            Assert.Equal("#FFFFFFFF", member.AmbientColor.ToHex());
+            Assert.Equal("#FFFFFFFF", member.BackgroundColor.ToHex());
             Assert.Equal("NoTexture", member.TextureName);
         }
     }

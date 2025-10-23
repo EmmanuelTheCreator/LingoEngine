@@ -246,8 +246,27 @@ namespace BlingoEngine.IO.Legacy.Cast
             var r = (byte)(raw >> 24);
             var g = (byte)(raw >> 16);
             var b = (byte)(raw >> 8);
-            var a = (byte)raw;
-            return new BlLegacyColor(r, g, b, a);
+
+            var rgb565 = PackRgb565(r, g, b);
+            return UnpackRgb565(rgb565);
+        }
+
+        private static ushort PackRgb565(byte r, byte g, byte b)
+        {
+            return (ushort)(((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3));
+        }
+
+        private static BlLegacyColor UnpackRgb565(ushort value)
+        {
+            var red = (byte)((value >> 11) & 0x1F);
+            var green = (byte)((value >> 5) & 0x3F);
+            var blue = (byte)(value & 0x1F);
+
+            red = (byte)((red * 255 + 15) / 31);
+            green = (byte)((green * 255 + 31) / 63);
+            blue = (byte)((blue * 255 + 15) / 31);
+
+            return new BlLegacyColor(red, green, blue);
         }
 
         private static float ReadSingle(BlStreamReader reader)
