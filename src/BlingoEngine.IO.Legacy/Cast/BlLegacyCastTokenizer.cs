@@ -1,5 +1,8 @@
 ﻿using BlingoEngine.IO.Legacy.Tools;
+using System;
+using System.IO;
 using System.Diagnostics;
+using System.Numerics;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Cast
@@ -103,6 +106,144 @@ namespace BlingoEngine.IO.Legacy.Cast
         }
 
 
+
+        public BlCastTextMember ReadTextMember(byte[] castBytes)
+        {
+            ArgumentNullException.ThrowIfNull(castBytes);
+
+            if (castBytes.Length < 12)
+                throw new ArgumentException("CASt payload is too small to contain the header.", nameof(castBytes));
+
+            using var memory = new MemoryStream(castBytes, writable: false);
+            var reader = new BlStreamReader(memory)
+            {
+                Endianness = BlEndianness.BigEndian
+            };
+
+            reader.ReadUInt32();
+            var infoLength = reader.ReadUInt32();
+            var specificLength = reader.ReadUInt32();
+
+            var infoBytes = infoLength > 0 ? reader.ReadBytes((int)infoLength) : Array.Empty<byte>();
+            var specificBytes = specificLength > 0 ? reader.ReadBytes((int)specificLength) : Array.Empty<byte>();
+
+            return ParseTextSpecific(infoBytes, specificBytes);
+        }
+
+        private static BlCastTextMember ParseTextSpecific(byte[] infoBytes, byte[] specificBytes)
+        {
+            using var specificStream = new MemoryStream(specificBytes, writable: false);
+            var reader = new BlStreamReader(specificStream)
+            {
+                Endianness = BlEndianness.BigEndian
+            };
+
+            if (specificBytes.Length < 8)
+                throw new InvalidDataException("Specific block does not contain the text header.");
+
+            var typeLength = reader.ReadInt32();
+            var type = reader.ReadAsciiString(typeLength);
+            var specificDataLength = reader.ReadInt32();
+
+            var isEditable = ReadBoolean(reader);
+            var framing = (BlLegacyTextFraming)reader.ReadInt32();
+            var tabsEnabled = ReadBoolean(reader);
+            var dtdEnabled = ReadBoolean(reader);
+            reader.Skip(4);
+
+            var isAntialiasEnabled = ReadBoolean(reader);
+            var antialiasMode = reader.ReadInt32();
+            var antialiasLargerThan = reader.ReadInt32();
+            reader.Skip(4);
+
+            var kerningLargerThan = reader.ReadInt32();
+            reader.Skip(4);
+
+            var isKerningEnabled = ReadBoolean(reader);
+            var kerningMode = reader.ReadInt32();
+            var useHyperlinkStyles = ReadBoolean(reader);
+
+            reader.Skip(4 * 3);
+
+            var preRenderInk = (BlCastTextPreRenderInk)reader.ReadInt32();
+            var savePreRenderBitmap = ReadBoolean(reader);
+
+            var shaderTag = reader.ReadAsciiString(4);
+            var shaderDataLength = reader.ReadInt32();
+            var faceFlags = reader.ReadInt32();
+            var tunnelDepth = ReadFixed1616(reader);
+            var isBevelEnabled = ReadBoolean(reader);
+            var bevelAmount = ReadFixed1616(reader);
+            var bevelEdge = (BlCastTextBevelEdge)reader.ReadInt32();
+            var smoothness = reader.ReadInt32();
+            var lightSetting = (BlCastTextDirectionalLight)reader.ReadInt32();
+            var shaderTexture = (BlCastTextShaderTexture)reader.ReadInt32();
+            var diffuseIndex = reader.ReadInt32();
+            var specularIndex = reader.ReadInt32();
+            var reflectivity = reader.ReadInt32();
+
+            var directionalColor = new BlCastTextColor(reader.ReadUInt32());
+            var ambientColor = new BlCastTextColor(reader.ReadUInt32());
+            var backgroundColor = new BlCastTextColor(reader.ReadUInt32());
+
+            var cameraPosition = new Vector3(ReadSingle(reader), ReadSingle(reader), ReadSingle(reader));
+            var cameraDistance = ReadFixed1616(reader);
+            var cameraRotation = new Vector3(ReadSingle(reader), ReadSingle(reader), ReadSingle(reader));
+            var cameraFocalLength = ReadFixed1616(reader);
+            var textureName = reader.ReadCString();
+
+            return new BlCastTextMember(
+                type,
+                specificDataLength,
+                isEditable,
+                framing,
+                tabsEnabled,
+                dtdEnabled,
+                isAntialiasEnabled,
+                antialiasMode,
+                antialiasLargerThan,
+                kerningLargerThan,
+                isKerningEnabled,
+                kerningMode,
+                useHyperlinkStyles,
+                preRenderInk,
+                savePreRenderBitmap,
+                shaderTag,
+                shaderDataLength,
+                faceFlags,
+                tunnelDepth,
+                isBevelEnabled,
+                bevelAmount,
+                bevelEdge,
+                smoothness,
+                lightSetting,
+                shaderTexture,
+                diffuseIndex,
+                specularIndex,
+                reflectivity,
+                directionalColor,
+                ambientColor,
+                backgroundColor,
+                cameraPosition,
+                cameraDistance,
+                cameraRotation,
+                cameraFocalLength,
+                textureName);
+        }
+
+        private static bool ReadBoolean(BlStreamReader reader) => reader.ReadInt32() != 0;
+
+        private static double ReadFixed1616(BlStreamReader reader)
+        {
+            var raw = reader.ReadUInt32();
+            return raw / 65536d;
+        }
+
+        private static float ReadSingle(BlStreamReader reader)
+        {
+            var raw = reader.ReadUInt32();
+            return BitConverter.Int32BitsToSingle(unchecked((int)raw));
+        }
 
         public List<CastToken> TokenizeInfo(byte[] info, int addonints = 0)
         {
