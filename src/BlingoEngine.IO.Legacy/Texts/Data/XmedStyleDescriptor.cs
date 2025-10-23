@@ -22,6 +22,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int? FontTableIndex { get; set; }
         public byte? ColorIndex { get; set; }
         public int? FontSize { get; set; }
+        public int LetterSpacing { get; set; }
         public bool Bold { get; set; }
         public bool Italic { get; set; }
         public bool Underline { get; set; }
@@ -59,6 +60,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
 
             if (child.LineSpacing == 0) child.LineSpacing = LineSpacing;
             if (child.BaseLineOffset == 0) child.BaseLineOffset = BaseLineOffset;
+            if (child.LetterSpacing == 0) child.LetterSpacing = LetterSpacing;
 
             if (child.Flags == XmedStyleFlags.None && Flags != XmedStyleFlags.None)
                 child.Flags = Flags;
