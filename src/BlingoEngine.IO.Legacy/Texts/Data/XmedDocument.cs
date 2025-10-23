@@ -1,5 +1,6 @@
 using BlingoEngine.IO.Legacy.Texts.Data;
 using BlingoEngine.IO.Legacy.Texts.Data.Pre10;
+using BlingoEngine.IO.Legacy.Texts.Data.Txc;
 
 using System;
 
@@ -23,6 +24,7 @@ namespace BlingoEngine.IO.Legacy.Texts
         public int TextLength { get; set; }
         public int DirectorVersion { get; set; }
         public XmedRichTextMetadata? RichText { get; set; }
+        public BlLegacyTxcImage? PreRenderedImage { get; set; }
 
         public void FillParagraphTexts()
         {

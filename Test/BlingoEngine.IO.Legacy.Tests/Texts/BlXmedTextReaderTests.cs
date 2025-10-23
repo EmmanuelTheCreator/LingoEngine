@@ -1,6 +1,7 @@
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Texts;
+using BlingoEngine.IO.Legacy.Texts.Data.Txc;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -56,6 +57,34 @@ public class BlXmedTextReaderTests
         document.Text.Should().Contain("This text is red");
         //document.RunMap.Should().NotBeEmpty();
         document.Styles.Should().HaveCountGreaterThan(1);
+    }
+
+    [Theory]
+    [InlineData("MemberTests/Text_PreRender_CopyInk_SaveBitmap_13.xmed.bin", 'p', false)]
+    [InlineData("MemberTests/Text_PreRender_OtherInk_SaveBitmap_13.xmed.bin", 'l', true)]
+    public void Read_WithPreRenderedBitmap_LoadsTxcImage(string asset, char variant, bool expectDecodable)
+    {
+        var document = ReadDocument(asset);
+
+        document.PreRenderedImage.Should().NotBeNull();
+
+        var image = document.PreRenderedImage!;
+        image.Variant.Should().Be(variant);
+        image.Width.Should().Be((ushort)500);
+        image.Height.Should().Be((ushort)154);
+
+        if (expectDecodable)
+        {
+            image.Compression.Should().Be(BlLegacyTxcCompressionKind.RlePairs);
+            image.EncodedPixels.Should().NotBeEmpty();
+            image.Pixels.Should().HaveCount(image.Width * image.Height);
+        }
+        else
+        {
+            image.Compression.Should().Be(BlLegacyTxcCompressionKind.Unknown);
+            image.EncodedPixels.Should().BeEmpty();
+            image.RemainingData.Should().NotBeEmpty();
+        }
     }
 
   

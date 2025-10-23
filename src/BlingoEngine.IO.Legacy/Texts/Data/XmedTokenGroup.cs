@@ -106,6 +106,7 @@
             Unknown13 = 0x0013,
             Unknown128 = 0x0128,
             Unknown129 = 0x0129,
+            PreRenderedBitmap = 0xFFFE,
         }
 
         public List<BlXmedToken> PreTokens { get; } = new();

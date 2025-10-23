@@ -111,6 +111,9 @@ namespace BlingoEngine.IO.Legacy.Texts
                 case XmedMainTokenGroup.MainGroupType.Unknown129:
                     group.Items.AddRange(group.RawTokens);
                     break;
+                case XmedMainTokenGroup.MainGroupType.PreRenderedBitmap:
+                    BuildPreRenderedBitmapGroup(group);
+                    break;
                 default:
                     break;
             }
@@ -232,6 +235,15 @@ namespace BlingoEngine.IO.Legacy.Texts
                 tabsMainGroup.Items.Add(tabStopsDefault);
                 readIndex += 28 + (tabCount * 4) + 6 + 18+2; // 12 * NULL = 28 +(4*tabs) + 26 = 54 + (4  * tabs)
             }
+        }
+
+        private static void BuildPreRenderedBitmapGroup(XmedMainTokenGroup group)
+        {
+            if (group.RawTokens.Count == 0)
+                return;
+
+            group.Items.Clear();
+            group.Items.AddRange(group.RawTokens);
         }
 
       
