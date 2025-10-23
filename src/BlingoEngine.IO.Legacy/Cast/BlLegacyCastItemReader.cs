@@ -1,8 +1,11 @@
-﻿using BlingoEngine.IO.Legacy.Cast.Data;
+﻿using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Cast.MemberTypes;
 using BlingoEngine.IO.Legacy.Tools;
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.IO;
 using System.Diagnostics;
+using System.Numerics;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Cast
@@ -106,6 +109,8 @@ namespace BlingoEngine.IO.Legacy.Cast
         }
 
 
+
+       
 
         public (List<CastToken> Tokens, BlCastMemberItem? MemberItem) ReadItem(string name, byte[] info)
         {
@@ -213,18 +218,23 @@ namespace BlingoEngine.IO.Legacy.Cast
                 var contentDebugc = specificData.ToHexString(16, true, 12, true);
                 contentDebugc += Environment.NewLine;
                 contentDebugc += Environment.NewLine;
-                contentDebugc += blob?.ToHexString(16, true, 12, true);
+                contentDebugc += blob?.ToHexString(16, true, 0, true);
             }
             BlCastMemberItem? castMember = null;
             // todo : specificData
             switch (memberType)
             {
-                default:
-                    case "flashComponent":
-                    case "text":
+                case "text":
+                    castMember = new BlCastMemberTextReader().Read(specificData);
                     break;
-                    case "bitmap":
-                    castMember = new BlCastMemberBitmapReader().Read(specificData);
+                case "bitmap":
+                    castMember = new BlCastMemberBitmapReader().Read(specificData, infoSlice);
+                    break;
+                case "animGif":
+                    castMember = new BlCastMemberBitmapReader().ReadGif(specificData);
+                    break;
+                case "flashComponent":
+                default:
                     break;
             }
             if (castMember == null)
@@ -234,7 +244,7 @@ namespace BlingoEngine.IO.Legacy.Cast
             castMember.Blob = blob;
             castMember.Created = dateCreated;
             castMember.Modified = dateModified;
-            castMember.MemberType = memberType;
+            castMember.MemberTypeString = memberType;
             return (returnData, castMember);
         }
 

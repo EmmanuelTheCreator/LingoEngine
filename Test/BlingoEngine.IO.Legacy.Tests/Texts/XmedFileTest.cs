@@ -198,6 +198,25 @@ public class XmedFileTest
     }
 
     [Fact]
+    public void Text_Hallo_letterSpace_file_should_capture_letter_spacing()
+    {
+        var document = ReadDocument("Text_Hallo_letterSpace_6_13.xmed.bin");
+
+        document.Runs.Should().ContainSingle();
+        var run = document.Runs.Single();
+
+        run.Text.Should().Be("Hallo");
+        run.FontSize.Should().Be(24);
+        run.LetterSpacing.Should().Be(6);
+
+        document.Styles.Should().Contain(style =>
+            style.StyleId == run.StyleId
+            && style.LetterSpacing == 6
+            && style.FontSize == 24
+            && style.FontName.Equals("Arial", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void Text_Hallo_multifont_file_should_list_multiple_fonts()
     {
         var document = ReadDocument("Text_Hallo_multifont_13.xmed.bin");
@@ -232,6 +251,204 @@ public class XmedFileTest
         string textFromRuns = string.Concat(document.Runs.Select(run => run.Text));
         textFromRuns.ShouldMatchNormalized("This text is red, Arial,12px,  The text is yellow, Tahoma, 9px, , bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again");
         GetNormalizedFonts(document).Should().Contain(new[] { "arial", "tahoma", "terminal" });
+    }
+
+    [Fact]
+    public void Text_Single_Line_Multi_Style_file_should_match_paragraph_annotations()
+    {
+        var document = ReadDocument("Text_Single_Line_Multi_Style_13.xmed.bin");
+
+        document.Paragraphs.Should().ContainSingle();
+
+        var paragraph = document.Paragraphs.Single();
+
+        paragraph.Text.Should().Be("This text is red, Arial,12px,  The text is yellow, Tahoma, 9px, , bold, italic, underline The text is green, font Terminal, 18px, with spacing of 39 The text is orange, Tahoma, 9px, bold, italic, underline This text is red, Arial,12px, again");
+        paragraph.Alignment.Should().Be(XmedAlignment.Center);
+        paragraph.LineSpacing.Should().Be(0);
+
+        var expectedRuns = new[]
+        {
+            new RunExpectation(
+                "This text is red, Arial,12px,  ",
+                StyleId: 5,
+                FontSize: 12,
+                Color: (0xFF, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "The text is yellow, Tahoma, 9px, , bold, italic, underline ",
+                StyleId: 7,
+                FontSize: 9,
+                Color: (0xFF, 0xFF, 0x00),
+                Bold: true,
+                Italic: true,
+                Underline: true),
+            new RunExpectation(
+                "The text is green, font Terminal, 18px, with spacing of 39 ",
+                StyleId: 6,
+                FontSize: 18,
+                Color: (0x00, 0xFF, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "The text is orange, Tahoma, 9px, bold, italic, underline ",
+                StyleId: 8,
+                FontSize: 9,
+                Color: (0xFF, 0x99, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "This text is red, Arial,12px, again",
+                StyleId: 5,
+                FontSize: 12,
+                Color: (0xFF, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false)
+        };
+
+        var runs = GetRunsWithinParagraph(document, paragraph).ToArray();
+
+        runs.Should().HaveSameCount(expectedRuns);
+        runs.Select(run => run.Text).Should().Equal(expectedRuns.Select(expectation => expectation.Text));
+
+        for (int index = 0; index < expectedRuns.Length; index++)
+        {
+            var expectation = expectedRuns[index];
+            var run = runs[index];
+
+            run.StyleId.Should().Be(expectation.StyleId);
+            run.FontSize.Should().Be(expectation.FontSize);
+            run.ForeColor.R.Should().Be(expectation.Color.R);
+            run.ForeColor.G.Should().Be(expectation.Color.G);
+            run.ForeColor.B.Should().Be(expectation.Color.B);
+            run.Bold.Should().Be(expectation.Bold);
+            run.Italic.Should().Be(expectation.Italic);
+            run.Underline.Should().Be(expectation.Underline);
+            run.Strikeout.Should().Be(expectation.Strikeout);
+            run.Subscript.Should().Be(expectation.Subscript);
+            run.Superscript.Should().Be(expectation.Superscript);
+        }
+
+        var normalizedFontFamilies = document.Fonts
+            .Select(font => font.FamilyName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Select(name => name.ToLowerInvariant())
+            .ToArray();
+
+        normalizedFontFamilies.Should().Contain(new[] { "arial", "tahoma", "terminal" });
+    }
+
+    [Fact]
+    public void Text_Flags_BIUSubSup_file_should_match_run_flags()
+    {
+        var document = ReadDocument("Styles/Text_Flags_BIUSubSup_13.xmed.bin");
+
+        document.Paragraphs.Should().ContainSingle();
+
+        var paragraph = document.Paragraphs.Single();
+
+        paragraph.Text.Should().Be("Para1 I'm Bold, I'm Italic, I'm Underline, Subscript, Superscript, normal text");
+        paragraph.Alignment.Should().Be(XmedAlignment.Left);
+        paragraph.LineSpacing.Should().Be(0);
+
+        var expectedRuns = new[]
+        {
+            new RunExpectation(
+                "Para1 ",
+                StyleId: 0,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "I'm Bold, ",
+                StyleId: 1,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: true,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "I'm Italic,",
+                StyleId: 2,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: true,
+                Underline: false),
+            new RunExpectation(
+                " ",
+                StyleId: 5,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: true,
+                Underline: false),
+            new RunExpectation(
+                "I'm Underline, ",
+                StyleId: 6,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: true),
+            new RunExpectation(
+                "Subscript, ",
+                StyleId: 4,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "Superscript, ",
+                StyleId: 3,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false),
+            new RunExpectation(
+                "normal text",
+                StyleId: 0,
+                FontSize: 12,
+                Color: (0x00, 0x00, 0x00),
+                Bold: false,
+                Italic: false,
+                Underline: false)
+        };
+
+        var runs = GetRunsWithinParagraph(document, paragraph).ToArray();
+
+        runs.Should().HaveSameCount(expectedRuns);
+        runs.Select(run => run.Text).Should().Equal(expectedRuns.Select(expectation => expectation.Text));
+
+        for (int index = 0; index < expectedRuns.Length; index++)
+        {
+            var expectation = expectedRuns[index];
+            var run = runs[index];
+
+            run.StyleId.Should().Be(expectation.StyleId);
+            run.FontSize.Should().Be(expectation.FontSize);
+            run.ForeColor.R.Should().Be(expectation.Color.R);
+            run.ForeColor.G.Should().Be(expectation.Color.G);
+            run.ForeColor.B.Should().Be(expectation.Color.B);
+            run.Bold.Should().Be(expectation.Bold);
+            run.Italic.Should().Be(expectation.Italic);
+            run.Underline.Should().Be(expectation.Underline);
+            run.Strikeout.Should().Be(expectation.Strikeout);
+            run.Subscript.Should().Be(expectation.Subscript);
+            run.Superscript.Should().Be(expectation.Superscript);
+        }
+
+        document.Fonts.Select(font => font.FamilyName)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Should().Contain(name => name.Equals("Arial", StringComparison.OrdinalIgnoreCase));
     }
     [Fact]
     public void Text_Multi_Line_Multi_Style_file_should_read_long_text_and_runs()
@@ -448,6 +665,7 @@ public class XmedFileTest
         }
     }
 
+
    
 
 
@@ -553,6 +771,19 @@ public class XmedFileTest
         bool Underline,
         XmedAlignment? Alignment,
         int? LineSpacing = null
+    );
+
+    private sealed record RunExpectation(
+        string Text,
+        int StyleId,
+        int? FontSize,
+        (byte R, byte G, byte B) Color,
+        bool Bold,
+        bool Italic,
+        bool Underline,
+        bool Strikeout = false,
+        bool Subscript = false,
+        bool Superscript = false
     );
 
    

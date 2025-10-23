@@ -225,6 +225,15 @@ namespace BlingoEngine.IO.Legacy.Tools
 
             return BinaryPrimitives.ReadUInt16BigEndian(buffer.AsSpan(offset, 2));
         }
+        public static int ReadInt16(this byte[] buffer, int offset)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            if (offset < 0 || offset + 2 > buffer.Length)
+                return 0;
+
+            return BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(offset, 2));
+        }
 
         public static byte ReadByteOrDefault(this byte[] buffer, int offset)
         {

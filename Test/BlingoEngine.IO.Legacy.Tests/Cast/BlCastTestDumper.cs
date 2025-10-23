@@ -51,9 +51,14 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberShape.cst"),"Shape"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/ImgCast.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),"Bitmap"),
-                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),"Bitmap"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_24bit.cst"),"Bitmap"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit_loc_Out1.cst"),"Bitmap"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit_loc_Out2.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted2.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted3.cst"),"Bitmap"),
             };
             var sb = new StringBuilder();
             foreach (var file in files)
@@ -93,7 +98,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 (var tokens, var member) = tokenizer.ReadItem(fileData.FileName,info);
                 var text1 = tokenizer.TokenListToStringX(tokens); // for debug
                 var fn = Path.GetFileName(file);
-                var name = $"{fn} - {member.MemberType} - {member.Name} - {member.MediaContentType} - {member.Blob?.ToHexString()} ({member.Created.Value:dd/MM:yyyy HH:mm:ss},{member.Modified.Value:dd/MM:yyyy HH:mm:ss})";
+                var name = $"{fn} - {member.MemberTypeString} - {member.Name} - {member.MediaContentType} - {member.Blob?.ToHexString()} ({member.Created.Value:dd/MM:yyyy HH:mm:ss},{member.Modified.Value:dd/MM:yyyy HH:mm:ss})";
                 sb.AppendLine(name);
                 sb.AppendLine(new string('-', name.Length));
                 sb.AppendLine(text1);

@@ -11,6 +11,7 @@ namespace BlingoEngine.IO.Legacy.Texts.Data
         public int StyleId { get; set; }
         public string FontName { get; set; } = string.Empty;
         public int? FontSize { get; set; }
+        public int LetterSpacing { get; set; }
         public bool Bold { get; set; }
         public bool Italic { get; set; }
         public bool Underline { get; set; }
