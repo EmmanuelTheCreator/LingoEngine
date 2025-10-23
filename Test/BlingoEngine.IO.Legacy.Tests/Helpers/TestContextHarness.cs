@@ -95,7 +95,28 @@ internal sealed class TestContextHarness : IDisposable
         string root = GetAssetPath("Texts_Fields");
         string[] matches = Directory.GetFiles(root, fileName, SearchOption.AllDirectories);
         if (matches.Length == 0)
-            throw new FileNotFoundException($"XMED sample '{relativePath}' not found.", direct);
+            throw new FileNotFoundException($"Text file '{relativePath}' not found.", direct);
+
+        return matches[0];
+    }
+    public static string GetAudioAssetPath(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            throw new ArgumentException("Relative path must be provided.", nameof(relativePath));
+
+        string normalized = relativePath.Replace('\\', '/').Trim('/');
+        if (normalized.Length == 0)
+            throw new ArgumentException("Relative path must contain a file name.", nameof(relativePath));
+
+        string direct = GetAssetPath($"Sounds/{normalized}");
+        if (File.Exists(direct))
+            return direct;
+
+        string fileName = Path.GetFileName(normalized);
+        string root = GetAssetPath("Sounds");
+        string[] matches = Directory.GetFiles(root, fileName, SearchOption.AllDirectories);
+        if (matches.Length == 0)
+            throw new FileNotFoundException($"Audio file '{relativePath}' not found.", direct);
 
         return matches[0];
     }

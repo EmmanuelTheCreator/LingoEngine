@@ -122,7 +122,7 @@ public static class BlLegacyMovieBlingoExtensions
             PurgePriority = 0
         };
 
-        return slot.Member.MemberType switch
+        var member = slot.Member.MemberType switch
         {
             BlLegacyCastMemberType.Text => baseDto.ToTextMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
             BlLegacyCastMemberType.Field => baseDto.ToFieldMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
@@ -142,6 +142,7 @@ public static class BlLegacyMovieBlingoExtensions
                 soundExporter, (BlCastMemberAudio)slot.Member),
             _ => baseDto
         };
+        return member;
     }
 
     public static BlingoMemberDTO ToTextMember(this BlingoMemberDTO baseDto, BlLegacyMovieArchive archive, int castResourceId, ILogger logger, BlCastMemberText memberTxt)

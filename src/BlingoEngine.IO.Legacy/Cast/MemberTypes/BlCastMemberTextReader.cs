@@ -7,7 +7,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberTextReader
     {
-        public BlCastMemberText Read(byte[] specificBytes)
+        public BlCastMemberText Read(byte[] specificBytes, List<byte[]> blobs, List<int> prefixValues)
         {
             using var specificStream = new MemoryStream(specificBytes, writable: false);
             var reader = new BlStreamReader(specificStream)

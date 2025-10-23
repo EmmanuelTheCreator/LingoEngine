@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using Xunit;
 
 namespace BlingoEngine.IO.Legacy.Tests.Cast
@@ -50,19 +51,23 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberButton.cst"),"Flash"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberShape.cst"),"Shape"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/ImgCast.cst"),"Bitmap"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),"Bitmap"),
+               // (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
-                (TestContextHarness.GetTextAssetPath("MemberTypes/DirFileWith_3_Sounds.dir"),"Bitmap"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/DirFileWith_3_Sounds.dir"),"Bitmap"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors.dir"),"Behavior"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors_parent.dir"),"Behavior"),
+                //(TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors_Movie.dir"),"Behavior"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors_linked.dir"),"Behavior"),
             };
             var sb = new StringBuilder();
             foreach (var file in files)
-                DumpCastTokens(sb, file);
+                DumpCastTokens(sb, file, false);
 
             var result = sb.ToString();
         }
 
-        private static void DumpCastTokens(StringBuilder sb, (string FileName, string Type) fileData)
+        private static void DumpCastTokens(StringBuilder sb, (string FileName, string Type) fileData, bool withTokens)
         {
             var file = fileData.FileName;
             using var harness = TestContextHarness.Open(file);
@@ -90,17 +95,29 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 if (!File.Exists(outPath2))
                     File.WriteAllBytes(outPath2,info);
                 var tokenizer = new BlLegacyCastItemReader();
-                (var tokens, var member) = tokenizer.ReadItem(fileData.FileName,info);
-                var text1 = tokenizer.TokenListToStringX(tokens); // for debug
                 var fn = Path.GetFileName(file);
-                var name = $"{fn} - {member.MemberTypeString} - {member.Name} - {member.MediaContentType} - {member.Blob?.ToHexString()} ({member.Created.Value:dd/MM:yyyy HH:mm:ss},{member.Modified.Value:dd/MM:yyyy HH:mm:ss})";
-                sb.AppendLine(name);
-                sb.AppendLine(new string('-', name.Length));
-                sb.AppendLine(text1);
-                sb.AppendLine("--------------------------------------------------");
+                if (withTokens)
+                {
+                    (var tokens, var member) = tokenizer.ReadItemWithTokens(fileData.FileName, info);
+                    var text1 = tokenizer.TokenListToStringX(tokens); // for debug
+                    var name = $"{fn} - {member.MemberTypeString} - {member.Name} - {member.MediaContentType} - Blobs={member.Blobs.Count} ({member.Created.Value:dd/MM:yyyy HH:mm:ss},{member.Modified.Value:dd/MM:yyyy HH:mm:ss})";
+                    sb.AppendLine(name);
+                    sb.AppendLine(new string('-', name.Length));
+                    sb.AppendLine(text1);
+                    sb.AppendLine("--------------------------------------------------");
 
-                Assert.NotNull(tokens);
-                break;
+                    Assert.NotNull(tokens);
+                }
+                else
+                {
+                    var memberData = tokenizer.ReadItem(fileData.FileName, info);
+                    var member = memberData.MemberItem;
+                    var data = $"{fn} - {member.MemberTypeString} - {member.Name} - {member.MediaContentType} ({member.Created.Value:dd/MM:yyyy HH:mm:ss},{member.Modified.Value:dd/MM:yyyy HH:mm:ss})";
+                    sb.AppendLine(data);
+                    foreach (var blob in member.Blobs)
+                        sb.AppendLine(blob.ToHexString(16,false,0,true));
+                }
+                //break;
             }
         }
     }

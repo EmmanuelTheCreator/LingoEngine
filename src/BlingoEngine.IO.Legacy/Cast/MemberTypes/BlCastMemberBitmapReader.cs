@@ -5,7 +5,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberBitmapReader
     {
-        public BlCastMemberItem Read(byte[] specificData, byte[] infoSlice)
+        public BlCastMemberItem Read(byte[] specificData, byte[] infoSlice, List<int> prefixValues)
         {
             var member = new BlCastMemberBitmap();
             var byte1 = specificData.ReadByteOrDefault(0);
@@ -74,7 +74,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             return member;
         }
 
-        public BlCastMemberItem ReadGif(byte[] specificData)
+        public BlCastMemberItem ReadGif(byte[] specificData, List<byte[]> blobs, List<int> prefixValues)
         {
             var member = new BlCastMemberGif();
 

@@ -2,6 +2,8 @@
 using BlingoEngine.IO.Legacy.Cast.MemberTypes;
 using BlingoEngine.IO.Legacy.Tools;
 using System.Diagnostics;
+using System.Net;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Cast
@@ -108,7 +110,117 @@ namespace BlingoEngine.IO.Legacy.Cast
 
        
 
-        public (List<CastToken> Tokens, BlCastMemberItem? MemberItem) ReadItem(string name, byte[] info)
+        public (BlCastMemberItem? MemberItem, List<byte[]> Datas) ReadItem(string name, byte[] info)
+        {
+            var typeValue = info.ReadInt32(0);
+            var infoLength = info.ReadInt32(4);
+            var specificLength = info.ReadInt32(8);
+
+            var infoBytesAvailable = info.Length - 12;
+            if (infoBytesAvailable <= 0)
+                return (null, new List<byte[]>());
+
+            var infoSlice = new byte[infoLength];
+            Buffer.BlockCopy(info, 12, infoSlice, 0, infoSlice.Length);
+
+            var specificData = new byte[specificLength];
+            Buffer.BlockCopy(info, (int)infoLength + 12, specificData, 0, specificData.Length);
+
+            var prefixValues = new List<int>
+            {
+                infoSlice.ReadInt32(0),
+                infoSlice.ReadInt32(4),
+                infoSlice.ReadInt32(8),
+                infoSlice.ReadInt16(12),
+                infoSlice.ReadByteOrDefault(14),
+                infoSlice.ReadByteOrDefault(15),
+                infoSlice.ReadInt16(16),
+                infoSlice.ReadInt16(18)
+            };
+
+            var datas = ReadData(infoSlice);
+            // 0-index table
+            // |            | index   |                             | 
+            // |------------|---------|-----------------------------|
+            // | ScriptText | 0       | for Scripts                 |
+            // | Name       | 1       |                             |
+            // | ScriptLink | 3       | for Scripts                 |
+            // | ScriptA    | 5       | for Scripts                 |
+            // |            | 9       | for GIF /Flash              |
+            // | MemberType | 10      | for text/Flash              |
+            // | ScriptB    | 11      | for Scripts                 |
+            // |            | 12      | for text/Flash              |
+            // | BitmapType | 16      | for Bitmaps                 |
+            // | created    | 17      |                             |
+            // | modified   | 18      |                             |
+            // | N/A        | 19      |                             |
+            // |            | 20*     |                             |
+            // |            | 21*     |                             |
+            // * = only some types of members have 22 values other only 20, like custom painted bitmap
+
+            var blops = new List<byte[]>();
+            var nameIndex = 1;
+            var memberFormat = "";
+            var memberName = "";
+            bool isScript = false;
+            if (datas[nameIndex].Length > 0)
+            {
+                var memberNameLength = datas[nameIndex][0];
+                memberName = Encoding.ASCII.GetString(datas[nameIndex].Skip(1).Take(memberNameLength).ToArray());
+            }
+            if (datas[0].Length > 0)
+            {
+                isScript = true;
+                blops.Add(datas[0]);                                        // script text      : long
+            }
+            if (datas[3].Length > 0 || isScript) blops.Add(datas[3]);       // script link name : long
+            if (datas[5].Length > 0 || isScript) blops.Add(datas[5]);       // script           : 20
+            if (datas[9].Length > 0) blops.Add(datas[9]);                   // animated GIF     : 16
+                                                                            // Flash            : 20
+                                                                            // Text             : 16
+            // memberContentType:
+            //      Text
+            //      text
+            //      Flash Component
+            string memberContentType = datas[10].ReadCString(0);            // all
+            if (datas[11].Length > 0 || isScript) blops.Add(datas[11]);      // script           : 20
+            if (datas[12].Length > 0) blops.Add(datas[12]);                 // text             : 20
+                                                                            // Flash            : 20
+
+            if (datas[16].Length > 0)
+            {
+                // Bitmap
+                // Type = "Flash Component" 
+                // Type = "Animated GIF..."
+                // Type = "kMoaCfFormat_PNG" 
+                // Type = "kMoaCfFormat_JPEG"
+                // Sound
+                // Type = "kMoaCfFormat_MPEG3"
+                memberFormat = Encoding.ASCII.GetString(datas[16]);    // bitmapBitmapFormat : 16
+                blops.Add(datas[16]);
+            }
+            // specials with 22 values
+            if (datas.Count > 21)
+            {
+                if (datas[20].Length > 0) blops.Add(datas[20]);             // 
+                if (datas[21].Length > 0) blops.Add(datas[21]);             // Bitmaps          : 4     : 251 , 80 , 0 , 0
+            }
+            var dateCreated = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[17].Reverse().ToArray(), 0)).UtcDateTime; 
+            var dateModified = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[18].Reverse().ToArray(), 0)).UtcDateTime;
+
+            //var test = Encoding.ASCII.GetString(datas[3]);
+
+
+            // read "N/A"
+            var n_a = datas[19].ReadCString(0);
+            if (n_a != "N/A")
+                throw new Exception("Expected N/A value not found in ." + name);
+
+            var member = CreateMember(infoSlice, specificData, memberName, memberContentType, memberFormat, blops, dateCreated, dateModified, prefixValues);
+            return (member, datas);
+
+        }
+        public (List<CastToken> Tokens, BlCastMemberItem? MemberItem) ReadItemWithTokens(string name, byte[] info)
         {
             var returnData = new List<CastToken>();
             using var memory = new MemoryStream(info, writable: false);
@@ -130,7 +242,7 @@ namespace BlingoEngine.IO.Legacy.Cast
 
             var infoBytesAvailable = info.Length - (int)reader.Position;
             if (infoBytesAvailable <= 0)
-                return (returnData,null);
+                return (returnData, null);
 
             if (infoLength > (uint)infoBytesAvailable)
                 infoLength = (uint)infoBytesAvailable;
@@ -142,12 +254,14 @@ namespace BlingoEngine.IO.Legacy.Cast
             var specificData = new byte[specificLength];
             Buffer.BlockCopy(info, (int)infoLength + 12, specificData, 0, specificData.Length);
 
+            var datas = ReadData(infoSlice);
+
             // Read the offsets
             (bool hasName, List<int> offsets) = ReadOffsets(returnData, reader, (int)typeValue, (int)infoLength, (int)specificLength);
 
             // Make a new array with the rest bytes
-            var endingBytes = new byte[infoSlice.Length - reader.Position+12];
-            Buffer.BlockCopy(infoSlice, (int)reader.Position-12, endingBytes, 0, endingBytes.Length);
+            var endingBytes = new byte[infoSlice.Length - reader.Position + 12];
+            Buffer.BlockCopy(infoSlice, (int)reader.Position - 12, endingBytes, 0, endingBytes.Length);
             //var test111 = endingBytes.ToHexString(16,false,0,true); // to debug
 
             // Create slices
@@ -170,7 +284,7 @@ namespace BlingoEngine.IO.Legacy.Cast
             //// Type = "kMoaCfFormat_JPEG"
             //// Type = "Flash Component" 
             string? memberContentType = null;
-            byte[]? blob = null;
+            var blobs = new List<byte[]>();
 
             // Count the number of arrays with 4 values there are at the end
             var count4 = bytesValues.Select(x => x.Length).Reverse().TakeWhile(x => x == 4).Count();
@@ -180,74 +294,85 @@ namespace BlingoEngine.IO.Legacy.Cast
             {
                 // member type + Blob
                 var blob2 = Encoding.ASCII.GetString(bytesValues[0]);
-                blob = bytesValues[0];
-                memberContentType = ReadCString(bytesValues[1], 0);
+                blobs.Add(bytesValues[0]);
+                memberContentType = bytesValues[1].ReadCString(0);
             }
-            else if(numberOfOtherValues == 1)
+            else if (numberOfOtherValues == 1)
             {
                 // only blob
                 //memberType = Encoding.ASCII.GetString(bytesValues[0]);
-                memberContentType = ReadCString(bytesValues[0], 0);
+                memberContentType = bytesValues[0].ReadCString(0);
                 //blob = bytesValues[0];
             }
+            // add ending bytes a as tokens
+            var count = endingBytes.Length - nameLength - 1;
+            for (int i = 0; i < count; i++)
+                returnData.Add(CastToken.NewByte(reader.Position, endingBytes[i + nameLength + 1]));
+            returnData.Add(CastToken.NewEmptyBreak());
+
 
             // Read creation datetime
             var dateCreated = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(bytesValues[readOffsetLast3].Reverse().ToArray(), 0)).UtcDateTime;
             // Read modified datetime
             var dateModified = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(bytesValues[readOffsetLast3 + 1].Reverse().ToArray(), 0)).UtcDateTime;
             // read "N/A"
-            var n_a = ReadCString(bytesValues[readOffsetLast3 + 2], 0);
-            if (n_a !=  "N/A")
-                throw new Exception("Expected N/A value not found in ."+ name);
+            var n_a = bytesValues[readOffsetLast3 + 2].ReadCString(0);
+            if (n_a != "N/A")
+                throw new Exception("Expected N/A value not found in ." + name);
 
-            // add ending bytes a as tokens
-            var count = endingBytes.Length - nameLength - 1;
-            for (int i = 0; i < count; i++)
-                returnData.Add(CastToken.NewByte(reader.Position, endingBytes[i+ nameLength +1]));
-            returnData.Add(CastToken.NewEmptyBreak());
 
             //var text1 = TokenListToStringX(returnData);
 
-            var memberType = GetMemberType(specificData, memberContentType);
+            BlCastMemberItem? castMember = CreateMember(infoSlice, specificData, memberName, memberContentType, memberContentType, blobs, dateCreated, dateModified, new List<int>());
+            return (returnData, castMember);
+        }
+
+        private BlCastMemberItem CreateMember(byte[] infoSlice, byte[] specificData, string memberName,string? memberContentType, string? memberFormat, List<byte[]> blobs, DateTime dateCreated, DateTime dateModified, List<int> prefixValues)
+        {
+            var memberType = GetMemberType(specificData, memberFormat);
             //if (string.IsNullOrWhiteSpace(memberType))
             {
                 var contentDebugc = specificData.ToHexString(16, true, 12, true);
                 contentDebugc += Environment.NewLine;
                 contentDebugc += Environment.NewLine;
-                contentDebugc += blob?.ToHexString(16, true, 0, true);
+                contentDebugc += blobs.Count> 0? blobs[0].ToHexString(16, true, 0, true): "";
             }
             BlCastMemberItem? castMember = null;
             // todo : specificData
             switch (memberType)
             {
                 case "text":
-                    castMember = new BlCastMemberTextReader().Read(specificData);
+                    castMember = new BlCastMemberTextReader().Read(specificData, blobs, prefixValues);
                     break;
                 case "bitmap":
                 case "bitmapPainted":
-                    castMember = new BlCastMemberBitmapReader().Read(specificData, infoSlice);
+                    castMember = new BlCastMemberBitmapReader().Read(specificData, infoSlice, prefixValues);
                     break;
                 case "animGif":
-                    castMember = new BlCastMemberBitmapReader().ReadGif(specificData);
+                    castMember = new BlCastMemberBitmapReader().ReadGif(specificData, blobs, prefixValues);
                     break;
                 case "mp3":
                 case "wav":
                 case "aiff":
                     castMember = new BlCastMemberAudioReader().Read(specificData);
                     break;
+                case "script":
+                    castMember = new BlCastMemberScriptReader().Read(specificData, blobs, prefixValues);
+                    break;
                 case "flashComponent":
                 default:
                     break;
             }
             if (castMember == null)
-            castMember = new BlCastMemberItem();
+                castMember = new BlCastMemberItem();
             castMember.Name = memberName;
             castMember.MediaContentType = memberContentType;
-            castMember.Blob = blob;
+            castMember.MemberFormat = memberFormat;
+            castMember.Blobs = blobs;
             castMember.Created = dateCreated;
             castMember.Modified = dateModified;
             castMember.MemberTypeString = memberType;
-            return (returnData, castMember);
+            return castMember;
         }
 
         private string GetMemberType(byte[] specificData, string? memberContentType)
@@ -281,11 +406,43 @@ namespace BlingoEngine.IO.Legacy.Cast
             
             if (specificData.Length == 28)
                 return "bitmapPainted";
-            if (specificData.Length < 20)
+            if (specificData.Length == 2)
+                return "script";
+                if (specificData.Length < 20)
                 return "Shape"; // Todo  another better way to detect
                 return "";
         }
 
+        private static List<byte[]> ReadData(byte[] infoSlice)
+        {
+            var offsets = new List<int>();
+            var datas = new List<byte[]>();
+
+            var offsetCountAddress = 20;
+            var startOffsets = 24;
+
+            var numberOfOffsets = infoSlice.ReadInt16(offsetCountAddress) + 1;// +1 to start from 0
+            var readAddress = 0;
+            for (int i = 0; i < numberOfOffsets; i++)
+            {
+                readAddress = startOffsets + (i * 4);
+                var value = infoSlice.ReadInt16(readAddress);
+                offsets.Add(value);
+            }
+            //var startOffset = startOffsets + numberOfOffsets * 4;
+            var startOffset = readAddress+  2;
+            var texts = new List<string>();
+            for (int i = 0; i < offsets.Count - 1; i++)
+            {
+                int addr = startOffset + offsets[i];
+                int len = offsets[i + 1] - offsets[i];
+                datas.Add(len <= 0 ? [] : infoSlice.Skip(addr).Take(len).ToArray());
+                //if (len > 0)
+                //    texts.Add(Encoding.ASCII.GetString(infoSlice.Skip(addr).Take(len).ToArray()));
+            }
+
+            return datas;
+        }
         private static (bool HasName, List<int> Offsets) ReadOffsets(List<CastToken> returnData, BlStreamReader reader, int typeValue, int infoLength,int specificLength)
         {
 
@@ -415,7 +572,7 @@ namespace BlingoEngine.IO.Legacy.Cast
                 if (token.Type == CastTokenType.EmptyBreak || tokenWrite == 8)
                 {
                     var addon = (addOffsetValues ? " " + new string(' ', 32 - intString.Length) + $" | {lastOffSetValue,3} | {lastOffSetDiffValue,3} | ": " | ");
-                    sb.AppendLine(asciiString.ToString() + new string(' ', 34 - asciiString.Length) + " | " +intString.ToString()+addon);
+                    sb.AppendLine(asciiString.ToString() + (asciiString.Length < 34? new string(' ', 34 - asciiString.Length) + " | " +intString.ToString()+addon: ""));
                     asciiString.Clear();
                     intString.Clear();
                     tokenWrite = 0;
@@ -523,13 +680,7 @@ namespace BlingoEngine.IO.Legacy.Cast
         private static uint ReadU32BE(byte[] buf, int pos) =>
             (uint)((buf[pos] << 24) | (buf[pos + 1] << 16) | (buf[pos + 2] << 8) | buf[pos + 3]);
 
-        private static string ReadCString(byte[] buf, int pos)
-        {
-            if (pos < 0 || pos >= buf.Length) return "";
-            int end = Array.IndexOf(buf, (byte)0, pos);
-            if (end < 0) end = buf.Length;
-            return Encoding.ASCII.GetString(buf, pos, end - pos);
-        }
+       
 
     }
 

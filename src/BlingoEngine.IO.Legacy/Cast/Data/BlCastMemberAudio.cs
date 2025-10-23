@@ -2,5 +2,9 @@
 {
     public class BlCastMemberAudio : BlCastMemberItem
     {
+        public BlCastMemberAudio()
+        {
+            MemberType = BlLegacyCastMemberType.Sound;
+        }
     }
 }
