@@ -1,4 +1,5 @@
-﻿using BlingoEngine.IO.Legacy.Tools;
+﻿using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Tools;
 using System;
 using System.IO;
 using System.Diagnostics;
@@ -182,9 +183,9 @@ namespace BlingoEngine.IO.Legacy.Cast
             var specularIndex = reader.ReadInt32();
             var reflectivity = reader.ReadInt32();
 
-            var directionalColor = new BlCastTextColor(reader.ReadUInt32());
-            var ambientColor = new BlCastTextColor(reader.ReadUInt32());
-            var backgroundColor = new BlCastTextColor(reader.ReadUInt32());
+            var directionalColor = ReadColor(reader);
+            var ambientColor = ReadColor(reader);
+            var backgroundColor = ReadColor(reader);
 
             var cameraPosition = new Vector3(ReadSingle(reader), ReadSingle(reader), ReadSingle(reader));
             var cameraDistance = ReadFixed1616(reader);
@@ -237,6 +238,16 @@ namespace BlingoEngine.IO.Legacy.Cast
         {
             var raw = reader.ReadUInt32();
             return raw / 65536d;
+        }
+
+        private static BlLegacyColor ReadColor(BlStreamReader reader)
+        {
+            var raw = reader.ReadUInt32();
+            var r = (byte)(raw >> 24);
+            var g = (byte)(raw >> 16);
+            var b = (byte)(raw >> 8);
+            var a = (byte)raw;
+            return new BlLegacyColor(r, g, b, a);
         }
 
         private static float ReadSingle(BlStreamReader reader)

@@ -1,4 +1,5 @@
 using System.Numerics;
+using BlingoEngine.IO.Legacy.Core;
 
 namespace BlingoEngine.IO.Legacy.Cast;
 
@@ -33,9 +34,9 @@ public sealed class BlCastTextMember
         int diffuseColorIndex,
         int specularColorIndex,
         int reflectivity,
-        BlCastTextColor directionalColor,
-        BlCastTextColor ambientColor,
-        BlCastTextColor backgroundColor,
+        BlLegacyColor directionalColor,
+        BlLegacyColor ambientColor,
+        BlLegacyColor backgroundColor,
         Vector3 cameraPosition,
         double cameraDistance,
         Vector3 cameraRotation,
@@ -108,9 +109,9 @@ public sealed class BlCastTextMember
     public int DiffuseColorIndex { get; }
     public int SpecularColorIndex { get; }
     public int Reflectivity { get; }
-    public BlCastTextColor DirectionalColor { get; }
-    public BlCastTextColor AmbientColor { get; }
-    public BlCastTextColor BackgroundColor { get; }
+    public BlLegacyColor DirectionalColor { get; }
+    public BlLegacyColor AmbientColor { get; }
+    public BlLegacyColor BackgroundColor { get; }
     public Vector3 CameraPosition { get; }
     public double CameraDistance { get; }
     public Vector3 CameraRotation { get; }
@@ -151,22 +152,4 @@ public enum BlCastTextShaderTexture
     None = 0,
     Default = 1,
     Member = 2
-}
-
-public readonly struct BlCastTextColor
-{
-    public BlCastTextColor(uint raw)
-    {
-        Raw = raw;
-        R = (byte)((raw >> 24) & 0xFF);
-        G = (byte)((raw >> 16) & 0xFF);
-        B = (byte)((raw >> 8) & 0xFF);
-        A = (byte)(raw & 0xFF);
-    }
-
-    public uint Raw { get; }
-    public byte R { get; }
-    public byte G { get; }
-    public byte B { get; }
-    public byte A { get; }
 }
