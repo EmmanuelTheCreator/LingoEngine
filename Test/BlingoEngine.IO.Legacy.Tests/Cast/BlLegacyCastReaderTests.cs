@@ -7,6 +7,7 @@ using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Cast.Data;
 
 namespace BlingoEngine.IO.Legacy.Tests.Cast;
 

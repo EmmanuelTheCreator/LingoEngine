@@ -4,6 +4,7 @@ using System.Text;
 
 using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Legacy.Cast;
+using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tools;

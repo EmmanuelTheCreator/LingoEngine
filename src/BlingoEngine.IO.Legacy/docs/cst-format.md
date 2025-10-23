@@ -82,7 +82,7 @@ release.
 
 Regardless of the version, the loader wraps the cast-data payload in a memory stream, instantiates the matching cast member class, and attaches any linked resources recorded in the `KEY*` table. This allows higher-level systems to fetch sprites, scripts, and media by cast member number without re-reading the tables.
 
-### Cast member types
+## Cast member types
 
 Director stores the cast-member classification as a big-endian 32-bit word at the start of the modern `CASt` header. The values below match the enumeration in `BlLegacyCastMemberType`. Later Shockwave releases introduced additional codes; until those layouts are documented the loader reports them as `Unknown` while still exposing the raw payload bytes.
 
@@ -105,24 +105,8 @@ Director stores the cast-member classification as a big-endian 32-bit word at th
 | `14` | Xtra | Third-party Xtras and internal extensions. |
 | `15` | Field | Editable text fields documented in [Legacy Text and Field Members](./LegacyTextFieldMembers.md). |
 
-### CASt Cinf byte offsets (observed)
 
-This offsets are for 1 file specific
-| Offset | Field / Meaning                          | Type        | Values / Notes |
-|-------:|------------------------------------------|-------------|----------------|
-| 0x44   | CastInfo Flags (DTS, etc.)               | byte/flags  | `BlLegacyCastInfoFlags` |
-| 0x46   | Text Framing                             | byte/enum   | `BlLegacyTextFraming` |
-| 0x8E   | AntiAlias & Kerning mode nibbles         | byte        | AA: low-nibble {0x06 None, 0x04 All, 0x02 >Threshold}; Kern: high-nibble {0x40 None, 0x30 All, 0x70 >Threshold} |
-| 0xBA   | AntiAlias threshold (pt)                 | byte        | 0–255 |
-| 0xCE   | Kerning enabled flag                     | byte/bit    | bit0: 1=on |
-| 0xD2   | Kerning threshold (pt)                   | byte        | 0–255 |
-| 0xD6   | Use Hyperlink Styles                     | byte/bool   | ≠0 true |
-| 0xE6   | Ink                                      | byte        | mode id |
-| 0xA2   | Is Editable                              | byte/bool   | ≠0 true |
-| var.   | Member Name                              | via Cinf    | Offset table to var-len field  |
-
-
-#### Bitmap cast members
+### Bitmap cast members
 
 Bitmap entries reserve their cast-data length for zero bytes because the actual raster payloads live
 in sibling resources linked through the `KEY*` table. Director 5–10 exports commonly attach
@@ -131,7 +115,7 @@ the surface, colour depth, and optional thumbnails. The Pascal-style name descri
 the info block so cataloguing tools can display the member without reading any media chunks. See
 [Legacy Bitmap Loading](./LegacyBitmapLoading.md) for byte-level layouts.
 
-#### Sound cast members
+### Sound cast members
 
 Sound members follow the same pattern: the info payload stores the Pascal-style name and optional
 authoring metadata, while the audio bytes remain in dedicated media resources referenced from the
@@ -140,9 +124,10 @@ prefer `ediM` containers for MP3 and streaming media. The cast-data length there
 because the loader pulls audio directly from the linked resource. Refer to [Legacy Sound
 Loading](./LegacySoundLoading.md) for per-format parsing rules.
 
-## Member type: Text 
+### Member type: Text 
+
 #### extra bytes breakdown example
-Typical bytes : 
+Typical bytes just before ending N/A: 
 ```
 68 EF 75 86    68    EF 77 75
 ```

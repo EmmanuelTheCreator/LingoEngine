@@ -1,4 +1,4 @@
-namespace BlingoEngine.IO.Legacy.Cast;
+namespace BlingoEngine.IO.Legacy.Cast.Data;
 
 /// <summary>
 /// Enumerates the legacy cast-member types encoded at the start of the <c>CASt</c> payload.

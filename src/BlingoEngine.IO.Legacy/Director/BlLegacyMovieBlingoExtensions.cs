@@ -7,6 +7,7 @@ using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.IO.Legacy.Bitmaps;
 using BlingoEngine.IO.Legacy.Cast;
+using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Fields;
 using BlingoEngine.IO.Legacy.Sounds;
 using BlingoEngine.IO.Legacy.Texts;

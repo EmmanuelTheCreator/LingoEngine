@@ -1,4 +1,5 @@
 using BlingoEngine.IO.Legacy.Afterburner;
+using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;

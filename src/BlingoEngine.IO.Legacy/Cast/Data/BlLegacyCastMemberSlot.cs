@@ -1,4 +1,4 @@
-namespace BlingoEngine.IO.Legacy.Cast;
+namespace BlingoEngine.IO.Legacy.Cast.Data;
 
 public enum BlLegacyTextFraming : byte
 {
