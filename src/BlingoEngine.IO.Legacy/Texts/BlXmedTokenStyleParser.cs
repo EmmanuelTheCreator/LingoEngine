@@ -91,6 +91,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     StyleId = styleId,
                     FontName = descriptor.FontName,
                     FontSize = descriptor.FontSize,
+                    LetterSpacing = descriptor.LetterSpacing,
                     Bold = descriptor.Bold,
                     Italic = descriptor.Italic,
                     Underline = descriptor.Underline,
@@ -110,6 +111,7 @@ namespace BlingoEngine.IO.Legacy.Texts
                     Text = document.Text,
                     FontName = baseStyle.FontName,
                     FontSize = baseStyle.FontSize,
+                    LetterSpacing = baseStyle.LetterSpacing,
                     Bold = baseStyle.Bold,
                     Italic = baseStyle.Italic,
                     Underline = baseStyle.Underline,
@@ -139,6 +141,11 @@ namespace BlingoEngine.IO.Legacy.Texts
             int fontSize = rawFontSize >> 16;
             if (fontSize > 0)
                 descriptor.FontSize = fontSize;
+
+            int rawLetterSpacing = styleGroup.ReadNumeric(24);
+            int letterSpacing = rawLetterSpacing >> 16;
+            if (letterSpacing != 0)
+                descriptor.LetterSpacing = letterSpacing;
 
             ReadFlags(styleGroup, descriptor);
         }
