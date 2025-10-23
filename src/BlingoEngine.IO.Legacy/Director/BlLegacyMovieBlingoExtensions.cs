@@ -127,6 +127,7 @@ public static class BlLegacyMovieBlingoExtensions
             BlLegacyCastMemberType.Text => baseDto.ToTextMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
             BlLegacyCastMemberType.Field => baseDto.ToFieldMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
             BlLegacyCastMemberType.Script => baseDto.ToScriptMember(archive, slot.ResourceId, logger, (BlCastMemberScript)slot.Member),
+            BlLegacyCastMemberType.DigitalVideo => baseDto.ToVideoMember(archive, slot.ResourceId, logger, (BlCastMemberVideo)slot.Member),
             BlLegacyCastMemberType.Bitmap or BlLegacyCastMemberType.Picture => baseDto.ToBitmapMember(
                 archive,
                 slot.ResourceId,
@@ -319,9 +320,48 @@ public static class BlLegacyMovieBlingoExtensions
             // Script specific
             Script = memberScript.Script,
             IsJavascript = memberScript.IsJavascript,
-            LinkedFilePath = memberScript.LinkedFilePath,
+            LinkedFilePath = memberScript.LinkedFileName,
             ScriptType = memberScript.ScriptType,
             
+            // Common
+            DateCreated = memberScript.Created.GetValueOrDefault(),
+            DateModified = memberScript.Modified.GetValueOrDefault(),
+            MediaContentType = memberScript.MediaContentType ?? "",
+        };
+    }
+    public static BlingoMemberDTO ToVideoMember(
+        this BlingoMemberDTO baseDto,
+        BlLegacyMovieArchive archive,
+        int castResourceId,
+        ILogger logger,
+        BlCastMemberVideo memberScript)
+    {
+        return new BlingoMemberVideoDTO
+        {
+            Name = baseDto.Name,
+            CastLibNum = baseDto.CastLibNum,
+            NumberInCast = baseDto.NumberInCast,
+            Type = baseDto.Type,
+            RegPoint = baseDto.RegPoint,
+            Size = 0,
+            Comments = baseDto.Comments,
+            FileName = baseDto.FileName,
+            PurgePriority = baseDto.PurgePriority,
+
+            // Video specific
+            Width = memberScript.Width,
+            Height = memberScript.Height,
+            DurationSeconds = memberScript.DurationSeconds,
+            LinkedFileName = memberScript.LinkedFileName,
+            LinkedFolder = memberScript.LinkedFolder,
+            PlayVideo = memberScript.PlayVideo,
+            PlayAudio = memberScript.PlayAudio,
+            StartPause = memberScript.StartPause,
+            EnableLoop = memberScript.EnableLoop,
+            StartValueMs = memberScript.StartValueMs,
+            VideoFps = memberScript.VideoFps,
+
+
             // Common
             DateCreated = memberScript.Created.GetValueOrDefault(),
             DateModified = memberScript.Modified.GetValueOrDefault(),

@@ -144,9 +144,10 @@ namespace BlingoEngine.IO.Legacy.Cast
             // |------------|---------|-----------------------------|
             // | ScriptText | 0       | for Scripts                 |
             // | Name       | 1       |                             |
+            // | Video      | 2       | for Video                   |
             // | ScriptLink | 3       | for Scripts                 |
             // | ScriptA    | 5       | for Scripts                 |
-            // |            | 9       | for GIF /Flash              |
+            // |            | 9       | for GIF /Flash /Video       |
             // | MemberType | 10      | for text/Flash              |
             // | ScriptB    | 11      | for Scripts                 |
             // |            | 12      | for text/Flash              |
@@ -173,15 +174,18 @@ namespace BlingoEngine.IO.Legacy.Cast
                 isScript = true;
                 blops.Add(datas[0]);                                        // script text      : long
             }
+            if (datas[2].Length > 0 || isScript) blops.Add(datas[2]);       // video            : long
             if (datas[3].Length > 0 || isScript) blops.Add(datas[3]);       // script link name : long
             if (datas[5].Length > 0 || isScript) blops.Add(datas[5]);       // script           : 20
             if (datas[9].Length > 0) blops.Add(datas[9]);                   // animated GIF     : 16
                                                                             // Flash            : 20
                                                                             // Text             : 16
+                                                                            // Video            : 16
             // memberContentType:
             //      Text
             //      text
             //      Flash Component
+            //      Windows Media
             string memberContentType = datas[10].ReadCString(0);            // all
             if (datas[11].Length > 0 || isScript) blops.Add(datas[11]);      // script           : 20
             if (datas[12].Length > 0) blops.Add(datas[12]);                 // text             : 20
@@ -208,7 +212,8 @@ namespace BlingoEngine.IO.Legacy.Cast
             var dateCreated = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[17].Reverse().ToArray(), 0)).UtcDateTime; 
             var dateModified = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[18].Reverse().ToArray(), 0)).UtcDateTime;
 
-            //var test = Encoding.ASCII.GetString(datas[3]);
+            //var test = Encoding.ASCII.GetString(datas[2]);
+            //var test2 = Encoding.ASCII.GetString(datas[3]);
 
 
             // read "N/A"
@@ -359,6 +364,12 @@ namespace BlingoEngine.IO.Legacy.Cast
                 case "script":
                     castMember = new BlCastMemberScriptReader().Read(specificData, blobs, prefixValues);
                     break;
+                case "video":
+                case "windowsMedia":
+                case "quickTimeMedia":
+                case "avi":
+                    castMember = new BlCastMemberVideoReader().Read(specificData, blobs, prefixValues, memberType);
+                    break;
                 case "flashComponent":
                 default:
                     break;
@@ -380,7 +391,7 @@ namespace BlingoEngine.IO.Legacy.Cast
             if (specificData.Length >= 6)
             {
                 var length = specificData.ReadUInt32(0);
-                if (length < 16)
+                if (length > 0 && length < 16)
                 {
                     var memberType = Encoding.ASCII.GetString(specificData, 4, (int)length);
                     return memberType;
@@ -406,6 +417,8 @@ namespace BlingoEngine.IO.Legacy.Cast
             
             if (specificData.Length == 28)
                 return "bitmapPainted";
+            if (specificData.Length == 12)
+                return "avi";
             if (specificData.Length == 2)
                 return "script";
                 if (specificData.Length < 20)

@@ -7,7 +7,8 @@ namespace BlingoEngine.IO.Legacy.Cast.Data
         public BlScriptType ScriptType { get; set; }
         public string Script { get; set; } = "";
         public bool IsJavascript { get; set; }
-        public string? LinkedFilePath { get; set; } 
+        public string? LinkedFileName { get; set; }
+        public string LinkedFolder { get; internal set; }
 
         public BlCastMemberScript()
         {

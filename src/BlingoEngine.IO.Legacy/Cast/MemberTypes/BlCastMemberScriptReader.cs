@@ -26,8 +26,8 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
                 member.IsJavascript = true;
             if (blobs.Count > 3)
             {
-                if (blobs[1].Length > 0) 
-                    member.LinkedFilePath = blobs[1].ReadCString(0); 
+                if (blobs[1].Length > 0) member.LinkedFolder = blobs[1].Skip(1).ToArray().ReadCString(0);
+                if (blobs[2].Length > 1) member.LinkedFileName = blobs[2].Skip(1).ToArray().ReadCString(0);
             }
             return member;
         }
