@@ -1,11 +1,7 @@
-﻿using BlingoEngine.IO.Legacy.Core;
-using BlingoEngine.IO.Legacy.Cast.Data;
+﻿using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Cast.MemberTypes;
 using BlingoEngine.IO.Legacy.Tools;
-using System;
-using System.IO;
 using System.Diagnostics;
-using System.Numerics;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Cast
@@ -228,10 +224,16 @@ namespace BlingoEngine.IO.Legacy.Cast
                     castMember = new BlCastMemberTextReader().Read(specificData);
                     break;
                 case "bitmap":
+                case "bitmapPainted":
                     castMember = new BlCastMemberBitmapReader().Read(specificData, infoSlice);
                     break;
                 case "animGif":
                     castMember = new BlCastMemberBitmapReader().ReadGif(specificData);
+                    break;
+                case "mp3":
+                case "wav":
+                case "aiff":
+                    castMember = new BlCastMemberAudioReader().Read(specificData);
                     break;
                 case "flashComponent":
                 default:
@@ -250,13 +252,14 @@ namespace BlingoEngine.IO.Legacy.Cast
 
         private string GetMemberType(byte[] specificData, string? memberContentType)
         {
-            if (specificData.Length < 6)
-                return "";
-            var length = specificData.ReadUInt32(0);
-            if (length < 16)
+            if (specificData.Length >= 6)
             {
-                var memberType = Encoding.ASCII.GetString(specificData, 4, (int)length);
-                return memberType;
+                var length = specificData.ReadUInt32(0);
+                if (length < 16)
+                {
+                    var memberType = Encoding.ASCII.GetString(specificData, 4, (int)length);
+                    return memberType;
+                }
             }
             if (!string.IsNullOrWhiteSpace(memberContentType))
             {
@@ -264,11 +267,20 @@ namespace BlingoEngine.IO.Legacy.Cast
                 {
                     case "Animated GIF...":
                     case "kMoaCfFormat_PNG":
-                    case "kMoaCfFormat_JPEG":    
+                    case "kMoaCfFormat_JPEG":
                         return "bitmap";
-                        throw new Exception("Not implemented yet: "+ memberContentType);
+                    case "kMoaCfFormat_MPEG3": return "mp3";
+                    case "kMoaCfFormat_WAV": return "wav";
+                    case "kMoaCfFormat_AIFF": return "aiff";
+                    //case "kMoaCfFormat_SWA": return "swa";
+                    //case "kMoaCfFormat_IMA": return "iwa";
+                    default:
+                        throw new Exception("Not implemented yet: " + memberContentType);
                 }
             }
+            
+            if (specificData.Length == 28)
+                return "bitmapPainted";
             if (specificData.Length < 20)
                 return "Shape"; // Todo  another better way to detect
                 return "";

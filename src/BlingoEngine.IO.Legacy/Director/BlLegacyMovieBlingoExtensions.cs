@@ -105,15 +105,15 @@ public static class BlLegacyMovieBlingoExtensions
         ArgumentNullException.ThrowIfNull(soundExporter);
 
         var memberIndex = slot.SlotIndex + 1;
-        var memberName = string.IsNullOrWhiteSpace(slot.Name) ? $"Member {memberIndex}" : slot.Name;
+        var memberName = string.IsNullOrWhiteSpace(slot.Member.Name) ? $"Member {memberIndex}" : slot.Member.Name;
 
         var baseDto = new BlingoMemberDTO
         {
             Name = memberName,
             CastLibNum = castDto.Number,
             NumberInCast = memberIndex,
-            Type = MapMemberType(slot.MemberType),
-            RegPoint = new BlingoPointDTO(),
+            Type = MapMemberType(slot.Member.MemberType),
+            RegPoint =  new BlingoPointDTO(),
             Width = 0,
             Height = 0,
             Size = 0,
@@ -122,29 +122,29 @@ public static class BlLegacyMovieBlingoExtensions
             PurgePriority = 0
         };
 
-        return slot.MemberType switch
+        return slot.Member.MemberType switch
         {
-            BlLegacyCastMemberType.Text => baseDto.ToTextMember(archive, slot.ResourceId, logger),
-            BlLegacyCastMemberType.Field => baseDto.ToFieldMember(archive, slot.ResourceId, logger),
+            BlLegacyCastMemberType.Text => baseDto.ToTextMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
+            BlLegacyCastMemberType.Field => baseDto.ToFieldMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
             BlLegacyCastMemberType.Bitmap or BlLegacyCastMemberType.Picture => baseDto.ToBitmapMember(
                 archive,
                 slot.ResourceId,
                 castDto,
                 resources,
                 usedNames,
-                bitmapExporter),
+                bitmapExporter, (BlCastMemberBitmap)slot.Member),
             BlLegacyCastMemberType.Sound => baseDto.ToSoundMember(
                 archive,
                 slot.ResourceId,
                 castDto,
                 resources,
                 usedNames,
-                soundExporter),
+                soundExporter, (BlCastMemberAudio)slot.Member),
             _ => baseDto
         };
     }
 
-    public static BlingoMemberDTO ToTextMember(this BlingoMemberDTO baseDto, BlLegacyMovieArchive archive, int castResourceId, ILogger logger)
+    public static BlingoMemberDTO ToTextMember(this BlingoMemberDTO baseDto, BlLegacyMovieArchive archive, int castResourceId, ILogger logger, BlCastMemberText memberTxt)
     {
         if (!archive.TryGetText(castResourceId, out var text))
             return baseDto;
@@ -163,11 +163,25 @@ public static class BlLegacyMovieBlingoExtensions
             Comments = baseDto.Comments,
             FileName = baseDto.FileName,
             PurgePriority = baseDto.PurgePriority,
-            MarkDownText = content
+            MarkDownText = content,
+
+            IsEditable = memberTxt.IsEditable,
+            TabsEnabled = memberTxt.TabsEnabled,
+            DtdEnabled = memberTxt.DtdEnabled,
+            IsAntialiasEnabled = memberTxt.IsAntialiasEnabled,
+            AntialiasMode = memberTxt.AntialiasMode,
+            AntialiasLargerThanPointSize = memberTxt.AntialiasLargerThanPointSize,
+            IsKerningEnabled = memberTxt.IsKerningEnabled,
+            KerningMode = memberTxt.KerningMode,
+            KerningLargerThanPointSize = memberTxt.KerningLargerThanPointSize,
+            // Common
+            DateCreated = memberTxt.Created.GetValueOrDefault(),
+            DateModified = memberTxt.Modified.GetValueOrDefault(),
+            MediaContentType = memberTxt.MediaContentType ?? "",
         };
     }
 
-    public static BlingoMemberDTO ToFieldMember(this BlingoMemberDTO baseDto, BlLegacyMovieArchive archive, int castResourceId, ILogger logger)
+    public static BlingoMemberDTO ToFieldMember(this BlingoMemberDTO baseDto, BlLegacyMovieArchive archive, int castResourceId, ILogger logger, BlCastMemberText memberTxt)
     {
         if (!archive.TryGetField(castResourceId, out var field))
             return baseDto;
@@ -186,18 +200,32 @@ public static class BlLegacyMovieBlingoExtensions
             Comments = baseDto.Comments,
             FileName = baseDto.FileName,
             PurgePriority = baseDto.PurgePriority,
-            MarkDownText = content
+            MarkDownText = content,
+
+            IsEditable = memberTxt.IsEditable,
+            TabsEnabled = memberTxt.TabsEnabled,
+            DtdEnabled = memberTxt.DtdEnabled,
+            IsAntialiasEnabled = memberTxt.IsAntialiasEnabled,
+            AntialiasMode = memberTxt.AntialiasMode,
+            AntialiasLargerThanPointSize = memberTxt.AntialiasLargerThanPointSize,
+            IsKerningEnabled = memberTxt.IsKerningEnabled,
+            KerningMode = memberTxt.KerningMode,
+            KerningLargerThanPointSize = memberTxt.KerningLargerThanPointSize,
+            // Common
+            DateCreated = memberTxt.Created.GetValueOrDefault(),
+            DateModified = memberTxt.Modified.GetValueOrDefault(),
+            MediaContentType = memberTxt.MediaContentType ?? "",
         };
     }
 
-    public static BlingoMemberDTO ToBitmapMember(
+    internal static BlingoMemberDTO ToBitmapMember(
         this BlingoMemberDTO baseDto,
         BlLegacyMovieArchive archive,
         int castResourceId,
         BlingoCastDTO castDto,
         DirFilesContainerDTO resources,
         HashSet<string> usedNames,
-        BlLegacyBitmapExporter exporter)
+        BlLegacyBitmapExporter exporter, BlCastMemberBitmap memberBm)
     {
         if (!archive.TryGetBitmap(castResourceId, out var bitmap))
             return baseDto;
@@ -213,14 +241,18 @@ public static class BlLegacyMovieBlingoExtensions
             CastLibNum = baseDto.CastLibNum,
             NumberInCast = baseDto.NumberInCast,
             Type = baseDto.Type,
-            RegPoint = baseDto.RegPoint,
-            Width = baseDto.Width,
-            Height = baseDto.Height,
+            RegPoint = new BlingoPointDTO { X= memberBm.LocH, Y= memberBm.LocV},
+            Width = memberBm.Width,
+            Height = memberBm.Height,
             Size = bitmap.Bytes.Length,
             Comments = baseDto.Comments,
             FileName = baseDto.FileName,
             PurgePriority = baseDto.PurgePriority,
-            ImageFile = fileName
+            ImageFile = fileName,
+            // Common
+            DateCreated = memberBm.Created.GetValueOrDefault(),
+            DateModified = memberBm.Modified.GetValueOrDefault(),
+            MediaContentType = memberBm.MediaContentType ?? "",
         };
     }
 
@@ -231,7 +263,7 @@ public static class BlLegacyMovieBlingoExtensions
         BlingoCastDTO castDto,
         DirFilesContainerDTO resources,
         HashSet<string> usedNames,
-        BlLegacySoundExporter exporter)
+        BlLegacySoundExporter exporter, BlCastMemberAudio memberSnd)
     {
         if (!archive.TryGetSound(castResourceId, out var sound))
             return baseDto;
@@ -254,7 +286,11 @@ public static class BlLegacyMovieBlingoExtensions
             Comments = baseDto.Comments,
             FileName = baseDto.FileName,
             PurgePriority = baseDto.PurgePriority,
-            SoundFile = fileName
+            SoundFile = fileName,
+            // Common
+            DateCreated = memberSnd.Created.GetValueOrDefault(),
+            DateModified = memberSnd.Modified.GetValueOrDefault(),
+            MediaContentType = memberSnd.MediaContentType ?? "",
         };
     }
 

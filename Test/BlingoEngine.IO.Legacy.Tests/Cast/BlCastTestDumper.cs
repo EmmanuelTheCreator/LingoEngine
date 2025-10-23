@@ -53,12 +53,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_Gif.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_24bit.cst"),"Bitmap"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit_loc_Out1.cst"),"Bitmap"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit_loc_Out2.cst"),"Bitmap"),
-                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted2.cst"),"Bitmap"),
-                (TestContextHarness.GetTextAssetPath("MemberTypes/MemberImagePainted3.cst"),"Bitmap"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/DirFileWith_3_Sounds.dir"),"Bitmap"),
             };
             var sb = new StringBuilder();
             foreach (var file in files)

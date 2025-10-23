@@ -5,6 +5,7 @@ using System.IO;
 using BlingoEngine.IO;
 using BlingoEngine.Core;
 using BlingoEngine.Director.Core.Importer;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.Director.LGodot.Gfx;
 
@@ -16,13 +17,15 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
     private readonly Button _backButton = new();
     private readonly List<string> _files = new();
     private readonly BlingoPlayer _player;
+    private readonly ILogger _logger;
     private readonly JsonStateRepository _repo = new();
 
     public event Action? Back;
 
-    public ImportDirCstFilesStep(BlingoPlayer player)
+    public ImportDirCstFilesStep(BlingoPlayer player, ILogger logger)
     {
         _player = player;
+        _logger = logger;
         Visible = false;
 
         var selectBtn = new Button { Text = "Select Files" };
@@ -113,7 +116,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
 
             try
             {
-                var (stage, movie, resources) = LegacyImporter.ImportMovie(file);
+                var (stage, movie, resources) = LegacyImporter.ImportMovie(file, _logger);
                 var tempDir = Path.Combine(Path.GetTempPath(), "blingo_import_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
                 foreach (var res in resources.Files)

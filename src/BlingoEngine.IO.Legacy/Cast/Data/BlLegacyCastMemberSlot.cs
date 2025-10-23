@@ -24,6 +24,4 @@ public enum BlLegacyTextKerningMode : byte { None = 0x44, AllText = 0x30, Larger
 /// </summary>
 /// <param name="SlotIndex">Zero-based position of the entry within the table.</param>
 /// <param name="ResourceId">Identifier of the <c>CASt</c> resource referenced by the slot.</param>
-/// <param name="MemberType">Type of cast member stored inside the <c>CASt</c> payload.</param>
-/// <param name="Name">Name recorded in the member info block, when available.</param>
-public readonly record struct BlLegacyCastMemberSlot(int SlotIndex, int ResourceId, BlLegacyCastMemberType MemberType, string Name, BlLegacyCastInfoFlags Flags, BlLegacyTextFraming TextFraming, BlLegacyTextAntiAlias AntiAlias, byte AntiAliasThreashold, BlLegacyTextKerningMode Kerning = BlLegacyTextKerningMode.None, byte KerningThreashold = 0, byte ink = 0, bool UseHyperlinkStyles = true, bool isEditable = false);
+public readonly record struct BlLegacyCastMemberSlot(int SlotIndex, int ResourceId, BlCastMemberItem Member);
