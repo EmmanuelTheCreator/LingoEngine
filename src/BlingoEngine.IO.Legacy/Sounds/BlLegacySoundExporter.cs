@@ -17,7 +17,7 @@ public sealed class BlLegacySoundExporter
     /// <param name="castName">Logical name of the cast library that owns the member.</param>
     /// <param name="baseFileName">Base file name that will be combined with the detected extension.</param>
     /// <returns>A resource DTO ready to be added to a <see cref="DirFilesContainerDTO"/>.</returns>
-    public DirFileResourceDTO CreateResource(BlLegacySound sound, string castName, string baseFileName)
+    public DirFileResourceDTO CreateResource(BlLegacySound sound, string castName, string baseFileName, int castLibNum, int numberInCast)
     {
         ArgumentNullException.ThrowIfNull(sound);
         ArgumentNullException.ThrowIfNull(castName);
@@ -28,7 +28,9 @@ public sealed class BlLegacySoundExporter
         {
             CastName = castName,
             FileName = baseFileName + extension,
-            Bytes = sound.Bytes
+            Bytes = sound.Bytes,
+            CastLibNum = castLibNum,
+            NumberInCast = numberInCast,
         };
     }
 

@@ -56,9 +56,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/MemberImage_jpg_32bit.cst"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/DirFileWith_3_Sounds.dir"),"Bitmap"),
                 //(TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors.dir"),"Behavior"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors_parent.dir"),"Behavior"),
-                //(TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors_Movie.dir"),"Behavior"),
-                (TestContextHarness.GetTextAssetPath("MemberTypes/Two_Behaviors_linked.dir"),"Behavior"),
+                (TestContextHarness.GetTextAssetPath("MemberTypes/DirFileWith_3_Sounds.dir"),"Behavior"),
             };
             var sb = new StringBuilder();
             foreach (var file in files)

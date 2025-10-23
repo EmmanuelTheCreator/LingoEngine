@@ -1,6 +1,7 @@
 ﻿using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Tools;
 using System.Text;
+using static BlingoEngine.IO.Data.DTO.Members.BlingoMemberScriptDTO;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
@@ -12,9 +13,9 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var scriptType = specificData.ReadInt16(0);
             switch (scriptType)
             {
-                case 1: member.ScriptType = BlCastMemberScript.BlScriptType.Behavior; break;
-                case 3: member.ScriptType = BlCastMemberScript.BlScriptType.MovieScript; break;
-                case 7: member.ScriptType = BlCastMemberScript.BlScriptType.ParentScript; break;
+                case 1: member.ScriptType = BlScriptType.Behavior; break;
+                case 3: member.ScriptType = BlScriptType.MovieScript; break;
+                case 7: member.ScriptType = BlScriptType.ParentScript; break;
                 default:
                     break;
             }
@@ -26,7 +27,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             if (blobs.Count > 3)
             {
                 if (blobs[1].Length > 0) 
-                    member.LinkName = blobs[1].ReadCString(0); 
+                    member.LinkedFilePath = blobs[1].ReadCString(0); 
             }
             return member;
         }

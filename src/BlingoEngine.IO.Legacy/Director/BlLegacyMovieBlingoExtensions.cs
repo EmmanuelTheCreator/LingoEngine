@@ -126,6 +126,7 @@ public static class BlLegacyMovieBlingoExtensions
         {
             BlLegacyCastMemberType.Text => baseDto.ToTextMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
             BlLegacyCastMemberType.Field => baseDto.ToFieldMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
+            BlLegacyCastMemberType.Script => baseDto.ToScriptMember(archive, slot.ResourceId, logger, (BlCastMemberScript)slot.Member),
             BlLegacyCastMemberType.Bitmap or BlLegacyCastMemberType.Picture => baseDto.ToBitmapMember(
                 archive,
                 slot.ResourceId,
@@ -269,7 +270,7 @@ public static class BlLegacyMovieBlingoExtensions
         if (!archive.TryGetSound(castResourceId, out var sound))
             return baseDto;
 
-        var resource = exporter.CreateResource(sound, castDto.Name, $"{castDto.Number}_{baseDto.NumberInCast}");
+        var resource = exporter.CreateResource(sound, castDto.Name, $"{castDto.Number}_{baseDto.NumberInCast}", castDto.Number, baseDto.NumberInCast);
         var fileName = EnsureUniqueFileName(resource.FileName, usedNames);
         resource.FileName = fileName;
         resources.Files.Add(resource);
@@ -292,6 +293,39 @@ public static class BlLegacyMovieBlingoExtensions
             DateCreated = memberSnd.Created.GetValueOrDefault(),
             DateModified = memberSnd.Modified.GetValueOrDefault(),
             MediaContentType = memberSnd.MediaContentType ?? "",
+        };
+    }
+    public static BlingoMemberDTO ToScriptMember(
+        this BlingoMemberDTO baseDto,
+        BlLegacyMovieArchive archive,
+        int castResourceId,
+        ILogger logger,
+        BlCastMemberScript memberScript)
+    {
+        return new BlingoMemberScriptDTO
+        {
+            Name = baseDto.Name,
+            CastLibNum = baseDto.CastLibNum,
+            NumberInCast = baseDto.NumberInCast,
+            Type = baseDto.Type,
+            RegPoint = baseDto.RegPoint,
+            Width = baseDto.Width,
+            Height = baseDto.Height,
+            Size = memberScript.Script.Length,
+            Comments = baseDto.Comments,
+            FileName = baseDto.FileName,
+            PurgePriority = baseDto.PurgePriority,
+
+            // Script specific
+            Script = memberScript.Script,
+            IsJavascript = memberScript.IsJavascript,
+            LinkedFilePath = memberScript.LinkedFilePath,
+            ScriptType = memberScript.ScriptType,
+            
+            // Common
+            DateCreated = memberScript.Created.GetValueOrDefault(),
+            DateModified = memberScript.Modified.GetValueOrDefault(),
+            MediaContentType = memberScript.MediaContentType ?? "",
         };
     }
 
