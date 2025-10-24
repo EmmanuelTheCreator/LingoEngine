@@ -28,6 +28,8 @@ internal static class BlCSharpName
         ArgumentNullException.ThrowIfNull(options);
 
         var baseName = NormalizeScriptName(name);
+        baseName = RemoveLeadingUnderscores(baseName);
+
         var suffix = kind switch
         {
             BlLingoScriptKind.Movie => options.MovieScriptSuffix,
@@ -73,5 +75,26 @@ internal static class BlCSharpName
         }
 
         return builder.ToString();
+    }
+
+    private static string RemoveLeadingUnderscores(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return "Script";
+        }
+
+        var trimmed = value.TrimStart('_');
+        if (trimmed.Length == 0)
+        {
+            return "Script";
+        }
+
+        if (char.IsDigit(trimmed[0]))
+        {
+            trimmed = "S" + trimmed;
+        }
+
+        return trimmed;
     }
 }

@@ -26,6 +26,35 @@ A `CASt` chunk begins with a 12‑byte header:
 * After the header, `InfoLen` bytes form the **cast‑info block** (`Cinf`).  This block is itself a list of offsets pointing to variable‑length fields such as the member name or script text.
 * The **specific data block** immediately follows the info block and contains the raw member data (e.g., text characters, bitmap pixels, sound samples).
 
+
+## Member Info Bytes (Cinf Offsets)
+
+| Offset | Field / Feature            | Type / Enum                        | Values / Meaning                                    |
+|:-------:|:---------------------------|:-----------------------------------|:----------------------------------------------------|
+| `0x44`  | **CastInfoFlags**          | `CastInfoFlags`                    | Bit 2 = DTS Off (0 = DTS On, 1 = Off)               |
+| `0x46`  | **TextFraming**            | `TextFraming`                      | 0 = Fixed, 1 = Scrolling, 2 = AdjustToFit           |
+| `0x8E`  | **AntiAlias + Kerning**    | `TextAntiAlias`, `TextKerningMode` | Shared byte — lower nibble = AA, upper nibble = Kerning |
+| `0xBA`  | **AntiAlias Threshold**    | `byte`                             | Point size threshold (for AA LargerThan mode)       |
+| `0xCE`  | **Kerning Enable Bit**     | `bool`                             | Bit 0 = Kerning enabled                             |
+| `0xD2`  | **Kerning Threshold**      | `byte`                             | Point size threshold (for Kerning LargerThan mode)  |
+| `0xD6`  | **TextFeatureFlags**       | `TextFeatureFlags`                 | Bit 0 = UseHyperlinkStyles                          |
+| `0xE6`  | **InkType**                | `BlingoInkType`                    | Matches Director ink enum (0–41 range)              |
+| `0xA2`  | **TextMemberFlags**        | `TextMemberFlags`                  | Bit 0 = IsEditable                                  |
+
+## Text Framing and Kerning Modes
+
+| Enum                | Value | Meaning / Description                  | Source Offset |
+|:--------------------|:------|:---------------------------------------|:--------------|
+| **TextFraming**     | 0x00  | Fixed (no scrolling or resizing)       | `Cinf + 0x46` |
+|                     | 0x01  | Scrolling text box                     | `Cinf + 0x46` |
+|                     | 0x02  | AdjustToFit (auto-size to content)     | `Cinf + 0x46` |
+| **TextKerningMode** | 0x40  | None (no kerning adjustments)          | `Cinf + 0x8E` |
+|                     | 0x30  | AllText (kerning applied globally)     | `Cinf + 0x8E` |
+|                     | 0x70  | LargerThan (apply if font > threshold) | `Cinf + 0x8E` |
+| **Kerning Enable**  | Bit 0 | 1 = enabled, 0 = disabled              | `Cinf + 0xCE` |
+| **Kerning Threshold** | byte | Point-size limit for LargerThan mode  | `Cinf + 0xD2` |
+
+
 ## XMED styled‑text information
 
 * For text and field members that carry styling, an **`XMED`** chunk supplies font and colour runs.  The link between a `CASt` chunk and its `XMED` data is recorded in the key table (`KEY*`) and memory map.

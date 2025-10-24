@@ -59,7 +59,9 @@ Director 4 introduces explicit `CASt` chunks with a short header:
 | Cast data payload | `cast data size` − consumed bytes | Bytes passed to the cast-specific parser. |
 | Cast info payload | `cast info size` bytes | Optional metadata strings or timestamps. |
 
-### Director 5–10.1 (`CASt` header)
+### Director 5– (`CASt` header)
+
+Note: version 10.1 seem to behave differently
 
 Later versions expand the header and reorder the fields. Director 10 and the final Director 10.1 maintenance release reuse this layout unchanged, so the same parsing rules cover all modern classic exports:
 
@@ -80,7 +82,7 @@ release.
 
 Regardless of the version, the loader wraps the cast-data payload in a memory stream, instantiates the matching cast member class, and attaches any linked resources recorded in the `KEY*` table. This allows higher-level systems to fetch sprites, scripts, and media by cast member number without re-reading the tables.
 
-### Cast member types
+## Cast member types
 
 Director stores the cast-member classification as a big-endian 32-bit word at the start of the modern `CASt` header. The values below match the enumeration in `BlLegacyCastMemberType`. Later Shockwave releases introduced additional codes; until those layouts are documented the loader reports them as `Unknown` while still exposing the raw payload bytes.
 
@@ -103,7 +105,8 @@ Director stores the cast-member classification as a big-endian 32-bit word at th
 | `14` | Xtra | Third-party Xtras and internal extensions. |
 | `15` | Field | Editable text fields documented in [Legacy Text and Field Members](./LegacyTextFieldMembers.md). |
 
-#### Bitmap cast members
+
+### Bitmap cast members
 
 Bitmap entries reserve their cast-data length for zero bytes because the actual raster payloads live
 in sibling resources linked through the `KEY*` table. Director 5–10 exports commonly attach
@@ -112,7 +115,7 @@ the surface, colour depth, and optional thumbnails. The Pascal-style name descri
 the info block so cataloguing tools can display the member without reading any media chunks. See
 [Legacy Bitmap Loading](./LegacyBitmapLoading.md) for byte-level layouts.
 
-#### Sound cast members
+### Sound cast members
 
 Sound members follow the same pattern: the info payload stores the Pascal-style name and optional
 authoring metadata, while the audio bytes remain in dedicated media resources referenced from the
@@ -120,3 +123,89 @@ authoring metadata, while the audio bytes remain in dedicated media resources re
 prefer `ediM` containers for MP3 and streaming media. The cast-data length therefore stays at zero
 because the loader pulls audio directly from the linked resource. Refer to [Legacy Sound
 Loading](./LegacySoundLoading.md) for per-format parsing rules.
+
+### Member type: Text 
+
+#### extra bytes breakdown example
+Typical bytes just before ending N/A: 
+```
+68 EF 75 86    68    EF 77 75
+```
+4 first are almost identical to next 4.
+
+#### Specific bytes:
+
+| RAW bytes   	| Property				| Value/Description					|
+|---------------|-----------------------|-----------------------------------|
+| 00 00 00 04 	| type length			| 4									|
+| 74 65 78 74 	| type					| text								|
+| 00 00 01 B0	| 						| 432								|
+| 00 00	00 01	| Editable				| ON  								|
+| 00 00 00 00 	| Framing				| 1=Scroling, 2=Fixed				|
+| 00 00 00 00 	| Tab on/off			| 1=ON, 0=OFF						|
+| 00 00 00 00 	| DTD on/off			| 1=ON, 0=OFF						|
+| 00 00 00 01 	| Antialias on/off		| 1=ON, 0=OFF						|
+| 00 00 00 0E 	| Antialias Mode		| 0=AllText, E0=Default? ,13=LargetThen		|
+| 00 00 00 00 	| AntaAlias Larger Size	| 15								|
+| 00 00 00 00 	| 						| 									|
+| 00 00 00 0F 	| Kerning Larger Size	| 15								|
+| 00 00 1F F4 	| 						| 81.80								|
+| 00 00 00 01 	| Kerning On/Off		| 1=ON, 0=OFF						|
+| 00 00 00 0E 	| Kerning Mode			| 0=AllText, E0=Default? ,13=LargetThen		|
+| 00 00 00 01 	| UseHyperlinkStyles	| 1=ON, 0=OFF						|
+| 00 00 00 00 	| 						| 									|
+| 00 00 00 00 	| 						| 									|
+| 00 00 00 00 	| 						| 									|
+| 00 00 00 00 	| PreRender Ink			| 1=InkCopy, 2=InkOther				|
+| 00 00 00 00 	| PreRender Save BMP	| 1=ON, 0=OFF						|
+| 33 54 45 58 	| 						| 3TEX or XET3						|
+| 00 00 01 64 	| 						| 356								|
+| FF FF FF FF 	| 						| White								|
+| 00 53 21 47 	| Tunnel Depth			| 50 or 83.13, 16.16 fixed-point, big-endian. 0x00532147 / 65536 = 83.13 |
+| 00 00 00 01 	| 						| 1									|
+| 00 02 CC CC	| Bevel Amount			| 2.80 = 16.16 fixed (big-endian).	0x0002CCCC / 65536 = 2.8027 ≈ 2.80 |
+| 00 00 00 01 	| 						| 1									|
+| 00 00 00 05 	| 						| 5									|
+| 00 00 00 01 	| 						| 1									|
+| 00 00 00 00 	| 						| 									|
+| 00 00 00 02 	| Perhaps light dir?	| 2									|
+| 00 00 00 00 	| 						| 									|
+| 00 00 00 1E  	| Reflectivity     		| 30								|
+| 99 66 33 00  	| Directional			| ≈ #A0522D	16-bit RGB				|
+| 99 33 66 00  	| Ambient				| ≈ #DA70D6	16-bit RGB				|
+| 00 99 66 00 	| Background			| ≈ #008080	16-bit RGB				|
+| 41 40 00 00  	| Camera Pos X			| IEEE-754 32-bit floating-point	|
+| 42 08 00 00  	| Camera Pos Y			| IEEE-754 32-bit floating-point	|
+| 42 60 00 00 	| Camera Pos Z			| IEEE-754 32-bit floating-point	|
+| 02 19 F6 10 	| Distance?				| 0x0219F610 / 65536 = 537.9612		|
+| 42 9C 00 00  	| Camera Rot X			| IEEE-754 32-bit floating-point	|
+| 42 C4 00 00  	| Camera Rot Y			| IEEE-754 32-bit floating-point	|
+| 42 98 00 00 	| Camera Rot Z			| IEEE-754 32-bit floating-point	|
+| 02 19 EF A8	| Focal?				| 0x0219EFA8 / 65536 = 537.9362		|
+| 4E 6F 54 65   | TextureName			| NoTexture							|
+| 78 74 75 72   | ...					|									| 
+| 65            | ...					|									| 
+
+
+#### Example values:
+| Label            | Value                          |
+|------------------|--------------------------------|
+| Camera Pos (XYZ) | [12.00, 34.00, 56.00]          | 
+| Rotation (XYZ)   | [78.00, 98.00, 76.00]          | 
+| Face: Front      | ✗                             |
+| Face: Back       | ✓                              |
+| Face: Tunnel     | ✗                             |
+| Smoothness       | 2                              |
+| Tunnel Depth     | 83.13                          | 
+| Bevel Amount     | 2.80                           | 
+| Bevel Edge       | Miter                          |
+| Light            | Middle Left                    |
+| Directional      | #A0522D (brown)                | 
+| Ambient          | #DA70D6 (orchid purple)        | 
+| Background       | #008080 (teal)                 | 
+| Shader Texture   | Default                        |
+| Texture Name     | NoTexture (disabled)           |
+| Diffuse          | #0000FF (blue)                 | 
+| Specular         | #008000 (green)                | 
+| Reflectivity     | 53                             | 
+

@@ -1,0 +1,402 @@
+000000 Ascii     L=20 a="FFFF0000000600040001"
+000014 PrefixedHex L=5 a="77AA" v=30634 t=01
+000019 PrefixedHex L=21 a="00000000005100000000" t=03
+00002E PrefixedHex L=6 a="40001" v=262145 t=02
+000034 PrefixedHex L=4 a="101" v=257 t=02
+000038 PrefixedHex L=10 a="-7FFF6FE0" t=02
+000042 PrefixedHex L=2 a="0" v=0 t=02
+000044 C2        L=2 t=03
+000046 PrefixedHex L=7 a="480048" v=4718664 t=02
+00004D PrefixedHex L=3 a="-1" t=02
+000050 PrefixedHex L=2 a="0" v=0 t=02
+000052 PrefixedHex L=3 a="26" v=38 t=02
+000055 PrefixedHex L=2 a="0" v=0 t=01
+000057 C1        L=2 t=03
+000059 PrefixedHex L=3 a="-1" t=02
+00005C B_82      L=1 <-
+00005D PrefixedHex L=2 a="0" v=0 t=02
+00005F C2        L=2 t=0A
+000061 PrefixedHex L=3 a="26" v=38 t=02
+000064 PrefixedHex L=4 a="1F4" v=500 t=02
+000068 PrefixedHex L=5 a="FF00" v=65280 t=01
+00006D B_81      L=1 <-
+00006E B_81      L=1 <-
+00006F PrefixedHex L=2 a="0" v=0 t=01
+000071 B_82      L=1 <-
+000072 B_82      L=1 <-
+000073 PrefixedHex L=2 a="1" v=1 t=02
+000075 PrefixedHex L=2 a="0" v=0 t=02
+000077 C2        L=2 t=04
+000079 PrefixedHex L=3 a="55" v=85 t=02
+00007C PrefixedHex L=2 a="0" v=0 t=01
+00007E PrefixedHex L=21 a="00010000003800000001" t=03
+000093 PrefixedHex L=2 a="0" v=0 t=02
+000095 PrefixedHex L=3 a="5B" v=91 t=02
+000098 PrefixedHex L=3 a="84" v=132 t=01
+00009B PrefixedHex L=2 a="0" v=0 t=02
+00009D PrefixedHex L=2 a="2" v=2 t=01
+00009F PrefixedHex L=2 a="0" v=0 t=02
+0000A1 PrefixedHex L=2 a="1" v=1 t=01
+0000A3 PrefixedHex L=2 a="0" v=0 t=02
+0000A5 B_82      L=1 <-
+0000A6 B_82      L=1 <-
+0000A7 PrefixedHex L=3 a="26" v=38 t=02
+0000AA PrefixedHex L=4 a="1F4" v=500 t=02
+0000AE PrefixedHex L=3 a="5A" v=90 t=01
+0000B1 PrefixedHex L=2 a="0" v=0 t=01
+0000B3 PrefixedHex L=2 a="3" v=3 t=01
+0000B5 PrefixedHex L=5 a="8800" v=34816 t=01
+0000BA PrefixedHex L=2 a="0" v=0 t=01
+0000BC PrefixedHex L=3 a="13" v=19 t=02
+0000BF PrefixedHex L=3 a="46" v=70 t=02
+0000C2 PrefixedHex L=3 a="26" v=38 t=02
+0000C5 PrefixedHex L=3 a="4A" v=74 t=02
+0000C8 PrefixedHex L=2 a="0" v=0 t=02
+0000CA PrefixedHex L=21 a="00020000006000000000" t=03
+0000DF Block00   L=95 a="One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)" v=-1 d=[4F 6E 65 20 6C 69 6E 65 2C 20 33 20 73 74 79 6C 65 73 20 28 41 72 69 61 6C 20 31 32 20 72 65 64 …]
+00013E PrefixedHex L=21 a="00040000002700000008" t=03
+000153 PrefixedHex L=2 a="0" v=0 t=02
+000155 B_81      L=1 <-
+000156 PrefixedHex L=3 a="14" v=20 t=02
+000159 PrefixedHex L=2 a="1" v=1 t=01
+00015B PrefixedHex L=3 a="28" v=40 t=02
+00015E PrefixedHex L=2 a="0" v=0 t=01
+000160 PrefixedHex L=3 a="2A" v=42 t=02
+000163 PrefixedHex L=2 a="2" v=2 t=01
+000165 PrefixedHex L=3 a="40" v=64 t=02
+000168 PrefixedHex L=2 a="0" v=0 t=01
+00016A PrefixedHex L=3 a="42" v=66 t=02
+00016D PrefixedHex L=2 a="4" v=4 t=01
+00016F PrefixedHex L=3 a="5A" v=90 t=02
+000172 PrefixedHex L=2 a="0" v=0 t=01
+000174 PrefixedHex L=3 a="5D" v=93 t=02
+000177 PrefixedHex L=2 a="0" v=0 t=01
+000179 PrefixedHex L=21 a="00050000000A00000002" t=03
+00018E PrefixedHex L=2 a="0" v=0 t=02
+000190 PrefixedHex L=2 a="1" v=1 t=01
+000192 PrefixedHex L=3 a="5D" v=93 t=02
+000195 PrefixedHex L=2 a="0" v=0 t=01
+000197 PrefixedHex L=21 a="00060000012B00000005" t=03
+0001AC PrefixedHex L=2 a="3" v=3 t=01
+0001AE PrefixedHex L=2 a="0" v=0 t=01
+0001B0 B_81      L=1 <-
+0001B1 B_81      L=1 <-
+0001B2 PrefixedHex L=2 a="C" v=12 t=01
+0001B4 PrefixedHex L=2 a="3" v=3 t=01
+0001B6 PrefixedHex L=2 a="0" v=0 t=01
+0001B8 B_81      L=1 <-
+0001B9 B_82      L=1 <-
+0001BA B_82      L=1 <-
+0001BB C1        L=2 t=04
+0001BD PrefixedHex L=5 a="FFFF" v=65535 t=01
+0001C2 B_81      L=1 <-
+0001C3 B_81      L=1 <-
+0001C4 PrefixedHex L=2 a="0" v=0 t=01
+0001C6 B_82      L=1 <-
+0001C7 PrefixedHex L=6 a="C0000" v=786432 t=02
+0001CD PrefixedHex L=2 a="0" v=0 t=02
+0001CF C2        L=2 t=0A
+0001D1 PrefixedHex L=2 a="6" v=6 t=02
+0001D3 PrefixedHex L=2 a="0" v=0 t=02
+0001D5 C2        L=2 t=07
+0001D7 C1        L=2 t=20
+0001D9 B_82      L=1 <-
+0001DA B_82      L=1 <-
+0001DB C1        L=2 t=03
+0001DD B_82      L=1 <-
+0001DE C1        L=2 t=03
+0001E0 PrefixedHex L=2 a="C" v=12 t=01
+0001E2 PrefixedHex L=2 a="3" v=3 t=01
+0001E4 PrefixedHex L=2 a="0" v=0 t=01
+0001E6 B_81      L=1 <-
+0001E7 B_82      L=1 <-
+0001E8 B_82      L=1 <-
+0001E9 PrefixedHex L=5 a="F700" v=63232 t=01
+0001EE PrefixedHex L=5 a="2000" v=8192 t=01
+0001F3 PrefixedHex L=5 a="4A00" v=18944 t=01
+0001F8 PrefixedHex L=2 a="0" v=0 t=01
+0001FA PrefixedHex L=5 a="FFFF" v=65535 t=01
+0001FF B_81      L=1 <-
+000200 B_81      L=1 <-
+000201 PrefixedHex L=2 a="0" v=0 t=01
+000203 B_82      L=1 <-
+000204 PrefixedHex L=6 a="C0000" v=786432 t=02
+00020A PrefixedHex L=2 a="0" v=0 t=02
+00020C C2        L=2 t=0A
+00020E PrefixedHex L=2 a="1" v=1 t=02
+000210 PrefixedHex L=2 a="0" v=0 t=02
+000212 C2        L=2 t=07
+000214 C1        L=2 t=20
+000216 B_82      L=1 <-
+000217 B_82      L=1 <-
+000218 C1        L=2 t=03
+00021A B_82      L=1 <-
+00021B PrefixedHex L=2 a="1" v=1 t=01
+00021D PrefixedHex L=2 a="0" v=0 t=01
+00021F B_81      L=1 <-
+000220 PrefixedHex L=2 a="9" v=9 t=01
+000222 PrefixedHex L=2 a="2" v=2 t=01
+000224 PrefixedHex L=2 a="0" v=0 t=01
+000226 B_81      L=1 <-
+000227 B_82      L=1 <-
+000228 B_82      L=1 <-
+000229 PrefixedHex L=5 a="1E00" v=7680 t=01
+00022E PrefixedHex L=5 a="F000" v=61440 t=01
+000233 PrefixedHex L=5 a="2E00" v=11776 t=01
+000238 PrefixedHex L=2 a="0" v=0 t=01
+00023A PrefixedHex L=5 a="FFFF" v=65535 t=01
+00023F B_81      L=1 <-
+000240 B_81      L=1 <-
+000241 PrefixedHex L=2 a="0" v=0 t=01
+000243 B_82      L=1 <-
+000244 PrefixedHex L=6 a="90000" v=589824 t=02
+00024A PrefixedHex L=2 a="0" v=0 t=02
+00024C C2        L=2 t=0A
+00024E PrefixedHex L=2 a="1" v=1 t=02
+000250 PrefixedHex L=2 a="0" v=0 t=02
+000252 C2        L=2 t=07
+000254 C1        L=2 t=20
+000256 B_82      L=1 <-
+000257 B_82      L=1 <-
+000258 C1        L=2 t=03
+00025A B_82      L=1 <-
+00025B C1        L=2 t=03
+00025D PrefixedHex L=2 a="C" v=12 t=01
+00025F PrefixedHex L=2 a="3" v=3 t=01
+000261 PrefixedHex L=2 a="0" v=0 t=01
+000263 B_81      L=1 <-
+000264 B_82      L=1 <-
+000265 B_82      L=1 <-
+000266 PrefixedHex L=5 a="2700" v=9984 t=01
+00026B PrefixedHex L=4 a="200" v=512 t=01
+00026F PrefixedHex L=5 a="FD00" v=64768 t=01
+000274 PrefixedHex L=2 a="0" v=0 t=01
+000276 PrefixedHex L=5 a="FFFF" v=65535 t=01
+00027B B_81      L=1 <-
+00027C B_81      L=1 <-
+00027D PrefixedHex L=2 a="0" v=0 t=01
+00027F B_82      L=1 <-
+000280 PrefixedHex L=6 a="C0000" v=786432 t=02
+000286 PrefixedHex L=2 a="0" v=0 t=02
+000288 C2        L=2 t=13
+00028A C1        L=2 t=20
+00028C B_82      L=1 <-
+00028D B_82      L=1 <-
+00028E C1        L=2 t=03
+000290 B_82      L=1 <-
+000291 PrefixedHex L=2 a="2" v=2 t=01
+000293 PrefixedHex L=2 a="0" v=0 t=01
+000295 B_81      L=1 <-
+000296 PrefixedHex L=3 a="10" v=16 t=01
+000299 PrefixedHex L=2 a="2" v=2 t=01
+00029B PrefixedHex L=2 a="0" v=0 t=01
+00029D B_81      L=1 <-
+00029E PrefixedHex L=4 a="400" v=1024 t=02
+0002A2 PrefixedHex L=2 a="0" v=0 t=02
+0002A4 PrefixedHex L=5 a="2700" v=9984 t=01
+0002A9 PrefixedHex L=4 a="200" v=512 t=01
+0002AD PrefixedHex L=5 a="FD00" v=64768 t=01
+0002B2 PrefixedHex L=2 a="0" v=0 t=01
+0002B4 PrefixedHex L=5 a="FFFF" v=65535 t=01
+0002B9 B_81      L=1 <-
+0002BA B_81      L=1 <-
+0002BB PrefixedHex L=2 a="0" v=0 t=01
+0002BD B_82      L=1 <-
+0002BE PrefixedHex L=7 a="120000" v=1179648 t=02
+0002C5 PrefixedHex L=2 a="0" v=0 t=02
+0002C7 C2        L=2 t=0A
+0002C9 PrefixedHex L=2 a="1" v=1 t=02
+0002CB PrefixedHex L=2 a="0" v=0 t=02
+0002CD C2        L=2 t=07
+0002CF C1        L=2 t=20
+0002D1 B_82      L=1 <-
+0002D2 B_82      L=1 <-
+0002D3 C1        L=2 t=03
+0002D5 B_82      L=1 <-
+0002D6 PrefixedHex L=21 a="00070000004D00000002" t=03
+0002EB PrefixedHex L=2 a="0" v=0 t=01
+0002ED B_81      L=1 <-
+0002EE B_81      L=1 <-
+0002EF C2        L=2 t=0F
+0002F1 B_81      L=1 <-
+0002F2 B_82      L=1 <-
+0002F3 PrefixedHex L=2 a="1" v=1 t=02
+0002F5 PrefixedHex L=2 a="0" v=0 t=02
+0002F7 C2        L=2 t=06
+0002F9 PrefixedHex L=9 a="6A03E2AE" v=1778639534 t=02
+000302 PrefixedHex L=2 a="0" v=0 t=01
+000304 PrefixedHex L=3 a="18" v=24 t=02
+000307 PrefixedHex L=2 a="0" v=0 t=01
+000309 B_82      L=1 <-
+00030A C1        L=2 t=03
+00030C C2        L=2 t=12
+00030E C1        L=2 t=03
+000310 C2        L=2 t=0F
+000312 B_81      L=1 <-
+000313 B_82      L=1 <-
+000314 PrefixedHex L=2 a="1" v=1 t=02
+000316 PrefixedHex L=2 a="0" v=0 t=02
+000318 C2        L=2 t=06
+00031A PrefixedHex L=9 a="6A03E2AE" v=1778639534 t=02
+000323 PrefixedHex L=2 a="1" v=1 t=01
+000325 B_82      L=1 <-
+000326 PrefixedHex L=4 a="17B" v=379 t=02
+00032A PrefixedHex L=2 a="0" v=0 t=02
+00032C B_82      L=1 <-
+00032D PrefixedHex L=3 a="18" v=24 t=02
+000330 PrefixedHex L=2 a="0" v=0 t=01
+000332 B_82      L=1 <-
+000333 C1        L=2 t=03
+000335 C2        L=2 t=12
+000337 PrefixedHex L=21 a="00080000020A00000003" t=03
+00034C Block00   L=68 a="Arial" v=40 d=[05 41 72 69 61 6C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …]
+000390 Block00   L=68 v=40 d=[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …]
+0003D4 PrefixedHex L=2 a="4" v=4 t=01
+0003D6 PrefixedHex L=2 a="0" v=0 t=01
+0003D8 B_81      L=1 <-
+0003D9 B_81      L=1 <-
+0003DA PrefixedHex L=4 a="4E4" v=1252 t=02
+0003DE PrefixedHex L=4 a="400" v=1024 t=02
+0003E2 PrefixedHex L=2 a="0" v=0 t=02
+0003E4 B_82      L=1 <-
+0003E5 B_82      L=1 <-
+0003E6 PrefixedHex L=2 a="1" v=1 t=02
+0003E8 PrefixedHex L=2 a="0" v=0 t=02
+0003EA B_82      L=1 <-
+0003EB PrefixedHex L=6 a="40008" v=262152 t=02
+0003F1 PrefixedHex L=2 a="0" v=0 t=02
+0003F3 B_82      L=1 <-
+0003F4 PrefixedHex L=4 a="101" v=257 t=02
+0003F8 PrefixedHex L=2 a="0" v=0 t=01
+0003FA Block00   L=68 a="Tahoma" v=40 d=[06 54 61 68 6F 6D 61 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …]
+00043E Block00   L=68 v=40 d=[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …]
+000482 PrefixedHex L=2 a="4" v=4 t=01
+000484 PrefixedHex L=2 a="0" v=0 t=01
+000486 B_81      L=1 <-
+000487 B_81      L=1 <-
+000488 PrefixedHex L=4 a="4E4" v=1252 t=02
+00048C PrefixedHex L=4 a="400" v=1024 t=02
+000490 PrefixedHex L=2 a="0" v=0 t=02
+000492 B_82      L=1 <-
+000493 B_82      L=1 <-
+000494 PrefixedHex L=2 a="1" v=1 t=02
+000496 PrefixedHex L=2 a="0" v=0 t=02
+000498 B_82      L=1 <-
+000499 PrefixedHex L=6 a="40008" v=262152 t=02
+00049F PrefixedHex L=2 a="0" v=0 t=02
+0004A1 B_82      L=1 <-
+0004A2 PrefixedHex L=4 a="101" v=257 t=02
+0004A6 PrefixedHex L=2 a="0" v=0 t=01
+0004A8 Block00   L=68 a="Terminal" v=40 d=[08 54 65 72 6D 69 6E 61 6C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …]
+0004EC Block00   L=68 v=40 d=[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …]
+000530 PrefixedHex L=2 a="4" v=4 t=01
+000532 PrefixedHex L=2 a="0" v=0 t=01
+000534 B_81      L=1 <-
+000535 PrefixedHex L=5 a="60FF" v=24831 t=01
+00053A PrefixedHex L=4 a="4E4" v=1252 t=02
+00053E PrefixedHex L=4 a="400" v=1024 t=02
+000542 PrefixedHex L=2 a="0" v=0 t=02
+000544 B_82      L=1 <-
+000545 B_82      L=1 <-
+000546 PrefixedHex L=2 a="1" v=1 t=02
+000548 PrefixedHex L=3 a="FF" v=255 t=02
+00054B PrefixedHex L=2 a="0" v=0 t=02
+00054D C2        L=2 t=03
+00054F PrefixedHex L=4 a="101" v=257 t=02
+000553 PrefixedHex L=2 a="0" v=0 t=01
+000555 PrefixedHex L=21 a="00090000001500000002" t=03
+00056A PrefixedHex L=2 a="0" v=0 t=02
+00056C B_82      L=1 <-
+00056D PrefixedHex L=3 a="26" v=38 t=02
+000570 PrefixedHex L=4 a="1F4" v=500 t=02
+000574 PrefixedHex L=2 a="0" v=0 t=02
+000576 B_82      L=1 <-
+000577 PrefixedHex L=3 a="26" v=38 t=02
+00057A PrefixedHex L=4 a="1F4" v=500 t=02
+00057E PrefixedHex L=21 a="000A0000001500000002" t=03
+000593 PrefixedHex L=2 a="0" v=0 t=02
+000595 B_82      L=1 <-
+000596 PrefixedHex L=3 a="26" v=38 t=02
+000599 PrefixedHex L=4 a="1F4" v=500 t=02
+00059D PrefixedHex L=2 a="0" v=0 t=02
+00059F B_82      L=1 <-
+0005A0 PrefixedHex L=3 a="26" v=38 t=02
+0005A3 PrefixedHex L=4 a="1F4" v=500 t=02
+0005A7 PrefixedHex L=21 a="000B0000000500000002" t=03
+0005BC PrefixedHex L=2 a="0" v=0 t=02
+0005BE C2        L=2 t=07
+0005C0 PrefixedHex L=21 a="000C0000002600000002" t=03
+0005D5 PrefixedHex L=3 a="42" v=66 t=02
+0005D8 B_82      L=1 <-
+0005D9 B_82      L=1 <-
+0005DA PrefixedHex L=2 a="8" v=8 t=02
+0005DC PrefixedHex L=4 a="152" v=338 t=02
+0005E0 PrefixedHex L=2 a="5" v=5 t=01
+0005E2 PrefixedHex L=2 a="0" v=0 t=02
+0005E4 B_82      L=1 <-
+0005E5 PrefixedHex L=2 a="1" v=1 t=01
+0005E7 PrefixedHex L=3 a="5A" v=90 t=02
+0005EA B_82      L=1 <-
+0005EB B_82      L=1 <-
+0005EC PrefixedHex L=2 a="5" v=5 t=02
+0005EE PrefixedHex L=4 a="1E3" v=483 t=02
+0005F2 PrefixedHex L=2 a="5" v=5 t=01
+0005F4 PrefixedHex L=3 a="93" v=147 t=02
+0005F7 B_82      L=1 <-
+0005F8 PrefixedHex L=2 a="1" v=1 t=01
+0005FA PrefixedHex L=21 a="000F0000002100000000" t=03
+00060F PrefixedHex L=3 a="40" v=64 t=02
+000612 PrefixedHex L=2 a="0" v=0 t=01
+000614 C2        L=2 t=0B
+000616 PrefixedHex L=2 a="1" v=1 t=01
+000618 PrefixedHex L=2 a="0" v=0 t=02
+00061A C2        L=2 t=09
+00061C B_81      L=1 <-
+00061D B_81      L=1 <-
+00061E B_82      L=1 <-
+00061F B_81      L=1 <-
+000620 B_81      L=1 <-
+000621 C2        L=2 t=04
+000623 C1        L=2 t=05
+000625 C2        L=2 t=03
+000627 C1        L=2 t=04
+000629 B_82      L=1 <-
+00062A B_82      L=1 <-
+00062B C1        L=2 t=03
+00062D C2        L=2 t=20
+00062F PrefixedHex L=21 a="00130000007E00000000" t=03
+000644 PrefixedHex L=2 a="D" v=13 t=01
+000646 PrefixedHex L=2 a="A" v=10 t=01
+000648 PrefixedHex L=2 a="9" v=9 t=01
+00064A PrefixedHex L=3 a="1F" v=31 t=01
+00064D PrefixedHex L=2 a="8" v=8 t=01
+00064F PrefixedHex L=2 a="C" v=12 t=01
+000651 PrefixedHex L=2 a="E" v=14 t=01
+000653 PrefixedHex L=3 a="1C" v=28 t=01
+000656 PrefixedHex L=3 a="1D" v=29 t=01
+000659 PrefixedHex L=3 a="1E" v=30 t=01
+00065C PrefixedHex L=3 a="1F" v=31 t=01
+00065F PrefixedHex L=3 a="7F" v=127 t=01
+000662 PrefixedHex L=3 a="1B" v=27 t=01
+000665 PrefixedHex L=2 a="0" v=0 t=01
+000667 Block00   L=72 a="-  .  ?  ?  ?  ?  ?  ?  .  '  "  ?  ?  ?  ?  ?  ?  " v=44 d=[01 2D 00 00 01 2E 00 00 01 B6 00 00 01 B5 00 00 01 95 00 00 01 B5 00 00 01 A5 00 00 01 A5 00 00 …]
+0006AF PrefixedHex L=5 a="FFFF" v=65535 t=01
+0006B4 B_81      L=1 <-
+0006B5 B_81      L=1 <-
+0006B6 PrefixedHex L=2 a="0" v=0 t=01
+0006B8 PrefixedHex L=5 a="FFFF" v=65535 t=01
+0006BD B_81      L=1 <-
+0006BE B_81      L=1 <-
+0006BF PrefixedHex L=2 a="0" v=0 t=01
+0006C1 PrefixedHex L=21 a="01280000000B00000001" t=03
+0006D6 PrefixedHex L=3 a="5D" v=93 t=02
+0006D9 B_82      L=1 <-
+0006DA PrefixedHex L=2 a="0" v=0 t=01
+0006DC C1        L=2 t=03
+0006DE C2        L=2 t=05
+0006E0 PrefixedHex L=21 a="01290000000B00000001" t=03
+0006F5 PrefixedHex L=3 a="5D" v=93 t=02
+0006F8 B_82      L=1 <-
+0006F9 PrefixedHex L=2 a="0" v=0 t=01
+0006FB C1        L=2 t=03
+0006FD C2        L=1

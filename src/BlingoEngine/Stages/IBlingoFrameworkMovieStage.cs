@@ -9,7 +9,7 @@ namespace BlingoEngine.Stages;
 /// Represents the top-level window or stage. Implementations update the
 /// display when the active <see cref="BlingoMovie"/> changes.
 /// </summary>
-public interface IBlingoFrameworkStage : IAbstFrameworkNode
+public interface IBlingoFrameworkStage : IAbstFrameworkLayoutNode
 {
     BlingoStage BlingoStage { get; }
     /// <summary>Sets the currently active movie.</summary>

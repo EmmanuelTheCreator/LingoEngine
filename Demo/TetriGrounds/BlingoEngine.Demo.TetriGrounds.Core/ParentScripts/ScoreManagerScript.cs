@@ -24,11 +24,12 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         private int myPlayerScore;
         private int myLevel;
         private int myNumberLinesRemoved;
-        private int myNumberLinesTot;
+        private int myTotalNumberLinesRemoved;
         private bool myLevelUp;
-        private int myLevelUpNeededScore;
+        private int myLevelUpNeededLines;
         private int myBlocksDroped;
         private DateTime myLastLineClear = DateTime.MinValue;
+        private int numberOfLinesCleared;
         private DateTime _started = DateTime.MinValue;
         private TimeSpan _elapsed;
         private readonly TimeSpan myComboDuration = TimeSpan.FromSeconds(2);
@@ -47,15 +48,15 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             _global = global;
             _scoresRepository = scoresRepository;
             myPlayerScore = 0;
-            myNumberLinesTot = 0;
             myLevelUp = false;
             myBlocksDroped = 0;
             var txt = Member<BlingoMemberText>("T_StartLevel");
             _memberScore = Member<BlingoMemberText>("T_Score")!;
             _memberTData = Member<BlingoMemberText>("T_data")!;
             myLevel = txt != null && int.TryParse(txt.Text, out var lvl) ? lvl : 1;
-            myLevelUpNeededScore = 100 * (myLevel + 1);
-
+            myLevelUpNeededLines = 10;
+            numberOfLinesCleared = 0;
+            myTotalNumberLinesRemoved = 0;
             UpdateGfxScore();
             NewText("Go!");
             _started = DateTime.UtcNow;
@@ -79,9 +80,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             {
                 var now = DateTime.UtcNow;
                 if (now - myLastLineClear <= myComboDuration)
-                {
                     myPlayerScore += 20 * myLevel * linesThisTurn;
-                }
                 myLastLineClear = now;
             }
             else
@@ -90,14 +89,14 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
             }
             myNumberLinesRemoved = 0;
             // check for level up (its the number of blocks droped)
-            if (myBlocksDroped > myLevelUpNeededScore)
+            if (myTotalNumberLinesRemoved > myLevelUpNeededLines)
             {
                 SendSprite<AnimationScriptBehavior>(22, x => x.StartAnim());
                 myLevelUp = true;
                 myLevel += 1;
                 NewText($"Level {myLevel} !!");
-                myLevelUpNeededScore += 1000;
-                myPlayerScore += 200 * myLevel;
+                myLevelUpNeededLines += 10;
+                myPlayerScore += (myLevel+1)*10;
             }
             UpdateGfxScore();
             _memberTData.Text = $"Level {myLevel}";
@@ -142,7 +141,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         public void LineRemoved()
         {
             myNumberLinesRemoved += 1;
-            myNumberLinesTot += 1;
+            myTotalNumberLinesRemoved++;
         }
         /// <summary>
         /// Called when the current block locks in place, awarding score based on how quickly it fell.
@@ -190,7 +189,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
                 {
                     if (string.IsNullOrWhiteSpace(name))
                         name = "Anonymous";
-                    _scoresRepository.StoreScore(name, myPlayerScore, myLevel, _started, _elapsed);
+                    _scoresRepository.StoreScore(name, myPlayerScore, myLevel, _started, _elapsed, myTotalNumberLinesRemoved);
                 }));
             }
         }

@@ -1,4 +1,4 @@
-﻿using AbstEngine.Director.LGodot;
+using AbstEngine.Director.LGodot;
 using AbstUI.FrameworkCommunication;
 using AbstUI.LGodot.Components;
 using AbstUI.LGodot.Primitives;

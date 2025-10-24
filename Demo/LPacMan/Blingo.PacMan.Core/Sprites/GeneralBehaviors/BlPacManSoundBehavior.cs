@@ -1,0 +1,39 @@
+﻿using BlingoEngine.Events;
+using BlingoEngine.Inputs.Events;
+using BlingoEngine.Movies;
+using BlingoEngine.Sprites;
+
+namespace Blingo.PacMan.Core.Game
+{
+    internal class BlPacManSoundBehavior : BlingoSpriteBehavior,IHasKeyDownEvent
+    {
+        private readonly GlobalVars _globals;
+
+        public BlPacManSoundBehavior(IBlingoMovieEnvironment env, GlobalVars globals) : base(env)
+        {
+            _globals = globals;
+        }
+
+        /// <inheritdoc />
+        public void KeyDown(BlingoKeyEvent key)
+        {
+            // 'S' toggles sound .
+            if (key.Key == "S")
+                ToggleSound();
+        }
+
+        /// <summary>
+        /// Toggles the attract music playback while updating the muted flag.
+        /// </summary>
+        private void ToggleSound()
+        {
+            var muted = !_globals.State.IsMuted;
+            _globals.State.IsMuted = muted;
+
+            if (muted)
+                _Player.SoundStopBack();
+            else
+                _Player.SoundPlayBack();
+        }
+    }
+}

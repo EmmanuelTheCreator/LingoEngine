@@ -69,6 +69,7 @@ namespace BlingoEngine.Demo.TetriGrounds.Core.ParentScripts
         /// </summary>
         public void StepFrame()
         {
+            if (!Sprite(myNum).HasSprite()) return;
             myCounter += 1;
             if (myCounter > Duration)
             {

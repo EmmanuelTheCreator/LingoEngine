@@ -1,0 +1,225 @@
+// 264 length Para 1: 38(38) , Para 2:39(151) ,Para 3:112(264)
+00:FFFF0000000600040001 
+    01:77AA 
+	
+03:00000000005C00000000 
+    02:40001 
+		02:101  				// File version or  constant (Western / Latin-1 codepage).
+		02:-7FFF6FE0 			// fix token probably (like in the tab stops where it is 6A03E2AE)
+	02:0 	
+      C2(03) 
+		02:480048 				// 72 0 72
+		02:-1 
+	02:0 
+		02:140 					// Height 320
+		01:0 
+      C1(03) 
+		02:-1 
+		<82 
+		02:0 					// 4 Values getting added when more than 1 color it seems
+		02:5 					// 4 Values getting added when more than 1 color it seems
+		02:0 					// 4 Values getting added when more than 1 color it seems
+		02:5 					// 4 Values getting added when more than 1 color it seems
+	02:0 
+      C2(06) 
+		02:140 					// Width 320
+		02:37F 					// Height
+		01:FF00 <81 <81 01:0 	// Some color
+		<82 
+		<82 
+		02:1 
+	02:0 
+      C2(04) 
+		02:108 			// 264,	Text length or sub-thing with 'tab-stops'
+		01:0 
+	  
+03:00010000003D00000001  	// Layout (895 x 320)
+    02:0 
+	02:108 
+		01:84 
+	02:0 
+		01:A  				// 10,	Number of text lines  
+	02:0 
+		01:3 				// 3,	Number of paragraphs or something with lines
+	02:0 <82 <82 
+	02:140 					// Height = 320
+	02:37F 					// Width  = 895
+		01:D2 				// 210		Changes with Indent?
+		01:0 				// 0 
+		01:7 				// 7
+		01:8C00 			// 
+		01:0 				// 0, 		?Changes with margin paragraph 1 ?	
+	02:122 					// 290, 	Changes with margin paragraph 2?	, Changes with Margin left	
+	02:48 					// 72,  	Changes with margin paragraph 3?		
+	02:140 					// 210		Changes with Margin left
+	02:2A6 					// 678 		Changes with Indent?
+	02:0 					// 0
+	
+03:00020000010E00000000  	// Block Full Text
+            00(108):"My first paragraph centered with all 0Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5"
+
+03:00040000000B00000002 	// Run styles
+    02:0   	
+		01:4 02:10A // Style=2, 266, -> Full text
+	 	01:4 			
+	
+03:00050000001500000004 	// Run paragraphs 
+    02:0  	 	
+		01:1 02:27 	 	// Run=1, 39, "My first paragraph centered with all 0\r"
+		01:2 02:98 	 	// Run=2, 152,"My first paragraph centered with all 0\rParagraph with align Left...spacing after 7\r" 
+		01:3 02:10A 	// Run=3, 266,"My first paragraph centered with all 0\r...spacing after 5\r"  
+		01:0
+	
+03:00060000010F00000005 	// Block Styles
+    01:4 
+// Style 0
+	01:0 <81 <81 
+	01:C 						// Font Descent 
+	01:3                        // Font Ascendent
+	01:0 <81 <82 <82 
+      C1(04) 					// End color black
+  01:FFFF <81 <81 01:0 <82 
+	02:C0000 					// Font-size
+	02:0 
+      C2(0A) 02:1 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+// Style 1
+	  01:1 01:0 <81 01:C 01:3 01:0 <81 <82 <82 
+      C1(04) 
+  01:FFFF <81 <81 01:0 <82 02:C0000 02:0 
+      C2(0A) 02:2 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+// Style 2
+	  01:1 01:0 <81 01:15 01:6 01:1 01:0 <82 <82 
+      C1(04) 
+  01:FFFF <81 <81 01:0 <82 02:180000 02:0 
+      C2(0A) 02:3 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+// Style 3
+	  01:1 01:0 <81 01:17 01:6 01:1 01:0 <82 <82 
+      C1(04) 
+  01:FFFF <81 <81 01:0 <82 
+	  02:180000 02:0 
+      C2(0A) 02:4 02:0 
+      C2(07) 01:1 01:0 
+      C1(1E) <82 <82 
+      C1(03) <82 
+// Style 4
+	  01:1 01:0 <81 01:17 01:6 01:1 01:0 <82 <82 
+		01:FF00 01:0 <81 <81 
+  01:FFFF <81 <81 01:0 <82 02:180000 02:0 
+      C2(0A) 02:6 02:0 
+      C2(07) 01:1 01:0 
+      C1(1E) <82 <82 
+      C1(03) <82 
+	  
+03:0007000000B200000004 	 		// Paragraphs Definitions
+// Paragraph 0
+    01:0 <81 <81       						C2(0F) 
+	<81 <82 02:1 02:0       				C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03) 	C2(12) 
+// Paragraph 1
+	01:1 01:0 <81 	      					C2(0F) 
+	<81 <82 02:1 02:0 						C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03)  C2(12)  	// Tab stops with only default Tab width of 24px      
+// Paragraph 2	  
+      C1(03)
+		02:120 											// 288,	Margin Left  
+		02:168  										// 360,	Margin Right 
+		02:1C  											// 28,	Indent from Left margin 
+		02:0								C2(03) 
+	02:9 02:7 02:0 							C2(05)		// Link to 9,7,0
+	<81 <82 02:1 02:0       				C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82 C1(03)  C2(12) 		// Tab stops with only default Tab width of 24px    
+// Paragraph 3	  
+      C1(03) 
+		02:48 			// 72,	Margin Left
+		02:90 			// 144,	Margin Right? 
+		02:15 			// 21,	Indent from Left margin   
+		02:0 
+      C2(03) 02:4 02:5 02:0 		// Link to 4,5,0
+      C2(05) <81 <82 02:1 02:0 
+      C2(06) 02:6A03E2AE 01:0 02:18 01:0 <82  	// Tab stops with only default Tab width of 24px
+      C1(03) 
+      C2(12) 
+	  
+03:00080000015D00000002			// Fonts  Block 
+    00(40):"Arial"				// Font Name
+    00(40):""                   // Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400  		// Font weight
+			02:0 <82 <82
+			02:1 
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008 
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+    00(40):"Arcade *"			// Font Name
+    00(40):""                   // Style name (Empty = Regular)
+		01:A 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  
+				02:4E4 			// Windows code page / charset (Latin-1) 
+				02:400 			// Font weight
+			02:0 <82 <82 
+			02:1 
+				02:0 <82 		// Character cell height or raster-font index   
+				02:40008 
+			02:0 <82 
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+
+03:00090000001700000002 	// Line-height spacing descriptor 
+    02:0 <82 
+		02:140 			// Line-height 
+		02:37F 			// paragraph spacing / baseline offset 
+	02:0 <82 
+		02:140 			// Line-height 
+		02:37F 			// paragraph spacing / baseline offset 
+	
+03:000A0000001700000002  	// Identical as Line-height spacing
+    02:0 <82 02:140 02:37F 02:0 <82 02:140 02:37F 
+	
+03:000B0000000500000002 
+    02:0 
+      C2(07) 
+	  
+03:000C0000002A00000002 
+    02:98 <82 <82 02:118 02:0 01:8 02:0 <82 01:1 02:108 <82 <82 02:15D 02:37E 01:A 02:179 <82 01:3 
+	
+03:000F0000002100000000 
+    02:40 01:0 
+      C2(0B) 01:1 02:0 
+      C2(09) <81 <81 <82 <81 <81 
+      C2(04) 
+      C1(05) 
+      C2(03) 
+      C1(04) <82 <82 
+      C1(03) 
+      C2(20) 
+	  
+03:00130000007E00000000 
+    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0 // D A 9 1F 8 C E 1C 1D 1F 7F 1B 0
+        00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
+  01:FFFF <81 <81 01:0 
+  01:FFFF <81 <81 01:0 
+  
+03:01280000000C00000001 
+    02:10A <82 01:0 
+      C1(03) 
+      C2(05) 
+	  
+03:01290000000C00000001 
+    02:10A <82 01:0 
+      C1(03) 
+      C2(05)

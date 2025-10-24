@@ -135,6 +135,36 @@ namespace BlingoEngine.Director.Core.Scores
             return null;
         }
 
+        internal (DirScoreChannel Channel, DirScoreSprite Sprite)? TryGetSpriteForMember(IBlingoMember member)
+        {
+            DirScoreSprite? bestSprite = null;
+            DirScoreChannel? bestChannel = null;
+
+            foreach (var ch in _channels.Values)
+            {
+                foreach (var candidate in ch.GetSprites())
+                {
+                    if (candidate.Sprite is not IBlingoSpriteWithMember withMember)
+                        continue;
+
+                    var candidateMember = withMember.GetMember();
+                    if (candidateMember == null || !ReferenceEquals(candidateMember, member))
+                        continue;
+
+                    if (bestSprite == null || candidate.Sprite.BeginFrame < bestSprite.Sprite.BeginFrame)
+                    {
+                        bestSprite = candidate;
+                        bestChannel = ch;
+                    }
+                }
+            }
+
+            if (bestSprite == null || bestChannel == null)
+                return null;
+
+            return (bestChannel, bestSprite);
+        }
+
         public void SelectSprite(BlingoSprite sprite)
         {
             if (sprite.Lock) return;

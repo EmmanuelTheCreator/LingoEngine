@@ -1,8 +1,12 @@
 using BlingoEngine.IO.Legacy.Afterburner;
+using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tools;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Xml;
 
 namespace BlingoEngine.IO.Legacy.Cast;
 
@@ -14,6 +18,8 @@ namespace BlingoEngine.IO.Legacy.Cast;
 internal sealed class BlLegacyCastReader
 {
     private readonly ReaderContext _context;
+    
+   
 
     public BlLegacyCastReader(ReaderContext context)
     {
@@ -86,70 +92,23 @@ internal sealed class BlLegacyCastReader
 
     private BlLegacyCastMemberSlot CreateMember(int slot, int resourceId, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
     {
-        var memberType = BlLegacyCastMemberType.Unknown;
-        var name = string.Empty;
-
+        BlCastMemberItem memberInfo = new();
         if (_context.Resources.TryGetEntry(resourceId, out var memberEntry))
         {
             var memberPayload = LoadPayload(memberEntry, classicLoader, afterburnerLoader);
-            if (memberPayload.Length > 0 && TryParseMemberChunk(memberPayload, out var parsedType, out var parsedName))
-            {
-                memberType = parsedType;
-                if (!string.IsNullOrEmpty(parsedName))
-                    name = parsedName;
-            }
+            if (memberPayload.Length > 0 && TryParseMemberChunk(memberPayload, out var memberInfo1))
+                memberInfo = memberInfo1!;
         }
 
-        return new BlLegacyCastMemberSlot(slot, resourceId, memberType, name);
+        return new BlLegacyCastMemberSlot(slot, resourceId, memberInfo);
     }
 
-    private static bool TryParseMemberChunk(byte[] payload, out BlLegacyCastMemberType memberType, out string name)
+    private static bool TryParseMemberChunk(byte[] payload, out BlCastMemberItem? castMemberInfo)
     {
-        memberType = BlLegacyCastMemberType.Unknown;
-        name = string.Empty;
-
-        if (payload.Length < 12)
-            return false;
-
-        using var memory = new MemoryStream(payload, writable: false);
-        var reader = new BlStreamReader(memory)
-        {
-            Endianness = BlEndianness.BigEndian
-        };
-
-        var typeValue = reader.ReadUInt32();
-        memberType = BlLegacyCastMemberTypeHelpers.MapMemberType(typeValue);
-
-        var infoLength = reader.ReadUInt32();
-        var specificLength = reader.ReadUInt32();
-
-        var infoBytesAvailable = payload.Length - (int)reader.Position;
-        if (infoBytesAvailable <= 0)
-            return true;
-
-        if (infoLength > (uint)infoBytesAvailable)
-            infoLength = (uint)infoBytesAvailable;
-
-        var infoData = infoLength > 0 ? reader.ReadBytes((int)infoLength) : Array.Empty<byte>();
-
-        if (specificLength > 0)
-        {
-            var skip = Math.Min((int)specificLength, payload.Length - (int)reader.Position);
-            if (skip > 0)
-                reader.Skip(skip);
-        }
-
-        name = ReadMemberName(infoData);
+        var memberData = new BlLegacyCastItemReader().ReadItem(string.Empty, payload);
+        castMemberInfo = memberData.MemberItem;
 
         return true;
-    }
-
-    private static string ReadMemberName(byte[] infoData)
-    {
-        if (infoData.Length == 0)
-            return string.Empty;
-        var extracted = infoData.ExtractName();
-        return !string.IsNullOrEmpty(extracted) ? extracted : string.Empty;
     }
 
 }

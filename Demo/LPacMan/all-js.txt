@@ -1,0 +1,3621 @@
+﻿
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Bonus.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation from './engine/Animation.js';
+import Character from './Character.js';
+import getDistance from './helper/getDistance.js';
+
+export const animationBase = {
+    imageURL : 'img/misc.png',
+    offsetY : 0,
+    offsetX : 0
+}
+
+export const animations = {
+    'default' : new Animation({
+        ...animationBase
+    }),
+    'score100' : new Animation({
+        ...animationBase,
+        offsetY : 60
+    }),
+    'score200' : new Animation({
+        ...animationBase,
+        offsetX : 60,
+        offsetY : 60
+    }),
+    'score500' : new Animation({
+        ...animationBase,
+        offsetX : 60 * 2,
+        offsetY : 60
+    }),
+    'score700' : new Animation({
+        ...animationBase,
+        offsetX : 60 * 3,
+        offsetY : 60
+    }),
+    'score1000' : new Animation({
+        ...animationBase,
+        offsetX : 60 * 4,
+        offsetY : 60
+    }),
+    'score2000' : new Animation({
+        ...animationBase,
+        offsetX : 60 * 5,
+        offsetY : 60
+    }),
+    'score5000' : new Animation({
+        ...animationBase,
+        offsetX : 60 * 6,
+        offsetY : 60
+    })
+};
+
+const defaults = {
+    animations,
+    speed : 40,
+    score : '100'
+};
+
+class Bonus extends Character {
+    constructor(options) {
+        super(options);
+
+        Object.keys(defaults).forEach(key => {
+            if (key in options) this[key] = options[key];
+        })
+
+        const { addPacmanPositionEventListener } = options;
+
+        // Change tile.
+        this.on('item:tile', (tile) => {
+            this._dir = this._nextDir;
+            this._nextDir = this.getNextDirection();
+            this._eatEvent = false;
+
+            if (this.getTile() === this._getTarget()) {
+                if (this._targetFound) {
+                    this._targetFound--;
+                } else {
+                    this.emit('item:destroy');
+                }
+            }
+
+        });
+
+        addPacmanPositionEventListener(data => {
+            this.pacmanData = data;
+        });
+
+        this._targetFound = 2;
+    }
+
+    move() {
+        Character.prototype.move.call(this, this._dir);
+        // Eat or eaten!
+        if (!this._eatEvent) {
+            var pacmanTile = this.pacmanData.tile, tile = this.getTile(), opposite = this._getOpDirection(this._dir);
+            if (pacmanTile === tile || (this.pacmanData.dir === opposite && pacmanTile === tile.get(opposite))) {
+                this._eatEvent = true;
+
+                this._nextAnimation =  this.animations[`score${this.score}`];
+                this.update();
+
+                this.emit('item:eaten', this);
+            }
+        }
+    }
+
+    getNextDirection() {
+        var targetTile = this._getTarget(); // Target Tile
+
+        var _dir = this._dir || this.dir;
+
+        var nextTile = this.getTile().get(_dir); // Next tile.
+
+        var directions = ['u', 'l', 'd', 'r']; // Preferred direction order.
+
+        var nextDirection, lastDistance;
+
+        for (var i = 0; i < 4; i++) {
+            var dir = directions[i];
+
+            if (dir === this._getOpDirection(_dir)) continue; // Cant't go back.
+
+            if (this.canGo(dir, nextTile)) {
+                var testTile = nextTile.get(dir);
+                var distance = getDistance(testTile, targetTile);
+
+                if (typeof lastDistance === 'undefined' || lastDistance > distance) {
+                    nextDirection = dir;
+                    lastDistance = distance;
+                }
+            }
+        }
+
+        return nextDirection;
+    }
+
+    canGo(dir, tile) {
+        if (!tile) tile = this.getTile();
+
+        var nextTile = tile.get(dir);
+
+        if (!nextTile) return false;
+
+        return !nextTile.isWall() && !nextTile.isHouse();
+    }
+
+    _getTarget() {
+        return this.map.tunnels[0];
+    }
+
+    setNextAnimation() {}
+}
+
+Object.assign(Bonus.prototype, defaults);
+
+export default Bonus;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Bonuses.js
+////////////////////////////////////////////////////////////////////////////////
+
+import makeBonus from './factory/makeBonus.js';
+
+class Bonuses {
+    constructor(options) {
+        this.bonuses = [];
+
+        this.x = options.x;
+        this.y = options.y;
+
+        this.model = options.model;
+
+        for (var i = 0; i < 8; i++) {
+            let bonus = makeBonus(i, {
+                x : options.x - i * 64,
+                y : options.y,
+                factor : options.factor,
+                addPacmanPositionEventListener : () => {},
+                normalizeRefrashRate : () => 1
+            });
+
+            options.addSprite(bonus);
+            this.bonuses.push(bonus);
+
+            if (i >= this.model.level) this.bonuses[i].hide();
+        }
+
+        this.model.on('change:level', this.render.bind(this));
+    }
+
+    render() {
+        for (var i = 0; i < 8; i++) {
+            if (i >= this.model.level) this.bonuses[i].hide();
+            else this.bonuses[i].show();
+        }
+    }
+}
+
+export default Bonuses;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Character.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Item from './Item.js';
+
+const defaults = {
+    width : 60,
+    height : 60,
+    step : 10,
+    speed : 80,
+    dir : null,
+    preturn : false
+};
+
+const animationLabelsByDirections = {
+    l : 'left',
+    r : 'right',
+    u : 'up',
+    d : 'down'
+};
+
+const oppositeDirections = {
+    l : 'r',
+    r : 'l',
+    u : 'd',
+    d : 'u'
+};
+
+class Character extends Item {
+    constructor(options) {
+        super(options);
+
+        Object.keys(defaults).forEach(key => {
+            if (key in options) this[key] = options[key];
+        });
+
+        this.pauseAnimation();
+
+        this.on('item:tile', (tile) => {
+            this.setNextAnimation();
+        });
+
+        this._moving = false;
+        this._lastX = this.x;
+        this._lastY = this.y;
+        this._speed = this.speed;
+        this._dir = null;
+        this._nextAnimation = null;
+        this._nextDirection = null;
+        this._moving = false;
+
+        this._saveDefaults()
+    }
+
+    _saveDefaults() {
+        this._defaults = {};
+
+        [
+            'x',
+            'y',
+            '_lastX',
+            '_lastY',
+            'dir',
+            '_dir',
+            '_nextAnimation',
+            '_nextDirection',
+            '_moving',
+            'mode',
+            'animation'
+        ].forEach(key => {
+            this._defaults[key] = this[key];
+        });
+    }
+
+    reset() {
+        Object.assign(this, this._defaults);
+        this.transform();
+        this.setAnimation(this.animation);
+        this.pauseAnimation();
+    }
+
+    update() {
+        var tile = this.getTile();
+
+        // Fix float point offset.
+        if (Math.abs(this.y - tile.y) < 1) this.y = tile.y;
+        if (Math.abs(this.x - tile.x) < 1) this.x = tile.x;
+
+        // Position change, move.
+        if (this._lastX !== this.x || this._lastY != this.y) {
+            this.setXYZ({
+                x : this.x,
+                y : this.y
+            });
+
+            this._lastX = this.x;
+            this._lastY = this.y;
+
+            if (!this._moving) {
+                this.emit('item:move');
+                this.resumeAnimation();
+                this._moving = true;
+            }
+
+            this.emit('item:position', this._getPositionData())
+        } else {
+            // Not moving.
+            if (this._moving) {
+                this.emit('item:stop');
+                this.pauseAnimation();
+                this._moving = false;
+            }
+        }
+        // Changed animation.
+        if (this._nextAnimation && this.animation !== this._nextAnimation) {
+            this.setAnimation(this._nextAnimation);
+        }
+
+    }
+
+    _getPositionData() {
+        return {
+            x : this.x,
+            y : this.y,
+            tile : this.getTile(),
+            dir : this.dir
+        };
+    }
+    // Called from Game main loop at every revolution.
+    move(dir) {
+        if (!dir) dir = this.dir;
+        if (!dir) return;
+
+        var tile = this.getTile(), step, _step = this.getStep();
+        // Could go that direction.
+        if ((dir != this.dir || this._preturn) && this.canGo(dir)) {
+
+            if (((dir !== this.dir && dir !== this._getOpDirection()) || this._preturn) && !this._isCentered()) {
+                // Not in the center of the tile. Befor turn, set step so on next frame we get into the center.
+                if (this._isV(dir)) {
+                    var diffX = Math.abs(this.x - tile.x);
+                    if (this.preturn) { // Set preturn to true to turn faster on corners.
+                        if (!this._isCentered('x')) {
+                            if (this.x > tile.x) this.x -= this.getMin(diffX, _step);
+                            else this.x += this.getMin(diffX, _step);
+                            this._preturn = true;
+                        } else this._preturn = false;
+                    } else {
+                        step = this.getMin(diffX, _step);
+                    }
+                }
+                if (this._isH(dir)) {
+                    var diffY = Math.abs(this.y - tile.y);
+                    if (this.preturn) { // Set preturn to true to turn faster on corners.
+                        if (!this._isCentered('y')) {
+                            if (this.y > tile.y) this.y -= this.getMin(diffY, _step);
+                            else this.y += this.getMin(diffY, _step);
+                            this._preturn = true;
+                        } else this._preturn = false;
+                    } else {
+                        step = this.getMin(diffY, _step);
+                    }
+                }
+
+            }
+            // No step. Means change direction.
+            if (!step) {
+                this.dir = dir;
+                this.setNextAnimation();
+            }
+        }
+
+        if (!step) {
+            // Keep straight.
+            if (this.canGo(this.dir)) {
+                step = _step;
+            } else {
+                // Wall.
+                if (this._isV(this.dir)) { step = this.getMin(Math.abs(this.y - tile.y), _step); }
+                if (this._isH(this.dir)) { step = this.getMin(Math.abs(this.x - tile.x), _step); }
+            }
+        }
+        // Move.
+        if (step) {
+            if (this.dir === 'u') {
+                this.y -= step;
+            }
+            if (this.dir === 'r') {
+                this.x += step;
+            }
+            if (this.dir === 'd') {
+                this.y += step;
+            }
+            if (this.dir === 'l') {
+                this.x -= step;
+            }
+        }
+        // Pass away limits.
+        if (this.x < 0) this.x = this.map.width * this.map.tileWidth;
+        if (this.x > this.map.width * this.map.tileWidth) this.x = 0;
+        if (this.y < 0) this.y = this.map.height * this.map.tileHeight;
+        if (this.y > this.map.height * this.map.tileHeight) this.y = 0;
+
+        tile = this.getTile();
+
+        if (tile !== this._lastTile) {
+            this._lastTile = tile;
+            this.emit('item:tile', tile);
+        }
+
+        this.update();
+    }
+
+    getStep() {
+        return this.step * (this._speed / 100);
+    }
+    // Set animation according model conditions. Override on subclasses.
+    setNextAnimation() {
+        this._nextAnimation = this.animations[animationLabelsByDirections[this.dir]];
+    }
+    // Helper methods:
+    _getOpDirection(dir) {
+        return oppositeDirections[dir || this.dir];
+    }
+    // Tile on passed direction is available for walking.
+    canGo(dir) {
+        const tile = this.getTile();
+
+        const nextTile = tile.get(dir);
+
+        return nextTile && !nextTile.isHouse() && !nextTile.isWall();
+    }
+
+    _isV(dir) {
+        return dir === 'u' || dir === 'd';
+    }
+
+    _isH(dir) {
+        return dir === 'l' || dir === 'r';
+    }
+
+    _isCentered(xy) {
+        var tile = this.getTile();
+        var x = tile.x === this.x, y = tile.y === this.y;
+
+        if (xy === 'x') return x;
+        if (xy === 'y') return y;
+        else return  x && y;
+    }
+
+    getMin() {
+        var min = null;
+        for (var i = 0, l = arguments.length; i < l; i++)
+            if (min === null || arguments[i] < min) min = arguments[i];
+
+        return min;
+    }
+
+}
+
+Object.assign(Character.prototype, defaults);
+
+export default Character;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Animation.js
+////////////////////////////////////////////////////////////////////////////////
+
+export const ANIMATION_VERTICAL = 1; // Generated by a vertical offset of the background
+export const ANIMATION_HORIZONTAL = 2; // Generated by a horizontal offset of the background
+export const ANIMATION_ONCE = 4; // Played only once (else looping indefinitely)
+export const ANIMATION_CALLBACK = 8; // A callback is exectued at the end of a cycle
+export const ANIMATION_PINGPONG = 32; // At the last frame of the animation it reverses (if used in conjunction with ONCE it will have no effect)
+
+const defaults = {
+    // The url of the image to be used as an animation or sprite
+    imageURL : null,
+    // The number of frames to be displayed when playing the animation
+    numberOfFrame : 1,
+    // The distance in pixels between two frames
+    delta : 0,
+    // The rate at which the frames change in miliseconds
+    refreshRate : 30,
+    // The type of the animation.This is a bitwise OR of the properties.
+    type : 0,
+    // The x coordinate where the first sprite begins
+    offsetX : 0,
+    // The y coordinate where the first sprite begins
+    offsetY : 0
+};
+
+class Animation {
+    constructor(options) {
+        Object.keys(defaults).forEach((key) => {
+            if (key in options) this[key] = options[key];
+        });
+    }
+
+    load() {
+        this.img = new Image();
+        this.img.src = this.imageURL;
+
+        return new Promise((resolve, reject) => {
+            this.img.addEventListener('load', resolve);
+        });
+    }
+
+    isReady() {
+        return this.img.complete;
+    }
+}
+
+Object.assign(Animation.prototype, defaults);
+
+export default Animation;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Game.js
+////////////////////////////////////////////////////////////////////////////////
+
+import { View } from 'rasti';
+
+import Keyboard from './Keyboard.js';
+import Touch from './Touch.js';
+import Scaling from './Scaling.js';
+
+// Game states
+export const STATE_NEW = 0;
+export const STATE_RUNNING = 1;
+export const STATE_PAUSED = 2;
+
+const defaults = {
+    height : 320,
+    width : 480,
+    originalHeight : 320,
+    originalWidth : 480,
+    refreshRate : 30,
+    position : 'absolute'
+};
+
+class Game extends View {
+    constructor(options) {
+        super(options);
+
+        Object.keys(defaults).forEach((key) => {
+            if (key in options) this[key] = options[key];
+        });
+
+        this.sprites = this.children; // List of sprites with animations / images used in the game
+        this.sounds = []; // List of sounds used in the game
+        this.callbacks = []; // List of the functions called at each refresh
+        this.loadedSpritesIndex = 0; // Keep track of the last loaded animation
+        this.loadedSoundsIndex = 0; // Keep track of the last loaded sound
+
+        this.keyboard = new Keyboard();
+        this.touch = new Touch();
+
+        this.scaling = new Scaling(this.originalWidth, this.originalHeight);
+        this.scaling.resize(this.width, this.height);
+
+        this.state = STATE_NEW;
+    }
+
+    render() {
+        super.render();
+
+        // We initialize the display of the div
+        Object.assign(this.el.style, {
+            position : this.position,
+            display : 'block',
+            overflow : 'hidden',
+            height : `${this.scaling.height}px`,
+            width : `${this.scaling.width}px`,
+            fontSize : `${this.scaling.getFactor() * 2}em`
+        });
+
+        this.scenegraph = this.createElement('div', {
+            style : 'visibility: hidden;'
+        });
+
+        this.el.appendChild(this.scenegraph);
+
+        return this;
+    }
+
+    onDestroy() {
+        this.keyboard.destroy();
+        this.touch.destroy();
+    }
+
+    /**
+     * Load resources before starting the game.
+     */
+    preload() {
+        // Start loading the images
+        for (let i = this.sprites.length - 1; i >= this.loadedSpritesIndex; i--) {
+            this.sprites[i].load();
+        }
+
+        // Start loading the sounds
+        for (let i = this.sounds.length - 1 ; i >= this.loadedSoundsIndex; i--){
+            this.sounds[i].load();
+        }
+
+        this.waitForResources();
+    }
+
+    /**
+     * Wait for all the resources called for in preload() to finish loading.
+     */
+    waitForResources() {
+        // Check the images
+        let spriteCount = 0;
+        for (let i = this.loadedSpritesIndex; i < this.sprites.length; i++) {
+            if (this.sprites[i].isReady()) {
+                spriteCount++;
+            }
+        }
+        // Check the sounds
+        let soundCount = 0;
+        for (let i = this.loadedSoundsIndex; i < this.sounds.length; i++) {
+            if (this.sounds[i].isReady()) {
+                soundCount++;
+            }
+        }
+
+        const rest = this.sprites.length + this.sounds.length - this.loadedSpritesIndex - this.loadedSoundsIndex;
+
+        // Call the load callback with the current progress
+        if (typeof this.onLoadProgress === 'function') {
+            let percent = (spriteCount + soundCount) / rest * 100;
+            this.onLoadProgress(percent);
+        }
+
+        if (spriteCount + soundCount < rest) {
+            setTimeout(this.waitForResources.bind(this), 100);
+        } else {
+            this.loadedSpritesIndex = this.sprites.length;
+            this.loadedSoundsIndex = this.sounds.length;
+
+            // Launch the refresh loop
+            if (this.state === STATE_NEW){
+                setInterval(this.refresh.bind(this), this.refreshRate);
+            }
+
+            this.state = STATE_RUNNING;
+
+            if (typeof this._onReadyCallback === 'function'){
+                this._onReadyCallback();
+                this._onReadyCallback = null;
+            }
+            // Make the scenegraph visible
+            this.scenegraph.style.visibility = 'visible';
+        }
+    }
+    /**
+     * Add a sprite.
+     */
+    addSprite(sprite) {
+        this.scenegraph.appendChild(this.addChild(sprite).el);
+
+        return this.state === STATE_RUNNING ?
+            sprite.load().then(() => {
+                this.loadedSpritesIndex++;
+                return Promise.resolve();
+            }) :
+            Promise.resolve();
+    }
+    /**
+     * Add a sound.
+     */
+    addSound(sound) {
+        this.sounds.push(sound);
+        return this.state === STATE_RUNNING ?
+            sound.load().then(() => {
+                this.loadedSoundsIndex++;
+                return Promise.resolve();
+            }) :
+            Promise.resolve();
+    }
+    /**
+     * Register a callback.
+     *
+     * @param {function} fn the callback
+     * @param {integer} rate the rate in ms at which the callback should be called (should be a multiple of the playground rate or will be rounded)
+     */
+    addCallback(callback, refreshRate = this.refreshRate) {
+        this.callbacks.push({ fn : callback, refreshRate : this.normalizeRefrashRate(refreshRate), idleCounter : 0 });
+    }
+    /**
+     * Called periodically to refresh the state of the game.
+     */
+    refresh() {
+        if (this.state === STATE_RUNNING) {
+            this.sprites.forEach(sprite => { sprite.refresh() });
+
+            var deadCallbacks = [];
+            for (var i = this.callbacks.length - 1; i >= 0; i--) {
+                if (this.callbacks[i].idleCounter === this.callbacks[i].refreshRate - 1) {
+                    const value = this.callbacks[i].fn();
+                    if (typeof value === 'boolean'){
+                        // If we have a boolean: 'true' means 'no more execution', 'false' means 'keep on executing'
+                        if (value) {
+                            deadCallbacks.push(i);
+                        }
+                    } else if (typeof value === 'number') {
+                        // If we have a number it re-defines the time to the next call
+                        this.callbacks[i].refreshRate = this.normalizeRefrashRate(value);
+                        this.callbacks[i].idleCounter = 0;
+                    }
+                }
+                this.callbacks[i].idleCounter = (this.callbacks[i].idleCounter + 1) % this.callbacks[i].refreshRate;
+            }
+
+            for (var i = deadCallbacks.length - 1; i >= 0; i--){
+                this.callbacks.splice(deadCallbacks[i], 1);
+            }
+        }
+    }
+    /**
+     * Clear the animations and sounds.
+     */
+    clear(clearCallbacks) {
+        this.destroyChildren();
+        this.loadedSpritesIndex = 0;
+        this.sounds = [];
+        this.loadedSoundsIndex = 0;
+        if (clearCallbacks) {
+            this.callbacks = [];
+        }
+        this.scenegraph.innerHTML = '';
+    }
+    /**
+    * Mute (or unmute) all the sounds.
+    */
+    muteSound(muted) {
+        for (var i = this.sounds.length - 1 ; i >= 0; i --) {
+            this.sounds[i].mute(muted);
+        }
+    }
+    /**
+    * Starts the game.
+    */
+    start(callback) {
+        if (typeof callback === 'function') this._onReadyCallback = callback;
+        this.preload();
+    }
+    /**
+     * TODO
+     */
+    pause() {
+        this.state = STATE_PAUSED;
+        this.scenegraph.style.visibility = 'hidden';
+    }
+    /**
+     * Resume the game if it was paused and call the callback passed in argument once the newly added ressources are loaded.
+     */
+    resume(callback) {
+        if (this.state === STATE_PAUSED){
+            if (typeof callback === 'function') this._onReadyCallback = callback;
+            this.preload();
+        }
+    }
+
+    normalizeRefrashRate(rate) {
+        return Math.round(rate / this.refreshRate) || 1;
+    }
+}
+
+Object.assign(Game.prototype, defaults);
+
+export default Game;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Keyboard.js
+////////////////////////////////////////////////////////////////////////////////
+
+import { View } from 'rasti';
+
+export const KEY_UP = 38;
+export const KEY_RIGHT = 39;
+export const KEY_DOWN = 40;
+export const KEY_LEFT = 37;
+
+export const EVENT_KEY_UP = 'keyup';
+export const EVENT_KEY_DOWN = 'keydown';
+
+class Keyboard extends View {
+    constructor(options) {
+        super({
+            el : document && document.body,
+            ...options
+        });
+
+        this.keys = {};
+    }
+
+    onKeyUp(event) {
+        this.keys[event.keyCode] = false;
+        this.emit(EVENT_KEY_UP, event);
+    }
+
+    onKeyDown(event) {
+        this.keys[event.keyCode] = true;
+        this.emit(EVENT_KEY_DOWN, event);
+    }
+
+    clear() {
+        this.keys = {};
+    }
+}
+
+Keyboard.prototype.events = {
+    keyup : 'onKeyUp',
+    keydown : 'onKeyDown'
+};
+
+export default Keyboard;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Model.js
+////////////////////////////////////////////////////////////////////////////////
+
+import { Model } from 'rasti';
+
+class ModelLocalStorage extends Model {
+    constructor(attrs) {
+        super(attrs);
+    }
+
+    fetch() {
+        if (this.url && window.localStorage) {
+            const item = window.localStorage.getItem(this.url);
+            if (item) this.set(JSON.parse(item));
+        }
+    }
+
+    save() {
+        if (this.url && window.localStorage) {
+            window.localStorage.setItem(this.url, JSON.stringify(this));
+        }
+    }
+}
+
+export default ModelLocalStorage;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Scaling.js
+////////////////////////////////////////////////////////////////////////////////
+
+
+class Scaling {
+    constructor(w, h) {
+        this.originalWidth = this.width = w;
+        this.originalHeight = this.height = h;
+
+        this.widthToHeight = w / h;
+    }
+
+    resize(newWidth, newHeight) {
+        const newWidthToHeight = newWidth / newHeight;
+
+        if (newWidthToHeight > this.widthToHeight) {
+            this.width = newHeight * this.widthToHeight;
+            this.height = newHeight;
+        } else {
+            this.height = newWidth / this.widthToHeight;
+            this.width = newWidth;
+        }
+    }
+
+    getFactor() {
+        return this.width / this.originalWidth;
+    }
+}
+
+export default Scaling;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Sound.js
+////////////////////////////////////////////////////////////////////////////////
+
+// Single AudioContext for all sounds.
+let audioCtx;
+let gainNode;
+
+// Polyfill decodeAudioData Promise-based syntax on safari.
+const decodeAudioData = (arrayBuffer) => new Promise((resolve, reject) => {
+    audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+});
+
+class Sound {
+    constructor(url) {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            gainNode = audioCtx.createGain();
+            gainNode.connect(audioCtx.destination);
+        }
+
+        this.url = url;
+    }
+
+    load() {
+        fetch(this.url)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => decodeAudioData(arrayBuffer))
+            .then(audioBuffer => {
+                this.audioBuffer = audioBuffer
+                return Promise.resolve(audioBuffer);
+            });
+    }
+
+    play() {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        const trackSource = audioCtx.createBufferSource();
+        trackSource.buffer = this.audioBuffer;
+        trackSource.connect(gainNode);
+        trackSource.start();
+    }
+
+    mute(muted) {
+        // Muted my default unless muted === false.
+        this.muted = muted !== false;
+
+        if (this.muted) {
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        } else {
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+        }
+    }
+
+    isReady() {
+        return !!this.audioBuffer;
+    }
+}
+
+export default Sound;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Sprite.js
+////////////////////////////////////////////////////////////////////////////////
+
+import { View } from 'rasti';
+
+import {
+    ANIMATION_HORIZONTAL,
+    ANIMATION_VERTICAL,
+    ANIMATION_ONCE,
+    ANIMATION_CALLBACK,
+    ANIMATION_PINGPONG
+} from './Animation.js';
+
+const defaults = {
+    width : 32,
+    height : 32,
+    x : 0,
+    y : 0,
+    z : 0,
+    offsetX : 0,
+    offsetY : 0,
+    idleCounter : 0,
+    currentFrame : 0,
+    frameIncrement : 1,
+    angle : 0,
+    factor :  1,
+    playing : true,
+    factorH : 1,
+    factorV : 1,
+    animations : {},
+    defaultAnimation : 'default',
+    normalizeRefrashRate : null,
+    type : null
+};
+
+class Sprite extends View {
+    constructor(options) {
+        super(options);
+
+        Object.keys(defaults).forEach((key) => {
+            if (key in options) this[key] = options[key];
+        });
+    }
+
+    load() {
+        return Promise.all(
+            Object.keys(this.animations)
+                .map(label => this.animations[label].load())
+        );
+    }
+
+    isReady() {
+        return Object.keys(this.animations)
+            .some(label => !!this.animations[label].isReady());
+    }
+
+    render() {
+        Object.assign(this.el.style, {
+            position : 'absolute',
+            overflow : 'hidden',
+            height : `${this.height}px`,
+            width : `${this.width}px`,
+            zIndex : this.z
+        });
+
+        this.setAnimation(this.animations[this.defaultAnimation]);
+
+        this.transform();
+    }
+
+    refresh() {
+        if (!this.animation) return;
+
+        if ((this.idleCounter === this.normalizeRefrashRate(this.animation.refreshRate) - 1) && this.playing) {
+            // Does 'this' loops?
+            if (this.animation.type & ANIMATION_ONCE) {
+                if (this.currentFrame < this.animation.numberOfFrame - 1) {
+                    this.currentFrame += this.frameIncrement;
+                } else if (this.currentFrame == this.animation.numberOfFrame - 1) {
+                    // Does 'this' has a callback ?
+                    if (this.animation.type & ANIMATION_CALLBACK) {
+                        if (typeof this.callback === 'function'){
+                            this.callback(this);
+                            this.callback = null;
+                        }
+                    }
+                }
+            } else {
+                if (this.animation.type & ANIMATION_PINGPONG) {
+                    if (this.currentFrame === this.animation.numberOfFrame - 1 && this.frameIncrement === 1) {
+                        this.frameIncrement = -1;
+                    } else if (this.currentFrame === 0 && this.frameIncrement === -1) {
+                        this.frameIncrement = 1;
+                    }
+                }
+
+                this.currentFrame = (this.currentFrame + this.frameIncrement) % this.animation.numberOfFrame;
+
+                if (this.currentFrame === 0) {
+                    // Does 'this' has a callback ?
+                    if(this.animation.type & ANIMATION_CALLBACK) {
+                        if (typeof this.callback === 'function') {
+                            this.callback(this);
+                        }
+                    }
+                }
+            }
+            // Update the background
+            if (this.animation.numberOfFrame > 1) {
+                let x = 0, y = 0;
+
+                if (this.animation.type & ANIMATION_VERTICAL) {
+                    x = -this.animation.offsetX;
+                    y = -this.animation.offsetY - this.animation.delta * this.currentFrame;
+                } else if (this.animation.type & ANIMATION_HORIZONTAL) {
+                    x = -this.animation.offsetX - this.animation.delta * this.currentFrame;
+                    y = -this.animation.offsetY;
+                }
+
+                this.el.style.backgroundPosition = `${x}px ${y}px`;
+            }
+        }
+        this.idleCounter = (this.idleCounter + 1) % this.normalizeRefrashRate(this.animation.refreshRate);
+    }
+    /**
+     * Stop the animation at the current frame.
+     */
+    pauseAnimation() {
+        this.playing = false;
+    }
+    /**
+     * Resume the animation (if paused)
+
+     */
+    resumeAnimation() {
+        this.playing = true;
+    }
+    /**
+     * Changes the animation associated with a sprite.
+     */
+    setAnimation(animation, index, callback) {
+        this.animation = animation;
+
+        this.currentFrame = 0;
+        this.frameIncrement = 1;
+
+        this.el.style.backgroundImage = `url('${animation.imageURL}')`;
+
+        if (animation.type & ANIMATION_VERTICAL) {
+            this.el.style.backgroundRepeat = 'repeat-x';
+        } else if (animation.type & ANIMATION_HORIZONTAL) {
+            this.el.style.backgroundRepeat = 'repeat-y';
+        } else {
+            this.el.style.backgroundRepeat = 'no-repeat';
+        }
+
+        let distanceX = 0;
+        let distanceY = 0;
+
+        this.el.style.backgroundPosition = `${-distanceX - animation.offsetX}px ${-distanceY - animation.offsetY}px`;
+
+        if (typeof callback === 'function'){
+            this.callback = callback;
+        }
+    }
+    /**
+     * Internal function doing the combined actions of rotate and scale.
+     * Please use .rotate() or .scale() instead since they are part of the supported API!
+     */
+    transform() {
+        this.el.style.transform = `translate(${this.x * this.factor - this.offsetX}px, ${this.y * this.factor - this.offsetY}px) rotate(${this.angle}deg) scale(${this.factor * this.factorH}, ${this.factor * this.factorV})`;
+    }
+    /**
+     * Rotate the element(s) clock-wise.
+     *
+     * @param {Number} angle the angle in degrees
+     * @param {Boolean} relative or not
+     */
+    rotate(angle, relative) {
+        if (relative === true){
+            angle += this.angle;
+            angle %= 360;
+        }
+
+        this.angle = parseFloat(angle);
+        this.transform();
+    }
+    /**
+     * Change the scale of the selected element(s). The passed argument is a ratio:
+     *
+     * @param {Number} factor a ratio: 1.0 = original size, 0.5 = half the original size etc.
+     * @param {Boolean} relative or not
+     */
+    scale(factor, relative) {
+        if (relative === true){
+            factor *= this.factor;
+        }
+        this.factor = parseFloat(factor);
+        this.transform();
+    }
+    /**
+     * Flips the element(s) horizontally.
+     */
+    flipH(flip) {
+        if (flip === undefined) {
+            return (this.factorH !== undefined) ? (this.factorH === -1) : false;
+        } else if (flip) {
+            this.factorH = -1;
+        } else {
+            this.factorH = 1;
+        }
+
+        this.transform();
+    }
+    /**
+     * Flips the element(s) vertically.
+     */
+    flipV(flip){
+        if (flip === undefined) {
+            return (this.factorV !== undefined) ? (this.factorV === -1) : false;
+        } else if (flip) {
+            this.factorV = -1;
+        } else {
+            this.factorV = 1;
+        }
+
+        this.transform();
+    }
+
+    setXYZ(options, relative) {
+        let transform = false;
+
+        Object.keys(options).forEach(coordinate => {
+            switch (coordinate) {
+                case 'x':
+                    if (relative) {
+                        options.x += this.x;
+                    }
+                    this.x = options.x;
+                    transform = true;
+                    break;
+
+                case 'y':
+                    if (relative) {
+                        options.y += this.y;
+                    }
+                    this.y = options.y;
+                    transform = true;
+                    break;
+
+                case 'z':
+                    if(relative) {
+                        options.z += this.z;
+                    }
+                    this.z = options.z;
+                    this.el.style.zIndex = this.z;
+                    break;
+            }
+        });
+
+        if (transform) this.transform();
+    }
+
+    setWH(options, relative) {
+        Object.keys(options).forEach(coordinate => {
+            switch (coordinate) {
+                case 'w':
+                    if (relative) {
+                        options.w += this.width;
+                    }
+                    this.width = options.w;
+                    this.el.style.width = `${this.width}px`;
+                    break;
+
+                case 'h':
+                    if(relative) {
+                        options.h += this.height;
+                    }
+                    this.height = options.h;
+                    this.el.style.height = `${this.height}px`;
+                    break;
+            }
+        });
+    }
+}
+
+Object.assign(Sprite.prototype, defaults);
+
+export default Sprite;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Timer.js
+////////////////////////////////////////////////////////////////////////////////
+
+// Return time stamp in seconds.
+export const ts = () => new Date().getTime();
+
+class Timer {
+    constructor(time) {
+        this.time = time;
+        this.start = ts();
+    }
+
+    pause() {
+        this.pauseTime = ts();
+    }
+
+    resume() {
+        this.start += ts() - this.pauseTime;
+    }
+
+    getElapsed() {
+        return ts() - this.start;
+    }
+
+    isElapsed(time = this.time) {
+        return this.getElapsed() > time * 1000;
+    }
+}
+
+export default Timer;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\engine\Touch.js
+////////////////////////////////////////////////////////////////////////////////
+
+import { View } from 'rasti';
+
+export const EVENT_SWIPE = 'swipe';
+
+export const EVENT_SWIPE_UP = 'swipe:up';
+export const EVENT_SWIPE_RIGHT = 'swipe:right';
+export const EVENT_SWIPE_DOWN = 'swipe:down';
+export const EVENT_SWIPE_LEFT = 'swipe:left';
+
+const defaults = {
+    threshold : 100, // required min distance traveled to be considered swipe
+    restraint : 150, // maximum distance allowed at the same time in perpendicular direction
+    allowedTime : 400 // maximum time allowed to travel that distance
+};
+
+class Touch extends View {
+    constructor(options = {}) {
+        super({
+            ...options,
+            el : options.el || (document && document.body)
+        });
+
+        Object.keys(defaults).forEach((key) => {
+            if (key in options) this[key] = options[key];
+        });
+
+        this.onTouchStart = this.onTouchStart.bind(this);
+        this.onTouchEnd = this.onTouchEnd.bind(this);
+
+        this.el.addEventListener('touchstart', this.onTouchStart, false);
+        this.el.addEventListener('touchend', this.onTouchEnd, false);
+    }
+
+    onDestroy() {
+        this.el.removeEventListener('touchstart', this.onTouchStart);
+        this.el.removeEventListener('touchend', this.onTouchEnd);
+    }
+
+    onTouchStart(event) {
+        const touch = event.changedTouches[0];
+
+        this.startX = touch.pageX;
+        this.startY = touch.pageY;
+        this.startTime = new Date(); // record time when finger first makes contact with surface
+    }
+
+    onTouchEnd(event) {
+        let type = null;
+
+        const touch = event.changedTouches[0];
+
+        const distX = touch.pageX - this.startX; // get horizontal dist traveled by finger while in contact with surface
+        const distY = touch.pageY - this.startY; // get vertical dist traveled by finger while in contact with surface
+        const elapsedTime = new Date() - this.startTime; // get time elapsed
+
+        if (elapsedTime <= this.allowedTime) { // first condition for awipe met
+            if (Math.abs(distX) >= this.threshold && Math.abs(distY) <= this.restraint) { // 2nd condition for horizontal swipe met
+                type = (distX < 0) ? EVENT_SWIPE_LEFT : EVENT_SWIPE_RIGHT; // if dist traveled is negative, it indicates left swipe
+            }
+
+            else if (Math.abs(distY) >= this.threshold && Math.abs(distX) <= this.restraint) { // 2nd condition for vertical swipe met
+                type = (distY < 0) ? EVENT_SWIPE_UP : EVENT_SWIPE_DOWN; // if dist traveled is negative, it indicates up swipe
+            }
+
+            this.emit(EVENT_SWIPE, type, event);
+        }
+    }
+}
+
+Object.assign(Touch.prototype, defaults);
+
+export default Touch;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\factory\makeBonus.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation from '../engine/Animation.js';
+import Bonus, { animations, animationBase } from '../Bonus.js';
+
+export default (index, options) => new Bonus({
+    animations : {
+        ...animations,
+        default : new Animation({
+            ...animationBase,
+            offsetX : 60 * index
+        })
+    },
+    ...options
+});
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\factory\makeDot.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation from '../engine/Animation.js';
+import Item from '../Item.js';
+
+export const animationBase = {
+    imageURL : 'img/pills.png',
+    numberOfFrame : 1
+};
+
+export default options => new Item({
+    width : 8,
+    height : 8,
+    defaultAnimation : 'white',
+    animations : {
+        'white' : new Animation({
+            ...animationBase,
+            offsetX : 24
+        }),
+        '' : new Animation({
+            ...animationBase,
+            offsetX : 24 + 32
+        }),
+        'red' : new Animation({
+            ...animationBase,
+            offsetX : 24 + 32 * 2
+        })
+    },
+    ...options
+});
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\factory\makeGhost.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation from '../engine/Animation.js';
+import Ghost, { animations, animationBase } from '../Ghost.js';
+import getDistance from '../helper/getDistance.js';
+
+export const SPRITE_PINKY = 'SPRITE_PINKY';
+export const SPRITE_BLINKY = 'SPRITE_BLINKY';
+export const SPRITE_INKY = 'SPRITE_INKY';
+export const SPRITE_SUE = 'SPRITE_SUE';
+
+export default (label, options) => {
+    // Pink Ghost
+    if (label === 'pinky') {
+        options = Object.assign({
+            type : SPRITE_PINKY,
+            dir : 'd',
+            defaultAnimation : 'down',
+            getChaseTarget : function() {
+                var t = this.pacmanData.tile;
+                var dir = this.pacmanData.dir;
+                return t.get(dir).get(dir).get(dir).get(dir);
+            },
+            animations : {
+                ...animations,
+                right : new Animation({
+                    ...animationBase,
+                    offsetY : 252,
+                    offsetX : -2
+                }),
+
+                down : new Animation({
+                    ...animationBase,
+                    offsetY : 252,
+                    offsetX : 64 * 2 - 2
+                }),
+
+                up : new Animation({
+                    ...animationBase,
+                    offsetY : 252,
+                    offsetX : 64 * 4 - 2
+                }),
+
+                left : new Animation({
+                    ...animationBase,
+                    offsetY : 252,
+                    offsetX : 64 * 6 - 2
+                })
+            }
+        }, options);
+    }
+    // Red Ghost
+    if (label === 'blinky') {
+        options = Object.assign({
+            type : SPRITE_BLINKY,
+            dir : 'l',
+            waitTime : 0,
+            scatterTarget : 25,
+            defaultAnimation : 'left',
+            animations : {
+                ...animations,
+                right : new Animation({
+                    ...animationBase,
+                    offsetY : 124,
+                    offsetX : -2
+                }),
+
+                down : new Animation({
+                    ...animationBase,
+                    offsetY : 124,
+                    offsetX : 64 * 2 - 2
+                }),
+
+                up : new Animation({
+                    ...animationBase,
+                    offsetY : 124,
+                    offsetX : 64 * 4 - 2
+                }),
+
+                left : new Animation({
+                    ...animationBase,
+                    offsetY : 124,
+                    offsetX : 64 * 6 - 2
+                })
+            }
+        }, options);
+    }
+    // Cyan Ghost
+    if (label === 'inky') {
+        options = Object.assign({
+            type : SPRITE_INKY,
+            dir : 'u',
+            waitTime : 6,
+            scatterTarget : 979,
+            defaultAnimation : 'up',
+            getChaseTarget : function() {
+                var pacmanTile = this.pacmanData.tile;
+                var blinkyTile = this.blinky.getTile();
+                var dir = this.pacmanData.dir;
+
+                pacmanTile = pacmanTile.get(dir).get(dir); // Two tiles in front of pacman
+
+                return this.map.getTile(pacmanTile.col + pacmanTile.col - blinkyTile.col, pacmanTile.row + pacmanTile.row - blinkyTile.row);
+
+            },
+            animations : {
+                ...animations,
+                right : new Animation({
+                    ...animationBase,
+                    offsetY : 316,
+                    offsetX : -2
+                }),
+
+                down : new Animation({
+                    ...animationBase,
+                    offsetY : 316,
+                    offsetX : 64 * 2 - 2
+                }),
+
+                up : new Animation({
+                    ...animationBase,
+                    offsetY : 316,
+                    offsetX : 64 * 4 - 2
+                }),
+
+                left : new Animation({
+                    ...animationBase,
+                    offsetY : 316,
+                    offsetX : 64 * 6 - 2
+                })
+            }
+        }, options);
+    }
+    // Orange Ghost
+    if (label === 'sue') {
+        options = Object.assign({
+            type : SPRITE_SUE,
+            dir : 'u',
+            waitTime : 8,
+            scatterTarget : 953,
+            defaultAnimation : 'up',
+            getChaseTarget : function() {
+                var t = this.pacmanData.tile;
+                var d = getDistance(t, this.getTile());
+                if (d > 16 * t.w) return t;
+                else return this.scatterTarget;
+            },
+            animations : {
+                ...animations,
+                'right' : new Animation({
+                    ...animationBase,
+                    offsetY : 188,
+                    offsetX : -2
+                }),
+
+                'down' : new Animation({
+                    ...animationBase,
+                    offsetY : 188,
+                    offsetX : 64 * 2 - 2
+                }),
+
+                'up' : new Animation({
+                    ...animationBase,
+                    offsetY : 188,
+                    offsetX : 64 * 4 - 2
+                }),
+
+                'left' : new Animation({
+                    ...animationBase,
+                    offsetY : 188,
+                    offsetX : 64 * 6 - 2
+                })
+           }
+
+       }, options);
+    }
+
+    return new Ghost(options);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\factory\makeMsPacman.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Pacman from '../Pacman.js';
+
+export const SPRITE_MS_PACMAN = 'SPRITE_MS_PACMAN';
+
+export default (options) => new Pacman({
+    x : 452,
+    y : 848,
+    type : SPRITE_MS_PACMAN,
+    ...options
+});
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\factory\makePill.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation, { ANIMATION_VERTICAL } from '../engine/Animation.js';
+import Item from '../Item.js';
+
+const animationBase = {
+    imageURL : 'img/pills.png',
+    numberOfFrame : 2,
+    delta : 24,
+    refreshRate : 450,
+    type : ANIMATION_VERTICAL
+};
+
+export default (options) => new Item({
+    width : 24,
+    height : 24,
+    animations : {
+        'white' : new Animation({
+            ...animationBase
+        }),
+        'yellow' : new Animation({
+            ...animationBase,
+            offsetX : 24 + 8
+        }),
+        'red' : new Animation({
+            ...animationBase,
+            offsetX : (24 + 8) * 2
+        })
+    },
+    ...options
+});
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Game.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Game from './engine/Game.js';
+import SoundManager from './SoundManager.js';
+import Map from './Map.js';
+import GameModel from './GameModel.js';
+import makeGhost from './factory/makeGhost.js';
+import makeDot from './factory/makeDot.js';
+import makePill from './factory/makePill.js';
+import makeBonus from './factory/makeBonus.js';
+import Pacman from './Pacman.js';
+import Lives from './Lives.js';
+import Bonuses from './Bonuses.js';
+
+import { EVENT_KEY_DOWN, KEY_UP, KEY_RIGHT, KEY_DOWN, KEY_LEFT } from './engine/Keyboard.js';
+import { EVENT_SWIPE, EVENT_SWIPE_UP, EVENT_SWIPE_RIGHT, EVENT_SWIPE_DOWN, EVENT_SWIPE_LEFT } from './engine/Touch.js';
+
+const show = el => { el.style.display = ''; }
+const hide = el => { el.style.display = 'none'; }
+
+const defaults = {
+    // Options.
+    width : 896 / 2,
+    height : 1152 / 2,
+    originalWidth : 896,
+    originalHeight : 1152,
+
+    dotScore : 10,
+    pillScore : 50,
+    defaultLives : 3,
+    soundEnabled : true,
+
+    events : {
+        'click .start' : 'startLevel'
+    }
+};
+
+class JsPacman extends Game {
+    constructor(options = {}) {
+        super(options);
+
+        Object.keys(defaults).forEach(key => {
+            if (key in options) this[key] = options[key];
+        });
+
+        this.model = new GameModel({
+            lives : this.defaultLives
+        });
+
+        this.model.fetch();
+
+        this.render();
+
+        this.elements = {
+            splash : this.$('.splash'),
+            start : this.$('.start'),
+            startP1 : this.$('.start-p1'),
+            startReady : this.$('.start-ready'),
+            highScore : this.$('.high-score span'),
+            score : this.$('.p1-score span'),
+            gameOver : this.$('.game-over'),
+            soundStatus : this.$('.sound-status'),
+            paused : this.$('.paused'),
+            load : this.$('.loadbar')
+        };
+
+        this.keyboard.on(EVENT_KEY_DOWN, this._onKeyDown.bind(this));
+
+        this.touch.on(EVENT_SWIPE, this._onSwipe.bind(this));
+
+        this.sound = new SoundManager({
+            soundEnabled : this.soundEnabled,
+            addSound : this.addSound.bind(this)
+        });
+
+        this.lives = new Lives({
+            lives : this.defaultLives + 1,
+            x : 40,
+            y : 1124,
+            model : this.model,
+            factor : this.scaling.getFactor(),
+            addSprite : this.addSprite.bind(this)
+        });
+
+        this.bonuses = new Bonuses({
+            level : this.model.level,
+            x : 860,
+            y : 1124,
+            model : this.model,
+            factor : this.scaling.getFactor(),
+            addSprite : this.addSprite.bind(this)
+        });
+
+        this._onGhostEaten = this._onGhostEaten.bind(this);
+        this._onGhostEat = this._onGhostEat.bind(this);
+
+        this.model.on('change:score', this._onChangeScore.bind(this));
+        this.model.on('change:highScore', this._onChangeHighScore.bind(this));
+        this.model.on('change:lives', this._onChangeLives.bind(this));
+        this.model.on('change:extraLives', this._onChangeExtraLives.bind(this));
+        this.model.on('change:mode', this._onChangeMode.bind(this));
+
+        this.makeLevel();
+
+        this.start(() => {
+            hide(this.elements.load);
+            show(this.elements.start);
+        });
+    }
+
+    startLevel() {
+        if (this._win) {
+            this.model.level++;
+            this.reset();
+            this._win = false;
+            return;
+        }
+
+        if (this._gameOver) {
+            this.model.level = 1;
+            this.reset();
+            this._gameOver = false;
+            hide(this.elements.splash);
+            this.sound.play('intro');
+            return;
+        }
+
+        hide(this.elements.splash);
+        this.sound.play('intro');
+        this.addCallback(this.mainLoop.bind(this));
+    }
+
+    reset() {
+        this.model.mode = null;
+
+        this.pinky.destroy();
+        this.blinky.destroy();
+        this.inky.destroy();
+        this.sue.destroy();
+        this.pacman.destroy();
+
+        this.map.destroyItems();
+
+        this.off('game:ghost:eaten', this._onGhostEaten);
+        this.off('game:ghost:eat', this._onGhostEat);
+
+        if (!this._win) {
+            this.model.lives = this.defaultLives + 1;
+            this.model.score = 0;
+        }
+
+        this.keyboard.clear();
+
+        this._inputDirection = null;
+        this._lastSwipe = null;
+
+        this.makeLevel();
+    }
+
+    makeLevel() {
+        Object.assign(this, this.model.getSettings('game'));
+
+        this.map = new Map(this.map);
+
+        this.el.classList.remove('maze-1');
+        this.el.classList.remove('maze-2');
+        this.el.classList.remove('maze-3');
+        this.el.classList.remove('maze-4');
+
+        this.el.classList.add(this.maze);
+
+        var dotAnimationLabel = 'white';
+        if (this.maze === 'maze-2') dotAnimationLabel = '';
+        if (this.maze === 'maze-3') dotAnimationLabel = 'red';
+
+        this._pauseFrames = 80;
+
+        this._destroyBonus = 0;
+        this._showBonus = 500;
+
+        var i = this.map.tiles.length, total = 0;
+        while (i--) {
+            var tile = this.map.tiles[i];
+            if (tile.code === '.') {
+                let dot = makeDot({
+                    defaultAnimation : dotAnimationLabel,
+                    map : this.map,
+                    factor : this.scaling.getFactor(),
+                    normalizeRefrashRate : this.normalizeRefrashRate.bind(this),
+                    x : tile.x,
+                    y : tile.y
+                });
+                tile.item = dot;
+                this.addSprite(dot);
+                total++;
+            }
+
+            if (tile.code === '*') {
+                let pill = makePill({
+                    defaultAnimation : dotAnimationLabel,
+                    map : this.map,
+                    factor : this.scaling.getFactor(),
+                    normalizeRefrashRate : this.normalizeRefrashRate.bind(this),
+                    x : tile.x,
+                    y : tile.y
+                });
+                tile.item = pill;
+                this.addSprite(pill);
+                total++;
+            }
+        }
+
+        this.totalItems = total;
+
+        // Pacman.
+        this.pacman = new Pacman({
+            preturn : true,
+            x : 452,
+            y : 848,
+            ...this.model.getSettings('pacman'),
+            map : this.map,
+            factor : this.scaling.getFactor(),
+            normalizeRefrashRate : this.normalizeRefrashRate.bind(this),
+            addGameGhostEatEventListener : listener => this.on('game:ghost:eat', listener),
+            addGameGhostModeFrightenedEnter : listener => this.on('game:ghost:modefrightened:enter', listener),
+            addGameGhostModeFrightenedExit : listener => this.on('game:ghost:modefrightened:exit', listener)
+        });
+
+        this.pacman.on('item:eatpill', t => {
+            this._pauseFrames = 2;
+
+            this.model.addScore(this.pillScore);
+
+            this.totalItems--;
+
+            if (this.totalItems === 0) {
+                this.win();
+            }
+            else this.sound.play('frightened');
+        });
+        // Pacman eats ghost.
+        this.on('game:ghost:eaten', this._onGhostEaten);
+        // Ghost eats Pacman.
+        this.on('game:ghost:eat', this._onGhostEat);
+        // Pacman make die turn arround.
+        this.pacman.on('item:die', (ghost) => {
+            this.sound.play('eaten');
+        });
+        // Pacman lose.
+        this.pacman.on('item:life', () => {
+            this.keyboard.clear();
+
+            this._inputDirection = null;
+            this._lastSwipe = null;
+            this.model.mode = null;
+
+            this.pacman.reset();
+
+            this.pinky.reset();
+            this.blinky.reset();
+            this.inky.reset();
+            this.sue.reset();
+
+            if (this.bonus) {
+                this._destroyBonus = 0;
+                this._showBonus = 250;
+                this.bonus.reset();
+                this.bonus.hide();
+            }
+
+            this.showGhosts();
+
+            this.model.lives--;
+
+            this._pacmanEaten = false;
+
+            if (this.model.lives) {
+                show(this.elements.startReady);
+                this._start = 1;
+                this._pauseFrames = 40;
+            } else {
+                this._pauseFrames = 120;
+            }
+        });
+        // Pacman eats dot.
+        this.pacman.on('item:eatdot', (t) => {
+            this.model.addScore(this.dotScore);
+
+            this.sound.play('dot');
+
+            this.totalItems--;
+
+            if (this.totalItems === 0) {
+                this.win();
+            }
+        });
+
+        this.addSprite(this.pacman);
+
+        // Bonus.
+        if (this.bonus) {
+            this.bonus.destroy();
+        }
+
+        var bonusTile = this.map.tunnels[this.map.tunnels.length - 1];
+
+        this.bonus = makeBonus(this.bonusIndex, {
+            map : this.map,
+            dir : 'l',
+            score : this.bonusScore,
+            x : bonusTile.x,
+            y : bonusTile.y,
+            factor : this.scaling.getFactor(),
+            normalizeRefrashRate : this.normalizeRefrashRate.bind(this),
+            addPacmanPositionEventListener : listener => this.pacman.on('item:position', listener)
+        });
+
+        // Bonus reaches target and disappears.
+        this.bonus.on('item:destroy', (bonus) => {
+            this.bonus.destroy();
+            this.bonus = null;
+        });
+
+        // Pacman eats bonus.
+        this.bonus.on('item:eaten', (bonus) => {
+            if (this._showBonus) return; // Not yet in the maze
+            this._pauseFrames = 5;
+            this._destroyBonus = 25;
+            this.model.addScore(parseInt(bonus.score));
+            this.sound.play('bonus');
+        });
+
+        this.addSprite(this.bonus);
+
+        // Ghosts.
+        const ghostAttrs = {
+            ...this.model.getSettings('ghost'),
+            map : this.map,
+            normalizeRefrashRate : this.normalizeRefrashRate.bind(this),
+            factor : this.scaling.getFactor(),
+            addGameGlobalModeEventListener : listener => this.on('game:globalmode', listener),
+            addGameGhostEatenEventListener : listener => this.on('game:ghost:eaten', listener),
+            addPacmanPositionEventListener : listener => this.pacman.on('item:position', listener),
+            addPacmanEatPillEventListener : listener => this.pacman.on('item:eatpill', listener)
+        };
+
+        const pinkyTile = this.map.houseCenter.getR();
+
+        this.pinky = makeGhost('pinky', {
+            ...ghostAttrs,
+            x : pinkyTile.x - this.map.tileWidth / 2,
+            y : pinkyTile.y
+        });
+
+        this.addEventListenersToGhost(this.pinky);
+
+        this.addSprite(this.pinky);
+
+        const blinkyTile = this.map.house.getU().getR();
+        this.blinky = makeGhost('blinky', {
+            ...ghostAttrs,
+            x : blinkyTile.x - this.map.tileWidth / 2,
+            y : blinkyTile.y
+        });
+
+        this.addEventListenersToGhost(this.blinky);
+
+        this.addSprite(this.blinky);
+
+        const inkyTile = this.map.houseCenter.getL();
+        this.inky = makeGhost('inky', {
+            ...ghostAttrs,
+            blinky : this.blinky,
+            x : inkyTile.x - 16,
+            y : inkyTile.y
+        });
+
+        this.addEventListenersToGhost(this.inky);
+
+        this.addSprite(this.inky);
+
+        const sueTile = this.map.houseCenter.getR().getR();
+        this.sue = makeGhost('sue', {
+            ...ghostAttrs,
+            x : sueTile.x + 16,
+            y : sueTile.y
+        });
+
+        this.addEventListenersToGhost(this.sue);
+
+        this.addSprite(this.sue);
+
+        show(this.elements.startReady);
+
+        if (!this._win) {
+            show(this.elements.startP1);
+
+            this.hideGhosts();
+
+            this.pacman.hide();
+
+            this._start = 2;
+        } else {
+            this.bonus.hide();
+            this._start = 1;
+        }
+    }
+
+    addEventListenersToGhost(ghost) {
+        ghost.on('item:eat', () => this.emit('game:ghost:eat', ghost));
+        ghost.on('item:eaten', () => this.emit('game:ghost:eaten', ghost));
+        ghost.on('item:modefrightened:enter', () => this.emit('game:ghost:modefrightened:enter', ghost));
+        ghost.on('item:modefrightened:exit', () => this.emit('game:ghost:modefrightened:exit', ghost));
+    }
+
+    mainLoop() {
+        // Global mode.
+        if (!this._start) this.model.updateMode();
+
+        // Input
+        this._inputDirection = this._getInputDirection();
+
+        // Move.
+        if (!this._pauseFrames) {
+            if (this._start === 2) {
+                hide(this.elements.startP1);
+                this.showGhosts();
+                this.pacman.show();
+
+                this.model.lives = this.defaultLives;
+
+                this._pauseFrames = 60;
+                this._start--;
+                return;
+            }
+
+            if (this._start === 1) {
+                hide(this.elements.startReady);
+                this._start--;
+                return;
+            }
+
+            if (this._win) {
+                this.startLevel();
+                return;
+            }
+
+            if (this._gameOver) {
+                hide(this.elements.gameOver);
+                show(this.elements.splash);
+                return;
+            }
+
+            if (this._showPacman) {
+                this.pacman.show();
+                this._showPacman = false;
+            }
+
+            this.pacman.move(this._inputDirection);
+
+            if (this._pacmanEaten) {
+                this.hideGhosts();
+            } else {
+                if (!this._soundBackPauseFrames) {
+                    if (this._isGhostDead()) {
+                        this.sound.play('dead');
+                    }
+                    else if (!this._isGhostFrightened()) {
+                        this.sound.play('back');
+                    }
+                    this._soundBackPauseFrames = 5;
+                } else this._soundBackPauseFrames--;
+
+                this.pinky.move();
+                this.blinky.move();
+                this.inky.move();
+                this.sue.move();
+
+                if (this._destroyBonus) {
+                    if (this._destroyBonus === 1) {
+                        this.bonus.destroy();
+                        delete this.bonus;
+                    }
+                    this._destroyBonus--;
+                } else if (this.bonus) {
+                    if (this._showBonus) {
+                        if (this._showBonus === 1) {
+                            this.bonus.show();
+                        }
+                        this._showBonus--;
+                    } else {
+                        this.bonus.move();
+                    }
+                }
+            }
+
+        } else {
+            this._pauseFrames--;
+        }
+    }
+
+    pause() {
+        super.pause();
+
+        this.pinky.pause();
+        this.blinky.pause();
+        this.inky.pause();
+        this.sue.pause();
+
+        this.muteSound(true);
+
+        this.model.pause();
+
+        show(this.elements.paused);
+    }
+
+    resume() {
+        super.resume();
+
+        this.pinky.resume();
+        this.blinky.resume();
+        this.inky.resume();
+        this.sue.resume();
+
+        this.muteSound(!!this._muted);
+
+        this.model.resume();
+
+        hide(this.elements.paused);
+    }
+
+    win() {
+        this._pauseFrames = 120;
+        this._win = true;
+
+        let times = 14;
+        this.addCallback(() => {
+            if (times) {
+                times--;
+                this.el.classList.toggle('blink');
+                return false; // Keep running.
+            } else {
+                this.el.classList.remove('blink');
+                return true; // Remove callback.
+            }
+        }, this.refreshRate * 8);
+
+        this.hideGhosts();
+        this.map.hideItems();
+        this.pacman.pauseAnimation();
+    }
+
+    hideGhosts() {
+        this.pinky.hide();
+        this.blinky.hide();
+        this.inky.hide();
+        this.sue.hide();
+
+        if (this.bonus) this.bonus.hide();
+    }
+
+    showGhosts() {
+        this.pinky.show();
+        this.blinky.show();
+        this.inky.show();
+        this.sue.show();
+
+        if (this.bonus && !this._showBonus) this.bonus.show();
+    }
+
+    _isGhostFrightened() {
+        return this.blinky.isFrightened() ||
+                this.inky.isFrightened()  ||
+                this.pinky.isFrightened() ||
+                this.sue.isFrightened();
+    }
+
+    _isGhostDead() {
+        return this.blinky.isDead() ||
+                this.inky.isDead()  ||
+                this.pinky.isDead() ||
+                this.sue.isDead();
+    }
+
+    _getInputDirection() {
+        const keys = this.keyboard.keys;
+        let direction = null;
+
+        if (keys[KEY_UP]) {
+            direction = 'u';
+        }
+        else if (keys[KEY_RIGHT]) {
+            direction = 'r';
+        }
+        else if (keys[KEY_DOWN]) {
+            direction = 'd';
+        }
+        else if (keys[KEY_LEFT]) {
+            direction = 'l';
+        }
+
+        if (direction) {
+            this._lastSwipe = null;
+        }
+        else if (this._lastSwipe === EVENT_SWIPE_UP) {
+            direction = 'u';
+        }
+        else if (this._lastSwipe === EVENT_SWIPE_RIGHT) {
+            direction = 'r';
+        }
+        else if (this._lastSwipe === EVENT_SWIPE_DOWN) {
+            direction = 'd';
+        }
+        else if (this._lastSwipe === EVENT_SWIPE_LEFT) {
+            direction = 'l';
+        }
+
+        return direction;
+    }
+
+    onLoadProgress(percent) {
+        this.elements.load.querySelector('.inner').style.width = `${percent}%`;
+    }
+
+    _onSwipe(type, ev) {
+        this._lastSwipe = type;
+    }
+
+    _onKeyDown(event) {
+        // Sound on/off.
+        if (event.keyCode === 83) {
+            if (!this.soundEnabled) return;
+            // Mute Sound.
+            this._muted = !this._muted;
+            this.muteSound(this._muted);
+
+            var el = this.elements.soundStatus;
+
+            if (this._muted) el.classList.remove('on');
+            else el.classList.add('on');
+
+            show(el);
+
+            if (this._hideSoundStatusTimeout) clearTimeout(this._hideSoundStatusTimeout);
+            this._hideSoundStatusTimeout = setTimeout(function() { hide(el); }, 2000);
+        }
+        // Pause Game.
+        else if (event.keyCode === 80) {
+            this._paused = !this._paused;
+            if (this._paused) this.pause();
+            else this.resume();
+        }
+    }
+
+    _onChangeScore(model, score) {
+        this.elements.score.innerText = score || '00';
+    }
+
+    _onChangeHighScore(model, highScore) {
+        this.elements.highScore.innerText = highScore || '00';
+    }
+    // Cange lives. Check game over.
+    _onChangeLives(model, lives) {
+        if (lives === 0) {
+            // Game over.
+            this._gameOver = true;
+            show(this.elements.gameOver);
+            this.hideGhosts();
+            this.pacman.hide();
+            this.model.save();
+        }
+    }
+    // Extra life.
+    _onChangeExtraLives(model, lives) {
+        this.sound.play('life');
+    }
+    // Change global mode.
+    _onChangeMode(model, mode) {
+        this.emit('game:globalmode', mode);
+    }
+    // Pacman eats ghost.
+    _onGhostEaten(ghost) {
+        this.pacman.hide();
+        this._pauseFrames = 15;
+        this._showPacman = true;
+        this.model.addScore(parseInt(ghost.score));
+        this.sound.play('eat');
+    }
+    // Ghost eats Pacman.
+    _onGhostEat() {
+        this._pauseFrames = 40;
+        this._pacmanEaten = true;
+    }
+
+    template(model) {
+        return `
+            <div class="score">
+                <div class="p1-score">1UP<br /><span>00</span></div>
+                <div class="high-score">HIGH SCORE<br /><span>${model.highScore || '00'}</span></div>
+                <div class="p2-score">2UP<br /><span>00</span></div>
+            </div>
+            <div class="start-p1" style="display: none">PLAYER ONE</div>
+            <div class="start-ready" style="display: none">READY!</div>
+            <div class="game-over" style="display: none">GAME OVER</div>
+            <div class="sound-status on" style="display: none"><span class="wrap">SOUND: <span class="on">ON</span><span class="off">OFF</span></span></div>
+            <div class="paused" style="display: none"><span class="wrap">PAUSED</span></div>
+            <div class="splash">
+                <span class="title">"JS PAC-MAN"</span>
+                <p class="nerd">HTML - CSS<br><br><span>JAVASCRIPT</span></p>
+                <a class="start" style="display: none">START</a>
+                <div class="loadbar"><div class="inner"></div></div>
+                <p class="keys"><span>&larr;&uarr;&darr;&rarr;</span>:MOVE <span>S</span>:SOUND <span>P</span>:PAUSE</p>
+                <div class="credits">&#169; 2014-${new Date().getFullYear()} <span>8</span>TENTACULOS <a href="https://github.com/8tentaculos/jsPacman">SOURCE+INFO</a></div>
+            </div>
+        `;
+    }
+}
+
+Object.assign(JsPacman.prototype, defaults);
+
+export default JsPacman;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\GameModel.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Model from './engine/Model.js';
+
+import Timer from './engine/Timer.js';
+
+import { MODE_SCATTER, MODE_CHASE } from './Ghost.js';
+
+import map1 from './maps/map-1.js';
+import map2 from './maps/map-2.js';
+import map3 from './maps/map-3.js';
+import map4 from './maps/map-4.js';
+
+// TODO: Add times data for each level.
+const times = [
+    { mode : MODE_SCATTER, time : 7 },
+    { mode : MODE_CHASE, time : 20 },
+    { mode : MODE_SCATTER, time : 7 },
+    { mode : MODE_CHASE, time : 20 },
+    { mode : MODE_SCATTER, time : 5 },
+    { mode : MODE_CHASE, time : 20 },
+    { mode : MODE_SCATTER, time : 5 },
+    { mode : MODE_CHASE, time : 1000000 }
+];
+
+// This info was parsed from
+// https://pacman.holenet.info/#LvlSpecs
+var data = [
+    [times, 0, 100, 80, 71, 75, 40, 20, 80, 10, 85, 90, 79, 50, 6, 5, map1, 'maze-1'],
+    [times, 1, 200, 90, 79, 85, 45, 30, 90, 15, 95, 95, 83, 55, 5, 5, map1, 'maze-1'],
+    [times, 2, 500, 90, 79, 85, 45, 40, 90, 20, 95, 95, 83, 55, 4, 5, map2, 'maze-2'],
+    [times, 3, 500, 90, 79, 85, 45, 40, 90, 20, 95, 95, 83, 55, 3, 5, map2, 'maze-2'],
+    [times, 4, 700, 100, 87, 95, 50, 40, 100, 20, 105, 100, 87, 60, 2, 5, map2, 'maze-2'],
+    [times, 5, 700, 100, 87, 95, 50, 50, 100, 25, 105, 100, 87, 60, 5, 5, map3, 'maze-3'],
+    [times, 6, 1000, 100, 87, 95, 50, 50, 100, 25, 105, 100, 87, 60, 2, 5, map3, 'maze-3'],
+    [times, 7, 1000, 100, 87, 95, 50, 50, 100, 25, 105, 100, 87, 60, 2, 5, map3, 'maze-3'],
+    [times, 0, 2000, 100, 87, 95, 50, 60, 100, 30, 105, 100, 87, 60, 1, 3, map3, 'maze-3'],
+    [times, 1, 2000, 100, 87, 95, 50, 60, 100, 30, 105, 100, 87, 60, 5, 5, map4, 'maze-4'],
+    [times, 2, 2000, 100, 87, 95, 50, 60, 100, 30, 105, 100, 87, 60, 2, 5, map4, 'maze-4'],
+    [times, 3, 2000, 100, 87, 95, 50, 80, 100, 40, 105, 100, 87, 60, 1, 3, map4, 'maze-4'],
+    [times, 4, 5000, 100, 87, 95, 50, 80, 100, 40, 105, 100, 87, 60, 1, 3, map4, 'maze-4'],
+    [times, 5, 5000, 100, 87, 95, 50, 80, 100, 40, 105, 100, 87, 60, 3, 5, map3, 'maze-3'],
+    [times, 6, 5000, 100, 87, 95, 50, 100, 100, 50, 105, 100, 87, 60, 1, 3, map3, 'maze-3'],
+    [times, 7, 5000, 100, 87, 95, 50, 100, 100, 50, 105, 100, 87, 60, 1, 3, map3, 'maze-3'],
+    [times, 7, 5000, 100, 87, 95, 50, 100, 100, 50, 105, 0, 0, 0, 0, 0, map3, 'maze-3'],
+    [times, 7, 5000, 100, 87, 95, 50, 100, 100, 50, 105, 100, 87, 60, 1, 3, map4, 'maze-4'],
+    [times, 7, 5000, 100, 87, 95, 50, 120, 100, 60, 105, 0, 0, 0, 0, 0, map4, 'maze-4'],
+    [times, 7, 5000, 100, 87, 95, 50, 120, 100, 60, 105, 0, 0, 0, 0, 0, map4, 'maze-4'],
+    [times, 7, 5000, 90, 79, 95, 50, 120, 100, 60, 105, 0, 0, 0, 0, 0, map4, 'maze-4']
+];
+
+var keys = [
+    'game.times',
+    'game.bonusIndex',
+    'game.bonusScore',
+    'pacman.speed',
+    'pacman.dotSpeed',
+    'ghost.speed',
+    'ghost.tunnelSpeed',
+    '',
+    '',
+    '',
+    '',
+    'pacman.frightenedSpeed',
+    'pacman.frightenedDotSpeed',
+    'ghost.frightenedSpeed',
+    'ghost.frightenedTime',
+    'ghost.frightenedFlashes',
+    'game.map',
+    'game.maze'
+];
+
+class GameModel extends Model {
+    constructor(attrs) {
+        super({
+            level : 1,
+            score : 0,
+            highScore : 0,
+            lives : 3,
+            extraLives : 1,
+            extraLifeScore : 10000,
+            mode : null,
+            ...attrs
+        });
+
+        this.url = 'jsPacman';
+
+        this.on('change:score', this.onChangeScore.bind(this));
+    }
+
+    addScore(score) {
+        this.score = this.score + score;
+    }
+
+    updateMode() {
+        if (!this.mode) this.modeTimer = new Timer();
+
+        const { times } = this.getSettings('game');
+
+        let total = 0,
+            i = 0;
+
+        while(times[i]) {
+            total += times[i].time;
+            if (!this.modeTimer.isElapsed(total) || i === times.length - 1) {
+                this.mode = times[i].mode;
+                break;
+            }
+            i++;
+        }
+    }
+
+    pause() {
+        if (this.modeTimer) this.modeTimer.pause();
+    }
+
+    resume() {
+        if (this.modeTimer) this.modeTimer.resume();
+    }
+
+    getSettings(key) {
+        const obj = {};
+
+        const level = this.level > data.length ? data.length : this.level;
+
+        let i = keys.length;
+
+        while(i--) {
+            let parts = keys[i].split('.');
+            if (parts[0] === key) obj[parts[1]] = data[level - 1][i];
+        }
+
+        return obj;
+    }
+
+    onChangeScore() {
+        if (this.extraLives && this.score >= this.extraLifeScore) {
+            this.extraLives--;
+            this.lives++;
+        }
+
+        if (this.highScore < this.score) {
+            this.highScore = this.score;
+        }
+    }
+
+    toJSON() {
+        return { highScore : this.highScore };
+    }
+}
+
+export default GameModel;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Ghost.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation, { ANIMATION_HORIZONTAL } from './engine/Animation.js';
+import Timer from './engine/Timer.js';
+import Character from './Character.js';
+import getDistance from './helper/getDistance.js';
+import rnd from './helper/rnd.js';
+
+export const MODE_SCATTER = 'scatter';
+export const MODE_CHASE = 'chase';
+export const MODE_FRIGHTENED = 'frightened';
+export const MODE_HOUSE = 'house';
+export const MODE_DEAD = 'dead';
+
+export const animationBase = {
+    imageURL : 'img/characters.png',
+    numberOfFrame : 2,
+    delta : 64,
+    refreshRate : 180,
+    type : ANIMATION_HORIZONTAL
+};
+
+export const animations = {
+    'frightened' : new Animation({
+        ...animationBase,
+        offsetY : 376,
+        offsetX : -2
+    }),
+
+    'frightenedBlink' : new Animation({
+        ...animationBase,
+        offsetY : 376,
+        offsetX : -2,
+        numberOfFrame : 4
+    }),
+
+    'deadRight' : new Animation({
+        ...animationBase,
+        offsetY : 376,
+        offsetX : 64 * 4 - 2,
+        numberOfFrame : 1
+    }),
+
+    'deadDown' : new Animation({
+        ...animationBase,
+        offsetY : 376,
+        offsetX : 64 * 5 - 2,
+        numberOfFrame : 1
+    }),
+
+    'deadUp' : new Animation({
+        ...animationBase,
+        offsetY : 376,
+        offsetX : 64 * 6 - 2,
+        numberOfFrame : 1
+    }),
+
+    'deadLeft' : new Animation({
+        ...animationBase,
+        offsetY : 376,
+        offsetX : 64 * 7 - 2,
+        numberOfFrame : 1
+    }),
+
+    'score200' : new Animation({
+        ...animationBase,
+        imageURL : 'img/misc.png',
+        numberOfFrame : 1,
+        offsetX : -2,
+        offsetY : 110
+    }),
+
+    'score400' : new Animation({
+        ...animationBase,
+        imageURL : 'img/misc.png',
+        numberOfFrame : 1,
+        offsetX : 64 * 1 - 2,
+        offsetY : 110
+    }),
+
+    'score800' : new Animation({
+        ...animationBase,
+        imageURL : 'img/misc.png',
+        numberOfFrame : 1,
+        offsetX : 64 * 2 - 2,
+        offsetY : 110
+    }),
+
+    'score1600' : new Animation({
+        ...animationBase,
+        imageURL : 'img/misc.png',
+        numberOfFrame : 1,
+        offsetX : 64 * 3,
+        offsetY : 110
+    })
+};
+
+const defaults = {
+    animations,
+    width : 64,
+    speed : 75,
+    frightenedTime : 5,
+    waitTime : 4,
+    scatterTarget : 0,
+    mode : MODE_HOUSE,
+    score : '200',
+    scores : { '200' : '400', '400' : '800', '800' : '1600' },
+    blinky : null,
+    getChaseTarget : function() {
+        return this.pacmanData.tile;
+    },
+    tunnelSpeed : null,
+    frightenedSpeed : null,
+    frightenedFlashes : null
+};
+
+class Ghost extends Character {
+    constructor(options) {
+        super(options);
+
+        Object.keys(defaults).forEach(key => {
+            if (key in options) this[key] = options[key];
+        });
+
+        const {
+            addGameGlobalModeEventListener,
+            addGameGhostEatenEventListener,
+            addPacmanEatPillEventListener,
+            addPacmanPositionEventListener
+        } = options;
+
+        this.deadTarget = this.map.house.getR().getU();
+        this.deadEndX = this._defaults.x;
+        this.deadEndY = this.map.houseCenter.y;
+        this.deadEnd = this.map.getTile(this.deadEndX, this.deadEndY, true);
+
+        this.houseTop = this.y - this.getTile().height / 2;
+        this.houseBottom = this.y + this.getTile().height / 2;
+        this.houseExitTile = this.map.house.getR();
+        this.houseExitTileX = this.houseExitTile.x - this.map.tileWidth / 2;
+
+        this.scatterTarget = this.map.tiles[this.scatterTarget];
+
+        this.setMode(this.mode);
+
+        // Change tile.
+        this.on('item:tile', (t) => {
+            if (this.mode === MODE_FRIGHTENED) this._speed = this.frightenedSpeed;
+            else if (this.mode === MODE_DEAD) this._speed = 130;
+            else if (t.isTunnel()) this._speed = this.tunnelSpeed;
+            else this._speed = this.speed;
+
+            if (this._turnBack) {
+                this.dir = this._getOpDirection(this.dir);
+                this._dir = null;
+                this._nextDir = this.getNextDirection();
+                this._turnBack = false;
+            } else {
+                this._dir = this._nextDir;
+                this._nextDir = this.getNextDirection();
+            }
+
+            this._eatEvent = false;
+        });
+
+        addGameGlobalModeEventListener(this.onGameGlobalMode.bind(this));
+
+        addPacmanEatPillEventListener(() => {
+            this.setMode(MODE_FRIGHTENED);
+            this.score = 200;
+        });
+
+        addGameGhostEatenEventListener(() => {
+            this.score = this.scores[this.score];
+        });
+
+        addPacmanPositionEventListener(data => {
+            this.pacmanData = data;
+        });
+    }
+
+    reset() {
+        super.reset();
+        this.setMode(this.mode);
+    }
+
+    pause() {
+        if (this.houseTimer) this.houseTimer.pause();
+        if (this.frightenedTimer) this.frightenedTimer.pause();
+    }
+
+    resume() {
+        if (this.mode === MODE_FRIGHTENED) this.frightenedTimer.resume();
+        if (this.mode === MODE_HOUSE && !this.housePrepareExit) this.houseTimer.resume();
+    }
+
+    setMode(mode) {
+        if (!mode) {
+            if (this.frightened) {
+                this.mode = this.frightened;
+                this.frightened = null;
+                return;
+            }
+
+            mode = this.globalMode;
+        }
+
+        if (mode === MODE_FRIGHTENED && (this.mode === MODE_HOUSE || this.mode === MODE_DEAD)) {
+            this.frightened = mode;
+        } else {
+            this.mode = mode;
+        }
+
+        this.onEnterMode(mode);
+    }
+
+    shouldExitMode() {
+        if (this.mode === MODE_DEAD) return this.getTile() === this.deadEnd;
+        
+        else if (this.mode === MODE_FRIGHTENED) return this.frightenedTimer.isElapsed();
+
+        else if (this.mode === MODE_HOUSE) return this.getTile() === this.houseExitTile.getU();
+
+        else if (this.mode != this.globalMode) return true;
+
+        return false;
+    }
+
+    onEnterMode(mode) {
+        switch (mode) {
+            case MODE_DEAD:
+                this.emit('item:modefrightened:exit');
+                this.deadPrepareEnter = false;
+                this._nextAnimation = this.animations[`score${this.score}`];
+                this.update();
+                break;
+            case MODE_FRIGHTENED:
+                this.frightenedTimer = new Timer(this.frightenedTime);
+                this.emit('item:modefrightened:enter');
+                break;
+            case MODE_HOUSE:
+                this.housePrepareExit = false;
+                this._speed = 70;
+                break;
+        }
+    }
+
+    onExitMode() {
+        const tile = this.getTile();
+
+        switch (this.mode) {
+            case MODE_DEAD:
+                this.reset();
+                break;
+            case MODE_FRIGHTENED:
+                this.setMode();
+                this.emit('item:modefrightened:exit');
+                break;
+            case MODE_HOUSE:
+                this.houseTimer = null;
+
+                this._dir = 'l';
+                this._nextDir = 'l';
+                this._lastTile = tile.getD();
+                this._speed = this.speed;
+                this.setMode();
+                break;
+            default:
+                if (!tile.isHouse()) {
+                    this._turnBack = true;
+                }
+                this.setMode();
+                break;
+        }
+    }
+
+    isFrightened() {
+        return this.frightened || this.mode === MODE_FRIGHTENED;
+    }
+
+    isDead() {
+        return this.mode === MODE_DEAD;
+    }
+
+    onGameGlobalMode(mode) {
+        if (mode) this.globalMode = mode;
+    }
+
+    move() {
+        if (this.shouldExitMode()) {
+            this.onExitMode();
+        } else {
+            if (this.mode === MODE_DEAD) {
+                if (!this.deadPrepareEnter && this.getTile() === this.deadTarget) {
+                    this.deadPrepareEnter = true;
+                }
+
+                if (this.deadPrepareEnter) {
+                    let endX = this.deadEndX;
+                    let endY = this.deadEndY;
+                    // Should go to center first
+                    if (this.y < endY) endX = this.deadTarget.x - this.map.tw / 2;
+                    // Set direction
+                    if (this.x < endX) this.dir = 'r';
+                    else if (this.x > endX) this.dir = 'l';
+                    else if (this.y < endY) this.dir = 'd';
+                    // Move
+                    if (this.dir === 'd')
+                        this.y += this.getMin(this.getStep(), endY - this.y);
+                    if (this.dir === 'r')
+                        this.x += this.getMin(this.getStep(), endX - this.x);
+                    if (this.dir === 'l')
+                        this.x -= this.getMin(this.getStep(), this.x - endX);
+
+                    this.setNextAnimation();
+                    this.update();
+                } else {
+                    super.move(this._dir);
+                }
+            } else if (this.mode === MODE_HOUSE) {
+                if (!this.houseTimer) this.houseTimer = new Timer(this.waitTime);
+
+                const tile = this.getTile();
+
+                if (!this.housePrepareExit && this.houseTimer.isElapsed() && !tile.isWall()) {
+                    this.housePrepareExit = true;
+                    this.y = tile.y;
+                }
+
+                if (this.frightened && this.frightenedTimer.isElapsed()) {
+                    this.frightened = null;
+                }
+
+                if (this.housePrepareExit) {
+                    if (this.x < this.houseExitTileX) this.dir = 'r';
+                    else if (this.x > this.houseExitTileX) this.dir = 'l';
+                    else this.dir = 'u';
+
+                    if (this.dir === 'u')
+                        this.y -= this.getMin(this.getStep(), this.y - this.houseExitTile.getU().y);
+                    if (this.dir === 'r')
+                        this.x += this.getMin(this.getStep(), this.houseExitTileX - this.x);
+                    if (this.dir === 'l')
+                        this.x -= this.getMin(this.getStep(), this.x - this.houseExitTileX);
+
+                } else {
+                    if (this.y <= this.houseTop && this.dir === 'u') this.dir = 'd';
+                    if (this.y >= this.houseBottom && this.dir === 'd') this.dir = 'u';
+
+                    if (this.dir === 'u')
+                        this.y -= this.getMin(this.getStep(), this.y - this.houseTop);
+                    if (this.dir === 'd')
+                        this.y += this.getMin(this.getStep(), this.houseBottom - this.y);
+
+                }
+
+                this.setNextAnimation();
+                this.update();
+            } else {
+                super.move(this._dir);
+            }
+        }
+
+        // Eat or eaten!
+        if (!this._eatEvent) {
+            var pt = this.pacmanData.tile, t = this.getTile(), op = this._getOpDirection(this.dir);
+            if (pt === t || (this.pacmanData.dir === op && pt === t.get(op))) {
+                this._eatEvent = true;
+                if (this.mode === MODE_FRIGHTENED) {
+                    // Ghost eaten by Pacman!
+                    this.setMode(MODE_DEAD);
+                    this.emit('item:eaten');
+                } else if (this.mode !== MODE_DEAD) {
+                    // Eat Pacman!
+                    this.emit('item:eat');
+                }
+            }
+        }
+    }
+
+    canGo(dir, tile) {
+        if (!tile) tile = this.getTile();
+
+        const nextTile = tile.get(dir);
+
+        if (this.mode === MODE_DEAD) return !nextTile || !nextTile.isWall();
+
+        if (!nextTile) return false;
+
+        return !nextTile.isWall() && !nextTile.isHouse();
+
+    }
+
+    getNextDirection() {
+        if (this.mode === MODE_FRIGHTENED) {
+            // Next tile.
+            const nextTile = this.getTile().get(this._dir);
+            // Clockwise direction order.
+            const directions = ['u', 'r', 'd', 'l', 'u', 'r', 'd', 'l'];
+            // Select random direction. Then try that direction or change following clockwise order.
+            let idx = rnd(4);
+
+            let nextDirection = directions[idx];
+
+            while (nextDirection && (nextDirection === this._getOpDirection(this._dir) || !this.canGo(nextDirection, nextTile))) {
+                nextDirection = directions[++idx];
+            }
+
+            return nextDirection;
+        }
+        // Target Tile
+        const targetTile = this.mode === MODE_CHASE ? this.getChaseTarget() :
+            this.mode === MODE_SCATTER ? this.scatterTarget :
+            this.deadTarget;
+
+        const _dir = this._dir || this.dir;
+        // Next tile.
+        const nextTile = this.getTile().get(_dir);
+        // Preferred direction order.
+        const directions = ['u', 'l', 'd', 'r'];
+
+        let nextDirection, lastDistance;
+
+        for (var i = 0; i < 4; i++) {
+            let dir = directions[i];
+            // Cant't go back.
+            if (dir === this._getOpDirection(_dir)) continue;
+
+            if (this.canGo(dir, nextTile)) {
+                let testTile = nextTile.get(dir);
+                let distance = getDistance(testTile, targetTile);
+
+                if (typeof lastDistance === 'undefined' || lastDistance > distance) {
+                    nextDirection = dir;
+                    lastDistance = distance;
+                }
+            }
+        }
+
+        return nextDirection;
+    }
+
+    setNextAnimation() {
+        if (this.mode === MODE_DEAD) {
+            switch (this.dir) {
+                case 'u':
+                    this._nextAnimation = this.animations.deadUp;
+                    break;
+                case 'r':
+                    this._nextAnimation = this.animations.deadRight;
+                    break;
+                case 'd':
+                    this._nextAnimation = this.animations.deadDown;
+                    break;
+                case 'l':
+                    this._nextAnimation = this.animations.deadLeft;
+                    break;
+            }
+        } else if (this.mode === MODE_FRIGHTENED ||
+            (this.mode === MODE_HOUSE && this.frightened)) {
+            if (!this.frightenedTimer.isElapsed(this.frightenedTime * 0.75)) {
+                this._nextAnimation = this.animations.frightened;
+            } else {
+                this._nextAnimation = this.animations.frightenedBlink;
+            }
+        } else {
+            super.setNextAnimation();
+        }
+    }
+}
+
+Object.assign(Ghost.prototype, defaults);
+
+export default Ghost;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\helper\getDistance.js
+////////////////////////////////////////////////////////////////////////////////
+
+// Distance between two tiles.
+export default (tileA, tileB) => {
+    const x = tileA.x, x1 = tileB.x, y = tileA.y, y1 = tileB.y;
+    return Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\helper\rnd.js
+////////////////////////////////////////////////////////////////////////////////
+
+// Return random number between 0 and total less one.
+export default total => Math.floor((Math.random() * total));
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Item.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Sprite from './engine/Sprite.js';
+
+class Item extends Sprite {
+    constructor(options = {}) {
+        super(options);
+
+        if (options.map) this.map = options.map;
+        // Half width and half height.
+        this.offsetX = parseInt(this.width / 2);
+        this.offsetY = parseInt(this.height / 2);
+        // Render.
+        this.render();
+    }
+
+    getTile() {
+        return this.map.getTile(this.x, this.y, true);
+    }
+
+    destroy() {
+        super.destroy().removeElement();
+    }
+
+    hide() {
+        this.el.style.display = 'none';
+    }
+
+    show() {
+        this.el.style.display = '';
+    }
+}
+
+export default Item;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Lives.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Pacman from './Pacman.js';
+
+class Lives  {
+    constructor(options) {
+        this.pacmans = [];
+
+        this.model = options.model;
+
+        for (var i = 0; i < 5; i++) {
+            let pacman = new Pacman({
+                x : options.x + i * 70,
+                y : options.y,
+                factor : options.factor,
+                defaultAnimation : 'right',
+                addGameGhostEatEventListener : () => {},
+                addGameGhostModeFrightenedEnter : () => {},
+                addGameGhostModeFrightenedExit : () => {},
+                normalizeRefrashRate : () => 1
+            });
+
+            options.addSprite(pacman);
+            this.pacmans.push(pacman);
+
+            if (i > this.model.lives - 2) this.pacmans[i].hide();
+        }
+
+        this.model.on('change:lives', this.render.bind(this));
+    }
+
+    render() {
+        for (var i = 0; i < 5; i++) {
+            if (i > this.model.lives - 2) this.pacmans[i].hide();
+            else this.pacmans[i].show();
+        }
+    }
+}
+
+export default Lives;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Map.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Tile from './Tile.js';
+
+class Map {
+    constructor(data) {
+        /*
+        data = ['----------------------------',
+                '============================',
+                '=......==..........==......=',
+                '=*====.==.========.==.====*=']
+        */
+        // Store tiles in array.
+        this.tiles = [];
+        // Set with and height according to data.
+        this.width = data[0].length;
+        this.height = data.length;
+
+        this.tunnels = [];
+
+        // Instantiate tiles and store them.
+        for (var y = 0; y < this.height; y++) {
+            var r = data[y];
+            for (var x = 0; x < this.width; x++) {
+                var code = r.charAt(x);
+                var tile = new Tile(code, x, y, this);
+                this.tiles.push(tile);
+                if (tile.isHouse() && !this.house) { // Store left house door
+                    this.house = tile;
+                }
+                if (tile.isTunnel() && (tile.col === 0 || tile.col === this.width - 1)) {
+                    this.tunnels.push(tile);
+                }
+            }
+        }
+
+        this.houseCenter = this.house.getD().getD();
+
+        // Cache tile dimensions
+        this.tileWidth = this.tiles[0].width;
+        this.tileHeight = this.tiles[0].height;
+    }
+
+    // Return tile object.
+    getTile(col, row, inPixels) {
+        if (inPixels) {
+            col = parseInt(col / this.tileWidth);
+            row = parseInt(row / this.tileHeight);
+        }
+
+        if (col > this.width - 1) col = 0;
+        if (col < 0) col = this.width - 1;
+        if (row > this.height - 1) row = 0;
+        if (row < 0) row = this.height - 1;
+
+        var idx = (row * this.width) + col;
+
+        return this.tiles[idx] || null;
+    }
+
+    destroyItems() {
+        var i = this.tiles.length;
+        while (i--) {
+            var t = this.tiles[i];
+            if (t.item) t.item.destroy();
+        }
+    }
+
+    hideItems() {
+        var i = this.tiles.length;
+        while (i--) {
+            var t = this.tiles[i];
+            if (t.item) t.item.hide();
+        }
+    }
+}
+
+export default Map;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\maps\map-1.js
+////////////////////////////////////////////////////////////////////////////////
+
+export default [
+'----------------------------',
+'----------------------------',
+'----------------------------',
+'============================',
+'=......==..........==......=',
+'=*====.==.========.==.====*=',
+'=.====.==.========.==.====.=',
+'=..........................=',
+'===.==.=====.==.=====.==.===',
+'--=.==.=====.==.=====.==.=--',
+'===.==.=====.==.=====.==.===',
+'ttt.==.......==.......==.ttt',
+'===.=====-========-=====.===',
+'--=.=====-========-=====.=--',
+'--=.--------------------.=--',
+'--=.=====-===hh===-=====.=--',
+'--=.=====-===--===-=====.=--',
+'--=.==----=------=----==.=--',
+'--=.==-==-========-==-==.=--',
+'===.==-==-========-==-==.===',
+'ttt.---==----------==---.ttt',
+'===.========-==-========.===',
+'--=.========-==-========.=--',
+'--=.......---==---.......=--',
+'--=.=====.========.=====.=--',
+'===.=====.========.=====.===',
+'=............--............=',
+'=.====.=====.==.=====.====.=',
+'=.====.=====.==.=====.====.=',
+'=.====.==....==....==.====.=',
+'=*====.==.========.==.====*=',
+'=.====.==.========.==.====.=',
+'=..........................=',
+'============================',
+'----------------------------',
+'----------------------------'
+];
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\maps\map-2.js
+////////////////////////////////////////////////////////////////////////////////
+
+export default [
+'----------------------------',
+'----------------------------',
+'----------------------------',
+'============================',
+'tttttt-==..........==-tttttt',
+'======.==.========.==.======',
+'======.==.========.==.======',
+'=*...........==...........*=',
+'=.=======.==.==.==.=======.=',
+'=.=======.==.==.==.=======.=',
+'=.==......==.==.==......==.=',
+'=.==.====-==....==-====.==.=',
+'=.==.====-========-====.==.=',
+'=......==-========-==......=',
+'======.==----------==.======',
+'======.==-===hh===-==.======',
+'=......==-===--===-==......=',
+'=.====.==-=------=-==.====.=',
+'=.====.---========---.====.=',
+'=...==.==-========-==.==...=',
+'===.==.==----------==.==.===',
+'--=.==.====-====-====.==.=--',
+'--=.==.====-====-====.==.=--',
+'--=.........====.........=--',
+'--=.=======.====.=======.=--',
+'===.=======.====.=======.===',
+'ttt....==...----...==....ttt',
+'===.==.==.========.==.==.===',
+'===.==.==.========.==.==.===',
+'=*..==.......==.......==..*=',
+'=.====.=====.==.=====.====.=',
+'=.====.=====.==.=====.====.=',
+'=..........................=',
+'============================',
+'----------------------------',
+'----------------------------'
+];
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\maps\map-3.js
+////////////////////////////////////////////////////////////////////////////////
+
+export default  [
+'----------------------------',
+'----------------------------',
+'----------------------------',
+'============================',
+'=.........==....==.........=',
+'=.=======.==.==.==.=======.=',
+'=*=======.==.==.==.=======*=',
+'=.==.........==.........==.=',
+'=.==.==.====.==.====.==.==.=',
+'=....==.====.==.====.==....=',
+'====.==.====.==.====.==.====',
+'====.==..............==.====',
+'t....====-========-====....t',
+'=.==-====-========-====-==.=',
+'=.==--------------------==.=',
+'=.====-==-===hh===-==-====.=',
+'=.====-==-===--===-==-====.=',
+'=.-----==-=------=-==-----.=',
+'=.==-====-========-====-==.=',
+'=.==-====-========-====-==.=',
+'=.==--------------------==.=',
+'=.====-=====-==-=====-====.=',
+'=.====-=====-==-=====-====.=',
+'=......==....==....==......=',
+'===.==.==.========.==.==.===',
+'===.==.==.========.==.==.===',
+'=*..==.......--.......==..*=',
+'=.====.=====.==.=====.====.=',
+'=.====.=====.==.=====.====.=',
+'=......==....==....==......=',
+'=.====.==.========.==.====.=',
+'=.====.==.========.==.====.=',
+'=......==..........==......=',
+'============================',
+'----------------------------',
+'----------------------------'
+];
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\maps\map-4.js
+////////////////////////////////////////////////////////////////////////////////
+
+export default [
+'----------------------------',
+'----------------------------',
+'----------------------------',
+'============================',
+'=..........................=',
+'=.==.====.========.====.==.=',
+'=*==.====.========.====.==*=',
+'=.==.====.==....==.====.==.=',
+'=.==......==.==.==......==.=',
+'=.====.==.==.==.==.==.====.=',
+'=.====.==.==.==.==.==.====.=',
+'=......==....==....==......=',
+'===.========-==-========.===',
+'--=.========-==-========.=--',
+'--=....==----------==....=--',
+'===-==.==-===hh===-==.==-===',
+'ttt-==.==-===--===-==.==-ttt',
+'======.---=------=---.======',
+'======.==-========-==.======',
+'ttt-==.==-========-==.==-ttt',
+'===-==.==----------==.==-===',
+'--=....=====-==-=====....=--',
+'--=.==.=====-==-=====.==.=--',
+'--=.==....---==---....==.=--',
+'--=.=====.==-==-==.=====.=--',
+'===.=====.==-==-==.=====.===',
+'=.........==----==.........=',
+'=.====.==.========.==.====.=',
+'=.====.==.========.==.====.=',
+'=.==...==..........==...==.=',
+'=*==.=======.==.=======.==*=',
+'=.==.=======.==.=======.==.=',
+'=............==............=',
+'============================',
+'----------------------------',
+'----------------------------'
+];
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Pacman.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Animation, { ANIMATION_HORIZONTAL } from './engine/Animation.js';
+import Character from './Character.js';
+
+const animationBase = {
+    imageURL : 'img/characters.png',
+    numberOfFrame : 4,
+    delta : 64,
+    refreshRate : 60,
+    offsetY : 60,
+    type : ANIMATION_HORIZONTAL
+};
+
+const animations = {
+    'right' : new Animation({
+        ...animationBase
+    }),
+
+    'down' : new Animation({
+        ...animationBase,
+        offsetX : 64 * 4
+    }),
+
+    'up' : new Animation({
+        ...animationBase,
+        offsetX : 64 * 8
+    }),
+
+    'left' : new Animation({
+        ...animationBase,
+        offsetX : 64 * 12
+    })
+};
+
+const defaults = {
+    animations,
+    dir : 'l',
+    defaultAnimation : 'left',
+    preturn : true,
+    frightenedSpeed : null,
+    frightenedDotSpeed : null,
+    dotSpeed : null
+};
+
+class Pacman extends Character {
+    constructor(options) {
+        super(options);
+
+        Object.keys(defaults).forEach(key => {
+            if (key in options) this[key] = options[key];
+        });
+
+        const {
+            addGameGhostEatEventListener,
+            addGameGhostModeFrightenedEnter,
+            addGameGhostModeFrightenedExit
+        } = options;
+
+        this._ghostFrightened = [];
+
+        // Change tile. Set direction.
+        this.on('item:tile', (tile) => {
+            if (this._ghostFrightened.length) this._speed = this.frightenedSpeed;
+            else this._speed = this.speed;
+
+            if (tile.item) {
+                if (tile.hasPill()) { // Pill!
+                    this.emit('item:eatpill', tile);
+                }
+                else if (tile.hasDot()) { // Dot!
+                    this.emit('item:eatdot', tile);
+                    if (this._ghostFrightened.length) this._speed = this.frightenedDotSpeed;
+                    else this._speed = this.dotSpeed;
+                }
+                tile.item.destroy();
+                tile.item = null;
+            }
+
+        });
+
+        addGameGhostEatEventListener(ghost => {
+            this._eatenTurns = 9;
+            this.dir = 'r';
+            this.pauseAnimation();
+        });
+
+        addGameGhostModeFrightenedEnter(ghost => {
+            this._ghostFrightened = this._ghostFrightened.filter(f => f !== ghost).concat([ghost]);
+        });
+
+        addGameGhostModeFrightenedExit(ghost => {
+            this._ghostFrightened = this._ghostFrightened.filter(f => f !== ghost);
+        });
+    }
+
+    reset() {
+        Character.prototype.reset.apply(this);
+        this._lastEatenTurnsTime = null;
+    }
+
+    move() {
+        if (!this._eatenTurns) Character.prototype.move.apply(this, arguments);
+        else if (!this._eatenTurnsFrames) {
+            if (this._eatenTurns === 9) this.emit('item:die');
+            if (this._eatenTurns > 2) {
+                var directions = {'d' : 'l', 'l' : 'u', 'u' : 'r', 'r' : 'd'};
+                this.dir = directions[this.dir];
+                this.setNextAnimation();
+                this.update();
+                this._eatenTurnsFrames = 5;
+            } else this._eatenTurnsFrames = 25;
+
+            this._eatenTurns--;
+
+            if (this._eatenTurns === 0) this.emit('item:life');
+
+        } else this._eatenTurnsFrames--;
+    }
+
+};
+
+Object.assign(Pacman.prototype, defaults);
+
+export default Pacman;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\SoundManager.js
+////////////////////////////////////////////////////////////////////////////////
+
+import Sound from './engine/Sound.js';
+
+class SoundManager {
+    constructor(options) {
+        this.soundEnabled = !!options.soundEnabled;
+
+        if (this.soundEnabled) {
+            this.sounds = {
+                intro : new Sound('audio/intro.mp3'),
+                back : new Sound('audio/back.mp3'),
+                dot : new Sound('audio/dot.mp3'),
+                eaten : new Sound('audio/eaten.mp3'),
+                eat : new Sound('audio/eat.mp3'),
+                frightened : new Sound('audio/frightened.mp3'),
+                dead : new Sound('audio/dead.mp3'),
+                bonus : new Sound('audio/bonus.mp3'),
+                life : new Sound('audio/life.mp3')
+            };
+
+            Object.keys(this.sounds).forEach(key => {
+                options.addSound(this.sounds[key]);
+            });
+        }
+    }
+
+    play(label) {
+        if (this.soundEnabled) this.sounds[label].play();
+    }
+}
+
+export default SoundManager;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FILE: C:\Users\Emmanuel\Downloads\jsPacman-master\jsPacman-master\src\js\Tile.js
+////////////////////////////////////////////////////////////////////////////////
+
+class Tile {
+    constructor(code, col, row, map)  {
+        this.code = code;
+
+        this.col = col;
+        this.row = row;
+
+        this.map = map;
+
+        this.width = 32;
+        this.height = 32;
+
+        this.x = this.col * this.width + this.width / 2;
+
+        this.y = this.row * this.height + this.height / 2 + 4; // Original Pacman has tile's center at x : 4, y : 5 position.
+    }
+
+    isWall() { return this.code === '='; }
+
+    isHouse() { return this.code === 'h'; }
+
+    isTunnel() { return this.code === 't'; }
+
+    hasDot() { return this.item && this.code === '.'; }
+
+    hasPill() { return this.item && this.code === '*'; }
+
+    get(dir) {
+        if (dir === 'u') return this.getU();
+        if (dir === 'd') return this.getD();
+        if (dir === 'l') return this.getL();
+        if (dir === 'r') return this.getR();
+        return null;
+    }
+
+    getU() {
+        return this.map.getTile(this.col, this.row - 1) || null;
+    }
+
+    getD() {
+        return this.map.getTile(this.col, this.row + 1) || null;
+    }
+
+    getL() {
+        return this.map.getTile(this.col - 1, this.row) || null;
+    }
+
+    getR() {
+        return this.map.getTile(this.col + 1, this.row) || null;
+    }
+}
+
+export default Tile;
+
+
+

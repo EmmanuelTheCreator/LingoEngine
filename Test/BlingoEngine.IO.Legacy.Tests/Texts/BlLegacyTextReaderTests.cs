@@ -3,6 +3,7 @@ using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Texts;
+using BlingoEngine.IO.Legacy.Texts.Data;
 using BlingoEngine.IO.Legacy.Tools;
 using FluentAssertions;
 using System.IO;
@@ -14,33 +15,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Texts;
 
 public class BlLegacyTextReaderTests
 {
-    [Fact]
-    public void GenerateXmedText()
-    {
-        var cstFiles = TestContextHarness.GetAllFilesFromFolder("Texts_Fields", "*.cst");
-        foreach (var item in cstFiles)
-        {
-            var texts = TestContextHarness.LoadTexts(item);
-            if (texts.Count > 0)
-            {
-                foreach (var textItem in texts)
-                {
-
-                    if (textItem.Format == BlLegacyTextFormatKind.Xmed)
-                    {
-                        var path = TestContextHarness.GetAssetPath("Texts_Fields/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.txt");
-                        if (File.Exists(path))
-                            continue;
-                        
-                        File.WriteAllText(path, textItem.Bytes.ToHexString());
-                        var pathBin = TestContextHarness.GetAssetPath("Texts_Fields/" + Path.GetFileNameWithoutExtension(item)+"_"+ textItem.ResourceId + ".xmed.bin");
-                        File.WriteAllBytes(pathBin, textItem.Bytes);
-                    }
-                }
-            }
-        }
-
-    }
+    
     [Fact]
     public void Read_ResolvesXmedPayload()
     {

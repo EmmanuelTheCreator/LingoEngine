@@ -18,6 +18,7 @@ public class BlingoMemberDTO
     public int CastLibNum { get; set; }
     public int NumberInCast { get; set; }
     public BlingoMemberTypeDTO Type { get; set; }
+    public string MediaContentType { get; set; } = "";
     public BlingoPointDTO RegPoint { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
@@ -25,4 +26,6 @@ public class BlingoMemberDTO
     public string Comments { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public int PurgePriority { get; set; }
+    public DateTime DateCreated{ get; set; }
+    public DateTime DateModified{ get; set; }
 }

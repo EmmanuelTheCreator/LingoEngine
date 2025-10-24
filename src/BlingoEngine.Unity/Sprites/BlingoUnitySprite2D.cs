@@ -162,11 +162,16 @@ public class BlingoUnitySprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSprit
     {
         if (_blingoSprite.Member is { } member)
         {
-            if (Width == 0 || Height == 0)
-            {
-                Width = member.Width;
-                Height = member.Height;
-            }
+            var (_, sourceWidth, sourceHeight) = _blingoSprite.GetMemberSourceMetrics();
+            if (sourceWidth <= 0)
+                sourceWidth = member.Width;
+            if (sourceHeight <= 0)
+                sourceHeight = member.Height;
+
+            if (Width == 0)
+                Width = sourceWidth;
+            if (Height == 0)
+                Height = sourceHeight;
         }
         IsDirtyMember = true;
     }
@@ -179,20 +184,60 @@ public class BlingoUnitySprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSprit
         if (!IsDirty) return;
         IsDirty = false;
 
-        var pos = new Vector3(_x - _regPoint.X, _y - _regPoint.Y, 0f);
-        _go.transform.localPosition = pos;
+        if (_blingoSprite.MemberSourceRect is null)
+        {
+            var pos = new Vector3(_x - _regPoint.X, _y - _regPoint.Y, 0f);
+            _go.transform.localPosition = pos;
+            _go.transform.localEulerAngles = new Vector3(0, 0, _rotation);
+
+            if (_texture?.Texture is Texture2D tex)
+            {
+                float defaultTargetWidth = _desiredWidth == 0 ? tex.width : _desiredWidth;
+                float defaultTargetHeight = _desiredHeight == 0 ? tex.height : _desiredHeight;
+                float defaultScaleX = defaultTargetWidth / tex.width;
+                float defaultScaleY = defaultTargetHeight / tex.height;
+                if (_flipH) defaultScaleX *= -1f;
+                if (_flipV) defaultScaleY *= -1f;
+                _go.transform.localScale = new Vector3(defaultScaleX, defaultScaleY, 1f);
+            }
+
+            return;
+        }
+
+        var (baseOffset, sourceWidth, sourceHeight) = _blingoSprite.GetMemberSourceMetrics();
+
+        float textureWidth = _texture?.Texture?.width ?? Width;
+        float textureHeight = _texture?.Texture?.height ?? Height;
+
+        float targetWidth = _desiredWidth == 0
+            ? (sourceWidth > 0 ? sourceWidth : textureWidth)
+            : _desiredWidth;
+        float targetHeight = _desiredHeight == 0
+            ? (sourceHeight > 0 ? sourceHeight : textureHeight)
+            : _desiredHeight;
+
+        if (sourceWidth <= 0)
+            sourceWidth = targetWidth != 0 ? targetWidth : 1f;
+        if (sourceHeight <= 0)
+            sourceHeight = targetHeight != 0 ? targetHeight : 1f;
+
+        float scaleMagnitudeX = sourceWidth != 0 ? targetWidth / sourceWidth : 1f;
+        float scaleMagnitudeY = sourceHeight != 0 ? targetHeight / sourceHeight : 1f;
+
+        var offset = new Vector3(baseOffset.X * scaleMagnitudeX, baseOffset.Y * scaleMagnitudeY, 0f);
+        _go.transform.localPosition = new Vector3(_x - offset.x, _y - offset.y, 0f);
         _go.transform.localEulerAngles = new Vector3(0, 0, _rotation);
 
-        if (_texture?.Texture is Texture2D tex)
-        {
-            float w = _desiredWidth == 0 ? tex.width : _desiredWidth;
-            float h = _desiredHeight == 0 ? tex.height : _desiredHeight;
-            float sx = w / tex.width;
-            float sy = h / tex.height;
-            if (_flipH) sx *= -1f;
-            if (_flipV) sy *= -1f;
-            _go.transform.localScale = new Vector3(sx, sy, 1f);
-        }
+        float scaleX = scaleMagnitudeX;
+        float scaleY = scaleMagnitudeY;
+        if (_flipH) scaleX *= -1f;
+        if (_flipV) scaleY *= -1f;
+        _go.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+
+        if (targetWidth > 0)
+            Width = targetWidth;
+        if (targetHeight > 0)
+            Height = targetHeight;
     }
 
     private void UpdateMember()
@@ -339,11 +384,36 @@ public class BlingoUnitySprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSprit
             var tex = ut.Texture;
             if (tex == null)
                 return;
-            _renderer.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-            Width = tex.width;
-            Height = tex.height;
+            Rect rect;
+            if (_blingoSprite.Member is BlingoMemberBitmap && _blingoSprite.MemberSourceRect is { } srcRect)
+            {
+                float bottom = srcRect.Bottom;
+                rect = new Rect(srcRect.Left, tex.height - bottom, srcRect.Width, srcRect.Height);
+            }
+            else
+            {
+                rect = new Rect(0, 0, tex.width, tex.height);
+            }
+
+            _renderer.sprite = Sprite.Create(tex, rect, new Vector2(0.5f, 0.5f));
             _texture = ut;
             _blingoSprite.FWTextureHasChanged(ut);
+
+            if (_blingoSprite.MemberSourceRect is { } rectSource)
+            {
+                if (Width == 0)
+                    Width = rectSource.Width;
+                if (Height == 0)
+                    Height = rectSource.Height;
+            }
+            else
+            {
+                if (Width == 0)
+                    Width = rect.width;
+                if (Height == 0)
+                    Height = rect.height;
+            }
+
             IsDirtyMember = true;
         }
     }

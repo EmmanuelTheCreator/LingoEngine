@@ -5,6 +5,7 @@ using System.IO;
 using BlingoEngine.IO;
 using BlingoEngine.Core;
 using BlingoEngine.Director.Core.Importer;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.Director.LGodot.Gfx;
 
@@ -16,13 +17,15 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
     private readonly Button _backButton = new();
     private readonly List<string> _files = new();
     private readonly BlingoPlayer _player;
+    private readonly ILogger _logger;
     private readonly JsonStateRepository _repo = new();
 
     public event Action? Back;
 
-    public ImportDirCstFilesStep(BlingoPlayer player)
+    public ImportDirCstFilesStep(BlingoPlayer player, ILogger logger)
     {
         _player = player;
+        _logger = logger;
         Visible = false;
 
         var selectBtn = new Button { Text = "Select Files" };
@@ -108,20 +111,15 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
     {
         foreach (var file in _files)
         {
-            if (!file.EndsWith(".dir", StringComparison.OrdinalIgnoreCase))
+            if (!file.EndsWith(".dir", StringComparison.OrdinalIgnoreCase) && !file.EndsWith(".cst", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             try
             {
-                var (stage, movie, resources) = LegacyImporter.ImportMovie(file);
-                var tempDir = Path.Combine(Path.GetTempPath(), "blingo_import_" + Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(tempDir);
-                foreach (var res in resources.Files)
-                {
-                    var resPath = Path.Combine(tempDir, res.FileName);
-                    File.WriteAllBytes(resPath, res.Bytes);
-                }
-                var loaded = _repo.Load(stage, movie, _player, tempDir);
+                var (stage, movie, resources) = LegacyImporter.ImportMovie(file, _logger);
+                //var tempDir = Path.Combine(Path.GetTempPath(), "blingo_import_" + Guid.NewGuid().ToString("N"));
+                var tempDir = Path.Combine("bin","Temp", "blingo_import_" + Guid.NewGuid().ToString("N"));
+                var loaded = _repo.Load(stage, movie, resources, _player, tempDir);
                 _player.SetActiveMovie(loaded);
                 GD.Print($"Imported movie '{movie.Name}' into '{tempDir}' and loaded");
             }

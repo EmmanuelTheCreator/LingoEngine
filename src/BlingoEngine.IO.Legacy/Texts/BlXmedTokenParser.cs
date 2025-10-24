@@ -1,0 +1,164 @@
+using System;
+
+using BlingoEngine.IO.Legacy.Texts.Data;
+using Microsoft.Extensions.Logging;
+
+namespace BlingoEngine.IO.Legacy.Texts
+{
+    internal sealed class BlXmedTokenParser
+    {
+        private readonly ILogger _logger;
+        private readonly byte[] _buffer;
+        private readonly IReadOnlyList<BlXmedToken> _tokens;
+        private readonly XmedDocument _document = new();
+
+        private readonly BlXmedTokenStyleParser _styleParser;
+        private readonly XmedSpacingReader _spacingReader;
+        private readonly XmedParagraphDescriptorReader _descriptorReader;
+        private readonly XmedSliceBuilder _styleSliceBuilder;
+        private readonly XmedSliceBuilder _paragraphSliceBuilder;
+        private readonly XmedHeaderReader _headerReader;
+        private readonly XmedFontTableReader _fontTableReader;
+        private readonly XmedFullTextReader _fullTextReader;
+        private readonly BlXmedTokenReader _reader;
+
+        public BlXmedTokenParser(ILogger logger, byte[] buffer, IReadOnlyList<BlXmedToken> tokens, IReadOnlyList<int> lastNumbers)
+        {
+            _logger = logger;
+            _buffer = buffer ?? Array.Empty<byte>();
+            _tokens = tokens ?? Array.Empty<BlXmedToken>();
+            _reader = new BlXmedTokenReader(_tokens);
+            _styleParser = new BlXmedTokenStyleParser(logger, _document);
+            _spacingReader = new XmedSpacingReader(_document, logger);
+            _descriptorReader = new XmedParagraphDescriptorReader(_document, _spacingReader, logger);
+            _styleSliceBuilder = new XmedSliceBuilder();
+            _paragraphSliceBuilder = new XmedSliceBuilder();
+            _headerReader = new XmedHeaderReader(_document, _styleParser, _spacingReader, _reader, logger);
+            _fontTableReader = new XmedFontTableReader(_document);
+            _fullTextReader = new XmedFullTextReader(_document);
+        }
+
+        public XmedDocument Parse(int directorVersion)
+        {
+            _document.DirectorVersion = directorVersion;
+            _document.PreRenderedImage = null;
+            _fontTableReader.Reset();
+
+            _descriptorReader.Reset();
+            _styleSliceBuilder.Reset();
+            _paragraphSliceBuilder.Reset();
+            _fullTextReader.Reset();
+            _styleParser.Reset();
+
+            var tokenList = _tokens as List<BlXmedToken> ?? _tokens.ToList();
+            var groups = BlXmedTokenizer.CreateGroups(tokenList);
+            foreach (var group in groups)
+            {
+                switch (group.MainType)
+                {
+                    case XmedMainTokenGroup.MainGroupType.RunHeaderFFFF:
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.RunHeader:
+                    case XmedMainTokenGroup.MainGroupType.Layout:
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.FullText:
+                        _fullTextReader.ReadText(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.RunStyles:
+                        _styleSliceBuilder.LoadBoundaries(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.RunParagraphs:
+                        _paragraphSliceBuilder.LoadBoundaries(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.Styles:
+                        _styleParser.LoadStyles(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.Paragraphs:
+                        _descriptorReader.LoadParagraphDescriptors(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.Fonts:
+                        _fontTableReader.ReadFontTable(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphBounds:
+                        _spacingReader.ReadParagraphBounds(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphBounds2:
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphFormats:
+                        _spacingReader.ReadParagraphFormats(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.ParagraphSpacing:
+                        _spacingReader.ReadParagraphSpacing(group);
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.UnknownB:
+                    case XmedMainTokenGroup.MainGroupType.Unknown13:
+                    case XmedMainTokenGroup.MainGroupType.Unknown128:
+                    case XmedMainTokenGroup.MainGroupType.Unknown129:
+                        break;
+                    case XmedMainTokenGroup.MainGroupType.PreRenderedBitmap:
+                        LoadPreRenderedBitmap(group);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            var paragraphSlices = _paragraphSliceBuilder.BuildSlices(_document.Text);
+            _descriptorReader.ApplyParagraphRuns(paragraphSlices);
+
+            var runSlices = _styleSliceBuilder.BuildSlices(_document.Text);
+            _styleParser.BuildRuns(_document, runSlices);
+            _styleParser.FinalizeStyles(_document);
+
+            return _document;
+        }
+
+        private void LoadPreRenderedBitmap(XmedMainTokenGroup group)
+        {
+            if (_buffer.Length == 0 || group.RawTokens.Count == 0)
+                return;
+
+            BlXmedToken? txcToken = null;
+            foreach (var token in group.RawTokens)
+            {
+                if (token.Type == BlXmedToken.TokenType.Ascii && token.Ascii is { Length: > 0 } ascii && ascii.StartsWith("TXc", StringComparison.Ordinal))
+                {
+                    txcToken = token;
+                    break;
+                }
+            }
+
+            if (txcToken == null)
+                return;
+
+            int start = txcToken.Start;
+            foreach (var token in group.RawTokens)
+            {
+                if (token.Start < start)
+                    start = token.Start;
+            }
+
+            if (start < 0 || start >= _buffer.Length)
+                return;
+
+            int lengthBytes = _buffer.Length - start;
+            if (lengthBytes <= 0)
+                return;
+
+            var data = new byte[lengthBytes];
+            Array.Copy(_buffer, start, data, 0, lengthBytes);
+
+            try
+            {
+                _document.PreRenderedImage = BlLegacyTxcReader.Read(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse pre-rendered TXc block from XMED document.");
+            }
+        }
+
+      
+
+    }
+}

@@ -1,23 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BlingoEngine.IO.Legacy.Bitmaps;
 using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Fields;
 using BlingoEngine.IO.Legacy.Files;
-
 using BlingoEngine.IO.Legacy.Scripts;
 using BlingoEngine.IO.Legacy.Shapes;
 using BlingoEngine.IO.Legacy.Sounds;
-
-using BlingoEngine.IO.Legacy.Fields;
-using BlingoEngine.IO.Legacy.Shapes;
-using BlingoEngine.IO.Legacy.Sounds;
 using BlingoEngine.IO.Legacy.Texts;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using BlingoEngine.IO.Legacy.Texts.Data;
 
 
 namespace BlingoEngine.IO.Legacy.Tests.Helpers;
@@ -83,6 +77,49 @@ internal sealed class TestContextHarness : IDisposable
     public ReaderContext Context { get; }
 
     public static string GetAssetPath(string relativePath) => TestFolder.AssetPath(relativePath);
+
+    public static string GetTextAssetPath(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            throw new ArgumentException("Relative path must be provided.", nameof(relativePath));
+
+        string normalized = relativePath.Replace('\\', '/').Trim('/');
+        if (normalized.Length == 0)
+            throw new ArgumentException("Relative path must contain a file name.", nameof(relativePath));
+
+        string direct = GetAssetPath($"Texts_Fields/{normalized}");
+        if (File.Exists(direct))
+            return direct;
+
+        string fileName = Path.GetFileName(normalized);
+        string root = GetAssetPath("Texts_Fields");
+        string[] matches = Directory.GetFiles(root, fileName, SearchOption.AllDirectories);
+        if (matches.Length == 0)
+            throw new FileNotFoundException($"Text file '{relativePath}' not found.", direct);
+
+        return matches[0];
+    }
+    public static string GetAudioAssetPath(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            throw new ArgumentException("Relative path must be provided.", nameof(relativePath));
+
+        string normalized = relativePath.Replace('\\', '/').Trim('/');
+        if (normalized.Length == 0)
+            throw new ArgumentException("Relative path must contain a file name.", nameof(relativePath));
+
+        string direct = GetAssetPath($"Sounds/{normalized}");
+        if (File.Exists(direct))
+            return direct;
+
+        string fileName = Path.GetFileName(normalized);
+        string root = GetAssetPath("Sounds");
+        string[] matches = Directory.GetFiles(root, fileName, SearchOption.AllDirectories);
+        if (matches.Length == 0)
+            throw new FileNotFoundException($"Audio file '{relativePath}' not found.", direct);
+
+        return matches[0];
+    }
     public static TestContextHarness Open(string relativePath)
     {
         var fullPath = TestFolder.AssetPath(relativePath.TrimStart('/').TrimStart('\\'));
@@ -100,6 +137,32 @@ internal sealed class TestContextHarness : IDisposable
     public void ReadResources()
     {
         Context.ReadDirFilesContainer();
+    }
+
+    public static string XmedDumpLongLog(string fileName)
+    {
+        var item = GetTextAssetPath(fileName);
+        var bytes = File.ReadAllBytes(item);
+        var tokens = BlXmedTokenizer.Tokenize(bytes).Tokens;
+        var log = BlXmedTokenizer.DumpTokensCompact(tokens);
+        return log;
+    }
+    public static string XmedDumpCompactLog(string fileName)
+    {
+        var item = GetTextAssetPath(fileName);
+        var bytes = File.ReadAllBytes(item);
+        var tokens = BlXmedTokenizer.Tokenize(bytes).Tokens;
+        var log = BlXmedTokenizer.DumpTokensUltraCompact(tokens);
+        return log;
+    }
+    public static string XmedDumpCompactLogGrouped(string fileName)
+    {
+        var item = GetTextAssetPath(fileName);
+        var bytes = File.ReadAllBytes(item);
+        var tokens = BlXmedTokenizer.Tokenize(bytes).Tokens;
+        var groups = BlXmedTokenizer.CreateGroups(tokens);
+        var log = XmedTokenGrouper.DumpGroupedTokens(groups);
+        return log;
     }
 
     public void Dispose()

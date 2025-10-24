@@ -16,7 +16,8 @@ internal static class BlLegacyHandlerFilters
             return true;
         }
 
-        if (IsPropertyDescriptionHandler(handler.OriginalName) || IsPropertyDescriptionHandler(handler.Symbol.Name))
+        if (IsPropertyDescriptionUtilityHandler(handler.OriginalName) ||
+            IsPropertyDescriptionUtilityHandler(handler.Symbol.Name))
         {
             return true;
         }
@@ -24,15 +25,14 @@ internal static class BlLegacyHandlerFilters
         return false;
     }
 
-    private static bool IsPropertyDescriptionHandler(string? name)
+    private static bool IsPropertyDescriptionUtilityHandler(string? name)
     {
         if (string.IsNullOrEmpty(name))
         {
             return false;
         }
 
-        return name.Equals("getPropertyDescriptionList", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("getBehaviorDescription", StringComparison.OrdinalIgnoreCase)
+        return name.Equals("getBehaviorDescription", StringComparison.OrdinalIgnoreCase)
             || name.Equals("getBehaviorTooltip", StringComparison.OrdinalIgnoreCase)
             || name.Equals("isOKToAttach", StringComparison.OrdinalIgnoreCase);
     }

@@ -186,6 +186,7 @@ namespace BlingoEngine.Movies
 
         void UpdateStage();
         IBlingoSpriteChannel Channel(int channelNumber);
+        IBlingoSprite? GetSprite(int channelNumber);
         ActorList ActorList { get; }
         BlingoTimeOutList TimeOutList { get; }
         /// <summary>

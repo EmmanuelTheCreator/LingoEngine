@@ -4,6 +4,8 @@ using BlingoEngine.Director.Core.Importer;
 using BlingoEngine.Projects;
 using AbstEngine.Director.LGodot;
 using AbstUI.FrameworkCommunication;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BlingoEngine.Director.LGodot.Gfx;
 
@@ -19,6 +21,7 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
     public DirGodotImportExportWindow(BlingoProjectSettings settings, BlingoPlayer player, DirectorImportExportWindow directorWindow, IServiceProvider serviceProvider)
         : base("Import / Export", serviceProvider)
     {
+        var logger = serviceProvider.GetRequiredService<ILogger<DirGodotImportExportWindow>>();
         Init(directorWindow);
        
         CustomMinimumSize = Size;
@@ -48,7 +51,7 @@ internal partial class DirGodotImportExportWindow : BaseGodotWindow, IDirFramewo
         _importBlingoStep.Back += ShowHome;
         AddChild(_importBlingoStep);
 
-        _importDirStep = new ImportDirCstFilesStep(player)
+        _importDirStep = new ImportDirCstFilesStep(player, logger)
         {
             Position = new Vector2(5, TitleBarHeight + 5),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,

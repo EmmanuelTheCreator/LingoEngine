@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using BlingoEngine.Legacy.Lingo.Analysis;
 using BlingoEngine.Legacy.Lingo.Analysis.Passes;
 using BlingoEngine.Legacy.Lingo.Syntax;
@@ -75,6 +76,29 @@ public sealed class BlLegacyClassGenerator
         var interfaces = CollectInterfaces(classScope);
 
         var writer = new BlCSharpCodeWriter();
+        var commentBlocks = ExtractCommentBlocks(source);
+        var commentsByLine = new Dictionary<int, CommentBlock>();
+        CommentBlock? headerBlock = null;
+
+        foreach (var block in commentBlocks)
+        {
+            if (block.IsFileHeader && headerBlock is null)
+            {
+                headerBlock = block;
+                continue;
+            }
+
+            if (block.TargetLine >= 0 && !commentsByLine.ContainsKey(block.TargetLine))
+            {
+                commentsByLine.Add(block.TargetLine, block);
+            }
+        }
+
+        if (headerBlock is CommentBlock fileHeader && fileHeader.Lines.Count > 0)
+        {
+            WriteCommentBlock(writer, fileHeader.Lines);
+        }
+
         var handlerConverter = new BlLegacyHandlerConverter(source, tokens, _options, analysis);
         var interfaceSuffix = interfaces.Count > 0 ? ", " + string.Join(", ", interfaces) : string.Empty;
 
@@ -99,19 +123,175 @@ public sealed class BlLegacyClassGenerator
                 writer.WriteLine();
             }
 
-            WriteConstructor(writer, className, classScope, needsGlobal);
+            WriteConstructor(writer, className, classScope, needsGlobal, handlerConverter, commentsByLine);
 
             if (interfaces.Contains("IBlingoPropertyDescriptionList"))
             {
-                WritePropertyDescriptionListStubs(writer);
+                var hasPropertyListHandler = classScope.Handlers.ContainsKey("getPropertyDescriptionList");
+                WritePropertyDescriptionListMembers(writer, hasPropertyListHandler);
             }
 
-            WriteHandlers(writer, classScope, handlerConverter, memberInfo.HandlerOrder);
+            WriteHandlers(writer, classScope, handlerConverter, memberInfo.HandlerOrder, commentsByLine);
         }
 
         writer.WriteLine("}");
 
         return writer.ToString();
+    }
+
+    private static IReadOnlyList<CommentBlock> ExtractCommentBlocks(string source)
+    {
+        if (string.IsNullOrEmpty(source))
+        {
+            return Array.Empty<CommentBlock>();
+        }
+
+        var blocks = new List<CommentBlock>();
+        using var reader = new StringReader(source);
+
+        string? line;
+        var lineIndex = 0;
+        var hasComment = false;
+        var seenNonCommentLine = false;
+        var commentLines = new List<CommentLine>();
+        var blockIsFileHeader = false;
+
+        while ((line = reader.ReadLine()) is not null)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                if (hasComment)
+                {
+                    commentLines.Add(new CommentLine(null, isBlankLine: true));
+                }
+
+                lineIndex++;
+                continue;
+            }
+
+            var trimmed = line.TrimStart();
+            if (trimmed.StartsWith("--", StringComparison.Ordinal))
+            {
+                if (!hasComment)
+                {
+                    hasComment = true;
+                    blockIsFileHeader = !seenNonCommentLine;
+                }
+
+                var commentText = trimmed.Length > 2 ? trimmed[2..] : string.Empty;
+                commentLines.Add(new CommentLine(commentText.Trim(), isBlankLine: false));
+                lineIndex++;
+                continue;
+            }
+
+            if (hasComment)
+            {
+                blocks.Add(new CommentBlock(lineIndex, commentLines.ToArray(), blockIsFileHeader));
+                commentLines.Clear();
+                hasComment = false;
+                blockIsFileHeader = false;
+            }
+
+            seenNonCommentLine = true;
+            lineIndex++;
+        }
+
+        return blocks;
+    }
+
+    private static void TryWriteLeadingComments(
+        BlCSharpCodeWriter writer,
+        Dictionary<int, CommentBlock> commentsByLine,
+        BlLingoHandlerSymbolTable? handler)
+    {
+        if (commentsByLine is null || handler is null)
+        {
+            return;
+        }
+
+        var declarationLine = GetHandlerDeclarationLine(handler);
+        if (declarationLine < 0)
+        {
+            return;
+        }
+
+        if (!commentsByLine.TryGetValue(declarationLine, out var block))
+        {
+            return;
+        }
+
+        commentsByLine.Remove(declarationLine);
+        WriteCommentBlock(writer, block.Lines);
+    }
+
+    private static int GetHandlerDeclarationLine(BlLingoHandlerSymbolTable handler)
+    {
+        if (handler?.Symbol?.Declarations is null || handler.Symbol.Declarations.Count == 0)
+        {
+            return -1;
+        }
+
+        return handler.Symbol.Declarations[0].LineSpan.Start.Line;
+    }
+
+    private static void WriteCommentBlock(BlCSharpCodeWriter writer, IReadOnlyList<CommentLine> lines)
+    {
+        if (lines.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var line in lines)
+        {
+            if (line.IsBlankLine)
+            {
+                writer.WriteLine();
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(line.Text))
+            {
+                writer.WriteLine("//");
+            }
+            else
+            {
+                writer.WriteLine("// " + line.Text);
+            }
+        }
+
+        if (!lines[^1].IsBlankLine)
+        {
+            writer.WriteLine();
+        }
+    }
+
+    private readonly struct CommentLine
+    {
+        public CommentLine(string? text, bool isBlankLine)
+        {
+            Text = text;
+            IsBlankLine = isBlankLine;
+        }
+
+        public string? Text { get; }
+
+        public bool IsBlankLine { get; }
+    }
+
+    private readonly struct CommentBlock
+    {
+        public CommentBlock(int targetLine, IReadOnlyList<CommentLine> lines, bool isFileHeader)
+        {
+            TargetLine = targetLine;
+            Lines = lines;
+            IsFileHeader = isFileHeader;
+        }
+
+        public int TargetLine { get; }
+
+        public IReadOnlyList<CommentLine> Lines { get; }
+
+        public bool IsFileHeader { get; }
     }
 
     private static BlLingoClassSymbolTable ResolveClassScope(string scriptName, BlLingoAnalysisResult analysis)
@@ -202,13 +382,20 @@ public sealed class BlLegacyClassGenerator
         BlCSharpCodeWriter writer,
         string className,
         BlLingoClassSymbolTable classScope,
-        bool needsGlobal)
+        bool needsGlobal,
+        BlLegacyHandlerConverter handlerConverter,
+        Dictionary<int, CommentBlock> commentsByLine)
     {
+        var constructorHandler = GetConstructorHandler(classScope);
+        TryWriteLeadingComments(writer, commentsByLine, constructorHandler);
+
         writer.Write($"public {className}(IBlingoMovieEnvironment env");
         var reservedNames = needsGlobal
             ? new[] { "env", "global" }
             : new[] { "env" };
-        var constructorParameters = ComposeConstructorParameters(classScope, reservedNames);
+        var constructorParameters = constructorHandler is not null
+            ? ComposeHandlerParameterDefinitions(constructorHandler, reservedNames)
+            : new List<ParameterDefinition>();
 
         if (needsGlobal)
         {
@@ -223,21 +410,33 @@ public sealed class BlLegacyClassGenerator
             writer.Write(parameter.Name);
         }
 
-        if (needsGlobal)
-        {
-            writer.WriteLine(") : base(env)");
-            writer.WriteLine("{");
-            using (writer.IndentScope())
-            {
-                writer.WriteLine("_global = global;");
-            }
-
-            writer.WriteLine("}");
-        }
-        else
+        var hasBody = needsGlobal || constructorHandler is not null;
+        if (!hasBody)
         {
             writer.WriteLine(") : base(env) { }");
+            return;
         }
+
+        writer.WriteLine(") : base(env)");
+        writer.WriteLine("{");
+        using (writer.IndentScope())
+        {
+            if (needsGlobal)
+            {
+                writer.WriteLine("_global = global;");
+                if (constructorHandler is not null)
+                {
+                    writer.WriteLine();
+                }
+            }
+
+            if (constructorHandler is not null)
+            {
+                handlerConverter.WriteHandlerBody(writer, constructorHandler);
+            }
+        }
+
+        writer.WriteLine("}");
     }
 
     private static void WritePropertyDeclarations(BlCSharpCodeWriter writer, IReadOnlyList<BlLegacyPropertyInfo> properties)
@@ -254,18 +453,21 @@ public sealed class BlLegacyClassGenerator
         }
     }
 
-    private static void WritePropertyDescriptionListStubs(BlCSharpCodeWriter writer)
+    private static void WritePropertyDescriptionListMembers(BlCSharpCodeWriter writer, bool hasListHandler)
     {
         writer.WriteLine();
-        writer.WriteLine("public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()");
-        writer.WriteLine("{");
-        using (writer.IndentScope())
+        if (!hasListHandler)
         {
-            writer.WriteLine("return null;");
-        }
+            writer.WriteLine("public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()");
+            writer.WriteLine("{");
+            using (writer.IndentScope())
+            {
+                writer.WriteLine("return null;");
+            }
 
-        writer.WriteLine("}");
-        writer.WriteLine();
+            writer.WriteLine("}");
+            writer.WriteLine();
+        }
         writer.WriteLine("public string? GetBehaviorDescription() => null;");
         writer.WriteLine();
         writer.WriteLine("public string? GetBehaviorTooltip() => null;");
@@ -277,7 +479,8 @@ public sealed class BlLegacyClassGenerator
         BlCSharpCodeWriter writer,
         BlLingoClassSymbolTable classScope,
         BlLegacyHandlerConverter handlerConverter,
-        IReadOnlyList<BlLingoHandlerSymbolTable> orderedHandlers)
+        IReadOnlyList<BlLingoHandlerSymbolTable> orderedHandlers,
+        Dictionary<int, CommentBlock> commentsByLine)
     {
         if (classScope is null || classScope.Handlers.Count == 0)
         {
@@ -296,11 +499,13 @@ public sealed class BlLegacyClassGenerator
         var handlers = new List<BlLingoHandlerSymbolTable>();
         var seen = new HashSet<BlLingoHandlerSymbolTable>();
 
+        var constructorHandler = GetConstructorHandler(classScope);
+
         if (orderedHandlers is not null)
         {
             foreach (var handler in orderedHandlers)
             {
-                if (handler is null || !classHandlers.Contains(handler) || BlLegacyHandlerFilters.ShouldSkipHandler(handler) || !seen.Add(handler))
+                if (handler is null || ReferenceEquals(handler, constructorHandler) || !classHandlers.Contains(handler) || BlLegacyHandlerFilters.ShouldSkipHandler(handler) || !seen.Add(handler))
                 {
                     continue;
                 }
@@ -311,7 +516,7 @@ public sealed class BlLegacyClassGenerator
 
         foreach (var handler in classScope.Handlers.Values)
         {
-            if (handler is null || BlLegacyHandlerFilters.ShouldSkipHandler(handler) || !seen.Add(handler))
+            if (handler is null || ReferenceEquals(handler, constructorHandler) || BlLegacyHandlerFilters.ShouldSkipHandler(handler) || !seen.Add(handler))
             {
                 continue;
             }
@@ -341,7 +546,7 @@ public sealed class BlLegacyClassGenerator
 
             first = false;
             var returnType = resolvedReturnTypes.TryGetValue(handler, out var resolved) ? resolved : "void";
-            WriteHandler(writer, classScope, handler, handlerConverter, returnType);
+            WriteHandler(writer, classScope, handler, handlerConverter, returnType, commentsByLine);
         }
     }
 
@@ -350,8 +555,11 @@ public sealed class BlLegacyClassGenerator
         BlLingoClassSymbolTable classScope,
         BlLingoHandlerSymbolTable handler,
         BlLegacyHandlerConverter handlerConverter,
-        string returnType)
+        string returnType,
+        Dictionary<int, CommentBlock> commentsByLine)
     {
+        TryWriteLeadingComments(writer, commentsByLine, handler);
+
         var methodName = BlCSharpName.SanitizeIdentifier(handler.Symbol.Name);
         if (string.IsNullOrEmpty(methodName))
         {
@@ -392,6 +600,12 @@ public sealed class BlLegacyClassGenerator
             handlerName = handler?.OriginalName;
         }
 
+        if (!string.IsNullOrEmpty(handlerName) &&
+            handlerName.Equals("GetPropertyDescriptionList", StringComparison.OrdinalIgnoreCase))
+        {
+            return "BehaviorPropertyDescriptionList?";
+        }
+
         var scriptName = classScope?.Symbol?.Name;
         var scriptKind = classScope?.ScriptKind ?? BlLingoScriptKind.Unknown;
         var resolved = BlLegacyHandlerReturnTypeRegistry.Resolve(scriptKind, scriptName, handlerName ?? string.Empty);
@@ -409,21 +623,6 @@ public sealed class BlLegacyClassGenerator
     }
 
     private readonly record struct ParameterDefinition(string Type, string Name);
-
-    private static List<ParameterDefinition> ComposeConstructorParameters(
-        BlLingoClassSymbolTable classScope,
-        IEnumerable<string> reservedNames)
-    {
-        if (classScope is null ||
-            !classScope.Handlers.TryGetValue("new", out var newHandler) ||
-            newHandler is null ||
-            BlLegacyHandlerFilters.ShouldSkipHandler(newHandler))
-        {
-            return new List<ParameterDefinition>();
-        }
-
-        return ComposeHandlerParameterDefinitions(newHandler, reservedNames);
-    }
 
     private static List<string> ComposeHandlerParameters(BlLingoHandlerSymbolTable handler)
     {
@@ -486,6 +685,21 @@ public sealed class BlLegacyClassGenerator
         }
 
         return definitions;
+    }
+
+    private static BlLingoHandlerSymbolTable? GetConstructorHandler(BlLingoClassSymbolTable classScope)
+    {
+        if (classScope is null)
+        {
+            return null;
+        }
+
+        if (!classScope.Handlers.TryGetValue("new", out var handler) || handler is null)
+        {
+            return null;
+        }
+
+        return BlLegacyHandlerFilters.ShouldSkipHandler(handler) ? null : handler;
     }
 
     private static string ResolveParameterType(BlCodeSymbol symbol)

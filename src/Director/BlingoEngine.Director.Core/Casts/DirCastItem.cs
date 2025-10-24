@@ -28,6 +28,7 @@ public class DirCastItem : IDirCastItem
 
     public IBlingoMember? Member => _member;
     public AbstGfxCanvas Canvas => _canvas;
+    public int SlotNumber => _slotNumber;
 
     public DirCastItem(IBlingoFrameworkFactory factory, IBlingoMember? member, int slotNumber, IDirectorIconManager? iconManager)
     {

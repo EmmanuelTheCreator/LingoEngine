@@ -151,6 +151,11 @@ internal static class BlLegacyReturnTypeHelper
             return "double";
         }
 
+        if (TryAnalyzeNumericArithmeticExpression(trimmed, out var containsFloatingPoint))
+        {
+            return containsFloatingPoint ? "double" : "int";
+        }
+
         return null;
     }
 
@@ -158,6 +163,55 @@ internal static class BlLegacyReturnTypeHelper
     {
         return !string.IsNullOrEmpty(target) &&
             target.Equals("result", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryAnalyzeNumericArithmeticExpression(string expression, out bool containsFloatingPoint)
+    {
+        containsFloatingPoint = false;
+
+        var hasOperator = false;
+        var hasDigit = false;
+        var sawDigitBeforeDot = false;
+        var awaitingFractionalDigit = false;
+
+        foreach (var ch in expression)
+        {
+            if (char.IsWhiteSpace(ch))
+            {
+                continue;
+            }
+
+            if (char.IsDigit(ch))
+            {
+                hasDigit = true;
+                sawDigitBeforeDot = true;
+
+                if (awaitingFractionalDigit)
+                {
+                    containsFloatingPoint = true;
+                    awaitingFractionalDigit = false;
+                }
+
+                continue;
+            }
+
+            if (ch == '.')
+            {
+                awaitingFractionalDigit = sawDigitBeforeDot;
+                sawDigitBeforeDot = false;
+                continue;
+            }
+
+            sawDigitBeforeDot = false;
+            awaitingFractionalDigit = false;
+
+            if (ch == '+' || ch == '-' || ch == '*' || ch == '/')
+            {
+                hasOperator = true;
+            }
+        }
+
+        return hasOperator && hasDigit;
     }
 
     public static bool IsReturnWithValue(string? expression)

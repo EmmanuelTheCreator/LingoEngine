@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 
 using BlingoEngine.IO.Data.DTO;
-using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Bitmaps;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
@@ -19,6 +18,8 @@ using BlingoEngine.IO.Legacy.Fields;
 using FluentAssertions;
 
 using Xunit;
+using BlingoEngine.IO.Legacy.Texts.Data;
+using BlingoEngine.IO.Legacy.Cast.Data;
 
 namespace BlingoEngine.IO.Legacy.Tests.Files;
 

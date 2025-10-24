@@ -24,8 +24,6 @@ namespace BlingoEngine.Sprites
         public const int SpriteNumOffset = 6;
         private readonly List<BlingoSpriteBehavior> _behaviors = new();
         private readonly BlingoMovie _movie;
-        private readonly IBlingoFrameworkFactory _frameworkFactory;
-        private readonly IBlingoSpritesPlayer _spritesHolder;
         private readonly IBlingoMovieEnvironment _environment;
 
         public IReadOnlyList<BlingoSpriteBehavior> Behaviors => _behaviors;
@@ -45,6 +43,10 @@ namespace BlingoEngine.Sprites
         private int _constraint;
         private bool _directToStage;
         private float _blend = 100f;
+        private ARect? _memberSourceRect;
+        private bool _memberSourceRectChanged;
+        private APoint _regPoint;
+
 
 
         #region Properties
@@ -58,6 +60,7 @@ namespace BlingoEngine.Sprites
         public AMargin Margin { get; set; } = AMargin.Zero;
         public int ZIndex { get => LocZ; set => LocZ = value; }
         IAbstFrameworkNode IAbstNode.FrameworkObj { get => _frameworkSprite; set => throw new NotImplementedException(); } // not allowed to set.
+        public T Framework<T>() where T : IAbstFrameworkNode => (T)_frameworkSprite;
 
 
         public override string Name { get => _frameworkSprite.Name; set => _frameworkSprite.Name = value; }
@@ -156,6 +159,7 @@ namespace BlingoEngine.Sprites
         }
         public APoint Loc { get => (_frameworkSprite.X, _frameworkSprite.Y); set => _frameworkSprite.SetPosition(value); }
 
+        /// <summary>Rotation of the sprite in degrees.</summary>
         public float Rotation
         {
             get => _frameworkSprite.Rotation;
@@ -221,7 +225,40 @@ namespace BlingoEngine.Sprites
             }
         }
 
-        public APoint RegPoint { get; set; }
+        public APoint RegPoint
+        {
+            get => _regPoint;
+            private set => SetRegPointInternal(value, respectMemberRegPoint: true);
+        }
+        internal void SetRegPoint(APoint value, bool respectMemberRegPoint = true)
+            => SetRegPointInternal(value, respectMemberRegPoint);
+
+        APoint IBlingoSprite.RegPoint
+        {
+            get => RegPoint;
+            set => SetRegPoint(value);
+        }
+
+        APoint IBlingoSprite2DLight.RegPoint
+        {
+            get => RegPoint;
+            set => SetRegPoint(value);
+        }
+
+        private void SetRegPointInternal(APoint value, bool respectMemberRegPoint)
+        {
+            var target = value;
+            if (respectMemberRegPoint && _member != null && MemberSourceRect is null)
+            {
+                target = _member.RegPoint;
+            }
+
+            if (_regPoint.Equals(target))
+                return;
+
+            _regPoint = target;
+            OnPropertyChanged();
+        }
         public AColor ForeColor
         {
             get => _foreColor;
@@ -242,7 +279,7 @@ namespace BlingoEngine.Sprites
                 OnPropertyChanged();
             }
         }
-        public List<string> ScriptInstanceList { get; private set; } = new();
+        public List<string> ScriptInstanceList => _behaviors.Select(x => x.Name).ToList();
 
 
 
@@ -269,6 +306,42 @@ namespace BlingoEngine.Sprites
                 float top = LocV - offset.Y - Height / 2f;
                 return new ARect(left, top, left + Width, top + Height);
             }
+        }
+
+        public ARect? MemberSourceRect
+        {
+            get => _memberSourceRect;
+            set
+            {
+                if (_memberSourceRect == value) return;
+                _memberSourceRect = value;
+
+                if (value is null)
+                {
+                    RegPoint = _member?.RegPoint ?? default;
+                }
+
+                _memberSourceRectChanged = true;
+                if (_frameworkSprite != null && _member != null)
+                    MemberHasChanged(forceSizeUpdate: true);
+                OnPropertyChanged();
+            }
+        }
+
+        public void SetMemberRect(ARect? memberRect, APoint? regPoint = null)
+        {
+            if (memberRect is null)
+            {
+                MemberSourceRect = null;
+                var fallbackRegPoint = _member?.RegPoint ?? default;
+                SetRegPointInternal(fallbackRegPoint, respectMemberRegPoint: false);
+                return;
+            }
+
+            var rectValue = memberRect.Value;
+            MemberSourceRect = rectValue;
+            var targetRegPoint = regPoint ?? default;
+            SetRegPointInternal(targetRegPoint, respectMemberRegPoint: false);
         }
 
         public int Size => Media.Length;
@@ -327,8 +400,6 @@ namespace BlingoEngine.Sprites
 #pragma warning restore CS8618
         {
             _movie = (BlingoMovie)environment.Movie;
-            _frameworkFactory = environment.Factory;
-            _spritesHolder = spritesHolder;
             _environment = environment;
         }
         public void Init(IBlingoFrameworkSprite frameworkSprite)
@@ -336,6 +407,8 @@ namespace BlingoEngine.Sprites
             _frameworkSprite = frameworkSprite;
             _frameworkSprite.Ink = _ink;
             ApplyBlend();
+            if (_memberSourceRectChanged && _member != null)
+                MemberHasChanged(forceSizeUpdate: true);
         }
 
         #region Behaviors
@@ -474,11 +547,15 @@ When a movie stops, events occur in the following order:
             _behaviors.ForEach(b =>
             {
                 _eventMediator.Subscribe(b, SpriteNum + 6, true); //  we ignore mouse because it has to be within the boundingbox
-                if (_movie.IsPlaying)
-                    if (b is IHasBeginSpriteEvent beginSpriteEvent) beginSpriteEvent.BeginSprite();
-
             });
             base.DoBeginSprite();
+            if (_movie.IsPlaying)
+                _behaviors.ForEach(b =>
+                {
+                    if (_movie.IsPlaying)
+                        if (b is IHasBeginSpriteEvent beginSpriteEvent) beginSpriteEvent.BeginSprite();
+
+                });
         }
         internal virtual BlingoMember? DoPreStepFrame()
         {
@@ -528,18 +605,60 @@ When a movie stops, events occur in the following order:
 
         private APoint GetRegPointOffset()
         {
-            if (_member is { } member)
+            if (_member is null)
+                return new APoint();
+
+            var (baseOffset, sourceWidth, sourceHeight) = GetMemberSourceMetrics();
+            if (sourceWidth != 0 && sourceHeight != 0)
             {
-                var baseOffset = member.CenterOffsetFromRegPoint();
-                if (member.Width != 0 && member.Height != 0)
-                {
-                    float scaleX = Width / member.Width;
-                    float scaleY = Height / member.Height;
-                    return new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
-                }
-                return baseOffset;
+                float scaleX = Width / sourceWidth;
+                float scaleY = Height / sourceHeight;
+                return new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
             }
-            return new APoint();
+            return baseOffset;
+        }
+
+
+        private void ApplyMemberSourceRectSize(bool force)
+        {
+            if (_frameworkSprite == null || _member == null)
+                return;
+
+            float targetWidth;
+            float targetHeight;
+
+            if (_member is BlingoMemberBitmap && MemberSourceRect is { } rect)
+            {
+                targetWidth = rect.Width;
+                targetHeight = rect.Height;
+            }
+            else
+            {
+                targetWidth = _member.Width;
+                targetHeight = _member.Height;
+            }
+
+            if (targetWidth > 0 && (force || Width == 0))
+                Width = targetWidth;
+
+            if (targetHeight > 0 && (force || Height == 0))
+                Height = targetHeight;
+        }
+
+        public (APoint offset, float sourceWidth, float sourceHeight) GetMemberSourceMetrics()
+        {
+            if (_member == null)
+                return (new APoint(), 0f, 0f);
+
+            if (_member is BlingoMemberBitmap && MemberSourceRect is { } rect)
+            {
+                var regPoint = RegPoint;
+                var baseOffset = new APoint(regPoint.X - rect.Width + (rect.Width / 2), regPoint.Y - rect.Height + (rect.Height / 2));
+                return (baseOffset, rect.Width, rect.Height);
+            }
+
+            var defaultOffset = _member.CenterOffsetFromRegPoint();
+            return (defaultOffset, _member.Width, _member.Height);
         }
 
 
@@ -577,7 +696,8 @@ When a movie stops, events occur in the following order:
             if (_member != null)
             {
                 _member.UsedBy(this);
-                RegPoint = _member.RegPoint;
+                if (MemberSourceRect is null)
+                    RegPoint = _member.RegPoint;
             }
             if (member is BlingoFilmLoopMember filmLoop)
             {
@@ -590,8 +710,10 @@ When a movie stops, events occur in the following order:
             return this;
         }
 
-        private void MemberHasChanged()
+        private void MemberHasChanged(bool forceSizeUpdate = false)
         {
+            var forceUpdate = forceSizeUpdate || _memberSourceRectChanged;
+            var isCropping = _member is BlingoMemberBitmap && MemberSourceRect is { };
             var existingPlayer = GetActorsOfType<BlingoFilmLoopPlayer>().FirstOrDefault();
             if (_member is BlingoFilmLoopMember)
             {
@@ -610,7 +732,17 @@ When a movie stops, events occur in the following order:
                 RemoveActor(existingPlayer);
             }
 
-            _frameworkSprite.MemberChanged();
+            if (_frameworkSprite != null)
+            {
+                var shouldForceSize = forceUpdate && isCropping;
+                ApplyMemberSourceRectSize(shouldForceSize);
+                _frameworkSprite.MemberChanged();
+                _memberSourceRectChanged = false;
+            }
+            else
+            {
+                _memberSourceRectChanged = forceUpdate && isCropping;
+            }
 
             OnPropertyChanged();
         }
@@ -947,6 +1079,7 @@ When a movie stops, events occur in the following order:
         protected override void OnLoadState(BlingoSpriteState state)
         {
             if (state is not BlingoSprite2DState s || Puppet) return;
+            MemberSourceRect = s.MemberSourceRect;
             if (s.Width > 0) Width = s.Width;
             if (s.Height > 0) Height = s.Height;
             //SetMember(s.Member); // Gives problems in SDL
@@ -999,6 +1132,7 @@ When a movie stops, events occur in the following order:
             s.BackColor = BackColor;
             s.Editable = Editable;
             s.IsDraggable = IsDraggable;
+            s.MemberSourceRect = MemberSourceRect;
         }
 
         #endregion
@@ -1099,10 +1233,7 @@ When a movie stops, events occur in the following order:
             _lock = false;
         }
 
-        public T Framework<T>() where T : IAbstFrameworkNode
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }
 

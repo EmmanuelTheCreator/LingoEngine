@@ -35,13 +35,13 @@ namespace Blingo.PacMan.SDL2
                         d.CsProjFile = "Blingo.PacMan.Core\\Blingo.PacMan.Core.csproj";
                     })
 #else
-                    .WithBlingoSdlEngine("Blingo PacMan", 730, 500)
+                    .WithBlingoSdlEngine("Blingo PacMan", BlPacManProjectFactory.GameWidth, BlPacManProjectFactory.GameHeight, null,null,1)
 #endif
 #if DEBUG
                     .WithRNetProjectHostServer(61699,true)
                     //.WithRNetPipeHostServer(61699,true)
 #endif
-                    .SetProjectFactory<PacManProjectFactory>()
+                    .SetProjectFactory<BlPacManProjectFactory>()
                     .BuildAndRunProject(sp => serviceProvider = sp)
                     );
             serviceProvider?.GetRequiredService<BlingoSdlRootContext>().Run();

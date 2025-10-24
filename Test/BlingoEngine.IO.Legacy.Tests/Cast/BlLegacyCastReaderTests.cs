@@ -7,6 +7,7 @@ using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Core;
+using BlingoEngine.IO.Legacy.Cast.Data;
 
 namespace BlingoEngine.IO.Legacy.Tests.Cast;
 
@@ -34,11 +35,11 @@ public class BlLegacyCastReaderTests
         var libraries = TestContextHarness.LoadCastLibraries("Sounds/DirFileWith_3_Sounds.dir");
         var soundLibrary = libraries.First(library => library.MemberSlots.Any(member => member.ResourceId == 4));
 
-        soundLibrary.MemberSlots.Select(member => member.Name)
+        soundLibrary.MemberSlots.Select(member => member.Member.Name)
             .Should()
             .Contain(new[] { "level_up", "go", "blockfall_1" });
 
-        soundLibrary.MemberSlots.Select(member => member.MemberType)
+        soundLibrary.MemberSlots.Select(member => member.Member.MemberType)
             .Should()
             .AllBeEquivalentTo(BlLegacyCastMemberType.Sound);
     }
@@ -52,8 +53,8 @@ public class BlLegacyCastReaderTests
         fieldLibrary.MemberSlots.Should().ContainSingle();
         var member = fieldLibrary.MemberSlots[0];
 
-        member.Name.Should().Be("My field");
-        member.MemberType.Should().BeOneOf(BlLegacyCastMemberType.Field, BlLegacyCastMemberType.Text);
+        member.Member.Name.Should().Be("My field");
+        member.Member.MemberType.Should().BeOneOf(BlLegacyCastMemberType.Field, BlLegacyCastMemberType.Text);
     }
 
     [Fact]

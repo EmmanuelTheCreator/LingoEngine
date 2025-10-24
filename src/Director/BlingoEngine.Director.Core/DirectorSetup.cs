@@ -71,6 +71,10 @@ namespace BlingoEngine.Director.Core
 
                     .AddTransient(p => new Lazy<IDirectorScriptsManager>(() => p.GetRequiredService<DirectorScriptsManager>()))
 
+                    .AddTransient<IDirCastImportService, DirCastImportService>()
+                    .AddTransient<DirCastImportDialog>()
+                    .AddTransient<DirCastImportDialogHandler>()
+
                     // Windows
                     .AddSingleton<DirectorMainMenu>()
 
@@ -139,9 +143,11 @@ namespace BlingoEngine.Director.Core
                         .Register<DirectorStageWindow, MoveSpritesCommand>()
                         .Register<DirectorStageWindow, RotateSpritesCommand>()
                         .Register<DirCastManager, CreateFilmLoopCommand>()
+                        .Register<DirectorScoreWindow, FindCastMemberInScoreCommand>()
                         .Register<DirectorScriptsManager, OpenScriptCommand>()
                         .Register<BlingoCodeImporterPopupHandler, OpenBlingoCodeImporterCommand>()
                         .Register<BlingoCSharpConverterPopupHandler, OpenBlingoCSharpConverterCommand>()
+                        .Register<DirCastImportDialogHandler, OpenCastImportDialogCommand>()
                         .Register<DirectorProjectManager, SaveDirProjectSettingsCommand>()
                         .Register<DirectorPropertyInspectorWindow, OpenBehaviorPopupCommand>()
                         .Register<CompileProjectCommandHandler, CompileProjectCommand>()

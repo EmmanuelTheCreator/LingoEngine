@@ -81,12 +81,13 @@ public class MyParentParent : BlingoParentScript
         Assert.Contains("public int myStartY { get; set; }", code);
 
         var propertyIndex = code.IndexOf("public int myStartX { get; set; } // start X", StringComparison.Ordinal);
-        var constructorIndex = code.IndexOf("public MoverBehavior(IBlingoMovieEnvironment env) : base(env) { }", StringComparison.Ordinal);
-        var handlerIndex = code.IndexOf("public void New()", StringComparison.Ordinal);
+        var constructorIndex = code.IndexOf("public MoverBehavior(IBlingoMovieEnvironment env) : base(env)", StringComparison.Ordinal);
 
         Assert.True(propertyIndex >= 0, "Properties were not generated");
         Assert.True(constructorIndex > propertyIndex, "Constructor should appear after properties");
-        Assert.True(handlerIndex > constructorIndex, "Handler should appear after constructor");
+        Assert.DoesNotContain("public void New()", code);
+        Assert.Contains("myStartX = 250;", code);
+        Assert.Contains("myStartY = 45;", code);
     }
 
     [Fact]
@@ -96,9 +97,9 @@ public class MyParentParent : BlingoParentScript
         var code = _generator.GenerateClass("MyParent", source, BlLingoScriptKind.Parent);
 
         Assert.Contains(
-            "public MyParentParent(IBlingoMovieEnvironment env, object _Gfx, object ChosenType) : base(env) { }",
+            "public MyParentParent(IBlingoMovieEnvironment env, object _Gfx, object ChosenType) : base(env)",
             code);
-        Assert.Contains("public void New(object _Gfx, object ChosenType)", code);
+        Assert.DoesNotContain("public void New(object _Gfx, object ChosenType)", code);
     }
 
     [Fact]
@@ -107,7 +108,65 @@ public class MyParentParent : BlingoParentScript
         const string source = "on exitFrame me\n  go to the frame\nend";
         var code = _generator.GenerateClass("Stopper", source, BlLingoScriptKind.Behavior);
 
-        Assert.Contains("_Movie.GoTo(_Movie.CurrentFrame);", code);
+        Assert.Contains("_movie.GoTo(_movie.CurrentFrame);", code);
+    }
+
+    [Fact]
+    public void GoToLabel_UsesLowercaseMovieField()
+    {
+        const string source = "on exitFrame\n  go to \"Game\"\nend";
+        var code = _generator.GenerateClass("Navigator", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("_movie.GoTo(\"Game\");", code);
+    }
+
+    [Fact]
+    public void BooleanOperators_AreTranslatedToCSharpEquivalents()
+    {
+        const string source = """
+on checkFlags flagA, flagB
+  if flagA and flagB then
+    return "both"
+  end if
+
+  if flagA or flagB then
+    return "either"
+  end if
+
+  if flagA <> flagB then
+    return "different"
+  end if
+
+  return "none"
+end
+""";
+
+        var code = _generator.GenerateClass("BooleanLogic", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains("if (flagA && flagB)", code);
+        Assert.Contains("if (flagA || flagB)", code);
+        Assert.Contains("if (flagA != flagB)", code);
+        Assert.Contains("return \"both\";", code);
+        Assert.Contains("return \"either\";", code);
+        Assert.Contains("return \"different\";", code);
+        Assert.Contains("return \"none\";", code);
+    }
+
+    [Fact]
+    public void ReturnKeywordInExpression_TranslatesToEnvironmentNewLine()
+    {
+        const string source = """
+on updateScores i
+  member("T_InternetScoresNames").text = member("T_InternetScoresNames").text & i[1] & return
+end
+""";
+
+        var code = _generator.GenerateClass("ScoreKeeper", source, BlLingoScriptKind.Parent);
+
+        Assert.Contains("Environment.NewLine", code);
+        Assert.Contains(
+            "Member<IBlingoMemberTextBase>(\"T_InternetScoresNames\").Text = Member<IBlingoMemberTextBase>(\"T_InternetScoresNames\").Text + i[1] + Environment.NewLine;",
+            code);
     }
 
     [Fact]
@@ -159,20 +218,41 @@ public class MyBehaviorBehavior : BlingoSpriteBehavior, IBlingoPropertyDescripti
 {
     public MyBehaviorBehavior(IBlingoMovieEnvironment env) : base(env) { }
 
-    public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
-    {
-        return null;
-    }
-
     public string? GetBehaviorDescription() => null;
 
     public string? GetBehaviorTooltip() => null;
 
     public bool IsOKToAttach(BlingoSymbol spriteType, int spriteNum) => true;
+    public BehaviorPropertyDescriptionList? GetPropertyDescriptionList()
+    {
+        return new BehaviorPropertyDescriptionList();
+    }
 }
 """;
 
         LegacyCodeAssert.AreEqual(expected, code);
+    }
+
+    [Fact]
+    public void PropertyDescriptionList_TranslatesAddPropStatements()
+    {
+        const string source = """
+property myFunction
+property mySpriteNum
+on getPropertyDescriptionList
+  addProp description,#myFunction,[#comment:"Function:", #default:"0"]
+  addProp description,#mySpriteNum,[#comment:"Sprite Num:", #default:4]
+end
+""";
+
+        var code = _generator.GenerateClass("Execute", source, BlLingoScriptKind.Behavior);
+
+        Assert.Contains(
+            ".Add(this, x => x.myFunction, \"Function:\", \"0\")",
+            code);
+        Assert.Contains(
+            ".Add(this, x => x.mySpriteNum, \"Sprite Num:\", 4)",
+            code);
     }
 
     [Fact]
@@ -235,4 +315,36 @@ public class MyBehaviorBehavior : BlingoSpriteBehavior, IHasMouseUpEvent
         LegacyCodeAssert.AreEqual(expected, code);
     }
 
+    [Fact]
+    public void LeadingComments_ArePreservedBeforeClassDeclaration()
+    {
+        const string source = "-- Header comment\n-- Second line\non startMovie\nend";
+        var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
+
+        const string expectedPrefix = """
+// Header comment
+// Second line
+
+public class MyBehaviorBehavior : BlingoSpriteBehavior
+""";
+
+        Assert.StartsWith(expectedPrefix.ReplaceLineEndings(Environment.NewLine), code);
+    }
+
+    [Fact]
+    public void CommentsBetweenHandlers_ArePreserved()
+    {
+        const string source = "-- Header\n" +
+            "on mouseUp\n" +
+            "end\n" +
+            "\n" +
+            "-- Between handlers\n" +
+            "on mouseDown\n" +
+            "end";
+
+        var code = _generator.GenerateClass("MyBehavior", source, BlLingoScriptKind.Behavior);
+
+        var commentSnippet = "    // Between handlers" + Environment.NewLine + Environment.NewLine + "    public void MouseDown";
+        Assert.Contains(commentSnippet.ReplaceLineEndings(Environment.NewLine), code);
+    }
 }

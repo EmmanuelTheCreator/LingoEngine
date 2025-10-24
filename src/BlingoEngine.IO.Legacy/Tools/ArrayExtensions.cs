@@ -184,7 +184,7 @@ namespace BlingoEngine.IO.Legacy.Tools
             var text =  builder.ToString();
             return text;
         }
-
+       
         /// <summary>
         /// Formats bytes as a hexadecimal string, optionally prefixing addresses on each line.
         /// </summary>
@@ -203,11 +203,45 @@ namespace BlingoEngine.IO.Legacy.Tools
             ArgumentNullException.ThrowIfNull(buffer);
 
             if (offset < 0 || offset + 4 > buffer.Length)
-            {
                 return 0u;
-            }
 
             return BinaryPrimitives.ReadUInt32LittleEndian(buffer.AsSpan(offset, 4));
+        }
+        public static uint ReadUInt32(this byte[] buffer, int offset)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            if (offset < 0 || offset + 4 > buffer.Length)
+                return 0u;
+
+            return BinaryPrimitives.ReadUInt32BigEndian(buffer.AsSpan(offset, 4));
+        }
+        public static int ReadInt32(this byte[] buffer, int offset)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            if (offset < 0 || offset + 4 > buffer.Length)
+                return 0;
+
+            return BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(offset, 4));
+        }
+        public static uint ReadUInt16(this byte[] buffer, int offset)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            if (offset < 0 || offset + 2 > buffer.Length)
+                return 0u;
+
+            return BinaryPrimitives.ReadUInt16BigEndian(buffer.AsSpan(offset, 2));
+        }
+        public static int ReadInt16(this byte[] buffer, int offset)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            if (offset < 0 || offset + 2 > buffer.Length)
+                return 0;
+
+            return BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(offset, 2));
         }
 
         public static byte ReadByteOrDefault(this byte[] buffer, int offset)
@@ -215,9 +249,7 @@ namespace BlingoEngine.IO.Legacy.Tools
             ArgumentNullException.ThrowIfNull(buffer);
 
             if (offset < 0 || offset >= buffer.Length)
-            {
                 return 0;
-            }
 
             return buffer[offset];
         }
@@ -310,7 +342,13 @@ namespace BlingoEngine.IO.Legacy.Tools
 
             return true;
         }
-
+        public static string ReadCString(this byte[] buf, int pos)
+        {
+            if (pos < 0 || pos >= buf.Length) return "";
+            int end = Array.IndexOf(buf, (byte)0, pos);
+            if (end < 0) end = buf.Length;
+            return Encoding.ASCII.GetString(buf, pos, end - pos);
+        }
         public static bool TryParseUInt32Decimal(this ReadOnlySpan<byte> span, out uint value)
         {
             value = 0;

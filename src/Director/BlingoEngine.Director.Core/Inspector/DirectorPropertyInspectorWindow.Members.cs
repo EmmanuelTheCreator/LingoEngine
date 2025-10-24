@@ -6,6 +6,7 @@ using BlingoEngine.Bitmaps;
 using BlingoEngine.Director.Core.Members.Commands;
 using BlingoEngine.FilmLoops;
 using BlingoEngine.Members;
+using BlingoEngine.Medias;
 using BlingoEngine.Shapes;
 using BlingoEngine.Sounds;
 using BlingoEngine.Texts;
@@ -34,6 +35,9 @@ public partial class DirectorPropertyInspectorWindow
                 break;
             case BlingoMemberShape shape:
                 AddShapeTab(shape);
+                break;
+            case BlingoMemberMedia media:
+                AddMediaTab(media);
                 break;
             case BlingoFilmLoopMember film:
                 AddTab(PropetyTabNames.FilmLoop, film);

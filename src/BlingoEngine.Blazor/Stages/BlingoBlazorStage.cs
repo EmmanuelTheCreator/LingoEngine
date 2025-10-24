@@ -57,6 +57,10 @@ public class BlingoBlazorStage : IBlingoFrameworkStage, IDisposable
 
     public float Scale { get; set; } = 1f;
 
+
+    public float X { get; set; }
+    public float Y { get; set; }
+
     public BlingoBlazorStage(BlingoPlayer player, IJSRuntime js, AbstUIScriptResolver scripts, BlingoBlazorRootPanel root, IAbstComponentFactory factory)
     {
         _player = player;
@@ -308,5 +312,6 @@ public class BlingoBlazorStage : IBlingoFrameworkStage, IDisposable
     }
 
     object IAbstFrameworkNode.FrameworkNode => _root.Component;
+
 }
 

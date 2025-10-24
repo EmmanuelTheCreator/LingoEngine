@@ -33,6 +33,8 @@ public interface IAbstWindowManager
     public event Action<IAbstWindow>? WindowClosed;
 
     bool OpenWindow(string windowCode);
+    bool OpenWindow<TWindow>(string windowCode, Action<TWindow>? actionOnOpen = null)
+        where TWindow : class, IAbstWindow;
     bool SwapWindowOpenState(string windowCode);
     bool CloseWindow(string windowCode);
     void Init(IAbstFrameworkWindowManager frameworkWindowManager);
@@ -128,11 +130,29 @@ public class AbstWindowManager : IAbstWindowManager, IDisposable,
         return true;
     }
 
-    public bool OpenWindow(string windowCode)
+    public bool OpenWindow(string windowCode) => OpenWindow(windowCode, (Action<IAbstWindow>?)null);
+
+    public bool OpenWindow<TWindow>(string windowCode, Action<TWindow>? actionOnOpen = null)
+        where TWindow : class, IAbstWindow
+        => OpenWindow(
+            windowCode,
+            actionOnOpen is null
+                ? null
+                : window =>
+                {
+                    if (window is not TWindow typedWindow)
+                    {
+                        throw new InvalidOperationException($"Window '{windowCode}' is not of type {typeof(TWindow).FullName}.");
+                    }
+
+                    actionOnOpen(typedWindow);
+                });
+
+    private bool OpenWindow(string windowCode, Action<IAbstWindow>? actionOnOpen)
     {
         if (!_windowFactory.TryGetRegistration(windowCode, out var registration)) return false;
         var instance = registration.Instance;
-        bool wasOpen = instance.IsOpen;
+        actionOnOpen?.Invoke(instance);
         instance.OpenWindow();
         SetActiveWindow(registration);
         WindowOpened?.Invoke(registration.Instance);

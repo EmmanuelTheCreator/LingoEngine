@@ -337,14 +337,25 @@ internal sealed class BlLegacyTypeCollection
 
         public void Apply()
         {
-            foreach (var property in _properties.Values)
-            {
-                property.Apply();
-            }
+            ApplyHandlers();
+            ApplyProperties();
+            ApplyHandlers();
+            ApplyProperties();
+        }
 
+        private void ApplyHandlers()
+        {
             foreach (var handler in _handlers.Values)
             {
                 handler.Apply();
+            }
+        }
+
+        private void ApplyProperties()
+        {
+            foreach (var property in _properties.Values)
+            {
+                property.Apply();
             }
         }
     }
@@ -478,6 +489,7 @@ internal sealed class BlLegacyTypeCollection
     internal sealed class TypeTarget
     {
         private string? _mergedType;
+        private readonly List<TypeTarget> _linkedTargets = new();
 
         public TypeTarget(string name, BlLegacyTypeTargetKind kind, BlCodeSymbol? symbol, bool isSelfParameter)
         {
@@ -495,6 +507,8 @@ internal sealed class BlLegacyTypeCollection
 
         public bool IsSelfParameter { get; }
 
+        public string? CurrentHint => BlLegacyTypeUtilities.NormalizeTypeName(_mergedType);
+
         public void AddHint(string typeName)
         {
             var normalized = BlLegacyTypeUtilities.NormalizeTypeName(typeName);
@@ -508,12 +522,29 @@ internal sealed class BlLegacyTypeCollection
                 : BlLegacyTypeUtilities.MergeTypeNames(_mergedType!, normalized);
         }
 
+        public void LinkTo(TypeTarget? target)
+        {
+            if (target is null || ReferenceEquals(this, target))
+            {
+                return;
+            }
+
+            if (!_linkedTargets.Contains(target))
+            {
+                _linkedTargets.Add(target);
+            }
+        }
+
         public void Apply()
         {
             var normalized = BlLegacyTypeUtilities.NormalizeTypeName(_mergedType);
             if (!string.IsNullOrEmpty(normalized) && Symbol is not null)
             {
                 Symbol.SetResolvedTypeName(normalized);
+                foreach (var linked in _linkedTargets)
+                {
+                    linked.AddHint(normalized);
+                }
             }
         }
     }

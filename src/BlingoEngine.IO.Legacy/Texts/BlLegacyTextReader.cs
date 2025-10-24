@@ -5,6 +5,7 @@ using BlingoEngine.IO.Legacy.Afterburner;
 using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
+using BlingoEngine.IO.Legacy.Texts.Data;
 
 namespace BlingoEngine.IO.Legacy.Texts;
 
@@ -18,18 +19,18 @@ namespace BlingoEngine.IO.Legacy.Texts;
 /// </summary>
 internal sealed class BlLegacyTextReader
 {
-    private static readonly BlTag XmedTag = BlTag.Get("XMED");
-    private static readonly BlTag StxtTag = BlTag.Get("STXT");
+    private static readonly BlTag _xmedTag = BlTag.Get("XMED");
+    private static readonly BlTag _stxtTag = BlTag.Get("STXT");
 
-    private static readonly BlTag[] CandidateTags =
+    private static readonly BlTag[] _candidateTags =
     {
-        XmedTag,
-        StxtTag
+        _xmedTag,
+        _stxtTag
     };
 
-    private static readonly HashSet<BlTag> ChildTags = new(CandidateTags);
+    private static readonly HashSet<BlTag> _childTags = new(_candidateTags);
 
-    private static readonly HashSet<BlTag> StandaloneTags = new(CandidateTags);
+    private static readonly HashSet<BlTag> _standaloneTags = new(_candidateTags);
 
     private readonly ReaderContext _context;
 
@@ -57,7 +58,7 @@ internal sealed class BlLegacyTextReader
         {
             foreach (var link in pair.Value)
             {
-                if (!ChildTags.Contains(link.Tag))
+                if (!_childTags.Contains(link.Tag))
                     continue;
 
                 if (!entriesById.TryGetValue(link.ChildId, out var child))
@@ -80,7 +81,7 @@ internal sealed class BlLegacyTextReader
 
         foreach (var entry in _context.Resources.Entries)
         {
-            if (!StandaloneTags.Contains(entry.Tag))
+            if (!_standaloneTags.Contains(entry.Tag))
                 continue;
 
             if (!processed.Add(entry.Id))
@@ -112,10 +113,10 @@ internal sealed class BlLegacyTextReader
 
     private static BlLegacyTextFormatKind DetectFormat(BlTag tag)
     {
-        if (tag == XmedTag)
+        if (tag == _xmedTag)
             return BlLegacyTextFormatKind.Xmed;
 
-        if (tag == StxtTag)
+        if (tag == _stxtTag)
             return BlLegacyTextFormatKind.Stxt;
 
         return BlLegacyTextFormatKind.Unknown;

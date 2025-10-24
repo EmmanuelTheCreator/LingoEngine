@@ -1,0 +1,251 @@
+
+00:FFFF0000000600040001
+    01:77AA 
+	
+03:00000000005100000000 
+    02:40001 
+		02:101 					// File version or  constant (Western / Latin-1 codepage).
+		02:-7FFF6FE0 			// fix token probably (like in the tab stops where it is 6A03E2AE)
+	02:0 
+      C2(03) 
+		02:480048 				// 72 0 72 
+		02:-1 
+	02:0 
+		02:26					// Height 38
+		01:0 
+      C1(03) 
+		02:-1 
+		<82 
+		
+		
+		
+		
+	02:0 
+      C2(0A) 
+		02:26					// Height	38
+		02:1F4 					// Width		
+		01:FF00 <81 <81 01:0 	// Some color
+		<82 
+		<82 
+		02:1 
+	02:0 
+      C2(04) 
+		02:55			// Text length   or sub-thing with 'tab-stops'
+		01:0 
+	  
+03:00010000003800000001 	// Layout (500 x 38)
+    02:0 
+		02:5B 
+		01:84 
+	02:0 
+		01:2  						// 2,	Number of text lines   
+	02:0 
+		01:1 						// 1,	Number of paragraphs or something with lines
+	02:0 
+		<82 
+		<82 
+		02:26 						// Height : 38px
+		02:1F4 						// Width  : 500px
+		01:5A 	
+		01:0 	
+		01:3 	
+		01:8800 	
+		01:0 
+	02:13 
+	02:46 
+	02:26 
+	02:4A 
+	02:0 
+	
+03:00020000006000000000 	// Block Full Text
+            00(-1):"One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)"
+			
+03:00040000002700000008 	// Run styles
+  02:0  
+	<81  02:14 		// Style=0 ,20, End = "One line, 3 styles ("																		20	0x14
+	01:1 02:28		// Style=1 ,40, End = "One line, 3 styles (Arial 12 red #F7204A" 		                                            20	0x14
+	01:0 02:2A		// Style=0 ,42, End = "One line, 3 styles (Arial 12 red #F7204A, " 			                                        2	0x02
+	01:2 02:40		// Style=2 ,64, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E"                            22	0x16
+	01:0 02:42		// Style=0 ,66, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, "		                    2	0x02
+	01:4 02:5A		// Style=4 ,90, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD"	16	0x0F	
+	01:0 02:5D		// Style=0 ,93, End = "One line, 3 styles (Arial 12 red #F7204A, Tahoma 9 green #1EF02E, Terminal 18 blue #2702FD)" 8	0x08
+	01:0
+	
+03:00050000000A00000002 	// Run paragraphs 
+    02:0 
+		01:1 02:5D  // Run=1 , 93, Complete text
+		01:0 
+		
+03:00060000012B00000005 	// Block Styles
+	01:3 
+// Style 0
+	01:0 
+	<81 
+	<81 
+	01:C 										// Font Descent 
+	01:3 										// Font Ascendent
+	01:0 
+	<81 
+	<82 
+	<82 
+      C1(04) 									// Foreground RGBA: Black #000000
+	01:FFFF <81 <81 01:0 <82 					// Background RGBA : White #FFFFFF
+		02:C0000 02:0  							// 12,	Font-size
+      C2(0A) 02:6 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+      C1(03) 
+// Style 1	  
+	  01:C 01:3 01:0 <81 <82 <82 
+			01:F700 01:2000 01:4A00 01:0 		// Red #F7204A
+  01:FFFF <81 <81 01:0 <82 
+		02:C0000 02:0 							// 12,	Font-size
+      C2(0A) 02:1 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+// Style 2	  
+	  01:1 01:0 <81 
+		01:9 									// 9,	 Follow Font-size ?			
+		01:2 
+		01:0 <81 <82 <82 
+			01:1E00 01:F000 01:2E00 01:0 		// Green : #1EF02E
+  01:FFFF <81 <81 01:0 <82 
+		02:90000 02:0 							// 9,	Font-Size
+      C2(0A) 02:1 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+      C1(03) 
+// Style 3	  Text_Multi_Style_Size_Color_13.xmedlog
+	  01:C 01:3 01:0 
+		<81 <82 <82 
+			01:2700 01:200 01:FD00 01:0 		// Blue: 	#2702FD
+  01:FFFF <81 <81 01:0 <82 
+		02:C0000 02:0  							// 12,	Font-size
+      C2(13) 
+      C1(20) <82 <82 
+      C1(03) <82 
+// Style 4	  Text_Multi_Style_Size_Color_13.xmedlog
+	01:2 01:0 <81 
+		01:10 								// 3. Font Descent 
+		01:2                                // 4. Font Ascent 
+		01:0                                // 5.
+		<81                                 // 6.					
+		02:400                              // 7. Seems font weight override 
+		02:0                                 
+		01:2700 01:200 01:FD00 01:0 		// 9.  Foreground color		Blue: 	#2702FD
+		01:FFFF <81 <81 01:0                // 10. Background color
+		<82                                 // 11.
+		02:120000   						// 12. Font size			18,
+		02:0
+      C2(0A) 02:1 02:0 
+      C2(07) 
+      C1(20) <82 <82 
+      C1(03) <82 
+	  
+03:00070000004D00000002 		// Paragraphs Definitions
+// Paragraph 0
+    01:0 <81 <81       							C2(0F) 
+	<81 <82 02:1 02:0 							C2(06) 
+	02:6A03E2AE 01:0 02:18 01:0 <82  						// Tab stops with only default Tab width of 24px
+      C1(03)       								C2(12) 
+// Paragraph 1	  
+      C1(03) 							       	C2(0F) 
+	  <81 <82 02:1 02:0       					C2(06) 
+	  02:6A03E2AE 01:1 
+		<82 02:17B 02:0 
+		<82 02:18  01:0 
+		<82 C1(03)  							C2(12) 		// Tab stops with 1 tab stop at 397px and default Tab width of 24px
+     
+	  
+03:00080000020A00000003			// Fonts  Block 
+	00(40):"Arial"				// Font Name
+	00(40):""               	// Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  			  
+				02:4E4 			// Windows code page / charset (Latin-1)  	
+				02:400  		// Font weight 
+			02:0 <82 <82 	
+			02:1
+				02:0 <82 		// Character cell height or raster-font index   		
+				02:40008		// lfPitchAndFamily and flag bits from the Win32 LOGFONT structure. = underline/italic bits  
+			02:0 <82 	
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+	00(40):"Tahoma"				// Font Name
+	00(40):""               	// Style name (Empty = Regular)
+		01:4 
+			01:0 <81 
+				<81				// Font ID / OEM charset flag.  			  
+				02:4E4 			// Windows code page / charset (Latin-1)  	
+				02:400  		// Font weight 
+			02:0 <82 <82 	
+			02:1
+				02:0 <82 		// Character cell height or raster-font index   		
+				02:40008		// lfPitchAndFamily and flag bits from the Win32 LOGFONT structure. = underline/italic bits  
+			02:0 <82 	
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+    00(40):"Terminal"			// Font Name
+    00(40):""               	// Style name (Empty = Regular)
+		01:4 
+			01:0 <81 	  	
+				01:60FF			// Font ID / OEM charset flag. In old Windows metrics tables, 0xFF60–0xFF62 marked OEM fixed-pitch raster fonts (Terminal, VGA437).
+				                // Director likely stores this as FF60 reverse
+				02:4E4 			// Windows code page / charset (Latin-1) 	
+				02:400  		// Font weight  
+			02:0 <82 <82 	
+			02:1 
+				02:FF 			// Character cell height or raster-font index. For Terminal this matches typical cell height (≈8×8 or 8×12 font → 0xFF sentinel).
+				02:0   	
+			C2(03) 				
+				02:101			// 257, Western / Latin I, Standard Windows 1252 fonts  
+				01:0 
+	  
+03:00090000001500000002 	// Line-height spacing descriptor 
+    02:0 <82 
+		02:26 			// Line-height
+		02:1F4 			// paragraph spacing / baseline offset
+	02:0 <82  			// Line-height
+		02:26 			// paragraph spacing / baseline offset
+		02:1F4 
+	
+03:000A0000001500000002 	// Identical as Line-height spacing
+    02:0 <82 02:26 02:1F4 02:0 <82 02:26 02:1F4 
+	
+03:000B0000000500000002 
+    02:0 
+      C2(07) 
+	  
+03:000C0000002600000002 
+    02:42 <82 <82 02:8 02:152 01:5 02:0 <82 01:1 02:5A <82 <82 02:5 02:1E3 01:5 02:93 <82 01:1 
+	
+03:000F0000002100000000 
+    02:40 01:0 
+      C2(0B) 01:1 02:0 
+      C2(09) <81 <81 <82 <81 <81 
+      C2(04) 
+      C1(05) 
+      C2(03) 
+      C1(04) <82 <82 
+      C1(03) 
+      C2(20) 
+	  
+03:00130000007E00000000 
+    01:D 01:A 01:9 01:1F 01:8 01:C 01:E 01:1C 01:1D 01:1E 01:1F 01:7F 01:1B 01:0  // D A 9 1F 8 C E 1C 1D 1F 7F 1B 0
+        00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
+  01:FFFF <81 <81 01:0 
+  01:FFFF <81 <81 01:0 
+  
+03:01280000000B00000001 
+    02:5D <82 01:0 
+      C1(03) 
+      C2(05) 
+	  
+03:01290000000B00000001 
+    02:5D <82 01:0 
+      C1(03) 
+      C2(FFFFFFFF)

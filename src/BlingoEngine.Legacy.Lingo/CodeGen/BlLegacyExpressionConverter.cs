@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using BlingoEngine.Legacy.Lingo.Analysis;
 using BlingoEngine.Legacy.Lingo.Syntax;
 
 namespace BlingoEngine.Legacy.Lingo.CodeGen;
@@ -9,71 +10,11 @@ namespace BlingoEngine.Legacy.Lingo.CodeGen;
 public sealed class BlLegacyExpressionConverter
 {
     private readonly IReadOnlyList<BlSyntaxToken> _tokens;
+    private readonly bool _treatReturnAsStatement;
     private readonly List<string> _parts = new();
     private int _index;
     private bool _afterDot;
 
-    private readonly struct MemberPropertyMapping
-    {
-        public MemberPropertyMapping(string genericType, string propertyName)
-        {
-            GenericType = genericType;
-            PropertyName = propertyName;
-        }
-
-        public string GenericType { get; }
-
-        public string PropertyName { get; }
-    }
-
-    private static readonly Dictionary<string, MemberPropertyMapping> s_memberPropertyMap = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["text"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Text"),
-        ["line"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Line"),
-        ["word"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Word"),
-        ["char"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Char"),
-        ["editable"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Editable"),
-        ["wordwrap"] = new MemberPropertyMapping("IBlingoMemberTextBase", "WordWrap"),
-        ["scrolltop"] = new MemberPropertyMapping("IBlingoMemberTextBase", "ScrollTop"),
-        ["textfont"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Font"),
-        ["font"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Font"),
-        ["textsize"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontSize"),
-        ["fontsize"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontSize"),
-        ["textstyle"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontStyle"),
-        ["fontstyle"] = new MemberPropertyMapping("IBlingoMemberTextBase", "FontStyle"),
-        ["textcolor"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Color"),
-        ["color"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Color"),
-        ["bold"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Bold"),
-        ["italic"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Italic"),
-        ["underline"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Underline"),
-        ["alignment"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Alignment"),
-        ["margin"] = new MemberPropertyMapping("IBlingoMemberTextBase", "Margin"),
-        ["loop"] = new MemberPropertyMapping("BlingoMemberSound", "Loop"),
-        ["stereo"] = new MemberPropertyMapping("BlingoMemberSound", "Stereo"),
-        ["length"] = new MemberPropertyMapping("BlingoMemberSound", "Length"),
-        ["linked"] = new MemberPropertyMapping("BlingoMemberSound", "IsLinked"),
-        ["islinked"] = new MemberPropertyMapping("BlingoMemberSound", "IsLinked"),
-        ["linkedfilepath"] = new MemberPropertyMapping("BlingoMemberSound", "LinkedFilePath"),
-        ["isexternal"] = new MemberPropertyMapping("BlingoMemberSound", "IsExternal"),
-        ["imagedata"] = new MemberPropertyMapping("BlingoMemberBitmap", "ImageData"),
-        ["isloaded"] = new MemberPropertyMapping("BlingoMemberBitmap", "IsLoaded"),
-        ["format"] = new MemberPropertyMapping("BlingoMemberBitmap", "Format"),
-        ["vertexlist"] = new MemberPropertyMapping("BlingoMemberShape", "VertexList"),
-        ["shapetype"] = new MemberPropertyMapping("BlingoMemberShape", "ShapeType"),
-        ["shapetypeint"] = new MemberPropertyMapping("BlingoMemberShape", "ShapeTypeInt"),
-        ["fillcolor"] = new MemberPropertyMapping("BlingoMemberShape", "FillColor"),
-        ["endcolor"] = new MemberPropertyMapping("BlingoMemberShape", "EndColor"),
-        ["strokecolor"] = new MemberPropertyMapping("BlingoMemberShape", "StrokeColor"),
-        ["strokewidth"] = new MemberPropertyMapping("BlingoMemberShape", "StrokeWidth"),
-        ["closed"] = new MemberPropertyMapping("BlingoMemberShape", "Closed"),
-        ["antialias"] = new MemberPropertyMapping("BlingoMemberShape", "AntiAlias"),
-        ["filled"] = new MemberPropertyMapping("BlingoMemberShape", "Filled"),
-        ["duration"] = new MemberPropertyMapping("BlingoMemberMedia", "Duration"),
-        ["currenttime"] = new MemberPropertyMapping("BlingoMemberMedia", "CurrentTime"),
-        ["mediastatus"] = new MemberPropertyMapping("BlingoMemberMedia", "MediaStatus"),
-        ["scripttype"] = new MemberPropertyMapping("BlingoMemberScript", "ScriptType"),
-        ["behaviortypename"] = new MemberPropertyMapping("BlingoMemberScript", "BehaviorTypeName"),
-    };
 
     private static readonly Dictionary<string, string> s_thePropertyMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -122,29 +63,158 @@ public sealed class BlLegacyExpressionConverter
         ["stage"] = "_Player.Stage",
     };
 
-    public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens)
+    private sealed record PropertyListCommandInfo
     {
-        _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
+        public PropertyListCommandInfo(string methodName, int requiredArgumentCount, int[]? symbolArgumentIndices = null)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+            SymbolArgumentIndices = symbolArgumentIndices ?? Array.Empty<int>();
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+
+        public int[] SymbolArgumentIndices { get; }
     }
 
-    public static string Convert(IReadOnlyList<BlSyntaxToken> tokens)
+    private sealed record PropertyListFunctionInfo
+    {
+        public PropertyListFunctionInfo(
+            string methodName,
+            int requiredArgumentCount,
+            int[]? symbolArgumentIndices = null,
+            bool isPropertyAccess = false)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+            SymbolArgumentIndices = symbolArgumentIndices ?? Array.Empty<int>();
+            IsPropertyAccess = isPropertyAccess;
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+
+        public int[] SymbolArgumentIndices { get; }
+
+        public bool IsPropertyAccess { get; }
+    }
+
+    private sealed record ListCommandInfo
+    {
+        public ListCommandInfo(string methodName, int requiredArgumentCount)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+    }
+
+    private sealed record ListFunctionInfo
+    {
+        public ListFunctionInfo(string methodName, int requiredArgumentCount, bool isPropertyAccess = false)
+        {
+            MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
+            RequiredArgumentCount = requiredArgumentCount;
+            IsPropertyAccess = isPropertyAccess;
+        }
+
+        public string MethodName { get; }
+
+        public int RequiredArgumentCount { get; }
+
+        public bool IsPropertyAccess { get; }
+    }
+
+    private static readonly Dictionary<string, PropertyListCommandInfo> s_propertyListCommands = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["addprop"] = new PropertyListCommandInfo("Add", 3, new[] { 0 }),
+        ["setprop"] = new PropertyListCommandInfo("SetProp", 3, new[] { 0 }),
+        ["deleteprop"] = new PropertyListCommandInfo("DeleteProp", 2, new[] { 0 }),
+        ["setaprop"] = new PropertyListCommandInfo("SetaProp", 3, new[] { 0 }),
+        ["addat"] = new PropertyListCommandInfo("AddAt", 4, new[] { 1 }),
+        ["deleteat"] = new PropertyListCommandInfo("DeleteAt", 2),
+        ["setat"] = new PropertyListCommandInfo("SetAt", 3),
+    };
+
+    private static readonly Dictionary<string, PropertyListFunctionInfo> s_propertyListFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["getprop"] = new PropertyListFunctionInfo("GetProp", 2, new[] { 0 }),
+        ["getaprop"] = new PropertyListFunctionInfo("GetaProp", 2, new[] { 0 }),
+        ["getpropat"] = new PropertyListFunctionInfo("GetPropAt", 2),
+        ["findpos"] = new PropertyListFunctionInfo("FindPos", 2, new[] { 0 }),
+        ["findposnear"] = new PropertyListFunctionInfo("FindPosNear", 2, new[] { 0 }),
+        ["getpos"] = new PropertyListFunctionInfo("GetPos", 2),
+        ["getat"] = new PropertyListFunctionInfo("GetAt", 2),
+        ["count"] = new PropertyListFunctionInfo("Count", 1, isPropertyAccess: true),
+        ["duplicate"] = new PropertyListFunctionInfo("Duplicate", 1),
+    };
+
+    private static readonly Dictionary<string, ListCommandInfo> s_listCommands = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["add"] = new ListCommandInfo("Add", 2),
+        ["addat"] = new ListCommandInfo("AddAt", 3),
+        ["deleteat"] = new ListCommandInfo("DeleteAt", 2),
+        ["setat"] = new ListCommandInfo("SetAt", 3),
+        ["deleteone"] = new ListCommandInfo("DeleteOne", 2),
+        ["deleteall"] = new ListCommandInfo("DeleteAll", 1),
+        ["sort"] = new ListCommandInfo("Sort", 1),
+    };
+
+    private static readonly Dictionary<string, ListFunctionInfo> s_listFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["getone"] = new ListFunctionInfo("GetOne", 1),
+        ["getlast"] = new ListFunctionInfo("GetLast", 1),
+        ["getavalue"] = new ListFunctionInfo("GetAValue", 1),
+        ["ilk"] = new ListFunctionInfo("Ilk", 1),
+        ["listp"] = new ListFunctionInfo("ListP", 1),
+        ["max"] = new ListFunctionInfo("Max", 1),
+        ["min"] = new ListFunctionInfo("Min", 1),
+    };
+
+    private static readonly string[] s_objectPredicateTypes =
+    {
+        "BlingoEngine.Core.IBlingoScriptBase",
+        "BlingoEngine.Xtras.IBlingoXtra",
+        "BlingoEngine.Core.IBlingoWindow",
+    };
+
+    public BlLegacyExpressionConverter(IReadOnlyList<BlSyntaxToken> tokens, bool treatReturnAsStatement = false)
+    {
+        _tokens = tokens ?? Array.Empty<BlSyntaxToken>();
+        _treatReturnAsStatement = treatReturnAsStatement;
+    }
+
+    public static string Convert(IReadOnlyList<BlSyntaxToken> tokens, bool treatReturnAsStatement = false)
     {
         if (tokens is null || tokens.Count == 0)
         {
             return string.Empty;
         }
 
-        return new BlLegacyExpressionConverter(tokens).Build();
+        return new BlLegacyExpressionConverter(tokens, treatReturnAsStatement).Build();
     }
 
     public string Build()
     {
         while (_index < _tokens.Count)
         {
-            if (TryHandleVoidPredicate() ||
+            if (TryHandlePropertyListCommand() ||
+                TryHandlePropertyListFunction() ||
+                TryHandleListCommand() ||
+                TryHandleListFunction() ||
+                TryHandleVoidPredicate() ||
+                TryHandleObjectPredicate() ||
                 TryHandleScriptInstantiation() ||
+                TryHandleStringFunction() ||
                 TryHandleValueFunction() ||
                 TryHandleAlertCommand() ||
+                TryHandleGoToMovieNavigation() ||
                 TryHandleGoToCurrentFrame() ||
                 TryHandleMemberTypedAccess() ||
                 TryHandleListLiteral() ||
@@ -153,12 +223,13 @@ public sealed class BlLegacyExpressionConverter
                 continue;
             }
 
+            var currentIndex = _index;
             var token = _tokens[_index++];
             switch (token.Kind)
             {
                 case BlSyntaxKind.IdentifierToken:
                 case BlSyntaxKind.KeywordToken:
-                    AppendIdentifier(token.ValueText);
+                    AppendIdentifier(token, currentIndex);
                     break;
                 case BlSyntaxKind.NumberToken:
                 case BlSyntaxKind.StringLiteralToken:
@@ -221,6 +292,61 @@ public sealed class BlLegacyExpressionConverter
         AppendRaw(expression);
         AppendRaw("==");
         AppendRaw("null");
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleObjectPredicate()
+    {
+        if (_index >= _tokens.Count ||
+            !string.Equals(_tokens[_index].ValueText, "objectp", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var innerTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var expression = Convert(innerTokens);
+
+        if (string.IsNullOrEmpty(expression))
+        {
+            AppendRaw("false");
+        }
+        else
+        {
+            AppendRaw(expression);
+            AppendRaw("is");
+
+            for (var index = 0; index < s_objectPredicateTypes.Length; index++)
+            {
+                if (index > 0)
+                {
+                    AppendRaw("or");
+                }
+
+                AppendRaw(s_objectPredicateTypes[index]);
+            }
+        }
+
         _index = closeIndex + 1;
         _afterDot = false;
         return true;
@@ -322,6 +448,61 @@ public sealed class BlLegacyExpressionConverter
         return true;
     }
 
+    private bool TryHandleStringFunction()
+    {
+        if (_index >= _tokens.Count ||
+            !string.Equals(_tokens[_index].ValueText, "string", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var argument = Convert(argumentTokens);
+
+        if (string.IsNullOrEmpty(argument))
+        {
+            AppendRaw("string.Empty");
+        }
+        else
+        {
+            if (RequiresParentheses(argumentTokens))
+            {
+                AppendRaw("(");
+                AppendRaw(argument);
+                AppendRaw(")");
+            }
+            else
+            {
+                AppendRaw(argument);
+            }
+
+            AppendRaw(".ToString()");
+        }
+
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
     private bool TryHandleAlertCommand()
     {
         if (_index >= _tokens.Count ||
@@ -347,6 +528,68 @@ public sealed class BlLegacyExpressionConverter
         }
 
         AppendRaw(")");
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleGoToMovieNavigation()
+    {
+        if (_index >= _tokens.Count || !IsIdentifier(_tokens[_index], "go"))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || !IsIdentifier(_tokens[_index + 1], "to"))
+        {
+            return false;
+        }
+
+        var argumentStart = _index + 2;
+        if (argumentStart >= _tokens.Count)
+        {
+            return false;
+        }
+
+        if (IsIdentifier(_tokens[argumentStart], "the"))
+        {
+            argumentStart++;
+            if (argumentStart >= _tokens.Count)
+            {
+                return false;
+            }
+        }
+
+        if (IsIdentifier(_tokens[argumentStart], "frame"))
+        {
+            var nextIndex = argumentStart + 1;
+            if (nextIndex >= _tokens.Count || ContainsNewLine(_tokens[nextIndex].LeadingTrivia))
+            {
+                return false;
+            }
+
+            var nextToken = _tokens[nextIndex];
+            if (IsValueToken(nextToken))
+            {
+                argumentStart = nextIndex;
+            }
+        }
+
+        if (argumentStart >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, argumentStart, _tokens.Count - argumentStart);
+        var argumentExpression = Convert(argumentTokens);
+        if (string.IsNullOrWhiteSpace(argumentExpression))
+        {
+            return false;
+        }
+
+        AppendRaw("_movie.GoTo(");
+        AppendRaw(argumentExpression);
+        AppendRaw(")");
+        _index = argumentStart + argumentTokens.Count;
         _afterDot = false;
         return true;
     }
@@ -381,7 +624,7 @@ public sealed class BlLegacyExpressionConverter
             return false;
         }
 
-        AppendRaw("_Movie.GoTo(_Movie.CurrentFrame)");
+        AppendRaw("_movie.GoTo(_movie.CurrentFrame)");
         _index += lookahead;
         _afterDot = false;
         return true;
@@ -418,7 +661,7 @@ public sealed class BlLegacyExpressionConverter
             return false;
         }
 
-        if (!s_memberPropertyMap.TryGetValue(propertyToken.ValueText, out var mapping))
+        if (!BlLegacyMemberPropertyFacts.TryGet(propertyToken.ValueText, out var mapping))
         {
             return false;
         }
@@ -426,7 +669,7 @@ public sealed class BlLegacyExpressionConverter
         var argsTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 2, argsClose - (_index + 2));
         var arguments = ConvertArguments(argsTokens);
 
-        AppendRaw($"Member<{mapping.GenericType}>");
+        AppendRaw($"Member<{mapping.MemberTypeName}>");
         AppendRaw("(");
         if (!string.IsNullOrEmpty(arguments))
         {
@@ -542,9 +785,61 @@ public sealed class BlLegacyExpressionConverter
         _afterDot = false;
         return true;
     }
-
-    private void AppendIdentifier(string text)
+    private static bool RequiresParentheses(IReadOnlyList<BlSyntaxToken> tokens)
     {
+        if (tokens.Count == 0)
+        {
+            return false;
+        }
+
+        if (tokens.Count == 1)
+        {
+            return tokens[0].Kind switch
+            {
+                BlSyntaxKind.IdentifierToken => false,
+                BlSyntaxKind.KeywordToken => false,
+                BlSyntaxKind.NumberToken => false,
+                BlSyntaxKind.StringLiteralToken => false,
+                _ => true,
+            };
+        }
+
+        if (tokens[0].Kind == BlSyntaxKind.LeftParenthesisToken)
+        {
+            var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+                tokens,
+                0,
+                BlSyntaxKind.LeftParenthesisToken,
+                BlSyntaxKind.RightParenthesisToken);
+            if (closeIndex == tokens.Count - 1)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    private void AppendIdentifier(BlSyntaxToken token, int tokenIndex)
+
+    {
+        var text = token.ValueText;
+
+        if (string.Equals(text, "return", StringComparison.OrdinalIgnoreCase))
+        {
+            if (_treatReturnAsStatement || IsReturnStatement(tokenIndex))
+            {
+                AppendRaw("return");
+            }
+            else
+            {
+                AppendRaw("Environment.NewLine");
+            }
+            _afterDot = false;
+            return;
+        }
+
         if (string.Equals(text, "me", StringComparison.OrdinalIgnoreCase))
         {
             AppendRaw("this");
@@ -580,6 +875,20 @@ public sealed class BlLegacyExpressionConverter
             return;
         }
 
+        if (string.Equals(text, "or", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("||");
+            _afterDot = false;
+            return;
+        }
+
+        if (string.Equals(text, "and", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("&&");
+            _afterDot = false;
+            return;
+        }
+
         if (_afterDot)
         {
             AppendRaw(BlLegacyHandlerTokenUtilities.ToPascalCase(text));
@@ -589,6 +898,46 @@ public sealed class BlLegacyExpressionConverter
 
         AppendRaw(text);
         _afterDot = false;
+    }
+
+    private bool IsReturnStatement(int tokenIndex)
+    {
+        if ((uint)tokenIndex >= (uint)_tokens.Count)
+        {
+            return false;
+        }
+
+        for (var index = tokenIndex + 1; index < _tokens.Count; index++)
+        {
+            var token = _tokens[index];
+            switch (token.Kind)
+            {
+                case BlSyntaxKind.OperatorToken:
+                    if (string.Equals(token.ValueText, "-", StringComparison.Ordinal) ||
+                        string.Equals(token.ValueText, "+", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    return false;
+                case BlSyntaxKind.IdentifierToken:
+                case BlSyntaxKind.KeywordToken:
+                case BlSyntaxKind.NumberToken:
+                case BlSyntaxKind.StringLiteralToken:
+                case BlSyntaxKind.SymbolToken:
+                case BlSyntaxKind.LeftParenthesisToken:
+                case BlSyntaxKind.HashToken:
+                    return true;
+                case BlSyntaxKind.CommaToken:
+                case BlSyntaxKind.RightParenthesisToken:
+                case BlSyntaxKind.RightBracketToken:
+                case BlSyntaxKind.RightBraceToken:
+                case BlSyntaxKind.SemicolonToken:
+                    return false;
+            }
+        }
+
+        return false;
     }
 
     private void AppendOperator(string op)
@@ -602,6 +951,18 @@ public sealed class BlLegacyExpressionConverter
         if (string.Equals(op, "&", StringComparison.Ordinal))
         {
             AppendRaw("+");
+            return;
+        }
+
+        if (string.Equals(op, "or", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("||");
+            return;
+        }
+
+        if (string.Equals(op, "and", StringComparison.OrdinalIgnoreCase))
+        {
+            AppendRaw("&&");
             return;
         }
 
@@ -744,6 +1105,14 @@ public sealed class BlLegacyExpressionConverter
             string.Equals(token.ValueText, value, StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsValueToken(BlSyntaxToken token)
+    {
+        return token.Kind is BlSyntaxKind.NumberToken or
+            BlSyntaxKind.StringLiteralToken or
+            BlSyntaxKind.IdentifierToken or
+            BlSyntaxKind.SymbolToken;
+    }
+
     private static bool ContainsNewLine(IReadOnlyList<BlSyntaxTrivia> trivia)
     {
         if (trivia is null)
@@ -760,6 +1129,370 @@ public sealed class BlLegacyExpressionConverter
         }
 
         return false;
+    }
+
+    private bool TryHandleListCommand()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_listCommands.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 1, _tokens.Count - (_index + 1));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            arguments.Add(Convert(segments[i]));
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        AppendRaw("(");
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            AppendRaw(arguments[i]);
+            if (i < arguments.Count - 1)
+            {
+                AppendRaw(", ");
+            }
+        }
+
+        AppendRaw(")");
+        _index = _tokens.Count;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandleListFunction()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_listFunctions.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        if (info.IsPropertyAccess && segments.Count > info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            arguments.Add(Convert(segments[i]));
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        if (!info.IsPropertyAccess)
+        {
+            AppendRaw("(");
+            for (var i = 0; i < arguments.Count; i++)
+            {
+                AppendRaw(arguments[i]);
+                if (i < arguments.Count - 1)
+                {
+                    AppendRaw(", ");
+                }
+            }
+
+            AppendRaw(")");
+        }
+
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandlePropertyListCommand()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_propertyListCommands.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(_tokens, _index + 1, _tokens.Count - (_index + 1));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            var segmentTokens = segments[i];
+            var expression = Convert(segmentTokens);
+            if (ContainsSymbolArgument(info.SymbolArgumentIndices, i - 1))
+            {
+                expression = EnsureSymbol(segmentTokens, expression);
+            }
+
+            arguments.Add(expression);
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        AppendRaw("(");
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            AppendRaw(arguments[i]);
+            if (i < arguments.Count - 1)
+            {
+                AppendRaw(", ");
+            }
+        }
+
+        AppendRaw(")");
+        _index = _tokens.Count;
+        _afterDot = false;
+        return true;
+    }
+
+    private bool TryHandlePropertyListFunction()
+    {
+        if (_index >= _tokens.Count)
+        {
+            return false;
+        }
+
+        var token = _tokens[_index];
+        if (token.Kind is not (BlSyntaxKind.IdentifierToken or BlSyntaxKind.KeywordToken))
+        {
+            return false;
+        }
+
+        if (!s_propertyListFunctions.TryGetValue(token.ValueText, out var info))
+        {
+            return false;
+        }
+
+        if (_index + 1 >= _tokens.Count || _tokens[_index + 1].Kind != BlSyntaxKind.LeftParenthesisToken)
+        {
+            return false;
+        }
+
+        var closeIndex = BlLegacyHandlerTokenUtilities.FindMatchingToken(
+            _tokens,
+            _index + 1,
+            BlSyntaxKind.LeftParenthesisToken,
+            BlSyntaxKind.RightParenthesisToken);
+
+        if (closeIndex < 0)
+        {
+            return false;
+        }
+
+        var argumentTokens = BlLegacyHandlerTokenUtilities.SliceTokens(
+            _tokens,
+            _index + 2,
+            closeIndex - (_index + 2));
+        var segments = BlLegacyHandlerTokenUtilities.SplitByComma(argumentTokens);
+        if (segments.Count < info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        if (info.IsPropertyAccess && segments.Count > info.RequiredArgumentCount)
+        {
+            return false;
+        }
+
+        var listExpression = Convert(segments[0]);
+        if (string.IsNullOrEmpty(listExpression))
+        {
+            return false;
+        }
+
+        var arguments = new List<string>(segments.Count - 1);
+        for (var i = 1; i < segments.Count; i++)
+        {
+            var segmentTokens = segments[i];
+            var expression = Convert(segmentTokens);
+            if (ContainsSymbolArgument(info.SymbolArgumentIndices, i - 1))
+            {
+                expression = EnsureSymbol(segmentTokens, expression);
+            }
+
+            arguments.Add(expression);
+        }
+
+        AppendRaw(listExpression);
+        AppendRaw(".");
+        AppendRaw(info.MethodName);
+        if (!info.IsPropertyAccess)
+        {
+            AppendRaw("(");
+            for (var i = 0; i < arguments.Count; i++)
+            {
+                AppendRaw(arguments[i]);
+                if (i < arguments.Count - 1)
+                {
+                    AppendRaw(", ");
+                }
+            }
+
+            AppendRaw(")");
+        }
+
+        _index = closeIndex + 1;
+        _afterDot = false;
+        return true;
+    }
+
+    private static bool ContainsSymbolArgument(int[] indices, int index)
+    {
+        if (indices is null || indices.Length == 0)
+        {
+            return false;
+        }
+
+        return Array.IndexOf(indices, index) >= 0;
+    }
+
+    private static string EnsureSymbol(IReadOnlyList<BlSyntaxToken> tokens, string expression)
+    {
+        if (string.IsNullOrEmpty(expression))
+        {
+            return expression;
+        }
+
+        if (expression.StartsWith("Symbol(", StringComparison.Ordinal))
+        {
+            return expression;
+        }
+
+        if (tokens.Count > 0 && tokens[0].Kind == BlSyntaxKind.SymbolToken)
+        {
+            return $"Symbol({ToStringLiteral(tokens[0].ValueText)})";
+        }
+
+        if (expression[0] == '#')
+        {
+            return $"Symbol({ToStringLiteral(expression[1..])})";
+        }
+
+        return expression;
+    }
+
+    private static string ToStringLiteral(string value)
+    {
+        var builder = new StringBuilder();
+        builder.Append('"');
+        if (!string.IsNullOrEmpty(value))
+        {
+            for (var index = 0; index < value.Length; index++)
+            {
+                var ch = value[index];
+                builder.Append(ch switch
+                {
+                    '\\' => "\\\\",
+                    '"' => "\\\"",
+                    '\n' => "\\n",
+                    '\r' => "\\r",
+                    '\t' => "\\t",
+                    _ => ch.ToString(),
+                });
+            }
+        }
+
+        builder.Append('"');
+        return builder.ToString();
     }
 
     private static string ResolveClassName(IReadOnlyList<BlSyntaxToken> tokens)

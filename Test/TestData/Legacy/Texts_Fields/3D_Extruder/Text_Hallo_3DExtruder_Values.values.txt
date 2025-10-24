@@ -1,0 +1,20 @@
+| Label            | Value                          |
+|------------------|--------------------------------|
+| Camera Pos (XYZ) | [12.00, 34.00, 56.00]          | 0C 22 38
+| Rotation (XYZ)   | [78.00, 98.00, 76.00]          | 4E 62 4C
+| Face: Front      | ✗                              |
+| Face: Back       | ✓                              |
+| Face: Tunnel     | ✗                              |
+| Smoothness       | 2                              |
+| Tunnel Depth     | 83.13                          | 20 79
+| Bevel Amount     | 2.80                           | 118
+| Bevel Edge       | Miter                          |
+| Light            | Middle Left                    |
+| Directional      | #A0522D (brown)                | A0 52 2D
+| Ambient          | #DA70D6 (orchid purple)        | DA 70 D6
+| Background       | #008080 (teal)                 | 00 80 80
+| Shader Texture   | Default                        |
+| Texture Name     | NoTexture (disabled)           |
+| Diffuse          | #0000FF (blue)                 | 00 00 FF
+| Specular         | #008000 (green)                | 00 80 00
+| Reflectivity     | 53                             | 35

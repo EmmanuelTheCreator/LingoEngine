@@ -1,4 +1,7 @@
-﻿using AbstUI.Primitives;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using AbstUI.Primitives;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
 using BlingoEngine.Members;
@@ -46,6 +49,9 @@ internal class DummyCast : IBlingoCast
     public IEnumerable<IBlingoMember> GetAll() => Array.Empty<IBlingoMember>();
     public void SwapMembers(int slot1, int slot2) { }
     public void Save() { }
+
+    public IReadOnlyList<int> ResolveFreeSlotNumbers(int startSlot, int requiredCount)
+        => Enumerable.Range(startSlot, requiredCount).ToArray();
 
     private class DummyMembersContainer : IBlingoMembersContainer
     {

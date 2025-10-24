@@ -1,4 +1,5 @@
-﻿using BlingoEngine.Bitmaps;
+﻿using System;
+using BlingoEngine.Bitmaps;
 using BlingoEngine.Members;
 using BlingoEngine.FilmLoops;
 using BlingoEngine.Medias;
@@ -248,6 +249,7 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
         _zIndex = sprite.SpriteNum;
         _directToStage = sprite.DirectToStage;
         _ink = sprite.Ink;
+        Visibility = true;
         ApplyBlend();
         ApplyInk();
     }
@@ -263,14 +265,14 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
     }
     public void Show()
     {
-        Visibility = true;
+        //Visibility = true;
         _show(this);
         _somethingChanged = true;
     }
 
     public void Hide()
     {
-        Visibility = false;
+        //Visibility = false;
         _hide(this);
         _somethingChanged = true;
     }
@@ -280,11 +282,18 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
     {
         if (_blingoSprite2D.Member is { } member)
         {
-            if(Width ==0)
-                Width = member.Width;
+            var (_, sourceWidth, sourceHeight) = _blingoSprite2D.GetMemberSourceMetrics();
+            if (sourceWidth <= 0)
+                sourceWidth = member.Width;
+            if (sourceHeight <= 0)
+                sourceHeight = member.Height;
+
+            if (Width == 0)
+                Width = sourceWidth;
             if (Height == 0)
-                Height = member.Height;
+                Height = sourceHeight;
         }
+        UpdateSourceRect();
         IsDirtyMember = true;
         ComponentContext.QueueRedraw(this);
     }
@@ -303,10 +312,15 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
 
     public AbstSDLRenderResult Render(AbstSDLRenderContext context)
     {
-        if (!IsDirty && !IsDirtyMember && !_somethingChanged)
+#if DEBUG
+        //if (_blingoSprite2D.Name.Contains("Life_"))
+        if (_blingoSprite2D.SpriteNum == 10)
         {
-            return _lastTexture;
         }
+#endif
+        if (!IsDirty && !IsDirtyMember && !_somethingChanged)
+            return _lastTexture;
+        
         _somethingChanged = false;
         Update();
         ComponentContext.Renderer = context.Renderer;
@@ -315,25 +329,84 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
             return nint.Zero;
         }
         var offset = new APoint();
+        SDL.SDL_Point? rotationCenter = null;
         if (_blingoSprite2D.Member is { } member)
         {
-            var baseOffset = member.CenterOffsetFromRegPoint();
+            var (baseOffset, sourceWidth, sourceHeight) = _blingoSprite2D.GetMemberSourceMetrics();
+            
             float scaleX = 1f;
             float scaleY = 1f;
-            if (member.Width != 0 && member.Height != 0)
+            float targetWidth = Width != 0 ? Width : ComponentContext.TargetWidth;
+            float targetHeight = Height != 0 ? Height : ComponentContext.TargetHeight;
+            if (Rotation == 0)
             {
-                scaleX = Width / member.Width;
-                scaleY = Height / member.Height;
+                if (sourceWidth != 0 && sourceHeight != 0)
+                {
+                    if (targetWidth == 0) targetWidth = sourceWidth;
+                    if (targetHeight == 0) targetHeight = sourceHeight;
+
+                    scaleX = sourceWidth != 0 ? targetWidth / sourceWidth : 1f;
+                    scaleY = sourceHeight != 0 ? targetHeight / sourceHeight : 1f;
+                }
             }
+            else
+            {
+                if (targetWidth == 0 && member.Width != 0) targetWidth = member.Width;
+                if (targetHeight == 0 && member.Height != 0) targetHeight = member.Height;
+                if (targetWidth == 0) targetWidth = 1f;
+                if (targetHeight == 0) targetHeight = 1f;
+
+                if (sourceWidth <= 0) sourceWidth = targetWidth;
+                if (sourceHeight <= 0) sourceHeight = targetHeight;
+
+                scaleX = sourceWidth != 0 ? targetWidth / sourceWidth : 1f;
+                scaleY = sourceHeight != 0 ? targetHeight / sourceHeight : 1f;
+            }
+
+            var pivotX = _blingoSprite2D.RegPoint.X * scaleX;
+            var pivotY = _blingoSprite2D.RegPoint.Y * scaleY;
+
             offset = new APoint(baseOffset.X * scaleX, baseOffset.Y * scaleY);
 
             if (_blingoSprite2D.Member is BlingoFilmLoopMember flm)
             {
                 var fl = flm.Framework<SdlMemberFilmLoop>();
-                offset = new APoint(offset.X - fl.Offset.X * scaleX, offset.Y - fl.Offset.Y * scaleY);
+                if (Rotation == 0)
+                    offset = new APoint(offset.X - fl.Offset.X * scaleX, offset.Y - fl.Offset.Y * scaleY);
+                else
+                {
+                    if (fl != null)
+                    {
+                        var filmLoopOffsetX = fl.Offset.X * scaleX;
+                        var filmLoopOffsetY = fl.Offset.Y * scaleY;
+                        offset = new APoint(offset.X - filmLoopOffsetX, offset.Y - filmLoopOffsetY);
+                        pivotX -= filmLoopOffsetX;
+                        pivotY -= filmLoopOffsetY;
+                    }
+                }
+            }
+            if (Rotation > 0)
+            {
+                rotationCenter = new SDL.SDL_Point
+                {
+                    x = (int)MathF.Round(pivotX),
+                    y = (int)MathF.Round(pivotY)
+                };
+                ComponentContext.RotationCenter = rotationCenter;
             }
         }
-
+        else if (Width > 0f && Height > 0f)
+        {
+            var pivotX = _blingoSprite2D.RegPoint.X;
+            var pivotY = _blingoSprite2D.RegPoint.Y;
+            rotationCenter = new SDL.SDL_Point
+            {
+                x = (int)MathF.Round(pivotX),
+                y = (int)MathF.Round(pivotY)
+            };
+            ComponentContext.RotationCenter = rotationCenter;
+        }
+        ComponentContext.Rotation = _rotation;
         ComponentContext.OffsetX = -offset.X;
         ComponentContext.OffsetY = -offset.Y;
         UpdateContextPosition();
@@ -395,17 +468,45 @@ public class SdlSprite : IBlingoFrameworkSprite, IBlingoFrameworkSpriteVideo, IA
         if (_texture == nint.Zero)
             return;
         _textureOwned = true;
-        if (Width == 0 || Height == 0)
+        float sourceWidth = tex.Width;
+        float sourceHeight = tex.Height;
+        if (_blingoSprite2D.Member is BlingoMemberBitmap && _blingoSprite2D.MemberSourceRect is { } rect)
         {
-            Width = tex.Width;
-            Height = tex.Height;
+            sourceWidth = rect.Width;
+            sourceHeight = rect.Height;
         }
+
+        if (Width == 0)
+            Width = sourceWidth;
+
+        if (Height == 0)
+            Height = sourceHeight;
+
+        UpdateSourceRect();
     }
 
     public void SetTexture(IAbstTexture2D texture)
     {
         var tex = (SdlTexture2D)texture;
         TextureHasChanged(tex);
+    }
+
+    private void UpdateSourceRect()
+    {
+        if (_blingoSprite2D.Member is BlingoMemberBitmap && _blingoSprite2D.MemberSourceRect is { } rect)
+        {
+            ComponentContext.SourceRect = new SDL.SDL_Rect
+            {
+                x = (int)MathF.Round(rect.Left),
+                y = (int)MathF.Round(rect.Top),
+                w = Math.Max(0, (int)MathF.Round(rect.Width)),
+                h = Math.Max(0, (int)MathF.Round(rect.Height))
+            };
+        }
+        else
+        {
+            ComponentContext.SourceRect = null;
+        }
     }
 
     private static readonly SDL.SDL_BlendMode _subtractBlend = SDL.SDL_ComposeCustomBlendMode(

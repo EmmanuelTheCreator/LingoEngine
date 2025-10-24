@@ -8,11 +8,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\src\BlingoEngine\BlingoEngine.csproj" />
+	  <Compile Remove="Setup\**" />
+	  <EmbeddedResource Remove="Setup\**" />
+	  <None Remove="Setup\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Setup\" />
+		<ProjectReference Include="..\..\..\src\BlingoEngine\BlingoEngine.csproj" />
 	</ItemGroup>
 
 </Project>

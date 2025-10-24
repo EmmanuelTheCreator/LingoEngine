@@ -1,0 +1,401 @@
+using AbstUI.Primitives;
+using Blingo.PacMan.Core.Datas;
+using Blingo.PacMan.Core.Engine;
+using Blingo.PacMan.Core.Enums;
+using Blingo.PacMan.Core.Game;
+using Blingo.PacMan.Core.Settings;
+using Blingo.PacMan.Core.Sprites.GeneralBehaviors;
+using Blingo.PacMan.Core.Sprites.ParentScripts;
+using BlingoEngine.Events;
+using BlingoEngine.Inputs.Events;
+using BlingoEngine.Movies;
+using BlingoEngine.Movies.Events;
+using BlingoEngine.Sprites;
+using BlingoEngine.Sprites.Events;
+
+namespace Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+
+/// <summary>
+/// Drives the Pac-Man avatar sprite, including keyboard input handling, animation swapping, and
+/// dispatching position events to the rest of the gameplay behaviours.
+/// </summary>
+internal sealed class PMPacManActorBehavior : BlingoSpriteBehavior,
+    IHasBeginSpriteEvent,
+    IHasEndSpriteEvent,
+    IHasKeyDownEvent,
+    IHasExitFrameEvent
+{
+    public static int SprSize => BlPacManTheme.Actor.SpriteSize;
+    public static int SprY => BlPacManTheme.Actor.SpriteSheetY;
+    private static readonly IReadOnlyDictionary<PMCharacterAnimationType, (ARect[] Frames, int FrameDelay)> _animationDefinitions =
+        BlPacManTheme.Actor.Animations;
+
+    // Legacy 16px sprite loops retained for reference. To reinstate them, move the values below into
+    // BlPacManTheme.Actor.Animations.
+    //var leftAnimation = new[]
+    //{
+    //    ARect.New(SprSize * 12, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 13, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 14, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 15, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 14, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 13, SprY, SprSize, SprSize),
+    //};
+
+    //var rightAnimation = new[]
+    //{
+    //    ARect.New(SprSize * 0, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 1, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 2, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 3, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 2, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 1, SprY, SprSize, SprSize),
+    //};
+
+    //var upAnimation = new[]
+    //{
+    //    ARect.New(SprSize * 8,  SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 9,  SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 10, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 11, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 10, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 9,  SprY, SprSize, SprSize),
+    //};
+
+    //var downAnimation = new[]
+    //{
+    //    ARect.New(SprSize * 4, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 5, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 6, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 7, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 6, SprY, SprSize, SprSize),
+    //    ARect.New(SprSize * 5, SprY, SprSize, SprSize),
+    //};
+
+    private readonly GlobalVars _globals;
+    private PMGameBehavior? _coordinator;
+    private PMDirection _requestedDirection;
+    private PMCharacter? _character;
+    private BlPacManEventSubscription? _tileEnteredSubscription;
+    private BlPacManEventSubscription? _positionSubscription;
+    private bool _animationsConfigured;
+
+    /// <summary>
+    /// Initialises the behaviour with the movie environment and shared global references.
+    /// </summary>
+    public PMPacManActorBehavior(IBlingoMovieEnvironment env, GlobalVars globals)
+        : base(env)
+    {
+        _globals = globals ?? throw new ArgumentNullException(nameof(globals));
+    }
+
+    /// <summary>
+    /// Applies the current level settings retrieved from the model.
+    /// </summary>
+    /// <param name="coordinator">The gameplay coordinator managing global state.</param>
+    /// <param name="settings">Speed and mode settings for Pac-Man.</param>
+    public void Configure(PMGameBehavior coordinator, PacmanSettings settings)
+    {
+        _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator));
+        if (settings is null)
+        {
+            throw new ArgumentNullException(nameof(settings));
+        }
+        var character = EnsureCharacter();
+        character.SetMap(_globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized."));
+        character.Step = GetBaseStepSize();
+        character.Speed = settings.Speed;
+        character.EffectiveSpeed = settings.Speed;
+        character.Reset();
+        _requestedDirection = PMDirection.None;
+        ResetPosition();
+        PublishPosition(character);
+    }
+
+    /// <summary>
+    /// Registers the behaviour as an actor and starts listening for movement updates.
+    /// </summary>
+    public void BeginSprite()
+    {
+        _coordinator = _globals.GameBehavior;
+        var character = EnsureCharacter();
+        character.BeginSprite();
+        EnsureAppearance();
+        _globals.GameModel?.AttachPacMan(this);
+
+        _positionSubscription?.Release();
+        _positionSubscription = character.SubscribePositionChanged(OnPositionChanged);
+        PublishPosition(character);
+
+        _requestedDirection = PMDirection.None;
+        if (_coordinator is not null && _globals.CurrentPacmanSettings is { } settings)
+            Configure(_coordinator, settings);
+    }
+
+    /// <summary>
+    /// Stops tracking Pac-Man when the sprite is removed from the stage.
+    /// </summary>
+    public void EndSprite()
+    {
+        _globals.GameModel?.DetachPacMan(this);
+        _tileEnteredSubscription?.Release();
+        _tileEnteredSubscription = null;
+        _positionSubscription?.Release();
+        _positionSubscription = null;
+    }
+
+    /// <summary>
+    /// Moves Pac-Man in the last requested direction.
+    /// </summary>
+    public void ExitFrame()
+    {
+        var character = EnsureCharacter();
+        //return;
+        if (_globals.State.IsGameplayFrozen)
+        {
+            character.Update();
+            return;
+        }
+
+        var requestedDirection = _requestedDirection;
+        character.Move(requestedDirection);
+        if (requestedDirection != PMDirection.None && character.Direction == requestedDirection)
+        {
+            _requestedDirection = PMDirection.None;
+        }
+        else
+        {
+            character.NextDirection = requestedDirection;
+        }
+        CheckCollisions(character);
+    }
+
+    /// <summary>
+    /// Translates keyboard input into direction requests that the next StepFrame will honour.
+    /// </summary>
+    public void KeyDown(BlingoKeyEvent key)
+    {
+        if (key.KeyCode == 123)
+            SetRequestedDirection(PMDirection.Left);
+        else if (key.KeyCode == 124)
+            SetRequestedDirection(PMDirection.Right);
+        else if (key.KeyCode == 126)
+            SetRequestedDirection(PMDirection.Up);
+        else if (key.KeyCode == 125)
+            SetRequestedDirection(PMDirection.Down);
+    }
+
+    /// <summary>
+    /// Consumes dots or pills when Pac-Man enters a tile containing a consumable component.
+    /// </summary>
+    private void OnTileEntered(BlPacManTileEventData args)
+    {
+        if (args.Tile.Item is PMConsumableComponent consumable)
+            consumable.Consume(this);
+    }
+
+    /// <summary>
+    /// Exposes the underlying movement helper for other behaviours.
+    /// </summary>
+    internal PMCharacter Character => EnsureCharacter();
+
+    /// <summary>
+    /// Hides Pac-Man's sprite.
+    /// </summary>
+    internal void Hide()
+    {
+        EnsureCharacter().Hide();
+    }
+
+    /// <summary>
+    /// Shows Pac-Man's sprite.
+    /// </summary>
+    internal void Show()
+    {
+        EnsureCharacter().Show();
+    }
+
+    /// <summary>
+    /// Resets Pac-Man's position and clears transient timers after a lost life.
+    /// </summary>
+    internal void ResetForLife()
+    {
+        var character = EnsureCharacter();
+        character.Reset();
+        ResetPosition();
+        character.Update();
+        PublishPosition(character);
+        _requestedDirection = PMDirection.None;
+    }
+
+    /// <summary>
+    /// Plays the appropriate sound effect when Pac-Man consumes an item.
+    /// </summary>
+    /// <param name="consumable">The component representing the consumed item.</param>
+    internal void HandleConsumableEaten(PMConsumableComponent consumable)
+    {
+        if (consumable is null)
+            return;
+
+        _globals.State.ConsumableEaten();
+
+        if (consumable.ScoreValue > 0)
+            _globals.ScoreManager.AddScore(consumable.ScoreValue);
+
+        if (!_globals.State.IsMuted)
+        {
+            switch (consumable.Type)
+            {
+                case BlPacManConsumableType.Pellet:
+                    _Player.SoundPlayDot();
+                    break;
+                case BlPacManConsumableType.PowerPill:
+                    _Player.SoundPlayFrightened();
+                    break;
+                case BlPacManConsumableType.Bonus:
+                    _Player.SoundPlayBonus();
+                    break;
+            }
+        }
+
+        if (consumable.Type == BlPacManConsumableType.PowerPill)
+        {
+            _globals.GhostManager.ResetGhostChain();
+            _globals.GhostManager.SetAllFrightened();
+        }
+    }
+
+    /// <summary>
+    /// Handles the audio transition when Pac-Man is eaten by a ghost.
+    /// </summary>
+    private void EatenByGhost()
+    {
+        if (!_globals.State.IsMuted)
+            _Player.SoundPlayEaten();
+
+        _Player.SoundStopBack();
+        Hide();
+        _globals.GameBehavior?.NotifyPacManEaten();
+    }
+
+    private void EnsureAppearance()
+    {
+        if (_animationsConfigured)
+            return;
+        
+        ConfigureAnimations();
+        _animationsConfigured = true;
+    }
+
+    private void CheckCollisions(PMCharacter character)
+    {
+        if (_globals.State.IsGameplayFrozen)
+            return;
+
+        var tile = character.GetTile();
+        if (tile is null)
+            return;
+
+        foreach (var ghost in _globals.GhostManager.GetGhostsOnTile(tile))
+        {
+            if (ghost.IsFrightened)
+            {
+                ghost.SetMode(GhostMode.Dead);
+                var score = _globals.GhostManager.RegisterGhostEaten();
+                if (score > 0)
+                    _globals.ScoreManager.AddScore(score);
+
+                var state = _globals.State;
+                state.SoundCooldown = 5;
+                state.GhostEaten();
+                
+                ghost.OnEaten(score);
+            }
+            else
+                EatenByGhost();
+
+            return;
+        }
+        _globals.BonusManager.CollectOnTile(tile);
+        
+    }
+
+    private void OnPositionChanged(BlPacManPositionEventData context)
+    {
+        if (context is null)
+            return;
+
+        _globals.State.UpdatePacManPosition(context);
+    }
+
+    private void PublishPosition(PMCharacter character)
+    {
+        if (character is null)
+            return;
+
+        var snapshot = new BlPacManPositionEventData(_character!.X, _character!.Y, character.GetTile(), character.Direction);
+        OnPositionChanged(snapshot);
+    }
+
+    private void ConfigureAnimations()
+    {
+        SendSprite<BlPacManAnimationBehavior>(Me.SpriteNum, behavior =>
+        {
+            foreach (var (name, definition) in _animationDefinitions)
+                behavior.SetAnimationRects(name, definition.Frames, definition.FrameDelay);
+        });
+    }
+
+    private void ResetPosition()
+    {
+        var map = _globals.Map;
+        if (map == null) return;
+        var startTile = map.PacManCenter;
+        if (startTile is null)
+            return;
+
+        _character!.X = startTile.X;
+        _character!.Y = startTile.Y;
+    }
+
+    private PMCharacter EnsureCharacter()
+    {
+        if (_character is not null)
+        {
+            if (_tileEnteredSubscription is null)
+            {
+                _tileEnteredSubscription = _character.SubscribeTileEntered(OnTileEntered);
+            }
+            return _character;
+        }
+
+        var map = _globals.Map ?? throw new InvalidOperationException("Pac-Man map is not initialized.");
+        var baseStep = GetBaseStepSize();
+        var baseSpeed = _globals.CurrentPacmanSettings?.Speed ?? 80f;
+        _character = new PMCharacter(_env, map, Me, PMCharacter.CharacterType.PacMan, new BlPacManCharacterOptions
+        {
+            Step = baseStep,
+            Speed = baseSpeed,
+            Direction = PMDirection.Left,
+            Preturn = true,
+        });
+        _character.RotateSprite = true;
+        _tileEnteredSubscription = _character.SubscribeTileEntered(OnTileEntered);
+        return _character;
+    }
+
+    private void SetRequestedDirection(PMDirection direction)
+    {
+        _requestedDirection = direction;
+        if (_character is { } character)
+        {
+            character.NextDirection = direction;
+        }
+    }
+
+    private float GetBaseStepSize()
+    {
+        return PMTileMath.GetMovementStep(_globals.Map);
+    }
+
+}

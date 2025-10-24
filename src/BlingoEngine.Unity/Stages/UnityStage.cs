@@ -36,6 +36,9 @@ public class UnityStage : MonoBehaviour, IBlingoFrameworkStage, IDisposable
         set => transform.localScale = new Vector3(value, value, value);
     }
 
+
+    public float X { get; set; }
+    public float Y { get; set; }
     internal void Configure(BlingoClock clock) => _clock = clock;
 
     internal void Init(BlingoStage stage)
@@ -139,6 +142,8 @@ public class UnityStage : MonoBehaviour, IBlingoFrameworkStage, IDisposable
     }
 
     object IAbstFrameworkNode.FrameworkNode => gameObject;
+
+   
 }
 
 

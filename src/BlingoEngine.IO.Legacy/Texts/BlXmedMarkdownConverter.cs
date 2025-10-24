@@ -21,7 +21,7 @@ public static class BlXmedMarkdownConverter
         }
 
         string? currentFont = null;
-        ushort currentSize = 0;
+        int? currentSize = 0;
         BlLegacyColor currentColor = default;
         bool hasColor = false;
 

@@ -45,8 +45,8 @@ public class StageIconBar : IDisposable
         _stageManager = stageManager;
 
         Panel = factory.CreatePanel("StageIconBar");
-        Panel.BackgroundColor = DirectorColors.BG_WhiteMenus;
         Panel.Height = iconBarHeight;
+        Panel.BackgroundColor = DirectorColors.BG_WhiteMenus;
 
         var container = factory.CreateWrapPanel(AOrientation.Horizontal, "StageIconBarContainer");
         container.Width = 600;

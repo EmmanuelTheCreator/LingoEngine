@@ -36,6 +36,7 @@ public class BlingoSprite2DState : BlingoSpriteState
     public AColor BackColor { get; set; }
     public bool Editable { get; set; }
     public bool IsDraggable { get; set; }
+    public ARect? MemberSourceRect { get; set; }
 }
 
 public class BlingoSprite2DVirtualState : BlingoSpriteState

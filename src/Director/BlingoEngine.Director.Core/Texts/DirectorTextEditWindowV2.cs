@@ -27,6 +27,8 @@ namespace BlingoEngine.Director.Core.Texts
         private readonly AbstMarkdownRenderer _renderer;
         private readonly AbstPanel _rootPanel;
         private readonly AbstScrollContainer _markdownScroller;
+        private readonly AbstScrollContainer _markdownScrollerContainer;
+        private readonly IAbstLayoutNode _markdownInputContainer;
         private CancellationTokenSource? _renderCts;
         private SynchronizationContext? _uiContext;
         private IBlingoMemberTextBase? _member;
@@ -34,7 +36,7 @@ namespace BlingoEngine.Director.Core.Texts
         private MemberNavigationBar<IBlingoMemberTextBase> _navBar;
         private bool _isSettingMemberValues = false;
         private readonly AbstLabel _caretLabel;
-        private readonly AbstLayoutWrapper _caretLabelContainer;
+        private readonly IAbstLayoutNode _caretLabelContainer;
 
         public TextEditIconBar IconBar { get; }
         public AbstTextStyle CurrentStyle => IconBar.CurrentStyle;
@@ -52,16 +54,13 @@ namespace BlingoEngine.Director.Core.Texts
             _rootPanel.AddItem(_navBar.Panel, 0, 0);
             _rootPanel.AddItem(IconBar.Panel, 0, 25);
             // Previously disposed preview texture here; no longer required.
-            var columns = factory.CreateWrapPanel(AOrientation.Horizontal, "TextEditWindowV2Columns");
-            _rootPanel.AddItem(columns, 0, 50);
-
             _previewCanvas = factory.CreateGfxCanvas("MarkdownPreview", 400, 400);
-            _markdownScroller = factory.CreateScrollContainer("MakdownScroller");
+            _markdownScroller = factory.CreateScrollContainer("MarkdownScroller");
             _markdownScroller.Width = 400;
             _markdownScroller.Height = 400;
             _markdownScroller.AddItem(_previewCanvas);
             _markdownScroller.ClipContents = true;
-            columns.AddItem(_markdownScroller);
+            _markdownScrollerContainer = (AbstScrollContainer)_rootPanel.AddItem(_markdownScroller, 420, 55);
             _painter = _factory.ComponentFactory.CreateImagePainterToTexture((int)_previewCanvas.Width, (int)_previewCanvas.Height);
             _painter.AutoResizeWidth = true;
             _painter.AutoResizeHeight = true;
@@ -71,11 +70,11 @@ namespace BlingoEngine.Director.Core.Texts
             _markdownInput = factory.CreateInputText("MarkdownInput", onChange: OnTextChanged, multiLine: true);
             _markdownInput.Width = 400;
             _markdownInput.Height = 400;
-            columns.AddItem(_markdownInput);
+            _markdownInputContainer = (IAbstLayoutNode)_rootPanel.AddItem(_markdownInput, 10, 55);
 
             _caretLabel = factory.CreateLabel("CaretPositionLabel", "Ln:0 Ch:0");
-            _caretLabelContainer = (AbstLayoutWrapper)_rootPanel.AddItem(_caretLabel, 0, 475);
-            _markdownInput.OnCaretChanged += (l, c) => _caretLabel.Text = $"Ln:{l} Ch:{c}";
+            _caretLabelContainer = (IAbstLayoutNode)_rootPanel.AddItem(_caretLabel, 0, 475);
+            _markdownInput.OnCaretChanged += OnCaretChanged;
 
             Width = 820;
             Height = 520;
@@ -181,6 +180,10 @@ namespace BlingoEngine.Director.Core.Texts
             _markdownInput.Height = contentHeight;
             _previewCanvas.Width = innerWidth / 2;
             _previewCanvas.Height = contentHeight;
+            _markdownScrollerContainer.X = 10 + innerWidth / 2;
+            _markdownScrollerContainer.Y = 55;
+            _markdownInputContainer.X = 10;
+            _markdownInputContainer.Y = 55;
             _caretLabelContainer.Y = height - 25;
         }
 
@@ -227,6 +230,20 @@ namespace BlingoEngine.Director.Core.Texts
                         RenderMarkdown(text);
                 }
             }, TaskScheduler.Default);
+        }
+
+        private void OnCaretChanged(int line, int column)
+        {
+            _caretLabel.Text = $"Ln:{line} Ch:{column}";
+            if (_isSettingMemberValues)
+                return;
+
+            var styleName = GetStyleNameAt(line, column);
+            if (string.IsNullOrEmpty(styleName))
+                styleName = TextEditIconBar.DefaultStyleName;
+
+            if (!string.Equals(IconBar.CurrentStyle.Name, styleName, StringComparison.Ordinal))
+                IconBar.SelectStyle(styleName);
         }
 
         private void RenderMarkdown(string text)
@@ -278,6 +295,47 @@ namespace BlingoEngine.Director.Core.Texts
             if (inserted)
                 ScheduleRender(_markdownInput.Text);
             return style;
+        }
+
+        private string? GetStyleNameAt(int line, int column)
+        {
+            var text = _markdownInput.Text;
+            int caretIndex = GetOffset(text, line, column);
+            string? paragraphStyle = null;
+            string? inlineStyle = null;
+            int index = 0;
+
+            while (index < caretIndex)
+            {
+                int tagStart = text.IndexOf("{{", index, StringComparison.Ordinal);
+                if (tagStart < 0 || tagStart >= caretIndex)
+                    break;
+
+                int tagEnd = text.IndexOf("}}", tagStart + 2, StringComparison.Ordinal);
+                if (tagEnd < 0 || tagEnd >= caretIndex)
+                    break;
+
+                var tag = text.Substring(tagStart + 2, tagEnd - tagStart - 2);
+
+                if (tag.StartsWith("PARA:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var name = tag.Substring(5).Trim();
+                    paragraphStyle = string.IsNullOrEmpty(name) ? TextEditIconBar.DefaultStyleName : name;
+                }
+                else if (tag.Equals("PARA", StringComparison.OrdinalIgnoreCase))
+                    paragraphStyle = TextEditIconBar.DefaultStyleName;
+                else if (tag.StartsWith("STYLE:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var name = tag.Substring(6).Trim();
+                    inlineStyle = string.IsNullOrEmpty(name) ? null : name;
+                }
+                else if (tag.Equals("/STYLE", StringComparison.OrdinalIgnoreCase))
+                    inlineStyle = null;
+
+                index = tagEnd + 2;
+            }
+
+            return inlineStyle ?? paragraphStyle;
         }
 
         private void InsertAroundSelection(string prefix, string suffix)

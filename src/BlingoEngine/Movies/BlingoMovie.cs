@@ -268,6 +268,7 @@ namespace BlingoEngine.Movies
 
 
         #region Sprite2Ds
+        public IBlingoSprite? GetSprite(int channelNumber) => _sprite2DManager.Channel(channelNumber).Sprite;
         public IBlingoSpriteChannel Channel(int channelNumber) => _sprite2DManager.Channel(channelNumber);
         public void PuppetSprite(int number, bool isPuppetSprite) => Channel(number).Puppet = isPuppetSprite;
         public IBlingoSpriteChannel GetActiveSprite(int number) => _sprite2DManager.GetActiveSprite(number);

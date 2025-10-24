@@ -81,6 +81,7 @@ public class BlingoBlazorSprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSpri
     public float Y { get => _y; set { _y = value; MakeDirty(); } }
     public float Width { get; private set; }
     public float Height { get; private set; }
+    public ARect? MemberSourceRect => _blingoSprite.MemberSourceRect;
     private string _name = string.Empty;
     public string Name { get => _name; set { _name = value; MakeDirty(); } }
     private APoint _regPoint;
@@ -118,11 +119,17 @@ public class BlingoBlazorSprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSpri
     {
         if (_blingoSprite.Member is { } member)
         {
-            if (Width == 0 || Height == 0)
-            {
-                Width = member.Width;
-                Height = member.Height;
-            }
+            var (_, sourceWidth, sourceHeight) = _blingoSprite.GetMemberSourceMetrics();
+            if (sourceWidth <= 0)
+                sourceWidth = member.Width;
+            if (sourceHeight <= 0)
+                sourceHeight = member.Height;
+
+            if (Width == 0)
+                Width = sourceWidth;
+            if (Height == 0)
+                Height = sourceHeight;
+
             if (member is BlingoMemberMedia media)
             {
                 var blazorMedia = media.Framework<BlingoBlazorMemberMedia>();
@@ -152,15 +159,27 @@ public class BlingoBlazorSprite2D : IBlingoFrameworkSprite, IBlingoFrameworkSpri
     public void SetTexture(IAbstTexture2D texture)
     {
         _texture = texture;
-        if (Width == 0 || Height == 0)
+        if (_blingoSprite.MemberSourceRect is { } rect)
         {
-            Width = texture.Width;
-            Height = texture.Height;
+            if (Width == 0)
+                Width = rect.Width;
+            if (Height == 0)
+                Height = rect.Height;
+        }
+        else
+        {
+            if (Width == 0)
+                Width = texture.Width;
+            if (Height == 0)
+                Height = texture.Height;
         }
         _blingoSprite.FWTextureHasChanged(texture);
         IsDirtyMember = true;
         MakeDirty();
     }
+
+    public (APoint Offset, float SourceWidth, float SourceHeight) GetMemberSourceMetrics()
+        => _blingoSprite.GetMemberSourceMetrics();
 
     /// <inheritdoc/>
     public void Play()

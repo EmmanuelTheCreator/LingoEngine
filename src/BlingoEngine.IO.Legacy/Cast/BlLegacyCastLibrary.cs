@@ -1,4 +1,6 @@
 
+using BlingoEngine.IO.Legacy.Cast.Data;
+
 namespace BlingoEngine.IO.Legacy.Cast;
 
 /// <summary>

@@ -32,7 +32,7 @@ internal class DummyTextMember : IBlingoMemberTextBase, IBlingoMemberTextBaseInt
     public int Height { get; set; }
     public long Size { get; set; }
     public string Comments { get; set; } = string.Empty;
-    public string FileName { get; set; }
+    public string FileName { get; set; } = string.Empty;
     public BlingoMemberType Type { get; set; } = BlingoMemberType.Text;
     public string CastName => string.Empty;
     public IBlingoCast Cast => _cast;
@@ -95,7 +95,7 @@ internal class DummyTextMember : IBlingoMemberTextBase, IBlingoMemberTextBaseInt
     public IAbstTexture2D? GetTexture() => null;
     public void ChangesHasBeenApplied() { }
     public void LoadFile() { LoadFileCalled = true; }
-    public void SetFileName(string name) => _fileName = name;
+    public void SetFileName(string name) => FileName = name;
 
     public string GetTextMDString()
     {

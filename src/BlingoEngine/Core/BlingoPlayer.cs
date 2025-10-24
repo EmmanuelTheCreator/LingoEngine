@@ -445,6 +445,18 @@ namespace BlingoEngine.Core
             ctx.Send(_ => action(), null);
         }
 
+        public void UnoadAllMovies()
+        {
+            foreach (var movie in _movies)
+            {
+                movie.Dispose();
+            }
+            _moviesByName.Clear();
+            _moviesByNumber.Clear();
+            _movies.Clear();
+            SetActiveMovie(null);
+        }
+
         private class UiContext : SynchronizationContext
         {
             private readonly BlockingCollection<(SendOrPostCallback, object?)> _queue = new();

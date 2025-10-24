@@ -1,0 +1,69 @@
+﻿== CAS* #7 (4 slots) ==
+
+[000] CASt #4  len=157
+  Type=0x00000006  InfoLen=145  SpecLen=0
+  INFO: len=145
+    INFO 0x000000: 00 00 00 14 00 00 00 00 00 00 00 00 00 00 00 10  |................|
+    INFO 0x000010: 00 00 00 00 00 14 00 00 00 00 00 00 00 00 00 00  |................|
+    INFO 0x000020: 00 09 00 00 00 09 00 00 00 09 00 00 00 09 00 00  |................|
+    INFO 0x000030: 00 09 00 00 00 09 00 00 00 09 00 00 00 09 00 00  |................|
+    INFO 0x000040: 00 09 00 00 00 09 00 00 00 09 00 00 00 09 00 00  |................|
+    INFO 0x000050: 00 09 00 00 00 09 00 00 00 09 00 00 00 1B 00 00  |................|
+    INFO 0x000060: 00 1F 00 00 00 23 00 00 00 27 08 6C 65 76 65 6C  |.....#...'.level|
+    INFO 0x000070: 5F 75 70 6B 4D 6F 61 43 66 46 6F 72 6D 61 74 5F  |_upkMoaCfFormat_|
+    INFO 0x000080: 4D 50 45 47 33 68 CA F3 0B 68 CA F3 0B 4E 2F 41  |MPEG3h...h...N/A|
+    INFO 0x000090: 00                                               |.|
+    @0x44 = 0x00  (0) 	CastInfo Flags (DTS, etc.)
+    @0x46 = 0x00  (0) 	Text Framing
+    @0x03 = 0x14  (20) 	AntiAlias & Kerning mode nibbles
+    @0x17 = 0x00  (0) 	Is Editable
+    @0x2F = 0x00  (0) 	AntiAlias threshold (pt)
+    @0x43 = 0x00  (0) 	Kerning enabled flag
+    @0x47 = 0x00  (0) 	Kerning threshold (pt)
+    @0x4B = 0x00  (0) 	Use Hyperlink Styles
+    @0x5B = 0x00  (0) 	Ink
+
+[001] CASt #5  len=151
+  Type=0x00000006  InfoLen=139  SpecLen=0
+  INFO: len=139
+    INFO 0x000000: 00 00 00 14 00 00 00 00 00 00 00 00 00 00 00 10  |................|
+    INFO 0x000010: 00 00 00 00 00 14 00 00 00 00 00 00 00 00 00 00  |................|
+    INFO 0x000020: 00 03 00 00 00 03 00 00 00 03 00 00 00 03 00 00  |................|
+    INFO 0x000030: 00 03 00 00 00 03 00 00 00 03 00 00 00 03 00 00  |................|
+    INFO 0x000040: 00 03 00 00 00 03 00 00 00 03 00 00 00 03 00 00  |................|
+    INFO 0x000050: 00 03 00 00 00 03 00 00 00 03 00 00 00 15 00 00  |................|
+    INFO 0x000060: 00 19 00 00 00 1D 00 00 00 21 02 67 6F 6B 4D 6F  |.........!.gokMo|
+    INFO 0x000070: 61 43 66 46 6F 72 6D 61 74 5F 4D 50 45 47 33 68  |aCfFormat_MPEG3h|
+    INFO 0x000080: CA F3 0B 68 CA F3 0B 4E 2F 41 00                 |...h...N/A.|
+    @0x44 = 0x00  (0) 	CastInfo Flags (DTS, etc.)
+    @0x46 = 0x00  (0) 	Text Framing
+    @0x03 = 0x14  (20) 	AntiAlias & Kerning mode nibbles
+    @0x17 = 0x00  (0) 	Is Editable
+    @0x2F = 0x00  (0) 	AntiAlias threshold (pt)
+    @0x43 = 0x00  (0) 	Kerning enabled flag
+    @0x47 = 0x00  (0) 	Kerning threshold (pt)
+    @0x4B = 0x00  (0) 	Use Hyperlink Styles
+    @0x5B = 0x00  (0) 	Ink
+
+[003] CASt #6  len=160
+  Type=0x00000006  InfoLen=148  SpecLen=0
+  INFO: len=148
+    INFO 0x000000: 00 00 00 14 00 00 00 00 00 00 00 00 00 00 00 10  |................|
+    INFO 0x000010: 00 00 00 00 00 14 00 00 00 00 00 00 00 00 00 00  |................|
+    INFO 0x000020: 00 0C 00 00 00 0C 00 00 00 0C 00 00 00 0C 00 00  |................|
+    INFO 0x000030: 00 0C 00 00 00 0C 00 00 00 0C 00 00 00 0C 00 00  |................|
+    INFO 0x000040: 00 0C 00 00 00 0C 00 00 00 0C 00 00 00 0C 00 00  |................|
+    INFO 0x000050: 00 0C 00 00 00 0C 00 00 00 0C 00 00 00 1E 00 00  |................|
+    INFO 0x000060: 00 22 00 00 00 26 00 00 00 2A 0B 62 6C 6F 63 6B  |."...&...*.block|
+    INFO 0x000070: 66 61 6C 6C 5F 31 6B 4D 6F 61 43 66 46 6F 72 6D  |fall_1kMoaCfForm|
+    INFO 0x000080: 61 74 5F 4D 50 45 47 33 68 CA F3 0B 68 CA F3 11  |at_MPEG3h...h...|
+    INFO 0x000090: 4E 2F 41 00                                      |N/A.|
+    @0x44 = 0x00  (0) 	CastInfo Flags (DTS, etc.)
+    @0x46 = 0x00  (0) 	Text Framing
+    @0x03 = 0x14  (20) 	AntiAlias & Kerning mode nibbles
+    @0x17 = 0x00  (0) 	Is Editable
+    @0x2F = 0x00  (0) 	AntiAlias threshold (pt)
+    @0x43 = 0x00  (0) 	Kerning enabled flag
+    @0x47 = 0x00  (0) 	Kerning threshold (pt)
+    @0x4B = 0x00  (0) 	Use Hyperlink Styles
+    @0x5B = 0x00  (0) 	Ink

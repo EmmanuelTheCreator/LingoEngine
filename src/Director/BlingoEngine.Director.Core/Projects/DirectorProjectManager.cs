@@ -10,6 +10,7 @@ using BlingoEngine.IO;
 using BlingoEngine.Movies;
 using BlingoEngine.Projects;
 using BlingoEngine.Net.RNetContracts;
+using System.IO;
 
 namespace BlingoEngine.Director.Core.Projects;
 
@@ -233,7 +234,37 @@ public class DirectorProjectManager : IAbstCommandHandler<SaveDirProjectSettings
             return false;
         }
         SaveProjectSettings();
+
+        if (command.StartNewProjectAfterSave)
+            StartNewProject();
+
         return true;
+    }
+
+    private void StartNewProject()
+    {
+        if (!_settings.HasValidSettings)
+            return;
+
+        if (_player.ActiveMovie is BlingoMovie activeMovie)
+        {
+            _player.CloseMovie(activeMovie);
+            _player.SetActiveMovie(null);
+        }
+
+        if (_settings.StageWidth > 0 && _settings.StageHeight > 0)
+            _player.LoadStage(_settings.StageWidth, _settings.StageHeight, _player.Stage.BackgroundColor);
+
+        var projectName = _settings.ProjectName;
+        var newMovie = (BlingoMovie)_player.NewMovie(projectName);
+        newMovie.MaxSpriteChannelCount = _settings.MaxSpriteChannelCount;
+
+        var settingsPath = GetSettingsPath();
+        if (!Directory.Exists(settingsPath))
+            Directory.CreateDirectory(settingsPath);
+
+        _repo.Save(GetMoviePath(projectName), newMovie);
+        SaveDirectorSettings();
     }
 }
 
