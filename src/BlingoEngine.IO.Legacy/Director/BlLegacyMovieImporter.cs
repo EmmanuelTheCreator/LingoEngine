@@ -62,18 +62,8 @@ public sealed class BlLegacyMovieImporter
         string movieName)
     {
         var resources = new DirFilesContainerDTO();
-        foreach (var resource in archive.RawResources.Files)
-        {
-            resources.Files.Add(new DirFileResourceDTO
-            {
-                CastName = resource.CastName,
-                FileName = resource.FileName,
-                Bytes = resource.Bytes
-            });
-        }
-
         var stage = archive.ToBlingoStage();
-        var movie = archive.ToBlingo(movieName, resources,_logger);
+        var movie = archive.ToBlingo(movieName, resources, _logger);
         return (stage, movie, resources);
     }
 }

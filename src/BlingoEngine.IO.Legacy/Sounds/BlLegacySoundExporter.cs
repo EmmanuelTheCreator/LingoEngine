@@ -31,6 +31,7 @@ public sealed class BlLegacySoundExporter
             Bytes = sound.Bytes,
             CastLibNum = castLibNum,
             NumberInCast = numberInCast,
+            Kind = DirFileResourceKind.Sound
         };
     }
 

@@ -29,7 +29,8 @@ public sealed class BlLegacyBitmapExporter
         {
             CastName = castName,
             FileName = baseFileName + extension,
-            Bytes = bitmap.Bytes
+            Bytes = bitmap.Bytes,
+            Kind = DirFileResourceKind.Bitmap
         };
     }
 

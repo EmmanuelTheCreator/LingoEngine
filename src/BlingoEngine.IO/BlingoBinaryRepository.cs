@@ -43,6 +43,9 @@ public class BlingoBinaryRepository
 
         foreach (var resource in resources.Files)
         {
+            if (resource.Kind == DirFileResourceKind.Unknown)
+                continue;
+
             if (resource.Bytes == null || resource.Bytes.Length == 0)
                 continue;
 
