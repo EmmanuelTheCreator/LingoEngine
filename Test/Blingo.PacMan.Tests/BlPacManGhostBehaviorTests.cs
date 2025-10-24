@@ -9,6 +9,7 @@ using Blingo.PacMan.Core.Enums;
 using Blingo.PacMan.Core.Game;
 using Blingo.PacMan.Core.Settings;
 using Blingo.PacMan.Core.Sprites.GameObjectBehaviors;
+using Blingo.PacMan.Core.Sprites.ParentScripts;
 using Blingo.PacMan.Tests.Fakes;
 using Blingo.PacMan.Tests.TestUtilities;
 using FluentAssertions;
@@ -20,24 +21,28 @@ namespace Blingo.PacMan.Tests;
 
 public sealed class PMGhostBehaviorTests
 {
-    private static readonly MethodInfo CanMoveMethod = typeof(PMGhostBehavior)
-        .GetMethod("CanMove", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?? throw new InvalidOperationException("Unable to access CanMove method for testing.");
+    private static readonly MethodInfo CanGoMethod = typeof(PMGhostBehavior)
+        .GetMethod("CanGo", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Unable to access CanGo method for testing.");
 
     private static readonly MethodInfo DetermineNextDirectionMethod = typeof(PMGhostBehavior)
         .GetMethod("GetNextDirection", BindingFlags.Instance | BindingFlags.NonPublic)
         ?? throw new InvalidOperationException("Unable to access GetNextDirection method for testing.");
 
     [Fact]
-    public void CanMove_allows_ghosts_to_leave_house_through_doorway()
+    public void CanMove_allows_dead_ghosts_to_enter_house_through_doorway()
     {
-        var map = new PMMap(Maps.Map1);
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
         var houseCenter = map.HouseCenter ?? throw new InvalidOperationException("House center tile was not found.");
         var doorway = houseCenter.GetUp() ?? throw new InvalidOperationException("House doorway tile was not found.");
+        var outside = doorway.GetUp()?.GetUp() ?? throw new InvalidOperationException("Outside doorway tile was not found.");
 
-        var behavior = (PMGhostBehavior)RuntimeHelpers.GetUninitializedObject(typeof(PMGhostBehavior));
+        var character = CreateCharacter(map, outside, PMDirection.Down);
+        typeof(PMCharacter).GetProperty("Mode")!.SetValue(character, GhostMode.Dead);
+        var behavior = CreateBehavior(globals, character);
 
-        var canMove = (bool)CanMoveMethod.Invoke(behavior, new object[] { PMDirection.Up, doorway })!;
+        var canMove = (bool)CanGoMethod.Invoke(behavior, new object[] { PMDirection.Down, outside })!;
 
         canMove.Should().BeTrue();
     }
@@ -45,61 +50,78 @@ public sealed class PMGhostBehaviorTests
     [Fact]
     public void CanMove_prevents_reentry_into_house_from_outside()
     {
-        var map = new PMMap(Maps.Map1);
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
         var houseCenter = map.HouseCenter ?? throw new InvalidOperationException("House center tile was not found.");
         var doorway = houseCenter.GetUp() ?? throw new InvalidOperationException("House doorway tile was not found.");
         var outside = doorway.GetUp()?.GetUp() ?? throw new InvalidOperationException("Outside doorway tile was not found.");
 
-        var behavior = (PMGhostBehavior)RuntimeHelpers.GetUninitializedObject(typeof(PMGhostBehavior));
+        var character = CreateCharacter(map, outside, PMDirection.Down);
+        var behavior = CreateBehavior(globals, character);
 
-        var canMove = (bool)CanMoveMethod.Invoke(behavior, new object[] { PMDirection.Down, outside })!;
+        var canMove = (bool)CanGoMethod.Invoke(behavior, new object[] { PMDirection.Down, outside })!;
 
         canMove.Should().BeFalse();
     }
 
-    //[Fact]
-    //public void DetermineNextDirection_reverses_when_forward_is_blocked()
-    //{
-    //    var layout = new[]
-    //    {
-    //        "===",
-    //        "=.=",
-    //        "=.=",
-    //        "===",
-    //    };
+    [Fact]
+    public void DetermineNextDirection_returns_none_when_forward_is_blocked()
+    {
+        var layout = new[]
+        {
+            "===",
+            "=.=",
+            "=.=",
+            "===",
+        };
 
-    //    var globals = PrepareGlobalsWithMap(layout);
-    //    var ghost = CreateBehavior(globals);
-    //    SetField(ghost, "_mode", GhostMode.Scatter);
+        var globals = PrepareGlobalsWithMap(layout);
+        var map = globals.Map;
+        var tile = map.GetTile(1, 1) ?? throw new InvalidOperationException();
+        var character = CreateCharacter(map, tile, PMDirection.Up);
+        var ghost = CreateBehavior(globals, character);
+        ghost.GhostName = MrGhost.Blinky;
 
-    //    var deadEnd = globals.Map.GetTile(1, 1) ?? throw new InvalidOperationException();
+        SetField(ghost, "_moveDir", PMDirection.Up);
+        SetField(ghost, "_scatterTarget", tile);
 
-    //    SetField(ghost, "_dir", PMDirection.Up);
-    //    SetField(ghost, "_scatterTarget", deadEnd);
+        var direction = (PMDirection)DetermineNextDirectionMethod.Invoke(ghost, new object[] { tile })!;
 
-    //    var direction = (PMDirection)DetermineNextDirectionMethod.Invoke(ghost, new object[] { deadEnd })!;
-
-    //    direction.Should().Be(PMDirection.Down);
-    //}
-
-    //[Fact]
-    //public void ExitCurrentMode_marks_house_exit()
-    //{
-    //    var globals = new GlobalVars();
-    //    var ghost = CreateBehavior(globals);
-
-    //    SetField(ghost, "_mode", GhostMode.House);
-    //    SetField(ghost, "_globalMode", GhostMode.Scatter);
-    //    SetField(ghost, "_hasLeftHouse", false);
-
-    //    ghost.ExitCurrentMode();
-
-    //    GetField<bool>(ghost, "_hasLeftHouse").Should().BeTrue();
-    //    GetField<GhostMode>(ghost, "_mode").Should().Be(GhostMode.Scatter);
-    //}
+        direction.Should().Be(PMDirection.None);
+    }
 
     [Fact]
-    public void Configure_keeps_blinky_outside_and_resets_release_delay()
+    public void OnExitMode_resets_house_navigation_state()
+    {
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
+        var house = map.HouseCenter ?? throw new InvalidOperationException("House center tile was not found.");
+        var character = CreateCharacter(map, house, PMDirection.Up);
+        character.Mode = GhostMode.House;
+        var ghost = CreateBehavior(globals, character);
+        ghost.GhostName = MrGhost.Blinky;
+        ghost.SetGlobalMode(GhostMode.Scatter);
+
+        SetField(ghost, "_moveDir", PMDirection.Up);
+        SetField(ghost, "_nextDir", PMDirection.Up);
+        SetField(ghost, "_houseTimer", new PMTimer(10));
+
+        ghost.OnExitMode();
+
+        typeof(PMGhostBehavior)
+            .GetField("_houseTimer", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(ghost)
+            .Should()
+            .BeNull();
+        GetField<PMDirection>(ghost, "_moveDir").Should().Be(PMDirection.Left);
+        GetField<PMDirection>(ghost, "_nextDir").Should().Be(PMDirection.Left);
+        character.Direction.Should().Be(PMDirection.Left);
+        character.Mode.Should().Be(GhostMode.Scatter);
+        character.EffectiveSpeed.Should().Be(GetField<float>(ghost, "_baseSpeed"));
+    }
+
+    [Fact]
+    public void Configure_applies_start_outside_flag()
     {
         var globals = new GlobalVars();
         var ghost = CreateBehavior(globals);
@@ -110,100 +132,139 @@ public sealed class PMGhostBehaviorTests
 
         GetField<bool>(ghost, "_startOutsideHouse").Should().BeTrue();
 
-        ghost.Configure(settings, true, 120);
+        ghost.Configure(settings, false, 120);
 
-        GetField<bool>(ghost, "_startOutsideHouse").Should().BeTrue();
-        GetField<int>(ghost, "_initialHouseReleaseFrames").Should().Be(120);
-        GetField<int>(ghost, "_houseReleaseFrames").Should().Be(120);
+        GetField<bool>(ghost, "_startOutsideHouse").Should().BeFalse();
+        GetField<GhostSettings>(ghost, "_settings").Should().BeSameAs(settings);
     }
 
-    //[Fact]
-    //public void Blinky_targets_pacman_tile_directly()
-    //{
-    //    var globals = PrepareGlobalsWithMap();
-    //    var ghost = CreateBehavior(globals);
-    //    ghost.GhostName = MrGhost.Blinky;
+    [Fact]
+    public void Blinky_targets_pacman_tile_directly()
+    {
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
+        var pacTile = map.GetTile(14, 23) ?? throw new InvalidOperationException();
+        var direction = PMDirection.Left;
 
-    //    var pacTile = globals.Map.GetTile(14, 23) ?? throw new InvalidOperationException();
-    //    globals.State.UpdatePacManPosition(new BlPacManPositionEventData(pacTile.CenterX, pacTile.CenterY, pacTile, PMDirection.Left));
+        var character = CreateCharacter(map, pacTile, direction);
 
-    //    var target = ghost.GetChaseTargetTile();
+        var target = PMGhostLogic.GetChaseTargetTile(globals.GhostManager, MrGhost.Blinky, character, pacTile, direction, pacTile);
 
-    //    target.Should().BeSameAs(pacTile);
-    //}
+        target.Should().BeSameAs(pacTile);
+    }
 
-    //[Fact]
-    //public void Pinky_targets_four_tiles_ahead()
-    //{
-    //    var globals = PrepareGlobalsWithMap();
-    //    var ghost = CreateBehavior(globals);
-    //    ghost.GhostName = MrGhost.Pinky;
+    [Fact]
+    public void Pinky_targets_four_tiles_ahead()
+    {
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
+        var pacTile = map.GetTile(10, 10) ?? throw new InvalidOperationException();
+        var direction = PMDirection.Right;
 
-    //    var pacTile = globals.Map.GetTile(10, 10) ?? throw new InvalidOperationException();
-    //    var direction = PMDirection.Right;
-    //    globals.State.UpdatePacManPosition(new BlPacManPositionEventData(pacTile.CenterX, pacTile.CenterY, pacTile, direction));
+        var character = CreateCharacter(map, pacTile, direction);
 
-    //    var expected = pacTile;
-    //    for (var i = 0; i < 4; i++)
-    //    {
-    //        expected = expected?.Get(direction);
-    //    }
+        var expected = pacTile;
+        for (var i = 0; i < 4; i++)
+            expected = expected?.Get(direction);
 
-    //    var target = ghost.GetChaseTargetTile();
+        var target = PMGhostLogic.GetChaseTargetTile(globals.GhostManager, MrGhost.Pinky, character, pacTile, direction, pacTile);
 
-    //    target.Should().BeSameAs(expected ?? pacTile);
-    //}
+        target.Should().BeSameAs(expected ?? pacTile);
+    }
 
-    //[Fact]
-    //public void Inky_reflects_vector_relative_to_blinky()
-    //{
-    //    var globals = PrepareGlobalsWithMap();
-    //    var ghost = CreateBehavior(globals);
-    //    ghost.GhostName = MrGhost.Inky;
+    [Fact]
+    public void Inky_reflects_vector_relative_to_blinky()
+    {
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
+        var pacTile = map.GetTile(15, 20) ?? throw new InvalidOperationException();
+        var direction = PMDirection.Up;
 
-    //    var pacTile = globals.Map.GetTile(15, 20) ?? throw new InvalidOperationException();
-    //    var ahead = pacTile.Get(PMDirection.Up)?.Get(PMDirection.Up) ?? pacTile;
-    //    var blinkyTile = globals.Map.GetTile(10, 18) ?? throw new InvalidOperationException();
+        var character = CreateCharacter(map, pacTile, direction);
 
-    //    var target = ghost.GetChaseTargetTile(pacTile, PMDirection.Up, blinkyTile);
+        var ahead = pacTile.Get(direction)?.Get(direction) ?? pacTile;
+        var blinkyTile = map.GetTile(10, 18) ?? throw new InvalidOperationException();
 
-    //    var offsetCol = (ahead?.Column ?? pacTile.Column) - blinkyTile.Column;
-    //    var offsetRow = (ahead?.Row ?? pacTile.Row) - blinkyTile.Row;
-    //    var expected = globals.Map.GetTile((ahead?.Column ?? pacTile.Column) + offsetCol, (ahead?.Row ?? pacTile.Row) + offsetRow);
+        var blinky = CreateBehavior(globals, CreateCharacter(map, blinkyTile, PMDirection.Left));
+        blinky.GhostName = MrGhost.Blinky;
+        RegisterGhost(globals.GhostManager, blinky);
 
-    //    target.Should().BeSameAs(expected);
-    //}
+        var target = PMGhostLogic.GetChaseTargetTile(globals.GhostManager, MrGhost.Inky, character, pacTile, direction, pacTile);
 
-    //[Fact]
-    //public void Clyde_switches_between_scatter_and_chase_targets()
-    //{
-    //    var globals = PrepareGlobalsWithMap();
-    //    var ghost = CreateBehavior(globals);
-    //    ghost.GhostName = MrGhost.Clyde;
+        var offsetCol = (ahead?.Column ?? pacTile.Column) - blinkyTile.Column;
+        var offsetRow = (ahead?.Row ?? pacTile.Row) - blinkyTile.Row;
+        var expected = map.GetTile((ahead?.Column ?? pacTile.Column) + offsetCol, (ahead?.Row ?? pacTile.Row) + offsetRow);
 
-    //    var pacTile = globals.Map.GetTile(14, 23) ?? throw new InvalidOperationException();
-    //    var scatter = globals.Map.GetTile(0, globals.Map.Height - 1) ?? throw new InvalidOperationException();
-    //    SetField(ghost, "_scatterTarget", scatter);
+        target.Should().BeSameAs(expected);
+    }
 
-    //    var farTile = globals.Map.GetTile(0, 0) ?? throw new InvalidOperationException();
-    //    var farTarget = ghost.GetChaseTargetTile(pacTile, PMDirection.Left, null, farTile);
-    //    farTarget.Should().BeSameAs(pacTile);
+    [Fact]
+    public void Sue_switches_between_scatter_and_chase_targets()
+    {
+        var globals = PrepareGlobalsWithMap();
+        var map = globals.Map;
+        var pacTile = map.GetTile(14, 23) ?? throw new InvalidOperationException();
+        var scatter = map.GetTile(0, map.Height - 1) ?? throw new InvalidOperationException();
+        var direction = PMDirection.Left;
 
-    //    var closeTile = pacTile.Get(PMDirection.Left) ?? pacTile;
-    //    var closeTarget = ghost.GetChaseTargetTile(pacTile, PMDirection.Left, null, closeTile);
-    //    closeTarget.Should().BeSameAs(scatter);
-    //}
+        var character = CreateCharacter(map, pacTile, direction);
 
-    //private static GlobalVars PrepareGlobalsWithMap(IEnumerable<string>? layout = null)
-    //{
-    //    var globals = new GlobalVars();
-    //    var map = new PMMap(layout ?? Maps.Map1);
-    //    var managerField = typeof(BlLevelManager).GetField("_map", BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
-    //    managerField.SetValue(globals.LevelManager, map);
-    //    return globals;
-    //}
+        var farTile = map.GetTile(0, 0) ?? throw new InvalidOperationException();
+        SetCharacterPosition(character, farTile);
+        var farTarget = PMGhostLogic.GetChaseTargetTile(globals.GhostManager, MrGhost.Sue, character, pacTile, direction, scatter);
+        farTarget.Should().BeSameAs(pacTile);
+
+        var closeTile = pacTile.Get(direction) ?? pacTile;
+        SetCharacterPosition(character, closeTile);
+        var closeTarget = PMGhostLogic.GetChaseTargetTile(globals.GhostManager, MrGhost.Sue, character, pacTile, direction, scatter);
+        closeTarget.Should().BeSameAs(scatter);
+    }
+
+    private static GlobalVars PrepareGlobalsWithMap(IEnumerable<string>? layout = null)
+    {
+        var globals = new GlobalVars();
+        var map = new PMMap(layout ?? Maps.Map1);
+        typeof(PMLevelManager)
+            .GetField("_map", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(globals.LevelManager, map);
+        return globals;
+    }
+
+    private static PMCharacter CreateCharacter(PMMap map, PMTile tile, PMDirection direction)
+    {
+        var character = (PMCharacter)RuntimeHelpers.GetUninitializedObject(typeof(PMCharacter));
+        var type = typeof(PMCharacter);
+
+        type.GetField("_map", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(character, map);
+        SetCharacterPosition(character, tile);
+        type.GetProperty("Direction")!.SetValue(character, direction);
+        type.GetProperty("Mode")!.SetValue(character, GhostMode.Scatter);
+
+        return character;
+    }
+
+    private static void SetCharacterPosition(PMCharacter character, PMTile tile)
+    {
+        var type = typeof(PMCharacter);
+        type.GetField("_x", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(character, tile.X);
+        type.GetField("_y", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(character, tile.Y);
+        type.GetField("_lastTile", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(character, tile);
+    }
+
+    private static void RegisterGhost(PMGhostManager manager, PMGhostBehavior ghost)
+    {
+        var field = typeof(PMGhostManager)
+            .GetField("_ghosts", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Unable to access ghost collection.");
+        var list = (List<PMGhostBehavior>)field.GetValue(manager)!;
+        if (!list.Contains(ghost))
+            list.Add(ghost);
+    }
 
     private static PMGhostBehavior CreateBehavior(GlobalVars? globals = null)
+        => CreateBehavior(globals, null);
+
+    private static PMGhostBehavior CreateBehavior(GlobalVars? globals, PMCharacter? character)
     {
         var behavior = (PMGhostBehavior)RuntimeHelpers.GetUninitializedObject(typeof(PMGhostBehavior));
         var type = typeof(PMGhostBehavior);
@@ -213,7 +274,8 @@ public sealed class PMGhostBehaviorTests
         type.GetField("_globals", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(behavior, globals);
         type.GetField("_random", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(behavior, new DeterministicRandomSource());
         type.GetField("_globalMode", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(behavior, GhostMode.Scatter);
-        type.GetField("_mode", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(behavior, GhostMode.House);
+        if (character is not null)
+            type.GetField("_character", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(behavior, character);
 
         return behavior;
     }
