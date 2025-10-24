@@ -1,4 +1,7 @@
-﻿using BlingoEngine.IO.Legacy.Director;
+using System;
+using System.IO;
+using BlingoEngine.IO.Data.DTO;
+using BlingoEngine.IO.Legacy.Director;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
 using BlingoEngine.IO.Legacy.Tests.Texts;
 using Microsoft.Extensions.Logging;
@@ -27,8 +30,15 @@ namespace BlingoEngine.IO.Legacy.Tests.Director
             var importer = new BlLegacyMovieImporter(_logger);
             var file = TestContextHarness.GetAudioAssetPath("DirFileWith_3_Sounds.dir");
             var data = importer.Import(file);
-            // todo: resources must be directly bound inside the cast member.
             var resources = data.Resources;
+
+            Assert.All(resources.Files, resource => Assert.NotEqual(DirFileResourceKind.Unknown, resource.Kind));
+            Assert.All(resources.Files, resource =>
+            {
+                var extension = Path.GetExtension(resource.FileName);
+                Assert.True(string.Equals(".wav", extension, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(".mp3", extension, StringComparison.OrdinalIgnoreCase));
+            });
         }
     }
 }

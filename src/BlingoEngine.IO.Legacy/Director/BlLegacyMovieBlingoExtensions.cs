@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Data.DTO.Members;
@@ -43,7 +44,9 @@ public static class BlLegacyMovieBlingoExtensions
 
         var bitmapExporter = new BlLegacyBitmapExporter();
         var soundExporter = new BlLegacySoundExporter();
-        var usedNames = new HashSet<string>(resources.Files.Select(f => f.FileName), StringComparer.OrdinalIgnoreCase);
+        var usedNames = new HashSet<string>(
+            resources.Files.Where(f => f.Kind != DirFileResourceKind.Unknown).Select(f => f.FileName),
+            StringComparer.OrdinalIgnoreCase);
 
         var castNumber = 1;
         foreach (var cast in archive.CastLibraries)
@@ -126,7 +129,14 @@ public static class BlLegacyMovieBlingoExtensions
         {
             BlLegacyCastMemberType.Text => baseDto.ToTextMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
             BlLegacyCastMemberType.Field => baseDto.ToFieldMember(archive, slot.ResourceId, logger, (BlCastMemberText)slot.Member),
-            BlLegacyCastMemberType.Script => baseDto.ToScriptMember(archive, slot.ResourceId, logger, (BlCastMemberScript)slot.Member),
+            BlLegacyCastMemberType.Script => baseDto.ToScriptMember(
+                archive,
+                slot.ResourceId,
+                castDto,
+                resources,
+                usedNames,
+                logger,
+                (BlCastMemberScript)slot.Member),
             BlLegacyCastMemberType.DigitalVideo => baseDto.ToVideoMember(archive, slot.ResourceId, logger, (BlCastMemberVideo)slot.Member),
             BlLegacyCastMemberType.Bitmap or BlLegacyCastMemberType.Picture => baseDto.ToBitmapMember(
                 archive,
@@ -300,9 +310,26 @@ public static class BlLegacyMovieBlingoExtensions
         this BlingoMemberDTO baseDto,
         BlLegacyMovieArchive archive,
         int castResourceId,
+        BlingoCastDTO castDto,
+        DirFilesContainerDTO resources,
+        HashSet<string> usedNames,
         ILogger logger,
         BlCastMemberScript memberScript)
     {
+        var baseFileName = BuildScriptFileName(castDto, baseDto, memberScript);
+        var fileName = EnsureUniqueFileName(baseFileName, usedNames);
+        var scriptBytes = Encoding.UTF8.GetBytes(memberScript.Script ?? string.Empty);
+
+        resources.Files.Add(new DirFileResourceDTO
+        {
+            CastName = castDto.Name,
+            FileName = fileName,
+            Bytes = scriptBytes,
+            CastLibNum = baseDto.CastLibNum,
+            NumberInCast = baseDto.NumberInCast,
+            Kind = DirFileResourceKind.Script
+        });
+
         return new BlingoMemberScriptDTO
         {
             Name = baseDto.Name,
@@ -312,17 +339,17 @@ public static class BlLegacyMovieBlingoExtensions
             RegPoint = baseDto.RegPoint,
             Width = baseDto.Width,
             Height = baseDto.Height,
-            Size = memberScript.Script.Length,
+            Size = memberScript.Script?.Length ?? 0,
             Comments = baseDto.Comments,
             FileName = baseDto.FileName,
             PurgePriority = baseDto.PurgePriority,
 
             // Script specific
-            Script = memberScript.Script,
+            Script = memberScript.Script ?? string.Empty,
             IsJavascript = memberScript.IsJavascript,
-            LinkedFilePath = memberScript.LinkedFileName,
+            LinkedFilePath = fileName,
             ScriptType = memberScript.ScriptType,
-            
+
             // Common
             DateCreated = memberScript.Created.GetValueOrDefault(),
             DateModified = memberScript.Modified.GetValueOrDefault(),
@@ -367,6 +394,41 @@ public static class BlLegacyMovieBlingoExtensions
             DateModified = memberScript.Modified.GetValueOrDefault(),
             MediaContentType = memberScript.MediaContentType ?? "",
         };
+    }
+
+    private static string BuildScriptFileName(BlingoCastDTO castDto, BlingoMemberDTO baseDto, BlCastMemberScript memberScript)
+    {
+        var extension = memberScript.IsJavascript ? ".js" : ".lingo";
+        var linkedName = memberScript.LinkedFileName;
+        var baseName = string.IsNullOrWhiteSpace(linkedName)
+            ? $"{castDto.Number}_{baseDto.NumberInCast}"
+            : Path.GetFileNameWithoutExtension(linkedName);
+
+        if (string.IsNullOrWhiteSpace(baseName))
+            baseName = $"{castDto.Number}_{baseDto.NumberInCast}";
+
+        var sanitized = SanitizeFileName(baseName);
+        return sanitized + extension;
+    }
+
+    private static string SanitizeFileName(string candidate)
+    {
+        if (string.IsNullOrEmpty(candidate))
+            return "script";
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(candidate.Length);
+
+        for (var i = 0; i < candidate.Length; i++)
+        {
+            var ch = candidate[i];
+            if (Array.IndexOf(invalidChars, ch) >= 0)
+                continue;
+
+            builder.Append(ch);
+        }
+
+        return builder.Length == 0 ? "script" : builder.ToString();
     }
 
     private static string DecodeText(BlLegacyText text, int directorVersion, ILogger logger)
