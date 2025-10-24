@@ -12,6 +12,7 @@ using BlingoEngine.Director.Core.UI;
 using BlingoEngine.FrameworkCommunication;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.Director.Core.Casts
 {
@@ -23,6 +24,7 @@ namespace BlingoEngine.Director.Core.Casts
         private readonly Dictionary<string, DirCastTab> _tabMap = new();
         private readonly IAbstCommandManager _commandManager;
         private readonly IDirectorIconManager _iconManager;
+        private readonly ILogger<DirectorCastWindow> _logger;
         private IBlingoMember? _selected;
         private IAbstMouseSubscription? _mouseSub;
         private IBlingoMovie? _movie;
@@ -36,13 +38,14 @@ namespace BlingoEngine.Director.Core.Casts
             IDirectorEventMediator mediator,
             IAbstCommandManager commandManager,
             IDirectorIconManager iconManager,
-            IBlingoPlayer player) : base(serviceProvider, DirectorMenuCodes.CastWindow)
+            IBlingoPlayer player, ILogger<DirectorCastWindow> logger) : base(serviceProvider, DirectorMenuCodes.CastWindow)
         {
             _player = (BlingoPlayer)player;
             _player.ActiveMovieChanged += OnActiveMovieChanged;
             _mediator = mediator;
             _commandManager = commandManager;
             _iconManager = iconManager;
+            _logger = logger;
             MinimumWidth = 360;
             MinimumHeight = 100;
             Width = 370;
@@ -95,7 +98,7 @@ namespace BlingoEngine.Director.Core.Casts
                     _commandManager,
                     _mediator,
                     _player,
-                    () => CreateContextMenu());
+                    () => CreateContextMenu(),_logger);
                 tab.SetViewportSize((int)_tabs.Width, (int)_tabs.Height);
                 _tabs.AddTab(tab.TabItem);
                 _tabMap[tab.TabItem.Title] = tab;

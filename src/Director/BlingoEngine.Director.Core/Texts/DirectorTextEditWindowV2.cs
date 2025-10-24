@@ -3,6 +3,7 @@ using AbstUI.Components.Containers;
 using AbstUI.Components.Graphics;
 using AbstUI.Components.Inputs;
 using AbstUI.Components.Texts;
+using AbstUI.Primitives;
 using AbstUI.Styles;
 using AbstUI.Texts;
 using AbstUI.Windowing;
@@ -26,8 +27,8 @@ namespace BlingoEngine.Director.Core.Texts
         private readonly AbstMarkdownRenderer _renderer;
         private readonly AbstPanel _rootPanel;
         private readonly AbstScrollContainer _markdownScroller;
-        private readonly AbstLayoutWrapper _markdownScrollerContainer;
-        private readonly AbstLayoutWrapper _markdownInputContainer;
+        private readonly AbstScrollContainer _markdownScrollerContainer;
+        private readonly IAbstLayoutNode _markdownInputContainer;
         private CancellationTokenSource? _renderCts;
         private SynchronizationContext? _uiContext;
         private IBlingoMemberTextBase? _member;
@@ -35,7 +36,7 @@ namespace BlingoEngine.Director.Core.Texts
         private MemberNavigationBar<IBlingoMemberTextBase> _navBar;
         private bool _isSettingMemberValues = false;
         private readonly AbstLabel _caretLabel;
-        private readonly AbstLayoutWrapper _caretLabelContainer;
+        private readonly IAbstLayoutNode _caretLabelContainer;
 
         public TextEditIconBar IconBar { get; }
         public AbstTextStyle CurrentStyle => IconBar.CurrentStyle;
@@ -54,12 +55,12 @@ namespace BlingoEngine.Director.Core.Texts
             _rootPanel.AddItem(IconBar.Panel, 0, 25);
             // Previously disposed preview texture here; no longer required.
             _previewCanvas = factory.CreateGfxCanvas("MarkdownPreview", 400, 400);
-            _markdownScroller = factory.CreateScrollContainer("MakdownScroller");
+            _markdownScroller = factory.CreateScrollContainer("MarkdownScroller");
             _markdownScroller.Width = 400;
             _markdownScroller.Height = 400;
             _markdownScroller.AddItem(_previewCanvas);
             _markdownScroller.ClipContents = true;
-            _markdownScrollerContainer = (AbstLayoutWrapper)_rootPanel.AddItem(_markdownScroller, 10, 50);
+            _markdownScrollerContainer = (AbstScrollContainer)_rootPanel.AddItem(_markdownScroller, 420, 55);
             _painter = _factory.ComponentFactory.CreateImagePainterToTexture((int)_previewCanvas.Width, (int)_previewCanvas.Height);
             _painter.AutoResizeWidth = true;
             _painter.AutoResizeHeight = true;
@@ -69,10 +70,10 @@ namespace BlingoEngine.Director.Core.Texts
             _markdownInput = factory.CreateInputText("MarkdownInput", onChange: OnTextChanged, multiLine: true);
             _markdownInput.Width = 400;
             _markdownInput.Height = 400;
-            _markdownInputContainer = (AbstLayoutWrapper)_rootPanel.AddItem(_markdownInput, 420, 50);
+            _markdownInputContainer = (IAbstLayoutNode)_rootPanel.AddItem(_markdownInput, 10, 55);
 
             _caretLabel = factory.CreateLabel("CaretPositionLabel", "Ln:0 Ch:0");
-            _caretLabelContainer = (AbstLayoutWrapper)_rootPanel.AddItem(_caretLabel, 0, 475);
+            _caretLabelContainer = (IAbstLayoutNode)_rootPanel.AddItem(_caretLabel, 0, 475);
             _markdownInput.OnCaretChanged += (l, c) => _caretLabel.Text = $"Ln:{l} Ch:{c}";
 
             Width = 820;
@@ -179,10 +180,10 @@ namespace BlingoEngine.Director.Core.Texts
             _markdownInput.Height = contentHeight;
             _previewCanvas.Width = innerWidth / 2;
             _previewCanvas.Height = contentHeight;
-            _markdownScrollerContainer.X = 10;
-            _markdownScrollerContainer.Y = 50;
-            _markdownInputContainer.X = 10 + innerWidth / 2;
-            _markdownInputContainer.Y = 50;
+            _markdownScrollerContainer.X = 10 + innerWidth / 2;
+            _markdownScrollerContainer.Y = 55;
+            _markdownInputContainer.X = 10;
+            _markdownInputContainer.Y = 55;
             _caretLabelContainer.Y = height - 25;
         }
 

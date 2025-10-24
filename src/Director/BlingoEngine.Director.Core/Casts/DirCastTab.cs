@@ -22,6 +22,7 @@ using BlingoEngine.FrameworkCommunication;
 using BlingoEngine.Members;
 using BlingoEngine.Scripts;
 using BlingoEngine.Texts;
+using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.Director.Core.Casts
 {
@@ -44,6 +45,7 @@ namespace BlingoEngine.Director.Core.Casts
         private readonly MemberNavigationBar _navBar;
         private readonly AbstContextMenu _contextMenu;
         private readonly IDirectorEventMediator _mediator;
+        private readonly ILogger _logger;
         private IDirCastItem? _selected;
         private IDirCastItem? _hoveredItem;
         private DirCastItem? _dragItem;
@@ -68,12 +70,13 @@ namespace BlingoEngine.Director.Core.Casts
             IAbstCommandManager commandManager,
             IDirectorEventMediator mediator,
             IBlingoPlayer player,
-            Func<AbstContextMenu> contextMenuFactory)
+            Func<AbstContextMenu> contextMenuFactory, ILogger logger)
         {
             _commandManager = commandManager;
             _factory = factory;
             _iconManager = iconManager;
             _mediator = mediator;
+            _logger = logger;
             _cast = cast;
             _contextMenu = (contextMenuFactory ?? throw new ArgumentNullException(nameof(contextMenuFactory)))();
             _contextMenu
@@ -429,6 +432,7 @@ namespace BlingoEngine.Director.Core.Casts
             catch (Exception ex)
             {
                 // todo : add logging
+                _logger.LogError(ex, "Error opening member editor:"+ex.Message+":"+ex);
             }
 
         }
