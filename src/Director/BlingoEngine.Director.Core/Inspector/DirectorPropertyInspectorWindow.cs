@@ -51,6 +51,7 @@ namespace BlingoEngine.Director.Core.Inspector
             Guides,
             Behavior,
             Member,
+            AVI,
             Bitmap,
             Sound,
             Shape,
