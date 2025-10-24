@@ -456,16 +456,15 @@ Always present and identical in samples:
 ## 03:FFFE - Pre-render Bitmap
 
 TXc(l) : contains all the font glyps perhaps, the encodeing is completly different.
+TODO
+
 
 ---
-
-## 📐 Text Box Size (Width & Height)
-
-
 
 
 
 ## 🧾 Paragraph Layout: Margins, Indents & Spacing
+TODO : update with latest implementation
 
 ### Location
 C2 is padding
@@ -504,7 +503,7 @@ C2(03) 02:9  02:7  02:0
 
 ### Location observations
 C2 is padding
-Kerning and extra letter spacing appear in the **`C2(03)`** and **`C2(04)`** sections following the header.
+Kerning and extra letter spacing appear after the padding **`C2(03)`** and **`C2(04)`**  following the header.
 
 ### Pattern
 C2 is padding
@@ -521,8 +520,8 @@ C2(04) 02:1  02:0
 | **Font_Kerning_Pos2_13** | `02:20000` then `02:18` | minor offset | Kerning enabled |
 
 ### Mapping
-- `C2(03)` → Base kerning table or offset between pairs (auto spacing).  
-- `C2(04)` → Additional user-defined character spacing (tracking).  
+- `C2(03)` after Base kerning table or offset between pairs (auto spacing).  
+- `C2(04)` after Additional user-defined character spacing (tracking).  
 - Units are likely **twips** (1/20 pt).  
 - Director’s “Spacing” field in Text Inspector maps directly to these values.
 
@@ -540,11 +539,12 @@ C2(04) 02:1  02:0
 
 ---
 
----
+
 
 # 🧾 Field Members and XMED Data
+!!!! Still to investigate !!!!
 
-Field members (`Type = 0x0F` in CASt chunks) store editable text and use **the same XMED structure** as standard text members.  
+Field members store editable text and use **the same XMED structure** as standard text members.  
 However, the data is split across two locations:
 
 | Component | Source | Description |
@@ -590,18 +590,7 @@ Context	Meaning of 03:0002
 So its structure is different in purpose, but the block header format (03:0002...) remains the same.
 It’s the payload that changes — from “text data” → “offset/placeholder table.”
 
-### Differences from Static Text
-| Aspect | Field Member | Text Member |
-|--------|---------------|-------------|
-| **Editing** | Editable at runtime | Read-only |
-| **Text Storage** | Separate raw bytes | Embedded inside XMED |
-| **Style Data** | External XMED reference | Inline XMED in same chunk |
-| **Rendering** | Merges raw text + XMED formatting | Directly uses XMED text layout |
 
-### Notes
-- Parsing a field requires resolving the **XMED link** via the key table and merging both parts.
-- All C1/C2 token meanings, block sizes, and font descriptors are **identical**.
-- The XMED for field members can be reused interchangeably in other styled-text contexts.
 
 
 

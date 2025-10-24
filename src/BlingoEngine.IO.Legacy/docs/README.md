@@ -12,4 +12,5 @@ These notes summarize the on-disk formats handled by `BlingoEngine.IO.Legacy`. T
 - [QuickDraw Shape Records](./LegacyShapeRecords.md) – Byte layouts for legacy shape cast members across Director releases.
 - [Director Score Timeline (Pre-10)](./LegacyScorePre10.md)
 - [Director 10+ Score Layout](./Director10PlusScoreTemplate.md)
+- [Director 10+ XMED declarations](./XMED_Declaration.md)
 
