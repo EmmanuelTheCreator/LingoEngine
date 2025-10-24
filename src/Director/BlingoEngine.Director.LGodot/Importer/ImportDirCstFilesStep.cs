@@ -111,7 +111,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
     {
         foreach (var file in _files)
         {
-            if (!file.EndsWith(".dir", StringComparison.OrdinalIgnoreCase))
+            if (!file.EndsWith(".dir", StringComparison.OrdinalIgnoreCase) && !file.EndsWith(".cst", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             try
