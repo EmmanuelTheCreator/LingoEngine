@@ -430,7 +430,7 @@ public class TextEditIconBar
     {
         if (_styles.TryGetValue(name, out var style))
             return style;
-        
+
         style = new AbstTextStyle
         {
             Name = name,
@@ -448,6 +448,27 @@ public class TextEditIconBar
         _styles.Add(name, style);
         RefreshStylesCombo();
         return style;
+    }
+
+    /// <summary>
+    /// Programmatically select a style in the toolbar. Creates the style if needed.
+    /// </summary>
+    public void SelectStyle(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            name = DefaultStyleName;
+
+        if (!_styles.ContainsKey(name))
+            EnsureStyle(name);
+
+        var previousSettingMemberValues = _isSettingMemberValues;
+        _isSettingMemberValues = true;
+
+        if (_currentStyle.Name != name)
+            ApplyStyle(name);
+
+        _stylesCombo.SelectedKey = name;
+        _isSettingMemberValues = previousSettingMemberValues;
     }
 
     /// <summary>

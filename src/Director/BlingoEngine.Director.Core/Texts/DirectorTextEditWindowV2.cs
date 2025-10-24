@@ -74,7 +74,7 @@ namespace BlingoEngine.Director.Core.Texts
 
             _caretLabel = factory.CreateLabel("CaretPositionLabel", "Ln:0 Ch:0");
             _caretLabelContainer = (IAbstLayoutNode)_rootPanel.AddItem(_caretLabel, 0, 475);
-            _markdownInput.OnCaretChanged += (l, c) => _caretLabel.Text = $"Ln:{l} Ch:{c}";
+            _markdownInput.OnCaretChanged += OnCaretChanged;
 
             Width = 820;
             Height = 520;
@@ -232,6 +232,20 @@ namespace BlingoEngine.Director.Core.Texts
             }, TaskScheduler.Default);
         }
 
+        private void OnCaretChanged(int line, int column)
+        {
+            _caretLabel.Text = $"Ln:{line} Ch:{column}";
+            if (_isSettingMemberValues)
+                return;
+
+            var styleName = GetStyleNameAt(line, column);
+            if (string.IsNullOrEmpty(styleName))
+                styleName = TextEditIconBar.DefaultStyleName;
+
+            if (!string.Equals(IconBar.CurrentStyle.Name, styleName, StringComparison.Ordinal))
+                IconBar.SelectStyle(styleName);
+        }
+
         private void RenderMarkdown(string text)
         {
             _painter.Clear(AColors.Transparent);
@@ -281,6 +295,47 @@ namespace BlingoEngine.Director.Core.Texts
             if (inserted)
                 ScheduleRender(_markdownInput.Text);
             return style;
+        }
+
+        private string? GetStyleNameAt(int line, int column)
+        {
+            var text = _markdownInput.Text;
+            int caretIndex = GetOffset(text, line, column);
+            string? paragraphStyle = null;
+            string? inlineStyle = null;
+            int index = 0;
+
+            while (index < caretIndex)
+            {
+                int tagStart = text.IndexOf("{{", index, StringComparison.Ordinal);
+                if (tagStart < 0 || tagStart >= caretIndex)
+                    break;
+
+                int tagEnd = text.IndexOf("}}", tagStart + 2, StringComparison.Ordinal);
+                if (tagEnd < 0 || tagEnd >= caretIndex)
+                    break;
+
+                var tag = text.Substring(tagStart + 2, tagEnd - tagStart - 2);
+
+                if (tag.StartsWith("PARA:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var name = tag.Substring(5).Trim();
+                    paragraphStyle = string.IsNullOrEmpty(name) ? TextEditIconBar.DefaultStyleName : name;
+                }
+                else if (tag.Equals("PARA", StringComparison.OrdinalIgnoreCase))
+                    paragraphStyle = TextEditIconBar.DefaultStyleName;
+                else if (tag.StartsWith("STYLE:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var name = tag.Substring(6).Trim();
+                    inlineStyle = string.IsNullOrEmpty(name) ? null : name;
+                }
+                else if (tag.Equals("/STYLE", StringComparison.OrdinalIgnoreCase))
+                    inlineStyle = null;
+
+                index = tagEnd + 2;
+            }
+
+            return inlineStyle ?? paragraphStyle;
         }
 
         private void InsertAroundSelection(string prefix, string suffix)
