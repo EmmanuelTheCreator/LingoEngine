@@ -404,6 +404,7 @@ namespace BlingoEngine.IO.Legacy.Cast
                     case "Animated GIF...":
                     case "kMoaCfFormat_PNG":
                     case "kMoaCfFormat_JPEG":
+                    case "kMoaCfFormat_TIFF":
                         return "bitmap";
                     case "kMoaCfFormat_MPEG3": return "mp3";
                     case "kMoaCfFormat_WAV": return "wav";

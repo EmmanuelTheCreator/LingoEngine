@@ -40,6 +40,36 @@ namespace BlingoEngine.Sounds
         /// </summary>
         public string LinkedFilePath { get; set; } = string.Empty;
 
+        private bool? _importedStereo;
+        /// <summary>
+        /// Stereo metadata from the imported resource.
+        /// </summary>
+        public bool? ImportedStereo
+        {
+            get => _importedStereo;
+            set => SetProperty(ref _importedStereo, value);
+        }
+
+        private double _originalLength;
+        /// <summary>
+        /// Duration metadata (in seconds) from the imported resource.
+        /// </summary>
+        public double OriginalLength
+        {
+            get => _originalLength;
+            set => SetProperty(ref _originalLength, value);
+        }
+
+        private string? _sourceFileName;
+        /// <summary>
+        /// Source filename associated with this sound.
+        /// </summary>
+        public string? SourceFileName
+        {
+            get => _sourceFileName;
+            set => SetProperty(ref _sourceFileName, value);
+        }
+
         public BlingoMemberSound(IBlingoFrameworkMemberSound blingoMemberSound, BlingoCast cast, int numberInCast, string name = "", string fileName = "")
             : base(blingoMemberSound, BlingoMemberType.Sound, cast, numberInCast, name, fileName)
         {
