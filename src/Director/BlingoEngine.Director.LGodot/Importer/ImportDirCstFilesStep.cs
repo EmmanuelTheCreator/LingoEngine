@@ -118,13 +118,7 @@ internal partial class ImportDirCstFilesStep : VBoxContainer
             {
                 var (stage, movie, resources) = LegacyImporter.ImportMovie(file, _logger);
                 var tempDir = Path.Combine(Path.GetTempPath(), "blingo_import_" + Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(tempDir);
-                foreach (var res in resources.Files)
-                {
-                    var resPath = Path.Combine(tempDir, res.FileName);
-                    File.WriteAllBytes(resPath, res.Bytes);
-                }
-                var loaded = _repo.Load(stage, movie, _player, tempDir);
+                var loaded = _repo.Load(stage, movie, resources, _player, tempDir);
                 _player.SetActiveMovie(loaded);
                 GD.Print($"Imported movie '{movie.Name}' into '{tempDir}' and loaded");
             }

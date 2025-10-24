@@ -10,6 +10,7 @@ using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Data.DTO.FilmLoops;
 using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.IO.Data.DTO.Sprites;
+using BlingoEngine.Medias;
 using BlingoEngine.Members;
 using BlingoEngine.Movies;
 using BlingoEngine.Scripts;
@@ -19,6 +20,8 @@ using BlingoEngine.Sprites;
 using BlingoEngine.Tempos;
 using BlingoEngine.Texts;
 using BlingoEngine.Transitions;
+using System;
+using System.IO;
 using System.Text.Json;
 
 namespace BlingoEngine.IO;
@@ -27,6 +30,7 @@ public interface IJsonStateRepository
 {
     BlingoMovie Load(BlingoProjectDTO dto, BlingoPlayer player, string resourceDir);
     BlingoMovie Load(BlingoStageDTO stageDto, BlingoMovieDTO movieDto, BlingoPlayer player, string resourceDir);
+    BlingoMovie Load(BlingoStageDTO stageDto, BlingoMovieDTO movieDto, DirFilesContainerDTO resources, BlingoPlayer player, string resourceDir);
     BlingoMovie Load(string filePath, BlingoPlayer player);
 
     (string JsonString, BlingoMovieDTO MovieDto) Save(string filePath, BlingoMovie movie, JsonStateRepository.MovieStoreOptions? options = null);
@@ -41,6 +45,18 @@ public interface IJsonStateRepository
 
 public class JsonStateRepository : IJsonStateRepository
 {
+    private readonly BlingoBinaryRepository _binaryRepository;
+
+    public JsonStateRepository()
+        : this(new BlingoBinaryRepository())
+    {
+    }
+
+    public JsonStateRepository(BlingoBinaryRepository binaryRepository)
+    {
+        _binaryRepository = binaryRepository;
+    }
+
     public class MovieStoreOptions
     {
         public bool WithMedia { get; set; }
@@ -111,25 +127,39 @@ public class JsonStateRepository : IJsonStateRepository
 
     public BlingoMovie Load(BlingoProjectDTO dto, BlingoPlayer player, string resourceDir)
     {
-        if (string.IsNullOrEmpty(resourceDir))
-            resourceDir = Directory.GetCurrentDirectory();
-        BuildStageFromDto(dto.Stage, player, resourceDir);
-        return BuildMovieFromDto(dto.Movies.First(), player, resourceDir);
+        resourceDir = EnsureResourceDirectory(resourceDir);
+        var movieDto = dto.Movies.First();
+        _binaryRepository.Initialize(movieDto, resourceDir);
+        BuildStageFromDto(dto.Stage, player);
+        return BuildMovieFromDto(movieDto, player);
     }
     public BlingoMovie Load(BlingoStageDTO stageDto, BlingoMovieDTO movieDto, BlingoPlayer player, string resourceDir)
     {
-        if (string.IsNullOrEmpty(resourceDir))
-            resourceDir = Directory.GetCurrentDirectory();
+        resourceDir = EnsureResourceDirectory(resourceDir);
+        _binaryRepository.Initialize(movieDto, resourceDir);
 
-        BuildStageFromDto(stageDto, player, resourceDir);
-        return BuildMovieFromDto(movieDto, player, resourceDir);
+        BuildStageFromDto(stageDto, player);
+        return BuildMovieFromDto(movieDto, player);
     }
 
-    private static void BuildStageFromDto(BlingoStageDTO dtoStage, BlingoPlayer player, string resourceDir)
+    public BlingoMovie Load(BlingoStageDTO stageDto, BlingoMovieDTO movieDto, DirFilesContainerDTO resources, BlingoPlayer player, string resourceDir)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+
+        resourceDir = EnsureResourceDirectory(resourceDir);
+
+        _binaryRepository.Initialize(movieDto, resourceDir);
+        _binaryRepository.PersistResources(resources);
+
+        BuildStageFromDto(stageDto, player);
+        return BuildMovieFromDto(movieDto, player);
+    }
+
+    private static void BuildStageFromDto(BlingoStageDTO dtoStage, BlingoPlayer player)
     {
         player.LoadStage((int)dtoStage.Width, (int)dtoStage.Height, FromDto(dtoStage.BackgroundColor));
     }
-    private static BlingoMovie BuildMovieFromDto(BlingoMovieDTO dto, BlingoPlayer player, string resourceDir)
+    private BlingoMovie BuildMovieFromDto(BlingoMovieDTO dto, BlingoPlayer player)
     {
         IBlingoEventMediator mediator = player.GetEventMediator();
         var movie = (BlingoMovie)player.NewMovie(dto.Name);
@@ -152,12 +182,23 @@ public class JsonStateRepository : IJsonStateRepository
             {
                 var reg = new APoint(memDto.RegPoint.X, memDto.RegPoint.Y);
                 string fileName = memDto.FileName;
-                if (memDto is BlingoMemberBitmapDTO pic && !string.IsNullOrEmpty(pic.ImageFile))
-                    fileName = Path.Combine(resourceDir, pic.ImageFile);
-                if (memDto is BlingoMemberSoundDTO snd && !string.IsNullOrEmpty(snd.SoundFile))
-                    fileName = Path.Combine(resourceDir, snd.SoundFile);
+                if (memDto is BlingoMemberScriptDTO scriptDto)
+                    fileName = _binaryRepository.WriteScriptFile(scriptDto);
+                else if (memDto is BlingoMemberBitmapDTO bitmapDto)
+                    fileName = _binaryRepository.ResolveBinaryPath(memDto, bitmapDto.ImageFile);
+                else if (memDto is BlingoMemberSoundDTO soundDto)
+                    fileName = _binaryRepository.ResolveBinaryPath(memDto, soundDto.SoundFile);
+                else if (memDto is BlingoMemberVideoDTO videoDto)
+                    fileName = _binaryRepository.ResolveBinaryPath(memDto, videoDto.LinkedFileName);
+                else
+                {
+                    var stored = _binaryRepository.TryGetStoredPath(memDto);
+                    if (!string.IsNullOrEmpty(stored))
+                        fileName = stored;
+                }
 
                 var member = (BlingoMember)cast.Add((BlingoMemberType)memDto.Type, memDto.NumberInCast, memDto.Name, fileName, reg);
+                member.FileName = fileName;
                 member.Width = memDto.Width;
                 member.Height = memDto.Height;
                 member.Size = memDto.Size;
@@ -172,7 +213,29 @@ public class JsonStateRepository : IJsonStateRepository
                 {
                     sndMem.Loop = sndDto.Loop;
                     sndMem.IsLinked = sndDto.IsLinked;
-                    sndMem.LinkedFilePath = sndDto.LinkedFilePath;
+                    sndMem.LinkedFilePath = fileName;
+                    sndMem.ImportedStereo = sndDto.Stereo;
+                    sndMem.OriginalLength = sndDto.Length;
+                    sndMem.SourceFileName = sndDto.SoundFile ?? sndDto.LinkedFilePath ?? Path.GetFileName(fileName);
+                }
+                if (member is BlingoMemberScript scriptMem && memDto is BlingoMemberScriptDTO scriptDto2)
+                {
+                    scriptMem.ScriptType = MapScriptType(scriptDto2.ScriptType);
+                    scriptMem.IsJavascript = scriptDto2.IsJavascript;
+                    scriptMem.LinkedFilePath = fileName;
+                    scriptMem.ScriptSource = scriptDto2.Script ?? string.Empty;
+                }
+                if (member is BlingoMemberMedia mediaMem && memDto is BlingoMemberVideoDTO videoDto2)
+                {
+                    mediaMem.PlayVideo = videoDto2.PlayVideo;
+                    mediaMem.PlayAudio = videoDto2.PlayAudio;
+                    mediaMem.StartPause = videoDto2.StartPause;
+                    mediaMem.EnableLoop = videoDto2.EnableLoop;
+                    mediaMem.StartValueMs = videoDto2.StartValueMs;
+                    mediaMem.VideoFps = videoDto2.VideoFps;
+                    mediaMem.DurationSeconds = videoDto2.DurationSeconds;
+                    mediaMem.LinkedFileName = Path.GetFileName(fileName);
+                    mediaMem.LinkedFolder = Path.GetDirectoryName(fileName) ?? string.Empty;
                 }
                 if (member is BlingoFilmLoopMember flMem && memDto is BlingoMemberFilmLoopDTO flDto)
                 {
@@ -305,6 +368,16 @@ public class JsonStateRepository : IJsonStateRepository
         var sprite = movie.Audio.Add(dto.Channel, dto.BeginFrame, soundMember);
         SoundSpriteDtoConverter.Apply(dto, sprite);
         sprite.InitialState = sprite.GetState();
+    }
+
+    private static BlingoScriptType MapScriptType(BlingoMemberScriptDTO.BlScriptType scriptType)
+    {
+        return scriptType switch
+        {
+            BlingoMemberScriptDTO.BlScriptType.ParentScript => BlingoScriptType.Parent,
+            BlingoMemberScriptDTO.BlScriptType.MovieScript => BlingoScriptType.Movie,
+            _ => BlingoScriptType.Behavior
+        };
     }
 
     private static bool TryResolveMember(Dictionary<(int CastNum, int MemberNum), BlingoMember> memberMap, BlingoMemberRefDTO? reference, out BlingoMember? member)
@@ -441,5 +514,8 @@ public class JsonStateRepository : IJsonStateRepository
 
     private static AColor FromDto(BlingoColorDTO dto)
         => new AColor(dto.Code, dto.R, dto.G, dto.B, dto.Name);
+
+    private static string EnsureResourceDirectory(string resourceDir)
+        => string.IsNullOrEmpty(resourceDir) ? Directory.GetCurrentDirectory() : resourceDir;
 }
 

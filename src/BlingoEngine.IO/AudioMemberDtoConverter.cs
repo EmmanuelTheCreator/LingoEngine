@@ -9,8 +9,8 @@ internal static class AudioMemberDtoConverter
     public static BlingoMemberSoundDTO ToDto(this BlingoMemberSound sound, BlingoMemberDTO baseDto, JsonStateRepository.MovieStoreOptions options)
     {
         var dto = MemberDtoConverter.PopulateBase(baseDto, new BlingoMemberSoundDTO());
-        dto.Stereo = sound.Stereo;
-        dto.Length = sound.Length;
+        dto.Stereo = sound.ImportedStereo ?? sound.Stereo;
+        dto.Length = sound.OriginalLength > 0 ? sound.OriginalLength : sound.Length;
         dto.Loop = sound.Loop;
         dto.IsLinked = sound.IsLinked;
         dto.LinkedFilePath = sound.LinkedFilePath;
