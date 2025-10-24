@@ -5,31 +5,16 @@
 This document uses the **token log** format.
 Tokens are printed in read order.
 
-- `00(some number):"text"` → literal text block.
-- `01:xxxx` → literal/value.
-- `02:xxxx` → number (often twips or offsets).
-- `03:xxxx` → Block declarations
-- `C1(xx)` → Padding, number of '0' values
-- `C2(xx)` → padding, number of 'NULL' values
-- `<81` → Repeat last token value, if new field then 00, and defines a new value/component
-- `82` → NULL value or default value
+- `00(some number):"text"` -> literal text block.
+- `01:xxxx` -> literal/value.
+- `02:xxxx` -> number (often twips or offsets).
+- `03:xxxx` -> Block declarations
+- `C1(xx)` -> Padding, number of '0' values
+- `C2(xx)` -> padding, number of 'NULL' values
+- `<81` -> Repeat last token value, if new field then 00, and defines a new value/component
+- `82` -> NULL value or default value
 
 Full specification: [XMED_Token_Log_Guide.md](XMED_Token_Log_Guide.md).
-
-## TODO : 3D Extruder
-Enum values Bevel Edge : None/ Mitter / Round
-Enum values Diretional :
-None
-Top Left/Center/Right
-Middle L/C/R
-Bottom L/C/R
-
-Shader Texture Enum:
-None
-Default
-Member
-
-
 
 # Main blocks
 Identifier: 03:00020000013000040003 
@@ -37,7 +22,7 @@ Starts with 03, then
 - 0002    : BlockType 
 - 0000130 : unknown Value, perhaps length
 - 0004    : unknown Value
-- 0003    : items in the block’s payload
+- 0003    : items in the block's payload
 
 ```tokens 
   :FFFF0000000600040001     // Header
@@ -62,7 +47,7 @@ Starts with 03, then
 
 
 ## FFFF / 0000 - Header 
-`00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 …`
+`00:FFFF0000000600040001 01:77AA 03:0000000000XX00000000 ...`
 
 ```tokens
 03:00000000005C00000000 
@@ -71,7 +56,7 @@ Starts with 03, then
 		02:-7FFF6FE0            // fix token probably/Version (like in the tab stops where it is 6A03E2AE)
 	02:0                          
       C2(03)                      
-		02:480048 				// 72×72 DPI                
+		02:480048 				// 72x72 DPI                
 		02:-1                     
 	02:0                          
 		02:92                   // Height 320
@@ -99,11 +84,11 @@ Starts with 03, then
 
 ### Color-table markers
  (02:5B 02:5C 02:5B 02:5C):
-5B and 5C are palette indices (indexes into the movie’s 256-color table).
-1️⃣ ForeColor  – the main text color (font glyph fill).  
-2️⃣ BackColor  – background behind the text (fill rectangle).  
-3️⃣ HiliteColor – highlight color used when text is selected.  
-4️⃣ ShadowColor – outline or drop-shadow color for embossed / raised text effects.
+5B and 5C are palette indices (indexes into the movie's 256-color table).
+1️⃣ ForeColor  - the main text color (font glyph fill).  
+2️⃣ BackColor  - background behind the text (fill rectangle).  
+3️⃣ HiliteColor - highlight color used when text is selected.  
+4️⃣ ShadowColor - outline or drop-shadow color for embossed / raised text effects.
 Director reused them in pairs for normal text/background combinations.
 
 ---
@@ -112,8 +97,12 @@ Director reused them in pairs for normal text/background combinations.
 
 ## 0001 - Layout
 
-
-TODO
+`03:0001000000...` entries appear after the header in every file, but the
+payload is still a mystery. The block is preserved verbatim in token logs until
+someone maps the bytes to Director's layout switches. Those options include the
+editable flag, tab handling, wrap mode, and kerning thresholds that are already
+visible in the CASt metadata. Future work can line up the raw values with the
+known controls once more reference movies are captured.
 
 
 ---
@@ -210,7 +199,7 @@ C2(07) 01:1 <81 <81 01:0 		// Bold, Italic, Underline
 
 ### Font Size <- to validate yet
 - Actual point size is stored per style in `03:0006`.  
-- Sometimes the header repeats an approximate pixel value (`pt × 1.333 × 10`).  
+- Sometimes the header repeats an approximate pixel value (`pt x 1.333 x 10`).  
 - Conversion back to points:  
 
 ```tokens
@@ -282,7 +271,7 @@ Description:
 ```
 
 A decimal tab aligns numbers by their decimal point.
-When you type numeric values in text (like 12.3, 4.56, 789.0), a decimal tab ensures that all the . (decimal points) line up vertically—so digits before and after stay neatly aligned.
+When you type numeric values in text (like 12.3, 4.56, 789.0), a decimal tab ensures that all the . (decimal points) line up vertically-so digits before and after stay neatly aligned.
 It's a long-standing feature in word processors (Word, PageMaker, Director's text engine).
 In your files, the 02:4 type marks that tab stop as decimal-aligned, used when displaying columns of numbers.
 
@@ -299,12 +288,10 @@ Each entry begins with a pair of `00(40)` strings (font family + style name) fol
 |-------|-------|
 | `TableIndex` | Declared slot in the font table. |
 | `FontId` | Raster/vector identifier (`0x60FF` for Terminal). |
-| `CodePage` | Windows code page; resolved to an `Encoding` via `Encoding.GetEncodings()` (for example `0x4E4 → windows-1252`). |
-| `PitchFlags` / `FamilyClass` | Low-byte projection of `lfPitchAndFamily` surfaced as enums (`Fixed`, `Variable`, `Swiss`, `Modern`, …). |
+| `CodePage` | Windows code page value (`0x4E4 = 1252` for Western Latin). |
+| `PitchFlags` / `FamilyClass` | Low-byte projection of the LOGFONT `lfPitchAndFamily` bits (`Fixed`, `Variable`, `Swiss`, `Modern`, ...). |
 | `PitchDecorations` | Remaining high bits, currently observed as `0x40000` for underline/italic hints. |
-| `ScriptId` | Matches the trailing `C2(03)` payload within the font entry. |
-
-`CodePagesEncodingProvider` is registered lazily inside `XmedFontDescriptor`, so legacy encodings are available even if the hosting application has not registered the provider beforehand.
+| `ScriptId` | Mirrors the trailing `C2(03)` payload within the font entry (257 = Western/Latin I). |
 
 ```tokens
 00(40):"FontName"      ← Family
@@ -330,10 +317,10 @@ Values were confirmed against `Text_Multi_Line_Multi_Style_13.analyse.txt`, whic
 
 
 
-## 03:0009 / 03:000A — 🧩 Paragraph Bounds
+## 03:0009 / 03:000A - 🧩 Paragraph Bounds
 
 **Type:** Layout geometry list (identical structure)  
-**Form:** `02:0 <82 02:X 02:Y 02:0 <82 02:X 02:Y` × paragraphCount  
+**Form:** `02:0 <82 02:X 02:Y 02:0 <82 02:X 02:Y` x paragraphCount  
 
 | Field | Meaning | Notes |
 |--------|----------|-------|
@@ -343,13 +330,13 @@ Values were confirmed against `Text_Multi_Line_Multi_Style_13.analyse.txt`, whic
 
 **Interpretation:**  
 Defines bounding boxes per paragraph; X encodes vertical spacing (line-height derived), Y the visual width.  
-No explicit line-height token exists — it’s inferred from these bounds.  
+No explicit line-height token exists - it's inferred from these bounds.  
 
 ---
 
 
 ## 03:000B - Some static List of 8 values 
-03:000B always holds 8 total values — one literal 0 followed by 7 NULLs (82) — acting as a static padding or reset field block.
+03:000B always holds 8 total values - one literal 0 followed by 7 NULLs (82) - acting as a static padding or reset field block.
 
 ---
 
@@ -358,17 +345,17 @@ No explicit line-height token exists — it’s inferred from these bounds.
 
 
 
-## 03:000C — Paragraph format records
+## 03:000C - Paragraph format records
 
 **Observations (from your logs):**
-- Structure = records of: `02:<S> <82 <82> 02:<A> 02:<B> 01:<f> [..optional..]` × count.  
-- Count varies (1–2). Values change with **alignment** and **margins**.
+- Structure = records of: `02:<S> <82 <82> 02:<A> 02:<B> 01:<f> [..optional..]` x count.  
+- Count varies (1-2). Values change with **alignment** and **margins**.
 - 82 NULL values still unkown
 
 **Correlations:**
-- **Left**: `02:0 <82 <82> 02:F 02:4 01:0 … 01:1`. 
+- **Left**: `02:0 <82 <82> 02:F 02:4 01:0 ... 01:1`. 
 - **Right**: `02:5 <82 <82> 02:E 02:77 01:0 02:3B <82 01:1`. 
-- **Center**: `02:0 <82 <82> 02:9 02:7 01:0 … 01:1`.
+- **Center**: `02:0 <82 <82> 02:9 02:7 01:0 ... 01:1`.
 - **LineHeight 18/36**: count=2, includes constants `02:E3`, `02:6F`. 
 
 **Conclusion:** 03:000C encodes per-paragraph formatting (alignment/indents/margins)
@@ -376,7 +363,7 @@ No explicit line-height token exists — it’s inferred from these bounds.
 ### Structure (per paragraph)
 
 ```tokens
-02:<S> <82 <82> 02:<A> 02:<B> 01:<f> …
+02:<S> <82 <82> 02:<A> 02:<B> 01:<f> ...
 ```
 
 | Symbol | Meaning | Notes |
@@ -387,20 +374,20 @@ No explicit line-height token exists — it’s inferred from these bounds.
 | `<f>` | Flags byte | 0=normal, 1=justify or alignment flag |
 
 **Link:**  
-The `<S>` field directly maps to paragraph order — `S=0` → first paragraph, `S=1` → second, etc.  
-Each record configures that paragraph’s layout (margins, width, alignment).  
+The `<S>` field directly maps to paragraph order - `S=0` -> first paragraph, `S=1` -> second, etc.  
+Each record configures that paragraph's layout (margins, width, alignment).  
 
 ---
 
 
-## 03:000F — Paragraph Spacing Descriptor
+## 03:000F - Paragraph Spacing Descriptor
 
 **Structure (per paragraph):**
 `02:<S> <82 <82> 02:<T> 02:<B> C2(0C)`
 
 | Symbol | Meaning | Description |
 |---------|----------|-------------|
-| `02:<S>` | Paragraph index | Sequential number for each paragraph (0, 1, 2…) |
+| `02:<S>` | Paragraph index | Sequential number for each paragraph (0, 1, 2...) |
 | `<82 <82>` | Unknown | NULL, NULL : Unknown |
 | `02:<T>` | Top offset | Derived from line-height or spacing setting |
 | `02:<B>` | Bottom offset | Paragraph end / bounding Y |
@@ -455,8 +442,33 @@ Always present and identical in samples:
 
 ## 03:FFFE - Pre-render Bitmap
 
-TXc(l) : contains all the font glyps perhaps, the encodeing is completly different.
-TODO
+Enabling Director's "Save pre-rendered bitmap" option appends a `03:FFFE` group
+to the XMED stream. The payload repeats the embedded `TXc` chunk exactly as it
+appears in the Cast data, so the same QuickDraw image is available without
+walking the rest of the resource fork.
+
+The block layout is simple:
+
+- Numeric tokens provide offsets and lengths for the binary blob.
+- One ASCII token starts with `"TXc"`, marking the beginning of the cached
+  bitmap.
+- Everything after that string is the serialized QuickDraw pixmap, including the
+  header, color table, and compressed pixel payload.
+
+Director uses two compression styles in these captures: the original "pair"
+run-length scheme and standard PackBits. When decompression fails, the data is
+still preserved byte-for-byte so tooling can inspect it later.
+
+Two sample members illustrate the possibilities:
+
+- `Text_PreRender_CopyInk_SaveBitmap.cst` embeds a `TXc('p')` image encoded with
+  pair compression.
+- `Text_PreRender_OtherInk_SaveBitmap.cst` stores a `TXc('l')` block that does
+  not match either decoder and therefore remains as raw bytes.
+
+The block does not contain glyph atlases; it is the exact rasterized text as it
+looked when the movie was saved. Loading the TXc content allows renderers to
+display the cached appearance without invoking Director's text pipeline.
 
 
 ---
@@ -464,39 +476,52 @@ TODO
 
 
 ## 🧾 Paragraph Layout: Margins, Indents & Spacing
-TODO : update with latest implementation
 
-### Location
-C2 is padding
-Paragraph metrics appear mainly in the **`C2(03)`** and **`03:000C`** blocks.
+Paragraph geometry is assembled from three sources. The `03:0007` descriptor
+block lists alignment, margin, indent, and tab stop information for each
+paragraph. Companion blocks add precise bounds (`03:0009` and `03:000A`),
+formatting spans (`03:000C`), and extra spacing offsets (`03:000F`). Together
+they describe how Director flows text inside the text box.
 
+### Descriptor tokens (`03:0007`)
 
+- Token index 0 -> alignment (`0=Left`, `1=Center`, `2=Right`, `3=Justify`).
+- Indices 3-6 -> left/right margins plus first-line and additional indents.
+- Index 8 -> line spacing; 10/11 -> spacing before/after the paragraph.
+- Tab stops appear as child tuples: a type code for left/right/center/decimal
+  plus a twip position.
+
+### Format records (`03:000C`)
+
+These records mirror the paragraph run boundaries. Each entry repeats the
+leading margin, span length, and trailing margin, and one byte restates the
+alignment used for justification. When paragraph bounds are missing, the span
+length from this block supplies the fallback width.
+
+### Paragraph bounds (`03:0009` / `03:000A`)
+
+Each triple contributes a baseline offset and visual width. The first list is
+treated as authoritative; the second usually matches but may hold alternate
+measurements from earlier Director versions.
+
+### Spacing records (`03:000F`)
+
+Every record stores the top and bottom spacing adjustments applied around the
+paragraph. Index values link the offsets back to the descriptor order, so stray
+entries can be ignored when they fall outside the known range.
 
 ### Field Mapping
-| Field | Example (hex) | Decimal | Meaning |
-|-------|----------------|----------|----------|
-| `02:120` | 288 | Left margin |
-| `02:168` | 360 | Right margin |
-| `02:1C`  | 28  | First line indent |
-| `02:48`  | 72  | Smaller left margin |
-| `02:90`  | 144 | Smaller right margin |
-| `02:15`  | 21  | First indent (0.3–0.4 inch range) |
 
-### Spacing Before / After
-Stored in **`C2(03)`** right after each margin group: C2 is padding
-```
-C2(03) 02:9  02:7  02:0
-```
-→ `9` = spacing before, `7` = spacing after (in points or twips).
-
-### Summary Table
-| Property | Source Block | Example | Unit | Description |
-|-----------|---------------|----------|-------|--------------|
-| Left Margin |  | `02:120` | twips | Paragraph left offset |
-| Right Margin | | `02:168` | twips | Paragraph right offset |
-| First Indent | | `02:1C` | twips | Indent for first line |
-| Spacing Before |  | `02:9` | pt/twips | Space above paragraph |
-| Spacing After |  | `02:7` | pt/twips | Space below paragraph |
+| Property | Source Block | Example | Notes |
+|-----------|--------------|---------|-------|
+| Alignment | `03:0007` | `02:0` | Token 0 in the descriptor group. |
+| Left / Right Margin | `03:0007` | `02:120`, `02:168` | Tokens 3 and 4; stored in twips. |
+| First Line / Additional Indent | `03:0007` | `02:1C`, `02:48` | Tokens 5 and 6; clamped to positive values. |
+| Line Spacing | `03:0007` | `02:120` | Token 8; exported as line spacing. |
+| Space Before / After | `03:0007` | `02:9`, `02:7` | Tokens 10 and 11; measured in twips. |
+| Paragraph Width | `03:0009`/`03:000C` | `02:190` | Baseline/width tuples or fallback span in format record. |
+| Baseline Offset | `03:0009` | `02:63` | Extracted from the bounds list. |
+| Extra Spacing | `03:000F` | `02:18` | Top/bottom offsets per paragraph index. |
 
 
 ## 🔠 Kerning & Character Spacing
@@ -523,14 +548,14 @@ C2(04) 02:1  02:0
 - `C2(03)` after Base kerning table or offset between pairs (auto spacing).  
 - `C2(04)` after Additional user-defined character spacing (tracking).  
 - Units are likely **twips** (1/20 pt).  
-- Director’s “Spacing” field in Text Inspector maps directly to these values.
+- Director's "Spacing" field in Text Inspector maps directly to these values.
 
 ### Summary
 | Property | Block | Example | Description |
 |-----------|--------|----------|--------------|
 | Kerning | `C2(03)` | `02:20000` | Default glyph pair spacing (auto) |
 | Character Spacing | `C2(04)` | `02:1E` | Manual tracking; increases distance between characters |
-| Combined Result | — | sum of both | Effective horizontal spacing per glyph |
+| Combined Result | - | sum of both | Effective horizontal spacing per glyph |
 
 ### Notes
 - `A01_Core_Min_13.xmedlog` defines the base state (no extra spacing).  
@@ -549,7 +574,7 @@ However, the data is split across two locations:
 
 | Component | Source | Description |
 |------------|--------|-------------|
-| **Text** | CASt → Specific Data Block | Raw UTF-16 or ASCII characters of the field content. |
+| **Text** | CASt -> Specific Data Block | Raw UTF-16 or ASCII characters of the field content. |
 | **Formatting (XMED)** | Separate `XMED` chunk | Tokenized structure identical to standalone XMED text, referenced through the key table. |
 
 ### Structure Overview
@@ -563,21 +588,21 @@ CASt Chunk
 │ └─ Name, script link, optional key to XMED
 ├─ Specific Data Block
 │ └─ Raw field text ("Hallo", "Score", etc.)
-└─ Linked XMED Chunk → tokenized style data
+└─ Linked XMED Chunk -> tokenized style data
 ```
 
 ### Linked XMED Block
 The referenced XMED chunk uses **identical block codes**:
 
 ```tokens
-03:0002 – Full Text
-03:0004 – Run Styles
-03:0005 – Run Paragraphs
-03:0006 – Style Definitions
-03:0007 – Paragraphs
-03:0008 – Font Table
+03:0002 - Full Text
+03:0004 - Run Styles
+03:0005 - Run Paragraphs
+03:0006 - Style Definitions
+03:0007 - Paragraphs
+03:0008 - Font Table
 ...
-03:FFFE – Pre-render Bitmap
+03:FFFE - Pre-render Bitmap
 ```
 
 In field members, the 03:0002 block keeps metadata only, not literal text.
@@ -588,7 +613,46 @@ Context	Meaning of 03:0002
 - Field member :	Empty or minimal block; defines start offsets for runs, linked to raw text in the CASt specific data.
 
 So its structure is different in purpose, but the block header format (03:0002...) remains the same.
-It’s the payload that changes — from “text data” → “offset/placeholder table.”
+It's the payload that changes - from "text data" -> "offset/placeholder table."
+
+
+---
+
+
+## 3D Extruder Settings
+
+Director's text members can enable the 3D "extruder" pipeline that creates a
+meshed version of the glyphs. The controls for this feature live in the CASt
+specific data that accompanies each text member. The structure mirrors the
+Inspector palette and stores the following settings:
+
+| Setting | Description |
+|---------|-------------|
+| Face flags | Bitfield selecting which faces of the extruded mesh are rendered (front, back, sides, tunnels). |
+| Tunnel depth | 16.16 fixed-point distance used when the tunnel faces are enabled. |
+| Bevel enabled | Boolean flag that turns bevel processing on or off. |
+| Bevel amount | 16.16 fixed-point bevel depth. |
+| Bevel edge | Enum: `0=None`, `1=Miter`, `2=Round`. |
+| Smoothness | Quality hint that increases the tessellation of curved outlines. |
+| Light direction | Enum covering nine preset directions plus `0=None`; matches the directional light buttons in Director. |
+| Shader texture | Enum: `0=None` (flat color), `1=Default` (built-in gradient), `2=Member` (links to another Cast member). |
+| Diffuse / Specular colors | Palette indices used for the lit surface. |
+| Reflectivity | Percentage value (0-100) that controls highlight intensity. |
+| Directional / Ambient / Background colors | Stored as RGB565 triples. Director converts them to 8-bit RGB when loading. |
+| Camera position / rotation | Three IEEE floats for position and three for Euler rotation. |
+| Camera distance / focal length | 16.16 fixed-point values that match the Inspector's distance and zoom sliders. |
+| Texture name | Pascal-style string containing the linked Cast member name when `Shader texture = Member`. |
+
+The same structure holds the pre-render options at the end of the block:
+
+- **Pre-render ink** (`0=Copy`, `1=Other`), mirroring the inspector pop-up.
+- **Save pre-rendered bitmap** (`0=Off`, `1=On`). When this flag is set the
+  XMED chunk appends the `03:FFFE` block documented above.
+
+All numeric fields follow Director's usual conventions: 16.16 fixed point for
+distances, palette indexes for colors, and Pascal strings for text. The floats
+and fixed-point numbers are stored big-endian, consistent with other CASt
+records.
 
 
 
