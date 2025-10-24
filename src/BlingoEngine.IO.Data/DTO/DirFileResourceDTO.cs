@@ -9,5 +9,6 @@ public class DirFileResourceDTO
     public byte[] Bytes { get; set; } = Array.Empty<byte>();
     public int NumberInCast { get; set; }
     public int CastLibNum { get; set; }
+    public DirFileResourceKind Kind { get; set; } = DirFileResourceKind.Unknown;
 }
 
