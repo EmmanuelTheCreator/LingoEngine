@@ -162,6 +162,7 @@ public class JsonStateRepository : IJsonStateRepository
     private BlingoMovie BuildMovieFromDto(BlingoMovieDTO dto, BlingoPlayer player)
     {
         IBlingoEventMediator mediator = player.GetEventMediator();
+        player.UnoadAllMovies();
         var movie = (BlingoMovie)player.NewMovie(dto.Name);
         movie.Tempo = dto.Tempo;
         movie.About = dto.About;
@@ -258,8 +259,8 @@ public class JsonStateRepository : IJsonStateRepository
             }
         }
 
-        foreach (var sDto in dto.Sprite2Ds)
-            BuildSpriteFromDto(sDto, movie, memberMap, mediator);
+        //foreach (var sDto in dto.Sprite2Ds)
+        //    BuildSpriteFromDto(sDto, movie, memberMap, mediator);
 
         foreach (var tempoDto in dto.TempoSprites)
             BuildTempoSpriteFromDto(tempoDto, movie);
