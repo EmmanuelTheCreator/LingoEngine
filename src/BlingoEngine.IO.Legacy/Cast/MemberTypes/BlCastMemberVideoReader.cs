@@ -1,6 +1,7 @@
 ﻿using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Tools;
+using System.Security.AccessControl;
 using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
@@ -43,7 +44,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
                 var value16 = specificData.ReadInt16(10);
                 member.VideoFps = specificData.ReadByteOrDefault(8);
                 var value17 = specificData.ReadByteOrDefault(9);
-                var playBackWay = (BlingoMemberVideoDTO.VideoPlaybackMode)specificData.ReadByteOrDefault(10);
+                var playBackWay = specificData.ReadByteOrDefault(10);
                 
                 //  0 = Sync to sound
                 //  1 = Paused on
@@ -52,24 +53,33 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
                 // 08 = PlayBack every frame
                 // 28 = PlayBack fixed FPS
                 // 18 = PlayBack Maximum
-                var flags = (BlingoMemberVideoDTO.VideoPlaybackFlags)specificData.ReadByteOrDefault(11);
+                var flags = specificData.ReadByteOrDefault(11);
                 // 2A = Default
                 // 0A = DTS off (DTS is on for all other values)
                 // 22 = Audio off
                 // 28 = Framing Crop
                 // 29 = Framing Crop Center
                 // 3A = Loop On
+
+                var mode = (AviPlaybackWay)playBackWay;
+                var opt = (AviFlags)flags;
+                var v = member;
+                v.PlayVideo = !mode.HasFlag(AviPlaybackWay.VideoOff);
+                v.StartPause = mode.HasFlag(AviPlaybackWay.Paused);
+                v.EnableLoop = opt == AviFlags.Loop;
+                v.PlayAudio = !opt.HasFlag(AviFlags.AudioOff);
+
+                if ((playBackWay & 0x38) == 0x08) v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.EveryFrame;
+                else if ((playBackWay & 0x38) == 0x18) v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.Maximum;
+                else if ((playBackWay & 0x38) == 0x28) v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.Fixed;
+                else v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.Sync;
+
+                if ((flags & 0x29) == 0x28) v.Framing = BlCastMemberVideo.VideoFraming.Crop;
+                else if ((flags & 0x29) == 0x29) v.Framing = BlCastMemberVideo.VideoFraming.CropCenter;
+                else v.Framing = BlCastMemberVideo.VideoFraming.Scale;
             }
 
-            var scriptType = specificData.ReadInt16(0);
-            switch (scriptType)
-            {
-                //case 1: member.ScriptType = BlScriptType.Behavior; break;
-                //case 3: member.ScriptType = BlScriptType.MovieScript; break;
-                //case 7: member.ScriptType = BlScriptType.ParentScript; break;
-                default:
-                    break;
-            }
+            
 
             if (blobs.Count > 1)
             {
@@ -83,5 +93,35 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             }
             return member;
         }
+
+        [Flags]
+        private enum AviPlaybackWay : byte
+        {
+            Paused = 0x01,
+            VideoOff = 0x02,
+            Preload = 0x04,
+
+            RateMask = 0x38,   // combobox
+            Sync = 0x00,
+            EveryFrame = 0x08,
+            Maximum = 0x18,
+            FixedFps = 0x28
+        }
+
+        [Flags]
+        private enum AviFlags : byte
+        {
+            // checkboxes
+            DtsOff = 0x0A,
+            AudioOff = 0x22,
+            Loop = 0x3A,
+
+            // framing combobox
+            FramingMask = 0x29,
+            FramingScale = 0x00,
+            FramingCrop = 0x28,
+            FramingCenter = 0x01
+        }
+
     }
 }

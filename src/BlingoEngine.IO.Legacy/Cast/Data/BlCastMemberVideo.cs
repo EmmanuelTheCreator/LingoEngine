@@ -18,5 +18,9 @@
         public bool EnableLoop { get; set; }
         public int StartValueMs { get; set; }
         public int VideoFps { get; internal set; }
+        public VideoFraming Framing { get; internal set; }
+
+        public enum VideoPlaybackRate { Sync, EveryFrame, Maximum, Fixed }
+        public enum VideoFraming { Scale, Crop, CropCenter }
     }
 }
