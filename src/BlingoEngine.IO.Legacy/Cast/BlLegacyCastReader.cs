@@ -4,8 +4,6 @@ using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Tools;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace BlingoEngine.IO.Legacy.Cast;
 
@@ -18,7 +16,6 @@ internal sealed class BlLegacyCastReader
 {
     private readonly ReaderContext _context;
 
-    public string CastPath { get; private set; }
 
     public BlLegacyCastReader(ReaderContext context)
     {
@@ -304,10 +301,10 @@ internal sealed class BlLegacyCastReader
         var offsetCount = reader.ReadInt32();          // 05 or 0D or 11   (Number of casts * 4) + 1
         //var something5 = reader.ReadUInt32();           // always 0 it seems
         //var something6 = reader.ReadUInt32();           // always 0 it seems
-        var offs = new int[offsetCount];
+        var offs = new int[offsetCount+1];
         for (int i = 0; i < offs.Length; i++) offs[i] = reader.ReadInt32();
         var datas = new List<byte[]>();
-        var startData = 28 + (offsetCount * 4) - 0x0A;
+        var startData = (int)reader.Position; // + 4; // 18 + (offsetCount * 4);
         var end = 0;
         for (int i = 0; i < offs.Length - 1; i++)
         {
@@ -316,9 +313,6 @@ internal sealed class BlLegacyCastReader
             var data = payload[start..end];
             datas.Add(data);
         }
-        var dataEnd = payload[end..payload.Length];
-        datas.Add(dataEnd);
-
         var list = new List<LsCmEntry>(numberOfCasts);
 
         for (int i = 0; i < numberOfCasts; i++)

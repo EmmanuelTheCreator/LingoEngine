@@ -209,3 +209,92 @@ Typical bytes just before ending N/A:
 | Specular         | #008000 (green)                | 
 | Reflectivity     | 53                             | 
 
+
+# Cast for Director 10+
+
+
+## CAS* — Cast Member Table
+| Offset | Size | Example Bytes           | Meaning |
+|--------:|------|-------------------------|----------|
+| 0x00    | 4 × N | `00 00 00 00`, `00 00 01 23` | Resource ID of each cast member (`0` = empty slot). |
+| — | — | — | Table length = number of member slots × 4 bytes. |
+
+---
+
+## Cinf — Cast Info Block
+| Offset | Size | Example Bytes | Description |
+|--------:|------|---------------|--------------|
+| 0x00 | 4 | `00 00 00 04` | Version or constant header. |
+| 0x04 | 2 | `00 05` | Entry count or tag ID. |
+| 0x06 | 24 | `00 00 00 00 00 00 00 00 00 00 00 12 00 00 00 1A 00 00 00 65 00 00 00 67` | Six 32-bit offsets (relative positions of subfields). |
+| 0x1E | 2 | `00 01` | Possibly display flag. |
+| 0x20 | 2 | `00 01` | Unknown flag. |
+| 0x22 | 2 | `00 03` | Row width index (e.g. 0–3 = 8–Fit). |
+| 0x24 | 2 | `00 01` | Visible-count index (e.g. 512–32000). |
+| 0x26 | 4 | `00 00 00 01` | Unknown / flag bits. |
+| 0x2A | 4 | `00 00 00 00` | Reserved. |
+| 0x2E | 2 | `04 9F` | Possibly flags or timestamp high. |
+| 0x30 | 4 | `00 00 00 00` | Reserved. |
+| 0x34 | 2 | `01 1D` | Unknown. |
+| 0x36 | 2 | `01 D1` | Unknown. |
+| 0x38 | 1 | `49` | Pascal string length (73). |
+| 0x39 | 73 | ASCII text | `D:\Projects\...\Casts` — folder path of external cast. |
+| ... | padding | `00 00 00` | Aligns to 4-byte boundary. |
+
+```
+
+        switch (rowWidthType)
+        {
+            case 00: returnData.RowWidth = "8 Thumbnails"; break;
+            case 01: returnData.RowWidth = "10 Thumbnails"; break;
+            case 02: returnData.RowWidth = "20 Thumbnails"; break;
+            case 03: returnData.RowWidth = "Fit to window"; break;
+        }
+      
+        switch (numberOfVisibleMembersType)
+        {
+            case 00: returnData.NumberOfVisibleMembers = 512; break;
+            case 01: returnData.NumberOfVisibleMembers = 1000; break;
+            case 02: returnData.NumberOfVisibleMembers = 2000; break;
+            case 03: returnData.NumberOfVisibleMembers = 5000; break;
+            case 04: returnData.NumberOfVisibleMembers = 10000; break;
+            case 05: returnData.NumberOfVisibleMembers = 32000; break;
+        }
+       
+        // To find flags :
+        // Number, Created, Modified, Modified Date, Script, Modified By, Type, Filename, Size, Comments
+        // 00 03 = Number
+        // 00 11 = Type
+        // 00 45 = Modified + Created
+        // 04 9F = 
+        // 00 1B = Number Scripts and Types
+        // 07 FF = All columns visible
+        // TODO: Parse flags
+
+```
+---
+
+## LsCM (a.k.a. MCsL) — Cast Library List
+| Offset | Size | Example Bytes | Meaning |
+|--------:|------|---------------|----------|
+| 0x00 | 4 | `00 00 00 0C` | Header length (constant). |
+| 0x04 | 4 | `00 00 00 04` | Number of cast libraries. |
+| 0x08 | 2 | `00 04` | Constant marker. |
+| 0x0A | 4 | `00 00 00 11` | Offset-count = (castCount×4)+1. |
+| 0x0E | * | `...` | Table of (offsetCount) × 4-byte offsets. |
+
+### Each Cast Entry
+| Relative Offset | Example Bytes | Description |
+|----------------:|---------------|--------------|
+| 0x00 | `08` | Pascal length of cast name (8). |
+| 0x01 | `49 6E 74 65 72 6E 61 6C` | “Internal” (cast name). |
+| — | `00` | Null terminator. |
+| — | optional Pascal string (starts with length, e.g. `5E`) | External cast file path (only if external). |
+| — | `00 00` | Preload flag. |
+| — | `00 01` | Unknown constant. |
+| — | `00 01` | Secondary flag. |
+| — | `00 03` | **Internal Cast Index (1-based)**; `0` if external. |
+| — | `04 00` | Constant footer. |
+
+Each entry ends aligned to the next 4-byte boundary.  
+External casts have both **name** and **path** strings; internal ones only the name.
