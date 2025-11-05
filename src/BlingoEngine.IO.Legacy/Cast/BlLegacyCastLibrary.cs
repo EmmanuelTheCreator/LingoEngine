@@ -32,10 +32,26 @@ public sealed class BlLegacyCastLibrary
     /// Gets the number of four-byte slots stored in the <c>CAS*</c> payload (including empty slots).
     /// </summary>
     public int EntryCount { get; }
+    public CastPreload Preload { get; set;  }
+
+    public string? CastPath { get; set; }
+    public string? RowWidth { get; set; }
+    public int VisibleColumnsFlags { get; set; }
+    public int NumberOfVisibleMembers { get; set; }
+    public bool ShowAsThumbList { get; set; }
 
     /// <summary>
     /// Gets the list of populated cast-member slots. Empty slots are omitted but their original
     /// index is preserved so consumers can reconstruct member numbering.
     /// </summary>
     public List<BlLegacyCastMemberSlot> MemberSlots { get; } = new();
+    public string Name { get; internal set; } = "";
+    public bool IsInternal { get; internal set; }
+
+    public enum CastPreload
+    {
+        WhenNeeded = 0,
+        AfterFrameOne = 1,
+        BeforeFrameOne = 2,
+    }
 }

@@ -150,6 +150,9 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
         Fgei = Register("FGEI");
         Cast = Register("CAST");
         CasStar = Register("CAS*");
+        // Cast info block
+        Cinf = Register("Cinf");
+        MCsL = Register("MCsL"); 
 
         Register("ediM");
         Register("BITD");
@@ -208,9 +211,15 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
     public static BlTag Free { get; }
     public static BlTag Junk { get; }
     public static BlTag Fver { get; }
+    public static BlTag MCsL { get; }
+    
     public static BlTag Fcdr { get; }
     public static BlTag Abmp { get; }
     public static BlTag Fgei { get; }
     public static BlTag Cast { get; }
+    /// <summary>
+    /// Cast info block
+    /// </summary>
+    public static BlTag Cinf { get; }
     public static BlTag CasStar { get; }
 }

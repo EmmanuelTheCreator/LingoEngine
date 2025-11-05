@@ -349,6 +349,17 @@ namespace BlingoEngine.IO.Legacy.Tools
             if (end < 0) end = buf.Length;
             return Encoding.ASCII.GetString(buf, pos, end - pos);
         }
+        public static string ReadStringFromFirstByteLength(this byte[] data)
+        {
+            if (data == null || data.Length < 2)
+                return string.Empty;
+
+            int len = data[0];
+            if (len <= 0 || len + 1 > data.Length)
+                return string.Empty;
+
+            return Encoding.ASCII.GetString(data, 1, len);
+        }
         public static bool TryParseUInt32Decimal(this ReadOnlySpan<byte> span, out uint value)
         {
             value = 0;
