@@ -349,7 +349,7 @@ namespace BlingoEngine.IO.Legacy.Tools
             if (end < 0) end = buf.Length;
             return Encoding.ASCII.GetString(buf, pos, end - pos);
         }
-        public static string ReadStringFromFirstByteLength(this byte[] data)
+        public static string ReadStringWithFirstByteLength(this byte[] data)
         {
             if (data == null || data.Length < 2)
                 return string.Empty;

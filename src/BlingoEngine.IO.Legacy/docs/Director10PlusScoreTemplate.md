@@ -3,7 +3,7 @@
 [\u2190 Back to documentation home](README.md)
 
 Director MX 2004 (version 10) introduced an updated score stream inside the `VWSC` chunk. The
-material below consolidates observations from ProjectorRays research samples so a new
+material below consolidates observations research samples so a new
 implementation can parse, interpret, and render the timeline without relying on external tools. All
 multi-byte integers are big-endian unless stated otherwise.
 
@@ -230,14 +230,14 @@ big-endian.
 
 ### Channel selectors and advance-frame tags
 
-Channel tags follow a repeating pattern:
+Channel tags follow much times a repeating pattern:
 
 ```
 channel = ((tag - 0x0136) / 0x30) + 6
 ```
 
 This formula matches most samples but remains under investigation—sprite data on channel 10 in one
-ProjectorRays test did **not** obey the progression, so treat the mapping as speculative until more
+ test did **not** obey the progression, so treat the mapping as speculative until more
 files confirm it.
 
 Known tag/channel pairs:
@@ -273,7 +273,7 @@ one frame.
 
 ### Tag `0x0120` hypotheses
 
-Although ProjectorRays treats tag `0x0120` as the ease-in/ease-out pair for the active sprite, earlier
+Although treats tag `0x0120` as the ease-in/ease-out pair for the active sprite, earlier
 notes captured alternative interpretations. Keep these possibilities in mind when analysing new
 samples:
 

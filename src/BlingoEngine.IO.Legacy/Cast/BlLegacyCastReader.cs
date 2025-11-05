@@ -185,7 +185,9 @@ internal sealed class BlLegacyCastReader
         // Cinf
         var reader = new BlStreamReader(new MemoryStream(payload));
         var hexString = reader.ReadBytesAsHexString(payload.Length);
+        reader.BaseStream.Dispose();
         reader = new BlStreamReader(new MemoryStream(payload));
+        
 
         var something = reader.ReadUInt32();    // 00 00 00 04 
         var something2 = reader.ReadUInt16();   // 00 05 
@@ -241,6 +243,7 @@ internal sealed class BlLegacyCastReader
         var stringLength = reader.ReadByte();   // 0x49 (73 bytes)
         if (stringLength > 0)
             returnData.CastPath = reader.ReadAsciiString(stringLength);
+        reader.BaseStream.Dispose();
         return returnData;
     }
     /*
@@ -294,6 +297,7 @@ internal sealed class BlLegacyCastReader
         var results = new List<LsCmEntry>();
         var reader = new BlStreamReader(new MemoryStream(payload));
         var hexString = reader.ReadBytesAsHexString(payload.Length);
+        reader.BaseStream.Dispose();
         reader = new BlStreamReader(new MemoryStream(payload));
         var headerLen = reader.ReadInt32();            // 00 00 00 0C 
         var numberOfCasts = reader.ReadInt32();        // 00 00 00 01
@@ -319,8 +323,8 @@ internal sealed class BlLegacyCastReader
         {
             var offset = i * 4 + 1;
             var entry = new LsCmEntry();
-            entry.Name = datas[offset].ReadStringFromFirstByteLength();
-            entry.Path = datas[offset + 1].ReadStringFromFirstByteLength();
+            entry.Name = datas[offset].ReadStringWithFirstByteLength();
+            entry.Path = datas[offset + 1].ReadStringWithFirstByteLength();
             entry.Preload = (BlLegacyCastLibrary.CastPreload)datas[offset + 2].ReadInt16(0);
             var castData2 = datas[offset + 3];
             entry.Data1 = castData2.ReadInt16(0);
@@ -329,6 +333,7 @@ internal sealed class BlLegacyCastReader
             entry.Data3 = castData2.ReadInt16(6);
             results.Add(entry);
         }
+        reader.BaseStream.Dispose();
         return results;
         /*
         

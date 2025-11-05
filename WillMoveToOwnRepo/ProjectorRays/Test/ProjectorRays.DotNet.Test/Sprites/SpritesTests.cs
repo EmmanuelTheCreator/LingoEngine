@@ -43,6 +43,13 @@ namespace ProjectorRays.DotNet.Test.Sprites
             sprites[4].StartFrame.Should().Be(13);
             sprites[4].EndFrame.Should().Be(15);
         }
+        [Fact]
+        public void TestKeyFramesTest()
+        {
+            var path = GetPath("KeyFrames/KeyFramesTest.dir");
+            //var path = GetPath("Behaviors/5spritesTest_With_Behavior.dir");
+            var sprites = ReadSprites(path);
+        }
 
         [Fact]
         public void TestTetriGrounds()
@@ -72,9 +79,9 @@ namespace ProjectorRays.DotNet.Test.Sprites
             sprites[0].Behaviors.Count.Should().Be(1);
         }
 
-        private List<RaySprite> ReadSprites(string path)
+        private List<RaySprite> ReadSprites(string path, bool dumpToFile = false)
         {
-            var score = TestFileReader.ReadScore(path);
+            var score = TestFileReader.ReadScore(path, dumpToFile);
             var parser = new RaysScoreFrameParserV2(_logger, new RayStreamAnnotatorDecorator(0));
             var stream = new ReadStream(score, score.Length, Endianness.BigEndian);
             var sprites = parser.ParseScore(stream);

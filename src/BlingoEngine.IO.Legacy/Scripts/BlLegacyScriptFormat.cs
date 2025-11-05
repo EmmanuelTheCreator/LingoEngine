@@ -75,37 +75,25 @@ internal static class BlLegacyScriptFormat
             var second = data[1];
 
             if (first == 0 && second != 0)
-            {
                 return second;
-            }
 
             if (second == 0 && first != 0)
-            {
                 return first;
-            }
 
             if (first == second && first != 0)
-            {
                 return first;
-            }
 
             if (first != 0)
-            {
                 return first;
-            }
 
             if (second != 0)
-            {
                 return second;
-            }
         }
 
         foreach (var candidate in data)
         {
             if (candidate != 0)
-            {
                 return candidate;
-            }
         }
 
         return data.Length > 0 ? data[0] : (byte)0;
