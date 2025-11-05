@@ -1,108 +1,116 @@
 # XMED Token Log — Reading Guide
 
-This document defines a **neutral, assumption‑free** notation for inspecting XMED bytes via a compact token log. It is meant for **comparison and investigation**, *not* for round‑tripping or asserting semantics.
+This document defines the neutral, byte-for-byte notation produced by the
+`BlXmedTokenizer`. The log is intended for **comparison and investigation** – it
+does not attempt to reverse the meaning of the data. Every token maps to the
+exact bytes emitted by Director and is emitted in read order.
 
 ---
 
 ## 1) Token Categories
 
-### A. Control‑prefixed ASCII
+### A. Prefixed ASCII/hex spans
 - **Form:** `NN:VALUE`
-- **Meaning:** `NN` is a single control byte in hex (e.g., `01`, `02`, `03`). `VALUE` is the literal ASCII payload that immediately follows in the file until the next token begins.
-- **Notes:**
-  - `VALUE` may look numeric (decimal/hex/signed) but is logged **verbatim**.
-  - Examples: `01:77AA`, `02:40001`, `03:00000000005C00000000`.
+- **Source:** Control bytes `01`, `02`, or `03` followed by printable ASCII.
+- **Interpretation:** The prefix byte becomes `NN`; the trailing ASCII payload is
+  written exactly as found. When the payload happens to represent a number it is
+  still logged verbatim. (`BlXmedTokenizer.Tokenize` builds these tokens and
+  stores the parsed numeric value for later readers.)【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L33-L88】
 
-### B. Booleans
-- **Source bytes:** `01 31` → `true`, `01 30` → `false`.
-
-### C. Tag Bytes
+### B. Padding composites (`C1` / `C2` / `C3`)
 - **Form:** `C1(xx)`, `C2(xx)`, `C3(xx)`
-- **Meaning:** Literal tag byte (`C1`,`C2`,`C3`) followed by a 1‑byte **type** `xx` in hex.
-- **Payload:** Any payload after these tags is logged by subsequent tokens (not inside the tag token).
+- **Meaning:** Raw bytes `C1`, `C2`, or `C3` followed by a 1-byte type value.
+  The token records the opener; any payload that follows is emitted as separate
+  tokens. Composite payloads are expanded later when the parser inspects the
+  stream.【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L90-L121】
 
-### D. Perhaps Link Markers
+### C. Repeat / terminator markers (`81` / `82`)
 - **Form:** `<81`, `<82`
-- **Meaning:** Raw bytes `81` / `82`. Perhaps “link/relate” to the previous logical token. No transformation applied.
+- **Meaning:** Literal bytes `0x81` and `0x82`. The tokenizer keeps them as
+  stand-alone markers so run readers can recognise field separators and
+  terminators.【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L123-L139】【F:src/BlingoEngine.IO.Legacy/Texts/Data/BlXmedToken.cs†L60-L72】
 
-### E. 0x00 Blocks (Text or Structured Bytes)
-- **Generic Form:** `00(perhaps len):…`
-- **Perhaps Declared length:** The decimal number **as written in the file** immediately after `0x00`, then a ASCII comma. Len is perhaps not a len but a controlbyte
-- **Two variants are logged:**
+### D. 0x00 blocks
+- **Form:** `00(N):…`
+- **Behaviour:** When a `0x00` byte is encountered the tokenizer captures the
+  comma-delimited payload as a single block. The prefix number `N` is logged as
+  written; no validation is performed. Two patterns are common:
+  1. `00(N):"…"` – ASCII text emitted verbatim (paragraph content, font names).
+  2. `00(N):a,b,c,…` – comma-separated byte list, typically the tail table at
+     the end of the block.【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L143-L207】
 
-1. **Text block**
-   - **Form:** `00(perhaps len):"…"`
-   - **Meaning:** A block that is logged as ASCII text **verbatim**, including embedded newlines.
-   - **Use:** Free text content (paragraphs, labels, etc.).
-   - **Note:** The logger does **not** enforce `len`. len is perhaps not a len but a controlbyte; it preserves the file’s bytes and prints the text exactly as read until the next token begins.
+### E. ASCII spans
+- **Form:** quoted text inside the log without a prefix.
+- **Meaning:** Printable characters (0x20–0x7E) that are not part of another
+  control structure. The tokenizer writes them as a single token so diffs can
+  focus on literal strings.【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L209-L224】
 
-2. **Numbers/Tail block**
-   - **Form:** `00(perhaps len):b0,b1,b2,…`
-   - **Meaning:** Hex bytes printed as a **comma‑separated list**. Typically used by the **final** 0x00 block (e.g., run codes).
+### F. Raw bytes
+- **Form:** single tokens that carry the numeric value.
+- **Meaning:** Any byte that does not match the patterns above is logged as a
+  `Byte` token to keep positional information intact.【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L226-L232】
 
-### F. Font Name Pair (Observed Pattern)
-- **Form:** successive `00(40):"Name"` followed by a fixed 64‑byte style tail (zero‑filled in observed files).
-- **Purpose:** Logged as two consecutive tokens (first shows the name, second is a zeroed tail captured implicitly by advancing the cursor). This preserves on‑disk order for diffs.
-
-> **Important:** All of the above are **descriptive logs**, not claims about Director/XMED semantics. Use them to line up bytes across files.
-
----
-
-## 2) Line Breaking & Spacing
-
-- **New lines** are started for:
-  - Tag tokens `C1/C2/C3`
-  - `00(...)` blocks
-  - Long sequences exceeding the configured token‑per‑line limit (for readability)
-- Inside a line, items are separated by a single space.
-- Quoted text (`"..."`) may contain newlines; these are preserved exactly.
+> **Note:** The tokenizer no longer labels values as `true`/`false`. Consumers
+> resolve booleans by reading the numeric payload (usually `02:0` or
+> `02:1`).【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenReader.cs†L115-L164】
 
 ---
 
-## 3) Examples (from real logs)
+## 2) Layout of the log
+
+- Each token is separated by a single space unless readability would suffer; in
+  that case the dumper inserts a newline (`DumpTokensUltraCompact`).【F:src/BlingoEngine.IO.Legacy/Texts/BlXmedTokenizer.cs†L246-L327】
+- Composite markers (`C1/C2/C3`), repeat markers, and `00(…)` blocks always
+  start on a fresh line to keep boundaries visible.
+- Text blocks keep their original newlines so multi-line paragraphs remain easy
+  to read.
+
+---
+
+## 3) Example excerpt
 
 ```
-00:FFFF0000000600040001 01:77AA  03:00000000005C00000000  02:40001  02:101  02:-7FFF6FE0  02:0 
-C2(03) 02:480048  02:-1  02:0  02:140  false
-C1(03) 02:-1  <82  02:0  02:5  02:0  02:5  02:0 
-...
-00(108):"My first paragraph centered with all 0
-Paragraph with align Left, Margin Left 4, Margin Right 5, First Indent 0.4inch Spacing Before 9, spacing after 7
-Paragraph with align Left, Margin Left 1, Margin Right 2, First Indent 0.3inch Spacing Before 4, spacing after 5"
-...
-00(40):"Arial"
-00(40):""
-...
-00(44):45,46,182,181,149,181,165,165,46,39,34,145,146,147,148,133,131
+00:FFFF0000000600040001 01:77AA
+03:00000000004F00000000 02:40001 02:101 02:-7FFD6FE0 02:0
+  C2(03) 02:480048 02:-1 02:0 02:18 01:0
+  C1(03) 02:-1 <82 02:0
+  C2(0A) 02:18 02:B2 01:FF00 <81 <81 01:0 <82 <82 02:1 02:0
+  C2(04) 02:5 01:0
+03:00020000000900000000
+  00(5):"Hallo"
 ```
 
----
-
-## 4) How to Compare Two Files with This Log
-
-- Generate the token logs for both files.
-- Diff the text outputs:
-  - **Control groups** (`NN:VALUE`) reveal structural changes.
-  - **Tag lines** (`C1/C2/C3`) show where typed records differ.
-  - **Text blocks** (`00(len):"..."`) surface content edits and line breaks.
-  - **Number tails** (`00(len):a,b,...`) spotlight run/code list differences.
-- Avoid interpreting the **meaning** of numbers or tags in this document—use it only to **locate** and **describe** byte differences consistently.
+The snippet above matches the default `Text_Hallo` sample. Notice that numeric
+values such as `02:1` are kept verbatim – downstream code decides whether they
+represent flags, booleans, or dimensions.
 
 ---
 
-## 5) Guarantees & Non‑Goals
+## 4) Using the logs for comparisons
 
-- **Guarantees**
-  - Order is preserved.
-  - Every token corresponds to an exact span of bytes.
-  - ASCII text is logged verbatim.
-  - Numeric lists are losslessly represented as hex bytes (CSV).
-
-- **Non‑Goals**
-  - No claims about semantics (runs, colors, styles).
-  - No enforcement that `len` equals any measured data length.
-  - No round‑trip promises. This is a **viewer/log format**.
+1. Generate token logs for the files you want to diff.
+2. Compare them with a standard text diff tool.
+3. Focus on the token groups:
+   - Prefixed entries (`NN:…`) highlight structural changes.
+   - `C1/C2` lines show composite records (colours, style descriptors, etc.).
+   - `00(…):"…"` exposes edited text.
+   - `00(…):a,b,…` lists help track font-table or run tables changing length.
+4. Defer semantic interpretation to the dedicated parser (`BlXmedTokenParser`)
+   which translates the tokens into styles, fonts, and paragraph metadata.
 
 ---
 
+## 5) Guarantees & non-goals
 
+**Guaranteed by the logger**
+- Token order matches file order.
+- Each token covers a precise byte span (start offset + length).
+- Text payloads are emitted verbatim, including embedded newlines.
+- Numeric lists preserve the raw bytes without reformatting.
+
+**Non-goals**
+- No attempt is made to validate declared lengths inside `00(…)` blocks.
+- The logger does not infer meaning from numeric payloads.
+- The format is one-way; it is not suitable for rebuilding the binary stream.
+
+---
