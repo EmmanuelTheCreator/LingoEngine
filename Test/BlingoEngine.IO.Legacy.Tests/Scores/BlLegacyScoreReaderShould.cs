@@ -10,7 +10,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
         public void ReadKeyFrames()
         {
             //var file = "KeyFrames/Animation_types.dir";
-            var file = "KeyFrames/KeyFramesTest.dir";
+            //var file = "KeyFrames/KeyFramesTest.dir";
+            var file = "KeyFrames/SingleSprite/SingleSprite.dir";
             //var file = "Behaviors/5spritesTest_With_Behavior.dir";
             using var harness = TestContextHarness.Open(file);
             harness.ReadResources();

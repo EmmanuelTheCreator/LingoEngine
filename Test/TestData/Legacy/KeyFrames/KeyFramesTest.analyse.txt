@@ -1,9 +1,10 @@
-// Start of file
-58 46 49 52 50 82 00 00
-
-// Score
-00 00 04 D8 FF FF FF FD  00 00 00 0C 00 00 00 3F  
-00 00 00 40 00 00 03 C0  
+// Score VWSC
+00 00 04 D8 		// TotalLength
+FF FF FF FD  		// HeaderType -3
+00 00 00 0C 		// constant12
+00 00 00 3F  		// EntryCount
+00 00 00 40 		// NotationBase = EntryCount + 1 
+00 00 03 C0  		// EntrySizeSum
 
 // Offsets 
 00 00 00 00 
@@ -12,7 +13,7 @@
 00 00 03 44  
 00 00 03 50 
 
-// per 3 values : SpriteData + MemberData: StartAddress, Length SpriteData, EndAddress MemberData
+// per 3 values : SpriteData + MemberBehaviorLink: StartAddress, SpriteData.Length/MemberBehaviorLink, MemberBehaviorLink.Length
 00 00 03 50 00 00 03 50  00 00 03 50  
 00 00 03 50 00 00 03 50  00 00 03 50 00 00 03 50  
 00 00 03 50 00 00 03 50  00 00 03 50 00 00 03 50  
@@ -30,8 +31,7 @@
 00 00 03 8C 00 00 03 8C  00 00 03 8C 00 00 03 C0  
 00 00 03 C0 00 00 03 C0  
 
-// ----------------------
-// FrameDataBuffer 
+// ---------------------------------------------
 // Header
 00 00 03 42 		// Actual size		834
 00 00  				// unkA1 unkA2
@@ -42,19 +42,31 @@
 03 EE  				// unkC1 unkC2 		  3, 238 OR 1006
 00 96 				// channelCount		150
 
-00 42 00 02  
-01 36 01 00 00 02 01 96  01 00 00 30 01 E0 10 80  
-FF 00 00 01 00 01 00 00  00 39 00 82 00 58 00 3F  
-00 50 00 00 01 00 00 00  00 00 FF FF FB 93 00 00  
-0C A1 00 00 00 00 00 00  00 00 00 00 00 00 00 08  
+00 42 				// 42 bytes block ?
+00 02 01 36 01 00 	// <- skip 6 frame (with next bytes)
+00 02 01 96 01 00 
+// [SPRITE_KEYFRAME] ---------------------
+00 30 				// start 0x30 bytes
+01 E0 10 80  FF 00 00 01   00 01 00 00  00 39 00 82 
+00 58 00 3F  00 50 00 00   01 00 00 00  00 00 FF FF 
+FB 93 00 00  0C A1 00 00   00 00 00 00  00 00 
+// ---------------------------------------
+00 00 00 00 00 08  	// end previous block/SpriteMainKeyframe
+
 00 02 01 F6 81 00 00 08  00 02 01 66 01 00 00 02  
 00 08 00 02 01 F6 01 00  00 1E 00 0C 01 EC 00 88  
 00 55 00 45 00 53 00 1E  91 00 00 02 01 FE FE 43  
-00 02 02 02 0A 86 00 58  00 02 01 66 00 00 00 30  
-01 80 10 24 CB 67 00 01  00 02 00 00 00 3C 00 0B  
-00 0A 00 11 00 11 00 7F  11 00 00 00 00 00 00 00  
-05 1E 00 00 05 28 00 00  00 00 00 00 00 00 00 00  
-00 00 00 0A 01 EC 00 8E  00 52 00 4B 00 57 00 42  
+00 02 02 02 0A 86 00 58  00 02 01 66 00 00 
+
+// [SPRITE_KEYFRAME] ---------------------
+00 30 				// start 0x30 bytes  
+01 80 10 24  CB 67 00 01   00 02 00 00  00 3C 00 0B  
+00 0A 00 11  00 11 00 7F   11 00 00 00  00 00 00 00  
+05 1E 00 00  05 28 00 00   00 00 00 00  00 00 00 00 
+// ---------------------------------------
+ 
+00 00 
+00 0A 01 EC 00 8E  00 52 00 4B 00 57 00 42  
 00 04 01 FC 00 00 00 F2  00 02 02 02 08 6B 00 3C  
 00 04 01 80 10 A4 98 56  00 08 01 90 00 20 00 1F  
 00 96 91 00 00 02 01 9E  
@@ -97,14 +109,14 @@ F6 1D 00 16 00 0A 01 EC  00 6F 00 A6 00 4D 00 5B
 01 EC 00 8C 00 08 00 02  01 EC 00 94 00 08 00 02  
 01 EC 00 9D 00 08 00 02  01 EC 00 A5 00 0E 00 02  
 01 EC 00 AD 00 02 01 F6  01 00 00 00 
-// -------------------
+// ---------------------------------------------
 // ORDER
 00 00 00 02  		// Order count
 00 00 00 39 		// IntervalOrder = 57
 00 00 00 3C  		// IntervalOrder = 60
-// -------------------
+// ---------------------------------------------
 // Sprite descriptors
--- Sprite --
+// -- Sprite --
 00 00 00 01 		// Startframe
 00 00 00 1E  		// EndFrame
 00 00 00 00 
@@ -124,7 +136,7 @@ E1 FD 				// Almost always  E1 FD
 00 00 00 0A 		// Keyframe at 10
 00 00 00 12  		// Keyframe at 18
 00 00 00 1D 		// Keyframe at 29
--- Sprite --
+// -- Sprite --
 00 00 00 07			// Startframe  
 00 00 00 0C         // EndFrame
 00 00 00 00         
@@ -141,4 +153,6 @@ E1 FD 				// Almost always  E1 FD
 00 00 00 00  
 // KeyFrames Offsets
 00 00 00 03 		// Keyframe at 3
-00 00 00 05         // Keyframe at 5                  
+00 00 00 05         // Keyframe at 5       
+
+           

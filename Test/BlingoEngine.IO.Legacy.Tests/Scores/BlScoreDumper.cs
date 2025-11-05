@@ -23,8 +23,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
                 //"Texts_Fields/MemberTests",
                 //"Texts_Fields/Paragraphs",
                 //"Texts_Fields/Content",
-                //"KeyFrames/SingleSprite",
-                "KeyFrames",
+                "KeyFrames/SingleSprite",
+                //"KeyFrames",
             ];
             foreach (var folder in folders)
             {

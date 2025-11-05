@@ -5,7 +5,7 @@ namespace BlingoEngine.IO.Legacy.Scores
 
     internal partial class BlLegacyScoreReader
     {
-        private record ScoreHeader
+        private record ScoreRawHeader
         {
             public int ActualSize { get; set; }
             public byte UnkA1 { get; set; }
@@ -28,9 +28,9 @@ namespace BlingoEngine.IO.Legacy.Scores
             public int TotalLength { get; internal set; }
         }
 
-        private ScoreHeader ReadMainHeader(BlStreamReader stream)
+        private ScoreRawHeader ReadMainHeader(BlStreamReader stream)
         {
-            return new ScoreHeader
+            return new ScoreRawHeader
             {
                 TotalLength = stream.ReadInt32(),
                 HeaderType = stream.ReadInt32(), // constantMinus3
@@ -41,7 +41,7 @@ namespace BlingoEngine.IO.Legacy.Scores
             };
         }
 
-        private void ReadHeader(byte[] stream, ScoreHeader header)
+        private void ReadHeader(byte[] stream, ScoreRawHeader header)
         {
             header.ActualSize = stream.ReadInt32(0);
             header.UnkA1 = stream.ReadByteOrDefault(4);
