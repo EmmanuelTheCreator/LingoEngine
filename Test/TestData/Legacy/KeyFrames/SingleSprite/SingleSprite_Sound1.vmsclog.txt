@@ -26,8 +26,8 @@ Item Desc. 0: Start=1, End=30, Channel=4, U1=0, Flip=False,False,🔒=False,Trai
 
 === Frames ===
 01) 0010
-    00C0=00 01 00 02	 	
-    00C6=00 03	 	
+    00C0=00 01 00 02                                         4) 
+    00C6=00 03                                               4) 
 02) 0002
 03) 0002
 04) 0002

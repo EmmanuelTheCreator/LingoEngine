@@ -19,7 +19,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
             List<string> folders =
             [
                 "KeyFrames/SingleSprite",
-                //"KeyFrames",
+                "KeyFrames",
             ];
             foreach (var folder in folders)
             {
@@ -28,7 +28,8 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
                 {
 
                     var path = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + ".vmsc.txt");
-                    if (File.Exists(path))
+                    var pathLog = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) + ".vmsclog.txt");
+                    if (File.Exists(pathLog))
                         continue;
 
                     using var harness = TestContextHarness.Open(item);
@@ -42,7 +43,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
                     //File.WriteAllBytes(pathBin, scoreBytes);
 
 
-                    var pathLog = TestContextHarness.GetAssetPath(folder + "/" + Path.GetFileNameWithoutExtension(item) +".vmsclog.txt");
+                    
                     scoreReader.ParseVMSC(scoreBytes);
                     var log = 
                         Path.GetFileName(item)+

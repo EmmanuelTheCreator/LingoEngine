@@ -26,7 +26,7 @@ Item Desc. 0: Start=1, End=1, Channel=5, U1=0, Flip=False,False,🔒=False,Trail
 
 === Frames ===
 01) 0018
-    00F0=FF FF FF FE 1E 00 7F 7F 00 01 00 01	 	
-    0102=00 03	 	
+    00F0=FF FF FF FE 1E 00 7F 7F 00 01 00 01                 5) 
+    0102=00 03                                               5) 
 
 

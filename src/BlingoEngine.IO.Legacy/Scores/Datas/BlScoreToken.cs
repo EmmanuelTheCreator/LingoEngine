@@ -6,9 +6,9 @@ namespace BlingoEngine.IO.Legacy.Scores.Datas
     [DebuggerDisplay("{LogString}")]
     internal class BlScoreTokenPropChange
     {
-        public BlSpriteRawData.BlSpriteProperty Property { get; private set; }
+        public BlSpriteRawData.BlSpriteRawProperty Property { get; private set; }
         public int Value { get; private set; }
-        public BlScoreTokenPropChange(BlSpriteRawData.BlSpriteProperty property, int value)
+        public BlScoreTokenPropChange(BlSpriteRawData.BlSpriteRawProperty property, int value)
         {
             Property = property;
             Value = value;
@@ -43,10 +43,16 @@ namespace BlingoEngine.IO.Legacy.Scores.Datas
                         ofs++; // unknown byte, advance safely
                         continue;
                     }
+                    if (payload.Length == 0) break;
+                    var readSize = spec.Size;
+                    if (ofs + readSize > payload.Length)
+                    {
+                        readSize = (ofs + readSize) - payload.Length;
+                        if (readSize == 0)
+                            break; // incomplete field
+                    }
 
-                    if (ofs + spec.Size > payload.Length) break; // incomplete field
-
-                    int value = spec.Size switch
+                    int value = readSize switch
                     {
                         1 => payload.ReadByteOrDefault(ofs),
                         2 => payload.ReadInt16(ofs),
@@ -55,7 +61,7 @@ namespace BlingoEngine.IO.Legacy.Scores.Datas
                     };
 
                     Properties.Add(new BlScoreTokenPropChange(spec.Prop, value));
-                    ofs += spec.Size;
+                    ofs += readSize;
                 }
             }
         }

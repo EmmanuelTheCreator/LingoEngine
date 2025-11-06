@@ -26,7 +26,7 @@ Item Desc. 0: Start=1, End=1, Channel=2, U1=0, Flip=False,False,🔒=False,Trail
 
 === Frames ===
 01) 0010
-    0060=00 01 00 01	 	
-    0066=00 03	 	
+    0060=00 01 00 01                                         2) 
+    0066=00 03                                               2) 
 
 

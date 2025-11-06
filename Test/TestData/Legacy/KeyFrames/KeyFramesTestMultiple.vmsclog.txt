@@ -29,237 +29,237 @@ Item Desc. 3: Start=15, End=44, Channel=12, U1=0, Flip=False,False,🔒=False,Tr
 
 === Frames ===
 01) 0042
-    0136=01 00
-    0196=01 00
-    01E0=10 80 FF 00 00 01 00 01 00 00 00 39 00 82 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 00 00
+    0136=01 00                                               6) Set FlipFlags=1
+    0196=01 00                                               8) Set FlipFlags=1
+    01E0=10 80 FF 00 00 01 00 01 00 00 00 39 00 82 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 00 00   10) Set Flags1=16|Set Ink=128|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=130|Set LocH=88|Set Height=63|Set Width=80|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=-1|Set Rotation=-74252288|Set Skew=211877888
 02) 0008
-    01F6=81 00
+    01F6=81 00                                              10) Set FlipFlags=129
 03) 0008
-    0166=01 00
+    0166=01 00                                               7) Set FlipFlags=1
 04) 0002
 05) 0008
-    01F6=01 00
+    01F6=01 00                                              10) Set FlipFlags=1
 06) 001E
-    01EC=00 88 00 55 00 45 00 53 00 1E 91 00
-    01FE=FE 43
-    0202=0A 86
+    01EC=00 88 00 55 00 45 00 53 00 1E 91 00                10) Set LocV=136|Set LocH=85|Set Height=69|Set Width=83|Set ScoreColor=0|Set Blend=30|Set FlipFlags=145
+    01FE=FE 43                                              10) Set Rotation=-445
+    0202=0A 86                                              10) Set Skew=2694
 07) 0058
-    0166=00 00
-    0180=10 24 CB 67 00 01 00 02 00 00 00 3C 00 0B 00 0A 00 11 00 11 00 7F 11 00 00 00 00 00 00 00 05 1E 00 00 05 28 00 00 00 00 00 00 00 00 00 00 00 00
-    01EC=00 8E 00 52 00 4B 00 57 00 42
-    01FC=00 00 00 F2
-    0202=08 6B
+    0166=00 00                                               7) Set FlipFlags=0
+    0180=10 24 CB 67 00 01 00 02 00 00 00 3C 00 0B 00 0A 00 11 00 11 00 7F 11 00 00 00 00 00 00 00 05 1E 00 00 05 28 00 00 00 00 00 00 00 00 00 00 00 00    8) Set Flags1=16|Set Ink=36|Set ForeColorR=203|Set BackColorR=103|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=11|Set LocH=10|Set Height=17|Set Width=17|Set ScoreColor=0|Set Blend=127|Set FlipFlags=17|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=85852160|Set Skew=86507520
+    01EC=00 8E 00 52 00 4B 00 57 00 42                      10) Set LocV=142|Set LocH=82|Set Height=75|Set Width=87|Set ScoreColor=0|Set Blend=66
+    01FC=00 00 00 F2                                        10) Set UnknownB=0|Set Rotation=242
+    0202=08 6B                                              10) Set Skew=2155
 08) 0070
-    0180=10 A4 98 56
-    0190=00 20 00 1F 00 96 91 00
-    019E=05 A7
-    01A2=05 C4
-    01EC=00 94 00 4F 00 52 00 5A 00 63
-    01FE=03 A1
-    0202=06 50
-    0210=10 80 FF 00 00 01 00 01 00 00 00 48 00 82 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 00 00
+    0180=10 A4 98 56                                         8) Set Flags1=16|Set Ink=164|Set ForeColorR=152|Set BackColorR=86
+    0190=00 20 00 1F 00 96 91 00                             8) Set Height=32|Set Width=31|Set ScoreColor=0|Set Blend=150|Set FlipFlags=145
+    019E=05 A7                                               8) Set Rotation=1447
+    01A2=05 C4                                               8) Set Skew=1476
+    01EC=00 94 00 4F 00 52 00 5A 00 63                      10) Set LocV=148|Set LocH=79|Set Height=82|Set Width=90|Set ScoreColor=0|Set Blend=99
+    01FE=03 A1                                              10) Set Rotation=929
+    0202=06 50                                              10) Set Skew=1616
+    0210=10 80 FF 00 00 01 00 01 00 00 00 48 00 82 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 00 00   11) Set Flags1=16|Set Ink=128|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=130|Set LocH=88|Set Height=63|Set Width=80|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=-1|Set Rotation=-74252288|Set Skew=211877888
 09) 003E
-    0182=65 45
-    0190=00 2F 00 2E 00 AF
-    019E=06 31
-    01A2=06 60
-    01EC=00 9A 00 4D 00 58 00 5D 00 84
-    01FE=06 51
-    0202=04 35
-    0226=81 00
+    0182=65 45                                               8) Set ForeColorR=101|Set BackColorR=69
+    0190=00 2F 00 2E 00 AF                                   8) Set Height=47|Set Width=46|Set ScoreColor=0|Set Blend=175
+    019E=06 31                                               8) Set Rotation=1585
+    01A2=06 60                                               8) Set Skew=1632
+    01EC=00 9A 00 4D 00 58 00 5D 00 84                      10) Set LocV=154|Set LocH=77|Set Height=88|Set Width=93|Set ScoreColor=0|Set Blend=132
+    01FE=06 51                                              10) Set Rotation=1617
+    0202=04 35                                              10) Set Skew=1077
+    0226=81 00                                              11) Set FlipFlags=129
 10) 003A
-    0182=32 33
-    0190=00 3E 00 3C 00 CC 11 00
-    019E=06 BB
-    01A2=06 FC
-    01EC=00 9F 00 50 00 5E 00 61 00 A8
-    01FE=09 01
-    0202=02 1A
+    0182=32 33                                               8) Set ForeColorR=50|Set BackColorR=51
+    0190=00 3E 00 3C 00 CC 11 00                             8) Set Height=62|Set Width=60|Set ScoreColor=0|Set Blend=204|Set FlipFlags=17
+    019E=06 BB                                               8) Set Rotation=1723
+    01A2=06 FC                                               8) Set Skew=1788
+    01EC=00 9F 00 50 00 5E 00 61 00 A8                      10) Set LocV=159|Set LocH=80|Set Height=94|Set Width=97|Set ScoreColor=0|Set Blend=168
+    01FE=09 01                                              10) Set Rotation=2305
+    0202=02 1A                                              10) Set Skew=538
 11) 003C
-    0182=82 51
-    0190=00 2B 00 29 00 72 91 00
-    019E=07 45
-    01A2=07 97
-    01EC=00 9E 00 56 00 64 00 64 00 CC 11 00
-    01FE=0B B1
-    0202=00 00
+    0182=82 51                                               8) Set ForeColorR=130|Set BackColorR=81
+    0190=00 2B 00 29 00 72 91 00                             8) Set Height=43|Set Width=41|Set ScoreColor=0|Set Blend=114|Set FlipFlags=145
+    019E=07 45                                               8) Set Rotation=1861
+    01A2=07 97                                               8) Set Skew=1943
+    01EC=00 9E 00 56 00 64 00 64 00 CC 11 00                10) Set LocV=158|Set LocH=86|Set Height=100|Set Width=100|Set ScoreColor=0|Set Blend=204|Set FlipFlags=17
+    01FE=0B B1                                              10) Set Rotation=2993
+    0202=00 00                                              10) Set Skew=0
 12) 003C
-    0182=D3 6F
-    0190=00 17 00 16 00 19 11 00
-    019E=07 D0
-    01A2=08 34
-    01EC=00 96 00 67 00 5F 00 62 00 B2 91 00
-    01FE=06 4B
-    0226=01 00
+    0182=D3 6F                                               8) Set ForeColorR=211|Set BackColorR=111
+    0190=00 17 00 16 00 19 11 00                             8) Set Height=23|Set Width=22|Set ScoreColor=0|Set Blend=25|Set FlipFlags=17
+    019E=07 D0                                               8) Set Rotation=2000
+    01A2=08 34                                               8) Set Skew=2100
+    01EC=00 96 00 67 00 5F 00 62 00 B2 91 00                10) Set LocV=150|Set LocH=103|Set Height=95|Set Width=98|Set ScoreColor=0|Set Blend=178|Set FlipFlags=145
+    01FE=06 4B                                              10) Set Rotation=1611
+    0226=01 00                                              11) Set FlipFlags=1
 13) 005C
-    0180=00 00 00 00 00 00 00 00
-    018A=00 00 00 00 00 00 00 00 00 00 00 00 01 00
-    019E=00 00
-    01A2=00 00
-    01EC=00 8C 00 77 00 5B 00 60 00 99
-    01FE=00 E6
-    021C=00 88 00 55 00 45 00 53 00 1C 91 00
-    022E=FE 43
-    0232=0A 86
+    0180=00 00 00 00 00 00 00 00                             8) Set Flags1=0|Set Ink=0|Set ForeColorR=0|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0
+    018A=00 00 00 00 00 00 00 00 00 00 00 00 01 00           8) Set PropertiesOffset=0|Set LocV=0|Set LocH=0|Set Height=0|Set Width=0|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1
+    019E=00 00                                               8) Set Rotation=0
+    01A2=00 00                                               8) Set Skew=0
+    01EC=00 8C 00 77 00 5B 00 60 00 99                      10) Set LocV=140|Set LocH=119|Set Height=91|Set Width=96|Set ScoreColor=0|Set Blend=153
+    01FE=00 E6                                              10) Set Rotation=230
+    021C=00 88 00 55 00 45 00 53 00 1C 91 00                11) Set LocV=136|Set LocH=85|Set Height=69|Set Width=83|Set ScoreColor=0|Set Blend=28|Set FlipFlags=145
+    022E=FE 43                                              11) Set Rotation=-445
+    0232=0A 86                                              11) Set Skew=2694
 14) 003A
-    0136=00 00
-    01EC=00 82 00 86 00 56 00 5E 00 7F
-    01FC=FF FF FB 82
-    021C=00 8E 00 52 00 4B 00 57 00 42
-    022C=00 00 00 F2
-    0232=08 6B
+    0136=00 00                                               6) Set FlipFlags=0
+    01EC=00 82 00 86 00 56 00 5E 00 7F                      10) Set LocV=130|Set LocH=134|Set Height=86|Set Width=94|Set ScoreColor=0|Set Blend=127
+    01FC=FF FF FB 82                                        10) Set UnknownB=-1|Set Rotation=-1150
+    021C=00 8E 00 52 00 4B 00 57 00 42                      11) Set LocV=142|Set LocH=82|Set Height=75|Set Width=87|Set ScoreColor=0|Set Blend=66
+    022C=00 00 00 F2                                        11) Set UnknownB=0|Set Rotation=242
+    0232=08 6B                                              11) Set Skew=2155
 15) 0064
-    01EC=00 78 00 96 00 52 00 5D 00 66
-    01FE=F6 1D
-    021C=00 94 00 4F 00 52 00 5A 00 63
-    022E=03 A1
-    0232=06 50
-    0240=10 80 FF 00 00 01 00 01 00 00 00 4E 00 82 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 00 00
+    01EC=00 78 00 96 00 52 00 5D 00 66                      10) Set LocV=120|Set LocH=150|Set Height=82|Set Width=93|Set ScoreColor=0|Set Blend=102
+    01FE=F6 1D                                              10) Set Rotation=-2531
+    021C=00 94 00 4F 00 52 00 5A 00 63                      11) Set LocV=148|Set LocH=79|Set Height=82|Set Width=90|Set ScoreColor=0|Set Blend=99
+    022E=03 A1                                              11) Set Rotation=929
+    0232=06 50                                              11) Set Skew=1616
+    0240=10 80 FF 00 00 01 00 01 00 00 00 4E 00 82 00 58 00 3F 00 50 00 00 01 00 00 00 00 00 FF FF FB 93 00 00 0C A1 00 00 00 00 00 00 00 00 00 00 00 00   12) Set Flags1=16|Set Ink=128|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=130|Set LocH=88|Set Height=63|Set Width=80|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=-1|Set Rotation=-74252288|Set Skew=211877888
 16) 0036
-    01EC=00 6F 00 A6 00 4D 00 5B 00 4C
-    01FE=F0 B8
-    021C=00 9A 00 4D 00 58 00 5D 00 82
-    022E=06 51
-    0232=04 35
-    0256=81 00
+    01EC=00 6F 00 A6 00 4D 00 5B 00 4C                      10) Set LocV=111|Set LocH=166|Set Height=77|Set Width=91|Set ScoreColor=0|Set Blend=76
+    01FE=F0 B8                                              10) Set Rotation=-3912
+    021C=00 9A 00 4D 00 58 00 5D 00 82                      11) Set LocV=154|Set LocH=77|Set Height=88|Set Width=93|Set ScoreColor=0|Set Blend=130
+    022E=06 51                                              11) Set Rotation=1617
+    0232=04 35                                              11) Set Skew=1077
+    0256=81 00                                              12) Set FlipFlags=129
 17) 0030
-    01EC=00 65 00 B6 00 48 00 59 00 33
-    01FE=EB 53
-    021C=00 9F 00 50 00 5E 00 61 00 A8
-    022E=09 01
-    0232=02 1A
+    01EC=00 65 00 B6 00 48 00 59 00 33                      10) Set LocV=101|Set LocH=182|Set Height=72|Set Width=89|Set ScoreColor=0|Set Blend=51
+    01FE=EB 53                                              10) Set Rotation=-5293
+    021C=00 9F 00 50 00 5E 00 61 00 A8                      11) Set LocV=159|Set LocH=80|Set Height=94|Set Width=97|Set ScoreColor=0|Set Blend=168
+    022E=09 01                                              11) Set Rotation=2305
+    0232=02 1A                                              11) Set Skew=538
 18) 0032
-    01EC=00 5D 00 C7 00 44 00 57 00 19
-    01FE=E5 EE
-    021C=00 9E 00 56 00 64 00 64 00 CC 11 00
-    022E=0B B1
-    0232=00 00
+    01EC=00 5D 00 C7 00 44 00 57 00 19                      10) Set LocV=93|Set LocH=199|Set Height=68|Set Width=87|Set ScoreColor=0|Set Blend=25
+    01FE=E5 EE                                              10) Set Rotation=-6674
+    021C=00 9E 00 56 00 64 00 64 00 CC 11 00                11) Set LocV=158|Set LocH=86|Set Height=100|Set Width=100|Set ScoreColor=0|Set Blend=204|Set FlipFlags=17
+    022E=0B B1                                              11) Set Rotation=2993
+    0232=00 00                                              11) Set Skew=0
 19) 0034
-    01EC=00 59 00 D9 00 3F 00 55 00 00 01 00
-    01FE=E0 88
-    021C=00 96 00 67 00 5F 00 62 00 B2 91 00
-    022E=06 4B
-    0256=01 00
+    01EC=00 59 00 D9 00 3F 00 55 00 00 01 00                10) Set LocV=89|Set LocH=217|Set Height=63|Set Width=85|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1
+    01FE=E0 88                                              10) Set Rotation=-8056
+    021C=00 96 00 67 00 5F 00 62 00 B2 91 00                11) Set LocV=150|Set LocH=103|Set Height=95|Set Width=98|Set ScoreColor=0|Set Blend=178|Set FlipFlags=145
+    022E=06 4B                                              11) Set Rotation=1611
+    0256=01 00                                              12) Set FlipFlags=1
 20) 0040
-    01EC=00 5C 00 E0
-    01F6=81 00
-    021C=00 8C 00 77 00 5B 00 60 00 99
-    022E=00 E6
-    024C=00 88 00 55 00 45 00 53 00 1C 91 00
-    025E=FE 43
-    0262=0A 86
+    01EC=00 5C 00 E0                                        10) Set LocV=92|Set LocH=224
+    01F6=81 00                                              10) Set FlipFlags=129
+    021C=00 8C 00 77 00 5B 00 60 00 99                      11) Set LocV=140|Set LocH=119|Set Height=91|Set Width=96|Set ScoreColor=0|Set Blend=153
+    022E=00 E6                                              11) Set Rotation=230
+    024C=00 88 00 55 00 45 00 53 00 1C 91 00                12) Set LocV=136|Set LocH=85|Set Height=69|Set Width=83|Set ScoreColor=0|Set Blend=28|Set FlipFlags=145
+    025E=FE 43                                              12) Set Rotation=-445
+    0262=0A 86                                              12) Set Skew=2694
 21) 003C
-    01EC=00 63 00 E5
-    021C=00 82 00 86 00 56 00 5E 00 7F
-    022C=FF FF FB 82
-    024C=00 8E 00 52 00 4B 00 57 00 42
-    025C=00 00 00 F2
-    0262=08 6B
+    01EC=00 63 00 E5                                        10) Set LocV=99|Set LocH=229
+    021C=00 82 00 86 00 56 00 5E 00 7F                      11) Set LocV=130|Set LocH=134|Set Height=86|Set Width=94|Set ScoreColor=0|Set Blend=127
+    022C=FF FF FB 82                                        11) Set UnknownB=-1|Set Rotation=-1150
+    024C=00 8E 00 52 00 4B 00 57 00 42                      12) Set LocV=142|Set LocH=82|Set Height=75|Set Width=87|Set ScoreColor=0|Set Blend=66
+    025C=00 00 00 F2                                        12) Set UnknownB=0|Set Rotation=242
+    0262=08 6B                                              12) Set Skew=2155
 22) 0038
-    01EC=00 6B 00 E7
-    021C=00 78 00 96 00 52 00 5D 00 66
-    022E=F6 1D
-    024C=00 94 00 4F 00 52 00 5A 00 63
-    025E=03 A1
-    0262=06 50
+    01EC=00 6B 00 E7                                        10) Set LocV=107|Set LocH=231
+    021C=00 78 00 96 00 52 00 5D 00 66                      11) Set LocV=120|Set LocH=150|Set Height=82|Set Width=93|Set ScoreColor=0|Set Blend=102
+    022E=F6 1D                                              11) Set Rotation=-2531
+    024C=00 94 00 4F 00 52 00 5A 00 63                      12) Set LocV=148|Set LocH=79|Set Height=82|Set Width=90|Set ScoreColor=0|Set Blend=99
+    025E=03 A1                                              12) Set Rotation=929
+    0262=06 50                                              12) Set Skew=1616
 23) 0038
-    01EC=00 73 00 E8
-    021C=00 6F 00 A6 00 4D 00 5B 00 4C
-    022E=F0 B9
-    024C=00 9A 00 4D 00 58 00 5D 00 82
-    025E=06 51
-    0262=04 35
+    01EC=00 73 00 E8                                        10) Set LocV=115|Set LocH=232
+    021C=00 6F 00 A6 00 4D 00 5B 00 4C                      11) Set LocV=111|Set LocH=166|Set Height=77|Set Width=91|Set ScoreColor=0|Set Blend=76
+    022E=F0 B9                                              11) Set Rotation=-3911
+    024C=00 9A 00 4D 00 58 00 5D 00 82                      12) Set LocV=154|Set LocH=77|Set Height=88|Set Width=93|Set ScoreColor=0|Set Blend=130
+    025E=06 51                                              12) Set Rotation=1617
+    0262=04 35                                              12) Set Skew=1077
 24) 0038
-    01EC=00 7C 00 E9
-    021C=00 65 00 B6 00 48 00 59 00 33
-    022E=EB 53
-    024C=00 9F 00 50 00 5E 00 61 00 A8
-    025E=09 01
-    0262=02 1A
+    01EC=00 7C 00 E9                                        10) Set LocV=124|Set LocH=233
+    021C=00 65 00 B6 00 48 00 59 00 33                      11) Set LocV=101|Set LocH=182|Set Height=72|Set Width=89|Set ScoreColor=0|Set Blend=51
+    022E=EB 53                                              11) Set Rotation=-5293
+    024C=00 9F 00 50 00 5E 00 61 00 A8                      12) Set LocV=159|Set LocH=80|Set Height=94|Set Width=97|Set ScoreColor=0|Set Blend=168
+    025E=09 01                                              12) Set Rotation=2305
+    0262=02 1A                                              12) Set Skew=538
 25) 0038
-    01EC=00 84
-    021C=00 5D 00 C7 00 44 00 57 00 19
-    022E=E5 EF
-    024C=00 9E 00 56 00 64 00 64 00 CC 11 00
-    025E=0B B1
-    0262=00 00
+    01EC=00 84                                              10) Set LocV=132
+    021C=00 5D 00 C7 00 44 00 57 00 19                      11) Set LocV=93|Set LocH=199|Set Height=68|Set Width=87|Set ScoreColor=0|Set Blend=25
+    022E=E5 EF                                              11) Set Rotation=-6673
+    024C=00 9E 00 56 00 64 00 64 00 CC 11 00                12) Set LocV=158|Set LocH=86|Set Height=100|Set Width=100|Set ScoreColor=0|Set Blend=204|Set FlipFlags=17
+    025E=0B B1                                              12) Set Rotation=2993
+    0262=00 00                                              12) Set Skew=0
 26) 0034
-    01EC=00 8C
-    021C=00 59 00 D9 00 3F 00 55 00 00 01 00
-    022E=E0 88
-    024C=00 96 00 67 00 5F 00 62 00 B2 91 00
-    025E=06 4B
+    01EC=00 8C                                              10) Set LocV=140
+    021C=00 59 00 D9 00 3F 00 55 00 00 01 00                11) Set LocV=89|Set LocH=217|Set Height=63|Set Width=85|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1
+    022E=E0 88                                              11) Set Rotation=-8056
+    024C=00 96 00 67 00 5F 00 62 00 B2 91 00                12) Set LocV=150|Set LocH=103|Set Height=95|Set Width=98|Set ScoreColor=0|Set Blend=178|Set FlipFlags=145
+    025E=06 4B                                              12) Set Rotation=1611
 27) 002A
-    01EC=00 94
-    021C=00 5C 00 E0
-    0226=81 00
-    024C=00 8C 00 77 00 5B 00 60 00 99
-    025E=00 E6
+    01EC=00 94                                              10) Set LocV=148
+    021C=00 5C 00 E0                                        11) Set LocV=92|Set LocH=224
+    0226=81 00                                              11) Set FlipFlags=129
+    024C=00 8C 00 77 00 5B 00 60 00 99                      12) Set LocV=140|Set LocH=119|Set Height=91|Set Width=96|Set ScoreColor=0|Set Blend=153
+    025E=00 E6                                              12) Set Rotation=230
 28) 0026
-    01EC=00 9D
-    021C=00 63 00 E5
-    024C=00 82 00 86 00 56 00 5E 00 7F
-    025C=FF FF FB 82
+    01EC=00 9D                                              10) Set LocV=157
+    021C=00 63 00 E5                                        11) Set LocV=99|Set LocH=229
+    024C=00 82 00 86 00 56 00 5E 00 7F                      12) Set LocV=130|Set LocH=134|Set Height=86|Set Width=94|Set ScoreColor=0|Set Blend=127
+    025C=FF FF FB 82                                        12) Set UnknownB=-1|Set Rotation=-1150
 29) 0024
-    01EC=00 A5
-    021C=00 6B 00 E7
-    024C=00 78 00 96 00 52 00 5D 00 66
-    025E=F6 1D
+    01EC=00 A5                                              10) Set LocV=165
+    021C=00 6B 00 E7                                        11) Set LocV=107|Set LocH=231
+    024C=00 78 00 96 00 52 00 5D 00 66                      12) Set LocV=120|Set LocH=150|Set Height=82|Set Width=93|Set ScoreColor=0|Set Blend=102
+    025E=F6 1D                                              12) Set Rotation=-2531
 30) 002A
-    01EC=00 AD
-    01F6=01 00
-    021C=00 73 00 E8
-    024C=00 6F 00 A6 00 4D 00 5B 00 4C
-    025E=F0 B9
+    01EC=00 AD                                              10) Set LocV=173
+    01F6=01 00                                              10) Set FlipFlags=1
+    021C=00 73 00 E8                                        11) Set LocV=115|Set LocH=232
+    024C=00 6F 00 A6 00 4D 00 5B 00 4C                      12) Set LocV=111|Set LocH=166|Set Height=77|Set Width=91|Set ScoreColor=0|Set Blend=76
+    025E=F0 B9                                              12) Set Rotation=-3911
 31) 004C
-    0196=00 00
-    01E0=00 00 00 00 00 00 00 00
-    01EA=00 00 00 00 00 00 00 00 00 00
-    01F6=00 00
-    01FC=00 00 00 00
-    021C=00 7C 00 E9
-    024C=00 65 00 B6 00 48 00 59 00 33
-    025E=EB 53
+    0196=00 00                                               8) Set FlipFlags=0
+    01E0=00 00 00 00 00 00 00 00                            10) Set Flags1=0|Set Ink=0|Set ForeColorR=0|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0
+    01EA=00 00 00 00 00 00 00 00 00 00                      10) Set PropertiesOffset=0|Set LocV=0|Set LocH=0|Set Height=0|Set Width=0
+    01F6=00 00                                              10) Set FlipFlags=0
+    01FC=00 00 00 00                                        10) Set UnknownB=0|Set Rotation=0
+    021C=00 7C 00 E9                                        11) Set LocV=124|Set LocH=233
+    024C=00 65 00 B6 00 48 00 59 00 33                      12) Set LocV=101|Set LocH=182|Set Height=72|Set Width=89|Set ScoreColor=0|Set Blend=51
+    025E=EB 53                                              12) Set Rotation=-5293
 32) 001C
-    021C=00 84
-    024C=00 5D 00 C7 00 44 00 57 00 19
-    025E=E5 EF
+    021C=00 84                                              11) Set LocV=132
+    024C=00 5D 00 C7 00 44 00 57 00 19                      12) Set LocV=93|Set LocH=199|Set Height=68|Set Width=87|Set ScoreColor=0|Set Blend=25
+    025E=E5 EF                                              12) Set Rotation=-6673
 33) 001E
-    021C=00 8C
-    024C=00 59 00 D9 00 3F 00 55 00 00 01 00
-    025E=E0 88
+    021C=00 8C                                              11) Set LocV=140
+    024C=00 59 00 D9 00 3F 00 55 00 00 01 00                12) Set LocV=89|Set LocH=217|Set Height=63|Set Width=85|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1
+    025E=E0 88                                              12) Set Rotation=-8056
 34) 0016
-    021C=00 94
-    024C=00 5C 00 E0
-    0256=81 00
+    021C=00 94                                              11) Set LocV=148
+    024C=00 5C 00 E0                                        12) Set LocV=92|Set LocH=224
+    0256=81 00                                              12) Set FlipFlags=129
 35) 0010
-    021C=00 9D
-    024C=00 63 00 E5
+    021C=00 9D                                              11) Set LocV=157
+    024C=00 63 00 E5                                        12) Set LocV=99|Set LocH=229
 36) 0010
-    021C=00 A5
-    024C=00 6B 00 E7
+    021C=00 A5                                              11) Set LocV=165
+    024C=00 6B 00 E7                                        12) Set LocV=107|Set LocH=231
 37) 0016
-    021C=00 AD
-    0226=01 00
-    024C=00 73 00 E8
+    021C=00 AD                                              11) Set LocV=173
+    0226=01 00                                              11) Set FlipFlags=1
+    024C=00 73 00 E8                                        12) Set LocV=115|Set LocH=232
 38) 0032
-    0210=00 00 00 00 00 00 00 00
-    021A=00 00 00 00 00 00 00 00 00 00
-    0226=00 00
-    022C=00 00 00 00
-    024C=00 7C 00 E9
+    0210=00 00 00 00 00 00 00 00                            11) Set Flags1=0|Set Ink=0|Set ForeColorR=0|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0
+    021A=00 00 00 00 00 00 00 00 00 00                      11) Set PropertiesOffset=0|Set LocV=0|Set LocH=0|Set Height=0|Set Width=0
+    0226=00 00                                              11) Set FlipFlags=0
+    022C=00 00 00 00                                        11) Set UnknownB=0|Set Rotation=0
+    024C=00 7C 00 E9                                        12) Set LocV=124|Set LocH=233
 39) 0008
-    024C=00 84
+    024C=00 84                                              12) Set LocV=132
 40) 0008
-    024C=00 8C
+    024C=00 8C                                              12) Set LocV=140
 41) 0008
-    024C=00 94
+    024C=00 94                                              12) Set LocV=148
 42) 0008
-    024C=00 9D
+    024C=00 9D                                              12) Set LocV=157
 43) 0008
-    024C=00 A5
+    024C=00 A5                                              12) Set LocV=165
 44) 000E
-    024C=00 AD
-    0256=01 00
+    024C=00 AD                                              12) Set LocV=173
+    0256=01 00                                              12) Set FlipFlags=1
 
 

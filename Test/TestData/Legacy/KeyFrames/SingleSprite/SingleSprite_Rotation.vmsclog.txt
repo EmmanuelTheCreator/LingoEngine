@@ -26,29 +26,29 @@ Item Desc. 0: Start=1, End=20, Channel=6, U1=0, Flip=False,False,🔒=False,Trai
 
 === Frames ===
 01) 0036
-    0120=10 00 FF 00 00 01 00 02 00 00 00 06 00 38 00 2E 00 26 00 8A 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0120=10 00 FF 00 00 01 00 02 00 00 00 06 00 38 00 2E 00 26 00 8A 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=56|Set LocH=46|Set Height=38|Set Width=138|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set Rotation=0|Set Skew=0
 02) 000E
-    0136=81 00
-    013E=01 D9
+    0136=81 00                                               6) Set FlipFlags=129
+    013E=01 D9                                               6) Set Rotation=473
 03) 0008
-    013E=03 B3
+    013E=03 B3                                               6) Set Rotation=947
 04) 0008
-    013E=05 8D
+    013E=05 8D                                               6) Set Rotation=1421
 05) 0008
-    013E=07 67
+    013E=07 67                                               6) Set Rotation=1895
 06) 0008
-    013E=09 41
+    013E=09 41                                               6) Set Rotation=2369
 07) 0008
-    013E=0B 1B
+    013E=0B 1B                                               6) Set Rotation=2843
 08) 0008
-    013E=0C F4
+    013E=0C F4                                               6) Set Rotation=3316
 09) 0008
-    013E=0E CE
+    013E=0E CE                                               6) Set Rotation=3790
 10) 000E
-    0136=01 00
-    013E=10 A8
+    0136=01 00                                               6) Set FlipFlags=1
+    013E=10 A8                                               6) Set Rotation=4264
 11) 0008
-    0136=81 00
+    0136=81 00                                               6) Set FlipFlags=129
 12) 0002
 13) 0002
 14) 0002

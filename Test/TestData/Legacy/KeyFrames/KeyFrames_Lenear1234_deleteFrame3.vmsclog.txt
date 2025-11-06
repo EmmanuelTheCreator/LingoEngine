@@ -26,22 +26,22 @@ Item Desc. 0: Start=1, End=41, Channel=6, U1=0, Flip=False,False,🔒=False,Trai
 
 === Frames ===
 01) 0036
-    0120=10 00 FF 00 00 01 00 03 00 00 00 06 00 82 00 25 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0120=10 00 FF 00 00 01 00 03 00 00 00 06 00 82 00 25 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=130|Set LocH=37|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set Rotation=0|Set Skew=0
 02) 0002
 03) 0008
-    0136=81 00
+    0136=81 00                                               6) Set FlipFlags=129
 04) 0008
-    0136=01 00
+    0136=01 00                                               6) Set FlipFlags=1
 05) 0002
 06) 0008
-    0136=81 00
+    0136=81 00                                               6) Set FlipFlags=129
 07) 0002
 08) 0002
 09) 0002
 10) 0008
-    0136=01 00
+    0136=01 00                                               6) Set FlipFlags=1
 11) 0008
-    0136=81 00
+    0136=81 00                                               6) Set FlipFlags=129
 12) 0002
 13) 0002
 14) 0002
@@ -51,9 +51,9 @@ Item Desc. 0: Start=1, End=41, Channel=6, U1=0, Flip=False,False,🔒=False,Trai
 18) 0002
 19) 0002
 20) 0008
-    0136=01 00
+    0136=01 00                                               6) Set FlipFlags=1
 21) 0008
-    0136=81 00
+    0136=81 00                                               6) Set FlipFlags=129
 22) 0002
 23) 0002
 24) 0002

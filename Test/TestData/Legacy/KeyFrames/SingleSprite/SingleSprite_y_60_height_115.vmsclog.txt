@@ -26,29 +26,29 @@ Item Desc. 0: Start=1, End=20, Channel=6, U1=0, Flip=False,False,🔒=False,Trai
 
 === Frames ===
 01) 0036
-    0120=10 80 FF 00 00 01 00 01 00 00 00 06 00 38 00 2E 00 1D 00 6C 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0120=10 80 FF 00 00 01 00 01 00 00 00 06 00 38 00 2E 00 1D 00 6C 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6) Set Flags1=16|Set Ink=128|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=56|Set LocH=46|Set Height=29|Set Width=108|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set Rotation=0|Set Skew=0
 02) 0010
-    0130=00 27 00 71
-    0136=81 00
+    0130=00 27 00 71                                         6) Set Height=39|Set Width=113
+    0136=81 00                                               6) Set FlipFlags=129
 03) 000E
-    012C=00 39 00 2F 00 30 00 75
+    012C=00 39 00 2F 00 30 00 75                             6) Set LocV=57|Set LocH=47|Set Height=48|Set Width=117
 04) 000A
-    0130=00 3A 00 7A
+    0130=00 3A 00 7A                                         6) Set Height=58|Set Width=122
 05) 000E
-    012C=00 3A 00 30 00 43 00 7F
+    012C=00 3A 00 30 00 43 00 7F                             6) Set LocV=58|Set LocH=48|Set Height=67|Set Width=127
 06) 000A
-    0130=00 4D 00 83
+    0130=00 4D 00 83                                         6) Set Height=77|Set Width=131
 07) 000E
-    012C=00 3B 00 31 00 56 00 88
+    012C=00 3B 00 31 00 56 00 88                             6) Set LocV=59|Set LocH=49|Set Height=86|Set Width=136
 08) 000A
-    0130=00 60 00 8D
+    0130=00 60 00 8D                                         6) Set Height=96|Set Width=141
 09) 000E
-    012C=00 3C 00 32 00 69 00 91
+    012C=00 3C 00 32 00 69 00 91                             6) Set LocV=60|Set LocH=50|Set Height=105|Set Width=145
 10) 0010
-    0130=00 73 00 96
-    0136=01 00
+    0130=00 73 00 96                                         6) Set Height=115|Set Width=150
+    0136=01 00                                               6) Set FlipFlags=1
 11) 0008
-    0136=81 00
+    0136=81 00                                               6) Set FlipFlags=129
 12) 0002
 13) 0002
 14) 0002
