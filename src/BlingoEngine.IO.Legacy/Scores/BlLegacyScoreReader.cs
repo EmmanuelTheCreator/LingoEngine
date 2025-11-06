@@ -2,6 +2,7 @@
 using BlingoEngine.IO.Legacy.Classic;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
+using BlingoEngine.IO.Legacy.Scores.Datas;
 using BlingoEngine.IO.Legacy.Tools;
 
 namespace BlingoEngine.IO.Legacy.Scores
@@ -12,8 +13,8 @@ namespace BlingoEngine.IO.Legacy.Scores
         private readonly ReaderContext _context;
 
         private ScoreRawHeader Header { get; set; }
-        public List<BlLegacyScoreTokenizer.BlScoreRawFrame> Tokens { get; private set; }
-        private List<SpriteRawData> Sprites { get; set; }
+        public List<BlScoreRawFrame> Tokens { get; private set; }
+        private List<BlSpriteRawData> Sprites { get; set; }
 
         public BlLegacyScoreReader(ReaderContext context)
         {
@@ -126,19 +127,21 @@ namespace BlingoEngine.IO.Legacy.Scores
             return returnData;
         }
 
-        private List<SpriteRawData> ReadSprites(List<byte[]> datas, List<(int SpriteData, int MemberBehaviorData)> spriteOffsets)
+        private List<BlSpriteRawData> ReadSprites(List<byte[]> datas, List<(int SpriteData, int MemberBehaviorData)> spriteOffsets)
         {
-            var returnData = new List<SpriteRawData>();
+            var returnData = new List<BlSpriteRawData>();
             var index = 0;
             foreach (var offset in spriteOffsets)
             {
                 var data = datas[offset.SpriteData];
                 var memberBehaviorData = datas[offset.MemberBehaviorData];
-                var spriteData = new SpriteRawData(data, memberBehaviorData, index);
+                var spriteData = new BlSpriteRawData(data, memberBehaviorData, index);
                 returnData.Add(spriteData);
                 index++;
             }
             return returnData;
         }
+   
+        
     }
 }

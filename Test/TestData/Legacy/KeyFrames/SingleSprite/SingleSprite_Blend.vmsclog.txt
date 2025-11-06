@@ -1,0 +1,60 @@
+SingleSprite_Blend.dir
+--------------------------------
+=== Header ===
+ActualSize: 		176
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	20
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		9
+EntrySizeSum: 	232
+NotationBase: 	10
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	296
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=20, Channel=6, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=9
+
+=== Frames ===
+01) 0036
+    0120=10 80 FF 00 00 01 00 01 00 00 00 06 00 38 00 2E 00 1D 00 6C 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00	 	Set Flags1=16|Set Ink=128|Set ForeColor=255|Set BackColor=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=56|Set LocH=46|Set Height=29|Set Width=108|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set Rotation=0|Set Skew=0
+02) 000A
+    0134=00 07 91 00	 	Set ScoreColor=0|Set Blend=7|Set FlipFlags=145
+03) 0008
+    0134=00 14	 	Set ScoreColor=0|Set Blend=20
+04) 0008
+    0134=00 1E	 	Set ScoreColor=0|Set Blend=30
+05) 0008
+    0134=00 2B	 	Set ScoreColor=0|Set Blend=43
+06) 0008
+    0134=00 35	 	Set ScoreColor=0|Set Blend=53
+07) 0008
+    0134=00 42	 	Set ScoreColor=0|Set Blend=66
+08) 0008
+    0134=00 4C	 	Set ScoreColor=0|Set Blend=76
+09) 0008
+    0134=00 59	 	Set ScoreColor=0|Set Blend=89
+10) 000A
+    0134=00 66 11 00	 	Set ScoreColor=0|Set Blend=102|Set FlipFlags=17
+11) 0008
+    0136=91 00	 	Set FlipFlags=145
+12) 0002
+13) 0002
+14) 0002
+15) 0002
+16) 0002
+17) 0002
+18) 0002
+19) 0002
+20) 0002
+
+

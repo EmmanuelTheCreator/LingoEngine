@@ -1,0 +1,31 @@
+SingleSprite_Tempo.dir
+--------------------------------
+=== Header ===
+ActualSize: 		32
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	1
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		6
+EntrySizeSum: 	84
+NotationBase: 	7
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	136
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=1, Channel=1, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=
+
+=== Frames ===
+01) 000C
+    0032=00 03 00 14 F6 00	 	
+
+

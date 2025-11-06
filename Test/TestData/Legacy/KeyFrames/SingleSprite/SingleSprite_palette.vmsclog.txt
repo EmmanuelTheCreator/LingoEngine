@@ -1,0 +1,32 @@
+SingleSprite_palette.dir
+--------------------------------
+=== Header ===
+ActualSize: 		44
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	1
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		6
+EntrySizeSum: 	96
+NotationBase: 	7
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	148
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=1, Channel=5, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=
+
+=== Frames ===
+01) 0018
+    00F0=FF FF FF FE 1E 00 7F 7F 00 01 00 01	 	
+    0102=00 03	 	
+
+

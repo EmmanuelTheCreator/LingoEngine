@@ -1,0 +1,323 @@
+SingleSprite_299.dir
+--------------------------------
+=== Header ===
+ActualSize: 		1750
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	20
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	300
+EntryCount: 		9408
+EntrySizeSum: 	1808
+NotationBase: 	9409
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	39468
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=20, Channel=304, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=9
+
+=== Frames ===
+01) 0108
+    0136=01 00	 	Set FlipFlags=1
+    0166=01 00	 	Set FlipFlags=1
+    0196=01 00	 	Set FlipFlags=1
+    01C6=01 00	 	Set FlipFlags=1
+    01F6=01 00	 	Set FlipFlags=1
+    0226=01 00	 	Set FlipFlags=1
+    0256=01 00	 	Set FlipFlags=1
+    0286=01 00	 	Set FlipFlags=1
+    02B6=01 00	 	Set FlipFlags=1
+    02E6=01 00	 	Set FlipFlags=1
+    0526=01 00	 	Set FlipFlags=1
+    0556=01 00	 	Set FlipFlags=1
+    0586=01 00	 	Set FlipFlags=1
+    05B6=01 00	 	Set FlipFlags=1
+    05E6=01 00	 	Set FlipFlags=1
+    0616=01 00	 	Set FlipFlags=1
+    0646=01 00	 	Set FlipFlags=1
+    0676=01 00	 	Set FlipFlags=1
+    06A6=01 00	 	Set FlipFlags=1
+    06D6=01 00	 	Set FlipFlags=1
+    0706=01 00	 	Set FlipFlags=1
+    27A6=01 00	 	Set FlipFlags=1
+    27D6=01 00	 	Set FlipFlags=1
+    2806=01 00	 	Set FlipFlags=1
+    2836=01 00	 	Set FlipFlags=1
+    2956=01 00	 	Set FlipFlags=1
+    29B6=01 00	 	Set FlipFlags=1
+    29E6=01 00	 	Set FlipFlags=1
+    2B06=01 00	 	Set FlipFlags=1
+    2B36=01 00	 	Set FlipFlags=1
+    2B66=01 00	 	Set FlipFlags=1
+    2B96=01 00	 	Set FlipFlags=1
+    2BF6=01 00	 	Set FlipFlags=1
+    2C26=01 00	 	Set FlipFlags=1
+    3706=01 00	 	Set FlipFlags=1
+    3900=10 00 FF 00 00 01 00 01 00 00 24 BD 00 F0 01 40 00 47 00 95 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00	 	Set Flags1=16|Set Ink=0|Set ForeColor=255|Set BackColor=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=36|Set LocV=240|Set LocH=320|Set Height=71|Set Width=149|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set Rotation=0|Set Skew=0
+02) 0080
+    0346=01 00	 	Set FlipFlags=1
+    03D6=01 00	 	Set FlipFlags=1
+    0406=01 00	 	Set FlipFlags=1
+    0436=01 00	 	Set FlipFlags=1
+    0466=01 00	 	Set FlipFlags=1
+    0496=01 00	 	Set FlipFlags=1
+    2716=01 00	 	Set FlipFlags=1
+    2AA6=01 00	 	Set FlipFlags=1
+    2AD6=01 00	 	Set FlipFlags=1
+    2BC6=01 00	 	Set FlipFlags=1
+    2D16=01 00	 	Set FlipFlags=1
+    2D46=01 00	 	Set FlipFlags=1
+    2D76=01 00	 	Set FlipFlags=1
+    2DD6=01 00	 	Set FlipFlags=1
+    2E06=01 00	 	Set FlipFlags=1
+    2E36=01 00	 	Set FlipFlags=1
+    2E66=01 00	 	Set FlipFlags=1
+    2EF6=01 00	 	Set FlipFlags=1
+    3736=01 00	 	Set FlipFlags=1
+    390E=01 41	 	Set LocH=321
+    3916=81 00	 	Set FlipFlags=129
+03) 0440
+    0316=01 00	 	Set FlipFlags=1
+    04C6=01 00	 	Set FlipFlags=1
+    04F6=01 00	 	Set FlipFlags=1
+    0736=01 00	 	Set FlipFlags=1
+    0766=01 00	 	Set FlipFlags=1
+    0796=01 00	 	Set FlipFlags=1
+    07C6=01 00	 	Set FlipFlags=1
+    07F6=01 00	 	Set FlipFlags=1
+    0826=01 00	 	Set FlipFlags=1
+    0856=01 00	 	Set FlipFlags=1
+    0886=01 00	 	Set FlipFlags=1
+    08B6=01 00	 	Set FlipFlags=1
+    08E6=01 00	 	Set FlipFlags=1
+    0916=01 00	 	Set FlipFlags=1
+    0946=01 00	 	Set FlipFlags=1
+    0976=01 00	 	Set FlipFlags=1
+    09A6=01 00	 	Set FlipFlags=1
+    09D6=01 00	 	Set FlipFlags=1
+    0A06=01 00	 	Set FlipFlags=1
+    0A36=01 00	 	Set FlipFlags=1
+    0A66=01 00	 	Set FlipFlags=1
+    0A96=01 00	 	Set FlipFlags=1
+    0AC6=01 00	 	Set FlipFlags=1
+    0AF6=01 00	 	Set FlipFlags=1
+    0B26=01 00	 	Set FlipFlags=1
+    0B56=01 00	 	Set FlipFlags=1
+    0B86=01 00	 	Set FlipFlags=1
+    0BB6=01 00	 	Set FlipFlags=1
+    0BE6=01 00	 	Set FlipFlags=1
+    0C16=01 00	 	Set FlipFlags=1
+    0C46=01 00	 	Set FlipFlags=1
+    0C76=01 00	 	Set FlipFlags=1
+    0CA6=01 00	 	Set FlipFlags=1
+    0CD6=01 00	 	Set FlipFlags=1
+    0D06=01 00	 	Set FlipFlags=1
+    0D36=01 00	 	Set FlipFlags=1
+    0D66=01 00	 	Set FlipFlags=1
+    0D96=01 00	 	Set FlipFlags=1
+    0DC6=01 00	 	Set FlipFlags=1
+    0DF6=01 00	 	Set FlipFlags=1
+    0E26=01 00	 	Set FlipFlags=1
+    0E56=01 00	 	Set FlipFlags=1
+    0E86=01 00	 	Set FlipFlags=1
+    0EB6=01 00	 	Set FlipFlags=1
+    0EE6=01 00	 	Set FlipFlags=1
+    0F16=01 00	 	Set FlipFlags=1
+    0F46=01 00	 	Set FlipFlags=1
+    0F76=01 00	 	Set FlipFlags=1
+    0FA6=01 00	 	Set FlipFlags=1
+    0FD6=01 00	 	Set FlipFlags=1
+    1006=01 00	 	Set FlipFlags=1
+    1036=01 00	 	Set FlipFlags=1
+    1066=01 00	 	Set FlipFlags=1
+    1096=01 00	 	Set FlipFlags=1
+    10C6=01 00	 	Set FlipFlags=1
+    10F6=01 00	 	Set FlipFlags=1
+    1126=01 00	 	Set FlipFlags=1
+    1156=01 00	 	Set FlipFlags=1
+    1186=01 00	 	Set FlipFlags=1
+    11B6=01 00	 	Set FlipFlags=1
+    11E6=01 00	 	Set FlipFlags=1
+    1216=01 00	 	Set FlipFlags=1
+    1246=01 00	 	Set FlipFlags=1
+    1276=01 00	 	Set FlipFlags=1
+    12A6=01 00	 	Set FlipFlags=1
+    12D6=01 00	 	Set FlipFlags=1
+    1306=01 00	 	Set FlipFlags=1
+    1336=01 00	 	Set FlipFlags=1
+    1366=01 00	 	Set FlipFlags=1
+    1396=01 00	 	Set FlipFlags=1
+    13C6=01 00	 	Set FlipFlags=1
+    13F6=01 00	 	Set FlipFlags=1
+    1426=01 00	 	Set FlipFlags=1
+    1456=01 00	 	Set FlipFlags=1
+    1486=01 00	 	Set FlipFlags=1
+    14B6=01 00	 	Set FlipFlags=1
+    14E6=01 00	 	Set FlipFlags=1
+    1516=01 00	 	Set FlipFlags=1
+    1546=01 00	 	Set FlipFlags=1
+    1576=01 00	 	Set FlipFlags=1
+    15A6=01 00	 	Set FlipFlags=1
+    15D6=01 00	 	Set FlipFlags=1
+    1606=01 00	 	Set FlipFlags=1
+    1636=01 00	 	Set FlipFlags=1
+    1666=01 00	 	Set FlipFlags=1
+    1696=01 00	 	Set FlipFlags=1
+    16C6=01 00	 	Set FlipFlags=1
+    16F6=01 00	 	Set FlipFlags=1
+    1726=01 00	 	Set FlipFlags=1
+    1756=01 00	 	Set FlipFlags=1
+    1786=01 00	 	Set FlipFlags=1
+    17B6=01 00	 	Set FlipFlags=1
+    17E6=01 00	 	Set FlipFlags=1
+    1816=01 00	 	Set FlipFlags=1
+    1846=01 00	 	Set FlipFlags=1
+    1876=01 00	 	Set FlipFlags=1
+    18A6=01 00	 	Set FlipFlags=1
+    18D6=01 00	 	Set FlipFlags=1
+    1906=01 00	 	Set FlipFlags=1
+    1936=01 00	 	Set FlipFlags=1
+    1966=01 00	 	Set FlipFlags=1
+    1996=01 00	 	Set FlipFlags=1
+    19C6=01 00	 	Set FlipFlags=1
+    19F6=01 00	 	Set FlipFlags=1
+    1A26=01 00	 	Set FlipFlags=1
+    1A56=01 00	 	Set FlipFlags=1
+    1A86=01 00	 	Set FlipFlags=1
+    1AB6=01 00	 	Set FlipFlags=1
+    1AE6=01 00	 	Set FlipFlags=1
+    1B16=01 00	 	Set FlipFlags=1
+    1B46=01 00	 	Set FlipFlags=1
+    1B76=01 00	 	Set FlipFlags=1
+    1BA6=01 00	 	Set FlipFlags=1
+    1BD6=01 00	 	Set FlipFlags=1
+    1C06=01 00	 	Set FlipFlags=1
+    1C36=01 00	 	Set FlipFlags=1
+    1C66=01 00	 	Set FlipFlags=1
+    1C96=01 00	 	Set FlipFlags=1
+    1CC6=01 00	 	Set FlipFlags=1
+    1CF6=01 00	 	Set FlipFlags=1
+    1D26=01 00	 	Set FlipFlags=1
+    1D56=01 00	 	Set FlipFlags=1
+    1D86=01 00	 	Set FlipFlags=1
+    1DB6=01 00	 	Set FlipFlags=1
+    1DE6=01 00	 	Set FlipFlags=1
+    1E16=01 00	 	Set FlipFlags=1
+    1E46=01 00	 	Set FlipFlags=1
+    1E76=01 00	 	Set FlipFlags=1
+    1EA6=01 00	 	Set FlipFlags=1
+    1ED6=01 00	 	Set FlipFlags=1
+    1F06=01 00	 	Set FlipFlags=1
+    1F36=01 00	 	Set FlipFlags=1
+    1F66=01 00	 	Set FlipFlags=1
+    1F96=01 00	 	Set FlipFlags=1
+    1FC6=01 00	 	Set FlipFlags=1
+    1FF6=01 00	 	Set FlipFlags=1
+    2026=01 00	 	Set FlipFlags=1
+    2056=01 00	 	Set FlipFlags=1
+    2086=01 00	 	Set FlipFlags=1
+    20B6=01 00	 	Set FlipFlags=1
+    20E6=01 00	 	Set FlipFlags=1
+    2116=01 00	 	Set FlipFlags=1
+    2146=01 00	 	Set FlipFlags=1
+    2176=01 00	 	Set FlipFlags=1
+    21A6=01 00	 	Set FlipFlags=1
+    21D6=01 00	 	Set FlipFlags=1
+    2206=01 00	 	Set FlipFlags=1
+    2236=01 00	 	Set FlipFlags=1
+    2266=01 00	 	Set FlipFlags=1
+    2296=01 00	 	Set FlipFlags=1
+    22C6=01 00	 	Set FlipFlags=1
+    22F6=01 00	 	Set FlipFlags=1
+    2326=01 00	 	Set FlipFlags=1
+    2356=01 00	 	Set FlipFlags=1
+    2386=01 00	 	Set FlipFlags=1
+    23B6=01 00	 	Set FlipFlags=1
+    23E6=01 00	 	Set FlipFlags=1
+    2416=01 00	 	Set FlipFlags=1
+    2446=01 00	 	Set FlipFlags=1
+    2476=01 00	 	Set FlipFlags=1
+    24A6=01 00	 	Set FlipFlags=1
+    24D6=01 00	 	Set FlipFlags=1
+    2506=01 00	 	Set FlipFlags=1
+    2536=01 00	 	Set FlipFlags=1
+    2566=01 00	 	Set FlipFlags=1
+    2596=01 00	 	Set FlipFlags=1
+    25C6=01 00	 	Set FlipFlags=1
+    25F6=01 00	 	Set FlipFlags=1
+    2626=01 00	 	Set FlipFlags=1
+    2656=01 00	 	Set FlipFlags=1
+    28C6=01 00	 	Set FlipFlags=1
+    28F6=01 00	 	Set FlipFlags=1
+    2926=01 00	 	Set FlipFlags=1
+    2986=01 00	 	Set FlipFlags=1
+    2A76=01 00	 	Set FlipFlags=1
+    2C56=01 00	 	Set FlipFlags=1
+    2C86=01 00	 	Set FlipFlags=1
+    2CB6=01 00	 	Set FlipFlags=1
+    2CE6=01 00	 	Set FlipFlags=1
+    2DA6=01 00	 	Set FlipFlags=1
+    390E=01 42	 	Set LocH=322
+04) 001A
+    2A46=01 00	 	Set FlipFlags=1
+    2E96=01 00	 	Set FlipFlags=1
+    2EC6=01 00	 	Set FlipFlags=1
+    390E=01 43	 	Set LocH=323
+05) 0020
+    0376=01 00	 	Set FlipFlags=1
+    03A6=01 00	 	Set FlipFlags=1
+    2A16=01 00	 	Set FlipFlags=1
+    3016=01 00	 	Set FlipFlags=1
+    390E=01 44	 	Set LocH=324
+06) 0008
+    390E=01 46	 	Set LocH=326
+07) 000E
+    26E6=01 00	 	Set FlipFlags=1
+    390E=01 47	 	Set LocH=327
+08) 0014
+    2866=01 00	 	Set FlipFlags=1
+    2896=01 00	 	Set FlipFlags=1
+    390E=01 48	 	Set LocH=328
+09) 000E
+    2686=01 00	 	Set FlipFlags=1
+    390E=01 49	 	Set LocH=329
+10) 0020
+    26B6=01 00	 	Set FlipFlags=1
+    2746=01 00	 	Set FlipFlags=1
+    2776=01 00	 	Set FlipFlags=1
+    390E=01 4A	 	Set LocH=330
+    3916=01 00	 	Set FlipFlags=1
+11) 000E
+    3766=01 00	 	Set FlipFlags=1
+    3916=81 00	 	Set FlipFlags=129
+12) 0008
+    2A76=00 00	 	Set FlipFlags=0
+13) 000E
+    2E06=00 00	 	Set FlipFlags=0
+    3766=00 00	 	Set FlipFlags=0
+14) 0002
+15) 0002
+16) 0002
+17) 0008
+    2A46=00 00	 	Set FlipFlags=0
+18) 0008
+    2A16=00 00	 	Set FlipFlags=0
+19) 000E
+    26B6=00 00	 	Set FlipFlags=0
+    2776=00 00	 	Set FlipFlags=0
+20) 0020
+    26E6=00 00	 	Set FlipFlags=0
+    2746=00 00	 	Set FlipFlags=0
+    2CB6=00 00	 	Set FlipFlags=0
+    2CE6=00 00	 	Set FlipFlags=0
+    2DD6=00 00	 	Set FlipFlags=0
+
+
