@@ -11,6 +11,9 @@ namespace BlingoEngine.IO.Legacy.Scores
     {
         private readonly ReaderContext _context;
 
+        private ScoreRawHeader Header { get; set; }
+        public List<BlLegacyScoreTokenizer.BlScoreRawFrame> Tokens { get; private set; }
+        private List<SpriteRawData> Sprites { get; set; }
 
         public BlLegacyScoreReader(ReaderContext context)
         {
@@ -46,16 +49,37 @@ namespace BlingoEngine.IO.Legacy.Scores
                 : entry.ReadClassicPayload(classicLoader);
         }
 
-        private void ParseVMSC(byte[] payload)
+        public void ParseVMSC(byte[] payload)
         {
+            var tokenizer = new BlLegacyScoreTokenizer(_context);
             var reader = new BlStreamReader(new MemoryStream(payload));
             var header = ReadMainHeader(reader);
             var datas = ReadDataRangesFromOffsets(reader, header.EntryCount);
             ReadHeader(datas[0], header);
+            Header = header;
             var spriteOffsets = ReadSpriteOffsets(datas[1]);
-            var sprites = ReadSprites(datas, spriteOffsets);
-
+            Sprites = ReadSprites(datas, spriteOffsets);
+            Tokens = tokenizer.Tokenize(datas[0].Skip(5 * 4).ToArray());
             reader.BaseStream.Dispose();
+        }
+        public string ToLog()
+        { 
+            var logSprites = string.Join(Environment.NewLine, Sprites.Select(s => s.ToLog()));
+            var tokenizer = new BlLegacyScoreTokenizer(_context);
+            var logFrames = tokenizer.ToLog(Tokens);
+            var logHeader = Header.ToLog();
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("=== Header ===");
+            sb.AppendLine(logHeader);
+            sb.AppendLine();
+            sb.AppendLine("=== Sprites ===");
+            sb.AppendLine(logSprites);
+            sb.AppendLine();
+            sb.AppendLine("=== Frames ===");
+            sb.AppendLine(logFrames);
+            sb.AppendLine();
+            var fullLog = sb.ToString();
+            return fullLog;
         }
 
        

@@ -1,0 +1,58 @@
+SingleSprite_10.dir
+--------------------------------
+=== Header ===
+ActualSize: 		160
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	20
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		12
+EntrySizeSum: 	216
+NotationBase: 	13
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	292
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=20, Channel=15, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=9
+
+=== Frames ===
+01) 003C
+    0136=01 00
+    02D0=10 80 FF 00 00 01 00 01 00 00 00 09 00 38 00 2E 00 1D 00 6C 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+02) 0008
+    02E6=81 00
+03) 0008
+    02DE=00 2F
+04) 0002
+05) 0008
+    02DE=00 30
+06) 0002
+07) 0008
+    02DE=00 31
+08) 0002
+09) 0008
+    02DE=00 32
+10) 0008
+    02E6=01 00
+11) 0008
+    02E6=81 00
+12) 0002
+13) 0002
+14) 0002
+15) 0002
+16) 0002
+17) 0002
+18) 0002
+19) 0002
+20) 0002
+
+

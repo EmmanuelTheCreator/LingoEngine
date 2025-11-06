@@ -24,33 +24,33 @@ FF FF FF FD
 // ---------------------------------------
 00 00 00 00 	// end previous block/SpriteMainKeyframe
 
-	00 08 
-00 02 
+00 08 							// Block 8 bytes - 2   
+	00 02 
 	01 36 81 00 				// 0x36 = 54 , 81 = set keyframe on frame 1
-	00 0A 
+00 0A 							// Block 10 bytes - 2  
 	00 04 
 	01 2C  						// 0x2C = 44
 		00 39 00 2F  			// Y:0x39 = 57	X:0x2F = 47 
-00 02 
-	00 0A 
+00 02 							// Block Empty Next  
+00 0A  							// Block 10 bytes - 2 
 	00 04 
 	01 2C  						// 0x2C = 44
 		00 3A 00 30  			// Y:0x3A = 58	X:0x30 = 48 
-00 02 
-	00 0A 
+00 02 							// Block Empty Next 
+00 0A  							// Block 10 bytes - 2 
 	00 04 
 	01 2C 						// 0x2C = 44
 		00 3B 00 31 	 		// Y:0x3B = 59	X:0x31 = 49 
-00 02 
-	00 0A 
+00 02 							// Block Empty Next  
+00 0A  							// Block 10 bytes - 2 
 	00 04 
 	01 2C  						// 0x2C = 44
 		00 3C 00 32 			// Y:0x3C = 60	X:0x32 = 50
-	00 08 
-00 02 
+00 08 							// Block 8 bytes - 2 
+	00 02 
 	01 36 01 00 				// 0x36 = 54
-	00 08 
-00 02 
+00 08 							// Block 8 bytes - 2 
+	00 02 
 	01 36 81 00					// 0x36 = 54 , 81 = set keyframe at offset frame 9 = frame 10
 00 02 00 02 00 02 00 02 
 00 02 00 02 00 02 00 02

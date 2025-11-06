@@ -110,10 +110,11 @@ namespace BlingoEngine.IO.Legacy.Scores
                 }
             }
 
-            public string ToDescriptionString()
+            public string ToDescriptionString() => $"Item Desc. {Index}: Start={StartFrame}, End={EndFrame}, Channel={Channel}, U1={Unknown1}, Flip={FlipH},{FlipV},🔒={IsLocked},Trails={Trails},Editable={Editable},Moveable={Moveable}, U3={UnknownAlwaysOne}, U4={UnkownA},{UnkownB}, U5={UnknownE1} {UnknownFD}, U7={Unknown7},{Unknown8},{Unknown9},{Unknown10}, KF={string.Join(',', KeyFrameOffsets)}";
+
+            internal string ToLog()
             {
-                return $"Item Desc. {Index}: Start={StartFrame}, End={EndFrame}, Channel={Channel}, U1={Unknown1}, Flip={FlipH},{FlipV},🔒={IsLocked},Trails={Trails},Editable={Editable},Moveable={Moveable} , U3={UnknownAlwaysOne}, U4A={UnkownA}, U4B={UnkownB}, U5={UnknownE1}, U6={UnknownFD}, ExtraVal={String.Join(',',KeyFrameOffsets)}";
-                
+                return ToDescriptionString();
             }
         }
     }

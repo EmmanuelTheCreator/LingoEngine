@@ -1,0 +1,57 @@
+SingleSprite_KeyFrameTo_11.dir
+--------------------------------
+=== Header ===
+ActualSize: 		154
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	20
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		9
+EntrySizeSum: 	212
+NotationBase: 	10
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	276
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=20, Channel=6, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=10
+
+=== Frames ===
+01) 0036
+    0120=10 80 FF 00 00 01 00 01 00 00 00 06 00 38 00 2E 00 1D 00 6C 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+02) 0008
+    0136=81 00
+03) 0008
+    012E=00 2F
+04) 0002
+05) 0008
+    012E=00 30
+06) 0002
+07) 0002
+08) 0008
+    012E=00 31
+09) 0002
+10) 0008
+    012E=00 32
+11) 0008
+    0136=01 00
+12) 0008
+    0136=81 00
+13) 0002
+14) 0002
+15) 0002
+16) 0002
+17) 0002
+18) 0002
+19) 0002
+20) 0002
+
+

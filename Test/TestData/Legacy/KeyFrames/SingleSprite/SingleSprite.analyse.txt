@@ -22,11 +22,11 @@ FF FF FF FD     // HeaderType -3
 03 EE 
 00 96 			// channelCount		150
 
-00 36 			// 36 bytes block length?
+00 36 								// Block 54 bytes - 2
 // [SPRITE_KEYFRAME] ---------------------
 00 30 			// Data length
-01 				// Tween flag bits
-20 10 			// ?? Control word affecting playback (0x2010 or 0x1008 observed).
+01 20 			// Control word affecting playback (0x01 20 or 0x01 10 observed).
+10 
 80 				// Ink mode (lower 7 bits).
 FF 00 			// Foreground/Background   colour index
 00 01			// cast number
@@ -43,31 +43,32 @@ FF 00 			// Foreground/Background   colour index
 // ---------------------------------------
 00 00 00 00  	// end previous block/SpriteMainKeyframe
 
-	00 08 
-00 02 
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size
 		01 36 81 00 				// 0x36 = 54 , 81 = set keyframe on frame 1
-	00 08 
-00 02 
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
 			01 2E 00 2F  			// Y:0x2E = 46	X:0x2F = 47
-00 02
-	00 08 
-00 02 
+00 02 								// Block Empty Next
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
 			01 2E 00 30  			// Y:0x2E = 46	X:0x30 = 48
-00 02
-	00 08 
-00 02 
+00 02 								// Block Empty Next
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
 			01 2E 00 31 	 		// Y:0x2E = 46	X:0x31 = 49
-00 02
-	00 08 
-00 02 
+00 02 								// Block Empty Next
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
 			01 2E 00 32 			// Y:0x2E = 46	X:0x32 = 50
-	00 08 
-00 02 
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
 			01 36 01 00				// 0x36 = 54
-	00 08 
-00 02 
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
 		01 36 81 00					// 0x36 = 54 , 81 = set keyframe at offset frame 9 = frame 10
-00 02 00 02 00 02 00 02 
+00 02 								// Block Empty Next 
+00 02 00 02 00 02 
 00 02 00 02 00 02 00 02 
 00 02 00 00 
 // ---------------------------------------------

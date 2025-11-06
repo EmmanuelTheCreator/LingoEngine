@@ -1,0 +1,62 @@
+SingleSprite_Rotation.dir
+--------------------------------
+=== Header ===
+ActualSize: 		184
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	20
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		9
+EntrySizeSum: 	240
+NotationBase: 	10
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	304
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=20, Channel=6, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=9
+
+=== Frames ===
+01) 0036
+    0120=10 00 FF 00 00 01 00 02 00 00 00 06 00 38 00 2E 00 26 00 8A 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+02) 000E
+    0136=81 00
+    013E=01 D9
+03) 0008
+    013E=03 B3
+04) 0008
+    013E=05 8D
+05) 0008
+    013E=07 67
+06) 0008
+    013E=09 41
+07) 0008
+    013E=0B 1B
+08) 0008
+    013E=0C F4
+09) 0008
+    013E=0E CE
+10) 000E
+    0136=01 00
+    013E=10 A8
+11) 0008
+    0136=81 00
+12) 0002
+13) 0002
+14) 0002
+15) 0002
+16) 0002
+17) 0002
+18) 0002
+19) 0002
+20) 0002
+
+

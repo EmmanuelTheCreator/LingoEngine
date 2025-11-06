@@ -26,6 +26,30 @@ namespace BlingoEngine.IO.Legacy.Scores
             public int OffsetsOffset { get; internal set; }
             public int HeaderType { get; internal set; }
             public int TotalLength { get; internal set; }
+
+            public string ToLog()
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"ActualSize: \t\t{ActualSize}");
+                sb.AppendLine($"UnkA1: \t\t\t{UnkA1}");
+                sb.AppendLine($"UnkA2: \t\t\t{UnkA2}");
+                sb.AppendLine($"UnkA3: \t\t\t{UnkA3}");
+                sb.AppendLine($"UnkA4: \t\t\t{UnkA4}");
+                sb.AppendLine($"HighestFrame: \t{HighestFrame}");
+                sb.AppendLine($"UnkB1: \t\t\t{UnkB1}");
+                sb.AppendLine($"UnkB2: \t\t\t{UnkB2}");
+                sb.AppendLine($"SpriteSize: \t\t{SpriteSize}");
+                sb.AppendLine($"UnkC1: \t\t\t{UnkC1}");
+                sb.AppendLine($"UnkC2: \t\t\t{UnkC2}");
+                sb.AppendLine($"ChannelCount: \t{ChannelCount}");
+                sb.AppendLine($"EntryCount: \t\t{EntryCount}");
+                sb.AppendLine($"EntrySizeSum: \t{EntrySizeSum}");
+                sb.AppendLine($"NotationBase: \t{NotationBase}");
+                sb.AppendLine($"OffsetsOffset: \t{OffsetsOffset}");
+                sb.AppendLine($"HeaderType: \t\t{HeaderType}");
+                sb.AppendLine($"TotalLength: \t{TotalLength}");
+                return sb.ToString();
+            }
         }
 
         private ScoreRawHeader ReadMainHeader(BlStreamReader stream)
@@ -57,5 +81,7 @@ namespace BlingoEngine.IO.Legacy.Scores
             header.ChannelCount = stream.ReadInt16(18);
             //header.FirstBlockSize = stream.ReadInt16("firstBlockSize");
         }
+
+       
     }
 }
