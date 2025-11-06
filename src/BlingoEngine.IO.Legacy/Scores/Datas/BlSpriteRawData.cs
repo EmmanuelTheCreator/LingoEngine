@@ -71,10 +71,10 @@ namespace BlingoEngine.IO.Legacy.Scores.Datas
             [(int)BlSpriteRawProperty.Ink ] = new() { Prop = BlSpriteRawProperty.Ink , Size = 1 },                // Ink
             [(int)BlSpriteRawProperty.ForeColorR ] = new() { Prop = BlSpriteRawProperty.ForeColorR , Size = 1 },  // ForeColor (R)
             [(int)BlSpriteRawProperty.BackColorR ] = new() { Prop = BlSpriteRawProperty.BackColorR , Size = 1 },  // BackColor (R)
-            [(int)BlSpriteRawProperty.MemberCastLib ] = new() { Prop = BlSpriteRawProperty.MemberCastLib , Size = 1 }, // Castlib
-            [(int)BlSpriteRawProperty.MemberNum ] = new() { Prop = BlSpriteRawProperty.MemberNum , Size = 1 },    // Member
-            [(int)BlSpriteRawProperty.UnknownA ] = new() { Prop = BlSpriteRawProperty.UnknownA , Size = 1 },      // UnknownA
-            [(int)BlSpriteRawProperty.PropertiesOffset ] = new() { Prop = BlSpriteRawProperty.PropertiesOffset , Size = 1 }, // PropertiesOffset
+            [(int)BlSpriteRawProperty.MemberCastLib ] = new() { Prop = BlSpriteRawProperty.MemberCastLib , Size = 2 }, // Castlib
+            [(int)BlSpriteRawProperty.MemberNum ] = new() { Prop = BlSpriteRawProperty.MemberNum , Size = 2 },    // Member
+            [(int)BlSpriteRawProperty.UnknownA ] = new() { Prop = BlSpriteRawProperty.UnknownA , Size = 2 },      // UnknownA
+            [(int)BlSpriteRawProperty.PropertiesOffset ] = new() { Prop = BlSpriteRawProperty.PropertiesOffset , Size = 2 }, // PropertiesOffset
             [(int)BlSpriteRawProperty.LocV ] = new() { Prop = BlSpriteRawProperty.LocV , Size = 2 },              // LocV
             [(int)BlSpriteRawProperty.LocH ] = new() { Prop = BlSpriteRawProperty.LocH , Size = 2 },              // LocH
             [(int)BlSpriteRawProperty.Height ] = new() { Prop = BlSpriteRawProperty.Height , Size = 2 },          // Height
@@ -272,15 +272,23 @@ namespace BlingoEngine.IO.Legacy.Scores.Datas
             ForeColor = new BlingoColorDTO(fgColorR, fgColorG, fgColorB);
             BackColor = new BlingoColorDTO(bgColorR, bgColorG, bgColorB);
             UnknownB = stream.ReadInt16(); // often 0
-            //stream.Skip(1);
-            if (stream.Length > 28)
+
+            if (stream.Position + 2 <= stream.Length)
             {
-                //stream.Skip(2); // unknown
-                //var test = stream.ReadInt16();
-                Rotation = stream.ReadInt32() / 100f;
-                Skew = stream.ReadInt32() / 100f;
+                var rotationRaw = stream.ReadInt16();
+                Rotation = rotationRaw / 100f;
+                if (stream.Position + 2 <= stream.Length)
+                    stream.Skip(2); // rotation centime precision (unused)
+            }
+
+            if (stream.Position + 2 <= stream.Length)
+            {
+                var skewRaw = stream.ReadInt16();
+                Skew = skewRaw / 100f;
+                if (stream.Position + 2 <= stream.Length)
+                    stream.Skip(2); // skew centime precision (unused)
             }
         }
-        
+
     }
 }

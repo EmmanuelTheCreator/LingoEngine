@@ -11,6 +11,7 @@ using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Fields;
 using BlingoEngine.IO.Legacy.Files;
+using BlingoEngine.IO.Legacy.Scores;
 using BlingoEngine.IO.Legacy.Sounds;
 using BlingoEngine.IO.Legacy.Texts;
 using BlingoEngine.IO.Legacy.Texts.Data;
@@ -29,7 +30,7 @@ public sealed class BlLegacyMovieArchive
     private readonly Dictionary<int, BlLegacyBitmap> _bitmapsByCastId;
     private readonly Dictionary<int, BlLegacySound> _soundsByCastId;
 
-    public BlLegacyMovieArchive(
+    internal BlLegacyMovieArchive(
         string fileName,
         int directorVersion,
         DirFilesContainerDTO rawResources,
@@ -39,7 +40,8 @@ public sealed class BlLegacyMovieArchive
         IReadOnlyList<BlLegacyBitmap> bitmaps,
         IReadOnlyList<BlLegacySound> sounds,
         IReadOnlyDictionary<int, IReadOnlyList<BlResourceKeyLink>> childrenByParent,
-        IReadOnlyDictionary<int, BlResourceKeyLink> parentByChild)
+        IReadOnlyDictionary<int, BlResourceKeyLink> parentByChild,
+        BlLegacyScore? score)
     {
         ArgumentNullException.ThrowIfNull(rawResources);
         ArgumentNullException.ThrowIfNull(casts);
@@ -56,6 +58,7 @@ public sealed class BlLegacyMovieArchive
         CastLibraries = casts;
         ChildrenByParent = childrenByParent;
         ParentByChild = parentByChild;
+        Score = score;
 
         _textsByCastId = BuildTextLookup(texts, ParentByChild);
         _fieldsByCastId = BuildFieldLookup(fields, ParentByChild);
@@ -92,6 +95,8 @@ public sealed class BlLegacyMovieArchive
     /// Gets a lookup that maps child resources back to their parent entries.
     /// </summary>
     public IReadOnlyDictionary<int, BlResourceKeyLink> ParentByChild { get; }
+
+    internal BlLegacyScore? Score { get; }
 
     public bool TryGetText(int castResourceId, [NotNullWhen(true)] out BlLegacyText? text)
         => _textsByCastId.TryGetValue(castResourceId, out text);
@@ -257,6 +262,8 @@ public sealed class BlLegacyMovieReader
         var fields = context.ReadFields();
         var bitmaps = context.ReadBitmaps();
         var sounds = context.ReadSounds();
+        var scoreReader = new BlLegacyScoreReader(context);
+        scoreReader.Read();
 
         var children = new Dictionary<int, IReadOnlyList<BlResourceKeyLink>>();
         foreach (var pair in context.Resources.ChildrenByParent)
@@ -268,6 +275,10 @@ public sealed class BlLegacyMovieReader
 
         var directorVersion = context.DataBlock?.Format.DirectorVersion ?? 0;
 
+        BlLegacyScore? score = null;
+        if (scoreReader.Sprites.Count > 0 || scoreReader.Frames.Count > 0)
+            score = new BlLegacyScore(scoreReader.Sprites.ToArray(), scoreReader.Frames.ToArray());
+
         return new BlLegacyMovieArchive(
             context.FileName,
             directorVersion,
@@ -278,6 +289,7 @@ public sealed class BlLegacyMovieReader
             bitmaps.ToList(),
             sounds.ToList(),
             children,
-            parent);
+            parent,
+            score);
     }
 }

@@ -6,13 +6,17 @@ using System.Text;
 
 using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Data.DTO.Members;
+using BlingoEngine.IO.Data.DTO.Sprites;
 using BlingoEngine.IO.Legacy.Bitmaps;
 using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Fields;
+using BlingoEngine.IO.Legacy.Scores;
+using BlingoEngine.IO.Legacy.Scores.Datas;
 using BlingoEngine.IO.Legacy.Sounds;
 using BlingoEngine.IO.Legacy.Texts;
 using BlingoEngine.IO.Legacy.Texts.Data;
+using BlingoEngine.IO.Legacy.Tools;
 using Microsoft.Extensions.Logging;
 
 namespace BlingoEngine.IO.Legacy.Director;
@@ -55,6 +59,9 @@ public static class BlLegacyMovieBlingoExtensions
             movie.Casts.Add(castDto);
             castNumber++;
         }
+
+        foreach (var sprite in BlLegacyScoreSpriteBuilder.Build(archive.Score))
+            movie.Sprite2Ds.Add(sprite);
 
         return movie;
     }
