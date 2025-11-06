@@ -1,4 +1,5 @@
-﻿using BlingoEngine.IO.Legacy.Core;
+﻿using System;
+using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Scores.Datas;
 using BlingoEngine.IO.Legacy.Tools;
 
@@ -77,12 +78,35 @@ namespace BlingoEngine.IO.Legacy.Scores
                 var payloadLength = reader.ReadInt16();
                 var tag = reader.ReadInt16();
                 var payload = reader.ReadBytes(payloadLength);
-                var token = new BlScoreToken(tag, payload);
-                frame.Tokens.Add(token);
+                foreach (var token in ExpandToken(tag, payload))
+                    frame.Tokens.Add(token);
             }
             reader.BaseStream.Dispose();
             return frame;
         }
-        
+
+        private static IEnumerable<BlScoreToken> ExpandToken(short addressOffset, byte[] payload)
+        {
+            const int SpriteChannelBase = 0x0120;
+            const int SpriteChannelBlockSize = 0x30;
+
+            if (addressOffset >= SpriteChannelBase
+                && payload.Length > SpriteChannelBlockSize
+                && payload.Length % SpriteChannelBlockSize == 0)
+            {
+                var blockCount = payload.Length / SpriteChannelBlockSize;
+                for (var i = 0; i < blockCount; i++)
+                {
+                    var offset = i * SpriteChannelBlockSize;
+                    var segment = new byte[SpriteChannelBlockSize];
+                    Array.Copy(payload, offset, segment, 0, SpriteChannelBlockSize);
+                    yield return new BlScoreToken((short)(addressOffset + offset), segment);
+                }
+                yield break;
+            }
+
+            yield return new BlScoreToken(addressOffset, payload);
+        }
+
     }
 }

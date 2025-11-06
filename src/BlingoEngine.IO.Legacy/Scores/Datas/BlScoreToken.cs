@@ -52,13 +52,22 @@ namespace BlingoEngine.IO.Legacy.Scores.Datas
                             break; // incomplete field
                     }
 
-                    int value = readSize switch
+                    int value;
+                    if (spec.Prop == BlSpriteRawData.BlSpriteRawProperty.Rotation
+                        || spec.Prop == BlSpriteRawData.BlSpriteRawProperty.Skew)
                     {
-                        1 => payload.ReadByteOrDefault(ofs),
-                        2 => payload.ReadInt16(ofs),
-                        4 => payload.ReadInt32(ofs),
-                        _ => payload.ReadByteOrDefault(ofs)
-                    };
+                        value = payload.ReadInt16(ofs);
+                    }
+                    else
+                    {
+                        value = readSize switch
+                        {
+                            1 => payload.ReadByteOrDefault(ofs),
+                            2 => payload.ReadInt16(ofs),
+                            4 => payload.ReadInt32(ofs),
+                            _ => payload.ReadByteOrDefault(ofs)
+                        };
+                    }
 
                     Properties.Add(new BlScoreTokenPropChange(spec.Prop, value));
                     ofs += readSize;

@@ -12,9 +12,12 @@ namespace BlingoEngine.IO.Legacy.Scores
     {
         private readonly ReaderContext _context;
 
+        private readonly List<BlScoreRawFrame> _frames = new();
+        private readonly List<BlSpriteRawData> _sprites = new();
         private ScoreRawHeader Header { get; set; }
-        public List<BlScoreRawFrame> Tokens { get; private set; }
-        private List<BlSpriteRawData> Sprites { get; set; }
+
+        public IReadOnlyList<BlScoreRawFrame> Frames => _frames;
+        public IReadOnlyList<BlSpriteRawData> Sprites => _sprites;
 
         public BlLegacyScoreReader(ReaderContext context)
         {
@@ -22,6 +25,8 @@ namespace BlingoEngine.IO.Legacy.Scores
         }
         public void Read()
         {
+            _frames.Clear();
+            _sprites.Clear();
             var payload = ReadVMSW();
             if (payload == null)
                 return;
@@ -59,15 +64,17 @@ namespace BlingoEngine.IO.Legacy.Scores
             ReadHeader(datas[0], header);
             Header = header;
             var spriteOffsets = ReadSpriteOffsets(datas[1]);
-            Sprites = ReadSprites(datas, spriteOffsets);
-            Tokens = tokenizer.Tokenize(datas[0].Skip(5 * 4).ToArray());
+            _sprites.Clear();
+            _sprites.AddRange(ReadSprites(datas, spriteOffsets));
+            _frames.Clear();
+            _frames.AddRange(tokenizer.Tokenize(datas[0].Skip(5 * 4).ToArray()));
             reader.BaseStream.Dispose();
         }
         public string ToLog()
-        { 
-            var logSprites = string.Join(Environment.NewLine, Sprites.Select(s => s.ToLog()));
+        {
+            var logSprites = string.Join(Environment.NewLine, _sprites.Select(s => s.ToLog()));
             var tokenizer = new BlLegacyScoreTokenizer(_context);
-            var logFrames = tokenizer.ToLog(Tokens);
+            var logFrames = tokenizer.ToLog(_frames);
             var logHeader = Header.ToLog();
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("=== Header ===");
