@@ -203,25 +203,25 @@ namespace BlingoEngine.IO.Legacy.Cast
                 memberFormat = Encoding.ASCII.GetString(datas[16]);    // bitmapBitmapFormat : 16
                 blops.Add(datas[16]);
             }
+
+            var dateCreated = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[17].Reverse().ToArray(), 0)).UtcDateTime;
+            var dateModified = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[18].Reverse().ToArray(), 0)).UtcDateTime;
+            // read "N/A" or username
+            var userName = datas[19].ReadCString(0);
+            var comment = datas[20].ReadCString(0);
+
             // specials with 22 values
             if (datas.Count > 21)
             {
-                if (datas[20].Length > 0) blops.Add(datas[20]);             // 
+                //if (datas[20].Length > 0) blops.Add(datas[20]);             // 
                 if (datas[21].Length > 0) blops.Add(datas[21]);             // Bitmaps          : 4     : 251 , 80 , 0 , 0
             }
-            var dateCreated = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[17].Reverse().ToArray(), 0)).UtcDateTime; 
-            var dateModified = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[18].Reverse().ToArray(), 0)).UtcDateTime;
+            
 
-            //var test = Encoding.ASCII.GetString(datas[2]);
-            //var test2 = Encoding.ASCII.GetString(datas[3]);
-
-
-            // read "N/A"
-            var n_a = datas[19].ReadCString(0);
-            if (n_a != "N/A")
-                throw new Exception("Expected N/A value not found in ." + name);
 
             var member = CreateMember(infoSlice, specificData, memberName, memberContentType, memberFormat, blops, dateCreated, dateModified, prefixValues);
+            member.ModifiedBy = userName;
+            member.Comment = comment;
             return (member, datas);
 
         }

@@ -1,5 +1,7 @@
 ﻿using BlingoEngine.IO.Legacy.Cast;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
+using FluentAssertions;
+using System.Linq;
 using Xunit;
 
 namespace BlingoEngine.IO.Legacy.Tests.Cast
@@ -30,6 +32,23 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             var ctx = harness.Context;
             var reader = new BlLegacyCastReader(ctx);
             reader.Read();
+        }
+        [Fact]
+        public void ReadCommentsAndUser()
+        {
+            var file = "Casts/ModifiedMember.dir";
+            using var harness = TestContextHarness.Open(file);
+            harness.ReadResources();
+            var ctx = harness.Context;
+            var reader = new BlLegacyCastReader(ctx);
+            var casts = reader.Read();
+            var cast = casts.First();
+            var member1 = cast.MemberSlots[0];
+            var member2 = cast.MemberSlots[1];
+            member1.Member.Comment.Should().Contain("Shape comment");
+            member2.Member.Comment.Should().Contain("My Comment");
+            member1.Member.ModifiedBy.Should().Contain("MyUserName");
+            member2.Member.ModifiedBy.Should().Contain("MyUserName");
         }
     }
 }

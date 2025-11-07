@@ -164,9 +164,10 @@ namespace BlingoEngine.IO.Legacy.Director
                 Width = 0,
                 Height = 0,
                 Size = 0,
-                Comments = string.Empty,
                 FileName = string.Empty,
-                PurgePriority = 0
+                PurgePriority = 0,
+                Comments = slot.Member.Comment,
+                ModifiedBy = slot.Member.ModifiedBy,
             };
             // Common
             member.DateCreated = rawMember.Created.GetValueOrDefault();

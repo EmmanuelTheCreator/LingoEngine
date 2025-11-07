@@ -157,7 +157,9 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
         // Movie info and settings
         VWFI = Register("VWFI");
         // Movie director settings
-        DRCF = Register("DRCF"); 
+        DRCF = Register("DRCF");
+        // Movie publish settings
+        PUBL = Register("PUBL"); 
 
         Register("ediM");
         Register("BITD");
@@ -236,4 +238,8 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
     /// Movie Director settings
     /// </summary>
     public static BlTag DRCF { get; }
+    /// <summary>
+    /// Movie publish settings
+    /// </summary>
+    public static BlTag PUBL { get; }
 }

@@ -10,5 +10,7 @@
         public DateTime? Modified { get; set; }
         public string MemberTypeString { get; set; } = "";
         public string? MemberFormat { get; set; }
+        public string ModifiedBy { get; set; } = "";
+        public string Comment { get; set; } = "";
     }
 }

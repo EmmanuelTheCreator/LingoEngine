@@ -232,7 +232,7 @@ internal sealed class BlLegacyCastReader
         var something13 = reader.ReadUInt32();                  // 00 00 00 01 
         returnData.ShowAsThumbList = reader.ReadUInt16() > 0;   // 00 00
         var something14 = reader.ReadUInt16();                  // 00 00 
-        returnData.VisibleColumnsFlags = reader.ReadUInt16();   // 04 9F // visible Columns as Flags
+
         // To find flags :
         // Number, Created, Modified, Modified Date, Script, Modified By, Type, Filename, Size, Comments
         // 00 03 = Number
@@ -242,6 +242,15 @@ internal sealed class BlLegacyCastReader
         // 00 1B = Number Scripts and Types
         // 07 FF = All columns visible
         // TODO: Parse flags
+
+
+        // For dir files, cast stops here
+        if (reader.Length - reader.Position == 0)
+            return returnData;
+
+        // External casts it seems
+        returnData.VisibleColumnsFlags = reader.ReadUInt16();   // 04 9F // visible Columns as Flags
+        
         var something16 = reader.ReadUInt32();  // 00 00 00 00 
         var something17 = reader.ReadUInt16();  // 01 1D
         var something18 = reader.ReadUInt16();  // 01 D1 
