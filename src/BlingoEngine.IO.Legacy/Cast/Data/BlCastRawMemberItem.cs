@@ -1,6 +1,6 @@
 ﻿namespace BlingoEngine.IO.Legacy.Cast.Data
 {
-    public class BlCastMemberItem
+    public class BlCastRawMemberItem
     {
         public BlLegacyCastMemberType MemberType{ get; protected set; }
         public string Name { get; set; } = "";

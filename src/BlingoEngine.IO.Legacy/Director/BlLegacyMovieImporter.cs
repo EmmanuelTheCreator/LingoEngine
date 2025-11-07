@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 using BlingoEngine.IO.Data.DTO;
 using Microsoft.Extensions.Logging;
 
@@ -61,10 +58,7 @@ public sealed class BlLegacyMovieImporter
         return ConvertArchive(archive, movieName, null);
     }
 
-    private (BlingoStageDTO Stage, BlingoMovieDTO Movie, DirFilesContainerDTO Resources) ConvertArchive(
-        BlLegacyMovieArchive archive,
-        string movieName,
-        string? sourceDirectory)
+    private (BlingoStageDTO Stage, BlingoMovieDTO Movie, DirFilesContainerDTO Resources) ConvertArchive(BlLegacyMovieArchive archive, string movieName, string? sourceDirectory)
     {
         var resources = new DirFilesContainerDTO();
         var stage = archive.ToBlingoStage();
@@ -73,11 +67,7 @@ public sealed class BlLegacyMovieImporter
         return (stage, movie, resources);
     }
 
-    private void ImportExternalCasts(
-        BlLegacyMovieArchive archive,
-        string? sourceDirectory,
-        BlingoMovieDTO movie,
-        DirFilesContainerDTO resources)
+    private void ImportExternalCasts(BlLegacyMovieArchive archive, string? sourceDirectory, BlingoMovieDTO movie, DirFilesContainerDTO resources)
     {
         if (movie.Casts.Count == 0)
             return;
@@ -92,7 +82,7 @@ public sealed class BlLegacyMovieImporter
             if (resolvedPath is null)
             {
                 if (!string.IsNullOrWhiteSpace(cast.CastPath))
-                    _logger?.LogWarning("External cast '{CastPath}' could not be resolved.", cast.CastPath);
+                    _logger!.LogWarning("External cast '{CastPath}' could not be resolved.", cast.CastPath);
                 continue;
             }
 
@@ -103,7 +93,7 @@ public sealed class BlLegacyMovieImporter
                 var externalMovie = externalArchive.ToBlingo(
                     Path.GetFileNameWithoutExtension(resolvedPath) ?? string.Empty,
                     resources,
-                    _logger);
+                    _logger!);
 
                 if (externalMovie.Casts.Count == 0)
                     continue;
@@ -111,7 +101,7 @@ public sealed class BlLegacyMovieImporter
                 var replacement = externalMovie.Casts[0];
                 replacement.Name = string.IsNullOrWhiteSpace(cast.Name) ? replacement.Name : cast.Name;
                 replacement.Number = movie.Casts[index].Number;
-                replacement.PreLoadMode = BlLegacyMovieBlingoExtensions.MapPreloadMode(cast.Preload);
+                replacement.PreLoadMode = cast.Preload.ToDto();
                 replacement.FileName = Path.GetFileName(resolvedPath) ?? string.Empty;
 
                 foreach (var member in replacement.Members)

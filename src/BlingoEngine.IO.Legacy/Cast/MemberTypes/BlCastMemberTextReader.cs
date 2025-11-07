@@ -7,7 +7,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberTextReader
     {
-        public BlCastMemberText Read(byte[] specificBytes, List<byte[]> blobs, List<int> prefixValues)
+        public BlCastRawMemberText Read(byte[] specificBytes, List<byte[]> blobs, List<int> prefixValues)
         {
             using var specificStream = new MemoryStream(specificBytes, writable: false);
             var reader = new BlStreamReader(specificStream)
@@ -69,7 +69,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var cameraFocalLength = ReadFixed1616(reader);
             var textureName = reader.ReadCString();
 
-            return new BlCastMemberText(
+            return new BlCastRawMemberText(
                 type,
                 specificDataLength,
                 isEditable,

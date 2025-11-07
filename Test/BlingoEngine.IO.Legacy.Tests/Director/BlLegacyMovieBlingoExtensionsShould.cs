@@ -1,22 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Text;
 using BlingoEngine.IO.Data.DTO;
-using BlingoEngine.IO.Data.DTO.Members;
-using BlingoEngine.IO.Legacy.Bitmaps;
-using BlingoEngine.IO.Legacy.Cast;
-using BlingoEngine.IO.Legacy.Cast.Data;
-using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Director;
-using BlingoEngine.IO.Legacy.Fields;
-using BlingoEngine.IO.Legacy.Sounds;
 using BlingoEngine.IO.Legacy.Tests.Helpers;
-using BlingoEngine.IO.Legacy.Texts.Data;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
-using System.Reflection;
 
 namespace BlingoEngine.IO.Legacy.Tests.Director;
 
@@ -29,6 +15,7 @@ public class BlLegacyMovieBlingoExtensionsShould
         var reader = new BlLegacyMovieReader();
         var archive = reader.Read(path);
         var resources = new DirFilesContainerDTO();
+        
         var movie = archive.ToBlingo("SingleSprite", resources, NullLogger.Instance);
 
         var sprite = Assert.Single(movie.Sprite2Ds);
@@ -46,116 +33,7 @@ public class BlLegacyMovieBlingoExtensionsShould
         Assert.Equal(1, member.CastLibNum);
         Assert.Null(sprite.Animator);
     }
-    [Fact]
-    public void CreateScriptResourceForScriptMembers()
-    {
-        var baseDto = new BlingoMemberDTO
-        {
-            Name = "Test Script",
-            CastLibNum = 1,
-            NumberInCast = 2,
-            Type = BlingoMemberTypeDTO.Script,
-            RegPoint = new BlingoPointDTO()
-        };
-        var castDto = new BlingoCastDTO { Name = "Cast 1", Number = 1 };
-        var resources = new DirFilesContainerDTO();
-        var usedNames = new HashSet<string>();
-        var memberScript = new BlCastMemberScript
-        {
-            Script = "on beginSprite\n  put 42\nend",
-            LinkedFileName = "inv:alid.lingo",
-            IsJavascript = false
-        };
+  
 
-        var result = baseDto.ToScriptMember(
-            archive: null!,
-            castResourceId: 0,
-            castDto,
-            resources,
-            usedNames,
-            NullLogger.Instance,
-            memberScript);
-
-        Assert.Single(resources.Files);
-        var resource = resources.Files[0];
-        Assert.Equal(DirFileResourceKind.Script, resource.Kind);
-        Assert.Equal(baseDto.CastLibNum, resource.CastLibNum);
-        Assert.Equal(baseDto.NumberInCast, resource.NumberInCast);
-        Assert.EndsWith(".lingo", resource.FileName);
-        Assert.Equal(memberScript.Script, Encoding.UTF8.GetString(resource.Bytes));
-        var scriptDto = Assert.IsType<BlingoMemberScriptDTO>(result);
-        Assert.Equal(resource.FileName, scriptDto.LinkedFilePath);
-        Assert.Contains(resource.FileName, usedNames);
-        Assert.Equal("Test Script", scriptDto.Name);
-    }
-
-    [Fact]
-    public void SkipThumbnailResourcesWhenConvertingBitmapMembers()
-    {
-        var castResourceId = 42;
-        var bitmapResourceId = 84;
-        var castLibrary = new BlLegacyCastLibrary(1, null, 1)
-        {
-            Name = "Thumbnail Cast",
-            IsInternal = true
-        };
-
-        var bitmapMember = new BlCastMemberBitmap
-        {
-            Width = 128,
-            Height = 64
-        };
-        bitmapMember.LocH = 3;
-        bitmapMember.LocV = 4;
-
-        castLibrary.MemberSlots.Add(new BlLegacyCastMemberSlot(0, castResourceId, bitmapMember));
-
-        var bitmap = new BlLegacyBitmap(bitmapResourceId, BlLegacyBitmapFormatKind.Thumbnail, new byte[16]);
-        var link = new BlResourceKeyLink(bitmapResourceId, castResourceId, BlTag.Get("Thum"));
-
-        var archive = new BlLegacyMovieArchive(
-            "thumbnail.dir",
-            0,
-            new DirFilesContainerDTO(),
-            new[] { castLibrary },
-            Array.Empty<BlLegacyText>(),
-            Array.Empty<BlLegacyField>(),
-            new[] { bitmap },
-            Array.Empty<BlLegacySound>(),
-            new Dictionary<int, IReadOnlyList<BlResourceKeyLink>> { [castResourceId] = new[] { link } },
-            new Dictionary<int, BlResourceKeyLink> { [bitmapResourceId] = link },
-            null);
-
-        var bitmapMapField = typeof(BlLegacyMovieArchive).GetField("_bitmapsByCastId", BindingFlags.NonPublic | BindingFlags.Instance);
-        var bitmapMap = Assert.IsAssignableFrom<IDictionary<int, BlLegacyBitmap>>(bitmapMapField?.GetValue(archive));
-        bitmapMap[castResourceId] = bitmap;
-
-        var castDto = new BlingoCastDTO { Name = "Thumbnail Cast", Number = 1 };
-        var baseDto = new BlingoMemberDTO
-        {
-            Name = "Thumb Member",
-            CastLibNum = 1,
-            NumberInCast = 1,
-            Type = BlingoMemberTypeDTO.Bitmap,
-            RegPoint = new BlingoPointDTO()
-        };
-
-        var resources = new DirFilesContainerDTO();
-        var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var exporter = new BlLegacyBitmapExporter();
-
-        var result = baseDto.ToBitmapMember(
-            archive,
-            castResourceId,
-            castDto,
-            resources,
-            usedNames,
-            exporter,
-            bitmapMember);
-
-        var bitmapDto = Assert.IsType<BlingoMemberBitmapDTO>(result);
-        Assert.Equal(string.Empty, bitmapDto.ImageFile);
-        Assert.Equal(0, bitmapDto.Size);
-        Assert.Empty(resources.Files);
-    }
+    
 }

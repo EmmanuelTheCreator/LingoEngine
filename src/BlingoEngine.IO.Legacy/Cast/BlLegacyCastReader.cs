@@ -29,12 +29,12 @@ internal sealed class BlLegacyCastReader
     /// cast-member tables contained within. The reader respects both classic chunk storage and
     /// Afterburner inline segments, inflating compressed data when necessary.
     /// </summary>
-    public IReadOnlyList<BlLegacyCastLibrary> Read()
+    public IReadOnlyList<BlLegacyRawCastLibrary> Read()
     {
         var castVisibleInfo = new List<CinfData>();
         List<LsCmEntry> castNameInfos = new List<LsCmEntry>();
-        var libraries = new List<BlLegacyCastLibrary>();
-        var parsingLibraries = new List<BlLegacyCastLibrary>();
+        var libraries = new List<BlLegacyRawCastLibrary>();
+        var parsingLibraries = new List<BlLegacyRawCastLibrary>();
         if (_context.Resources.Entries.Count == 0)
             return libraries;
 
@@ -97,7 +97,7 @@ internal sealed class BlLegacyCastReader
                     }
                     else
                     {
-                        var lib = new BlLegacyCastLibrary(-1, index, 0)
+                        var lib = new BlLegacyRawCastLibrary(-1, index, 0)
                         {
                             Name = info.Name,
                             CastPath = info.Path,
@@ -127,14 +127,14 @@ internal sealed class BlLegacyCastReader
             : entry.ReadClassicPayload(classicLoader);
     }
 
-    private BlLegacyCastLibrary ParseLibrary(BlLegacyResourceEntry entry, byte[] payload, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
+    private BlLegacyRawCastLibrary ParseLibrary(BlLegacyResourceEntry entry, byte[] payload, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
     {
         int? parentId = null;
         if (_context.Resources.ParentByChild.TryGetValue(entry.Id, out var link))
             parentId = link.ParentId;
 
         var entryCount = payload.Length / 4;
-        var library = new BlLegacyCastLibrary(entry.Id, parentId, entryCount);
+        var library = new BlLegacyRawCastLibrary(entry.Id, parentId, entryCount);
         if (entryCount == 0)
         {
             return library;
@@ -155,7 +155,7 @@ internal sealed class BlLegacyCastReader
 
     private BlLegacyCastMemberSlot CreateMember(int slot, int resourceId, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
     {
-        BlCastMemberItem memberInfo = new();
+        BlCastRawMemberItem memberInfo = new();
         if (_context.Resources.TryGetEntry(resourceId, out var memberEntry))
         {
             var memberPayload = LoadPayload(memberEntry, classicLoader, afterburnerLoader);
@@ -166,7 +166,7 @@ internal sealed class BlLegacyCastReader
         return new BlLegacyCastMemberSlot(slot, resourceId, memberInfo);
     }
 
-    private static bool TryParseMemberChunk(byte[] payload, out BlCastMemberItem? castMemberInfo)
+    private static bool TryParseMemberChunk(byte[] payload, out BlCastRawMemberItem? castMemberInfo)
     {
         var memberData = new BlLegacyCastItemReader().ReadItem(string.Empty, payload);
         castMemberInfo = memberData.MemberItem;
@@ -300,7 +300,7 @@ internal sealed class BlLegacyCastReader
         public int Data1 { get; set; }
         public int Data2 { get; set; }
         public int Data3 { get; set; }
-        public BlLegacyCastLibrary.CastPreload Preload { get; internal set; }
+        public BlLegacyRawCastLibrary.CastPreload Preload { get; internal set; }
     }
 
     private List<LsCmEntry> ReadCastsMCsL(byte[] payload)
@@ -336,7 +336,7 @@ internal sealed class BlLegacyCastReader
             var entry = new LsCmEntry();
             entry.Name = datas[offset].ReadStringWithFirstByteLength();
             entry.Path = datas[offset + 1].ReadStringWithFirstByteLength();
-            entry.Preload = (BlLegacyCastLibrary.CastPreload)datas[offset + 2].ReadInt16(0);
+            entry.Preload = (BlLegacyRawCastLibrary.CastPreload)datas[offset + 2].ReadInt16(0);
             var castData2 = datas[offset + 3];
             entry.Data1 = castData2.ReadInt16(0);
             entry.Data2 = castData2.ReadInt16(2);
@@ -437,7 +437,7 @@ internal sealed class BlLegacyCastReader
 /// </summary>
 internal static class BlLegacyCastReaderExtensions
 {
-    public static IReadOnlyList<BlLegacyCastLibrary> ReadCastLibraries(this ReaderContext context)
+    public static IReadOnlyList<BlLegacyRawCastLibrary> ReadCastLibraries(this ReaderContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 

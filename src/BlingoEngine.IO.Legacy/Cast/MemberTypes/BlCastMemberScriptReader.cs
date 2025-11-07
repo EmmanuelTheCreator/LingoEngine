@@ -7,9 +7,9 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberScriptReader
     {
-        internal BlCastMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues)
+        internal BlCastRawMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues)
         {
-            var member = new BlCastMemberScript();
+            var member = new BlCastRawMemberScript();
             var scriptType = specificData.ReadInt16(0);
             switch (scriptType)
             {

@@ -8,9 +8,9 @@ namespace BlingoEngine.IO.Legacy.Cast;
 /// Each slot mirrors the four-byte entries Director wrote to reference individual <c>CASt</c>
 /// members that belong to the owning cast library.
 /// </summary>
-public sealed class BlLegacyCastLibrary
+public sealed class BlLegacyRawCastLibrary
 {
-    public BlLegacyCastLibrary(int resourceId, int? libraryId, int entryCount)
+    public BlLegacyRawCastLibrary(int resourceId, int? libraryId, int entryCount)
     {
         ResourceId = resourceId;
         LibraryId = libraryId;

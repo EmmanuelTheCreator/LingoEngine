@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using BlingoEngine.IO.Legacy.Scores.Datas;
 
 namespace BlingoEngine.IO.Legacy.Scores;

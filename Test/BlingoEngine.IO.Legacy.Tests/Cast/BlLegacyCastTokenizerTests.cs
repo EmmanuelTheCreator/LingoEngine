@@ -16,7 +16,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             var reader = new BlLegacyCastItemReader();
 
             var memberGen = reader.ReadItem("",bytes);
-            var member = (BlCastMemberText)memberGen.MemberItem;
+            var member = (BlCastRawMemberText)memberGen.MemberItem;
 
             Assert.Equal("text", member.TextType);
             Assert.Equal(0x1B0, member.SpecificDataLength);
@@ -58,7 +58,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             var reader = new BlLegacyCastItemReader();
 
             var memberGen = reader.ReadItem("", bytes);
-            var member = (BlCastMemberText)memberGen.MemberItem;
+            var member = (BlCastRawMemberText)memberGen.MemberItem;
 
             Assert.Equal("text", member.TextType);
             Assert.Equal(0x1B0, member.SpecificDataLength);

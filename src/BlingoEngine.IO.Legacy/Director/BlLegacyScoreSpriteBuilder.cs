@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
 using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Data.DTO.Members;
 using BlingoEngine.IO.Data.DTO.Sprites;
@@ -68,7 +63,7 @@ internal static class BlLegacyScoreSpriteBuilder
             return null;
 
         var startFrame = spriteData.StartFrame;
-        var state = SpriteState.FromSprite(spriteData);
+        var state = RawSpriteState.FromSprite(spriteData);
 
         if (framesByNumber.TryGetValue(startFrame, out var baseTokens))
         {
@@ -135,7 +130,7 @@ internal static class BlLegacyScoreSpriteBuilder
         return frameSet.ToList();
     }
 
-    private static Blingo2DSpriteDTO CreateSpriteDto(BlSpriteRawData sprite, SpriteState state)
+    private static Blingo2DSpriteDTO CreateSpriteDto(BlSpriteRawData sprite, RawSpriteState state)
     {
         return new Blingo2DSpriteDTO
         {
@@ -151,8 +146,8 @@ internal static class BlLegacyScoreSpriteBuilder
             Skew = state.Skew,
             RegPoint = new BlingoPointDTO(),
             Ink = state.Ink,
-            ForeColor = new BlingoColorDTO(state.ForeR, state.ForeG, state.ForeB),
-            BackColor = new BlingoColorDTO(state.BackR, state.BackG, state.BackB),
+            ForeColor = state.ForeColor,
+            BackColor = state.BackColor,
             Blend = state.Blend,
             Editable = state.Editable,
             FlipH = state.FlipH,
@@ -176,7 +171,7 @@ internal static class BlLegacyScoreSpriteBuilder
         animator.BackgroundColorOptions.Enabled = sprite.TweenFlags.TweeningEnabled && sprite.TweenFlags.BackColor;
     }
 
-    private static void ApplyTokenToState(SpriteState state, BlScoreToken token)
+    private static void ApplyTokenToState(RawSpriteState state, BlScoreToken token)
     {
         foreach (var property in token.Properties)
         {
@@ -198,22 +193,22 @@ internal static class BlLegacyScoreSpriteBuilder
                     state.Blend = ConvertBlend(property.Value);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.ForeColorR:
-                    state.ForeR = (byte)property.Value;
+                    state.ForeColor = new BlingoColorDTO( (byte)property.Value, state.ForeColor.G, state.ForeColor.B);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.ForeColorG:
-                    state.ForeG = (byte)property.Value;
+                    state.ForeColor = new BlingoColorDTO(state.ForeColor.R, (byte)property.Value, state.ForeColor.B);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.ForeColorB:
-                    state.ForeB = (byte)property.Value;
+                    state.ForeColor = new BlingoColorDTO(state.ForeColor.R, state.ForeColor.G, (byte)property.Value);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.BackColorR:
-                    state.BackR = (byte)property.Value;
+                    state.BackColor = new BlingoColorDTO((byte)property.Value, state.BackColor.G, state.BackColor.B);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.BackColorG:
-                    state.BackG = (byte)property.Value;
+                    state.BackColor = new BlingoColorDTO(state.BackColor.R, (byte)property.Value, state.BackColor.B);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.BackColorB:
-                    state.BackB = (byte)property.Value;
+                    state.BackColor = new BlingoColorDTO(state.BackColor.R, state.BackColor.G, (byte)property.Value);
                     break;
                 case BlSpriteRawData.BlSpriteRawProperty.ScoreColor:
                     state.ScoreColor = property.Value;
@@ -236,7 +231,7 @@ internal static class BlLegacyScoreSpriteBuilder
         }
     }
 
-    private static void AddKeyFrames(BlingoSpriteAnimatorDTO animator, SpriteState previous, SpriteState next, int frame)
+    private static void AddKeyFrames(BlingoSpriteAnimatorDTO animator, RawSpriteState previous, RawSpriteState next, int frame)
     {
         if (previous.LocH != next.LocH || previous.LocV != next.LocV)
         {
@@ -278,22 +273,22 @@ internal static class BlLegacyScoreSpriteBuilder
             });
         }
 
-        if (previous.ForeR != next.ForeR || previous.ForeG != next.ForeG || previous.ForeB != next.ForeB)
+        if (previous.ForeColor != next.ForeColor)
         {
             animator.ForegroundColor.Add(new BlingoColorKeyFrameDTO
             {
                 Frame = frame,
-                Value = new BlingoColorDTO(next.ForeR, next.ForeG, next.ForeB),
+                Value = next.ForeColor,
                 Ease = BlingoEaseTypeDTO.Linear
             });
         }
 
-        if (previous.BackR != next.BackR || previous.BackG != next.BackG || previous.BackB != next.BackB)
+        if (previous.BackColor != next.BackColor)
         {
             animator.BackgroundColor.Add(new BlingoColorKeyFrameDTO
             {
                 Frame = frame,
-                Value = new BlingoColorDTO(next.BackR, next.BackG, next.BackB),
+                Value = new BlingoColorDTO(next.BackColor.R, next.BackColor.G, next.BackColor.B),
                 Ease = BlingoEaseTypeDTO.Linear
             });
         }
@@ -320,19 +315,15 @@ internal static class BlLegacyScoreSpriteBuilder
         return (float)Math.Round(100f - rawValue / 255f * 100f, 2);
     }
 
-    private sealed class SpriteState
+    private sealed class RawSpriteState
     {
         public int LocH { get; set; }
         public int LocV { get; set; }
         public float Rotation { get; set; }
         public float Skew { get; set; }
         public float Blend { get; set; }
-        public byte ForeR { get; set; }
-        public byte ForeG { get; set; }
-        public byte ForeB { get; set; }
-        public byte BackR { get; set; }
-        public byte BackG { get; set; }
-        public byte BackB { get; set; }
+        public BlingoColorDTO ForeColor { get; internal set; } = new BlingoColorDTO();
+        public BlingoColorDTO BackColor { get; internal set; } = new BlingoColorDTO();
         public bool FlipH { get; set; }
         public bool FlipV { get; set; }
         public int ScoreColor { get; set; }
@@ -342,21 +333,17 @@ internal static class BlLegacyScoreSpriteBuilder
         public int Width { get; set; }
         public int Height { get; set; }
 
-        public static SpriteState FromSprite(BlSpriteRawData sprite)
+        public static RawSpriteState FromSprite(BlSpriteRawData sprite)
         {
-            return new SpriteState
+            return new RawSpriteState
             {
                 LocH = sprite.LocH,
                 LocV = sprite.LocV,
                 Rotation = sprite.Rotation,
                 Skew = sprite.Skew,
                 Blend = sprite.Blend,
-                ForeR = sprite.ForeColor.R,
-                ForeG = sprite.ForeColor.G,
-                ForeB = sprite.ForeColor.B,
-                BackR = sprite.BackColor.R,
-                BackG = sprite.BackColor.G,
-                BackB = sprite.BackColor.B,
+                ForeColor = sprite.ForeColor,
+                BackColor= sprite.BackColor,
                 FlipH = sprite.FlipH,
                 FlipV = sprite.FlipV,
                 ScoreColor = sprite.ScoreColor,
@@ -368,21 +355,17 @@ internal static class BlLegacyScoreSpriteBuilder
             };
         }
 
-        public SpriteState Clone()
+        public RawSpriteState Clone()
         {
-            return new SpriteState
+            return new RawSpriteState
             {
                 LocH = LocH,
                 LocV = LocV,
                 Rotation = Rotation,
                 Skew = Skew,
                 Blend = Blend,
-                ForeR = ForeR,
-                ForeG = ForeG,
-                ForeB = ForeB,
-                BackR = BackR,
-                BackG = BackG,
-                BackB = BackB,
+                ForeColor = ForeColor,
+                BackColor = BackColor,
                 FlipH = FlipH,
                 FlipV = FlipV,
                 ScoreColor = ScoreColor,

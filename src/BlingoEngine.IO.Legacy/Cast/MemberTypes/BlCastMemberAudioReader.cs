@@ -4,9 +4,9 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberAudioReader
     {
-        internal BlCastMemberItem Read(byte[] specificData)
+        internal BlCastRawMemberItem Read(byte[] specificData)
         {
-            var member = new BlCastMemberAudio();
+            var member = new BlCastRawMemberAudio();
             return member;
         }
     }

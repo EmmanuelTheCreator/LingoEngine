@@ -14,24 +14,22 @@ namespace BlingoEngine.IO.Legacy.Scores
 
         private readonly List<BlScoreRawFrame> _frames = new();
         private readonly List<BlSpriteRawData> _sprites = new();
-        private ScoreRawHeader Header { get; set; }
-
-        public IReadOnlyList<BlScoreRawFrame> Frames => _frames;
-        public IReadOnlyList<BlSpriteRawData> Sprites => _sprites;
+        private ScoreRawHeader? Header { get; set; }
 
         public BlLegacyScoreReader(ReaderContext context)
         {
             _context = context;
         }
-        public void Read()
+        public BlLegacyScore Read()
         {
             _frames.Clear();
             _sprites.Clear();
             var payload = ReadVMSW();
             if (payload == null)
-                return;
+                return new BlLegacyScore(_sprites,_frames);
 
             ParseVMSC(payload);
+            return new BlLegacyScore(_sprites, _frames);
         }
 
         public byte[]? ReadVMSW()
@@ -75,7 +73,7 @@ namespace BlingoEngine.IO.Legacy.Scores
             var logSprites = string.Join(Environment.NewLine, _sprites.Select(s => s.ToLog()));
             var tokenizer = new BlLegacyScoreTokenizer(_context);
             var logFrames = tokenizer.ToLog(_frames);
-            var logHeader = Header.ToLog();
+            var logHeader = Header?.ToLog();
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("=== Header ===");
             sb.AppendLine(logHeader);

@@ -27,5 +27,17 @@ public struct BlingoColorDTO
         B = b;
         A = a;
     }
+    public static bool operator ==(BlingoColorDTO left, BlingoColorDTO right) =>
+    left.R == right.R && left.G == right.G && left.B == right.B && left.A == right.A;
+
+    public static bool operator !=(BlingoColorDTO left, BlingoColorDTO right) => !(left == right);
+
+    public override bool Equals(object? obj) =>
+        obj is BlingoColorDTO other && this == other;
+
+    public override int GetHashCode() => HashCode.Combine(R, G, B, A);
+
+    public BlingoColorDTO Clone() => new BlingoColorDTO(Code, Name, R, G, B, A);
+
 }
 

@@ -8,9 +8,9 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberVideoReader
     {
-        internal BlCastMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues, string mediaType)
+        internal BlCastRawMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues, string mediaType)
         {
-            var member = new BlCastMemberVideo();
+            var member = new BlCastRawMemberVideo();
             if (mediaType == "windowsMedia")
             {
                 var skipRead = specificData.ReadInt16(2);
@@ -69,14 +69,14 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
                 v.EnableLoop = opt == AviFlags.Loop;
                 v.PlayAudio = !opt.HasFlag(AviFlags.AudioOff);
 
-                if ((playBackWay & 0x38) == 0x08) v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.EveryFrame;
-                else if ((playBackWay & 0x38) == 0x18) v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.Maximum;
-                else if ((playBackWay & 0x38) == 0x28) v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.Fixed;
-                else v.VideoFps = (int)BlCastMemberVideo.VideoPlaybackRate.Sync;
+                if ((playBackWay & 0x38) == 0x08) v.VideoFps = (int)BlCastRawMemberVideo.VideoPlaybackRate.EveryFrame;
+                else if ((playBackWay & 0x38) == 0x18) v.VideoFps = (int)BlCastRawMemberVideo.VideoPlaybackRate.Maximum;
+                else if ((playBackWay & 0x38) == 0x28) v.VideoFps = (int)BlCastRawMemberVideo.VideoPlaybackRate.Fixed;
+                else v.VideoFps = (int)BlCastRawMemberVideo.VideoPlaybackRate.Sync;
 
-                if ((flags & 0x29) == 0x28) v.Framing = BlCastMemberVideo.VideoFraming.Crop;
-                else if ((flags & 0x29) == 0x29) v.Framing = BlCastMemberVideo.VideoFraming.CropCenter;
-                else v.Framing = BlCastMemberVideo.VideoFraming.Scale;
+                if ((flags & 0x29) == 0x28) v.Framing = BlCastRawMemberVideo.VideoFraming.Crop;
+                else if ((flags & 0x29) == 0x29) v.Framing = BlCastRawMemberVideo.VideoFraming.CropCenter;
+                else v.Framing = BlCastRawMemberVideo.VideoFraming.Scale;
             }
 
             

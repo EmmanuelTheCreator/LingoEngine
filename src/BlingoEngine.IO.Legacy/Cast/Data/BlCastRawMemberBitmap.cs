@@ -1,12 +1,12 @@
 ﻿namespace BlingoEngine.IO.Legacy.Cast.Data
 {
-    internal class BlCastMemberBitmap : BlCastMemberItem
+    internal class BlCastRawMemberBitmap : BlCastRawMemberItem
     {
         public int Height { get; internal set; }
         public int Width { get; internal set; }
         public bool Trim { get; internal set; } = true;
 
-        public BlCastMemberBitmap()
+        public BlCastRawMemberBitmap()
         {
             MemberType = BlLegacyCastMemberType.Bitmap;
         }
@@ -23,7 +23,7 @@
             JPEG,
         }
     }
-    internal class BlCastMemberGif : BlCastMemberItem
+    internal class BlCastMemberGif : BlCastRawMemberItem
     {
         public int Height { get; internal set; }
         public int Width { get; internal set; }

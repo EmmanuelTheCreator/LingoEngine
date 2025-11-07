@@ -86,15 +86,11 @@ public sealed class ReaderContext : IDisposable
     public void Dispose()
     {
         if (_disposed)
-        {
             return;
-        }
 
         _disposed = true;
         if (!_leaveOpen)
-        {
             BaseStream.Dispose();
-        }
     }
 
     /// <summary>

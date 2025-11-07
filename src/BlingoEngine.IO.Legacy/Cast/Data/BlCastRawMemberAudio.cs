@@ -1,8 +1,8 @@
 ﻿namespace BlingoEngine.IO.Legacy.Cast.Data
 {
-    public class BlCastMemberAudio : BlCastMemberItem
+    public class BlCastRawMemberAudio : BlCastRawMemberItem
     {
-        public BlCastMemberAudio()
+        public BlCastRawMemberAudio()
         {
             MemberType = BlLegacyCastMemberType.Sound;
         }

@@ -110,7 +110,7 @@ namespace BlingoEngine.IO.Legacy.Cast
 
        
 
-        public (BlCastMemberItem? MemberItem, List<byte[]> Datas) ReadItem(string name, byte[] info)
+        public (BlCastRawMemberItem? MemberItem, List<byte[]> Datas) ReadItem(string name, byte[] info)
         {
             var typeValue = info.ReadInt32(0);
             var infoLength = info.ReadInt32(4);
@@ -225,7 +225,7 @@ namespace BlingoEngine.IO.Legacy.Cast
             return (member, datas);
 
         }
-        public (List<CastToken> Tokens, BlCastMemberItem? MemberItem) ReadItemWithTokens(string name, byte[] info)
+        public (List<CastToken> Tokens, BlCastRawMemberItem? MemberItem) ReadItemWithTokens(string name, byte[] info)
         {
             var returnData = new List<CastToken>();
             using var memory = new MemoryStream(info, writable: false);
@@ -328,11 +328,11 @@ namespace BlingoEngine.IO.Legacy.Cast
 
             //var text1 = TokenListToStringX(returnData);
 
-            BlCastMemberItem? castMember = CreateMember(infoSlice, specificData, memberName, memberContentType, memberContentType, blobs, dateCreated, dateModified, new List<int>());
+            BlCastRawMemberItem? castMember = CreateMember(infoSlice, specificData, memberName, memberContentType, memberContentType, blobs, dateCreated, dateModified, new List<int>());
             return (returnData, castMember);
         }
 
-        private BlCastMemberItem CreateMember(byte[] infoSlice, byte[] specificData, string memberName,string? memberContentType, string? memberFormat, List<byte[]> blobs, DateTime dateCreated, DateTime dateModified, List<int> prefixValues)
+        private BlCastRawMemberItem CreateMember(byte[] infoSlice, byte[] specificData, string memberName,string? memberContentType, string? memberFormat, List<byte[]> blobs, DateTime dateCreated, DateTime dateModified, List<int> prefixValues)
         {
             var memberType = GetMemberType(specificData, memberFormat);
             //if (string.IsNullOrWhiteSpace(memberType))
@@ -342,7 +342,7 @@ namespace BlingoEngine.IO.Legacy.Cast
                 contentDebugc += Environment.NewLine;
                 contentDebugc += blobs.Count> 0? blobs[0].ToHexString(16, true, 0, true): "";
             }
-            BlCastMemberItem? castMember = null;
+            BlCastRawMemberItem? castMember = null;
             // todo : specificData
             switch (memberType)
             {
@@ -375,7 +375,7 @@ namespace BlingoEngine.IO.Legacy.Cast
                     break;
             }
             if (castMember == null)
-                castMember = new BlCastMemberItem();
+                castMember = new BlCastRawMemberItem();
             castMember.Name = memberName;
             castMember.MediaContentType = memberContentType;
             castMember.MemberFormat = memberFormat;

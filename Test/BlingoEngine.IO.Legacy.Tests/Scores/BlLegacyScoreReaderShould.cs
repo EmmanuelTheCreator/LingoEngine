@@ -15,12 +15,12 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
             using var harness = TestContextHarness.Open("KeyFrames/Animation_types.dir");
             harness.ReadResources();
             var reader = new BlLegacyScoreReader(harness.Context);
-            reader.Read();
+            var score = reader.Read();
 
-            Assert.Equal(6, reader.Frames.Count);
-            Assert.Equal(12, reader.Sprites.Count);
+            Assert.Equal(6, score.Frames.Count);
+            Assert.Equal(12, score.Sprites.Count);
 
-            var firstFrame = reader.Frames[0];
+            var firstFrame = score.Frames[0];
             Assert.Equal(14, firstFrame.Tokens.Count);
 
             var spriteChannels = firstFrame.Tokens
@@ -40,9 +40,9 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
             using var harness = TestContextHarness.Open("KeyFrames/KeyFramesTest.dir");
             harness.ReadResources();
             var reader = new BlLegacyScoreReader(harness.Context);
-            reader.Read();
+            var score = reader.Read();
 
-            var score = new BlLegacyScore(reader.Sprites.ToArray(), reader.Frames.ToArray());
+            
             var sprites = BlLegacyScoreSpriteBuilder.Build(score);
 
             Assert.Equal(new[] { 8, 10 }, sprites.Select(s => s.SpriteNum).OrderBy(v => v));
@@ -137,15 +137,15 @@ namespace BlingoEngine.IO.Legacy.Tests.Scores
             using var harness = TestContextHarness.Open("KeyFrames/KeyFramesTestMultiple.dir");
             harness.ReadResources();
             var reader = new BlLegacyScoreReader(harness.Context);
-            reader.Read();
+            var score = reader.Read();
 
-            var firstFrame = reader.Frames.First();
+            var firstFrame = score.Frames.First();
             var initialToken = firstFrame.Tokens.First(t => t.Channel == 10 && t.Payload.Length == 0x30);
 
             Assert.Equal(-1133, initialToken.Properties.Single(p => p.Property == BlSpriteRawData.BlSpriteRawProperty.Rotation).Value);
             Assert.Equal(3233, initialToken.Properties.Single(p => p.Property == BlSpriteRawData.BlSpriteRawProperty.Skew).Value);
 
-            var frameSix = reader.Frames.Single(f => f.FrameNum == 6);
+            var frameSix = score.Frames.Single(f => f.FrameNum == 6);
             var rotationDelta = frameSix.Tokens.Single(t => t.Channel == 10 && t.AddressOffset == 0x01FE);
             var skewDelta = frameSix.Tokens.Single(t => t.Channel == 10 && t.AddressOffset == 0x0202);
 

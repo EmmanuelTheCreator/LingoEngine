@@ -24,4 +24,4 @@ public enum BlLegacyTextKerningMode : byte { None = 0x44, AllText = 0x30, Larger
 /// </summary>
 /// <param name="SlotIndex">Zero-based position of the entry within the table.</param>
 /// <param name="ResourceId">Identifier of the <c>CASt</c> resource referenced by the slot.</param>
-public readonly record struct BlLegacyCastMemberSlot(int SlotIndex, int ResourceId, BlCastMemberItem Member);
+public readonly record struct BlLegacyCastMemberSlot(int SlotIndex, int ResourceId, BlCastRawMemberItem Member);

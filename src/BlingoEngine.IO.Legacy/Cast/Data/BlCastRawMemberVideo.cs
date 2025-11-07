@@ -1,8 +1,8 @@
 ﻿namespace BlingoEngine.IO.Legacy.Cast.Data
 {
-    public class BlCastMemberVideo : BlCastMemberItem
+    public class BlCastRawMemberVideo : BlCastRawMemberItem
     {
-        public BlCastMemberVideo()
+        public BlCastRawMemberVideo()
         {
             MemberType = BlLegacyCastMemberType.DigitalVideo;
         }

@@ -3,9 +3,9 @@ using BlingoEngine.IO.Legacy.Core;
 
 namespace BlingoEngine.IO.Legacy.Cast.Data;
 
-public class BlCastMemberText : BlCastMemberItem
+public class BlCastRawMemberText : BlCastRawMemberItem
 {
-    public BlCastMemberText(
+    public BlCastRawMemberText(
         string type,
         int specificDataLength,
         bool isEditable,
