@@ -50,5 +50,17 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             member1.Member.ModifiedBy.Should().Contain("MyUserName");
             member2.Member.ModifiedBy.Should().Contain("MyUserName");
         }
+        [Fact]
+        public void ReadShapes()
+        {
+            var file = "Shapes/DirWith_8_Shapes.dir";
+            using var harness = TestContextHarness.Open(file);
+            harness.ReadResources();
+            var ctx = harness.Context;
+            var reader = new BlLegacyCastReader(ctx);
+            var casts = reader.Read();
+            var cast = casts.First();
+           
+        }
     }
 }

@@ -208,7 +208,7 @@ namespace BlingoEngine.IO.Legacy.Cast
             var dateModified = DateTimeOffset.FromUnixTimeSeconds(BitConverter.ToInt32(datas[18].Reverse().ToArray(), 0)).UtcDateTime;
             // read "N/A" or username
             var userName = datas[19].ReadCString(0);
-            var comment = datas[20].ReadCString(0);
+            var comment = datas.Count > 20? datas[20].ReadCString(0) : "";
 
             // specials with 22 values
             if (datas.Count > 21)
@@ -360,6 +360,13 @@ namespace BlingoEngine.IO.Legacy.Cast
                 case "wav":
                 case "aiff":
                     castMember = new BlCastMemberAudioReader().Read(specificData);
+                    break;
+                case "shape":
+                case "vectorShape":
+                case "Shape":
+                    var isVecorShape = memberType == "vectorShape";
+                    
+                    castMember = new BlCastMemberShapeReader().Read(specificData, blobs, prefixValues, isVecorShape);
                     break;
                 case "script":
                     castMember = new BlCastMemberScriptReader().Read(specificData, blobs, prefixValues);
