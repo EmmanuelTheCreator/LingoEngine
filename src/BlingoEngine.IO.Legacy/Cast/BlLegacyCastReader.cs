@@ -1,3 +1,5 @@
+using System;
+
 using BlingoEngine.IO.Legacy.Afterburner;
 using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Classic;
@@ -62,7 +64,10 @@ internal sealed class BlLegacyCastReader
                 var payload = LoadPayload(entry, classicLoader, afterburnerLoader);
                 var visibleInfo = ReadCastInfoCinf(payload);
                 castVisibleInfo.Add(visibleInfo);
-                var lastLib = parsingLibraries.Last();
+                if (parsingLibraries.Count == 0)
+                    continue;
+
+                var lastLib = parsingLibraries[^1];
                 lastLib.CastPath = visibleInfo.CastPath;
                 lastLib.RowWidth = visibleInfo.RowWidth;
                 lastLib.VisibleColumnsFlags = visibleInfo.VisibleColumnsFlags;
@@ -242,7 +247,13 @@ internal sealed class BlLegacyCastReader
         var something18 = reader.ReadUInt16();  // 01 D1 
         var stringLength = reader.ReadByte();   // 0x49 (73 bytes)
         if (stringLength > 0)
-            returnData.CastPath = reader.ReadAsciiString(stringLength);
+        {
+            var remaining = reader.Length - reader.Position;
+            if (stringLength <= remaining)
+                returnData.CastPath = reader.ReadAsciiString(stringLength);
+            else
+                reader.Position = reader.Length;
+        }
         reader.BaseStream.Dispose();
         return returnData;
     }
