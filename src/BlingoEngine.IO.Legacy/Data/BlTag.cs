@@ -153,7 +153,11 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
         // Cast info block
         Cinf = Register("Cinf");
         MCsL = Register("MCsL");
-        VWSC = Register("VWSC"); 
+        VWSC = Register("VWSC");
+        // Movie info and settings
+        VWFI = Register("VWFI");
+        // Movie director settings
+        DRCF = Register("DRCF"); 
 
         Register("ediM");
         Register("BITD");
@@ -224,4 +228,12 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
     public static BlTag Cinf { get; }
     public static BlTag CasStar { get; }
     public static BlTag VWSC { get; }
+    /// <summary>
+    /// Movie info and settings
+    /// </summary>
+    public static BlTag VWFI { get; }
+    /// <summary>
+    /// Movie Director settings
+    /// </summary>
+    public static BlTag DRCF { get; }
 }
