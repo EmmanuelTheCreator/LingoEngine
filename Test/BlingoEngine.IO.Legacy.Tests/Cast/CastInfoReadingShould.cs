@@ -54,7 +54,11 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
         public void ReadShapes()
         {
             //var file = "Shapes/DirWith_8_Shapes.dir";
-            var file = "Shapes/Shape_Triangle_filled.cst";
+            //var file = "Shapes/Shape_Triangle.cst";
+            //var file = "Shapes/Shape_Two_Triangles.cst";
+            var file = "Shapes/Shape_Triangle_Scale72.cst";
+            //var file = "Shapes/Shape_Triangle_gradient_radial.cst";
+            //var file = "Shapes/Shape_Triangle_Stroke_3.cst";
             using var harness = TestContextHarness.Open(file);
             harness.ReadResources();
             var ctx = harness.Context;

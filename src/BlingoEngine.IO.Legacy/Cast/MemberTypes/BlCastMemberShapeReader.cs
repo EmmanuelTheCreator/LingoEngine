@@ -2,7 +2,9 @@
 using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Tools;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
@@ -14,6 +16,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var member = new BlCastRawMemberShape();
             if (isVecorShape)
             {
+                File.WriteAllText("temp.txt", rawBytes);
                 member.ShapeType = BlCastRawMemberShape.BlShapeType.PolyLine;
                 ReadVectorShape(member, specificData);
             }
@@ -60,8 +63,21 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
             member.Height = values[9];
 
             var values2 = new List<int>();
-            for (int i = 0; i < 26; i++)
+            for (int i = 0; i < 18; i++)
                 values2.Add(reader.ReadInt32());
+
+            member.StrokeWidth = BitConverter.ToSingle(reader.ReadBytes(4).Reverse().ToArray(), 0);
+            var fillType = reader.ReadInt32();
+            member.Fill = fillType > 0;             // Fill type shape: 0 = no fill, 1 = solid, 2 = gradient
+
+            // Read gradient
+            member.IsGradientFill = fillType == 2;
+            member.GradientIsRadial = reader.ReadInt32() > 0;      // Gradiant radial
+            member.GradientSpread = BitConverter.ToSingle(reader.ReadBytes(4).Reverse().ToArray(), 0);
+            member.GradientAngle = BitConverter.ToSingle(reader.ReadBytes(4).Reverse().ToArray(), 0);
+            member.GradientXOffset = reader.ReadInt32();
+            member.GradientyOffset = reader.ReadInt32();
+            member.GradientyCycles = reader.ReadInt32();
 
             // read colors
             var colorValues = new List<BlingoColorDTO>();
@@ -71,9 +87,72 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
                 colorValues.Add(new BlingoColorDTO((byte)reader.ReadInt32(), (byte)reader.ReadInt32(), (byte)reader.ReadInt32()));
             }
 
-            var values3 = new List<int>();
-            for (int i = 0; i < 4; i++)
-                values2.Add(reader.ReadInt32());
+            var tag = reader.ReadInt32();
+            if (tag == 7)
+            {
+                var numberOfVertices = reader.ReadInt32();
+                var curve = new BlCastRawMemberShape.BlShapeCurve();
+                member.Curves = [curve];
+                for (int i = 0; i < numberOfVertices; i++)
+                {
+                    tag = reader.ReadInt32();
+                    if (tag == 0x0A)
+                    {
+                        // continue curve
+                    }
+                    else if (tag == 0x07)
+                    {
+                        // New curve
+                        curve = new BlCastRawMemberShape.BlShapeCurve();
+                        member.Curves.Add(curve);
+                        var numberOfValues2 = reader.ReadInt32();       // 01
+                        var tag2 = reader.ReadInt32();                  // 02
+                        var nameLength = reader.ReadInt32();            // 08
+                        var name = reader.ReadAsciiString(nameLength);  // newCurve
+                        continue;
+                    }
+                    var vertex = new BlCastRawMemberShape.BlShapeVertex();
+                    curve.Vertices.Add(vertex);
+                    var numberOfValues = reader.ReadInt32();
+                    for (int index = 0; index < numberOfValues; index++)
+                    {
+                        tag = reader.ReadInt32();                   // 02
+                        if (tag == 2)
+                        {
+                            var tagByte = reader.ReadByte();
+                            reader.ReadByte();                      // 00
+                            if (tagByte == 0x80)
+                            {
+                                var typeTag = reader.ReadInt16();   // 00, 01 or 02
+                                tag = reader.ReadInt32();           // 08
+
+                                var x = reader.ReadInt32();
+                                var y = reader.ReadInt32();
+                                    
+                                if (typeTag == 0) vertex.Position = new BlingoPointDTO(x, y);
+                                else if (typeTag == 1) vertex.Handle1 = new BlingoPointDTO(x, y);
+                                else if (typeTag == 2) vertex.Handle2 = new BlingoPointDTO(x, y);
+                            }
+                            else
+                            {
+                                // Vertex with name
+                                var nameLength = reader.ReadInt16();
+                                var name = reader.ReadAsciiString(nameLength);
+                                tag = reader.ReadInt32(); // 8
+                                var x = reader.ReadInt32();
+                                var y = reader.ReadInt32();
+                                if (name == "vertex") vertex.Position = new BlingoPointDTO(x, y);
+                                else if (name == "handle1") vertex.Handle1 = new BlingoPointDTO(x, y);
+                                else if (name == "handle2") vertex.Handle2 = new BlingoPointDTO(x, y);
+                            }
+                        }
+                    }
+                }
+            }
+
+            
+
+
         }
     }
 }
@@ -101,9 +180,11 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
 42 C8 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00 
 42 C8 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 01   00 00 00 03 
 00 00 00 01   00 00 00 01   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 01 
-3F 80 00 00   00 00 00 01   00 00 00 00 
-42 C8 00 00   
-    00 00 00 00                    
+    3F 80 00 00                                             // Stroke Width
+    00 00 00 01                                             // Fill type shape: 0 = no fill, 1 = solid, 2 = gradient
+    00 00 00 00                                             // Gradiant is radial
+    42 C8 00 00                                             // Gradient Spread float
+    00 00 00 00                                             // Gradient Angle float
     00 00 00 00                                             // Gradient Y-offset   
     00 00 00 00                                             // Gradient X-Offset  
     00 00 00 01                                             // Gradient cycles
