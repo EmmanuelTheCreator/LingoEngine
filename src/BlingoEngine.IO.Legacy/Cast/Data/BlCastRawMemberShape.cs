@@ -31,6 +31,7 @@ namespace BlingoEngine.IO.Legacy.Cast.Data
         public BlingoColorDTO? GradientColor { get; internal set; }
         public bool LineClosed { get; internal set; }
         public bool AntiAlias { get; internal set; }
+        public BlingoPointDTO RegPoint { get; internal set; }
 
         public enum BlShapeType
         {

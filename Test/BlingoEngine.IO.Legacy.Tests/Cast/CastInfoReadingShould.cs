@@ -56,7 +56,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             //var file = "Shapes/DirWith_8_Shapes.dir";
             //var file = "Shapes/Shape_Triangle.cst";
             //var file = "Shapes/Shape_Two_Triangles.cst";
-            var file = "Shapes/Shape_Triangle_Closed_off.cst";
+            var file = "Shapes/Shape_Triangle_Regpoint.cst";
             //var file = "Shapes/Shape_Triangle_gradient_radial.cst";
             //var file = "Shapes/Shape_Triangle_Stroke_3.cst";
             using var harness = TestContextHarness.Open(file);

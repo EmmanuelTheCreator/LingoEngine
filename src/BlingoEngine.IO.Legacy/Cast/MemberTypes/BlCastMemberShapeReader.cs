@@ -58,8 +58,11 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
             var values = new List<int>();
             for (int i = 0; i < 13; i++) 
                 values.Add(reader.ReadInt32());
-            member.Width = values[8];
-            member.Height = values[9];
+
+            member.RegPoint = new BlingoPointDTO(values[5], values[4]);
+
+            member.Height = values[8];
+            member.Width = values[9];
 
             member.AntiAlias = reader.ReadInt32() > 0;  // AntiAlias On/Off
 
@@ -152,7 +155,7 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
                                 // Vertex with name
                                 var nameLength = reader.ReadInt16();
                                 var name = reader.ReadAsciiString(nameLength);
-                                tag = reader.ReadInt32(); // 8
+                                tag = reader.ReadInt32(); // 08
                                 var x = reader.ReadInt32();
                                 var y = reader.ReadInt32();
                                 if (name == "vertex") vertex.Position = new BlingoPointDTO(x, y);
@@ -181,21 +184,21 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
 //  fill color  = #66ff66
 //  line        = #000000
 
-00 00 00 0B     76 65 63 74 6F 72 53 68 61 70 65    // = vectorShape
-00 00 02 87                                         // ? = 647
-46 4C 53 48                                         // = FLSH (flash? perhaps)
-00 00 02 87   00 00 00 1A                           // ? = 647  ; ? = 26
-00 00 00 00   00 00 00 01                           // 
-00 00 00 60   00 00 00 8D                           // ? = 96   ; ? = 141
+00 00 00 0B     76 65 63 74 6F 72 53 68 61 70 65            // = vectorShape
+00 00 02 87                                                 // ? = 647
+46 4C 53 48                                                 // = FLSH (flash? perhaps)
+00 00 02 87   00 00 00 1A                                   // ? = 647  ; ? = 26
+00 00 00 00   00 00 00 01                                   // 
+00 00 00 60   00 00 00 8D 							        // Regpoint Y,X
 00 00 00 00   00 00 00 00 
-00 00 00 C1   00 00 01 1B                           // Height + Width
+00 00 00 C1   00 00 01 1B                                   // Height + Width
 00 00 00 01   00 00 00 00 
 00 00 00 00   
-    00 00 00 01  							        // AntiAlias On/Off
-    42 C8 00 00    								    // Scale 100.00 %  
+    00 00 00 01  							                // AntiAlias On/Off
+    42 C8 00 00    								            // Scale 100.00 %  
 00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00 
 42 C8 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 01   
-    00 00 00 03                                     // Scale mode
+    00 00 00 03                                             // Scale mode
 00 00 00 01   00 00 00 01   00 00 00 00   00 00 00 00   00 00 00 00   
     00 00 00 01                                             // Line Closed On/Off
     3F 80 00 00                                             // Stroke Width
