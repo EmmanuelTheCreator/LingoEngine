@@ -16,7 +16,6 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var member = new BlCastRawMemberShape();
             if (isVecorShape)
             {
-                File.WriteAllText("temp.txt", rawBytes);
                 member.ShapeType = BlCastRawMemberShape.BlShapeType.PolyLine;
                 ReadVectorShape(member, specificData);
             }
@@ -57,15 +56,26 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
             var value1 = reader.ReadInt32();        // 00 00 02 87      = 647
             var flash = reader.ReadBytes(4);        // 46 4C 53 48      = FLSH (flash? perhaps)
             var values = new List<int>();
-            for (int i = 0; i < 14; i++) 
+            for (int i = 0; i < 13; i++) 
                 values.Add(reader.ReadInt32());
             member.Width = values[8];
             member.Height = values[9];
 
+            member.AntiAlias = reader.ReadInt32() > 0;  // AntiAlias On/Off
+
+            member.Scale = BitConverter.ToSingle(reader.ReadBytes(4).Reverse().ToArray(), 0);
             var values2 = new List<int>();
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < 10; i++)
                 values2.Add(reader.ReadInt32());
 
+            member.ScaleMode = (BlCastRawMemberShape.BlShapeScaleMode)reader.ReadInt32();
+
+            var values3 = new List<int>();
+            for (int i = 0; i < 6; i++)
+                values3.Add(reader.ReadInt32());
+
+            
+            member.LineClosed = reader.ReadInt32() > 0;  // Line Closed On/Off
             member.StrokeWidth = BitConverter.ToSingle(reader.ReadBytes(4).Reverse().ToArray(), 0);
             var fillType = reader.ReadInt32();
             member.Fill = fillType > 0;             // Fill type shape: 0 = no fill, 1 = solid, 2 = gradient
@@ -86,6 +96,10 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
                 reader.ReadInt32(); // 12
                 colorValues.Add(new BlingoColorDTO((byte)reader.ReadInt32(), (byte)reader.ReadInt32(), (byte)reader.ReadInt32()));
             }
+            member.StrokeColor = colorValues[0];
+            member.FillColor = colorValues[1];
+            member.BackgroundColor = colorValues[2];
+            member.GradientColor = colorValues[3];
 
             var tag = reader.ReadInt32();
             if (tag == 7)
@@ -176,10 +190,14 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
 00 00 00 00   00 00 00 00 
 00 00 00 C1   00 00 01 1B                           // Height + Width
 00 00 00 01   00 00 00 00 
-00 00 00 00   00 00 00 01 
-42 C8 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00 
-42 C8 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 01   00 00 00 03 
-00 00 00 01   00 00 00 01   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 01 
+00 00 00 00   
+    00 00 00 01  							        // AntiAlias On/Off
+    42 C8 00 00    								    // Scale 100.00 %  
+00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00 
+42 C8 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 01   
+    00 00 00 03                                     // Scale mode
+00 00 00 01   00 00 00 01   00 00 00 00   00 00 00 00   00 00 00 00   
+    00 00 00 01                                             // Line Closed On/Off
     3F 80 00 00                                             // Stroke Width
     00 00 00 01                                             // Fill type shape: 0 = no fill, 1 = solid, 2 = gradient
     00 00 00 00                                             // Gradiant is radial

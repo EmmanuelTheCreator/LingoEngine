@@ -25,6 +25,12 @@ namespace BlingoEngine.IO.Legacy.Cast.Data
         public float StrokeWidth { get; internal set; }
         public BlShapeScaleMode ScaleMode { get; internal set; }
         public float Scale { get; internal set; }
+        public BlingoColorDTO? StrokeColor { get; internal set; }
+        public BlingoColorDTO? FillColor { get; internal set; }
+        public BlingoColorDTO? BackgroundColor { get; internal set; }
+        public BlingoColorDTO? GradientColor { get; internal set; }
+        public bool LineClosed { get; internal set; }
+        public bool AntiAlias { get; internal set; }
 
         public enum BlShapeType
         {
@@ -36,11 +42,11 @@ namespace BlingoEngine.IO.Legacy.Cast.Data
         }
         public enum BlShapeScaleMode
         {
-            ShowAll,
-            NoBorder,
-            ExactFit,
-            AutoSize,
-            NoScale
+            ShowAll = 0,
+            NoBorder = 1,
+            ExactFit = 2,
+            AutoSize = 3,
+            NoScale = 4,
         }
         public class BlShapeCurve
         {
