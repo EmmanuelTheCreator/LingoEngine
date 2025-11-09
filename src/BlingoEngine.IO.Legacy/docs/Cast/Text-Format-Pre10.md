@@ -1,4 +1,4 @@
-# Legacy Text and Field Members
+# Member Text Format: Director Pre Version 10
 
 [_Back to documentation overview_](README.md)
 
@@ -97,12 +97,6 @@ resource that tracks font runs, colour tables, and letter spacing. Any payload r
 `XMED` is passed through unchanged by the legacy readers so experiments can continue even though the
 latest MX-era format is still under investigation.
 
-## Director 11+ Styled Text (`XMED`) Layout
 
-Modern Director releases store per-character formatting inside an `XMED` stream. The chunk begins
-with an ASCII directory that announces the offsets and capacities for each data block before listing
-the text runs and style descriptors.
-
-TODO
 
 

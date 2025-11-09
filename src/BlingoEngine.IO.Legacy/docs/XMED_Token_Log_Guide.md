@@ -100,7 +100,7 @@ represent flags, booleans, or dimensions.
 
 ---
 
-## 5) Guarantees & non-goals
+## 5) Guarantees 
 
 **Guaranteed by the logger**
 - Token order matches file order.
@@ -108,9 +108,5 @@ represent flags, booleans, or dimensions.
 - Text payloads are emitted verbatim, including embedded newlines.
 - Numeric lists preserve the raw bytes without reformatting.
 
-**Non-goals**
-- No attempt is made to validate declared lengths inside `00(…)` blocks.
-- The logger does not infer meaning from numeric payloads.
-- The format is one-way; it is not suitable for rebuilding the binary stream.
 
 ---

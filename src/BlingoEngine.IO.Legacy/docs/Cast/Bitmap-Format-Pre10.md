@@ -1,4 +1,4 @@
-# Legacy Bitmap Loading
+# Member Bitmap Format: Director Pre Version 10
 
 [← Documentation Overview](README.md)
 
@@ -6,8 +6,8 @@ Legacy Director movies store bitmap members in a mix of QuickDraw BITD chunks, W
 
 ## Resource tags and container detection
 
-| Tag | Purpose | Detection outcome |
-| --- | --- | --- |
+| Tag    | Purpose | Detection outcome |
+| ------ | ------- | ----------------- |
 | `ediM` | Authoring metadata that often embeds PNG, JPEG, or DIB streams. If the payload cannot be classified it is ignored so the reader can fall back to the classic bitmap chunk. | Signature inspection on the payload bytes (PNG, JPEG, GIF, BMP, or TIFF magic). |
 | `BITD` | Classic Macintosh bitmap data with RLE segments. | Classified as `Bitd` immediately from the tag. |
 | `DIB ` | Windows device-independent bitmap stored alongside the original palette. | Classified as `Dib` from the tag, while the byte layout mirrors the BITMAPINFOHEADER table below. |
@@ -54,7 +54,7 @@ Director 4 switches to a longer record that starts with a packed pitch word. Opt
 | `<unknown padding>` | 1 byte (optional) | Present when the record exceeds 22 bytes; historically used as a flag byte. |
 | `<bits per pixel>` | 1 byte (optional) | Pixel depth stored after the padding byte. |
 | `<CLUT cast library>` | 2 bytes (optional, Director 5+) | Library ID for the palette when version ≥ 0x500. |
-| `<CLUT id>` | 2 bytes (optional) | Palette resource number; non-positive values select built-ins. |
+| `<CLUT id>`   | 2 bytes (optional) | Palette resource number; non-positive values select built-ins. |
 | `<unknown16>` | 2 bytes (optional) | Additional metadata observed in longer Director 4/5 records. |
 | `<unknown16>` | 2 bytes (optional) | Second 16-bit value retained for completeness. |
 | `<unknown16>` | 2 bytes (optional) | Third 16-bit value preceding the 32-bit fields. |
@@ -124,4 +124,4 @@ Classic Mac bitmaps rely on the BITD RLE scheme. The control bytes below match t
 - Signature checks allow the reader to pick up stand-alone PNG, JPEG, GIF, BMP, and TIFF resources that newer Shockwave builds emit without the legacy tags.
 - The byte layouts above match the data consumed by the classic Director executables, so the same codepath can decode movies built for Director 2 all the way through Director MX 2004.
 
-[Back to documentation overview](README.md)
+[← Back to the format overview](./README.md)

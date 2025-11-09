@@ -1,5 +1,7 @@
 # Director Movie (`.dir`) Container
 
+[← Back to Docs Home](README.md)
+
 ## Overview
 
 Classic Director movies store their data in a RIFF-style container. Most exports use the big-endian `RIFX` tag, while little-endian bundles spell the signature backwards (`XFIR`) or use the standard `RIFF`/`FFIR` pair. The top-level chunk announces the archive subtype with a four-character code (`MV93`, `MC95`, `APPL`, `FGDM`, or `FGDC`) that decides how the resource map is parsed.
@@ -128,7 +130,7 @@ the same map layout as the Director 10 entry below, so no additional parsing rul
 ### `mmap` resource table
 
 | Field | Length | Notes |
-| --- | --- | --- |
+| ----- | --- | --- |
 | `6D 6D 61 70` (`mmap`) | 4 bytes | Resource table signature. |
 | `mmap` length | 4 bytes | Size of the `mmap` chunk. |
 | Header size | 2 bytes | Number of bytes between the `mmap` header and the first entry. |
@@ -160,3 +162,5 @@ Each resource chunk inside the archive follows the RIFF convention:
 | Payload | `length` bytes | Resource data. Memory-map readers typically skip the 8-byte sub-header before handing the payload to higher-level parsers. |
 
 The resource map marks each chunk as it is accessed so tooling can report unused entries when the archive closes.
+
+[← Back to Docs Home](README.md)

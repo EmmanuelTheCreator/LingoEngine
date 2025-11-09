@@ -1,4 +1,4 @@
-# Legacy Script Cast Members
+﻿# Member Script Format : Director Pre Version 10
 
 [← Back to the format overview](./README.md)
 
@@ -18,18 +18,15 @@ length-adjacent offset at `0x0021`. The reader chooses between these layouts by
 inspecting the archive's **Director file version** stored in the `imap` control
 block.
 
-| Offset | Size | Description |
-| --- | --- | --- |
-| `0x0000` | 4 | Reserved fields that remain zero in observed files. |
-| `0x0010` | 4 | **Script number** stored as a big-endian signed integer. The
-value links the member to the `Lscr` entry listed in the `Lctx/LctX`
-script-context tables. |
-| `0x001D` | 4 | **Script text length** stored as a little-endian unsigned word.
-Lengths of zero mark compiled-only entries. |
-| `0x0068` | 2 | Pointer table slot that precedes the behaviour text (Director 4+). The loader skips the two-byte pointer and begins reading at `0x006A`. |
-| `0x006A` | `length` | Lingo source text encoded as single-byte characters (Director 4+). |
-| `0x006A + length` | 1 | Length of the script name. Zero indicates that the name is omitted. |
-| `0x006B + length` | `nameLength` | Script/behaviour name in single-byte encoding. |
+| Offset            | Size       | Description                                                               |
+| ----------------- | ---------- | ------------------------------------------------------------------------- |
+| `0x0000`          | 4          | Reserved fields that remain zero in observed files.                       |
+| `0x0010`          | 4          | **Script number** stored as a big-endian signed integer. The value links the member to the `Lscr` entry listed in the `Lctx/LctX` script-context tables. |
+| `0x001D`          | 4          | **Script text length** stored as a little-endian unsigned word. Lengths of zero mark compiled-only entries. |
+| `0x0068`          | 2          | Pointer table slot that precedes the behaviour text (Director 4+). The loader skips the two-byte pointer and begins reading at `0x006A`. |
+| `0x006A`          | length     | Lingo source text encoded as single-byte characters (Director 4+).        |
+| `0x006A + length` | 1          | Length of the script name. Zero indicates that the name is omitted.       |
+| `0x006B + length` | nameLength | Script/behaviour name in single-byte encoding.                            |
 
 Older exports that strip the pointer table expose the script text immediately
 after the length word at `0x0021`. Unknown Director versions are left untouched
@@ -60,3 +57,6 @@ length-adjacent offsets after confirming the byte count fits.
 * Director 3 exports omit the pointer table entirely. Use the
   `LegacyTextAfterLength` layout in `BlLegacyScriptWriter` when emitting
   synthetic fixtures for those archives.
+
+
+[← Back to the format overview](./README.md)

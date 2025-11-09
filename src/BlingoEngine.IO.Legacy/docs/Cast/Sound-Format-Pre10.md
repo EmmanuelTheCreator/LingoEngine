@@ -1,6 +1,6 @@
-[← Back to Docs Home](README.md)
-
 # Legacy Sound Loading Notes
+
+[← Back to Docs Home](README.md)
 
 The legacy IO layer now exposes a `BlLegacySoundReader` that resolves sound payloads across
 all Director releases. Classic movies expose Mac `SND ` chunks, mid-era files list `snd `
@@ -72,3 +72,5 @@ remains tied to the decoded stream so the caller can decide whether to respect o
 | Bytes | Length | Purpose |
 | --- | --- | --- |
 | `<resource payload>` | variable | Raw bytes streamed from the archive or a linked file. |
+
+[← Back to Docs Home](README.md)

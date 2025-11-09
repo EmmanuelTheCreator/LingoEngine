@@ -84,31 +84,3 @@ interpreted.
 | `<line thickness>` | 1 byte | Pen width for the outline. |
 | `<line direction>` | 1 byte | Line-direction byte preserved for patterned strokes. |
 
-### Director 11 and newer – Placeholder data
-
-Director MX 2004 and subsequent releases no longer expose a documented 17-byte payload. Projector
-builds often substitute default values or omit the cast data entirely. When a movie advertises a
-Director 11+ version marker, the loader keeps whatever bytes were supplied (even an empty buffer) and
-classifies the format as a placeholder so the caller can opt into experimental processing.
-
-## Colour interpretation
-
-Classic Mac projectors store signed QuickDraw colours even though palette indices eventually operate
-in an unsigned 0–255 range. Director 2 and 3 therefore require normalisation using the expression
-`(value + 128) & 0xFF`. Starting with Director 4, both foreground and background components are stored
-as unsigned bytes and may be forwarded directly to the palette transform.
-
-## Reader implementation notes
-
-- `BlLegacyShapeReader` inflates classic and Afterburner-compressed `CASt` entries, extracts the
-  cast-data segment using the wrappers above, and then scans for a 17-byte window that contains a
-  plausible QuickDraw rectangle. This approach tolerates optional `flags1` bytes that precede the
-  payload in early Director versions.
-- The reader honours the movie's endianness markers when validating rectangle coordinates so that
-  mixed-platform Director movies continue to parse correctly.
-- Every record is preserved exactly as it appears on disk. The `BlLegacyShape` data class exposes
-  the 17 raw bytes along with the best-effort format classification so higher-level systems can
-  reconstruct ink modes, patterns, and colour schemes as needed.
-
-These notes ensure the implementation keeps byte-for-byte parity with historical Director projectors
-while remaining ready for future discoveries about Director MX-era resources.
