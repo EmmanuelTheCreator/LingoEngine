@@ -168,7 +168,7 @@ internal sealed class BlLegacyCastReader
 
     private static bool TryParseMemberChunk(byte[] payload, out BlCastRawMemberItem? castMemberInfo)
     {
-        var memberData = new BlLegacyCastItemReader().ReadItem(string.Empty, payload);
+        var memberData = new BlLegacyCastItemReader_Dir10().ReadItem(string.Empty, payload);
         castMemberInfo = memberData.MemberItem;
 
         return true;

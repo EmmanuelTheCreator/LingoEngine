@@ -13,7 +13,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
         {
             var path = TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_3DExtruder_Values.CASt.bin");
             var bytes = File.ReadAllBytes(path);
-            var reader = new BlLegacyCastItemReader();
+            var reader = new BlLegacyCastItemReader_Dir10();
 
             var memberGen = reader.ReadItem("",bytes);
             var member = (BlCastRawMemberText)memberGen.MemberItem;
@@ -55,7 +55,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
         {
             var path = TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_Display_3DMode.CASt.bin");
             var bytes = File.ReadAllBytes(path);
-            var reader = new BlLegacyCastItemReader();
+            var reader = new BlLegacyCastItemReader_Dir10();
 
             var memberGen = reader.ReadItem("", bytes);
             var member = (BlCastRawMemberText)memberGen.MemberItem;

@@ -6,46 +6,42 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
     internal class BlCastMemberShapeReader_Dir10
     {
-        internal BlCastRawMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues, bool isVecorShape)
+        public BlCastRawMemberShape ReadBasicShape(byte[] specificData)
         {
-            var rawBytes = specificData.ToHexString();
             var member = new BlCastRawMemberShape();
-            if (isVecorShape)
+            /*
+            Member 1: 00 01 00 00 00 00 00 39 00 47 00 01 FF 00 01 02 05    // MySquare                 77x57
+            Member 2: 00 02 00 00 00 00 00 36 00 41 00 01 FF 00 01 02 05    // MySquareRoundBorders     65x54
+            Member 3: 00 03 00 00 00 00 00 3B 00 42 00 01 FF 00 01 02 05    // MyOvalFilled             66x59
+            -> polyline
+            Member 4: 00 01 00 00 00 00 00 3B 00 48 00 01 FF 00 00 02 05    // MyRectangle
+            Member 5: 00 02 00 00 00 00 00 38 00 44 00 01 FF 00 00 02 05    // MySquareRoundBorders
+            Member 6: 00 03 00 00 00 00 00 3B 00 46 00 01 FF 00 00 02 05    // MyOval
+            Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
+                            */
+            var shapeType = specificData.ReadInt16(0);
+            switch (shapeType)
             {
-                member.ShapeType = BlCastRawMemberShape.BlRawShapeType.PolyLine;
-                ReadVectorShape(member, specificData);
+                case 01: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Rectangle; break;
+                case 02: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.RoundRectangle; break;
+                case 03: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Oval; break;
+                case 04: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Line; break;
             }
-            else
-            {
-/*
-Member 1: 00 01 00 00 00 00 00 39 00 47 00 01 FF 00 01 02 05    // MySquare                 77x57
-Member 2: 00 02 00 00 00 00 00 36 00 41 00 01 FF 00 01 02 05    // MySquareRoundBorders     65x54
-Member 3: 00 03 00 00 00 00 00 3B 00 42 00 01 FF 00 01 02 05    // MyOvalFilled             66x59
--> polyline
-Member 4: 00 01 00 00 00 00 00 3B 00 48 00 01 FF 00 00 02 05    // MyRectangle
-Member 5: 00 02 00 00 00 00 00 38 00 44 00 01 FF 00 00 02 05    // MySquareRoundBorders
-Member 6: 00 03 00 00 00 00 00 3B 00 46 00 01 FF 00 00 02 05    // MyOval
-Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
-                */
-                var shapeType = specificData.ReadInt16(0);
-                switch (shapeType)
-                {
-                    case 01: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Rectangle; break;
-                    case 02: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.RoundRectangle; break;
-                    case 03: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Oval; break;
-                    case 04: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Line; break;
-                }
-                member.Height = specificData.ReadInt16(6);
-                member.Width = specificData.ReadInt16(8);
-                var somethingA = specificData.ReadInt32(10); // 00 01
-                var somethingB = specificData.ReadInt16(12); // FF 00
-                member.Fill = specificData.ReadByteOrDefault(14) > 0; // 01 = fill , 00  not fill
-            }
+            member.Height = specificData.ReadInt16(6);
+            member.Width = specificData.ReadInt16(8);
+            var somethingA = specificData.ReadInt32(10); // 00 01
+            var somethingB = specificData.ReadInt16(12); // FF 00
+            member.Fill = specificData.ReadByteOrDefault(14) > 0; // 01 = fill , 00  not fill
             return member;
         }
 
-        private void ReadVectorShape(BlCastRawMemberShape member, byte[] payload)
+        public BlCastRawMemberShape ReadVectorShape(byte[] payload)
         {
+            // For debug
+            //var rawBytes = payload.ToHexString();
+            var member = new BlCastRawMemberShape();
+            member.ShapeType = BlCastRawMemberShape.BlRawShapeType.PolyLine;
+
             var reader = new BlStreamReader(new MemoryStream(payload));
             var length = reader.ReadInt32();        // 0B
             var type = reader.ReadBytes(length);    // = vectorShape
@@ -163,10 +159,11 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
                 }
             }
 
-            
 
 
+            return member;
         }
+        
     }
 }
 /*

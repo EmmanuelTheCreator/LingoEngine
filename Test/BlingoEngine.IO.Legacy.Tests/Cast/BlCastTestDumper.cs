@@ -109,11 +109,11 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
                 var info = bytes.ToArray(); 
                 if (!File.Exists(outPath2))
                     File.WriteAllBytes(outPath2,info);
-                var tokenizer = new BlLegacyCastItemReader();
+                var tokenizer = new BlLegacyCastItemReader_ForDump();
                 var fn = Path.GetFileName(file);
                 if (withTokens)
                 {
-                    (var tokens, var member) = tokenizer.ReadItemWithTokens(fileData.FileName, info);
+                    (var tokens, var member) = tokenizer.ReadItemWithTokensForDump(fileData.FileName, info);
                     var text1 = tokenizer.TokenListToStringX(tokens); // for debug
                     var name = $"{fn} - {member.MemberTypeString} - {member.Name} - {member.MediaContentType} - Blobs={member.Blobs.Count} ({member.Created.Value:dd/MM:yyyy HH:mm:ss},{member.Modified.Value:dd/MM:yyyy HH:mm:ss})";
                     sb.AppendLine(name);

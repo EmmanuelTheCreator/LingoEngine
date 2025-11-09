@@ -2,6 +2,8 @@
 
 [← Back to the format overview](./README.md)
 
+<img src="../Images/Director_TabMember.jpg"><img src="../Images/Director_TabCast.jpg">
+
 ## CAS* — Cast Member Table
 
 ### Each Cast Entry
