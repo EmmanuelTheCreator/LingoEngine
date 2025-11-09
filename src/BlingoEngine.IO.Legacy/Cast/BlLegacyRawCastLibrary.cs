@@ -44,7 +44,7 @@ public sealed class BlLegacyRawCastLibrary
     /// Gets the list of populated cast-member slots. Empty slots are omitted but their original
     /// index is preserved so consumers can reconstruct member numbering.
     /// </summary>
-    public List<BlLegacyCastMemberSlot> MemberSlots { get; } = new();
+    public List<BlCastRawMemberSlot> MemberSlots { get; } = new();
     public string Name { get; internal set; } = "";
     public bool IsInternal { get; internal set; }
 

@@ -41,7 +41,7 @@ public class BlLegacyCastReaderTests
 
         soundLibrary.MemberSlots.Select(member => member.Member.MemberType)
             .Should()
-            .AllBeEquivalentTo(BlLegacyCastMemberType.Sound);
+            .AllBeEquivalentTo(BlCastRawMemberType.Sound);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class BlLegacyCastReaderTests
         var member = fieldLibrary.MemberSlots[0];
 
         member.Member.Name.Should().Be("My field");
-        member.Member.MemberType.Should().BeOneOf(BlLegacyCastMemberType.Field, BlLegacyCastMemberType.Text);
+        member.Member.MemberType.Should().BeOneOf(BlCastRawMemberType.Field, BlCastRawMemberType.Text);
     }
 
     [Fact]

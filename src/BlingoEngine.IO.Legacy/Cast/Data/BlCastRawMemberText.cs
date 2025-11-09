@@ -3,13 +3,22 @@ using BlingoEngine.IO.Legacy.Core;
 
 namespace BlingoEngine.IO.Legacy.Cast.Data;
 
+public enum BlRawTextFraming : byte
+{
+    Fixed = 0x00,
+    Scrolling = 0x01,
+    AdjustToFit = 0x02
+}
+
+public enum BlRawTextAntiAlias : byte { None = 0, AllText = 1, LargerThan = 2 }
+public enum BlRawTextKerningMode : byte { None = 0x44, AllText = 0x30, LargerThan = 0x75 }
 public class BlCastRawMemberText : BlCastRawMemberItem
 {
     public BlCastRawMemberText(
         string type,
         int specificDataLength,
         bool isEditable,
-        BlLegacyTextFraming framing,
+        BlRawTextFraming framing,
         bool tabsEnabled,
         bool dtdEnabled,
         bool isAntialiasEnabled,
@@ -19,7 +28,7 @@ public class BlCastRawMemberText : BlCastRawMemberItem
         bool isKerningEnabled,
         int kerningMode,
         bool useHyperlinkStyles,
-        BlCastTextPreRenderInk preRenderInk,
+        BlRawTextPreRenderInk preRenderInk,
         bool savePreRenderBitmap,
         string shaderTag,
         int shaderDataLength,
@@ -27,10 +36,10 @@ public class BlCastRawMemberText : BlCastRawMemberItem
         double tunnelDepth,
         bool isBevelEnabled,
         double bevelAmount,
-        BlCastTextBevelEdge bevelEdge,
+        BlRawTextBevelEdge bevelEdge,
         int smoothness,
-        BlCastTextDirectionalLight lightSetting,
-        BlCastTextShaderTexture shaderTexture,
+        BlRawTextDirectionalLight lightSetting,
+        BlRawTextShaderTexture shaderTexture,
         int diffuseColorIndex,
         int specularColorIndex,
         int reflectivity,
@@ -43,7 +52,7 @@ public class BlCastRawMemberText : BlCastRawMemberItem
         double cameraFocalLength,
         string textureName)
     {
-        MemberType = BlLegacyCastMemberType.Text;
+        MemberType = BlCastRawMemberType.Text;
         TextType = type;
         SpecificDataLength = specificDataLength;
         IsEditable = isEditable;
@@ -85,7 +94,7 @@ public class BlCastRawMemberText : BlCastRawMemberItem
     public string TextType { get; }
     public int SpecificDataLength { get; }
     public bool IsEditable { get; }
-    public BlLegacyTextFraming Framing { get; }
+    public BlRawTextFraming Framing { get; }
     public bool TabsEnabled { get; }
     public bool DtdEnabled { get; }
     public bool IsAntialiasEnabled { get; }
@@ -95,7 +104,7 @@ public class BlCastRawMemberText : BlCastRawMemberItem
     public bool IsKerningEnabled { get; }
     public int KerningMode { get; }
     public bool UseHyperlinkStyles { get; }
-    public BlCastTextPreRenderInk PreRenderInk { get; }
+    public BlRawTextPreRenderInk PreRenderInk { get; }
     public bool SavePreRenderBitmap { get; }
     public string ShaderTag { get; }
     public int ShaderDataLength { get; }
@@ -103,10 +112,10 @@ public class BlCastRawMemberText : BlCastRawMemberItem
     public double TunnelDepth { get; }
     public bool IsBevelEnabled { get; }
     public double BevelAmount { get; }
-    public BlCastTextBevelEdge BevelEdge { get; }
+    public BlRawTextBevelEdge BevelEdge { get; }
     public int Smoothness { get; }
-    public BlCastTextDirectionalLight LightSetting { get; }
-    public BlCastTextShaderTexture ShaderTexture { get; }
+    public BlRawTextDirectionalLight LightSetting { get; }
+    public BlRawTextShaderTexture ShaderTexture { get; }
     public int DiffuseColorIndex { get; }
     public int SpecularColorIndex { get; }
     public int Reflectivity { get; }
@@ -120,21 +129,21 @@ public class BlCastRawMemberText : BlCastRawMemberItem
     public string TextureName { get; }
 }
 
-public enum BlCastTextPreRenderInk
+public enum BlRawTextPreRenderInk
 {
     None = 0,
     InkCopy = 1,
     InkOther = 2
 }
 
-public enum BlCastTextBevelEdge
+public enum BlRawTextBevelEdge
 {
     None = 0,
     Miter = 1,
     Round = 2
 }
 
-public enum BlCastTextDirectionalLight
+public enum BlRawTextDirectionalLight
 {
     None = 0,
     TopLeft = 1,
@@ -148,7 +157,7 @@ public enum BlCastTextDirectionalLight
     BottomRight = 9
 }
 
-public enum BlCastTextShaderTexture
+public enum BlRawTextShaderTexture
 {
     None = 0,
     Default = 1,

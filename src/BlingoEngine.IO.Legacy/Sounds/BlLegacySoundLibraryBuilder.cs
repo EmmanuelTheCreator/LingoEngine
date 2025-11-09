@@ -88,7 +88,7 @@ public static class BlLegacySoundLibraryBuilder
     private static byte[] BuildCastMember(string? memberName)
     {
         return BlLegacyCastLibraryBuilderHelpers.BuildModernCastMetadata(
-            BlLegacyCastMemberType.Sound,
+            BlCastRawMemberType.Sound,
             memberName,
             dataLength: 0u);
     }

@@ -153,7 +153,7 @@ internal sealed class BlLegacyCastReader
         return library;
     }
 
-    private BlLegacyCastMemberSlot CreateMember(int slot, int resourceId, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
+    private BlCastRawMemberSlot CreateMember(int slot, int resourceId, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
     {
         BlCastRawMemberItem memberInfo = new();
         if (_context.Resources.TryGetEntry(resourceId, out var memberEntry))
@@ -163,7 +163,7 @@ internal sealed class BlLegacyCastReader
                 memberInfo = memberInfo1!;
         }
 
-        return new BlLegacyCastMemberSlot(slot, resourceId, memberInfo);
+        return new BlCastRawMemberSlot(slot, resourceId, memberInfo);
     }
 
     private static bool TryParseMemberChunk(byte[] payload, out BlCastRawMemberItem? castMemberInfo)

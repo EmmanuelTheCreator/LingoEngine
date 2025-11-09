@@ -4,7 +4,7 @@
     {
         public BlCastRawMemberAudio()
         {
-            MemberType = BlLegacyCastMemberType.Sound;
+            MemberType = BlCastRawMemberType.Sound;
         }
     }
 }

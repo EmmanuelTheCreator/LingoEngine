@@ -2,7 +2,7 @@
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
-    internal class BlCastMemberAudioReader
+    internal class BlCastMemberAudioReader_Dir10
     {
         internal BlCastRawMemberItem Read(byte[] specificData)
         {

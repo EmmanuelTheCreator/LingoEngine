@@ -5,9 +5,9 @@ using System.Numerics;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
-    internal class BlCastMemberTextReader
+    internal class BlCastMemberTextReader_Dir10
     {
-        public BlCastRawMemberText Read(byte[] specificBytes, List<byte[]> blobs, List<int> prefixValues)
+        public BlCastRawMemberText Read(byte[] specificBytes)
         {
             using var specificStream = new MemoryStream(specificBytes, writable: false);
             var reader = new BlStreamReader(specificStream)
@@ -23,7 +23,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var specificDataLength = reader.ReadInt32();
 
             var isEditable = ReadBoolean(reader);
-            var framing = (BlLegacyTextFraming)reader.ReadInt32();
+            var framing = (BlRawTextFraming)reader.ReadInt32();
             var tabsEnabled = ReadBoolean(reader);
             var dtdEnabled = ReadBoolean(reader);
             reader.Skip(4);
@@ -42,7 +42,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 
             reader.Skip(4 * 3);
 
-            var preRenderInk = (BlCastTextPreRenderInk)reader.ReadInt32();
+            var preRenderInk = (BlRawTextPreRenderInk)reader.ReadInt32();
             var savePreRenderBitmap = ReadBoolean(reader);
 
             var shaderTag = reader.ReadAsciiString(4);
@@ -51,10 +51,10 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var tunnelDepth = ReadFixed1616(reader);
             var isBevelEnabled = ReadBoolean(reader);
             var bevelAmount = ReadFixed1616(reader);
-            var bevelEdge = (BlCastTextBevelEdge)reader.ReadInt32();
+            var bevelEdge = (BlRawTextBevelEdge)reader.ReadInt32();
             var smoothness = reader.ReadInt32();
-            var lightSetting = (BlCastTextDirectionalLight)reader.ReadInt32();
-            var shaderTexture = (BlCastTextShaderTexture)reader.ReadInt32();
+            var lightSetting = (BlRawTextDirectionalLight)reader.ReadInt32();
+            var shaderTexture = (BlRawTextShaderTexture)reader.ReadInt32();
             var diffuseIndex = reader.ReadInt32();
             var specularIndex = reader.ReadInt32();
             var reflectivity = reader.ReadInt32();

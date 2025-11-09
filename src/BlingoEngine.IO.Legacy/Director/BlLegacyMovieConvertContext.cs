@@ -148,7 +148,7 @@ namespace BlingoEngine.IO.Legacy.Director
            _resources.Files.Add(resource);
         }
 
-        public T CreateMember<T>(BlLegacyCastMemberSlot slot)
+        public T CreateMember<T>(BlCastRawMemberSlot slot)
             where T : BlingoMemberDTO, new()
         {
             var rawMember = slot.Member;

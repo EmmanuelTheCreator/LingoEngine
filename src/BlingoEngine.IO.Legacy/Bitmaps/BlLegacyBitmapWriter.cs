@@ -229,7 +229,7 @@ public static class BlLegacyBitmapLibraryBuilder
 
     private static byte[] BuildCastMember(string? memberName)
         => BlLegacyCastLibraryBuilderHelpers.BuildModernCastMetadata(
-            BlLegacyCastMemberType.Bitmap,
+            BlCastRawMemberType.Bitmap,
             memberName,
             dataLength: 0u);
 

@@ -69,23 +69,23 @@ public static class BlLegacyMovieBlingoExtensions
         return castDto;
     }
 
-    public static BlingoMemberDTO ToBlingo(this BlLegacyCastMemberSlot slot, BlLegacyMovieConvertContext context)
+    public static BlingoMemberDTO ToBlingo(this BlCastRawMemberSlot slot, BlLegacyMovieConvertContext context)
     {
         var member = slot.Member.MemberType switch
         {
-            BlLegacyCastMemberType.Text => slot.Member.ToTextMember(context, slot),
-            BlLegacyCastMemberType.Field => slot.Member.ToFieldDto(context, slot),
-            BlLegacyCastMemberType.Script => slot.Member.ToScriptDto(context, slot),
-            BlLegacyCastMemberType.DigitalVideo => slot.Member.ToVideoDto(context, slot),
-            BlLegacyCastMemberType.Sound => slot.Member.ToSoundDto(context,slot),
-            BlLegacyCastMemberType.Bitmap or BlLegacyCastMemberType.Picture => slot.Member.ToBitmapDto(context, slot),
+            BlCastRawMemberType.Text => slot.Member.ToTextMember(context, slot),
+            BlCastRawMemberType.Field => slot.Member.ToFieldDto(context, slot),
+            BlCastRawMemberType.Script => slot.Member.ToScriptDto(context, slot),
+            BlCastRawMemberType.DigitalVideo => slot.Member.ToVideoDto(context, slot),
+            BlCastRawMemberType.Sound => slot.Member.ToSoundDto(context,slot),
+            BlCastRawMemberType.Bitmap or BlCastRawMemberType.Picture => slot.Member.ToBitmapDto(context, slot),
             // Not implemented, return default
             _ => new BlingoMemberDTO { Name = slot.Member.Name, CastLibNum = context.CurrentCast.Number,NumberInCast = slot.SlotIndex+1}
         };
         return member;
     }
 
-    public static BlingoMemberDTO ToTextMember(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlLegacyCastMemberSlot slot)
+    public static BlingoMemberDTO ToTextMember(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlCastRawMemberSlot slot)
     {
         var rawMember = (BlCastRawMemberText)rawMemberG;
         var member = context.CreateMember<BlingoMemberTextDTO>(slot);
@@ -108,7 +108,7 @@ public static class BlLegacyMovieBlingoExtensions
         return member;
     }
 
-    public static BlingoMemberDTO ToFieldDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlLegacyCastMemberSlot slot)
+    public static BlingoMemberDTO ToFieldDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlCastRawMemberSlot slot)
     {
         var rawMember = (BlCastRawMemberText)rawMemberG;
         var member = context.CreateMember<BlingoMemberFieldDTO>(slot);
@@ -131,7 +131,7 @@ public static class BlLegacyMovieBlingoExtensions
         return member;
     }
 
-    internal static BlingoMemberDTO ToBitmapDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlLegacyCastMemberSlot slot)
+    internal static BlingoMemberDTO ToBitmapDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlCastRawMemberSlot slot)
     {
         var rawMember = (BlCastRawMemberBitmap)rawMemberG;
         var member = context.CreateMember<BlingoMemberBitmapDTO>(slot);
@@ -155,7 +155,7 @@ public static class BlLegacyMovieBlingoExtensions
         return member;
     }
 
-    public static BlingoMemberDTO ToSoundDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlLegacyCastMemberSlot slot)
+    public static BlingoMemberDTO ToSoundDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlCastRawMemberSlot slot)
     {
         var rawMember = (BlCastRawMemberAudio)rawMemberG;
         if (!context.TryGetSound(slot.ResourceId, out var sound))
@@ -168,7 +168,7 @@ public static class BlLegacyMovieBlingoExtensions
         member.SoundFile = resource.FileName;
         return member;
     }
-    public static BlingoMemberDTO ToScriptDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlLegacyCastMemberSlot slot)
+    public static BlingoMemberDTO ToScriptDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlCastRawMemberSlot slot)
     {
         var rawMember = (BlCastRawMemberScript)rawMemberG;
         var member = context.CreateMember<BlingoMemberScriptDTO>(slot);
@@ -180,7 +180,7 @@ public static class BlLegacyMovieBlingoExtensions
 
         return member;
     }
-    public static BlingoMemberDTO ToVideoDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlLegacyCastMemberSlot slot)
+    public static BlingoMemberDTO ToVideoDto(this BlCastRawMemberItem rawMemberG, BlLegacyMovieConvertContext context, BlCastRawMemberSlot slot)
     {
         var rawMember = (BlCastRawMemberVideo)rawMemberG;
         var member = context.CreateMember<BlingoMemberVideoDTO>(slot);
@@ -204,24 +204,24 @@ public static class BlLegacyMovieBlingoExtensions
 
 
 
-    internal static BlingoMemberTypeDTO ToDto(this BlLegacyCastMemberType type)
+    internal static BlingoMemberTypeDTO ToDto(this BlCastRawMemberType type)
     {
         return type switch
         {
-            BlLegacyCastMemberType.Bitmap => BlingoMemberTypeDTO.Bitmap,
-            BlLegacyCastMemberType.FilmLoop => BlingoMemberTypeDTO.FilmLoop,
-            BlLegacyCastMemberType.Text => BlingoMemberTypeDTO.Text,
-            BlLegacyCastMemberType.Palette => BlingoMemberTypeDTO.Palette,
-            BlLegacyCastMemberType.Picture => BlingoMemberTypeDTO.Picture,
-            BlLegacyCastMemberType.Sound => BlingoMemberTypeDTO.Sound,
-            BlLegacyCastMemberType.Button => BlingoMemberTypeDTO.Button,
-            BlLegacyCastMemberType.Shape => BlingoMemberTypeDTO.Shape,
-            BlLegacyCastMemberType.Movie => BlingoMemberTypeDTO.Movie,
-            BlLegacyCastMemberType.DigitalVideo => BlingoMemberTypeDTO.DigitalVideo,
-            BlLegacyCastMemberType.Script => BlingoMemberTypeDTO.Script,
-            BlLegacyCastMemberType.Rte => BlingoMemberTypeDTO.Script,
-            BlLegacyCastMemberType.Font => BlingoMemberTypeDTO.Font,
-            BlLegacyCastMemberType.Field => BlingoMemberTypeDTO.Field,
+            BlCastRawMemberType.Bitmap => BlingoMemberTypeDTO.Bitmap,
+            BlCastRawMemberType.FilmLoop => BlingoMemberTypeDTO.FilmLoop,
+            BlCastRawMemberType.Text => BlingoMemberTypeDTO.Text,
+            BlCastRawMemberType.Palette => BlingoMemberTypeDTO.Palette,
+            BlCastRawMemberType.Picture => BlingoMemberTypeDTO.Picture,
+            BlCastRawMemberType.Sound => BlingoMemberTypeDTO.Sound,
+            BlCastRawMemberType.Button => BlingoMemberTypeDTO.Button,
+            BlCastRawMemberType.Shape => BlingoMemberTypeDTO.Shape,
+            BlCastRawMemberType.Movie => BlingoMemberTypeDTO.Movie,
+            BlCastRawMemberType.DigitalVideo => BlingoMemberTypeDTO.DigitalVideo,
+            BlCastRawMemberType.Script => BlingoMemberTypeDTO.Script,
+            BlCastRawMemberType.Rte => BlingoMemberTypeDTO.Script,
+            BlCastRawMemberType.Font => BlingoMemberTypeDTO.Font,
+            BlCastRawMemberType.Field => BlingoMemberTypeDTO.Field,
             _ => BlingoMemberTypeDTO.Unknown
         };
     }

@@ -4,7 +4,7 @@ namespace BlingoEngine.IO.Legacy.Cast.Data
 {
     public class BlCastRawMemberScript : BlCastRawMemberItem
     {
-        public BlScriptType ScriptType { get; set; }
+        public BlScriptTypeDTO ScriptType { get; set; }
         public string Script { get; set; } = "";
         public bool IsJavascript { get; set; }
         public string? LinkedFileName { get; set; }
@@ -12,7 +12,7 @@ namespace BlingoEngine.IO.Legacy.Cast.Data
 
         public BlCastRawMemberScript()
         {
-            MemberType = BlLegacyCastMemberType.Script;
+            MemberType = BlCastRawMemberType.Script;
         }
     }
 }

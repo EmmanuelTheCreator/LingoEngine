@@ -154,8 +154,8 @@ namespace BlingoEngine.IO.Legacy.Cast
             // | BitmapType | 16      | for Bitmaps                 |
             // | created    | 17      |                             |
             // | modified   | 18      |                             |
-            // | N/A        | 19      |                             |
-            // |            | 20*     |                             |
+            // | Username   | 19      |                             |
+            // | Comment    | 20*     |                             |
             // |            | 21*     |                             |
             // * = only some types of members have 22 values other only 20, like custom painted bitmap
 
@@ -219,7 +219,7 @@ namespace BlingoEngine.IO.Legacy.Cast
             
 
 
-            var member = CreateMember(infoSlice, specificData, memberName, memberContentType, memberFormat, blops, dateCreated, dateModified, prefixValues);
+            var member = CreateMember_Dir10(infoSlice, specificData, memberName, memberContentType, memberFormat, blops, dateCreated, dateModified, prefixValues);
             member.ModifiedBy = userName;
             member.Comment = comment;
             return (member, datas);
@@ -328,11 +328,11 @@ namespace BlingoEngine.IO.Legacy.Cast
 
             //var text1 = TokenListToStringX(returnData);
 
-            BlCastRawMemberItem? castMember = CreateMember(infoSlice, specificData, memberName, memberContentType, memberContentType, blobs, dateCreated, dateModified, new List<int>());
+            BlCastRawMemberItem? castMember = CreateMember_Dir10(infoSlice, specificData, memberName, memberContentType, memberContentType, blobs, dateCreated, dateModified, new List<int>());
             return (returnData, castMember);
         }
 
-        private BlCastRawMemberItem CreateMember(byte[] infoSlice, byte[] specificData, string memberName,string? memberContentType, string? memberFormat, List<byte[]> blobs, DateTime dateCreated, DateTime dateModified, List<int> prefixValues)
+        private BlCastRawMemberItem CreateMember_Dir10(byte[] infoSlice, byte[] specificData, string memberName,string? memberContentType, string? memberFormat, List<byte[]> blobs, DateTime dateCreated, DateTime dateModified, List<int> prefixValues)
         {
             var memberType = GetMemberType(specificData, memberFormat);
             //if (string.IsNullOrWhiteSpace(memberType))
@@ -347,35 +347,35 @@ namespace BlingoEngine.IO.Legacy.Cast
             switch (memberType)
             {
                 case "text":
-                    castMember = new BlCastMemberTextReader().Read(specificData, blobs, prefixValues);
+                    castMember = new BlCastMemberTextReader_Dir10().Read(specificData);
                     break;
                 case "bitmap":
                 case "bitmapPainted":
-                    castMember = new BlCastMemberBitmapReader().Read(specificData, infoSlice, prefixValues);
+                    castMember = new BlCastMemberBitmapReader_Dir10().Read(specificData, infoSlice);
                     break;
                 case "animGif":
-                    castMember = new BlCastMemberBitmapReader().ReadGif(specificData, blobs, prefixValues);
+                    castMember = new BlCastMemberBitmapReader_Dir10().ReadGif(specificData, blobs, prefixValues);
                     break;
                 case "mp3":
                 case "wav":
                 case "aiff":
-                    castMember = new BlCastMemberAudioReader().Read(specificData);
+                    castMember = new BlCastMemberAudioReader_Dir10().Read(specificData);
                     break;
                 case "shape":
                 case "vectorShape":
                 case "Shape":
                     var isVecorShape = memberType == "vectorShape";
                     
-                    castMember = new BlCastMemberShapeReader().Read(specificData, blobs, prefixValues, isVecorShape);
+                    castMember = new BlCastMemberShapeReader_Dir10().Read(specificData, blobs, prefixValues, isVecorShape);
                     break;
                 case "script":
-                    castMember = new BlCastMemberScriptReader().Read(specificData, blobs, prefixValues);
+                    castMember = new BlCastMemberScriptReader_Dir10().Read(specificData, blobs, prefixValues);
                     break;
                 case "video":
                 case "windowsMedia":
                 case "quickTimeMedia":
                 case "avi":
-                    castMember = new BlCastMemberVideoReader().Read(specificData, blobs, prefixValues, memberType);
+                    castMember = new BlCastMemberVideoReader_Dir10().Read(specificData, blobs, prefixValues, memberType);
                     break;
                 case "flashComponent":
                 default:

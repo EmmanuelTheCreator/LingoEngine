@@ -1,14 +1,10 @@
 ﻿using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Legacy.Cast.Data;
 using BlingoEngine.IO.Legacy.Tools;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
-    internal class BlCastMemberShapeReader
+    internal class BlCastMemberShapeReader_Dir10
     {
         internal BlCastRawMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues, bool isVecorShape)
         {
@@ -16,7 +12,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var member = new BlCastRawMemberShape();
             if (isVecorShape)
             {
-                member.ShapeType = BlCastRawMemberShape.BlShapeType.PolyLine;
+                member.ShapeType = BlCastRawMemberShape.BlRawShapeType.PolyLine;
                 ReadVectorShape(member, specificData);
             }
             else
@@ -34,10 +30,10 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
                 var shapeType = specificData.ReadInt16(0);
                 switch (shapeType)
                 {
-                    case 01: member.ShapeType = BlCastRawMemberShape.BlShapeType.Rectangle; break;
-                    case 02: member.ShapeType = BlCastRawMemberShape.BlShapeType.RoundRectangle; break;
-                    case 03: member.ShapeType = BlCastRawMemberShape.BlShapeType.Oval; break;
-                    case 04: member.ShapeType = BlCastRawMemberShape.BlShapeType.Line; break;
+                    case 01: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Rectangle; break;
+                    case 02: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.RoundRectangle; break;
+                    case 03: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Oval; break;
+                    case 04: member.ShapeType = BlCastRawMemberShape.BlRawShapeType.Line; break;
                 }
                 member.Height = specificData.ReadInt16(6);
                 member.Width = specificData.ReadInt16(8);
@@ -71,7 +67,7 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
             for (int i = 0; i < 10; i++)
                 values2.Add(reader.ReadInt32());
 
-            member.ScaleMode = (BlCastRawMemberShape.BlShapeScaleMode)reader.ReadInt32();
+            member.ScaleMode = (BlCastRawMemberShape.BlRawShapeScaleMode)reader.ReadInt32();
 
             var values3 = new List<int>();
             for (int i = 0; i < 6; i++)
@@ -108,7 +104,7 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
             if (tag == 7)
             {
                 var numberOfVertices = reader.ReadInt32();
-                var curve = new BlCastRawMemberShape.BlShapeCurve();
+                var curve = new BlCastRawMemberShape.BlRawShapeCurve();
                 member.Curves = [curve];
                 for (int i = 0; i < numberOfVertices; i++)
                 {
@@ -120,7 +116,7 @@ Member 7: 00 04 00 00 00 00 00 27 00 4A 00 01 FF 00 01 02 05    // MyLine
                     else if (tag == 0x07)
                     {
                         // New curve
-                        curve = new BlCastRawMemberShape.BlShapeCurve();
+                        curve = new BlCastRawMemberShape.BlRawShapeCurve();
                         member.Curves.Add(curve);
                         var numberOfValues2 = reader.ReadInt32();       // 01
                         var tag2 = reader.ReadInt32();                  // 02

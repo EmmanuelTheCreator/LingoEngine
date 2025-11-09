@@ -3,7 +3,7 @@ namespace BlingoEngine.IO.Legacy.Cast.Data;
 /// <summary>
 /// Enumerates the legacy cast-member types encoded at the start of the <c>CASt</c> payload.
 /// </summary>
-public enum BlLegacyCastMemberType
+public enum BlCastRawMemberType
 {
     /// <summary>
     /// Type code returned when the loader cannot map the stored identifier.
@@ -92,29 +92,29 @@ public enum BlLegacyCastMemberType
 }
 
 
-public static class BlLegacyCastMemberTypeHelpers
+public static class BlCastRawMemberTypeHelpers
 {
-    public static BlLegacyCastMemberType MapMemberType(uint value)
+    public static BlCastRawMemberType MapMemberType(uint value)
     {
         return value switch
         {
-            0 => BlLegacyCastMemberType.Null,
-            1 => BlLegacyCastMemberType.Bitmap,
-            2 => BlLegacyCastMemberType.FilmLoop,
-            3 => BlLegacyCastMemberType.Text,
-            4 => BlLegacyCastMemberType.Palette,
-            5 => BlLegacyCastMemberType.Picture,
-            6 => BlLegacyCastMemberType.Sound,
-            7 => BlLegacyCastMemberType.Button,
-            8 => BlLegacyCastMemberType.Shape,
-            9 => BlLegacyCastMemberType.Movie,
-            10 => BlLegacyCastMemberType.DigitalVideo,
-            11 => BlLegacyCastMemberType.Script,
-            12 => BlLegacyCastMemberType.Rte,
-            13 => BlLegacyCastMemberType.Font,
-            14 => BlLegacyCastMemberType.Xtra,
-            15 => BlLegacyCastMemberType.Field,
-            _ => BlLegacyCastMemberType.Unknown
+            0 => BlCastRawMemberType.Null,
+            1 => BlCastRawMemberType.Bitmap,
+            2 => BlCastRawMemberType.FilmLoop,
+            3 => BlCastRawMemberType.Text,
+            4 => BlCastRawMemberType.Palette,
+            5 => BlCastRawMemberType.Picture,
+            6 => BlCastRawMemberType.Sound,
+            7 => BlCastRawMemberType.Button,
+            8 => BlCastRawMemberType.Shape,
+            9 => BlCastRawMemberType.Movie,
+            10 => BlCastRawMemberType.DigitalVideo,
+            11 => BlCastRawMemberType.Script,
+            12 => BlCastRawMemberType.Rte,
+            13 => BlCastRawMemberType.Font,
+            14 => BlCastRawMemberType.Xtra,
+            15 => BlCastRawMemberType.Field,
+            _ => BlCastRawMemberType.Unknown
         };
     }
 }

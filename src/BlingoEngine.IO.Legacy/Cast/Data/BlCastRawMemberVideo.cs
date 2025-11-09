@@ -4,7 +4,7 @@
     {
         public BlCastRawMemberVideo()
         {
-            MemberType = BlLegacyCastMemberType.DigitalVideo;
+            MemberType = BlCastRawMemberType.DigitalVideo;
         }
 
         public string LinkedFileName { get; set; } = "";
@@ -18,9 +18,9 @@
         public bool EnableLoop { get; set; }
         public int StartValueMs { get; set; }
         public int VideoFps { get; internal set; }
-        public VideoFraming Framing { get; internal set; }
+        public BlRawVideoFraming Framing { get; internal set; }
 
-        public enum VideoPlaybackRate { Sync, EveryFrame, Maximum, Fixed }
-        public enum VideoFraming { Scale, Crop, CropCenter }
+        public enum BlRawVideoPlaybackRate { Sync, EveryFrame, Maximum, Fixed }
+        public enum BlRawVideoFraming { Scale, Crop, CropCenter }
     }
 }

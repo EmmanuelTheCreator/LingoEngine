@@ -3,9 +3,9 @@ using BlingoEngine.IO.Legacy.Tools;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
-    internal class BlCastMemberBitmapReader
+    internal class BlCastMemberBitmapReader_Dir10
     {
-        public BlCastRawMemberItem Read(byte[] specificData, byte[] infoSlice, List<int> prefixValues)
+        public BlCastRawMemberItem Read(byte[] specificData, byte[] infoSlice)
         {
             var member = new BlCastRawMemberBitmap();
             var byte1 = specificData.ReadByteOrDefault(0);
@@ -37,9 +37,9 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var compressionType = infoSlice.ReadByteOrDefault(infoSlice.Length-4); // FB, FD, FE
             switch (compressionType)
             {
-                case 0xFB: member.CompressionType = BlCastRawMemberBitmap.BitmapCompressionType.MovieSetting;break;
-                case 0xFE: member.CompressionType = BlCastRawMemberBitmap.BitmapCompressionType.Standard;break;
-                case 0xFD: member.CompressionType = BlCastRawMemberBitmap.BitmapCompressionType.JPEG;break;
+                case 0xFB: member.CompressionType = BlCastRawMemberBitmap.RawBitmapCompressionType.MovieSetting;break;
+                case 0xFE: member.CompressionType = BlCastRawMemberBitmap.RawBitmapCompressionType.Standard;break;
+                case 0xFD: member.CompressionType = BlCastRawMemberBitmap.RawBitmapCompressionType.JPEG;break;
                 default:
                     break;
             }
@@ -76,7 +76,7 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 
         public BlCastRawMemberItem ReadGif(byte[] specificData, List<byte[]> blobs, List<int> prefixValues)
         {
-            var member = new BlCastMemberGif();
+            var member = new BlCastRawMemberGif();
 
             var int1 = specificData.ReadUInt32(11); // 0x34
             var int2 = specificData.ReadUInt32(15); // 0x34

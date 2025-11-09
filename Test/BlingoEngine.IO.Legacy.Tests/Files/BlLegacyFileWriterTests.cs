@@ -236,7 +236,7 @@ public class BlLegacyFileWriterTests
         var header = castResource.Bytes.AsSpan();
         var nameByteCount = Encoding.UTF8.GetByteCount(memberName);
         var expectedInfoLength = (uint)(1 + nameByteCount);
-        BinaryPrimitives.ReadUInt32BigEndian(header.Slice(0, 4)).Should().Be((uint)BlLegacyCastMemberType.Shape);
+        BinaryPrimitives.ReadUInt32BigEndian(header.Slice(0, 4)).Should().Be((uint)BlCastRawMemberType.Shape);
         BinaryPrimitives.ReadUInt32BigEndian(header.Slice(4, 4)).Should().Be(expectedInfoLength);
         BinaryPrimitives.ReadUInt32BigEndian(header.Slice(8, 4)).Should().Be((uint)shapeRecord.Length);
 

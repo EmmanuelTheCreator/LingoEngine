@@ -5,7 +5,7 @@ using static BlingoEngine.IO.Data.DTO.Members.BlingoMemberScriptDTO;
 
 namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
 {
-    internal class BlCastMemberScriptReader
+    internal class BlCastMemberScriptReader_Dir10
     {
         internal BlCastRawMemberItem Read(byte[] specificData, List<byte[]> blobs, List<int> prefixValues)
         {
@@ -13,9 +13,9 @@ namespace BlingoEngine.IO.Legacy.Cast.MemberTypes
             var scriptType = specificData.ReadInt16(0);
             switch (scriptType)
             {
-                case 1: member.ScriptType = BlScriptType.Behavior; break;
-                case 3: member.ScriptType = BlScriptType.MovieScript; break;
-                case 7: member.ScriptType = BlScriptType.ParentScript; break;
+                case 1: member.ScriptType = BlScriptTypeDTO.Behavior; break;
+                case 3: member.ScriptType = BlScriptTypeDTO.MovieScript; break;
+                case 7: member.ScriptType = BlScriptTypeDTO.ParentScript; break;
                 default:
                     break;
             }
