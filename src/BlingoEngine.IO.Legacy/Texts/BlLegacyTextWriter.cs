@@ -129,7 +129,7 @@ public static class BlLegacyTextLibraryBuilder
         {
             FileName = $"CASt_{_castMemberResourceId:D4}.bin",
             Bytes = BlLegacyCastLibraryBuilderHelpers.BuildModernCastMetadata(
-                BlLegacyCastMemberType.Text,
+                BlCastRawMemberType.Text,
                 memberName,
                 dataLength: 0)
         });

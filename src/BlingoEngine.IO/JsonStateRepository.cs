@@ -371,12 +371,12 @@ public class JsonStateRepository : IJsonStateRepository
         sprite.InitialState = sprite.GetState();
     }
 
-    private static BlingoScriptType MapScriptType(BlingoMemberScriptDTO.BlScriptType scriptType)
+    private static BlingoScriptType MapScriptType(BlingoMemberScriptDTO.BlScriptTypeDTO scriptType)
     {
         return scriptType switch
         {
-            BlingoMemberScriptDTO.BlScriptType.ParentScript => BlingoScriptType.Parent,
-            BlingoMemberScriptDTO.BlScriptType.MovieScript => BlingoScriptType.Movie,
+            BlingoMemberScriptDTO.BlScriptTypeDTO.ParentScript => BlingoScriptType.Parent,
+            BlingoMemberScriptDTO.BlScriptTypeDTO.MovieScript => BlingoScriptType.Movie,
             _ => BlingoScriptType.Behavior
         };
     }

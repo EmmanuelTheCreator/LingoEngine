@@ -36,6 +36,7 @@ internal class RaysScoreReader
         int absoluteStart = stream.Offset + entriesStart + offsets[0];
 
         ctx.SetFrameDataBufferView(stream.Data, absoluteStart, size);
+        //var dataaa = ctx.FrameDataBufferView.LogHex();
         List<int> intervalOrder = new();
         if (entryCount >= 2)
         {
@@ -43,6 +44,7 @@ internal class RaysScoreReader
             int absoluteStart2 = stream.Offset + entriesStart + offsets[1];
             var orderView = new BufferView(stream.Data, absoluteStart2, offsets[2] - offsets[1]);
             var os = new ReadStream(orderView, Endianness.BigEndian, annotator: Annotator);
+            //var dataaa = os.LogHex();
             if (os.Size >= 4)
             {
                 int count = os.ReadInt32("orderCount");

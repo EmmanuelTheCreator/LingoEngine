@@ -270,6 +270,12 @@ public sealed class BlStreamReader
         var buffer = ReadBytes(length);
         return Encoding.ASCII.GetString(buffer);
     }
+    public string ReadStringWithFirstByteLength()
+    {
+        var length = ReadByte();
+        var buffer = ReadBytes(length);
+        return Encoding.ASCII.GetString(buffer);
+    }
 
     /// <summary>
     /// Formats bytes as a hexadecimal string, optionally prefixing each line with the byte offset (e.g. <c>0x00000000:</c>).

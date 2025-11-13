@@ -18,7 +18,7 @@ namespace BlingoEngine.IO.Legacy.Tests.Helpers;
 
 internal sealed class TestContextHarness : IDisposable
 {
-    public static IReadOnlyList<BlLegacyCastLibrary> LoadCastLibraries(string relativePath)
+    public static IReadOnlyList<BlLegacyRawCastLibrary> LoadCastLibraries(string relativePath)
     {
         using var harness = Open(relativePath);
         harness.ReadResources();

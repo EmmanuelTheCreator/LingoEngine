@@ -150,6 +150,16 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
         Fgei = Register("FGEI");
         Cast = Register("CAST");
         CasStar = Register("CAS*");
+        // Cast info block
+        Cinf = Register("Cinf");
+        MCsL = Register("MCsL");
+        VWSC = Register("VWSC");
+        // Movie info and settings
+        VWFI = Register("VWFI");
+        // Movie director settings
+        DRCF = Register("DRCF");
+        // Movie publish settings
+        PUBL = Register("PUBL"); 
 
         Register("ediM");
         Register("BITD");
@@ -208,9 +218,28 @@ public readonly struct BlTag : IEquatable<BlTag>, IEquatable<string>
     public static BlTag Free { get; }
     public static BlTag Junk { get; }
     public static BlTag Fver { get; }
+    public static BlTag MCsL { get; }
+    
     public static BlTag Fcdr { get; }
     public static BlTag Abmp { get; }
     public static BlTag Fgei { get; }
     public static BlTag Cast { get; }
+    /// <summary>
+    /// Cast info block
+    /// </summary>
+    public static BlTag Cinf { get; }
     public static BlTag CasStar { get; }
+    public static BlTag VWSC { get; }
+    /// <summary>
+    /// Movie info and settings
+    /// </summary>
+    public static BlTag VWFI { get; }
+    /// <summary>
+    /// Movie Director settings
+    /// </summary>
+    public static BlTag DRCF { get; }
+    /// <summary>
+    /// Movie publish settings
+    /// </summary>
+    public static BlTag PUBL { get; }
 }

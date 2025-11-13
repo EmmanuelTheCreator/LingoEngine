@@ -8,10 +8,6 @@
 	  <LangVersion>12</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\docs\DirDissasembly\XMED_Declaration.md" Link="XMED_Declaration.md" />
-    <None Include="..\..\docs\DirDissasembly\XMED_Offsets.md" Link="XMED_Offsets.md" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
   </ItemGroup>
   <ItemGroup>

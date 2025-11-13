@@ -1,0 +1,159 @@
+Animation_types.dir
+--------------------------------
+=== Header ===
+ActualSize: 		1344
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	6
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		63
+EntrySizeSum: 	2012
+NotationBase: 	64
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	2292
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=6, Channel=6, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 1: Start=1, End=6, Channel=7, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 2: Start=1, End=6, Channel=8, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 3: Start=1, End=6, Channel=9, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 4: Start=1, End=6, Channel=10, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 5: Start=1, End=6, Channel=11, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 6: Start=1, End=6, Channel=12, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3
+Item Desc. 7: Start=1, End=6, Channel=13, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=2, U4=-10486,15, U5=229 255, U7=30,55,0,0, KF=3
+Item Desc. 8: Start=1, End=6, Channel=25, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 9: Start=1, End=6, Channel=86, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 10: Start=1, End=6, Channel=105, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+Item Desc. 11: Start=1, End=6, Channel=154, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=3,5
+
+=== Frames ===
+01) 0262
+    0120=10 00 FF 00 00 01 00 04 00 00 00 03 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 06 00 14 00 0A 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 09 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 1E 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 15 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 18 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 21 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 FF 00 00 01 00 04 00 00 00 24 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=20|Set LocH=10|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0|Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0
+    03D6=01 00                                              20) Set FlipFlags=1
+    04B0=10 00 FF 00 00 01 00 04 00 00 00 33 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   25) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0
+    0556=01 00                                              28) Set FlipFlags=1
+    1020=10 00 FF 00 00 01 00 04 00 00 00 36 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   86) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0
+    13B0=10 00 FF 00 00 01 00 04 00 00 00 39 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  105) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0
+    1CE0=10 00 FF 00 00 01 00 04 00 00 00 3C 00 78 00 A0 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  154) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=120|Set LocH=160|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set UnknownB=0|Set Rotation=0|Set Skew=0
+02) 00B2
+    0120=10 80                                               6) Set Flags1=16|Set Ink=128
+    0130=00 2E 00 4D                                         6) Set Height=46|Set Width=77
+    0136=81 00                                               6) Set FlipFlags=129
+    015C=00 50 00 49                                         7) Set LocV=80|Set LocH=73
+    0166=81 00                                               7) Set FlipFlags=129
+    0196=81 00                                               8) Set FlipFlags=129
+    019E=09 1D                                               8) Set Rotation=2333
+    01C6=81 00                                               9) Set FlipFlags=129
+    01D2=04 57                                               9) Set Skew=1111
+    01F4=00 49 91 00                                        10) Set ScoreColor=0|Set Blend=73|Set FlipFlags=145
+    0212=CC 10                                              11) Set ForeColorR=204|Set BackColorR=16
+    0226=81 00                                              11) Set FlipFlags=129
+    0256=81 00                                              12) Set FlipFlags=129
+    0286=81 00                                              13) Set FlipFlags=129
+    0316=01 00                                              16) Set FlipFlags=1
+    04B0=10 80                                              25) Set Flags1=16|Set Ink=128
+    04C0=00 2E 00 4D                                        25) Set Height=46|Set Width=77
+    04C6=81 00                                              25) Set FlipFlags=129
+    1020=10 80                                              86) Set Flags1=16|Set Ink=128
+    1030=00 2E 00 4D                                        86) Set Height=46|Set Width=77
+    1036=81 00                                              86) Set FlipFlags=129
+    13B0=10 80                                             105) Set Flags1=16|Set Ink=128
+    13C0=00 2E 00 4D                                       105) Set Height=46|Set Width=77
+    13C6=81 00                                             105) Set FlipFlags=129
+    1CE0=10 80                                             154) Set Flags1=16|Set Ink=128
+    1CF0=00 2E 00 4D                                       154) Set Height=46|Set Width=77
+    1CF6=81 00                                             154) Set FlipFlags=129
+03) 004A
+    0130=00 49 00 58                                         6) Set Height=73|Set Width=88
+    015C=00 8D 00 89                                         7) Set LocV=141|Set LocH=137
+    019E=12 3A                                               8) Set Rotation=4666
+    01D2=08 AE                                               9) Set Skew=2222
+    01F4=00 96                                              10) Set ScoreColor=0|Set Blend=150
+    0212=98 21                                              11) Set ForeColorR=152|Set BackColorR=33
+    04C0=00 49 00 58                                        25) Set Height=73|Set Width=88
+    1030=00 49 00 58                                        86) Set Height=73|Set Width=88
+    13C0=00 49 00 58                                       105) Set Height=73|Set Width=88
+    1CF0=00 49 00 58                                       154) Set Height=73|Set Width=88
+04) 0094
+    0130=00 64 00 64                                         6) Set Height=100|Set Width=100
+    0136=01 00                                               6) Set FlipFlags=1
+    015C=00 C9 00 C8                                         7) Set LocV=201|Set LocH=200
+    0166=01 00                                               7) Set FlipFlags=1
+    0196=01 00                                               8) Set FlipFlags=1
+    019E=1B 58                                               8) Set Rotation=7000
+    01C6=01 00                                               9) Set FlipFlags=1
+    01D2=0D 05                                               9) Set Skew=3333
+    01F4=00 E5 11 00                                        10) Set ScoreColor=0|Set Blend=229|Set FlipFlags=17
+    0212=64 32                                              11) Set ForeColorR=100|Set BackColorR=50
+    0226=01 00                                              11) Set FlipFlags=1
+    0240=10 01                                              12) Set Flags1=16|Set Ink=1
+    0256=01 00                                              12) Set FlipFlags=1
+    0286=01 00                                              13) Set FlipFlags=1
+    04C0=00 64 00 64                                        25) Set Height=100|Set Width=100
+    04C6=01 00                                              25) Set FlipFlags=1
+    1030=00 64 00 64                                        86) Set Height=100|Set Width=100
+    1036=01 00                                              86) Set FlipFlags=1
+    13C0=00 64 00 64                                       105) Set Height=100|Set Width=100
+    13C6=01 00                                             105) Set FlipFlags=1
+    1CF0=00 64 00 64                                       154) Set Height=100|Set Width=100
+    1CF6=01 00                                             154) Set FlipFlags=1
+05) 0094
+    0130=00 3C 00 53                                         6) Set Height=60|Set Width=83
+    0136=81 00                                               6) Set FlipFlags=129
+    015C=00 6E 00 69                                         7) Set LocV=110|Set LocH=105
+    0166=81 00                                               7) Set FlipFlags=129
+    0196=81 00                                               8) Set FlipFlags=129
+    019E=30 D4                                               8) Set Rotation=12500
+    01C6=81 00                                               9) Set FlipFlags=129
+    01D2=0F 30                                               9) Set Skew=3888
+    01F4=00 7F 91 00                                        10) Set ScoreColor=0|Set Blend=127|Set FlipFlags=145
+    0212=96 46                                              11) Set ForeColorR=150|Set BackColorR=70
+    0226=81 00                                              11) Set FlipFlags=129
+    0240=10 00                                              12) Set Flags1=16|Set Ink=0
+    0256=81 00                                              12) Set FlipFlags=129
+    0286=81 00                                              13) Set FlipFlags=129
+    04C0=00 3C 00 53                                        25) Set Height=60|Set Width=83
+    04C6=81 00                                              25) Set FlipFlags=129
+    1030=00 3C 00 53                                        86) Set Height=60|Set Width=83
+    1036=81 00                                              86) Set FlipFlags=129
+    13C0=00 3C 00 53                                       105) Set Height=60|Set Width=83
+    13C6=81 00                                             105) Set FlipFlags=129
+    1CF0=00 3C 00 53                                       154) Set Height=60|Set Width=83
+    1CF6=81 00                                             154) Set FlipFlags=129
+06) 00A6
+    0120=10 00                                               6) Set Flags1=16|Set Ink=0
+    0130=00 13 00 41                                         6) Set Height=19|Set Width=65
+    0136=01 00                                               6) Set FlipFlags=1
+    015C=00 14 00 0A                                         7) Set LocV=20|Set LocH=10
+    0166=01 00                                               7) Set FlipFlags=1
+    0196=01 00                                               8) Set FlipFlags=1
+    019E=46 50                                               8) Set Rotation=18000
+    01C6=01 00                                               9) Set FlipFlags=1
+    01D2=11 5C                                               9) Set Skew=4444
+    01F4=00 19 11 00                                        10) Set ScoreColor=0|Set Blend=25|Set FlipFlags=17
+    0212=C8 5A                                              11) Set ForeColorR=200|Set BackColorR=90
+    0226=01 00                                              11) Set FlipFlags=1
+    0240=10 09                                              12) Set Flags1=16|Set Ink=9
+    04B0=10 00                                              25) Set Flags1=16|Set Ink=0
+    04C0=00 13 00 41                                        25) Set Height=19|Set Width=65
+    04C6=01 00                                              25) Set FlipFlags=1
+    1020=10 00                                              86) Set Flags1=16|Set Ink=0
+    1030=00 13 00 41                                        86) Set Height=19|Set Width=65
+    1036=01 00                                              86) Set FlipFlags=1
+    13B0=10 00                                             105) Set Flags1=16|Set Ink=0
+    13C0=00 13 00 41                                       105) Set Height=19|Set Width=65
+    13C6=01 00                                             105) Set FlipFlags=1
+    1CE0=10 00                                             154) Set Flags1=16|Set Ink=0
+    1CF0=00 13 00 41                                       154) Set Height=19|Set Width=65
+    1CF6=01 00                                             154) Set FlipFlags=1
+
+

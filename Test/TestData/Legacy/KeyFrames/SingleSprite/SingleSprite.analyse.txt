@@ -1,0 +1,92 @@
+// Score VWSC
+00 00 01 14 	// TotalLength	
+FF FF FF FD     // HeaderType -3
+00 00 00 0C     // constant12
+00 00 00 09     // EntryCount
+00 00 00 0A     // NotationBase = EntryCount + 1 
+00 00 00 D4     // EntrySizeSum
+
+// Offsets 
+00 00 00 00 
+00 00 00 9C
+00 00 00 A4 00 00 00 A4 00 00 00 A4 00 00 00 A4
+00 00 00 A4 00 00 00 D4 00 00 00 D4 00 00 00 D4
+
+// ---------------------------------------------
+// Header
+00 00 00 9A 	// Actual size	
+00 00 00 14 
+00 00 00 14 	// highestFrame
+00 0D 
+00 30			// spriteSize		 48
+03 EE 
+00 96 			// channelCount		150
+
+00 36 								// Block 54 bytes - 2
+// [SPRITE_KEYFRAME] ---------------------
+00 30 			// Data length
+01 20 			// Control word affecting playback (0x01 20 or 0x01 10 observed).
+10 
+80 				// Ink mode (lower 7 bits).
+FF 00 			// Foreground/Background   colour index
+00 01			// cast number
+00 01 			// member number
+00 00 			// ?
+00 06 			// ? 
+00 38 			// position X
+00 2E 			// position Y
+00 1D 			// height
+00 6C 			// width
+00 00
+01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 
+// ---------------------------------------
+00 00 00 00  	// end previous block/SpriteMainKeyframe
+
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size
+		01 36 81 00 				// 0x36 = 54 , 81 = set keyframe on frame 1
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
+			01 2E 00 2F  			// Y:0x2E = 46	X:0x2F = 47
+00 02 								// Block Empty Next
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
+			01 2E 00 30  			// Y:0x2E = 46	X:0x30 = 48
+00 02 								// Block Empty Next
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
+			01 2E 00 31 	 		// Y:0x2E = 46	X:0x31 = 49
+00 02 								// Block Empty Next
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
+			01 2E 00 32 			// Y:0x2E = 46	X:0x32 = 50
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
+			01 36 01 00				// 0x36 = 54
+00 08 								// Block 8 bytes - 2  
+	00 02 							// Payload size 
+		01 36 81 00					// 0x36 = 54 , 81 = set keyframe at offset frame 9 = frame 10
+00 02 								// Block Empty Next 
+00 02 00 02 00 02 
+00 02 00 02 00 02 00 02 
+00 02 00 00 
+// ---------------------------------------------
+// ORDER
+00 00 00 01
+00 00 00 06 
+// ---------------------------------------------
+// Sprite descriptors
+// -- Sprite --
+00 00 00 01 		// Startframe
+00 00 00 14         // EndFrame
+00 00 00 00         
+00 00               
+00 00               // Sprite flags 
+00 00 00 06         // Channel			= 6
+00 01               // Almost Always 01
+00 00               
+00 0F               // Almost Always  00 0F 
+E1 FD               // Almost always  E1 FD
+00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00
+00 00 00 09			// Keyframe at offset 9 from start sprite = frame 10

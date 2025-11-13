@@ -393,13 +393,3 @@ internal sealed class BlLegacyShapeReader
         => isBigEndian ? BinaryPrimitives.ReadInt16BigEndian(data) : BinaryPrimitives.ReadInt16LittleEndian(data);
 }
 
-internal static class BlLegacyShapeReaderExtensions
-{
-    public static IReadOnlyList<BlLegacyShape> ReadShapes(this ReaderContext context)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-
-        var reader = new BlLegacyShapeReader(context);
-        return reader.Read();
-    }
-}

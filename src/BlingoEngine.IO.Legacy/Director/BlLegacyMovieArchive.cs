@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 
 using BlingoEngine.IO.Data.DTO;
 using BlingoEngine.IO.Legacy.Bitmaps;
 using BlingoEngine.IO.Legacy.Cast;
-using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 using BlingoEngine.IO.Legacy.Fields;
-using BlingoEngine.IO.Legacy.Files;
+using BlingoEngine.IO.Legacy.Scores;
 using BlingoEngine.IO.Legacy.Sounds;
-using BlingoEngine.IO.Legacy.Texts;
 using BlingoEngine.IO.Legacy.Texts.Data;
 
 namespace BlingoEngine.IO.Legacy.Director;
@@ -28,40 +22,6 @@ public sealed class BlLegacyMovieArchive
     private readonly Dictionary<int, BlLegacyField> _fieldsByCastId;
     private readonly Dictionary<int, BlLegacyBitmap> _bitmapsByCastId;
     private readonly Dictionary<int, BlLegacySound> _soundsByCastId;
-
-    public BlLegacyMovieArchive(
-        string fileName,
-        int directorVersion,
-        DirFilesContainerDTO rawResources,
-        IReadOnlyList<BlLegacyCastLibrary> casts,
-        IReadOnlyList<BlLegacyText> texts,
-        IReadOnlyList<BlLegacyField> fields,
-        IReadOnlyList<BlLegacyBitmap> bitmaps,
-        IReadOnlyList<BlLegacySound> sounds,
-        IReadOnlyDictionary<int, IReadOnlyList<BlResourceKeyLink>> childrenByParent,
-        IReadOnlyDictionary<int, BlResourceKeyLink> parentByChild)
-    {
-        ArgumentNullException.ThrowIfNull(rawResources);
-        ArgumentNullException.ThrowIfNull(casts);
-        ArgumentNullException.ThrowIfNull(texts);
-        ArgumentNullException.ThrowIfNull(fields);
-        ArgumentNullException.ThrowIfNull(bitmaps);
-        ArgumentNullException.ThrowIfNull(sounds);
-        ArgumentNullException.ThrowIfNull(childrenByParent);
-        ArgumentNullException.ThrowIfNull(parentByChild);
-
-        FileName = fileName;
-        DirectorVersion = directorVersion;
-        RawResources = rawResources;
-        CastLibraries = casts;
-        ChildrenByParent = childrenByParent;
-        ParentByChild = parentByChild;
-
-        _textsByCastId = BuildTextLookup(texts, ParentByChild);
-        _fieldsByCastId = BuildFieldLookup(fields, ParentByChild);
-        _bitmapsByCastId = BuildBitmapLookup(bitmaps, ParentByChild);
-        _soundsByCastId = BuildSoundLookup(sounds, ParentByChild);
-    }
 
     /// <summary>
     /// Gets the logical file name associated with the archive.
@@ -81,7 +41,7 @@ public sealed class BlLegacyMovieArchive
     /// <summary>
     /// Gets the list of cast libraries discovered in the <c>CAS*</c> tables.
     /// </summary>
-    public IReadOnlyList<BlLegacyCastLibrary> CastLibraries { get; }
+    public IReadOnlyList<BlLegacyRawCastLibrary> CastLibraries { get; }
 
     /// <summary>
     /// Gets the resource relationships registered in the <c>KEY*</c> table, grouped by parent.
@@ -92,6 +52,47 @@ public sealed class BlLegacyMovieArchive
     /// Gets a lookup that maps child resources back to their parent entries.
     /// </summary>
     public IReadOnlyDictionary<int, BlResourceKeyLink> ParentByChild { get; }
+
+    internal BlLegacyScore? Score { get; }
+
+
+    internal BlLegacyMovieArchive(
+        string fileName,
+        int directorVersion,
+        DirFilesContainerDTO rawResources,
+        IReadOnlyList<BlLegacyRawCastLibrary> casts,
+        IReadOnlyList<BlLegacyText> texts,
+        IReadOnlyList<BlLegacyField> fields,
+        IReadOnlyList<BlLegacyBitmap> bitmaps,
+        IReadOnlyList<BlLegacySound> sounds,
+        IReadOnlyDictionary<int, IReadOnlyList<BlResourceKeyLink>> childrenByParent,
+        IReadOnlyDictionary<int, BlResourceKeyLink> parentByChild,
+        BlLegacyScore? score)
+    {
+        ArgumentNullException.ThrowIfNull(rawResources);
+        ArgumentNullException.ThrowIfNull(casts);
+        ArgumentNullException.ThrowIfNull(texts);
+        ArgumentNullException.ThrowIfNull(fields);
+        ArgumentNullException.ThrowIfNull(bitmaps);
+        ArgumentNullException.ThrowIfNull(sounds);
+        ArgumentNullException.ThrowIfNull(childrenByParent);
+        ArgumentNullException.ThrowIfNull(parentByChild);
+
+        FileName = fileName;
+        DirectorVersion = directorVersion;
+        RawResources = rawResources;
+        CastLibraries = casts;
+        ChildrenByParent = childrenByParent;
+        ParentByChild = parentByChild;
+        Score = score;
+
+        _textsByCastId = BuildTextLookup(texts, ParentByChild);
+        _fieldsByCastId = BuildFieldLookup(fields, ParentByChild);
+        _bitmapsByCastId = BuildBitmapLookup(bitmaps, ParentByChild);
+        _soundsByCastId = BuildSoundLookup(sounds, ParentByChild);
+    }
+
+
 
     public bool TryGetText(int castResourceId, [NotNullWhen(true)] out BlLegacyText? text)
         => _textsByCastId.TryGetValue(castResourceId, out text);
@@ -220,64 +221,5 @@ public sealed class BlLegacyMovieArchive
         }
 
         return map;
-    }
-}
-
-/// <summary>
-/// Reads legacy Director movie archives and produces <see cref="BlLegacyMovieArchive"/> instances
-/// that expose the decoded cast members and media payloads.
-/// </summary>
-public sealed class BlLegacyMovieReader
-{
-    public BlLegacyMovieArchive Read(string path)
-    {
-        ArgumentNullException.ThrowIfNull(path);
-
-        using var stream = File.OpenRead(path);
-        var fileName = Path.GetFileName(path);
-        return Read(stream, fileName, leaveOpen: false);
-    }
-
-    public BlLegacyMovieArchive Read(Stream stream, string fileName, bool leaveOpen = false)
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-        ArgumentNullException.ThrowIfNull(fileName);
-
-        using var context = new ReaderContext(stream, fileName, leaveOpen);
-        return ReadFromContext(context);
-    }
-
-    private static BlLegacyMovieArchive ReadFromContext(ReaderContext context)
-    {
-        var dirFile = new BlDirFile(context);
-        var rawResources = dirFile.Read();
-
-        var casts = context.ReadCastLibraries();
-        var texts = context.ReadTexts();
-        var fields = context.ReadFields();
-        var bitmaps = context.ReadBitmaps();
-        var sounds = context.ReadSounds();
-
-        var children = new Dictionary<int, IReadOnlyList<BlResourceKeyLink>>();
-        foreach (var pair in context.Resources.ChildrenByParent)
-            children[pair.Key] = pair.Value.ToArray();
-
-        var parent = new Dictionary<int, BlResourceKeyLink>();
-        foreach (var pair in context.Resources.ParentByChild)
-            parent[pair.Key] = pair.Value;
-
-        var directorVersion = context.DataBlock?.Format.DirectorVersion ?? 0;
-
-        return new BlLegacyMovieArchive(
-            context.FileName,
-            directorVersion,
-            rawResources,
-            casts.ToList(),
-            texts.ToList(),
-            fields.ToList(),
-            bitmaps.ToList(),
-            sounds.ToList(),
-            children,
-            parent);
     }
 }

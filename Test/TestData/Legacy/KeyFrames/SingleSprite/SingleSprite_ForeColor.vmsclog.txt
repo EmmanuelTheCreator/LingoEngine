@@ -1,0 +1,68 @@
+SingleSprite_ForeColor.dir
+--------------------------------
+=== Header ===
+ActualSize: 		242
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	20
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		9
+EntrySizeSum: 	300
+NotationBase: 	10
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	364
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=20, Channel=6, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=9
+
+=== Frames ===
+01) 0036
+    0120=10 80 FF 00 00 01 00 01 00 00 00 06 00 38 00 2E 00 1D 00 6C 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6) Set Flags1=16|Set Ink=128|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=56|Set LocH=46|Set Height=29|Set Width=108|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set Rotation=0|Set Skew=0
+02) 0014
+    0122=16 00                                               6) Set ForeColorR=22|Set BackColorR=0
+    0134=10 00 81 00 14 00 14 00                             6) Set ScoreColor=16|Set Blend=0|Set FlipFlags=129|Set ForeColorG=20|Set BackColorG=0|Set ForeColorB=20|Set BackColorB=0
+03) 0010
+    0122=2D 00                                               6) Set ForeColorR=45|Set BackColorR=0
+    0138=23 00 23 00                                         6) Set ForeColorG=35|Set BackColorG=0|Set ForeColorB=35|Set BackColorB=0
+04) 0010
+    0122=44 00                                               6) Set ForeColorR=68|Set BackColorR=0
+    0138=2D 00 2D 00                                         6) Set ForeColorG=45|Set BackColorG=0|Set ForeColorB=45|Set BackColorB=0
+05) 0010
+    0122=5B 00                                               6) Set ForeColorR=91|Set BackColorR=0
+    0138=32 00 32 00                                         6) Set ForeColorG=50|Set BackColorG=0|Set ForeColorB=50|Set BackColorB=0
+06) 0008
+    0122=71 00                                               6) Set ForeColorR=113|Set BackColorR=0
+07) 0010
+    0122=88 00                                               6) Set ForeColorR=136|Set BackColorR=0
+    0138=2D 00 2D 00                                         6) Set ForeColorG=45|Set BackColorG=0|Set ForeColorB=45|Set BackColorB=0
+08) 0010
+    0122=9F 00                                               6) Set ForeColorR=159|Set BackColorR=0
+    0138=23 00 23 00                                         6) Set ForeColorG=35|Set BackColorG=0|Set ForeColorB=35|Set BackColorB=0
+09) 0010
+    0122=B6 00                                               6) Set ForeColorR=182|Set BackColorR=0
+    0138=14 00 14 00                                         6) Set ForeColorG=20|Set BackColorG=0|Set ForeColorB=20|Set BackColorB=0
+10) 0012
+    0122=CC 00                                               6) Set ForeColorR=204|Set BackColorR=0
+    0136=01 00 00 00 00 00                                   6) Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0
+11) 0008
+    0136=81 00                                               6) Set FlipFlags=129
+12) 0002
+13) 0002
+14) 0002
+15) 0002
+16) 0002
+17) 0002
+18) 0002
+19) 0002
+20) 0002
+
+

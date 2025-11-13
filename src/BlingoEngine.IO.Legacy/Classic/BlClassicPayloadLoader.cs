@@ -1,3 +1,4 @@
+using BlingoEngine.IO.Legacy.Afterburner;
 using BlingoEngine.IO.Legacy.Core;
 using BlingoEngine.IO.Legacy.Data;
 
@@ -59,6 +60,40 @@ internal sealed class BlClassicPayloadLoader
         }
 
         return Array.Empty<byte>();
+    }
+
+    public static byte[]? ReadResource(ReaderContext context, BlTag tag)
+    {
+        var classicLoader = new BlClassicPayloadLoader(context);
+        BlAfterburnerPayloadLoader? afterburnerLoader = null;
+        if (context.AfterburnerState is not null)
+            afterburnerLoader = new BlAfterburnerPayloadLoader(context, context.AfterburnerState);
+        var vwsc = context.Resources.Entries.FirstOrDefault(e => e.Tag == tag);
+        if (vwsc == null) return null;
+
+        var payload = LoadPayload(vwsc, classicLoader, afterburnerLoader);
+        return payload;
+    }
+    public static List<byte[]> ReadResources(ReaderContext context, BlTag tag)
+    {
+        var returnData = new List<byte[]>();
+        var classicLoader = new BlClassicPayloadLoader(context);
+        BlAfterburnerPayloadLoader? afterburnerLoader = null;
+        if (context.AfterburnerState is not null)
+            afterburnerLoader = new BlAfterburnerPayloadLoader(context, context.AfterburnerState);
+        var vwsc = context.Resources.Entries.Where(e => e.Tag == tag);
+        foreach (var entry in vwsc)
+        {
+            var payload = LoadPayload(entry, classicLoader, afterburnerLoader);
+            returnData.Add(payload);
+        }
+        return returnData;
+    }
+    private static byte[] LoadPayload(BlLegacyResourceEntry entry, BlClassicPayloadLoader classicLoader, BlAfterburnerPayloadLoader? afterburnerLoader)
+    {
+        return entry.StorageKind == BlResourceStorageKind.AfterburnerSegment
+            ? afterburnerLoader is null ? Array.Empty<byte>() : entry.LoadAfterburner(afterburnerLoader)
+            : entry.ReadClassicPayload(classicLoader);
     }
 }
 

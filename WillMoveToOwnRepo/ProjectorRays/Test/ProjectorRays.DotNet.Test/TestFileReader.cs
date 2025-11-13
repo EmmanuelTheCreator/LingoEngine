@@ -33,7 +33,7 @@ public static class TestFileReader
         var dump = Path.ChangeExtension(xmedFile, ".score.txt");
         return File.Exists(dump);
     }
-    public static byte[] ReadScore(string dirFile)
+    public static byte[] ReadScore(string dirFile, bool dumpToFile = true)
     {
         var dump = Path.ChangeExtension(dirFile, ".score.txt");
         if (!File.Exists(dump))
@@ -41,7 +41,9 @@ public static class TestFileReader
             var previous = RaysScoreChunk.FrameParserFactory;
             try
             {
-                RaysScoreChunk.FrameParserFactory = (logger, annotator) => new RaysScoreFrameParserV2ToFile(logger, annotator, dirFile);
+                RaysScoreChunk.FrameParserFactory = (logger, annotator) => dumpToFile
+                ?new RaysScoreFrameParserV2ToFile(logger, annotator, dirFile)
+                :new RaysScoreFrameParserV2(logger, annotator);
                 var data = File.ReadAllBytes(dirFile);
                 var stream = new ReadStream(data, data.Length, Endianness.BigEndian);
                 using var factory = LoggerFactory.Create(builder => { });

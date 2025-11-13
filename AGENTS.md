@@ -58,17 +58,17 @@ These instructions apply to the entire repository.
 5. Use `rg` (ripgrep) for searches and `dotnet format` for styling.
 
 ## Code Style
- - Use `dotnet format` to fix style issues when needed.
-  - Format only the project that owns your changes:
-
+- Format only the project that owns your changes:
     `dotnet format <path/to/project.csproj> --include <relative/path/to/file.cs> -v diagnostic`
-- Prefer `rg` (ripgrep) over `grep` for searching the codebase.
 - Do not remove existing comments from code.
 - When writing new classes, place members in the order: fields, then properties, then constructors.
+- I repeat: Always put first the fields, then the properties, then the constructor and then the methods.
 - Avoid adding business logic or default implementations inside interfaces to preserve .NET Framework 4.8 compatibility.
 - When introducing new reusable test utilities or fakes, place their implementations under the test project's `/Fakes/` directory so future tests can consume them.
 - When adding reusable fakes or reflection helpers for tests, place deterministic sources under the owning test project's `Fakes/` directory and shared helpers under its `TestUtilities/` directory so future tests can reuse them rather than redefining copies.
-- 
+- I repeat again: Always put first the fields, then the properties, then the constructor and then the methods.
+
+
 # VERY IMPORTANT
 - If there is only one code line after an `if`, `for`, or similar statement, you may omit the braces `{}`.
 This is VERY IMPORTANT.
@@ -196,11 +196,7 @@ if (condition)
 | WillMoveToOwnRepo/AbstUI/Test/AbstUI.LGodotTest/AbstUI.LGodotTest.csproj | Tests for the AbstUI Godot backend |
 
 - ### WillMoveToOwnRepo / ProjectorRays
-| Path | Description |
-| --- | --- |
-| WillMoveToOwnRepo/ProjectorRays/src/ProjectorRays.DotNet/ProjectorRays.DotNet.csproj | Core ProjectorRays .NET library |
-| WillMoveToOwnRepo/ProjectorRays/src/ProjectorRays.Console/ProjectorRays.Console.csproj | Console showcase for ProjectorRays |
-| WillMoveToOwnRepo/ProjectorRays/Test/ProjectorRays.DotNet.Test/ProjectorRays.DotNet.Test.csproj | Tests for ProjectorRays library |
+Will be DELETED
 
 ## Notes for Agents
 - The solution file is `BlingoEngine.sln`. But avoid using it, its big.

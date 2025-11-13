@@ -1,0 +1,78 @@
+KeyFrames_Lenear1234.dir
+--------------------------------
+=== Header ===
+ActualSize: 		196
+UnkA1: 			0
+UnkA2: 			0
+UnkA3: 			0
+UnkA4: 			20
+HighestFrame: 	41
+UnkB1: 			0
+UnkB2: 			13
+SpriteSize: 		48
+UnkC1: 			3
+UnkC2: 			238
+ChannelCount: 	150
+EntryCount: 		9
+EntrySizeSum: 	268
+NotationBase: 	10
+OffsetsOffset: 	12
+HeaderType: 		-3
+TotalLength: 	332
+
+
+=== Sprites ===
+Item Desc. 0: Start=1, End=41, Channel=6, U1=0, Flip=False,False,🔒=False,Trails=False,Editable=False,Moveable=False, U3=1, U4=0,15, U5=225 253, U7=0,0,0,0, KF=1,3,4,9,19
+
+=== Frames ===
+01) 0036
+    0120=10 00 FF 00 00 01 00 03 00 00 00 06 00 82 00 25 00 13 00 41 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6) Set Flags1=16|Set Ink=0|Set ForeColorR=255|Set BackColorR=0|Set MemberCastLib=0|Set MemberNum=0|Set UnknownA=0|Set PropertiesOffset=0|Set LocV=130|Set LocH=37|Set Height=19|Set Width=65|Set ScoreColor=0|Set Blend=0|Set FlipFlags=1|Set ForeColorG=0|Set BackColorG=0|Set ForeColorB=0|Set BackColorB=0|Set Rotation=0|Set Skew=0
+02) 0002
+03) 0008
+    0136=81 00                                               6) Set FlipFlags=129
+04) 0008
+    0136=01 00                                               6) Set FlipFlags=1
+05) 0002
+06) 0008
+    0136=81 00                                               6) Set FlipFlags=129
+07) 0002
+08) 0002
+09) 0002
+10) 0008
+    0136=01 00                                               6) Set FlipFlags=1
+11) 0008
+    0136=81 00                                               6) Set FlipFlags=129
+12) 0002
+13) 0002
+14) 0002
+15) 0002
+16) 0002
+17) 0002
+18) 0002
+19) 0002
+20) 0008
+    0136=01 00                                               6) Set FlipFlags=1
+21) 0008
+    0136=81 00                                               6) Set FlipFlags=129
+22) 0002
+23) 0002
+24) 0002
+25) 0002
+26) 0002
+27) 0002
+28) 0002
+29) 0002
+30) 0002
+31) 0002
+32) 0002
+33) 0002
+34) 0002
+35) 0002
+36) 0002
+37) 0002
+38) 0002
+39) 0002
+40) 0002
+41) 0002
+
+

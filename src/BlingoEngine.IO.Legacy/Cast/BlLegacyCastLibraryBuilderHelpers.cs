@@ -84,7 +84,7 @@ internal static class BlLegacyCastLibraryBuilderHelpers
         return info;
     }
 
-    public static byte[] BuildModernCastMetadata(BlLegacyCastMemberType type, string? memberName, uint dataLength)
+    public static byte[] BuildModernCastMetadata(BlCastRawMemberType type, string? memberName, uint dataLength)
     {
         var info = BuildNameInfoBytes(memberName);
         var payload = new byte[12 + info.Length];

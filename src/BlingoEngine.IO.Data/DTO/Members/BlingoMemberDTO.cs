@@ -23,9 +23,10 @@ public class BlingoMemberDTO
     public int Width { get; set; }
     public int Height { get; set; }
     public long Size { get; set; }
-    public string Comments { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public int PurgePriority { get; set; }
+    public string Comments { get; set; } = string.Empty;
+    public string ModifiedBy { get; set; } = string.Empty;
     public DateTime DateCreated{ get; set; }
     public DateTime DateModified{ get; set; }
 }

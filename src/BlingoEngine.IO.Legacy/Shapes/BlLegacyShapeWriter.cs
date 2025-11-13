@@ -221,7 +221,7 @@ public static class BlLegacyShapeLibraryBuilder
         var info = infoBytes ?? BlLegacyCastLibraryBuilderHelpers.BuildNameInfoBytes(memberName);
         var payload = new byte[12 + info.Length + shapeRecord.Length];
 
-        BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(0, 4), (uint)BlLegacyCastMemberType.Shape);
+        BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(0, 4), (uint)BlCastRawMemberType.Shape);
         BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(4, 4), (uint)info.Length);
         BinaryPrimitives.WriteUInt32BigEndian(payload.AsSpan(8, 4), (uint)shapeRecord.Length);
 

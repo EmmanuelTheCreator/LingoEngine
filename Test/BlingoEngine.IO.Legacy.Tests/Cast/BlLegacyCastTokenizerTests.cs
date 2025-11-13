@@ -13,15 +13,15 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
         {
             var path = TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_3DExtruder_Values.CASt.bin");
             var bytes = File.ReadAllBytes(path);
-            var reader = new BlLegacyCastItemReader();
+            var reader = new BlLegacyCastItemReader_Dir10();
 
             var memberGen = reader.ReadItem("",bytes);
-            var member = (BlCastMemberText)memberGen.MemberItem;
+            var member = (BlCastRawMemberText)memberGen.MemberItem;
 
             Assert.Equal("text", member.TextType);
             Assert.Equal(0x1B0, member.SpecificDataLength);
             Assert.False(member.IsEditable);
-            Assert.Equal(BlLegacyTextFraming.Fixed, member.Framing);
+            Assert.Equal(BlRawTextFraming.Fixed, member.Framing);
             Assert.True(member.IsAntialiasEnabled);
             Assert.Equal(0x0E, member.AntialiasMode);
             Assert.Equal(0x1E, member.KerningLargerThanPointSize);
@@ -32,10 +32,10 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
             Assert.Equal(4, member.FaceFlags);
             Assert.True(member.IsBevelEnabled);
             Assert.Equal(2.80, member.BevelAmount, 2);
-            Assert.Equal(BlCastTextBevelEdge.Miter, member.BevelEdge);
+            Assert.Equal(BlRawTextBevelEdge.Miter, member.BevelEdge);
             Assert.Equal(2, member.Smoothness);
-            Assert.Equal(BlCastTextDirectionalLight.TopLeft, member.LightSetting);
-            Assert.Equal(BlCastTextShaderTexture.Default, member.ShaderTexture);
+            Assert.Equal(BlRawTextDirectionalLight.TopLeft, member.LightSetting);
+            Assert.Equal(BlRawTextShaderTexture.Default, member.ShaderTexture);
             Assert.Equal(53, member.Reflectivity);
             Assert.Equal("#9C6531FF", member.DirectionalColor.ToHex());
             Assert.Equal("#9C3163FF", member.AmbientColor.ToHex());
@@ -55,20 +55,20 @@ namespace BlingoEngine.IO.Legacy.Tests.Cast
         {
             var path = TestContextHarness.GetTextAssetPath("3D_Extruder/Text_Hallo_Display_3DMode.CASt.bin");
             var bytes = File.ReadAllBytes(path);
-            var reader = new BlLegacyCastItemReader();
+            var reader = new BlLegacyCastItemReader_Dir10();
 
             var memberGen = reader.ReadItem("", bytes);
-            var member = (BlCastMemberText)memberGen.MemberItem;
+            var member = (BlCastRawMemberText)memberGen.MemberItem;
 
             Assert.Equal("text", member.TextType);
             Assert.Equal(0x1B0, member.SpecificDataLength);
             Assert.False(member.IsBevelEnabled);
             Assert.Equal(50.0, member.TunnelDepth, 2);
             Assert.Equal(1.0, member.BevelAmount, 2);
-            Assert.Equal(BlCastTextBevelEdge.Miter, member.BevelEdge);
+            Assert.Equal(BlRawTextBevelEdge.Miter, member.BevelEdge);
             Assert.Equal(5, member.Smoothness);
-            Assert.Equal(BlCastTextDirectionalLight.TopLeft, member.LightSetting);
-            Assert.Equal(BlCastTextShaderTexture.Default, member.ShaderTexture);
+            Assert.Equal(BlRawTextDirectionalLight.TopLeft, member.LightSetting);
+            Assert.Equal(BlRawTextShaderTexture.Default, member.ShaderTexture);
             Assert.Equal("#FFFFFFFF", member.DirectionalColor.ToHex());
             Assert.Equal("#FFFFFFFF", member.AmbientColor.ToHex());
             Assert.Equal("#FFFFFFFF", member.BackgroundColor.ToHex());
