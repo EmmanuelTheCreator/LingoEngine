@@ -75,6 +75,11 @@ public class BlingoDebugOverlay : IBlingoClockListener
         _engineFrames++;
     }
 
+    public void OnIdle(float deltaTime)
+    {
+        // Idle callbacks do not affect the debug overlay.
+    }
+
     public void Prepare()
     {
         throw new NotImplementedException();

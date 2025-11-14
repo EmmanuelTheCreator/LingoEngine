@@ -28,6 +28,7 @@ namespace BlingoEngine.Events
         private readonly List<IHasStepFrameEvent> _stepFrames = new(); // must be handled by actorlist
         private readonly List<IHasPrepareFrameEvent> _prepareFrames = new();
         private readonly List<IHasEnterFrameEvent> _enterFrames = new();
+        private readonly List<IHasIdleFrameEvent> _idleFrames = new();
         private readonly List<IHasExitFrameEvent> _exitFrames = new();
         private readonly List<IHasFocusEvent> _focuss = new();
         private readonly List<IHasBlurEvent> _blurs = new();
@@ -83,6 +84,7 @@ namespace BlingoEngine.Events
 
             if (ms is IHasPrepareFrameEvent prepareFrameEvent) Insert(_prepareFrames, prepareFrameEvent);
             if (ms is IHasEnterFrameEvent enterFrameEvent) Insert(_enterFrames, enterFrameEvent);
+            if (ms is IHasIdleFrameEvent idleFrameEvent) Insert(_idleFrames, idleFrameEvent);
             if (ms is IHasExitFrameEvent exitFrameEvent) Insert(_exitFrames, exitFrameEvent);
             if (ms is IHasFocusEvent focusEvent) Insert(_focuss, focusEvent);
             if (ms is IHasBlurEvent blurEvent) Insert(_blurs, blurEvent);
@@ -113,6 +115,7 @@ namespace BlingoEngine.Events
             // Not stepframe it seems stepframe is only used through the actor list.
             if (ms is IHasPrepareFrameEvent prepareFrameEvent) _prepareFrames.Remove(prepareFrameEvent);
             if (ms is IHasEnterFrameEvent enterFrameEvent) _enterFrames.Remove(enterFrameEvent);
+            if (ms is IHasIdleFrameEvent idleFrameEvent) _idleFrames.Remove(idleFrameEvent);
             if (ms is IHasExitFrameEvent exitFrameEvent) _exitFrames.Remove(exitFrameEvent);
             if (ms is IHasFocusEvent focusEvent) _focuss.Remove(focusEvent);
             if (ms is IHasBlurEvent blurEvent) _blurs.Remove(blurEvent);
@@ -148,6 +151,7 @@ namespace BlingoEngine.Events
             FilterList(_mouseExits);
             FilterList(_prepareFrames);
             FilterList(_enterFrames);
+            FilterList(_idleFrames);
             FilterList(_exitFrames);
             FilterList(_focuss);
             FilterList(_blurs);
@@ -172,6 +176,7 @@ namespace BlingoEngine.Events
         internal void RaiseStepFrame() => _stepFrames.ForEach(x => x.StepFrame());
         internal void RaisePrepareFrame() => _prepareFrames.ForEach(x => x.PrepareFrame());
         internal void RaiseEnterFrame() => _enterFrames.ForEach(x => x.EnterFrame());
+        internal void RaiseIdleFrame() => _idleFrames.ForEach(x => x.IdleFrame());
         internal void RaiseExitFrame() => _exitFrames.ForEach(x => x.ExitFrame());
         public void RaiseFocus() => _focuss.ForEach(x => x.Focus());
         public void RaiseBlur() => _blurs.ForEach(x => x.Blur());

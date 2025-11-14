@@ -1,5 +1,5 @@
-﻿using System.Linq;
 using AbstUI.Primitives;
+using AbstUI.Components;
 using BlingoEngine.Casts;
 using BlingoEngine.Core;
 using BlingoEngine.Events;
@@ -17,8 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
-using System.Linq;
-using AbstUI.Components;
 
 namespace BlingoEngine.Movies
 {
@@ -58,6 +56,20 @@ namespace BlingoEngine.Movies
         private readonly ActorList _actorList = new ActorList();
         private readonly BlingoMovieScriptContainer _movieScripts;
         private readonly List<BlingoSpriteManager> _spriteManagers = new();
+
+        // Director bases idle timing on a 60 Hz clock where idleHandlerPeriod skips ticks before
+        // issuing an on idle. Period 0 removes that throttle so handlers can run as fast as
+        // possible during the delay between enterFrame and exitFrame (see the Director MX 2004
+        // Scripting manual entry for idleHandlerPeriod).
+        private const float IdleBaseIntervalSeconds = 1f / 60f;
+        private const float UnthrottledIdleQuantumSeconds = 1f / 1000f;
+        private const int MaxIdleDispatchPerTick = 10_000;
+
+        private bool _frameIsActive;
+        private bool _hasPendingEndSprites;
+        private float _idleAccumulator;
+        private int _idleHandlerPeriod = 1;
+        private float _idleIntervalSeconds = IdleBaseIntervalSeconds;
 
 
         #region Properties
@@ -186,6 +198,26 @@ namespace BlingoEngine.Movies
         {
             get => _tempoManager.Tempo;
             set => _tempoManager.ChangeTempo(value);
+        }
+
+        /// <summary>
+        /// Mirrors Director's <c>_movie.idleHandlerPeriod</c>: 0 runs on idle as often as possible,
+        /// positive values cap the frequency to 60/n events per second using the 60 Hz idle
+        /// timer described in the Director scripting manual.
+        /// </summary>
+        public int IdleHandlerPeriod
+        {
+            get => _idleHandlerPeriod;
+            set
+            {
+                var normalized = value < 0 ? 0 : value;
+                if (SetProperty(ref _idleHandlerPeriod, normalized, nameof(IdleHandlerPeriod)))
+                {
+                    _idleIntervalSeconds = normalized == 0
+                        ? UnthrottledIdleQuantumSeconds
+                        : normalized * IdleBaseIntervalSeconds;
+                }
+            }
         }
         public int MaxSpriteChannelCount
         {
@@ -362,7 +394,46 @@ namespace BlingoEngine.Movies
                     AdvanceFrame();
             }
         }
+
+        /// <summary>
+        /// Dispatches <c>idleFrame</c> callbacks while the playhead is waiting inside a frame.
+        /// </summary>
+        public void OnIdle(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return;
+
+            if (!_isPlaying || !_frameIsActive)
+            {
+                if (!_frameIsActive)
+                    _idleAccumulator = 0f;
+                return;
+            }
+
+            _idleAccumulator += deltaTime;
+            var interval = _idleHandlerPeriod == 0 ? UnthrottledIdleQuantumSeconds : _idleIntervalSeconds;
+
+            int dispatchCount = 0;
+            while (_idleAccumulator >= interval && dispatchCount < MaxIdleDispatchPerTick)
+            {
+                _eventMediator.RaiseIdleFrame();
+                dispatchCount++;
+                _idleAccumulator -= interval;
+
+                if (_idleHandlerPeriod == 0 && _idleAccumulator < interval)
+                    break;
+            }
+
+            if (dispatchCount == MaxIdleDispatchPerTick)
+                _idleAccumulator = 0f;
+        }
         private bool _isAdvancing;
+
+        /// <summary>
+        /// Advances the playhead by a single frame following Director's documented event order:
+        /// <c>beginSprite</c> → <c>stepFrame</c> → <c>prepareFrame</c> → <c>enterFrame</c> → idle →
+        /// <c>exitFrame</c> → <c>endSprite</c>.
+        /// </summary>
         public void AdvanceFrame()
         {
             if (_isAdvancing) return;
@@ -370,7 +441,6 @@ namespace BlingoEngine.Movies
 
             try
             {
-
                 var frameChanged = false;
                 if (_nextFrame < 0)
                 {
@@ -382,34 +452,40 @@ namespace BlingoEngine.Movies
                     frameChanged = SetProperty(ref _currentFrame, _nextFrame, nameof(CurrentFrame));
                     _nextFrame = -1;
                 }
+
                 if (frameChanged)
                 {
                     OnPropertyChanged(nameof(Frame));
 
                     var transitionSprite = _transitionManager.GetFrameSprite(_currentFrame);
-                    if (transitionSprite != null)
-                    {
-                        if (_transitionPlayer.Start(transitionSprite))
-                            _skipStepFrame = true;
-                    }
+                    if (transitionSprite != null && _transitionPlayer.Start(transitionSprite))
+                        _skipStepFrame = true;
 
-                    // update the list with all ended, and all the new started sprites.
+                    // Detect sprite lifecycle changes before raising frame handlers.
                     _sprite2DManager.UpdateActiveSprites(_currentFrame, _lastFrame);
                     _spriteManagers.ForEach(x => x.UpdateActiveSprites(_currentFrame, _lastFrame));
+                }
 
-                    // End the sprites first, the frame has change, start by ending all sprites, that are not on this frame anymore.
-                    _sprite2DManager.EndSprites();
-                    _spriteManagers.ForEach(x => x.EndSprites());
+                // Finish the previous frame (exitFrame/endSprite) before we start dispatching
+                // events for the new frame. Director does this when the playhead crosses into
+                // a new frame so handlers see a clean transition.
+                CompleteActiveFrame();
 
-                    // Begin the new sprites
+                if (frameChanged)
+                {
+                    // Director delivers beginSprite before any of the frame handlers run.
                     _sprite2DManager.BeginSprites();
                     _spriteManagers.ForEach(x => x.BeginSprites());
+
+                    _hasPendingEndSprites = true;
                 }
                 else
                 {
                     // Are there new puppet sprites set.
                     _sprite2DManager.DoPuppetSprites();
+                    _hasPendingEndSprites = false;
                 }
+
                 _lastFrame = _currentFrame;
 
                 if (_needToRaiseStartMovie)
@@ -422,23 +498,40 @@ namespace BlingoEngine.Movies
                 _sprite2DManager.PreStepFrame();
                 if (!_skipStepFrame)
                     _eventMediator.RaiseStepFrame();
+                // The canonical handler order for an active frame. Idle callbacks are pumped
+                // later via OnIdle while _frameIsActive remains true.
                 _eventMediator.RaisePrepareFrame();
                 _eventMediator.RaiseEnterFrame();
+                _frameIsActive = true;
 
                 OnUpdateStage();
                 _skipStepFrame = false;
                 if (frameChanged)
                     CurrentFrameChanged?.Invoke(_currentFrame);
-
-                _eventMediator.RaiseExitFrame();
             }
             finally
             {
-                //_sprite2DManager.EndSprites();
-                //_spriteManagers.ForEach(x => x.EndSprites());
                 _isAdvancing = false;
             }
 
+        }
+
+        private void CompleteActiveFrame()
+        {
+            if (!_frameIsActive)
+                return;
+
+            _eventMediator.RaiseExitFrame();
+
+            if (_hasPendingEndSprites)
+            {
+                _sprite2DManager.EndSprites();
+                _spriteManagers.ForEach(x => x.EndSprites());
+                _hasPendingEndSprites = false;
+            }
+
+            _frameIsActive = false;
+            _idleAccumulator = 0f;
         }
 
 
@@ -467,6 +560,7 @@ namespace BlingoEngine.Movies
             PlayStateChanged?.Invoke(false);
             _environment.Sound.StopAll();
             //_spriteManager.EndSprites();
+            CompleteActiveFrame();
             _eventMediator.RaiseStopMovie();
             // EndSprite
             // StopMovie
